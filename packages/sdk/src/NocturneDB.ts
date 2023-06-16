@@ -5,14 +5,13 @@ import {
   NoteTrait,
   IncludedNoteWithNullifier,
   Note,
-  WithTimestamp,
   OptimisticNFRecord,
   OptimisticOpDigestRecord,
 } from "./primitives";
 import { numberToStringPadded, zip } from "./utils";
 import * as JSON from "bigint-json-serialization";
 import { KV, KVStore } from "./store";
-import { StateDiff } from "./sync";
+import { StateDiff, TotalEntityIndex, WithTotalEntityIndex } from "./sync";
 import { ethers } from "ethers";
 
 const NOTES_BY_INDEX_PREFIX = "NOTES_BY_INDEX";
@@ -21,7 +20,7 @@ const NOTES_BY_NULLIFIER_PREFIX = "NOTES_BY_NULLIFIER";
 const MERKLE_INDEX_TIMESTAMP_PREFIX = "MERKLE_INDEX_TIMESTAMP";
 const OPTIMISTIC_NF_RECORD_PREFIX = "OPTIMISTIC_NF_RECORD";
 const OPTIMISTIC_OP_DIGEST_RECORD_PREFIX = "OPTIMISTIC_OP_DIGEST_RECORD";
-const NEXT_BLOCK_KEY = "NEXT_BLOCK";
+const CURRENT_TOTAL_ENTITY_INDEX_KEY = "CURRENT_TOTAL_ENTITY_INDEX";
 const LAST_COMMITTED_MERKLE_INDEX_KEY = "LAST_MERKLE_INDEX";
 
 // ceil(log10(2^32))
@@ -41,10 +40,10 @@ export interface GetNotesOpts {
 
 export class NocturneDB {
   // store the following mappings:
-  //  merkleIndexKey => Note
-  //  assetKey => merkleIndex[]
-  //  nullifierKey => merkleIndex
-  //  merkleIndexTimestampKey => timestamp
+  //  merkleIndex => Note
+  //  merkleIndex => totalEntityIndex
+  //  asset => merkleIndex[]
+  //  nullifier => merkleIndex
   public kv: KVStore;
 
   constructor(kv: KVStore) {
@@ -68,7 +67,7 @@ export class NocturneDB {
     return `${NOTES_BY_NULLIFIER_PREFIX}-${nullifier.toString()}`;
   }
 
-  static formatTimestampKey(merkleIndex: number): string {
+  static formatMerkleIndexToTotalEntityIndexKey(merkleIndex: number): string {
     return `${MERKLE_INDEX_TIMESTAMP_PREFIX}-${numberToStringPadded(
       merkleIndex,
       MAX_MERKLE_INDEX_DIGITS
@@ -203,13 +202,11 @@ export class NocturneDB {
   }
 
   async storeNotes(
-    notesWithTimestamps: WithTimestamp<IncludedNoteWithNullifier>[]
+    notesWithTotalEntityIndices: WithTotalEntityIndex<IncludedNoteWithNullifier>[]
   ): Promise<void> {
-    const notes = notesWithTimestamps.map(
-      ({ timestampUnixMillis, inner }) => inner
-    );
+    const notes = notesWithTotalEntityIndices.map(({ inner }) => inner);
     // make note KVs
-    const noteKVs: KV[] = notes.map((note) =>
+    const noteKVs: KV[] = notes.map(({ nullifier, ...note }) =>
       NocturneDB.makeNoteKV(note.merkleIndex, note)
     );
 
@@ -221,9 +218,12 @@ export class NocturneDB {
     // get the updated asset => merkleIndex[] KV pairs
     const assetKVs = await this.getUpdatedAssetKVsWithNotesAdded(notes);
 
-    const timestampKVs = notesWithTimestamps.map(
-      ({ inner, timestampUnixMillis }) =>
-        NocturneDB.makeTimestampKV(inner.merkleIndex, timestampUnixMillis)
+    const merkleIndexToTotalEntityIndexKVs = notesWithTotalEntityIndices.map(
+      ({ inner, totalEntityIndex }) =>
+        NocturneDB.makeMerkleIndexToTotalEntityIndexKV(
+          inner.merkleIndex,
+          totalEntityIndex
+        )
     );
 
     // write them all into the KV store
@@ -231,7 +231,7 @@ export class NocturneDB {
       ...noteKVs,
       ...nullifierKVs,
       ...assetKVs,
-      ...timestampKVs,
+      ...merkleIndexToTotalEntityIndexKVs,
     ]);
   }
 
@@ -307,29 +307,31 @@ export class NocturneDB {
   }
 
   /**
-   * Get timestamp at which an owned note with merkleIndex `merkleIndex` was inserted into the tree (not necessarily committed)
+   * Get TotalEntityIndex at which an owned note with merkleIndex `merkleIndex` was inserted into the tree (not necessarily committed)
    *
-   * @param merkleIndex the merkleIndex to get the timestamp for
-   * @returns timestamp the timestamp in unix millis at which the merkleIndex was inserted into the tree,
+   * @param merkleIndex the merkleIndex to get the TotalEntityIndex for
+   * @returns the totalEntityIndex in unix millis at which the merkleIndex was inserted into the tree,
    *          or undefined if the corresponding note is nullified or not owned
    */
-  async getTimestampForMerkleIndex(
+  async getTotalEntityIndexForMerkleIndex(
     merkleIndex: number
-  ): Promise<number | undefined> {
-    const timestampKey = NocturneDB.formatTimestampKey(merkleIndex);
-    return await this.kv.getNumber(timestampKey);
+  ): Promise<bigint | undefined> {
+    const totalEntityIndexKey =
+      NocturneDB.formatMerkleIndexToTotalEntityIndexKey(merkleIndex);
+    return await this.kv.getBigInt(totalEntityIndexKey);
   }
 
-  /// return the next block number the DB has not yet been synced to
+  // return the totalEntityndex that the DB has been synced to
   // this is more/less a "version" number
-  // returns `this.startBlock` if it's undefined
-  async nextBlock(): Promise<number | undefined> {
-    return await this.kv.getNumber(NEXT_BLOCK_KEY);
+  async currentTotalEntityIndex(): Promise<TotalEntityIndex | undefined> {
+    return await this.kv.getBigInt(CURRENT_TOTAL_ENTITY_INDEX_KEY);
   }
 
-  // update `nextBlock()`.
-  async setNextBlock(currentBlock: number): Promise<void> {
-    await this.kv.putNumber(NEXT_BLOCK_KEY, currentBlock);
+  // update `currentTotallEntityIndex()`.
+  async setCurrentTotalEntityIndex(
+    totalEntityIndex: TotalEntityIndex
+  ): Promise<void> {
+    await this.kv.putBigInt(CURRENT_TOTAL_ENTITY_INDEX_KEY, totalEntityIndex);
   }
 
   // index of the last note (dummy or not) to be committed
@@ -349,7 +351,7 @@ export class NocturneDB {
       notesAndCommitments,
       nullifiers,
       lastCommittedMerkleIndex,
-      blockNumber,
+      totalEntityIndex,
     } = diff;
 
     // TODO: make this all one write
@@ -357,15 +359,16 @@ export class NocturneDB {
     await this.storeNotes(
       notesAndCommitments.filter(
         ({ inner }) => !NoteTrait.isCommitment(inner)
-      ) as WithTimestamp<IncludedNoteWithNullifier>[]
+      ) as WithTotalEntityIndex<IncludedNoteWithNullifier>[]
     );
+
     const nfIndices = await this.nullifyNotes(nullifiers);
 
     if (lastCommittedMerkleIndex) {
       await this.setLastCommittedMerkleIndex(lastCommittedMerkleIndex);
     }
 
-    await this.setNextBlock(blockNumber + 1);
+    await this.setCurrentTotalEntityIndex(totalEntityIndex);
 
     return nfIndices;
   }
@@ -420,8 +423,14 @@ export class NocturneDB {
     return [NocturneDB.formatNullifierKey(nullifier), merkleIndex.toString()];
   }
 
-  private static makeTimestampKV(merkleIndex: number, timestamp: number): KV {
-    return [NocturneDB.formatTimestampKey(merkleIndex), timestamp.toString()];
+  private static makeMerkleIndexToTotalEntityIndexKV(
+    merkleIndex: number,
+    totalEntityIndex: TotalEntityIndex
+  ): KV {
+    return [
+      NocturneDB.formatMerkleIndexToTotalEntityIndexKey(merkleIndex),
+      totalEntityIndex.toString(),
+    ];
   }
 
   private static makeOptimisticOpDigestRecordKV(

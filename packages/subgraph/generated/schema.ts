@@ -12,9 +12,9 @@ import {
 } from "@graphprotocol/graph-ts";
 
 export class DepositEvent extends Entity {
-  constructor(id: Bytes) {
+  constructor(id: string) {
     super();
-    this.set("id", Value.fromBytes(id));
+    this.set("id", Value.fromString(id));
   }
 
   save(): void {
@@ -22,35 +22,24 @@ export class DepositEvent extends Entity {
     assert(id != null, "Cannot save DepositEvent entity without an ID");
     if (id) {
       assert(
-        id.kind == ValueKind.BYTES,
-        `Entities of type DepositEvent must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        id.kind == ValueKind.STRING,
+        `Entities of type DepositEvent must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("DepositEvent", id.toBytes().toHexString(), this);
+      store.set("DepositEvent", id.toString(), this);
     }
   }
 
-  static load(id: Bytes): DepositEvent | null {
-    return changetype<DepositEvent | null>(
-      store.get("DepositEvent", id.toHexString())
-    );
+  static load(id: string): DepositEvent | null {
+    return changetype<DepositEvent | null>(store.get("DepositEvent", id));
   }
 
-  get id(): Bytes {
+  get id(): string {
     let value = this.get("id");
-    return value!.toBytes();
+    return value!.toString();
   }
 
-  set id(value: Bytes) {
-    this.set("id", Value.fromBytes(value));
-  }
-
-  get idx(): BigInt {
-    let value = this.get("idx");
-    return value!.toBigInt();
-  }
-
-  set idx(value: BigInt) {
-    this.set("idx", Value.fromBigInt(value));
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
   }
 
   get type(): string {
@@ -136,9 +125,9 @@ export class DepositEvent extends Entity {
 }
 
 export class EncodedOrEncryptedNote extends Entity {
-  constructor(id: Bytes) {
+  constructor(id: string) {
     super();
-    this.set("id", Value.fromBytes(id));
+    this.set("id", Value.fromString(id));
   }
 
   save(): void {
@@ -149,35 +138,26 @@ export class EncodedOrEncryptedNote extends Entity {
     );
     if (id) {
       assert(
-        id.kind == ValueKind.BYTES,
-        `Entities of type EncodedOrEncryptedNote must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        id.kind == ValueKind.STRING,
+        `Entities of type EncodedOrEncryptedNote must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("EncodedOrEncryptedNote", id.toBytes().toHexString(), this);
+      store.set("EncodedOrEncryptedNote", id.toString(), this);
     }
   }
 
-  static load(id: Bytes): EncodedOrEncryptedNote | null {
+  static load(id: string): EncodedOrEncryptedNote | null {
     return changetype<EncodedOrEncryptedNote | null>(
-      store.get("EncodedOrEncryptedNote", id.toHexString())
+      store.get("EncodedOrEncryptedNote", id)
     );
   }
 
-  get id(): Bytes {
+  get id(): string {
     let value = this.get("id");
-    return value!.toBytes();
+    return value!.toString();
   }
 
-  set id(value: Bytes) {
-    this.set("id", Value.fromBytes(value));
-  }
-
-  get idx(): BigInt {
-    let value = this.get("idx");
-    return value!.toBigInt();
-  }
-
-  set idx(value: BigInt) {
-    this.set("idx", Value.fromBigInt(value));
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
   }
 
   get merkleIndex(): BigInt {
@@ -189,45 +169,45 @@ export class EncodedOrEncryptedNote extends Entity {
     this.set("merkleIndex", Value.fromBigInt(value));
   }
 
-  get note(): Bytes | null {
+  get note(): string | null {
     let value = this.get("note");
     if (!value || value.kind == ValueKind.NULL) {
       return null;
     } else {
-      return value.toBytes();
+      return value.toString();
     }
   }
 
-  set note(value: Bytes | null) {
+  set note(value: string | null) {
     if (!value) {
       this.unset("note");
     } else {
-      this.set("note", Value.fromBytes(<Bytes>value));
+      this.set("note", Value.fromString(<string>value));
     }
   }
 
-  get encryptedNote(): Bytes | null {
+  get encryptedNote(): string | null {
     let value = this.get("encryptedNote");
     if (!value || value.kind == ValueKind.NULL) {
       return null;
     } else {
-      return value.toBytes();
+      return value.toString();
     }
   }
 
-  set encryptedNote(value: Bytes | null) {
+  set encryptedNote(value: string | null) {
     if (!value) {
       this.unset("encryptedNote");
     } else {
-      this.set("encryptedNote", Value.fromBytes(<Bytes>value));
+      this.set("encryptedNote", Value.fromString(<string>value));
     }
   }
 }
 
 export class EncodedNote extends Entity {
-  constructor(id: Bytes) {
+  constructor(id: string) {
     super();
-    this.set("id", Value.fromBytes(id));
+    this.set("id", Value.fromString(id));
   }
 
   save(): void {
@@ -235,35 +215,24 @@ export class EncodedNote extends Entity {
     assert(id != null, "Cannot save EncodedNote entity without an ID");
     if (id) {
       assert(
-        id.kind == ValueKind.BYTES,
-        `Entities of type EncodedNote must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        id.kind == ValueKind.STRING,
+        `Entities of type EncodedNote must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("EncodedNote", id.toBytes().toHexString(), this);
+      store.set("EncodedNote", id.toString(), this);
     }
   }
 
-  static load(id: Bytes): EncodedNote | null {
-    return changetype<EncodedNote | null>(
-      store.get("EncodedNote", id.toHexString())
-    );
+  static load(id: string): EncodedNote | null {
+    return changetype<EncodedNote | null>(store.get("EncodedNote", id));
   }
 
-  get id(): Bytes {
+  get id(): string {
     let value = this.get("id");
-    return value!.toBytes();
+    return value!.toString();
   }
 
-  set id(value: Bytes) {
-    this.set("id", Value.fromBytes(value));
-  }
-
-  get idx(): BigInt {
-    let value = this.get("idx");
-    return value!.toBigInt();
-  }
-
-  set idx(value: BigInt) {
-    this.set("idx", Value.fromBigInt(value));
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
   }
 
   get ownerH1(): BigInt {
@@ -322,9 +291,9 @@ export class EncodedNote extends Entity {
 }
 
 export class EncryptedNote extends Entity {
-  constructor(id: Bytes) {
+  constructor(id: string) {
     super();
-    this.set("id", Value.fromBytes(id));
+    this.set("id", Value.fromString(id));
   }
 
   save(): void {
@@ -332,35 +301,24 @@ export class EncryptedNote extends Entity {
     assert(id != null, "Cannot save EncryptedNote entity without an ID");
     if (id) {
       assert(
-        id.kind == ValueKind.BYTES,
-        `Entities of type EncryptedNote must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        id.kind == ValueKind.STRING,
+        `Entities of type EncryptedNote must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("EncryptedNote", id.toBytes().toHexString(), this);
+      store.set("EncryptedNote", id.toString(), this);
     }
   }
 
-  static load(id: Bytes): EncryptedNote | null {
-    return changetype<EncryptedNote | null>(
-      store.get("EncryptedNote", id.toHexString())
-    );
+  static load(id: string): EncryptedNote | null {
+    return changetype<EncryptedNote | null>(store.get("EncryptedNote", id));
   }
 
-  get id(): Bytes {
+  get id(): string {
     let value = this.get("id");
-    return value!.toBytes();
+    return value!.toString();
   }
 
-  set id(value: Bytes) {
-    this.set("id", Value.fromBytes(value));
-  }
-
-  get idx(): BigInt {
-    let value = this.get("idx");
-    return value!.toBigInt();
-  }
-
-  set idx(value: BigInt) {
-    this.set("idx", Value.fromBigInt(value));
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
   }
 
   get ownerH1(): BigInt {
@@ -437,9 +395,9 @@ export class EncryptedNote extends Entity {
 }
 
 export class Nullifier extends Entity {
-  constructor(id: Bytes) {
+  constructor(id: string) {
     super();
-    this.set("id", Value.fromBytes(id));
+    this.set("id", Value.fromString(id));
   }
 
   save(): void {
@@ -447,35 +405,24 @@ export class Nullifier extends Entity {
     assert(id != null, "Cannot save Nullifier entity without an ID");
     if (id) {
       assert(
-        id.kind == ValueKind.BYTES,
-        `Entities of type Nullifier must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        id.kind == ValueKind.STRING,
+        `Entities of type Nullifier must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("Nullifier", id.toBytes().toHexString(), this);
+      store.set("Nullifier", id.toString(), this);
     }
   }
 
-  static load(id: Bytes): Nullifier | null {
-    return changetype<Nullifier | null>(
-      store.get("Nullifier", id.toHexString())
-    );
+  static load(id: string): Nullifier | null {
+    return changetype<Nullifier | null>(store.get("Nullifier", id));
   }
 
-  get id(): Bytes {
+  get id(): string {
     let value = this.get("id");
-    return value!.toBytes();
+    return value!.toString();
   }
 
-  set id(value: Bytes) {
-    this.set("id", Value.fromBytes(value));
-  }
-
-  get idx(): BigInt {
-    let value = this.get("idx");
-    return value!.toBigInt();
-  }
-
-  set idx(value: BigInt) {
-    this.set("idx", Value.fromBigInt(value));
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
   }
 
   get nullifier(): BigInt {
@@ -489,9 +436,9 @@ export class Nullifier extends Entity {
 }
 
 export class SubtreeCommit extends Entity {
-  constructor(id: Bytes) {
+  constructor(id: string) {
     super();
-    this.set("id", Value.fromBytes(id));
+    this.set("id", Value.fromString(id));
   }
 
   save(): void {
@@ -499,35 +446,24 @@ export class SubtreeCommit extends Entity {
     assert(id != null, "Cannot save SubtreeCommit entity without an ID");
     if (id) {
       assert(
-        id.kind == ValueKind.BYTES,
-        `Entities of type SubtreeCommit must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        id.kind == ValueKind.STRING,
+        `Entities of type SubtreeCommit must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("SubtreeCommit", id.toBytes().toHexString(), this);
+      store.set("SubtreeCommit", id.toString(), this);
     }
   }
 
-  static load(id: Bytes): SubtreeCommit | null {
-    return changetype<SubtreeCommit | null>(
-      store.get("SubtreeCommit", id.toHexString())
-    );
+  static load(id: string): SubtreeCommit | null {
+    return changetype<SubtreeCommit | null>(store.get("SubtreeCommit", id));
   }
 
-  get id(): Bytes {
+  get id(): string {
     let value = this.get("id");
-    return value!.toBytes();
+    return value!.toString();
   }
 
-  set id(value: Bytes) {
-    this.set("id", Value.fromBytes(value));
-  }
-
-  get idx(): BigInt {
-    let value = this.get("idx");
-    return value!.toBigInt();
-  }
-
-  set idx(value: BigInt) {
-    this.set("idx", Value.fromBigInt(value));
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
   }
 
   get newRoot(): BigInt {
@@ -550,9 +486,9 @@ export class SubtreeCommit extends Entity {
 }
 
 export class FilledBatchWithZerosEvent extends Entity {
-  constructor(id: Bytes) {
+  constructor(id: string) {
     super();
-    this.set("id", Value.fromBytes(id));
+    this.set("id", Value.fromString(id));
   }
 
   save(): void {
@@ -563,35 +499,26 @@ export class FilledBatchWithZerosEvent extends Entity {
     );
     if (id) {
       assert(
-        id.kind == ValueKind.BYTES,
-        `Entities of type FilledBatchWithZerosEvent must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        id.kind == ValueKind.STRING,
+        `Entities of type FilledBatchWithZerosEvent must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("FilledBatchWithZerosEvent", id.toBytes().toHexString(), this);
+      store.set("FilledBatchWithZerosEvent", id.toString(), this);
     }
   }
 
-  static load(id: Bytes): FilledBatchWithZerosEvent | null {
+  static load(id: string): FilledBatchWithZerosEvent | null {
     return changetype<FilledBatchWithZerosEvent | null>(
-      store.get("FilledBatchWithZerosEvent", id.toHexString())
+      store.get("FilledBatchWithZerosEvent", id)
     );
   }
 
-  get id(): Bytes {
+  get id(): string {
     let value = this.get("id");
-    return value!.toBytes();
+    return value!.toString();
   }
 
-  set id(value: Bytes) {
-    this.set("id", Value.fromBytes(value));
-  }
-
-  get idx(): BigInt {
-    let value = this.get("idx");
-    return value!.toBigInt();
-  }
-
-  set idx(value: BigInt) {
-    this.set("idx", Value.fromBigInt(value));
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
   }
 
   get startIndex(): BigInt {
@@ -610,5 +537,139 @@ export class FilledBatchWithZerosEvent extends Entity {
 
   set numZeros(value: BigInt) {
     this.set("numZeros", Value.fromBigInt(value));
+  }
+}
+
+export class TreeInsertionEvent extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save TreeInsertionEvent entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type TreeInsertionEvent must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("TreeInsertionEvent", id.toString(), this);
+    }
+  }
+
+  static load(id: string): TreeInsertionEvent | null {
+    return changetype<TreeInsertionEvent | null>(
+      store.get("TreeInsertionEvent", id)
+    );
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get encodedOrEncryptedNote(): string | null {
+    let value = this.get("encodedOrEncryptedNote");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set encodedOrEncryptedNote(value: string | null) {
+    if (!value) {
+      this.unset("encodedOrEncryptedNote");
+    } else {
+      this.set("encodedOrEncryptedNote", Value.fromString(<string>value));
+    }
+  }
+
+  get filledBatchWithZerosEvent(): string | null {
+    let value = this.get("filledBatchWithZerosEvent");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set filledBatchWithZerosEvent(value: string | null) {
+    if (!value) {
+      this.unset("filledBatchWithZerosEvent");
+    } else {
+      this.set("filledBatchWithZerosEvent", Value.fromString(<string>value));
+    }
+  }
+}
+
+export class SDKEvent extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save SDKEvent entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type SDKEvent must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("SDKEvent", id.toString(), this);
+    }
+  }
+
+  static load(id: string): SDKEvent | null {
+    return changetype<SDKEvent | null>(store.get("SDKEvent", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get encodedOrEncryptedNote(): string | null {
+    let value = this.get("encodedOrEncryptedNote");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set encodedOrEncryptedNote(value: string | null) {
+    if (!value) {
+      this.unset("encodedOrEncryptedNote");
+    } else {
+      this.set("encodedOrEncryptedNote", Value.fromString(<string>value));
+    }
+  }
+
+  get nullifier(): string | null {
+    let value = this.get("nullifier");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set nullifier(value: string | null) {
+    if (!value) {
+      this.unset("nullifier");
+    } else {
+      this.set("nullifier", Value.fromString(<string>value));
+    }
   }
 }

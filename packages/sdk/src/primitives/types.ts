@@ -147,8 +147,8 @@ export enum DepositRequestStatus {
 }
 
 export interface WithTimestamp<T> {
-  timestampUnixMillis: number;
   inner: T;
+  timestampUnixMillis: number;
 }
 
 export interface OptimisticNFRecord {

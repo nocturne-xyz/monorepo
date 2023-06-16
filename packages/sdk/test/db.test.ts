@@ -11,7 +11,7 @@ import {
   NoteTrait,
   IncludedNoteWithNullifier,
   AssetTrait,
-  WithTimestamp,
+  WithTotalEntityIndex,
   unzip,
 } from "../src";
 import { ponzi, shitcoin, stablescam } from "./utils";
@@ -207,7 +207,7 @@ describe("NocturneDB", async () => {
 
   it("stores a batch of notes with a single asset", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin);
-    await db.storeNotes(withDummyTimestamps(notes));
+    await db.storeNotes(withDummyTotalEntityIndices(notes));
 
     const map = await db.getAllNotes({
       includeUncommitted: true,
@@ -222,7 +222,7 @@ describe("NocturneDB", async () => {
 
   it("stores a batch of notes with multiple assets", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
-    await db.storeNotes(withDummyTimestamps(notes));
+    await db.storeNotes(withDummyTotalEntityIndices(notes));
 
     const map = await db.getAllNotes({
       includeUncommitted: true,
@@ -243,7 +243,7 @@ describe("NocturneDB", async () => {
 
   it("nullifies one note", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin);
-    await db.storeNotes(withDummyTimestamps(notes));
+    await db.storeNotes(withDummyTotalEntityIndices(notes));
 
     const noteToNullify = notes[0];
     const nfToApply = noteToNullify.nullifier;
@@ -263,7 +263,7 @@ describe("NocturneDB", async () => {
 
   it("nullifies multiple notes", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin);
-    await db.storeNotes(withDummyTimestamps(notes));
+    await db.storeNotes(withDummyTotalEntityIndices(notes));
 
     // remove the first 10 notes
     const notesToNullify = notes.slice(10);
@@ -288,7 +288,7 @@ describe("NocturneDB", async () => {
 
   it("nullifies all notes for a given asset", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi);
-    await db.storeNotes(withDummyTimestamps(notes));
+    await db.storeNotes(withDummyTotalEntityIndices(notes));
 
     // nullify all of the ponzi notes
     const ponziNotes = notes.filter(
@@ -328,7 +328,7 @@ describe("NocturneDB", async () => {
       (n) => AssetTrait.hash(n.asset) === AssetTrait.hash(stablescam)
     );
 
-    await db.storeNotes(withDummyTimestamps(notes));
+    await db.storeNotes(withDummyTotalEntityIndices(notes));
 
     // nullify a some each asset's notes
     const shitcoinNotesToNullify = shitcoinNotes.filter((_, i) => i % 3 === 0);
@@ -382,7 +382,7 @@ describe("NocturneDB", async () => {
 
   it("gets all notes for a given asset", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
-    await db.storeNotes(withDummyTimestamps(notes));
+    await db.storeNotes(withDummyTotalEntityIndices(notes));
 
     for (const asset of [shitcoin, ponzi, stablescam]) {
       const assetHash = AssetTrait.hash(asset);
@@ -402,7 +402,7 @@ describe("NocturneDB", async () => {
 
   it("only returns committed notes when getting all notes without { includeUncommitted: true }", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
-    await db.storeNotes(withDummyTimestamps(notes));
+    await db.storeNotes(withDummyTotalEntityIndices(notes));
 
     const allCommittedNotes = await db.getAllNotes();
     expect(allCommittedNotes.size).to.eql(0);
@@ -410,7 +410,7 @@ describe("NocturneDB", async () => {
 
   it("only returns committed notes when getting notes for a given asset without { includeUncommitted: true }", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
-    await db.storeNotes(withDummyTimestamps(notes));
+    await db.storeNotes(withDummyTotalEntityIndices(notes));
 
     for (const asset of [shitcoin, ponzi, stablescam]) {
       const notesGot = await db.getNotesForAsset(asset);
@@ -423,7 +423,7 @@ describe("NocturneDB", async () => {
   it("applies optimistic nullifiers", async () => {
     // insert 10 notes
     const [notes, _] = dummyNotesAndNfs(10, shitcoin);
-    await db.storeNotes(withDummyTimestamps(notes));
+    await db.storeNotes(withDummyTotalEntityIndices(notes));
 
     // optimistically nullify 5 of them
     const [merkleIndices, records] = unzip(
@@ -459,7 +459,7 @@ describe("NocturneDB", async () => {
   it("gets all optimistic records", async () => {
     // insert 10 notes
     const [notes, _] = dummyNotesAndNfs(10, shitcoin);
-    await db.storeNotes(withDummyTimestamps(notes));
+    await db.storeNotes(withDummyTotalEntityIndices(notes));
 
     const expirationDate = 1234567890;
 
@@ -509,6 +509,6 @@ describe("NocturneDB", async () => {
   });
 });
 
-function withDummyTimestamps<T>(arr: T[]): WithTimestamp<T>[] {
-  return arr.map((t) => ({ inner: t, timestampUnixMillis: 0 }));
+function withDummyTotalEntityIndices<T>(arr: T[]): WithTotalEntityIndex<T>[] {
+  return arr.map((t) => ({ inner: t, totalEntityIndex: 0n }));
 }

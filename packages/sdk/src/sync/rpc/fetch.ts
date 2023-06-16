@@ -3,8 +3,6 @@ import {
   EncodedAsset,
   EncryptedNote,
   IncludedNote,
-  Note,
-  WithTimestamp,
 } from "../../primitives";
 import {
   RefundProcessedEvent,
@@ -14,6 +12,15 @@ import {
 import { Handler } from "@nocturne-xyz/contracts";
 import { queryEvents } from "../../utils";
 import { StealthAddressTrait } from "../../crypto";
+import {
+  TotalEntityIndexTrait,
+  WithTotalEntityIndex,
+} from "../totalEntityIndex";
+
+export interface SubtreeUpdateCommit {
+  newRoot: bigint;
+  subtreeBatchOffset: number;
+}
 
 export interface JoinSplitEvent {
   oldNoteANullifier: bigint;
@@ -35,7 +42,7 @@ export async function fetchNotesFromRefunds(
   contract: Handler,
   from: number,
   to: number
-): Promise<WithTimestamp<IncludedNote>[]> {
+): Promise<WithTotalEntityIndex<IncludedNote>[]> {
   const filter = contract.filters.RefundProcessed();
   let events: RefundProcessedEvent[] = await queryEvents(
     contract,
@@ -46,45 +53,7 @@ export async function fetchNotesFromRefunds(
 
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
-  return Promise.all(
-    events.map(async (event) => {
-      const {
-        refundAddr,
-        nonce,
-        encodedAssetAddr,
-        encodedAssetId,
-        value,
-        merkleIndex,
-      } = event.args;
-
-      const { h1, h2 } = refundAddr;
-      const encodedAsset: EncodedAsset = {
-        encodedAssetAddr: encodedAssetAddr.toBigInt(),
-        encodedAssetId: encodedAssetId.toBigInt(),
-      };
-
-      const owner = StealthAddressTrait.decompress({
-        h1: h1.toBigInt(),
-        h2: h2.toBigInt(),
-      });
-
-      const note: IncludedNote = {
-        owner,
-        nonce: nonce.toBigInt(),
-        asset: AssetTrait.decode(encodedAsset),
-        value: value.toBigInt(),
-        merkleIndex: merkleIndex.toNumber(),
-      };
-
-      const block = await event.getBlock();
-      const timestampUnixMillis = block.timestamp * 1000;
-
-      return {
-        inner: note,
-        timestampUnixMillis,
-      };
-    })
-  );
+  return events.map((event) => refundNoteFromEvent(event));
 }
 
 // fetching joinsplits occuring in block range [from, to]
@@ -94,7 +63,7 @@ export async function fetchJoinSplits(
   contract: Handler,
   from: number,
   to: number
-): Promise<WithTimestamp<JoinSplitEvent>[]> {
+): Promise<WithTotalEntityIndex<JoinSplitEvent>[]> {
   const filter = contract.filters.JoinSplitProcessed();
   let events: JoinSplitProcessedEvent[] = await queryEvents(
     contract,
@@ -106,81 +75,7 @@ export async function fetchJoinSplits(
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
   // TODO figure out how to do type conversion better
-  return Promise.all(
-    events.map(async (event) => {
-      const {
-        oldNoteANullifier,
-        oldNoteBNullifier,
-        newNoteAIndex,
-        newNoteBIndex,
-        newNoteACommitment,
-        newNoteAEncrypted,
-        newNoteBCommitment,
-        newNoteBEncrypted,
-        encodedAsset,
-        publicSpend,
-      } = event.args;
-      const { encodedAssetAddr, encodedAssetId } = encodedAsset;
-      let { owner, encappedKey, encryptedNonce, encryptedValue } =
-        newNoteAEncrypted;
-      let { h1, h2 } = owner;
-      const newNoteAOwner = {
-        h1: h1.toBigInt(),
-        h2: h2.toBigInt(),
-      };
-      const encappedKeyA = encappedKey.toBigInt();
-      const encryptedNonceA = encryptedNonce.toBigInt();
-      const encryptedValueA = encryptedValue.toBigInt();
-      ({ owner, encappedKey, encryptedNonce, encryptedValue } =
-        newNoteBEncrypted);
-      ({ h1, h2 } = owner);
-      const newNoteBOwner = {
-        h1: h1.toBigInt(),
-        h2: h2.toBigInt(),
-      };
-      const encappedKeyB = encappedKey.toBigInt();
-      const encryptedNonceB = encryptedNonce.toBigInt();
-      const encryptedValueB = encryptedValue.toBigInt();
-      const joinSplitEvent = {
-        oldNoteANullifier: oldNoteANullifier.toBigInt(),
-        oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
-        newNoteAIndex: newNoteAIndex.toNumber(),
-        newNoteBIndex: newNoteBIndex.toNumber(),
-        newNoteACommitment: newNoteACommitment.toBigInt(),
-        newNoteBCommitment: newNoteBCommitment.toBigInt(),
-        encodedAsset: {
-          encodedAssetAddr: encodedAssetAddr.toBigInt(),
-          encodedAssetId: encodedAssetId.toBigInt(),
-        },
-        publicSpend: publicSpend.toBigInt(),
-        newNoteAEncrypted: {
-          owner: newNoteAOwner,
-          encappedKey: encappedKeyA,
-          encryptedNonce: encryptedNonceA,
-          encryptedValue: encryptedValueA,
-        },
-        newNoteBEncrypted: {
-          owner: newNoteBOwner,
-          encappedKey: encappedKeyB,
-          encryptedNonce: encryptedNonceB,
-          encryptedValue: encryptedValueB,
-        },
-      };
-
-      const block = await event.getBlock();
-      const timestampUnixMillis = block.timestamp * 1000;
-
-      return {
-        inner: joinSplitEvent,
-        timestampUnixMillis,
-      };
-    })
-  );
-}
-
-interface SubtreeUpdateCommit {
-  newRoot: bigint;
-  subtreeBatchOffset: number;
+  return events.map((event) => joinSplitEventFromRaw(event));
 }
 
 // fetches subtree commits in block range [from, to]
@@ -190,7 +85,7 @@ export async function fetchSubtreeUpdateCommits(
   contract: Handler,
   from: number,
   to: number
-): Promise<SubtreeUpdateCommit[]> {
+): Promise<WithTotalEntityIndex<SubtreeUpdateCommit>[]> {
   const subtreeUpdateEventsFilter = contract.filters.SubtreeUpdate();
   let events: SubtreeUpdateEvent[] = await queryEvents(
     contract,
@@ -206,94 +101,112 @@ export async function fetchSubtreeUpdateCommits(
       a.logIndex - b.logIndex
   );
 
-  return events.map(({ args: { newRoot, subtreeBatchOffset } }) => ({
-    newRoot: newRoot.toBigInt(),
-    subtreeBatchOffset: subtreeBatchOffset.toNumber(),
+  return events.map((event) => ({
+    totalEntityIndex: TotalEntityIndexTrait.fromTypedEvent(event),
+    inner: {
+      newRoot: event.args.newRoot.toBigInt(),
+      subtreeBatchOffset: event.args.subtreeBatchOffset.toNumber(),
+    },
   }));
 }
 
-interface OrderedInsertion {
-  insertion: bigint | Note;
-  blockNumber: number;
-  txIdx: number;
-  logIdx: number;
+function joinSplitEventFromRaw(
+  raw: JoinSplitProcessedEvent
+): WithTotalEntityIndex<JoinSplitEvent> {
+  const {
+    oldNoteANullifier,
+    oldNoteBNullifier,
+    newNoteAIndex,
+    newNoteBIndex,
+    newNoteACommitment,
+    newNoteAEncrypted,
+    newNoteBCommitment,
+    newNoteBEncrypted,
+    encodedAsset,
+    publicSpend,
+  } = raw.args;
+  const { encodedAssetAddr, encodedAssetId } = encodedAsset;
+  let { owner, encappedKey, encryptedNonce, encryptedValue } =
+    newNoteAEncrypted;
+  let { h1, h2 } = owner;
+  const newNoteAOwner = {
+    h1: h1.toBigInt(),
+    h2: h2.toBigInt(),
+  };
+  const encappedKeyA = encappedKey.toBigInt();
+  const encryptedNonceA = encryptedNonce.toBigInt();
+  const encryptedValueA = encryptedValue.toBigInt();
+  ({ owner, encappedKey, encryptedNonce, encryptedValue } = newNoteBEncrypted);
+  ({ h1, h2 } = owner);
+  const newNoteBOwner = {
+    h1: h1.toBigInt(),
+    h2: h2.toBigInt(),
+  };
+  const encappedKeyB = encappedKey.toBigInt();
+  const encryptedNonceB = encryptedNonce.toBigInt();
+  const encryptedValueB = encryptedValue.toBigInt();
+
+  return {
+    totalEntityIndex: TotalEntityIndexTrait.fromTypedEvent(raw),
+    inner: {
+      oldNoteANullifier: oldNoteANullifier.toBigInt(),
+      oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
+      newNoteAIndex: newNoteAIndex.toNumber(),
+      newNoteBIndex: newNoteBIndex.toNumber(),
+      newNoteACommitment: newNoteACommitment.toBigInt(),
+      newNoteBCommitment: newNoteBCommitment.toBigInt(),
+      encodedAsset: {
+        encodedAssetAddr: encodedAssetAddr.toBigInt(),
+        encodedAssetId: encodedAssetId.toBigInt(),
+      },
+      publicSpend: publicSpend.toBigInt(),
+      newNoteAEncrypted: {
+        owner: newNoteAOwner,
+        encappedKey: encappedKeyA,
+        encryptedNonce: encryptedNonceA,
+        encryptedValue: encryptedValueA,
+      },
+      newNoteBEncrypted: {
+        owner: newNoteBOwner,
+        encappedKey: encappedKeyB,
+        encryptedNonce: encryptedNonceB,
+        encryptedValue: encryptedValueB,
+      },
+    },
+  };
 }
 
-// returns SubtreeUpdateCommit events sorted in the order in which they appeared on-chain
-export async function fetchInsertions(
-  contract: Handler,
-  from: number,
-  to: number
-): Promise<(Note | bigint)[]> {
-  // fetch both kind of insertion events (note commitments and full notes)
-  const ncEventsProm: Promise<JoinSplitProcessedEvent[]> = queryEvents(
-    contract,
-    contract.filters.JoinSplitProcessed(),
-    from,
-    to
-  );
-  const noteEventsProm: Promise<RefundProcessedEvent[]> = queryEvents(
-    contract,
-    contract.filters.RefundProcessed(),
-    from,
-    to
-  );
+function refundNoteFromEvent(
+  event: RefundProcessedEvent
+): WithTotalEntityIndex<IncludedNote> {
+  const {
+    refundAddr,
+    nonce,
+    encodedAssetAddr,
+    encodedAssetId,
+    value,
+    merkleIndex,
+  } = event.args;
 
-  const [noteCommitmentEvents, notesEvents] = await Promise.all([
-    ncEventsProm,
-    noteEventsProm,
-  ]);
+  const { h1, h2 } = refundAddr;
+  const encodedAsset: EncodedAsset = {
+    encodedAssetAddr: encodedAssetAddr.toBigInt(),
+    encodedAssetId: encodedAssetId.toBigInt(),
+  };
 
-  // extract leaves from each (note commitments are the leaves, full notes have to be hashed)
-  // combine them into a single list
-  // and sort them in the order in which they appeared on-chain
+  const owner = StealthAddressTrait.decompress({
+    h1: h1.toBigInt(),
+    h2: h2.toBigInt(),
+  });
 
-  let insertions: OrderedInsertion[] = [];
-  for (const event of noteCommitmentEvents) {
-    const newNcA = event.args.newNoteACommitment.toBigInt();
-    const newNcB = event.args.newNoteBCommitment.toBigInt();
-
-    const orderedNoteCommitments = [newNcA, newNcB].map((nc) => ({
-      insertion: nc,
-      blockNumber: event.blockNumber,
-      txIdx: event.transactionIndex,
-      logIdx: event.logIndex,
-    }));
-    insertions.push(...orderedNoteCommitments);
-  }
-
-  for (const event of notesEvents) {
-    const noteValues = event.args;
-    const h1 = noteValues.refundAddr.h1.toBigInt();
-    const h2 = noteValues.refundAddr.h2.toBigInt();
-    const owner = StealthAddressTrait.decompress({ h1, h2 });
-
-    const encoddAsset: EncodedAsset = {
-      encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
-      encodedAssetId: noteValues.encodedAssetId.toBigInt(),
-    };
-
-    const asset = AssetTrait.decode(encoddAsset);
-
-    const note: Note = {
+  return {
+    totalEntityIndex: TotalEntityIndexTrait.fromTypedEvent(event),
+    inner: {
       owner,
-      nonce: noteValues.nonce.toBigInt(),
-      asset,
-      value: noteValues.value.toBigInt(),
-    };
-
-    insertions.push({
-      insertion: note,
-      blockNumber: event.blockNumber,
-      txIdx: event.transactionIndex,
-      logIdx: event.logIndex,
-    });
-  }
-
-  insertions = insertions.sort(
-    (a, b) =>
-      a.blockNumber - b.blockNumber || a.txIdx - b.txIdx || a.logIdx - b.logIdx
-  );
-
-  return insertions.map(({ insertion }) => insertion);
+      nonce: nonce.toBigInt(),
+      asset: AssetTrait.decode(encodedAsset),
+      value: value.toBigInt(),
+      merkleIndex: merkleIndex.toNumber(),
+    },
+  };
 }

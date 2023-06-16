@@ -1,14 +1,18 @@
 import { DepositInstantiated } from "../generated/DepositManager/DepositManager";
 import { DepositEvent } from "../generated/schema";
-import { toPadded32BArray, getTotalLogIndex } from "./utils";
+import {
+  toPaddedHexString,
+  getTotalLogIndex,
+  getTotalEntityIndex,
+} from "./utils";
 
 export function handleDepositInstantiated(event: DepositInstantiated): void {
   const totalLogIndex = getTotalLogIndex(event);
-  const id = toPadded32BArray(totalLogIndex);
+  const idx = getTotalEntityIndex(totalLogIndex, 0);
+  const id = toPaddedHexString(idx);
 
   const deposit = new DepositEvent(id);
 
-  deposit.idx = totalLogIndex;
   deposit.type = "Instantiated";
   deposit.spender = event.params.spender;
 

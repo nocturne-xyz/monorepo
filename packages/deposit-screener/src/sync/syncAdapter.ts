@@ -3,17 +3,18 @@ import {
   IterSyncOpts,
   DepositEventType,
   DepositEvent,
+  TotalEntityIndex,
 } from "@nocturne-xyz/sdk";
 
 export interface DepositEventsBatch {
-  blockNumber: number;
+  totalEntityIndex: TotalEntityIndex;
   depositEvents: DepositEvent[];
 }
 
 export interface ScreenerSyncAdapter {
   iterDepositEvents(
     type: DepositEventType,
-    startBlock: number,
+    startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<DepositEventsBatch>;
 }

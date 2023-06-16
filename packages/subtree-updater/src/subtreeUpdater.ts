@@ -13,6 +13,7 @@ import {
   TreeConstants,
   IncludedNote,
   IncludedNoteCommitment,
+  TotalEntityIndexTrait,
 } from "@nocturne-xyz/sdk";
 import { Mutex } from "async-mutex";
 import IORedis from "ioredis";
@@ -155,25 +156,22 @@ export class SubtreeUpdater {
     const queuerProm = queuer();
 
     const teardown = async () => {
-      const results = await Promise.allSettled([
+      await Promise.allSettled([
         proofJobs.close(),
         prover.close(),
         submitter.close(),
       ]);
 
-      const teardownResults = {
-        closeProofJobs: results[0],
-        closeProver: results[1],
-        closeSubmitter: results[2],
-      };
-      this.logger.debug(`teardown completed with results`, { teardownResults });
+      await Promise.allSettled([submitterProm, proverProm, queuerProm]);
+
+      this.logger.debug("teardown completed");
     };
 
     const promise = (async () => {
       try {
         await Promise.all([submitterProm, proverProm, queuerProm]);
       } catch (err) {
-        this.logger.error(`error in subtree updater: ${err}`, err);
+        this.logger.error(`error in subtree updater`, err);
         await teardown();
         throw err;
       }
@@ -262,15 +260,17 @@ export class SubtreeUpdater {
   ): ClosableAsyncIterator<ProofJobData> {
     logger.info(`subtree updater iterator starting`);
 
+    const startTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
+      blockNumber: BigInt(this.startBlock ?? 0),
+    });
     return this.adapter
-      .iterInsertions(this.startBlock, {
+      .iterInsertions(startTotalEntityIndex, {
         throttleMs: queryThrottleMs,
       })
       .tap(({ merkleIndex, ...insertion }) => {
         logger.debug(`got insertion at merkleIndex ${merkleIndex}`, {
           insertion,
         });
-        merkleIndex += 1;
         if (this.fillBatchLatency === undefined) {
           return;
         }
@@ -284,7 +284,7 @@ export class SubtreeUpdater {
         clearTimeout(this.fillBatchTimeout);
 
         // if the insertion we got is not at a batch boundry, re-set the timeout because we haven't organically filled the batch yet
-        if (merkleIndex % BATCH_SIZE !== 0) {
+        if ((merkleIndex + 1) % BATCH_SIZE !== 0) {
           this.fillBatchTimeout = setTimeout(
             () =>
               this.fillBatchWithZeros(

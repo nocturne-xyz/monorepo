@@ -1,76 +1,144 @@
 import {
-  SubgraphUtils,
   fetchLastCommittedMerkleIndex,
   merkleIndexToSubtreeIndex,
+  TotalEntityIndexTrait,
+  TotalEntityIndex,
+  WithTotalEntityIndex,
+  IncludedEncryptedNote,
+  IncludedNote,
+  EncodedOrEncryptedNoteResponse,
+  encryptedNoteFromEncryptedNoteResponse,
+  includedNoteFromNoteResponse,
 } from "@nocturne-xyz/sdk";
 import { makeSubgraphQuery } from "@nocturne-xyz/sdk/dist/src/sync/subgraph/utils";
 
-const { fetchLatestIndexedBlock, totalEntityIndexFromBlockNumber } =
-  SubgraphUtils;
+export type TreeInsertion =
+  | FilledBatchWithZerosEvent
+  | IncludedNote
+  | IncludedEncryptedNote;
 
 export interface FilledBatchWithZerosEvent {
   merkleIndex: number; // start index
   numZeros: number;
 }
 
-export interface FilledBatchWithZerosResponse {
+export interface FilledBatchWithZerosEventResponse {
   startIndex: string;
   numZeros: string;
 }
 
-interface FetchFilledBatchWithZerosEventsResponse {
+export interface TreeInsertionEventReponse {
+  id: string;
+  encodedOrEncryptedNote: Omit<EncodedOrEncryptedNoteResponse, "id"> | null;
+  filledBatchWithZerosEvent: FilledBatchWithZerosEventResponse | null;
+}
+
+interface FetchTreeInsertionsResponse {
   data: {
-    filledBatchWithZerosEvents: FilledBatchWithZerosResponse[];
+    treeInsertionEvents: TreeInsertionEventReponse[];
   };
 }
 
-interface FetchFilledBatchWithZerosEventsVars {
+interface FetchTreeInsertionsVars {
   fromIdx: string;
-  toIdx: string;
 }
 
-const filledBatchWithZerosQuery = `\
-query fetchFilledBatchWithZerosEvents($fromIdx: Bytes!, $toIdx: Bytes!) {
-  filledBatchWithZerosEvents(where: { idx_gte: $fromIdx, idx_lt: $toIdx}, orderBy: idx) {
-    startIndex
-    numZeros
+const treeInsertionsQuery = `\
+query fetchTreeInsertionEvents($fromIdx: String!) {
+  treeInsertionEvents(where: { id_gte: $fromIdx }) {
+    id
+    encodedOrEncryptedNote {
+      merkleIndex
+      note {
+        ownerH1
+        ownerH2
+        nonce
+        encodedAssetAddr
+        encodedAssetId
+        value
+      }
+      encryptedNote {
+        ownerH1
+        ownerH2
+        encappedKey
+        encryptedNonce
+        encryptedValue
+        encodedAssetAddr
+        encodedAssetId
+        commitment
+      }
+    }
+    filledBatchWithZerosEvent {
+      startIndex
+      numZeros
+    }
   }
 }`;
 
-export async function fetchFilledBatchWithZerosEvents(
+export async function fetchTreeInsertions(
   endpoint: string,
-  fromBlock: number,
-  toBlock: number
-): Promise<FilledBatchWithZerosEvent[]> {
+  fromTotalEntityIndex: TotalEntityIndex
+): Promise<WithTotalEntityIndex<TreeInsertion>[]> {
   const query = makeSubgraphQuery<
-    FetchFilledBatchWithZerosEventsVars,
-    FetchFilledBatchWithZerosEventsResponse
-  >(endpoint, filledBatchWithZerosQuery, "filledBatchWithZeros");
+    FetchTreeInsertionsVars,
+    FetchTreeInsertionsResponse
+  >(endpoint, treeInsertionsQuery, "treeInsertionEvents");
 
-  const fromIdx = totalEntityIndexFromBlockNumber(BigInt(fromBlock)).toString();
-  const toIdx = totalEntityIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
+  const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
+  const res = await query({ fromIdx });
 
-  const res = await query({ fromIdx, toIdx });
-
-  if (!res.data || res.data.filledBatchWithZerosEvents.length === 0) {
+  if (!res.data || res.data.treeInsertionEvents.length === 0) {
     return [];
   }
 
-  return res.data.filledBatchWithZerosEvents.map(
-    ({ startIndex, numZeros }) => ({
-      merkleIndex: parseInt(startIndex),
-      numZeros: parseInt(numZeros),
-    })
+  return res.data.treeInsertionEvents.map(
+    ({ id, encodedOrEncryptedNote, filledBatchWithZerosEvent }) => {
+      const totalEntityIndex = BigInt(id);
+
+      // encrypted note
+      if (encodedOrEncryptedNote && encodedOrEncryptedNote.encryptedNote) {
+        const { encryptedNote, merkleIndex } = encodedOrEncryptedNote;
+        return {
+          inner: encryptedNoteFromEncryptedNoteResponse(
+            encryptedNote,
+            parseInt(merkleIndex)
+          ),
+          totalEntityIndex,
+        };
+      }
+
+      // encoded note
+      if (encodedOrEncryptedNote && encodedOrEncryptedNote.note) {
+        const { note, merkleIndex } = encodedOrEncryptedNote;
+        return {
+          inner: includedNoteFromNoteResponse(note, parseInt(merkleIndex)),
+          totalEntityIndex,
+        };
+      }
+
+      // filled batch with zeros
+      if (filledBatchWithZerosEvent) {
+        const { startIndex, numZeros } = filledBatchWithZerosEvent;
+        return {
+          inner: {
+            merkleIndex: parseInt(startIndex),
+            numZeros: parseInt(numZeros),
+          },
+          totalEntityIndex,
+        };
+      }
+
+      // should never happen
+      throw new Error("invalid tree insertion event");
+    }
   );
 }
 
 export async function fetchLatestSubtreeIndex(
   endpoint: string
 ): Promise<number | undefined> {
-  const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
   const lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
-    endpoint,
-    latestIndexedBlock
+    endpoint
   );
   return lastCommittedMerkleIndex
     ? merkleIndexToSubtreeIndex(lastCommittedMerkleIndex)

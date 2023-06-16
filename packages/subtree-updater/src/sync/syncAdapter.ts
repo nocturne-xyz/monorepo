@@ -3,12 +3,13 @@ import {
   IncludedNote,
   IncludedNoteCommitment,
   IterSyncOpts,
+  TotalEntityIndex,
 } from "@nocturne-xyz/sdk";
 
 export interface SubtreeUpdaterSyncAdapter {
   // iterate over insertions, pulling them by merkle index
   iterInsertions(
-    startBlock: number,
+    startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<IncludedNote | IncludedNoteCommitment>;
 

@@ -1,24 +1,22 @@
 import {
   ClosableAsyncIterator,
-  SubgraphUtils,
   IterSyncOpts,
-  min,
   sleep,
-  fetchNotes,
   IncludedNote,
   IncludedEncryptedNote,
   NoteTrait,
   TreeConstants,
   IncludedNoteCommitment,
+  TotalEntityIndex,
+  maxArray,
+  SubgraphUtils,
+  TotalEntityIndexTrait,
+  max,
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
-import {
-  fetchFilledBatchWithZerosEvents,
-  fetchLatestSubtreeIndex,
-} from "./fetch";
-const { fetchLatestIndexedBlock } = SubgraphUtils;
+import { fetchTreeInsertions, fetchLatestSubtreeIndex } from "./fetch";
 
-const MAX_CHUNK_SIZE = 50;
+const { fetchLatestIndexedBlock } = SubgraphUtils;
 
 export class SubgraphSubtreeUpdaterSyncAdapter
   implements SubtreeUpdaterSyncAdapter
@@ -30,72 +28,91 @@ export class SubgraphSubtreeUpdaterSyncAdapter
   }
 
   iterInsertions(
-    startBlock: number,
+    startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<IncludedNote | IncludedNoteCommitment> {
-    const chunkSize = opts?.maxChunkSize
-      ? min(opts.maxChunkSize, MAX_CHUNK_SIZE)
-      : MAX_CHUNK_SIZE;
+    const endpoint = this.graphqlEndpoint;
+    const endTotalEntityIndex = opts?.endTotalEntityIndex;
 
     let closed = false;
-
-    const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
-      let from = startBlock;
-      while (!closed) {
-        let to = from + chunkSize;
+      let from = startTotalEntityIndex;
 
-        // Only fetch up to the latest indexed block
-        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
-        to = min(to, latestIndexedBlock);
+      const maybeApplyThrottle = async (currentBlock: number) => {
+        const isCaughtUp =
+          from >=
+          TotalEntityIndexTrait.fromComponents({
+            blockNumber: BigInt(currentBlock),
+          });
+        const sleepDelay = max(opts?.throttleMs ?? 0, isCaughtUp ? 5000 : 0);
+        await sleep(sleepDelay);
+      };
 
-        // Exceeded tip, sleep
-        if (from > latestIndexedBlock) {
-          await sleep(1_000);
-          continue;
-        }
-
-        console.log(`fetching insertions from ${from} to ${to}...`);
-
-        const [notesWithTimestamps, filledBatchWithZerosEvents] =
-          await Promise.all([
-            fetchNotes(endpoint, from, to),
-            fetchFilledBatchWithZerosEvents(endpoint, from, to),
-          ]);
-        const notes = notesWithTimestamps.map(({ inner }) => inner);
-
-        const combined = [...notes, ...filledBatchWithZerosEvents].sort(
-          (a, b) => a.merkleIndex - b.merkleIndex
+      while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
+        console.log(
+          `fetching insertions from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
+            from
+          )} (block ${
+            TotalEntityIndexTrait.toComponents(from).blockNumber
+          }) ...`
         );
 
-        for (const insertion of combined) {
-          if ("numZeros" in insertion) {
-            const startIndex = insertion.merkleIndex;
-            for (let i = 0; i < insertion.numZeros; i++) {
+        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
+        await maybeApplyThrottle(latestIndexedBlock);
+
+        const insertions = await fetchTreeInsertions(endpoint, from);
+
+        const sorted = insertions.sort(
+          ({ inner: a }, { inner: b }) => a.merkleIndex - b.merkleIndex
+        );
+
+        // if we got insertions, get the greatest total entity index we saw and set from to that plus one
+        if (insertions.length > 0) {
+          from = maxArray(sorted.map((i) => i.totalEntityIndex)) + 1n;
+
+          for (const { inner: insertion } of sorted) {
+            if ("numZeros" in insertion) {
+              const startIndex = insertion.merkleIndex;
+              console.log("yielding zeros", {
+                startIndex,
+                numZeros: insertion.numZeros,
+              });
+              for (let i = 0; i < insertion.numZeros; i++) {
+                yield {
+                  noteCommitment: TreeConstants.ZERO_VALUE,
+                  merkleIndex: startIndex + i,
+                };
+              }
+            } else if (NoteTrait.isEncryptedNote(insertion)) {
+              console.log("yielding commitment of encrypted note", {
+                merkleIndex: insertion.merkleIndex,
+              });
               yield {
-                noteCommitment: TreeConstants.ZERO_VALUE,
-                merkleIndex: startIndex + i,
+                noteCommitment: (insertion as IncludedEncryptedNote).commitment,
+                merkleIndex: insertion.merkleIndex,
               };
+            } else {
+              console.log("yielding note", {
+                merkleIndex: insertion.merkleIndex,
+              });
+              yield insertion as IncludedNote;
             }
-          } else if (NoteTrait.isEncryptedNote(insertion)) {
-            console.log(
-              "yielding commitment of encrypted note at index",
-              insertion.merkleIndex
-            );
-            yield {
-              noteCommitment: (insertion as IncludedEncryptedNote).commitment,
-              merkleIndex: insertion.merkleIndex,
-            };
-          } else {
-            console.log("yielding note at index", insertion.merkleIndex);
-            yield insertion as IncludedNote;
           }
-        }
+        } else {
+          // otherwise, we've caught up and there's nothing more to fetch.
+          // set `from` to the entity index corresponding to the latest indexed block
+          // if it's greater than the current `from`.
 
-        from = to + 1;
+          // this is to prevent an busy loops in the case where the subgraph has indexed a block corresponding
+          // to a totalEntityIndex > `endTotalEntityIndex` but we haven't found any insertions in that block
+          const currentBlockTotalEntityIndex =
+            TotalEntityIndexTrait.fromComponents({
+              blockNumber: BigInt(latestIndexedBlock),
+            });
 
-        if (opts?.throttleMs && latestIndexedBlock - from > chunkSize) {
-          await sleep(opts.throttleMs);
+          if (currentBlockTotalEntityIndex > from) {
+            from = currentBlockTotalEntityIndex;
+          }
         }
       }
     };

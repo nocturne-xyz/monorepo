@@ -5,8 +5,7 @@ enum DepositEventType {
 }
 
 type DepositEvent @entity(immutable: true) {
-  id: Bytes!
-  idx: BigInt!
+  id: ID!
   type: DepositEventType!
   spender: Bytes!
   encodedAssetAddr: BigInt!
@@ -19,16 +18,14 @@ type DepositEvent @entity(immutable: true) {
 }
 
 type EncodedOrEncryptedNote @entity(immutable: true) {
-  id: Bytes!
-  idx: BigInt!
+  id: ID!
   merkleIndex: BigInt!
   note: EncodedNote
   encryptedNote: EncryptedNote
 }
 
 type EncodedNote @entity(immutable: true) {
-  id: Bytes!
-  idx: BigInt!
+  id: ID!
   ownerH1: BigInt!
   ownerH2: BigInt!
   nonce: BigInt!
@@ -38,8 +35,7 @@ type EncodedNote @entity(immutable: true) {
 }
 
 type EncryptedNote @entity(immutable: true) {
-  id: Bytes!
-  idx: BigInt!
+  id: ID!
   ownerH1: BigInt!
   ownerH2: BigInt!
   encappedKey: BigInt!
@@ -51,21 +47,30 @@ type EncryptedNote @entity(immutable: true) {
 }
 
 type Nullifier @entity(immutable: true) {
-  id: Bytes!
-  idx: BigInt!
+  id: ID!
   nullifier: BigInt!
 }
 
 type SubtreeCommit @entity(immutable: true) {
-  id: Bytes!
-  idx: BigInt!
+  id: ID!
   newRoot: BigInt!
   subtreeBatchOffset: BigInt!
 }
 
 type FilledBatchWithZerosEvent @entity(immutable: true) {
-  id: Bytes!
-  idx: BigInt!
+  id: ID!
   startIndex: BigInt!
   numZeros: BigInt!
+}
+
+type TreeInsertionEvent @entity(immutable: true) {
+  id: ID!
+  encodedOrEncryptedNote: EncodedOrEncryptedNote
+  filledBatchWithZerosEvent: FilledBatchWithZerosEvent
+}
+
+type SDKEvent @entity(immutable: true) {
+  id: ID!
+  encodedOrEncryptedNote: EncodedOrEncryptedNote
+  nullifier: Nullifier
 }

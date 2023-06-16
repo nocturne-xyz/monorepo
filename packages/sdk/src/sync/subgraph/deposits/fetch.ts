@@ -1,6 +1,11 @@
 import { DepositRequest, EncodedAsset } from "../../../primitives";
 import { CompressedStealthAddress } from "../../../crypto";
 import { SubgraphUtils } from "../";
+import {
+  TotalEntityIndex,
+  TotalEntityIndexTrait,
+  WithTotalEntityIndex,
+} from "../../totalEntityIndex";
 
 export enum DepositEventType {
   Instantiated = "Instantiated",
@@ -11,7 +16,7 @@ export interface DepositEvent extends DepositRequest {
   type: DepositEventType;
 }
 
-const { makeSubgraphQuery, totalLogIndexFromBlockNumber } = SubgraphUtils;
+const { makeSubgraphQuery } = SubgraphUtils;
 
 export interface DepositEventResponse {
   id: string;
@@ -29,7 +34,6 @@ export interface DepositEventResponse {
 
 interface FetchDepositEventsVars {
   fromIdx?: string;
-  toIdx?: string;
   type?: DepositEventType;
   spender?: string;
 }
@@ -42,8 +46,7 @@ interface FetchDepositEventsResponse {
 
 function formDepositEventsRawQuery(
   type?: string,
-  fromBlock?: number,
-  toBlock?: number,
+  fromTotalEntityIndex?: TotalEntityIndex,
   spender?: string
 ) {
   const params = [];
@@ -53,25 +56,22 @@ function formDepositEventsRawQuery(
     params.push(`$type: String!`);
     conditions.push(`type: $type`);
   }
-  if (fromBlock) {
-    params.push(`$fromIdx: Bytes!`);
-    conditions.push(`idx_gte: $fromIdx`);
-  }
-  if (toBlock) {
-    params.push(`$toIdx: Bytes!`);
-    conditions.push(`idx_lt: $toIdx`);
+  if (fromTotalEntityIndex) {
+    params.push(`$fromIdx: String!`);
+    conditions.push(`id_gte: $fromIdx`);
   }
   if (spender) {
     params.push(`$spender: Bytes!`);
     conditions.push(`spender: $spender`);
   }
 
-  const exists = [type, fromBlock, toBlock, spender].some((x) => x);
+  const exists = [type, fromTotalEntityIndex, spender].some((x) => x);
   const paramsString = exists ? `(${params.join(", ")})` : "";
-  const whereClause = exists ? `(where: { ${conditions.join(", ")} })` : "";
+  const whereClause = exists ? `where: { ${conditions.join(", ")} }, ` : "";
   return `\
     query fetchDepositEvents${paramsString} {
-      depositEvents${whereClause} {
+      depositEvents(${whereClause}first: 100, orderDirection: asc, orderBy: id) {
+        id
         type
         spender
         encodedAssetAddr
@@ -89,28 +89,24 @@ export async function fetchDepositEvents(
   endpoint: string,
   filter: {
     type?: DepositEventType;
-    fromBlock?: number; // the range is inclusive — i.e. [fromBlock, toBlock]
-    toBlock?: number;
+    fromTotalEntityIndex?: TotalEntityIndex;
     spender?: string;
   } = {}
-): Promise<DepositEvent[]> {
-  const { type, fromBlock, toBlock, spender } = filter;
+): Promise<WithTotalEntityIndex<DepositEvent>[]> {
+  const { type, fromTotalEntityIndex, spender } = filter;
   const query = makeSubgraphQuery<
     FetchDepositEventsVars,
     FetchDepositEventsResponse
   >(
     endpoint,
-    formDepositEventsRawQuery(type, fromBlock, toBlock, spender),
+    formDepositEventsRawQuery(type, fromTotalEntityIndex, spender),
     "depositEvents"
   );
-  const fromIdx = fromBlock
-    ? totalLogIndexFromBlockNumber(BigInt(fromBlock)).toString()
-    : undefined;
-  const toIdx = toBlock
-    ? totalLogIndexFromBlockNumber(BigInt(toBlock + 1)).toString()
+  const fromIdx = fromTotalEntityIndex
+    ? TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex)
     : undefined;
 
-  const res = await query({ fromIdx, toIdx, type, spender });
+  const res = await query({ fromIdx, type, spender });
 
   if (!res.data || res.data.depositEvents.length === 0) {
     return [];
@@ -121,7 +117,7 @@ export async function fetchDepositEvents(
 
 function depositEventFromDepositEventResponse(
   depositEventResponse: DepositEventResponse
-): DepositEvent {
+): WithTotalEntityIndex<DepositEvent> {
   const type = depositEventResponse.type;
   const spender = depositEventResponse.spender;
 
@@ -141,12 +137,15 @@ function depositEventFromDepositEventResponse(
   const gasCompensation = BigInt(depositEventResponse.gasCompensation);
 
   return {
-    type: type as DepositEventType,
-    spender,
-    encodedAsset,
-    value,
-    depositAddr,
-    nonce,
-    gasCompensation,
+    totalEntityIndex: BigInt(depositEventResponse.id),
+    inner: {
+      type: type as DepositEventType,
+      spender,
+      encodedAsset,
+      value,
+      depositAddr,
+      nonce,
+      gasCompensation,
+    },
   };
 }

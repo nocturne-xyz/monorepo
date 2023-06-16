@@ -404,9 +404,11 @@ export class NocturneFrontendSDK {
    * Query subgraph for all spender's deposits
    */
   async fetchAllDeposits(): Promise<DepositEvent[]> {
-    return await fetchDepositEvents(SUBGRAPH_URL, {
+    const withEntityIndices = await fetchDepositEvents(SUBGRAPH_URL, {
       spender: await (await getWindowSigner()).getAddress(),
     });
+
+    return withEntityIndices.map(e => e.inner);
   }
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.

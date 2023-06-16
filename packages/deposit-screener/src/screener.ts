@@ -10,6 +10,7 @@ import {
   DepositRequestStatus,
   hashDepositRequest,
   DepositEventType,
+  TotalEntityIndexTrait,
 } from "@nocturne-xyz/sdk";
 import { Job, Queue, Worker } from "bullmq";
 import { ethers } from "ethers";
@@ -139,15 +140,21 @@ export class DepositScreenerScreener {
     this.logger.info(
       `DepositManager contract: ${this.depositManagerContract.address}.`
     );
-    const nextBlockToSync = (await this.db.getNextBlock()) ?? this.startBlock;
+    const currentTotalEntityIndex = await this.db.getCurrentTotalEntityIndex();
+    const nextTotalEntityIndexToSync = currentTotalEntityIndex
+      ? currentTotalEntityIndex + 1n
+      : 0n;
     this.logger.info(
-      `processing deposit requests starting from block ${nextBlockToSync}`
+      `processing deposit requests starting from totalEntityIndex ${nextTotalEntityIndexToSync} (block ${
+        TotalEntityIndexTrait.toComponents(nextTotalEntityIndexToSync)
+          .blockNumber
+      })`
     );
 
     const depositEvents = this.adapter.iterDepositEvents(
       DepositEventType.Instantiated,
-      nextBlockToSync,
-      { maxChunkSize: 100_000, throttleMs: queryThrottleMs }
+      nextTotalEntityIndexToSync,
+      { throttleMs: queryThrottleMs }
     );
 
     const screenerProm = this.startScreener(
@@ -269,7 +276,7 @@ export class DepositScreenerScreener {
           );
         }
       }
-      await this.db.setNextBlock(batch.blockNumber);
+      await this.db.setCurrentTotalEntityIndex(batch.totalEntityIndex);
     }
   }
 

@@ -1,18 +1,22 @@
-import { min, sleep } from "../../../utils";
-import { ClosableAsyncIterator } from "../../closableAsyncIterator";
+import { maxArray, sleep, max } from "../../../utils";
 import {
   EncryptedStateDiff,
   IterSyncOpts,
   SDKSyncAdapter,
 } from "../../syncAdapter";
+import { fetchLastCommittedMerkleIndex, fetchSDKEvents } from "./fetch";
 import {
-  fetchLastCommittedMerkleIndex,
-  fetchNotes,
-  fetchNullifiers,
-} from "./fetch";
+  TotalEntityIndex,
+  TotalEntityIndexTrait,
+  WithTotalEntityIndex,
+} from "../../totalEntityIndex";
+import { ClosableAsyncIterator } from "../../closableAsyncIterator";
 import { fetchLatestIndexedBlock } from "../utils";
-
-const MAX_CHUNK_SIZE = 10000;
+import {
+  IncludedEncryptedNote,
+  IncludedNote,
+  Nullifier,
+} from "../../../primitives";
 
 export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   private readonly graphqlEndpoint: string;
@@ -22,66 +26,88 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   }
 
   iterStateDiffs(
-    startBlock: number,
+    startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<EncryptedStateDiff> {
-    const chunkSize = opts?.maxChunkSize
-      ? min(opts.maxChunkSize, MAX_CHUNK_SIZE)
-      : MAX_CHUNK_SIZE;
-
-    const endBlock = opts?.endBlock;
+    const endTotalEntityIndex = opts?.endTotalEntityIndex;
     let closed = false;
 
     const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
-      let from = startBlock;
-      while (!closed && (!endBlock || from < endBlock)) {
-        let to = from + chunkSize;
-        console.log(`from: ${from}`);
-        console.log(`to: ${to}`);
-        console.log(`endBlock: ${endBlock}`);
+      let from = startTotalEntityIndex;
+      let lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
+        endpoint,
+        from
+      );
 
-        // Only fetch up to end block
-        if (endBlock) {
-          to = min(to, endBlock);
-        }
+      const maybeApplyThrottle = async (currentBlock: number) => {
+        const isCaughtUp =
+          from >=
+          TotalEntityIndexTrait.fromComponents({
+            blockNumber: BigInt(currentBlock),
+          });
+        const sleepDelay = max(opts?.throttleMs ?? 0, isCaughtUp ? 5000 : 0);
+        await sleep(sleepDelay);
+      };
 
-        // Only fetch up to the latest indexed block
-        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
-        console.log(`latestIndexedBlock: ${latestIndexedBlock}`);
-        to = min(to, latestIndexedBlock);
-
-        // Exceeded tip, sleep
-        if (from > latestIndexedBlock) {
-          await sleep(5_000);
-          continue;
-        }
-
-        console.log(`fetching state diff from ${from} to ${to}...`);
-
-        const [notes, nullifiers, lastCommittedMerkleIndex] = await Promise.all(
-          [
-            fetchNotes(endpoint, from, to),
-            fetchNullifiers(endpoint, from, to),
-            fetchLastCommittedMerkleIndex(endpoint, to),
-          ]
+      while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
+        console.log(
+          `fetching state diffs from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
+            from
+          )} (block ${
+            TotalEntityIndexTrait.toComponents(from).blockNumber
+          }) ...`
         );
 
-        const stateDiff: EncryptedStateDiff = {
-          notes,
-          nullifiers,
-          lastCommittedMerkleIndex,
-          blockNumber: to,
-        };
+        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
+        await maybeApplyThrottle(latestIndexedBlock);
 
-        console.log("yielding state diff:", stateDiff);
+        // fetch notes and nfs on or after `from`, will return at most 100 of each
+        const notesAndNullifiers = await fetchSDKEvents(endpoint, from);
 
-        yield stateDiff;
+        // if we have notes and/or mullifiers, update from and get the last committed merkle index as of the entity index we saw
+        if (notesAndNullifiers.length > 0) {
+          const highestTotalEntityIndex = maxArray(
+            notesAndNullifiers.map((n) => n.totalEntityIndex)
+          );
+          lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
+            endpoint
+          );
 
-        from = to + 1;
+          const notes = notesAndNullifiers.filter(
+            ({ inner }) => typeof inner !== "bigint"
+          ) as WithTotalEntityIndex<IncludedNote | IncludedEncryptedNote>[];
+          const nullifiers = notesAndNullifiers.filter(
+            ({ inner }) => typeof inner === "bigint"
+          ) as WithTotalEntityIndex<Nullifier>[];
 
-        if (opts?.throttleMs && latestIndexedBlock - from > chunkSize) {
-          await sleep(opts.throttleMs);
+          const stateDiff: EncryptedStateDiff = {
+            notes,
+            nullifiers: nullifiers.map((n) => n.inner),
+            lastCommittedMerkleIndex,
+            totalEntityIndex: highestTotalEntityIndex,
+          };
+
+          console.log("yielding state diff:", stateDiff);
+
+          yield stateDiff;
+
+          from = highestTotalEntityIndex + 1n;
+        } else {
+          // otherwise, we've caught up and there's nothing more to fetch.
+          // set `from` to the entity index corresponding to the latest indexed block
+          // if it's greater than the current `from`.
+
+          // this is to prevent an busy loops in the case where the subgraph has indexed a block corresponding
+          // to a totalEntityIndex > `endTotalEntityIndex` but we haven't found any insertions in that block
+          const currentBlockTotalEntityIndex =
+            TotalEntityIndexTrait.fromComponents({
+              blockNumber: BigInt(latestIndexedBlock),
+            });
+
+          if (currentBlockTotalEntityIndex > from) {
+            from = currentBlockTotalEntityIndex;
+          }
         }
       }
     };

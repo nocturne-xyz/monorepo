@@ -147,3 +147,7 @@ export function consecutiveChunks<T>(
   }
   return chunks;
 }
+
+export function dedup<T>(arr: T[]): T[] {
+  return Array.from(new Set(arr));
+}

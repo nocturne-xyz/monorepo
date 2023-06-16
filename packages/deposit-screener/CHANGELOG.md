@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- fix edge case that can cause totalEntityIndex to go backwards in subgraph sync adapter
+- sync by TotalEntityIndex instead of block ranges
 - check in screener and fulfiller that deposit request still outstanding
 - fix bug in docker compose that pointed to bundler package not screener
 - instrument screener and fulfiller components with opentel metrics

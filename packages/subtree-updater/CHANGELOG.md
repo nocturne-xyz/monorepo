@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- make teardown actually wait for all proms to settle
+- fix edge case that can cause totalEntityIndex to go backwards in subgraph sync adapter
+- sync `TreeInsertioEvent`s instead of notes and fill batch events individually
+- sync by TotalEntityIndex instead of block ranges
 - reduce chunk size down from 100000 to 50
 - use merkle index from insertions instead of separate counter
 - subgraph sync checks if `res.data` undefined

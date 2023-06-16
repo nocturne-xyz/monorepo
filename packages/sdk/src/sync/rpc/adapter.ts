@@ -2,11 +2,10 @@ import {
   Address,
   AssetTrait,
   IncludedEncryptedNote,
+  IncludedNote,
   Nullifier,
-  WithTimestamp,
 } from "../../primitives";
-import { min } from "../../utils";
-import { ClosableAsyncIterator } from "../closableAsyncIterator";
+import { min, max } from "../../utils";
 import {
   EncryptedStateDiff,
   IterSyncOpts,
@@ -25,6 +24,12 @@ import {
   JoinSplitEvent,
 } from "./fetch";
 import { ethers } from "ethers";
+import {
+  TotalEntityIndex,
+  TotalEntityIndexTrait,
+  WithTotalEntityIndex,
+} from "../totalEntityIndex";
+import { ClosableAsyncIterator } from "../closableAsyncIterator";
 
 // TODO: mess with this a bit
 const RPC_MAX_CHUNK_SIZE = 1000;
@@ -43,41 +48,47 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
   }
 
   iterStateDiffs(
-    startBlock: number,
+    startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<EncryptedStateDiff> {
-    const chunkSize = opts?.maxChunkSize
-      ? min(opts.maxChunkSize, RPC_MAX_CHUNK_SIZE)
-      : RPC_MAX_CHUNK_SIZE;
-    const endBlock = opts?.endBlock;
-    let closed = false;
-
+    const endTotalEntityIndex = opts?.endTotalEntityIndex;
     const handlerContract = this.handlerContract;
+
+    let closed = false;
     const generator = async function* () {
+      // sync by block, because that's all the chain gives us.
+      // but iterate by total entity index, because that's what logically makes sense for the application
+      // so what we do, is maintain both a block number and a total entity index, and filter out events that are outside of the range we're interested in
+      //
+      // We need to filter because we don't know where the start/end total entity indices will be within a block
       const merkleCount = (await handlerContract.count()).toNumber();
       let lastCommittedMerkleIndex =
         merkleCount !== 0 ? merkleCount - 1 : undefined;
-      let from = startBlock;
-      while (!closed && (!endBlock || from < endBlock)) {
-        let to = from + chunkSize;
-        if (endBlock) {
-          to = min(to, endBlock);
-        }
 
-        // if `to` > current block number, want to only fetch up to current block number
+      let from = Number(
+        TotalEntityIndexTrait.toComponents(startTotalEntityIndex).blockNumber
+      );
+      let currTotalEntityIndex =
+        startTotalEntityIndex !== 0n ? startTotalEntityIndex : undefined;
+
+      const maybeApplyThrottle = async (to: number) => {
+        const isCaughtUp = from > to;
+        const sleepDelay = max(opts?.throttleMs ?? 0, isCaughtUp ? 5000 : 0);
+        await sleep(sleepDelay);
+      };
+
+      while (
+        !closed &&
+        (!endTotalEntityIndex ||
+          !currTotalEntityIndex ||
+          currTotalEntityIndex < endTotalEntityIndex)
+      ) {
+        // set `to` to be the min of `from` + `chunkSize` and the current block number
         const currentBlock = await handlerContract.provider.getBlockNumber();
-        to = min(to, currentBlock);
+        const to = min(from + RPC_MAX_CHUNK_SIZE, currentBlock);
+        await maybeApplyThrottle(to);
 
-        // if `from` > `to`, we've caught up to the tip of the chain
-        // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
-        // and no new blocks were produced since then
-        // sleep for a bit and re-try to avoid spamming the RPC endpoint
-        if (from > to) {
-          await sleep(5_000);
-          continue;
-        }
-
-        // fetch event data from chain
+        // get all events JoinSplit, Refund, and SubtreeUpdate events in the range [`from`, `to`]
         const [includedNotes, joinSplitEvents, subtreeUpdateCommits] =
           await Promise.all([
             fetchNotesFromRefunds(handlerContract, from, to),
@@ -85,42 +96,59 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
             fetchSubtreeUpdateCommits(handlerContract, from, to),
           ]);
 
-        // extract notes and nullifiers
-        const joinSplitEventsWithoutTimestamps = joinSplitEvents.map(
-          ({ inner }) => inner
-        );
-        const nullifiers = extractNullifiersFromJoinSplitEvents(
-          joinSplitEventsWithoutTimestamps
-        );
-        const encryptedNotes =
-          extractEncryptedNotesFromJoinSplitEvents(joinSplitEvents);
-        const notes = [...includedNotes, ...encryptedNotes];
-
-        notes.sort((a, b) => a.inner.merkleIndex - b.inner.merkleIndex);
-
-        // get the latest subtree commit
+        // update `lastCommittedMerkleIndex` according to the `SubtreeUpdate` events received
         if (subtreeUpdateCommits.length > 0) {
           lastCommittedMerkleIndex = maxArray(
-            subtreeUpdateCommits.map(({ subtreeBatchOffset }) => {
+            subtreeUpdateCommits.map(({ inner: { subtreeBatchOffset } }) => {
               return batchOffsetToLatestMerkleIndexInBatch(subtreeBatchOffset);
             })
           );
         }
 
-        const diff: EncryptedStateDiff = {
-          notes,
-          nullifiers,
-          lastCommittedMerkleIndex,
-          blockNumber: to,
-        };
-        yield diff;
+        // extract notes and nullifiers
+        const nullifiers =
+          extractNullifiersFromJoinSplitEvents(joinSplitEvents);
+        const encryptedNotes =
+          extractEncryptedNotesFromJoinSplitEvents(joinSplitEvents);
+        const notes: WithTotalEntityIndex<
+          IncludedNote | IncludedEncryptedNote
+        >[] = [...includedNotes, ...encryptedNotes];
 
-        // the next state diff starts at the first block in the next range, `to + 1`
-        from = to + 1;
+        notes.sort((a, b) => a.inner.merkleIndex - b.inner.merkleIndex);
 
-        if (opts?.throttleMs && currentBlock - from > chunkSize) {
-          await sleep(opts.throttleMs);
+        // filter out all notes that dont fall in the range [`currTotalLogIndex`, `endTotalLogIndex`]
+        const filteredNotes = notes.filter(
+          ({ totalEntityIndex }) =>
+            (!currTotalEntityIndex ||
+              totalEntityIndex >= currTotalEntityIndex) &&
+            (!endTotalEntityIndex || totalEntityIndex <= endTotalEntityIndex)
+        );
+
+        // filter out all nullifiers that dont fall in the range [`currTotalLogIndex`, `endTotalLogIndex`]
+        const filteredNullifiers = nullifiers.filter(
+          ({ totalEntityIndex }) =>
+            (!currTotalEntityIndex ||
+              totalEntityIndex >= currTotalEntityIndex) &&
+            (!endTotalEntityIndex || totalEntityIndex <= endTotalEntityIndex)
+        );
+
+        currTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
+          blockNumber: BigInt(to),
+        });
+
+        // if there are remaining events after filtering, yield a diff
+        if (nullifiers.length + notes.length > 0) {
+          const diff: EncryptedStateDiff = {
+            notes: filteredNotes,
+            nullifiers: filteredNullifiers.map((n) => n.inner),
+            totalEntityIndex: currTotalEntityIndex,
+            lastCommittedMerkleIndex,
+          };
+          yield diff;
         }
+
+        // proceed to next block `from` to `to` + 1
+        from = to + 1;
       }
     };
 
@@ -131,20 +159,28 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 }
 
 function extractNullifiersFromJoinSplitEvents(
-  joinSplitEvents: JoinSplitEvent[]
-): Nullifier[] {
-  const nullifiers: Nullifier[] = [];
-  for (const e of joinSplitEvents) {
-    const { oldNoteANullifier, oldNoteBNullifier } = e;
-    nullifiers.push(oldNoteANullifier, oldNoteBNullifier);
-  }
-  return nullifiers;
+  joinSplitEvents: WithTotalEntityIndex<JoinSplitEvent>[]
+): WithTotalEntityIndex<Nullifier>[] {
+  return joinSplitEvents.flatMap(
+    ({ inner: { oldNoteANullifier, oldNoteBNullifier }, totalEntityIndex }) => {
+      return [
+        {
+          totalEntityIndex,
+          inner: oldNoteANullifier,
+        },
+        {
+          totalEntityIndex: totalEntityIndex + 1n,
+          inner: oldNoteBNullifier,
+        },
+      ];
+    }
+  );
 }
 
 function extractEncryptedNotesFromJoinSplitEvents(
-  joinSplitEvents: WithTimestamp<JoinSplitEvent>[]
-): WithTimestamp<IncludedEncryptedNote>[] {
-  return joinSplitEvents.flatMap(({ inner, timestampUnixMillis }) => {
+  joinSplitEvents: WithTotalEntityIndex<JoinSplitEvent>[]
+): WithTotalEntityIndex<IncludedEncryptedNote>[] {
+  return joinSplitEvents.flatMap(({ inner, totalEntityIndex }) => {
     const {
       newNoteAIndex,
       newNoteBIndex,
@@ -158,22 +194,25 @@ function extractEncryptedNotesFromJoinSplitEvents(
     const asset = AssetTrait.decode(encodedAsset);
 
     const noteA = {
-      ...newNoteAEncrypted,
-      asset,
-      commitment: newNoteACommitment,
-      merkleIndex: newNoteAIndex,
+      totalEntityIndex: totalEntityIndex + 2n,
+      inner: {
+        ...newNoteAEncrypted,
+        asset,
+        commitment: newNoteACommitment,
+        merkleIndex: newNoteAIndex,
+      },
     };
 
     const noteB = {
-      ...newNoteBEncrypted,
-      asset,
-      commitment: newNoteBCommitment,
-      merkleIndex: newNoteBIndex,
+      totalEntityIndex: totalEntityIndex + 3n,
+      inner: {
+        ...newNoteBEncrypted,
+        asset,
+        commitment: newNoteBCommitment,
+        merkleIndex: newNoteBIndex,
+      },
     };
 
-    return [
-      { inner: noteA, timestampUnixMillis },
-      { inner: noteB, timestampUnixMillis },
-    ];
+    return [noteA, noteB];
   });
 }

@@ -17,14 +17,14 @@ import { ethers } from "ethers";
 import { signOperation } from "./signOperation";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
-import { SDKSyncAdapter } from "./sync";
+import { SDKSyncAdapter, TotalEntityIndexTrait } from "./sync";
 import { syncSDK } from "./syncSDK";
 import { getJoinSplitRequestTotalValue, unzip } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
 import { getMerkleIndicesAndNfsFromOp } from "./utils/misc";
 import { OpTracker } from "./OpTracker";
-import { getCreationTimestampOfNewestNoteInOp } from "./timestampOfNewestNoteInOp";
+import { getTotalEntityIndexOfNewestNoteInOp } from "./totalEntityIndexOfNewestNoteInOp";
 
 // 10 minutes
 const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000;
@@ -85,9 +85,7 @@ export class NocturneWalletSDK {
       provider: this.handlerContract.provider,
       viewer: this.signer,
     };
-    await syncSDK(deps, this.syncAdapter, this.db, this.merkleProver, {
-      startBlock: this.config.contracts.startBlock,
-    });
+    await syncSDK(deps, this.syncAdapter, this.db, this.merkleProver);
   }
 
   async prepareOperation(
@@ -142,10 +140,16 @@ export class NocturneWalletSDK {
     return true;
   }
 
-  async getCreationTimestampOfNewestNoteInOp(
+  async getCreationBlockOfNewestNoteInOp(
     op: PreSignOperation | SignedOperation
   ): Promise<number> {
-    return await getCreationTimestampOfNewestNoteInOp(this.db, op);
+    const totalEntityIndex = await getTotalEntityIndexOfNewestNoteInOp(
+      this.db,
+      op
+    );
+    return Number(
+      TotalEntityIndexTrait.toComponents(totalEntityIndex).blockNumber
+    );
   }
 
   async applyOptimisticRecordsForOp(

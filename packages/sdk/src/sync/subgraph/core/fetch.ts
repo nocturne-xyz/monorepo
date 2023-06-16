@@ -3,17 +3,124 @@ import {
   AssetTrait,
   IncludedEncryptedNote,
   IncludedNote,
-  WithTimestamp,
+  Nullifier,
 } from "../../../primitives";
 import {
   maxArray,
   batchOffsetToLatestMerkleIndexInBatch,
 } from "../../../utils";
+import { makeSubgraphQuery } from "../utils";
 import {
-  blockNumberFromTotalEntityIndex,
-  makeSubgraphQuery,
-  totalEntityIndexFromBlockNumber,
-} from "../utils";
+  TotalEntityIndex,
+  TotalEntityIndexTrait,
+  WithTotalEntityIndex,
+} from "../../totalEntityIndex";
+
+export type SDKEvent = IncludedNote | IncludedEncryptedNote | Nullifier;
+
+export interface SDKEventResponse {
+  id: string;
+  encodedOrEncryptedNote: Omit<EncodedOrEncryptedNoteResponse, "id"> | null;
+  nullifier: Omit<NullifierResponse, "id"> | null;
+}
+
+export interface SDKEventsResponse {
+  data: {
+    sdkevents: SDKEventResponse[];
+  };
+}
+
+export interface FetchSDKEventsVars {
+  fromIdx: string;
+}
+
+const sdkEventsQuery = `\
+query fetchSDKEvents($fromIdx: String!) {
+  sdkevents(where: { id_gte: $fromIdx }, first: 100) {
+    id
+    encodedOrEncryptedNote {
+      merkleIndex
+      note {
+        ownerH1
+        ownerH2
+        nonce
+        encodedAssetAddr
+        encodedAssetId
+        value
+      }
+      encryptedNote {
+        ownerH1
+        ownerH2
+        encappedKey
+        encryptedNonce
+        encryptedValue
+        encodedAssetAddr
+        encodedAssetId
+        commitment
+      }
+    }
+    nullifier {
+      nullifier
+    }
+  }
+}
+`;
+
+export async function fetchSDKEvents(
+  endpoint: string,
+  fromTotalEntityIndex: TotalEntityIndex
+): Promise<WithTotalEntityIndex<SDKEvent>[]> {
+  const query = makeSubgraphQuery<FetchSDKEventsVars, SDKEventsResponse>(
+    endpoint,
+    sdkEventsQuery,
+    "sdkEvents"
+  );
+
+  const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
+  const res = await query({ fromIdx });
+
+  console.log("res.data", res.data);
+
+  if (!res.data || res.data.sdkevents.length === 0) {
+    return [];
+  }
+
+  return res.data.sdkevents.map(({ id, encodedOrEncryptedNote, nullifier }) => {
+    const totalEntityIndex = BigInt(id);
+
+    // encrypted note
+    if (encodedOrEncryptedNote && encodedOrEncryptedNote.encryptedNote) {
+      const { encryptedNote, merkleIndex } = encodedOrEncryptedNote;
+      return {
+        inner: encryptedNoteFromEncryptedNoteResponse(
+          encryptedNote,
+          parseInt(merkleIndex)
+        ),
+        totalEntityIndex,
+      };
+    }
+
+    // encoded note
+    if (encodedOrEncryptedNote && encodedOrEncryptedNote.note) {
+      const { note, merkleIndex } = encodedOrEncryptedNote;
+      return {
+        inner: includedNoteFromNoteResponse(note, parseInt(merkleIndex)),
+        totalEntityIndex,
+      };
+    }
+
+    // nullifier
+    if (nullifier) {
+      return {
+        inner: BigInt(nullifier.nullifier),
+        totalEntityIndex,
+      };
+    }
+
+    // should never happen
+    throw new Error("invalid sdk event");
+  });
+}
 
 export interface NoteResponse {
   ownerH1: string;
@@ -25,7 +132,6 @@ export interface NoteResponse {
 }
 
 export interface EncryptedNoteResponse {
-  id: string;
   ownerH1: string;
   ownerH2: string;
   encappedKey: string;
@@ -37,8 +143,8 @@ export interface EncryptedNoteResponse {
 }
 
 export interface EncodedOrEncryptedNoteResponse {
+  id: string;
   merkleIndex: string;
-  idx: string;
   note: NoteResponse | null;
   encryptedNote: EncryptedNoteResponse | null;
 }
@@ -51,13 +157,12 @@ interface FetchNotesResponse {
 
 interface FetchNotesVars {
   fromIdx: string;
-  toIdx: string;
 }
 
 const notesQuery = `\
-query fetchNotes($fromIdx: Bytes!, $toIdx: Bytes!) {
-  encodedOrEncryptedNotes(where: { idx_gte: $fromIdx, idx_lt: $toIdx}) {
-    idx
+query fetchNotes($fromIdx: String!) {
+  encodedOrEncryptedNotes(where: { id_gte: $fromIdx }, first: 100) {
+    id,
     merkleIndex
     note {
       ownerH1
@@ -80,37 +185,30 @@ query fetchNotes($fromIdx: Bytes!, $toIdx: Bytes!) {
   }
 }`;
 
-// gets notes or encrypted notes for a given block range
-// the range is inclusive - i.e. [fromBlock, toBlock]
+// gets first 100 notes on or after a given totalEntityIndex
 export async function fetchNotes(
   endpoint: string,
-  fromBlock: number,
-  toBlock: number
-): Promise<WithTimestamp<IncludedNote | IncludedEncryptedNote>[]> {
+  fromTotalEntityIndex: TotalEntityIndex
+): Promise<WithTotalEntityIndex<IncludedNote | IncludedEncryptedNote>[]> {
   const query = makeSubgraphQuery<FetchNotesVars, FetchNotesResponse>(
     endpoint,
     notesQuery,
     "notes"
   );
 
-  const fromIdx = totalEntityIndexFromBlockNumber(BigInt(fromBlock)).toString();
-  const toIdx = totalEntityIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
-
-  const res = await query({ fromIdx, toIdx });
+  const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
+  const res = await query({ fromIdx });
 
   if (!res.data || res.data.encodedOrEncryptedNotes.length === 0) {
     return [];
   }
 
   return res.data.encodedOrEncryptedNotes.map(
-    ({ merkleIndex, note, encryptedNote, idx }) => {
-      const timestampUnixMillis = Number(
-        blockNumberFromTotalEntityIndex(BigInt(idx))
-      );
+    ({ merkleIndex, note, encryptedNote, id }) => {
       if (note) {
         return {
           inner: includedNoteFromNoteResponse(note, parseInt(merkleIndex)),
-          timestampUnixMillis,
+          totalEntityIndex: BigInt(id),
         };
       } else if (encryptedNote) {
         return {
@@ -118,7 +216,7 @@ export async function fetchNotes(
             encryptedNote,
             parseInt(merkleIndex)
           ),
-          timestampUnixMillis,
+          totalEntityIndex: BigInt(id),
         };
       } else {
         throw new Error("res must contain either note or encryptedNote");
@@ -188,32 +286,44 @@ interface FetchSubtreeCommitsResponse {
 }
 
 interface FetchSubtreeCommitsVars {
-  toBlock: number;
+  toIdx?: string;
 }
 
 interface SubtreeCommitResponse {
   subtreeBatchOffset: string;
 }
 
-const subtreeCommitQuery = `
-  query fetchSubtreeCommits($toBlock: Int!) {
-    subtreeCommits(block: { number: $toBlock }, orderBy: subtreeBatchOffset, orderDirection: desc, first: 1) {
+const subtreeCommitQuery = (params: string, whereClause: string) => `
+  query fetchSubtreeCommits${params} {
+    subtreeCommits(${whereClause}orderBy: subtreeBatchOffset, orderDirection: desc, first: 1) {
       subtreeBatchOffset
     }
   }
 `;
 
-// gets last committed merkle index for a given block range
-// the range is inclusive - i.e. [fromBlock, toBlock]
+// gets last committed merkle index on or before a given totalEntityIndex
 export async function fetchLastCommittedMerkleIndex(
   endpoint: string,
-  toBlock: number
+  toTotalEntityIndex?: TotalEntityIndex
 ): Promise<number | undefined> {
+  let params = "";
+  let whereClause = "";
+  if (toTotalEntityIndex) {
+    params = "($toIdx: String!)";
+    whereClause = "where: { id_lt: $toIdx }, ";
+  }
+
+  const rawQuery = subtreeCommitQuery(params, whereClause);
+
   const query = makeSubgraphQuery<
     FetchSubtreeCommitsVars,
     FetchSubtreeCommitsResponse
-  >(endpoint, subtreeCommitQuery, "last committed merkle index");
-  const res = await query({ toBlock });
+  >(endpoint, rawQuery, "last committed merkle index");
+
+  const toIdx = toTotalEntityIndex
+    ? TotalEntityIndexTrait.toStringPadded(toTotalEntityIndex)
+    : undefined;
+  const res = await query({ toIdx });
 
   if (!res.data || res.data.subtreeCommits.length === 0) {
     return undefined;
@@ -235,42 +345,42 @@ interface FetchNullifiersResponse {
 
 interface FetchNullifiersVars {
   fromIdx: string;
-  toIdx: string;
 }
 
 interface NullifierResponse {
+  id: string;
   nullifier: string;
 }
 
 const nullifiersQuery = `
-  query fetchNullifiers($fromIdx: Bytes!, $toIdx: Bytes!) {
-    nullifiers(where: { idx_gte: $fromIdx, idx_lt: $toIdx}) {
+  query fetchNullifiers($fromIdx: String!) {
+    nullifiers(where: { id_gte: $fromIdx }, first: 100) {
+      id,
       nullifier
     }
   }
 `;
 
-// gets nullifiers for a given block range
-// the range is inclusive - i.e. [fromBlock, toBlock]
+// gets first 100 nullifiers on or after a given totalEntityIndex
 export async function fetchNullifiers(
   endpoint: string,
-  fromBlock: number,
-  toBlock: number
-): Promise<bigint[]> {
+  fromTotalEntityIndex: TotalEntityIndex
+): Promise<WithTotalEntityIndex<Nullifier>[]> {
   const query = makeSubgraphQuery<FetchNullifiersVars, FetchNullifiersResponse>(
     endpoint,
     nullifiersQuery,
     "nullifiers"
   );
 
-  const fromIdx = totalEntityIndexFromBlockNumber(BigInt(fromBlock)).toString();
-  const toIdx = totalEntityIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
-
-  const res = await query({ fromIdx, toIdx });
+  const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
+  const res = await query({ fromIdx });
 
   if (!res.data || res.data.nullifiers.length === 0) {
     return [];
   }
 
-  return res.data.nullifiers.map(({ nullifier }) => BigInt(nullifier));
+  return res.data.nullifiers.map(({ id, nullifier }) => ({
+    inner: BigInt(nullifier),
+    totalEntityIndex: BigInt(id),
+  }));
 }
