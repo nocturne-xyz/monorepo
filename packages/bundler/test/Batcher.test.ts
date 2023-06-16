@@ -8,7 +8,7 @@ import {
   PROVEN_OPERATION_QUEUE,
   ProvenOperationJobData,
   PROVEN_OPERATION_JOB_TAG,
-} from "../src/common";
+} from "../src/types";
 import { VALID_RELAY_REQUEST } from "./utils";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { sleep } from "../src/utils";

@@ -275,8 +275,6 @@ export class BundlerSubmitter {
       logger.info(
         `setting operation with digest ${digest} to status ${status}`
       );
-
-      const redisTxs: RedisTransaction[] = [];
       redisTxs.push(
         this.statusDB.getSetJobStatusTransaction(digest.toString(), status)
       );
