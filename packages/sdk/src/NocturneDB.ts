@@ -67,7 +67,7 @@ export class NocturneDB {
     return `${NOTES_BY_NULLIFIER_PREFIX}-${nullifier.toString()}`;
   }
 
-  static formatTotalEntityIndexKey(merkleIndex: number): string {
+  static formatMerkleIndexToTotalEntityIndexKey(merkleIndex: number): string {
     return `${MERKLE_INDEX_TIMESTAMP_PREFIX}-${numberToStringPadded(
       merkleIndex,
       MAX_MERKLE_INDEX_DIGITS
@@ -218,9 +218,12 @@ export class NocturneDB {
     // get the updated asset => merkleIndex[] KV pairs
     const assetKVs = await this.getUpdatedAssetKVsWithNotesAdded(notes);
 
-    const totalEntityIndexKVs = notesWithTotalEntityIndices.map(
+    const merkleIndexToTotalEntityIndexKVs = notesWithTotalEntityIndices.map(
       ({ inner, totalEntityIndex }) =>
-        NocturneDB.makeTotalEntityIndexKV(inner.merkleIndex, totalEntityIndex)
+        NocturneDB.makeMerkleIndexToTotalEntityIndexKV(
+          inner.merkleIndex,
+          totalEntityIndex
+        )
     );
 
     // write them all into the KV store
@@ -228,7 +231,7 @@ export class NocturneDB {
       ...noteKVs,
       ...nullifierKVs,
       ...assetKVs,
-      ...totalEntityIndexKVs,
+      ...merkleIndexToTotalEntityIndexKVs,
     ]);
   }
 
@@ -314,7 +317,7 @@ export class NocturneDB {
     merkleIndex: number
   ): Promise<bigint | undefined> {
     const totalEntityIndexKey =
-      NocturneDB.formatTotalEntityIndexKey(merkleIndex);
+      NocturneDB.formatMerkleIndexToTotalEntityIndexKey(merkleIndex);
     return await this.kv.getBigInt(totalEntityIndexKey);
   }
 
@@ -420,12 +423,12 @@ export class NocturneDB {
     return [NocturneDB.formatNullifierKey(nullifier), merkleIndex.toString()];
   }
 
-  private static makeTotalEntityIndexKV(
+  private static makeMerkleIndexToTotalEntityIndexKV(
     merkleIndex: number,
     totalEntityIndex: TotalEntityIndex
   ): KV {
     return [
-      NocturneDB.formatTotalEntityIndexKey(merkleIndex),
+      NocturneDB.formatMerkleIndexToTotalEntityIndexKey(merkleIndex),
       totalEntityIndex.toString(),
     ];
   }
