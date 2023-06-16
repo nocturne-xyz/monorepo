@@ -124,6 +124,119 @@ export class DepositEvent extends Entity {
   }
 }
 
+export class DepositRequest extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save DepositRequest entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type DepositRequest must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("DepositRequest", id.toString(), this);
+    }
+  }
+
+  static load(id: string): DepositRequest | null {
+    return changetype<DepositRequest | null>(store.get("DepositRequest", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get status(): string {
+    let value = this.get("status");
+    return value!.toString();
+  }
+
+  set status(value: string) {
+    this.set("status", Value.fromString(value));
+  }
+
+  get spender(): Bytes {
+    let value = this.get("spender");
+    return value!.toBytes();
+  }
+
+  set spender(value: Bytes) {
+    this.set("spender", Value.fromBytes(value));
+  }
+
+  get encodedAssetAddr(): BigInt {
+    let value = this.get("encodedAssetAddr");
+    return value!.toBigInt();
+  }
+
+  set encodedAssetAddr(value: BigInt) {
+    this.set("encodedAssetAddr", Value.fromBigInt(value));
+  }
+
+  get encodedAssetId(): BigInt {
+    let value = this.get("encodedAssetId");
+    return value!.toBigInt();
+  }
+
+  set encodedAssetId(value: BigInt) {
+    this.set("encodedAssetId", Value.fromBigInt(value));
+  }
+
+  get value(): BigInt {
+    let value = this.get("value");
+    return value!.toBigInt();
+  }
+
+  set value(value: BigInt) {
+    this.set("value", Value.fromBigInt(value));
+  }
+
+  get depositAddrH1(): BigInt {
+    let value = this.get("depositAddrH1");
+    return value!.toBigInt();
+  }
+
+  set depositAddrH1(value: BigInt) {
+    this.set("depositAddrH1", Value.fromBigInt(value));
+  }
+
+  get depositAddrH2(): BigInt {
+    let value = this.get("depositAddrH2");
+    return value!.toBigInt();
+  }
+
+  set depositAddrH2(value: BigInt) {
+    this.set("depositAddrH2", Value.fromBigInt(value));
+  }
+
+  get nonce(): BigInt {
+    let value = this.get("nonce");
+    return value!.toBigInt();
+  }
+
+  set nonce(value: BigInt) {
+    this.set("nonce", Value.fromBigInt(value));
+  }
+
+  get gasCompensation(): BigInt {
+    let value = this.get("gasCompensation");
+    return value!.toBigInt();
+  }
+
+  set gasCompensation(value: BigInt) {
+    this.set("gasCompensation", Value.fromBigInt(value));
+  }
+}
+
 export class EncodedOrEncryptedNote extends Entity {
   constructor(id: string) {
     super();

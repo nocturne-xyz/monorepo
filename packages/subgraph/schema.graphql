@@ -17,6 +17,25 @@ type DepositEvent @entity(immutable: true) {
   gasCompensation: BigInt!
 }
 
+enum DepositRequestStatus {
+  Pending
+  Completed
+  Retrievied
+}
+
+type DepositRequest @entity(immutable: false) {
+  id: ID!
+  status: DepositRequestStatus!
+  spender: Bytes!
+  encodedAssetAddr: BigInt!
+  encodedAssetId: BigInt!
+  value: BigInt!
+  depositAddrH1: BigInt!
+  depositAddrH2: BigInt!
+  nonce: BigInt!
+  gasCompensation: BigInt!
+}
+
 type EncodedOrEncryptedNote @entity(immutable: true) {
   id: ID!
   merkleIndex: BigInt!
