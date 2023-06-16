@@ -59,8 +59,8 @@ dataSources:
           handler: handleDepositInstantiated
         - event: DepositCompleted(indexed
             address,(uint256,uint256),uint256,(uint256,uint256),uint256,uint256)
-          handler: handleDepositCompleted 
+          handler: handleDepositCompleted
         - event: DepositRetrieved(indexed
             address,(uint256,uint256),uint256,(uint256,uint256),uint256,uint256)
-          handler: handleDepositRetrieved 
+          handler: handleDepositRetrieved
       file: ./src/depositManager.ts
