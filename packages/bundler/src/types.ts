@@ -1,3 +1,5 @@
+export const ACTOR_NAME = "bundler";
+
 export const PROVEN_OPERATION_QUEUE = "ProvenOperationQueue";
 export const OPERATION_BATCH_QUEUE = "OperationBatchQueue";
 export const PROVEN_OPERATION_JOB_TAG = "PROVEN_OPERATION";
@@ -10,3 +12,9 @@ export type ProvenOperationJobData = {
 export type OperationBatchJobData = {
   operationBatchJson: string;
 };
+
+export enum OpValidationFailure {
+  NotEnoughGas = "NotEnoughGas",
+  NullifierConflict = "NullifierConflict",
+  CallRevert = "CallRevert",
+}

@@ -6,7 +6,11 @@ import cors from "cors";
 import { Logger } from "winston";
 import morgan from "morgan";
 import { Queue } from "bullmq";
-import { ProvenOperationJobData, PROVEN_OPERATION_QUEUE } from "./common";
+import {
+  ProvenOperationJobData,
+  PROVEN_OPERATION_QUEUE,
+  ACTOR_NAME,
+} from "./types";
 import { NullifierDB, StatusDB } from "./db";
 import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
 import {
@@ -14,7 +18,21 @@ import {
   makeGetOperationStatusHandler,
   makeRelayHandler,
 } from "./routes";
-import { ActorHandle, HealthCheckResponse } from "@nocturne-xyz/offchain-utils";
+import {
+  ActorHandle,
+  HealthCheckResponse,
+  makeCreateCounterFn,
+  makeCreateHistogramFn,
+} from "@nocturne-xyz/offchain-utils";
+import * as ot from "@opentelemetry/api";
+
+const COMPONENT_NAME = "server";
+
+export interface BundlerServerMetrics {
+  relayRequestsReceivedCounter: ot.Counter;
+  opValidationFailuresHistogram: ot.Histogram;
+  relayRequestsEnqueuedCounter: ot.Counter;
+}
 
 export class BundlerServer {
   redis: IORedis;
@@ -24,6 +42,7 @@ export class BundlerServer {
   logger: Logger;
   tellerContract: Teller;
   provider: ethers.providers.Provider;
+  metrics: BundlerServerMetrics;
   ignoreGas?: boolean;
 
   constructor(
@@ -40,6 +59,34 @@ export class BundlerServer {
     this.logger = logger;
     this.provider = provider;
     this.tellerContract = Teller__factory.connect(tellerAddress, provider);
+
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createCounter = makeCreateCounterFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+    const createHistogram = makeCreateHistogramFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+
+    this.metrics = {
+      relayRequestsReceivedCounter: createCounter(
+        "relay_requests_received.counter",
+        "Number of relay requests received by server"
+      ),
+      opValidationFailuresHistogram: createHistogram(
+        "op_validation_failures.histogram",
+        "Histogram of op validation failures"
+      ),
+      relayRequestsEnqueuedCounter: createCounter(
+        "relay_requests_enqueued.counter",
+        "Number of relay requests enqueued for batching"
+      ),
+    };
+
     this.ignoreGas = ignoreGas;
   }
 
@@ -58,6 +105,7 @@ export class BundlerServer {
           route: "/relay",
           function: "relayHandler",
         }),
+        metrics: this.metrics,
         opts: { ignoreGas: this.ignoreGas },
       })
     );

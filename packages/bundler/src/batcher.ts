@@ -12,11 +12,27 @@ import {
   OPERATION_BATCH_JOB_TAG,
   ProvenOperationJobData,
   PROVEN_OPERATION_QUEUE,
-} from "./common";
+  ACTOR_NAME,
+} from "./types";
 import * as JSON from "bigint-json-serialization";
 import { actorChain } from "./utils";
 import { Logger } from "winston";
-import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import {
+  ActorHandle,
+  makeCreateCounterFn,
+  makeCreateHistogramFn,
+} from "@nocturne-xyz/offchain-utils";
+import * as ot from "@opentelemetry/api";
+
+const COMPONENT_NAME = "batcher";
+
+export interface BundlerBatcherMetrics {
+  relayRequestsEnqueuedInBatcherDBCounter: ot.Counter;
+  relayRequestsBatchedCounter: ot.Counter;
+  batchesCreatedCounter: ot.Counter;
+  batchLatencyHistogram: ot.Histogram;
+  batchSizeHistogram: ot.Histogram;
+}
 
 export class BundlerBatcher {
   redis: IORedis;
@@ -24,6 +40,7 @@ export class BundlerBatcher {
   batcherDB: BatcherDB<ProvenOperation>;
   outboundQueue: Queue<OperationBatchJobData>;
   logger: Logger;
+  metrics: BundlerBatcherMetrics;
   readonly MAX_BATCH_LATENCY_SECS: number = 60;
   readonly BATCH_SIZE: number = 8;
 
@@ -48,6 +65,41 @@ export class BundlerBatcher {
     this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, {
       connection: redis,
     });
+
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createCounter = makeCreateCounterFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+    const createHistogram = makeCreateHistogramFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+
+    this.metrics = {
+      relayRequestsEnqueuedInBatcherDBCounter: createCounter(
+        "relay_requests_enqueued_in_batcher_db.counter",
+        "Number of relay requests enqueued in batcher DB"
+      ),
+      relayRequestsBatchedCounter: createCounter(
+        "relay_requests_batched.counter",
+        "Number of relay requests batched"
+      ),
+      batchesCreatedCounter: createCounter(
+        "batches_created.counter",
+        "Number of batches created"
+      ),
+      batchLatencyHistogram: createHistogram(
+        "batch_latency.histogram",
+        "Histogram of number of seconds delay until batch created (lesser of time to full batch or  max latency)"
+      ),
+      batchSizeHistogram: createHistogram(
+        "batch_size.histogram",
+        "Histogram of batch sizes"
+      ),
+    };
   }
 
   start(): ActorHandle {
@@ -103,6 +155,12 @@ export class BundlerBatcher {
               }
             });
 
+            // Update metrics
+            this.metrics.relayRequestsBatchedCounter.add(batch.length);
+            this.metrics.batchesCreatedCounter.add(1);
+            this.metrics.batchLatencyHistogram.record(counterSeconds);
+            this.metrics.batchSizeHistogram.record(batch.length);
+
             counterSeconds = 0;
           }
 
@@ -157,6 +215,8 @@ export class BundlerBatcher {
             throw new Error(msg);
           }
         });
+
+        this.metrics.relayRequestsEnqueuedInBatcherDBCounter.add(1);
       },
       {
         connection: this.redis,

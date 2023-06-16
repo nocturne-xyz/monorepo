@@ -17,6 +17,11 @@ export class DummyScreenerDelayCalculator {
     spender;
     assetAddr;
     value;
-    return this.delaySeconds;
+
+    const twentyPercentOfDelay = this.delaySeconds / 5;
+    return (
+      this.delaySeconds -
+      (Math.random() * 2 * twentyPercentOfDelay - twentyPercentOfDelay)
+    );
   }
 }
