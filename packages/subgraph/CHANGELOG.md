@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- index `DepositCompleted` and `DepositRetrieved` events, and use them to update `DepositRequest` `status`.
+- add `DepositRequest` entity
 - add `SDKEvent` and `TreeInsertionEvent` types that unify events that SDK / subtree updater cares about
 - get rid of all unnecessary `idx` fields
 - make `id` be of type `ID` instead of `Bytes` on all entity schemas
