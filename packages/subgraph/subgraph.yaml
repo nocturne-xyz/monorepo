@@ -17,7 +17,11 @@ dataSources:
         - EncodedOrEncryptedNote
         - EncodedNote
         - EncryptedNote
+        - Nullifier
         - SubtreeCommit
+        - FilledBatchWithZerosEvent
+        - TreeInsertionEvent
+        - SDKEvent
       abis:
         - name: Handler
           file: ./abis/Handler.json
@@ -44,7 +48,8 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - Deposit
+        - DepositEvent
+        - DepositRequest
       abis:
         - name: DepositManager
           file: ./abis/DepositManager.json
@@ -52,4 +57,10 @@ dataSources:
         - event: DepositInstantiated(indexed
             address,(uint256,uint256),uint256,(uint256,uint256),uint256,uint256)
           handler: handleDepositInstantiated
+        - event: DepositCompleted(indexed
+            address,(uint256,uint256),uint256,(uint256,uint256),uint256,uint256)
+          handler: handleDepositCompleted 
+        - event: DepositRetrieved(indexed
+            address,(uint256,uint256),uint256,(uint256,uint256),uint256,uint256)
+          handler: handleDepositRetrieved 
       file: ./src/depositManager.ts
