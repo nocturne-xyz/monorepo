@@ -22,7 +22,7 @@ import {
   depositFundsMultiToken,
   depositFundsSingleToken,
 } from "../src/deposit";
-import { submitAndProcessOperation } from "../src/utils";
+import { sleep, submitAndProcessOperation } from "../src/utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { KEYS_TO_WALLETS } from "../src/keys";
 
@@ -144,6 +144,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       // force subtree update by filling batch and sync SDK...
       console.log("applying subtree update...");
       await fillSubtreeBatch();
+
+      await sleep(2000);
 
       console.log("syncing SDK...");
       await nocturneWalletSDKAlice.sync();
