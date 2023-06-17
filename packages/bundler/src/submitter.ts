@@ -151,6 +151,7 @@ export class BundlerSubmitter {
 
     logger.debug("dispatching bundle...");
     const tx = await this.dispatchBundle(logger, operations);
+    logger.info("dispatch bundle tx: ", tx);
 
     if (!tx) {
       logger.error("bundle reverted");

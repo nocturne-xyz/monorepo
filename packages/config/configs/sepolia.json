@@ -15,17 +15,17 @@
     "depositManagerProxy": {
       "kind": "Transparent",
       "proxy": "0x75C01A4359C98df2cB602313bb989fdf4aC45e5e",
-      "implementation": "0xe0c4b0d5fdefb98071efecea850fa6d64d49a9b5"
+      "implementation": "0x3b119d6d94C3f021b4F72AD87754D86B73b873be"
     },
     "tellerProxy": {
       "kind": "Transparent",
       "proxy": "0xFB43BC11cbeBF5A3EFa795a117356E6dFc013DA3",
-      "implementation": "0x3f275901c3d04493cc5da0e2e72601fc0786a91e"
+      "implementation": "0x5bbA31ABfCA2A78a8ef09c8368D1b96D7870cc6E"
     },
     "handlerProxy": {
       "kind": "Transparent",
       "proxy": "0x86356407e7412721B582517F06e1793eC82Fb748",
-      "implementation": "0xefb671b382e328f099b1253162e67206c3a01c75"
+      "implementation": "0xcb7c6EbEa031A693D91876470CB2c21a5562c00d"
     },
     "joinSplitVerifierAddress": "0x10FfDc059A723d84baB4B16CEe2c178fEA55853B",
     "subtreeUpdateVerifierAddress": "0xE6C53026B9b489F9435Df30baf476dBB96ACe07b",

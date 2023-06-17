@@ -45,7 +45,7 @@ interface AssetAndTicker {
 }
 
 // TODO: ask bundler for the batch size and make a more intelligent estimate than this
-const PER_JOINSPLIT_GAS = 250_000n;
+const PER_JOINSPLIT_GAS = 300_000n;
 const PER_REFUND_GAS = 150_000n;
 
 export interface HandleOpRequestGasDeps {

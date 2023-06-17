@@ -7,7 +7,6 @@ import {
   Teller__factory,
 } from "@nocturne-xyz/contracts";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
-// import { checkNocturneDeployment } from "../src/checks";
 
 dotenv.config();
 
@@ -37,6 +36,10 @@ dotenv.config();
   ).deploy();
   const newTellerImpl = await new Teller__factory(deployer).deploy();
   const newHandlerImpl = await new Handler__factory(deployer).deploy();
+
+  console.log("new deposit manager impl: ", newDepositManagerImpl.address);
+  console.log("new teller impl: ", newTellerImpl.address);
+  console.log("new handler impl: ", newHandlerImpl.address);
 
   console.log("upgrading deposit manager");
   const depositManagerUpgradeTx = await proxyAdmin.upgrade(
