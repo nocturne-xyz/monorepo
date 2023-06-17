@@ -10,7 +10,7 @@ const GRAPH_NODE_COMPOSE_OPTS: compose.IDockerComposeOptions = {
   commandOptions: [["--force-recreate"], ["--renew-anon-volumes"]],
 };
 
-export const SUBGRAPH_CWD = `${ROOT_DIR}/packages/subgraph`;
+export const SUBGRAPH_CWD = `${ROOT_DIR}/subgraph`;
 
 export interface SubgraphConfig {
   tellerAddress: string;
