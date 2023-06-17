@@ -2,7 +2,6 @@
 
 ### Unreleased
 
-- add `depositHash` to `DepositInstantiated`, `DepositRetrieved`, and `DepositCompleted` events
 - use new compressed encoding to compute note hashes in subtree update logic
 - replace `StealthAddress` with `CompressedStealthAddress`, which is composed of two points in 255-bit compressed encoding
 - remove proof and root from joinsplit events
