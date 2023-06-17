@@ -151,7 +151,8 @@ library OperationUtils {
     ) internal pure returns (uint256) {
         uint256 handleJoinSplitGas = op.joinSplits.length *
             GAS_PER_JOINSPLIT_HANDLE;
-        uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
+        uint256 handleRefundGas = opResult.numRefunds *
+            (GAS_PER_REFUND_HANDLE + GAS_PER_REFUND_TREE);
 
         return
             op.gasPrice *

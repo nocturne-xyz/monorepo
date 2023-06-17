@@ -207,7 +207,10 @@ export class BundlerSubmitter {
       logger.info(`submtting bundle with ${operations.length} operations`);
       return this.tellerContract.processBundle(
         { operations },
-        { gasLimit: est.toBigInt() + 1_000_000n } // Add gas est buffer
+        {
+          gasLimit: est.toBigInt() + 1_000_000n,
+          gasPrice: await this.tellerContract.provider.getGasPrice(),
+        } // Add gas est buffer
       );
     } catch (err) {
       logger.error("failed to process bundle:", err);

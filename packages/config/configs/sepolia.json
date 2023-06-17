@@ -15,26 +15,22 @@
     "depositManagerProxy": {
       "kind": "Transparent",
       "proxy": "0x75C01A4359C98df2cB602313bb989fdf4aC45e5e",
-      "implementation": "0x25e9E0ada551B9Fc027eA1a1A27a5eB74F41857B"
+      "implementation": "0xe0c4b0d5fdefb98071efecea850fa6d64d49a9b5"
     },
     "tellerProxy": {
       "kind": "Transparent",
       "proxy": "0xFB43BC11cbeBF5A3EFa795a117356E6dFc013DA3",
-      "implementation": "0x29689f3d03435a808c66a6eaa5ef2DB74173389E"
+      "implementation": "0x3f275901c3d04493cc5da0e2e72601fc0786a91e"
     },
     "handlerProxy": {
       "kind": "Transparent",
       "proxy": "0x86356407e7412721B582517F06e1793eC82Fb748",
-      "implementation": "0x0a59a156b95D3eb2F3FA9235Cac7180Ab00F3784"
+      "implementation": "0xefb671b382e328f099b1253162e67206c3a01c75"
     },
     "joinSplitVerifierAddress": "0x10FfDc059A723d84baB4B16CEe2c178fEA55853B",
     "subtreeUpdateVerifierAddress": "0xE6C53026B9b489F9435Df30baf476dBB96ACe07b",
-    "screeners": [
-      "0x44cD09776A1c3b803A5Fe30660528a61d36653B4"
-    ],
-    "depositSources": [
-      "0x75C01A4359C98df2cB602313bb989fdf4aC45e5e"
-    ]
+    "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
+    "depositSources": ["0x75C01A4359C98df2cB602313bb989fdf4aC45e5e"]
   },
   "erc20s": [
     [
@@ -68,17 +64,8 @@
     ]
   ],
   "protocolAllowlist": [
-    [
-      "TEST-TOKEN",
-      "0x4F8988F365a8C73d02e119076Bec71a1265D80Cd"
-    ],
-    [
-      "weth",
-      "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9"
-    ],
-    [
-      "dai",
-      "0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6"
-    ]
+    ["TEST-TOKEN", "0x4F8988F365a8C73d02e119076Bec71a1265D80Cd"],
+    ["weth", "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9"],
+    ["dai", "0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6"]
   ]
 }

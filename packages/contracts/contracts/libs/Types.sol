@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
-uint256 constant GAS_PER_JOINSPLIT_VERIFY = 100_000;
-uint256 constant GAS_PER_JOINSPLIT_HANDLE = 140_000;
-uint256 constant GAS_PER_REFUND_TREE = 40_000;
-uint256 constant GAS_PER_REFUND_HANDLE = 60_000;
+uint256 constant GAS_PER_JOINSPLIT_HANDLE = 165_000;
+uint256 constant GAS_PER_REFUND_TREE = 60_000;
+uint256 constant GAS_PER_REFUND_HANDLE = 50_000;
 
 enum AssetType {
     ERC20,

@@ -45,8 +45,8 @@ interface AssetAndTicker {
 }
 
 // TODO: ask bundler for the batch size and make a more intelligent estimate than this
-const PER_JOINSPLIT_GAS = 580_000n;
-const PER_REFUND_GAS = 80_000n;
+const PER_JOINSPLIT_GAS = 250_000n;
+const PER_REFUND_GAS = 150_000n;
 
 export interface HandleOpRequestGasDeps {
   db: NocturneDB;
@@ -247,7 +247,7 @@ async function estimateGasForOperationRequest(
       ...opRequest,
       maxNumRefunds:
         maxNumRefunds ??
-        BigInt(joinSplitRequests.length + refundAssets.length) + 5n,
+        BigInt(joinSplitRequests.length + refundAssets.length) + 5n, // dummy fill joinsplits length
       gasAssetRefundThreshold: 0n,
       executionGasLimit: BLOCK_GAS_LIMIT,
       refundAddr: DUMMY_REFUND_ADDR,
@@ -261,6 +261,9 @@ async function estimateGasForOperationRequest(
       { viewer: DUMMY_VIEWER, ...deps },
       dummyOpRequest
     );
+    simulationOp.maxNumRefunds = BigInt(
+      simulationOp.joinSplits.length + refundAssets.length
+    ); // set correct maxNumRefunds now that we know number of joinsplits
 
     // simulate the operation
     console.log("simulating operation");

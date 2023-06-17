@@ -5,6 +5,8 @@ import "../../libs/Types.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+uint256 constant GAS_PER_JOINSPLIT_VERIFY = 100_000;
+
 enum OperationFailureType {
     NONE,
     JOINSPLIT_BAD_ROOT,
