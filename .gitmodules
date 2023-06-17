@@ -18,3 +18,4 @@
 [submodule "subgraph"]
 	path = subgraph
 	url = https://github.com/nocturne-xyz/subgraph
+	ignore = dirty
