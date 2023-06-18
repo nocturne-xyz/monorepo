@@ -45,7 +45,7 @@ interface AssetAndTicker {
 }
 
 // TODO: ask bundler for the batch size and make a more intelligent estimate than this
-const PER_JOINSPLIT_GAS = 400_000n; // TODO: why does this need to be so high?
+const PER_JOINSPLIT_GAS = 500_000n; // TODO: why does this need to be so high?
 const PER_REFUND_GAS = 150_000n;
 
 export interface HandleOpRequestGasDeps {
@@ -262,7 +262,7 @@ async function estimateGasForOperationRequest(
       dummyOpRequest
     );
     simulationOp.maxNumRefunds = BigInt(
-      simulationOp.joinSplits.length + refundAssets.length
+      simulationOp.joinSplits.length + refundAssets.length + 5
     ); // set correct maxNumRefunds now that we know number of joinsplits
 
     // simulate the operation
