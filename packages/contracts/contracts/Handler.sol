@@ -185,7 +185,10 @@ contract Handler is
 
         // Set verification and execution gas after getting opResult
         opResult.verificationGas = perJoinSplitVerifyGas * op.joinSplits.length;
-        opResult.executionGas = preExecutionGas - gasleft();
+        opResult.executionGas = Utils.min(
+            op.executionGasLimit,
+            preExecutionGas - gasleft()
+        );
         opResult.numRefunds = _totalNumRefundsToHandle(op);
 
         // Gather reserved gas asset and process gas payment to bundler

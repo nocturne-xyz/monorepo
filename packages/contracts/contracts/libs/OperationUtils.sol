@@ -151,7 +151,7 @@ library OperationUtils {
     ) internal pure returns (uint256) {
         uint256 handleJoinSplitGas = op.joinSplits.length *
             GAS_PER_JOINSPLIT_HANDLE;
-        uint256 handleRefundGas = opResult.numRefunds *
+        uint256 refundGas = opResult.numRefunds *
             (GAS_PER_REFUND_HANDLE + GAS_PER_REFUND_TREE);
 
         return
@@ -159,7 +159,7 @@ library OperationUtils {
             (opResult.verificationGas +
                 handleJoinSplitGas +
                 opResult.executionGas +
-                handleRefundGas);
+                refundGas);
     }
 
     // From https://ethereum.stackexchange.com/questions/83528
