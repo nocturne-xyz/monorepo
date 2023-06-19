@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add dummy magic rejection value for screener to reject some deposits (test purposes)
 - put back redis utils
 - make logging more consistent
 - add logger to `SubgraphScreenerSyncAdapter`

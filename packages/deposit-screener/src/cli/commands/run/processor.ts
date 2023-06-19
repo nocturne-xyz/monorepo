@@ -20,7 +20,11 @@ const runProcess = new Command("processor")
   )
   .option(
     "--dummy-screening-delay <number>",
-    "dummy screening delay in seconds"
+    "dummy screening delay in seconds (test purposes only)"
+  )
+  .option(
+    "--dummy-magic-rejection-value <number>",
+    "dummy magic deposit value that results in deposit being rejected (test purposes only)"
   )
   .option(
     "--log-dir <string>",
@@ -40,6 +44,7 @@ const runProcess = new Command("processor")
     const {
       configNameOrPath,
       dummyScreeningDelay,
+      dummyMagicRejectionValue,
       logDir,
       throttleMs,
       stdoutLogLevel,
@@ -94,7 +99,7 @@ const runProcess = new Command("processor")
       getRedis(),
       logger,
       // TODO: use real screening api and delay calculator
-      new DummyScreeningApi(),
+      new DummyScreeningApi(dummyMagicRejectionValue),
       new DummyScreenerDelayCalculator(dummyScreeningDelay),
       supportedAssets,
       config.contracts.startBlock
