@@ -24,7 +24,7 @@
   "dependencies": {
     "@nocturne-xyz/config": "1.0.14-alpha",
     "@nocturne-xyz/contracts": "1.0.32-alpha",
-    "@nocturne-xyz/local-prover": "1.0.6-alpha",
+    "@nocturne-xyz/local-prover": "1.0.7-alpha",
     "@nocturne-xyz/offchain-utils": "0.1.7",
     "@nocturne-xyz/sdk": "1.0.151-alpha",
     "async-mutex": "^0.4.0",
