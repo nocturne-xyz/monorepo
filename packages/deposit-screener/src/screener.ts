@@ -317,9 +317,9 @@ export class DepositScreenerScreener {
       },
     });
 
-    console.log("[histogram] delaySeconds: ", delaySeconds);
-    console.log("[histogram] spender tag: ", depositRequest.spender);
-    console.log("[histogram] assetAddr tag: ", assetAddr);
+    logger.info("[histogram] delaySeconds", delaySeconds);
+    logger.log("[histogram] spender tag", depositRequest.spender);
+    logger.log("[histogram] assetAddr tag", assetAddr);
 
     this.metrics.screeningDelayHistogram.record(delaySeconds, {
       spender: depositRequest.spender,
