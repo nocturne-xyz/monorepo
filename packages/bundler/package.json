@@ -27,8 +27,8 @@
   "dependencies": {
     "@nocturne-xyz/config": "1.0.14-alpha",
     "@nocturne-xyz/contracts": "1.0.32-alpha",
-    "@nocturne-xyz/sdk": "1.0.153-alpha",
     "@nocturne-xyz/offchain-utils": "0.1.8",
+    "@nocturne-xyz/sdk": "1.0.153-alpha",
     "@types/commander": "^2.12.2",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.14",
