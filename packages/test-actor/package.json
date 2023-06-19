@@ -18,20 +18,23 @@
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src",
     "prettier:write": "prettier --write ./src",
+    "build:docker": "./build_docker.sh",
     "test:unit": ""
   },
   "dependencies": {
-    "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/contracts": "workspace:^",
-    "@nocturne-xyz/local-prover": "workspace:^",
-    "@nocturne-xyz/sdk": "workspace:^",
+    "@nocturne-xyz/config": "1.0.14-alpha",
+    "@nocturne-xyz/contracts": "1.0.32-alpha",
+    "@nocturne-xyz/local-prover": "1.0.6-alpha",
+    "@nocturne-xyz/offchain-utils": "0.1.7",
+    "@nocturne-xyz/sdk": "1.0.151-alpha",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
     "commander": "^10.0.0",
     "dotenv": "^16.0.3",
     "ethers": "^5.7.2",
     "node-fetch": "^3.3.1",
-    "randombytes": "^2.1.0"
+    "randombytes": "^2.1.0",
+    "winston": "^3.9.0"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",

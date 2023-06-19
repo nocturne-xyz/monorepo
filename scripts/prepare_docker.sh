@@ -35,3 +35,7 @@ popd
 pushd ./packages/deposit-screener
 yarn build:docker
 popd
+
+pushd ./packages/test-actor
+yarn build:docker
+popd
