@@ -156,6 +156,11 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
       closed = true;
     });
   }
+
+  async getLatestIndexedBlock(): Promise<number> {
+    const currentBlock = await this.handlerContract.provider.getBlockNumber();
+    return currentBlock;
+  }
 }
 
 function extractNullifiersFromJoinSplitEvents(

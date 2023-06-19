@@ -43,6 +43,25 @@ export class TotalEntityIndexTrait {
     );
   }
 
+  // return a `TotalEntityIndex` (TEI) corresponding to the given block number
+  // if `mode` is `UP_TO`, return the TEI of the 0th event in the block, namely `(blockNumber, 0, 0, 0)`
+  // if `mode` is `THROUGH`, return the TEI of the last event in the block, namely `(blockNumber, U32_MAX, U32_MAX, U32_MAX)`
+  public static fromBlockNumber(
+    blockNumber: number,
+    mode: "UP_TO" | "THROUGH" = "THROUGH"
+  ): TotalEntityIndex {
+    if (mode === "UP_TO") {
+      return this.fromComponents({ blockNumber: BigInt(blockNumber) });
+    } else {
+      return this.fromComponents({
+        blockNumber: BigInt(blockNumber),
+        txIdx: U32_MAX,
+        logIdx: U32_MAX,
+        eventIdx: U32_MAX,
+      });
+    }
+  }
+
   public static toComponents(
     idx: TotalEntityIndex
   ): TotalEntityIndexComponents {

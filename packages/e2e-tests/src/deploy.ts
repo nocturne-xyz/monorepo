@@ -123,7 +123,7 @@ export interface TestDeployment {
 }
 
 // defaults for actor deployments
-const ANVIL_URL = "http://0.0.0.0:8545";
+const HH_URL = "http://0.0.0.0:8545";
 export const SUBGRAPH_URL = "http://localhost:8000/subgraphs/name/nocturne";
 
 const DEFAULT_BUNDLER_CONFIG: Omit<
@@ -131,14 +131,14 @@ const DEFAULT_BUNDLER_CONFIG: Omit<
   "tellerAddress" | "txSignerKey" | "ignoreGas"
 > = {
   maxLatency: 1,
-  rpcUrl: ANVIL_URL,
+  rpcUrl: HH_URL,
 };
 
 const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
   DepositScreenerConfig,
   "depositManagerAddress" | "txSignerKey" | "attestationSignerKey"
 > = {
-  rpcUrl: ANVIL_URL,
+  rpcUrl: HH_URL,
   subgraphUrl: SUBGRAPH_URL,
 };
 
@@ -146,7 +146,7 @@ const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
   SubtreeUpdaterConfig,
   "handlerAddress" | "txSignerKey"
 > = {
-  rpcUrl: ANVIL_URL,
+  rpcUrl: HH_URL,
   subgraphUrl: SUBGRAPH_URL,
   fillBatchLatency: undefined,
   // useRapidsnark: true,
@@ -175,7 +175,7 @@ export async function setupTestDeployment(
   const resetHardhat = await hhThunk();
 
   // deploy contracts
-  const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
+  const provider = new ethers.providers.JsonRpcProvider(HH_URL);
 
   // keep track of any modified configs
   const actorConfig: TestActorsConfig = structuredClone(config);
