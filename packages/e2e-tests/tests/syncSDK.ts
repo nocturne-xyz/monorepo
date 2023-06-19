@@ -187,6 +187,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       console.log("apply subtree update post-operation...");
       await fillSubtreeBatch();
 
+      await sleep(2000);
+
       // sync SDK again...
       console.log("syncing SDK again...");
       await nocturneWalletSDKAlice.sync();

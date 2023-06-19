@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- sync through current block, not merely up to it
 - randomness to screener delay
 - fix edge case that can cause totalEntityIndex to go backwards in subgraph sync adapter
 - sync by TotalEntityIndex instead of block ranges

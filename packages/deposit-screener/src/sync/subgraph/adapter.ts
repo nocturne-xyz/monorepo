@@ -90,10 +90,7 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
           // this is to prevent an busy loops in the case where the subgraph has indexed a block corresponding
           // to a totalEntityIndex > `endTotalEntityIndex` but we haven't found any insertions in that block
           const currentBlockTotalEntityIndex =
-            TotalEntityIndexTrait.fromComponents({
-              blockNumber: BigInt(latestIndexedBlock),
-            });
-
+            TotalEntityIndexTrait.fromBlockNumber(latestIndexedBlock);
           if (currentBlockTotalEntityIndex > from) {
             from = currentBlockTotalEntityIndex;
           }

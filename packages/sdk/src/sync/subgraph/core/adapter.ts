@@ -114,14 +114,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
     });
   }
 
-  async fetchLastCommittedMerkleIndex(): Promise<number> {
-    const blockNumber = await fetchLastCommittedMerkleIndex(
-      this.graphqlEndpoint
-    );
-    if (!blockNumber) {
-      throw new Error("could not fetch last committed merkle index");
-    }
-
-    return blockNumber;
+  async getLatestIndexedBlock(): Promise<number> {
+    return await fetchLatestIndexedBlock(this.graphqlEndpoint);
   }
 }

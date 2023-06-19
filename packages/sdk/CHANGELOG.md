@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- sync through current block, not merely up to it
+- add `getLatestIndexedBlock` to `SyncAdapter` and make `syncSDK` use that instead of `provider.getCurrentBlock()`
 - fix `hasEnoughBalanceForOpRequest`
 - fix sdk bug where using simulation maxNumRefunds was causing "too many refunds" revert
 - fix edge case that can cause totalEntityIndex to go backwards in subgraph sync adapter

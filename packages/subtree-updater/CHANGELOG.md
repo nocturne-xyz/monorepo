@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- sync through current block, not merely up to it
 - make teardown actually wait for all proms to settle
 - fix edge case that can cause totalEntityIndex to go backwards in subgraph sync adapter
 - sync `TreeInsertioEvent`s instead of notes and fill batch events individually
