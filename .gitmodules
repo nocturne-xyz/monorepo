@@ -15,3 +15,7 @@
 	path = graph-node
 	url = https://github.com/nocturne-xyz/graph-node.git
 	branch = dont-persist-volumes
+[submodule "subgraph"]
+	path = subgraph
+	url = https://github.com/nocturne-xyz/subgraph
+	ignore = dirty

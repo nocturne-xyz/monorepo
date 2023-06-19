@@ -13,7 +13,7 @@ do
 done
 
 # https://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself
-SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" 
+SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 ROOT_DIR="$SCRIPT_DIR/../"
 cd $ROOT_DIR
 
@@ -53,7 +53,7 @@ cleanup() {
 
 if [ "$pre_startup_flag" = "true" ]; then
     pre_startup
-else 
+else
     echo "Pre-startup flag is false, skipping.."
 fi
 
@@ -78,7 +78,7 @@ popd
 # same ports its dumb graphql server wants to use
 sleep 20
 
-# start hardhat 
+# start hardhat
 pushd packages/e2e-tests
 echo "starting hardhat..."
 npx hardhat node &> "$LOG_DIR/hardhat" &
@@ -130,7 +130,9 @@ popd
 sleep 15
 
 # deploy subgraph
-pushd packages/subgraph
+pushd subgraph
+yarn install
+yarn build
 yarn create-local
 yarn deploy-local
 popd
@@ -153,7 +155,7 @@ BUNDLER_PORT="3000"
 # screener default config variables
 SCREENER_REDIS_URL="redis://redis:6380"
 
-# subtree updater default config variables 
+# subtree updater default config variables
 SUBTREE_UPDATER_REDIS_URL="redis://redis:6381"
 
 # subgraph url
@@ -181,7 +183,7 @@ RPC_URL=$RPC_URL
 TX_SIGNER_KEY=$BUNDLER_TX_SIGNER_KEY
 EOM
 
-# clear redis if it exists 
+# clear redis if it exists
 rm -r ./redis-data || echo 'redis-data does not yet exist'
 mkdir ./redis-data
 popd
@@ -206,7 +208,7 @@ TX_SIGNER_KEY=$SCREENER_TX_SIGNER_KEY
 ATTESTATION_SIGNER_KEY=$SCREENER_TX_SIGNER_KEY
 EOM
 
-# clear redis if it exists 
+# clear redis if it exists
 rm -r ./redis-data || echo 'redis-data does not yet exist'
 mkdir ./redis-data
 popd

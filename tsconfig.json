@@ -68,13 +68,10 @@
       "path": "./packages/snap"
     },
     {
-      "path": "./packages/subgraph"
-    },
-    {
       "path": "./packages/test-actor"
     },
     {
       "path": "./packages/offchain-utils"
-    },
+    }
   ]
 }
