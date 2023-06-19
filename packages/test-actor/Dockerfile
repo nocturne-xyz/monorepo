@@ -8,6 +8,7 @@ COPY yarn.lock .
 COPY .yarn .yarn
 COPY .yarnrc.yml .
 COPY packages/test-actor packages/test-actor
+COPY packages/circuit-artifacts/joinsplit packages/circuit-artifacts/joinsplit
 
 RUN yarn install
 
