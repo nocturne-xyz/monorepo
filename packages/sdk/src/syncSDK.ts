@@ -42,9 +42,9 @@ export async function syncSDK(
     : 0n;
 
   const currentBlock = await adapter.getLatestIndexedBlock();
-  const endTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
-    blockNumber: BigInt(opts?.endBlock ?? currentBlock),
-  });
+  const endTotalEntityIndex = TotalEntityIndexTrait.fromBlockNumber(
+    opts?.endBlock ?? currentBlock
+  );
   console.log(
     `[syncSDK] syncing SDK from totalEntityIndex ${startTotalEntityIndex} (block ${
       TotalEntityIndexTrait.toComponents(startTotalEntityIndex).blockNumber
