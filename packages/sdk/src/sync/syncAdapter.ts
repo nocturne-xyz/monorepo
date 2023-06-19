@@ -55,4 +55,7 @@ export interface SDKSyncAdapter {
     startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<EncryptedStateDiff>;
+
+  // return the latest block the sync adapter can sync to
+  getLatestIndexedBlock(): Promise<number>;
 }

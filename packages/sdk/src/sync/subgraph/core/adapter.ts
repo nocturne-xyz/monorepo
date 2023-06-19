@@ -101,10 +101,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
           // this is to prevent an busy loops in the case where the subgraph has indexed a block corresponding
           // to a totalEntityIndex > `endTotalEntityIndex` but we haven't found any insertions in that block
           const currentBlockTotalEntityIndex =
-            TotalEntityIndexTrait.fromComponents({
-              blockNumber: BigInt(latestIndexedBlock),
-            });
-
+            TotalEntityIndexTrait.fromBlockNumber(latestIndexedBlock);
           if (currentBlockTotalEntityIndex > from) {
             from = currentBlockTotalEntityIndex;
           }
@@ -115,5 +112,16 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
     return new ClosableAsyncIterator(generator(), async () => {
       closed = true;
     });
+  }
+
+  async fetchLastCommittedMerkleIndex(): Promise<number> {
+    const blockNumber = await fetchLastCommittedMerkleIndex(
+      this.graphqlEndpoint
+    );
+    if (!blockNumber) {
+      throw new Error("could not fetch last committed merkle index");
+    }
+
+    return blockNumber;
   }
 }

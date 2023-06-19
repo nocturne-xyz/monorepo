@@ -81,11 +81,12 @@ export class NocturneWalletSDK {
   }
 
   async sync(): Promise<void> {
-    const deps = {
-      provider: this.handlerContract.provider,
-      viewer: this.signer,
-    };
-    await syncSDK(deps, this.syncAdapter, this.db, this.merkleProver);
+    await syncSDK(
+      { viewer: this.signer },
+      this.syncAdapter,
+      this.db,
+      this.merkleProver
+    );
   }
 
   async prepareOperation(

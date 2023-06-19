@@ -12,7 +12,6 @@ import {
   SDKSyncAdapter,
   TotalEntityIndexTrait,
 } from "./sync";
-import { ethers } from "ethers";
 import {
   IncludedEncryptedNote,
   IncludedNote,
@@ -28,11 +27,10 @@ export interface SyncOpts {
 
 export interface SyncDeps {
   viewer: NocturneViewer;
-  provider: ethers.providers.Provider;
 }
 
 export async function syncSDK(
-  { provider, viewer }: SyncDeps,
+  { viewer }: SyncDeps,
   adapter: SDKSyncAdapter,
   db: NocturneDB,
   merkle: SparseMerkleProver,
@@ -43,7 +41,7 @@ export async function syncSDK(
     ? currTotalEntityIndex + 1n
     : 0n;
 
-  const currentBlock = await provider.getBlockNumber();
+  const currentBlock = await adapter.getLatestIndexedBlock();
   const endTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
     blockNumber: BigInt(opts?.endBlock ?? currentBlock),
   });
