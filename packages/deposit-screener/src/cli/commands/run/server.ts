@@ -21,6 +21,10 @@ const runServer = new Command("server")
     "dummy screening delay in seconds (test purposes only)"
   )
   .option(
+    "--dummy-magic-long-delay-value <number>",
+    "dummy magic value that results in long delay (test purposes only)"
+  )
+  .option(
     "--log-dir <string>",
     "directory to write logs to",
     "./logs/deposit-screener"
@@ -34,6 +38,7 @@ const runServer = new Command("server")
       configNameOrPath,
       port,
       dummyScreeningDelay,
+      dummyMagicLongDelayValue,
       logDir,
       stdoutLogLevel,
     } = options;
@@ -58,7 +63,10 @@ const runServer = new Command("server")
       getRedis(),
       // TODO: use real screening api and delay calculator
       new DummyScreeningApi(),
-      new DummyScreenerDelayCalculator(dummyScreeningDelay),
+      new DummyScreenerDelayCalculator(
+        dummyScreeningDelay,
+        dummyMagicLongDelayValue
+      ),
       supportedAssetRateLimits
     );
 

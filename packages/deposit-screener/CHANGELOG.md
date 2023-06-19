@@ -3,6 +3,7 @@
 ### Unreleased
 
 - fix server cli to also take `--dummy-screener-delay`
+- add dummy magic long delay value to cause dummy screener to give 3h delay
 - add dummy magic rejection value for screener to reject some deposits (test purposes)
 - put back redis utils
 - make logging more consistent
