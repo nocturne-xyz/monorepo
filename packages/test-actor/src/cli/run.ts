@@ -18,6 +18,7 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { TestActor } from "../actor";
 import * as fs from "fs";
+import { makeLogger } from "@nocturne-xyz/offchain-utils";
 
 export const run = new Command("run")
   .summary("run test actor")
@@ -37,6 +38,15 @@ export const run = new Command("run")
   .option("--interval <number>", "interval between deposits/ops in seconds")
   .option("--only-deposits", "only perform deposits")
   .option("--only-operations", "only perform operations")
+  .option(
+    "--log-dir <string>",
+    "directory to write logs to",
+    "./logs/deposit-screener-processor"
+  )
+  .option(
+    "--stdout-log-level <string>",
+    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
+  )
   .action(async (options) => {
     const {
       configNameOrPath,
@@ -46,9 +56,15 @@ export const run = new Command("run")
       interval,
       onlyDeposits,
       onlyOperations,
+      logDir,
+      stdoutLogLevel,
     } = options;
 
+    const logger = makeLogger(logDir, "test-actor", "actor", stdoutLogLevel);
+
     const config = loadNocturneConfig(configNameOrPath);
+
+    logger.log("config", { config });
 
     const rpcUrl = process.env.RPC_URL;
     if (!rpcUrl) {
@@ -122,7 +138,8 @@ export const run = new Command("run")
       sdk,
       prover,
       bundlerEndpoint,
-      testTokens
+      testTokens,
+      logger
     );
 
     if (onlyDeposits && onlyOperations) {

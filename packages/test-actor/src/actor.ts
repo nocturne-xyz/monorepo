@@ -20,6 +20,7 @@ import * as JSON from "bigint-json-serialization";
 import { Erc20Config } from "@nocturne-xyz/config";
 import { ethers } from "ethers";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
+import { Logger } from "winston";
 
 const ONE_MINUTE_AS_MILLIS = 60 * 1000;
 const ONE_DAY_SECONDS = 60n * 60n * 24n;
@@ -39,6 +40,7 @@ export class TestActor {
   prover: JoinSplitProver;
   bundlerEndpoint: string;
   erc20s: Map<string, Erc20Config>;
+  logger: Logger;
 
   constructor(
     txSigner: ethers.Wallet,
@@ -47,7 +49,8 @@ export class TestActor {
     sdk: NocturneWalletSDK,
     prover: JoinSplitProver,
     bundlerEndpoint: string,
-    erc20s: Map<string, Erc20Config>
+    erc20s: Map<string, Erc20Config>,
+    logger: Logger
   ) {
     this.txSigner = txSigner;
     this.teller = teller;
@@ -57,6 +60,7 @@ export class TestActor {
     this.bundlerEndpoint = bundlerEndpoint;
 
     this.erc20s = erc20s;
+    this.logger = logger;
   }
 
   async run(opts?: TestActorOpts): Promise<void> {
@@ -67,27 +71,27 @@ export class TestActor {
     while (true) {
       await this.sdk.sync();
       const balances = await this.sdk.getAllAssetBalances();
-      console.log("balances: ", balances);
+      this.logger.info("balances: ", balances);
 
       let actionTaken = false;
       if (opts?.onlyDeposits) {
-        console.log("depositing");
+        this.logger.info("depositing");
         actionTaken = await this.deposit();
       } else if (opts?.onlyOperations) {
-        console.log("performing operation");
+        this.logger.info("performing operation");
         actionTaken = await this.randomOperation();
       } else {
         if (flipCoin()) {
-          console.log("switched on deposit");
+          this.logger.info("depositing");
           actionTaken = await this.deposit();
         } else {
-          console.log("switched on operation");
+          this.logger.info("performing operation");
           actionTaken = await this.randomOperation();
         }
       }
 
       if (actionTaken) {
-        console.log(`sleeping for ${intervalMs / 1000} seconds`);
+        this.logger.info(`sleeping for ${intervalMs / 1000} seconds`);
         await sleep(intervalMs);
       }
     }
@@ -96,7 +100,7 @@ export class TestActor {
   private async getRandomErc20AndValue(): Promise<[Asset, bigint] | undefined> {
     const assetsWithBalance = await this.sdk.getAllAssetBalances();
     if (assetsWithBalance.length === 0) {
-      console.log("no asset balances");
+      this.logger.warn("test-actor has no asset balances");
       return undefined;
     }
 
@@ -121,9 +125,9 @@ export class TestActor {
 
   private async deposit(): Promise<boolean> {
     // choose a random deposit request and set its nonce
-    console.log(
-      `erc20 entries: ${JSON.stringify(Array.from(this.erc20s.entries()))}`
-    );
+    this.logger.debug(`${this.erc20s.size} possible erc20s`, {
+      erc20s: Array.from(this.erc20s.entries()),
+    });
     const [erc20Name, erc20Config] = randomElem(
       Array.from(this.erc20s.entries())
     );
@@ -132,7 +136,15 @@ export class TestActor {
       10n * ONE_ETH_IN_WEI
     );
 
-    console.log(`reserving tokens. token: ${erc20Name}, value: ${randomValue}`);
+    this.logger.info(
+      `reserving ${randomValue} of token "${erc20Config.address}"`,
+      {
+        tokenName: erc20Name,
+        tokenAddress: erc20Config.address,
+        amount: randomValue,
+      }
+    );
+
     const erc20Token = SimpleERC20Token__factory.connect(
       erc20Config.address,
       this.txSigner
@@ -143,7 +155,15 @@ export class TestActor {
     );
     await reserveTx.wait(1);
 
-    console.log(`approving tokens. token: ${erc20Name}, value: ${randomValue}`);
+    this.logger.info(
+      `approving deopsit manager for ${randomValue} of token "${erc20Config.address}"`,
+      {
+        tokenName: erc20Name,
+        tokenAddress: erc20Config.address,
+        amount: randomValue,
+      }
+    );
+
     const approveTx = await erc20Token.approve(
       this.depositManager.address,
       randomValue
@@ -151,9 +171,15 @@ export class TestActor {
     await approveTx.wait(1);
 
     // submit
-    console.log(
-      `instantiating erc20 deposit request for ${erc20Name} with value ${randomValue}`
+    this.logger.info(
+      `instantiating erc20 deposit request for ${randomValue} of token "${erc20Config.address}"`,
+      {
+        tokenName: erc20Name,
+        tokenAddress: erc20Config.address,
+        amount: randomValue,
+      }
     );
+
     const instantiateDepositTx =
       await this.depositManager.instantiateErc20MultiDeposit(
         erc20Token.address,
@@ -168,7 +194,9 @@ export class TestActor {
       receipt,
       this.depositManager.interface.getEvent("DepositInstantiated")
     ) as DepositInstantiatedEvent[];
-    console.log(`instantiate deposit tx: ${JSON.stringify(matchingEvents)}`);
+    this.logger.debug("matching events from transaction receipt", {
+      matchingEvents,
+    });
 
     return true;
   }
@@ -181,8 +209,12 @@ export class TestActor {
     }
     const [asset, value] = maybeErc20AndValue;
 
-    console.log(
-      `Attempting operation with asset ${asset.assetAddr} and value ${value}`
+    this.logger.info(
+      `Attempting operation that spends ${value} of token ${asset.assetAddr}`,
+      {
+        tokenAddress: asset.assetAddr,
+        amount: value,
+      }
     );
 
     let opRequest: OperationRequest;
@@ -197,9 +229,16 @@ export class TestActor {
     const signed = this.sdk.signOperation(preSign);
     await this.sdk.applyOptimisticRecordsForOp(signed);
 
-    console.log(`proving operation: ${computeOperationDigest(signed)}`);
+    const opDigest = computeOperationDigest(signed);
+    this.logger.info(`proving operation with digest ${opDigest}`, {
+      opDigest,
+      signedOp: signed,
+    });
+
     const proven = await proveOperation(this.prover, signed);
-    console.log(JSON.stringify(proven));
+    this.logger.info(`proved operation with dipest ${opDigest}`, {
+      provenOp: proven,
+    });
 
     // submit
     const res = await fetch(`${this.bundlerEndpoint}/relay`, {
