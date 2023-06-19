@@ -161,7 +161,7 @@ describe("handleGasForOperationRequest", async () => {
 
   it("adds a joinsplit request for gasAssetB when gas price is nonzero, there exists a joinsplit unwrapping gasAssetA, user doesn't have enough gasAssetA, but user does have enough gasAssetB", async () => {
     const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
-      [500_000n, 500_000n, 500_000n, 2_000_000n],
+      [500_000n, 500_000n, 500_000n, 3_000_000n],
       [shitcoin, shitcoin, shitcoin, stablescam]
     );
     const deps = {
@@ -181,7 +181,7 @@ describe("handleGasForOperationRequest", async () => {
       .maxNumRefunds(1n)
       .gas({
         // Exceeds shitcoin balance, forces us to use stablescam
-        executionGasLimit: 1_000_000n,
+        executionGasLimit: 1_500_000n,
         gasPrice: 1n,
       })
       .chainId(1n)
