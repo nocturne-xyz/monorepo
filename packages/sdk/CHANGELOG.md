@@ -2,9 +2,9 @@
 
 ### Unreleased
 
-- fix bug causing ops with >3 proofs to fail processing by using
-  - we keep using `opRequest.joinSplitRequests.length` instead of `simulatedOp.joinSplits.length`, causes ops with > 500k worth of joinsplit verification/handling to fail
-  - Fix uses simulated op joinSplits.length and lowers per joinSplit gas estimate
+- we fail to take into account extra joinsplit gas if gas asset is not already in joinsplits, we fix that in tryUpdateJoinSplitRequests
+- we keep using `opRequest.joinSplitRequests.length` instead of `simulatedOp.joinSplits.length`, causes ops with > 500k worth of joinsplit verification/handling to fail
+  - Fix uses simulated op joinSplits.length for gas estimation and lowers per joinSplit gas estimate
 - sync through current block, not merely up to it
 - add `getLatestIndexedBlock` to `SyncAdapter` and make `syncSDK` use that instead of `provider.getCurrentBlock()`
 - fix `hasEnoughBalanceForOpRequest`
