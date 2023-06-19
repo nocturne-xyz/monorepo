@@ -105,12 +105,12 @@ export class TestActor {
 
     // If random chosen doesn't have any funds, find the first one with funds
     if (randomAsset.balance > 0) {
-      const value = randomBigIntBounded(randomAsset.balance / 100n);
+      const value = randomBigIntBounded(randomAsset.balance / 25n);
       return [randomAsset.asset, value];
     } else {
       for (const asset of assetsWithBalance) {
         if (asset.balance > 0) {
-          const value = randomBigIntBounded(randomAsset.balance / 5n);
+          const value = randomBigIntBounded(randomAsset.balance / 25n);
           return [asset.asset, value];
         }
       }

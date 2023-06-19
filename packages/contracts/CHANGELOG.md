@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- update gas comp numbers in `Types.sol` and remove verify gas estimate since not needed
 - use new compressed encoding to compute note hashes in subtree update logic
 - replace `StealthAddress` with `CompressedStealthAddress`, which is composed of two points in 255-bit compressed encoding
 - remove proof and root from joinsplit events
