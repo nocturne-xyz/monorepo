@@ -18,7 +18,7 @@
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src",
     "prettier:write": "prettier --write ./src",
-    "build:docker": "./build_docker.sh",
+    "build:docker": "docker build -f ./Dockerfile ../../ -t nocturnelabs/test-actor:dev",
     "test:unit": ""
   },
   "dependencies": {
