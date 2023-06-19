@@ -71,9 +71,9 @@ async function startDepositScreenerScreener(
 ): Promise<TeardownFn> {
   const { depositManagerAddress, subgraphUrl, rpcUrl } = config;
 
-  const adapter = new SubgraphScreenerSyncAdapter(subgraphUrl);
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const logger = makeTestLogger("deposit-screener", "processor");
+  const adapter = new SubgraphScreenerSyncAdapter(subgraphUrl, logger);
+  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const screener = new DepositScreenerScreener(
     adapter,
     depositManagerAddress,

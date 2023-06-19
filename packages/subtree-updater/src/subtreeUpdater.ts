@@ -314,8 +314,9 @@ export class SubtreeUpdater {
             : NoteTrait.toCommitment(noteOrCommitment as Note)
         );
 
-        logger.info(
-          `inserting batch into merkle tree. startIndex: ${subtreeBatchOffset}, leaves: ${leaves}}`
+        logger.debug(
+          `inserting batch into local SMP tree with offset ${subtreeBatchOffset}`,
+          { subtreeBatchOffset, leaves }
         );
         this.tree.insertBatch(
           subtreeBatchOffset,

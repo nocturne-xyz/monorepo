@@ -55,7 +55,7 @@ export function makeRelayHandler({
 
     const errorOrRelayRequest = tryParseRelayRequest(req.body);
     if (typeof errorOrRelayRequest == "string") {
-      logger.warn("request validation failed", errorOrRelayRequest);
+      logger.warn("request validation failed", { errorOrRelayRequest });
       res.statusMessage = errorOrRelayRequest;
       res.status(400).json(errorOrRelayRequest);
       return;
@@ -66,7 +66,7 @@ export function makeRelayHandler({
     const childLogger = logger.child({ opDigest: digest });
 
     const logValidationFailure = (msg: string) =>
-      childLogger.warn(`failed to validate operation `, msg);
+      childLogger.warn(`failed to validate operation`, { msg });
 
     childLogger.debug("checking operation's gas price");
 
@@ -155,13 +155,17 @@ export function makeGetOperationStatusHandler({
     const status = await statusDB.getJobStatus(req.params.id);
     if (status) {
       childLogger.info(
-        `found operation with digest ${req.params.id} with status: ${status}`
+        `found operation with digest ${req.params.id} with status: ${status}`,
+        { opDigest: req.params.id, status }
       );
 
       const response: OperationStatusResponse = { status };
       res.json(response);
     } else {
-      childLogger.warn(`could not find operation with digest ${req.params.id}`);
+      childLogger.warn(
+        `could not find operation with digest ${req.params.id}`,
+        { opDigest: req.params.id }
+      );
       res.status(404).json({ error: "operation not found" });
     }
   };
@@ -184,7 +188,7 @@ export function makeCheckNFHandler({
     try {
       exists = await nullifierDB.hasNullifierConflict(nf);
     } catch (err) {
-      logger.error("failed to check if nullifier exists", err);
+      logger.error("failed to check if nullifier exists", { err });
       res.status(500).json({ error: "internal server error" });
     }
 
@@ -230,7 +234,7 @@ async function postJob(
   await redis.multi(allTransactions).exec((maybeErr) => {
     if (maybeErr) {
       const msg = `failed to execute set jobs status + add nfs transaction: ${maybeErr}`;
-      logger.error(msg);
+      logger.error(msg, { maybeErr });
       throw new Error(msg);
     }
   });

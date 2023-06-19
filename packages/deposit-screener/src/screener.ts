@@ -153,7 +153,13 @@ export class DepositScreenerScreener {
       `processing deposit requests starting from totalEntityIndex ${nextTotalEntityIndexToSync} (block ${
         TotalEntityIndexTrait.toComponents(nextTotalEntityIndexToSync)
           .blockNumber
-      })`
+      })`,
+      {
+        nextTotalEntityIndexToSync,
+        blockNumber: TotalEntityIndexTrait.toComponents(
+          nextTotalEntityIndexToSync
+        ).blockNumber,
+      }
     );
 
     const depositEvents = this.adapter.iterDepositEvents(
@@ -166,7 +172,7 @@ export class DepositScreenerScreener {
       this.logger.child({ function: "screener" }),
       depositEvents
     ).catch((err) => {
-      this.logger.error("error in deposit processor screener: ", err);
+      this.logger.error("error in deposit processor screener", { err });
       throw new Error("error in deposit processor screener: " + err);
     });
 
@@ -192,7 +198,7 @@ export class DepositScreenerScreener {
       try {
         await Promise.all([screenerProm, arbiterProm]);
       } catch (err) {
-        this.logger.error(`error in deposit screener screener: ${err}`, err);
+        this.logger.error(`error in deposit screener screener`, { err });
         await teardown();
         throw err;
       }
@@ -229,7 +235,7 @@ export class DepositScreenerScreener {
           attributes
         );
 
-        logger.info(`received deposit event, storing in DB`, event);
+        logger.info(`received deposit event, storing in DB`, { event });
         await this.db.storeDepositRequest(depositRequest);
 
         const hash = hashDepositRequest(depositRequest);
@@ -273,7 +279,8 @@ export class DepositScreenerScreener {
           );
         } else {
           childLogger.warn(
-            `deposit failed first screening stage with reason ${reason}`
+            `deposit failed first screening stage with reason ${reason}`,
+            { reason }
           );
           await this.db.setDepositRequestStatus(
             depositRequest,
@@ -317,9 +324,9 @@ export class DepositScreenerScreener {
       },
     });
 
-    logger.info("[histogram] delaySeconds", delaySeconds);
-    logger.log("[histogram] spender tag", depositRequest.spender);
-    logger.log("[histogram] assetAddr tag", assetAddr);
+    logger.info("[histogram] delaySeconds", { delaySeconds });
+    logger.info("[histogram] spender tag", { spender: depositRequest.spender });
+    logger.info("[histogram] assetAddr tag", { assetAddr });
 
     this.metrics.screeningDelayHistogram.record(delaySeconds, {
       spender: depositRequest.spender,
@@ -338,16 +345,17 @@ export class DepositScreenerScreener {
           job.data.depositRequestJson
         );
         const depositHash = hashDepositRequest(depositRequest);
+        const assetAddr = AssetTrait.decode(
+          depositRequest.encodedAsset
+        ).assetAddr;
         const childLogger = logger.child({
           depositRequestSpender: depositRequest.spender,
           depositReququestNonce: depositRequest.nonce,
           depositRequestHash: depositHash,
+          depositRequestAsset: assetAddr,
         });
 
         childLogger.info("processing deposit request");
-        const assetAddr = AssetTrait.decode(
-          depositRequest.encodedAsset
-        ).assetAddr;
 
         if (!this.supportedAssets.has(assetAddr)) {
           childLogger.warn(`unsupported asset ${assetAddr}`);

@@ -52,7 +52,7 @@ const runProcess = new Command("processor")
     );
 
     const config = loadNocturneConfig(configNameOrPath);
-    logger.info("config", config);
+    logger.info("config", { config });
 
     // TODO: enable switching on adapter impl
     const subgraphEndpoint = process.env.SUBGRAPH_URL;

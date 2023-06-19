@@ -70,15 +70,25 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       vkeyPath,
       stdoutLogLevel,
     } = options;
+    const logger = makeLogger(
+      logDir,
+      "subtree-updater",
+      "subtree-updater",
+      stdoutLogLevel
+    );
 
     const config = loadNocturneConfig(configNameOrPath);
+    logger.info("config", { config });
 
     // TODO: enable switching on adapter impl
     const subgraphEndpoint = process.env.SUBGRAPH_URL;
     if (!subgraphEndpoint) {
       throw new Error("missing SUBGRAPH_URL");
     }
-    const adapter = new SubgraphSubtreeUpdaterSyncAdapter(subgraphEndpoint);
+    const adapter = new SubgraphSubtreeUpdaterSyncAdapter(
+      subgraphEndpoint,
+      logger.child({ function: "SubgraphSubtreeUpdaterSyncAdapter" })
+    );
 
     const rpcUrl = process.env.RPC_URL;
     if (!rpcUrl) {
@@ -98,13 +108,6 @@ export const runSubtreeUpdater = new Command("subtree-updater")
     const fillBatchLatency = fillBatchLatencyMs
       ? (fillBatchLatencyMs as number)
       : undefined;
-
-    const logger = makeLogger(
-      logDir,
-      "subtree-updater",
-      "subtree-updater",
-      stdoutLogLevel
-    );
 
     let prover: SubtreeUpdateProver;
     if (useMockProver) {
