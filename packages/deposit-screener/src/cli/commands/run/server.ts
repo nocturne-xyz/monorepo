@@ -17,6 +17,10 @@ const runServer = new Command("server")
   )
   .requiredOption("--port <number>", "server port", parseInt)
   .option(
+    "--dummy-screening-delay <number>",
+    "dummy screening delay in seconds (test purposes only)"
+  )
+  .option(
     "--log-dir <string>",
     "directory to write logs to",
     "./logs/deposit-screener"
@@ -26,7 +30,13 @@ const runServer = new Command("server")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
-    const { configNameOrPath, port, logDir, stdoutLogLevel } = options;
+    const {
+      configNameOrPath,
+      port,
+      dummyScreeningDelay,
+      logDir,
+      stdoutLogLevel,
+    } = options;
     const config = loadNocturneConfig(configNameOrPath);
 
     const supportedAssetRateLimits = new Map(
@@ -48,7 +58,7 @@ const runServer = new Command("server")
       getRedis(),
       // TODO: use real screening api and delay calculator
       new DummyScreeningApi(),
-      new DummyScreenerDelayCalculator(),
+      new DummyScreenerDelayCalculator(dummyScreeningDelay),
       supportedAssetRateLimits
     );
 
