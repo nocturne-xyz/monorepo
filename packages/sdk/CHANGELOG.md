@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- remove some unnecesary logs that are left-over from debugging sessions.
 - we fail to take into account extra joinsplit gas if gas asset is not already in joinsplits, we fix that in tryUpdateJoinSplitRequests
 - we keep using `opRequest.joinSplitRequests.length` instead of `simulatedOp.joinSplits.length`, causes ops with > 500k worth of joinsplit verification/handling to fail
   - Fix uses simulated op joinSplits.length for gas estimation and lowers per joinSplit gas estimate
