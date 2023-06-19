@@ -234,7 +234,7 @@ async function postJob(
   await redis.multi(allTransactions).exec((maybeErr) => {
     if (maybeErr) {
       const msg = `failed to execute set jobs status + add nfs transaction: ${maybeErr}`;
-      logger.error(msg, { maybeErr });
+      logger.error(msg, { err: maybeErr });
       throw new Error(msg);
     }
   });
