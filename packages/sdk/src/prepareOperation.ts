@@ -61,8 +61,13 @@ export async function prepareOperation(
     );
 
     newJoinSplits.forEach((js) => {
-      usedMerkleIndices.add(js.oldNoteA.merkleIndex);
-      usedMerkleIndices.add(js.oldNoteB.merkleIndex);
+      // If note value == 0, its just a dummy and we don't want to count in used merkle indices
+      if (js.oldNoteA.value !== 0n) {
+        usedMerkleIndices.add(js.oldNoteA.merkleIndex);
+      }
+      if (js.oldNoteB.value !== 0n) {
+        usedMerkleIndices.add(js.oldNoteB.merkleIndex);
+      }
     });
     joinSplits.push(...newJoinSplits);
   }

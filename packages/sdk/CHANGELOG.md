@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix bug in ignore indices that caused zero (dummy) notes to make sdk incorrectly ignore note at merkle index 0
 - pass in optional winston logger
 - remove some unnecesary logs that are left-over from debugging sessions.
 - we fail to take into account extra joinsplit gas if gas asset is not already in joinsplits, we fix that in tryUpdateJoinSplitRequests
