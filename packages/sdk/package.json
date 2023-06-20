@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/sdk",
-  "version": "1.0.152-alpha",
+  "version": "1.0.153-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -29,7 +29,8 @@
     "ethers": "^5.7.2",
     "js-sha256": "^0.9.0",
     "randombytes": "^2.1.0",
-    "sorted-btree": "^1.8.1"
+    "sorted-btree": "^1.8.1",
+    "winston": "^3.9.0"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",

@@ -1,3 +1,4 @@
+import { Logger } from "winston";
 import { decompressPoint } from "./crypto";
 import {
   PreProofJoinSplit,
@@ -13,10 +14,11 @@ import {
 
 export async function proveOperation(
   prover: JoinSplitProver,
-  op: SignedOperation
+  op: SignedOperation,
+  logger?: Logger
 ): Promise<ProvenOperation> {
   const joinSplits: ProvenJoinSplit[] = await Promise.all(
-    op.joinSplits.map((joinSplit) => proveJoinSplit(prover, joinSplit))
+    op.joinSplits.map((joinSplit) => proveJoinSplit(prover, joinSplit, logger))
   );
 
   const {
@@ -51,11 +53,12 @@ export async function proveOperation(
 
 async function proveJoinSplit(
   prover: JoinSplitProver,
-  signedJoinSplit: PreProofJoinSplit
+  signedJoinSplit: PreProofJoinSplit,
+  logger?: Logger
 ): Promise<ProvenJoinSplit> {
   const { opDigest, proofInputs, encSenderCanonAddr, ...baseJoinSplit } =
     signedJoinSplit;
-  console.log("proofInputs: ", proofInputs);
+  logger && logger.debug("proofInputs: ", proofInputs);
   const proof = await prover.proveJoinSplit(proofInputs);
 
   const decompressedC1 = decompressPoint(encSenderCanonAddr.c1);
@@ -81,27 +84,28 @@ async function proveJoinSplit(
     decompressedC1.y !== BigInt(publicSignals.encSenderCanonAddrC1Y) ||
     decompressedC2.y !== BigInt(publicSignals.encSenderCanonAddrC2Y)
   ) {
-    console.error("from proof, got", publicSignals);
-    console.error("from sdk, got", {
-      newNoteACommitment: baseJoinSplit.newNoteACommitment,
-      newNoteBCommitment: baseJoinSplit.newNoteBCommitment,
-      commitmentTreeRoot: baseJoinSplit.commitmentTreeRoot,
-      publicSpend: baseJoinSplit.publicSpend,
-      nullifierA: baseJoinSplit.nullifierA,
-      nullifierB: baseJoinSplit.nullifierB,
-      encodedAssetAddr: baseJoinSplit.encodedAsset.encodedAssetAddr,
-      encodedAssetId: baseJoinSplit.encodedAsset.encodedAssetId,
-      decompressedC1Y: decompressedC1?.y,
-      decompressedC2Y: decompressedC2?.y,
-      opDigest,
-    });
+    logger && logger.error("from proof, got", publicSignals);
+    logger &&
+      logger.error("from sdk, got", {
+        newNoteACommitment: baseJoinSplit.newNoteACommitment,
+        newNoteBCommitment: baseJoinSplit.newNoteBCommitment,
+        commitmentTreeRoot: baseJoinSplit.commitmentTreeRoot,
+        publicSpend: baseJoinSplit.publicSpend,
+        nullifierA: baseJoinSplit.nullifierA,
+        nullifierB: baseJoinSplit.nullifierB,
+        encodedAssetAddr: baseJoinSplit.encodedAsset.encodedAssetAddr,
+        encodedAssetId: baseJoinSplit.encodedAsset.encodedAssetId,
+        decompressedC1Y: decompressedC1?.y,
+        decompressedC2Y: decompressedC2?.y,
+        opDigest,
+      });
 
     throw new Error(
       `snarkjs generated public input differs from precomputed ones`
     );
   }
 
-  console.log("proofWithPis", proof);
+  logger && logger.debug("proofWithPis", proof);
 
   const solidityProof = packToSolidityProof(proof.proof);
   return {

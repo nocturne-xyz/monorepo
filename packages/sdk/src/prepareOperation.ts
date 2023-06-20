@@ -28,6 +28,7 @@ import {
   groupByArr,
 } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
+import { Logger } from "winston";
 
 export const __private = {
   gatherNotes,
@@ -37,6 +38,7 @@ export interface PrepareOperationDeps {
   db: NocturneDB;
   viewer: NocturneViewer;
   merkle: SparseMerkleProver;
+  logger?: Logger;
 }
 
 export async function prepareOperation(
@@ -89,7 +91,7 @@ export async function prepareOperation(
 }
 
 async function prepareJoinSplits(
-  { db, viewer, merkle }: PrepareOperationDeps,
+  { db, viewer, merkle, logger }: PrepareOperationDeps,
   joinSplitRequest: JoinSplitRequest,
   alreadyUsedNoteMerkleIndices: Set<number> = new Set()
 ): Promise<PreSignJoinSplit[]> {
@@ -97,7 +99,8 @@ async function prepareJoinSplits(
     db,
     getJoinSplitRequestTotalValue(joinSplitRequest),
     joinSplitRequest.asset,
-    alreadyUsedNoteMerkleIndices
+    alreadyUsedNoteMerkleIndices,
+    logger
   );
 
   const unwrapAmount = joinSplitRequest.unwrapValue;
@@ -122,7 +125,8 @@ async function gatherNotes(
   db: NocturneDB,
   requestedAmount: bigint,
   asset: Asset,
-  noteMerkleIndicesToIgnore: Set<number> = new Set()
+  noteMerkleIndicesToIgnore: Set<number> = new Set(),
+  logger?: Logger
 ): Promise<IncludedNote[]> {
   // check that the user has enough notes to cover the request
   const notes = (await db.getNotesForAsset(asset)).filter(
@@ -178,7 +182,7 @@ async function gatherNotes(
     subseqIndex--;
   }
 
-  console.log("notes to use: ", notesToUse);
+  logger && logger.debug("notes to use: ", notesToUse);
   return notesToUse;
 }
 
