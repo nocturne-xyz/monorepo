@@ -3364,7 +3364,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": 1.0.14-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
-    "@nocturne-xyz/offchain-utils": 0.1.8
+    "@nocturne-xyz/offchain-utils": 0.1.9
     "@nocturne-xyz/sdk": 1.0.153-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -3510,7 +3510,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": 1.0.14-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
-    "@nocturne-xyz/offchain-utils": 0.1.8
+    "@nocturne-xyz/offchain-utils": 0.1.9
     "@nocturne-xyz/sdk": 1.0.153-alpha
     "@opentelemetry/api": ^1.4.1
     "@opentelemetry/exporter-metrics-otlp-http": ^0.40.0
@@ -3651,7 +3651,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/offchain-utils@0.1.8, @nocturne-xyz/offchain-utils@workspace:^, @nocturne-xyz/offchain-utils@workspace:packages/offchain-utils":
+"@nocturne-xyz/offchain-utils@0.1.9, @nocturne-xyz/offchain-utils@workspace:^, @nocturne-xyz/offchain-utils@workspace:packages/offchain-utils":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/offchain-utils@workspace:packages/offchain-utils"
   dependencies:
@@ -3668,7 +3668,6 @@ __metadata:
     bigint-json-serialization: ^1.0.1
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
-    ioredis: ^5.3.2
     prettier: ^2.8.8
     ts-node: ^10.9.1
     typescript: ^4.8.4
@@ -3875,7 +3874,7 @@ __metadata:
     "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/config": 1.0.14-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
-    "@nocturne-xyz/offchain-utils": 0.1.8
+    "@nocturne-xyz/offchain-utils": 0.1.9
     "@nocturne-xyz/sdk": 1.0.152-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
@@ -3914,7 +3913,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.14-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
     "@nocturne-xyz/local-prover": 1.0.7-alpha
-    "@nocturne-xyz/offchain-utils": 0.1.8
+    "@nocturne-xyz/offchain-utils": 0.1.9
     "@nocturne-xyz/sdk": 1.0.151-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -16279,23 +16278,6 @@ __metadata:
     redis-parser: ^3.0.0
     standard-as-callback: ^2.1.0
   checksum: 6c98cb8f8772ad4bb2b6b7a0a224e4a63f4759f9a28e84205f18788552f08221d51f391c10892dca01a1b10b2804d0a7e6082b0b7decd65538a5fb6b0f4f1f82
-  languageName: node
-  linkType: hard
-
-"ioredis@npm:^5.3.2":
-  version: 5.3.2
-  resolution: "ioredis@npm:5.3.2"
-  dependencies:
-    "@ioredis/commands": ^1.1.1
-    cluster-key-slot: ^1.1.0
-    debug: ^4.3.4
-    denque: ^2.1.0
-    lodash.defaults: ^4.2.0
-    lodash.isarguments: ^3.1.0
-    redis-errors: ^1.2.0
-    redis-parser: ^3.0.0
-    standard-as-callback: ^2.1.0
-  checksum: 9a23559133e862a768778301efb68ae8c2af3c33562174b54a4c2d6574b976e85c75a4c34857991af733e35c48faf4c356e7daa8fb0a3543d85ff1768c8754bc
   languageName: node
   linkType: hard
 
