@@ -306,7 +306,7 @@ export async function setupTestDeployment(
     if (config.configs?.subtreeUpdater?.useRapidsnark) {
       await sleep(30_000);
     } else {
-      await sleep(10_000);
+      await sleep(15_000);
     }
   };
 
