@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { DepositScreenerServer } from "../../../server";
-import { makeLogger, getRedis } from "@nocturne-xyz/offchain-utils";
+import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import { getRedis } from "./utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
 import { DummyScreeningApi } from "../../../screening";
 import { DummyScreenerDelayCalculator } from "../../../screenerDelay";
