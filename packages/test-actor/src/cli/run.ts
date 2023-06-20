@@ -64,7 +64,7 @@ export const run = new Command("run")
 
     const config = loadNocturneConfig(configNameOrPath);
 
-    logger.log("config", { config });
+    logger.info("config", { config });
 
     const rpcUrl = process.env.RPC_URL;
     if (!rpcUrl) {
