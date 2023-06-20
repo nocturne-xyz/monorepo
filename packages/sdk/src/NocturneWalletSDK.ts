@@ -111,10 +111,6 @@ export class NocturneWalletSDK {
       deps,
       opRequest
     );
-    console.log(
-      "pre prepareOperation joinSplitRequests:",
-      gasAccountedOpRequest.joinSplitRequests
-    );
 
     return await prepareOperation(deps, gasAccountedOpRequest);
   }

@@ -144,8 +144,6 @@ export async function handleGasForOperationRequest(
         logger
       );
 
-    console.log("final joinSplitRequests:", joinSplitRequests);
-
     if (!gasAssetAndTicker) {
       throw new Error("not enough owned gas tokens pay for op");
     }
