@@ -75,10 +75,14 @@ export class SubgraphSubtreeUpdaterSyncAdapter
           for (const { inner: insertion } of sorted) {
             if ("numZeros" in insertion) {
               const startIndex = insertion.merkleIndex;
+              const meta = {
+                startIndex: startIndex,
+                numZeros: insertion.numZeros,
+              };
               logger &&
                 logger.debug("yielding zeros", {
-                  startIndex,
-                  numZeros: insertion.numZeros,
+                  insertionKind: "zeros",
+                  insertion: meta,
                 });
               for (let i = 0; i < insertion.numZeros; i++) {
                 yield {
@@ -89,21 +93,31 @@ export class SubgraphSubtreeUpdaterSyncAdapter
             } else if (NoteTrait.isEncryptedNote(insertion)) {
               const noteCommitment = (insertion as IncludedEncryptedNote)
                 .commitment;
+              const meta = {
+                merkleIndex: insertion.merkleIndex,
+                noteCommitment,
+              };
+
               logger &&
                 logger.debug("yielding encrypted note", {
-                  merkleIndex: insertion.merkleIndex,
-                  noteCommitment,
+                  insertionKind: "encrypted note",
+                  meta,
                 });
               yield {
-                noteCommitment: noteCommitment,
+                noteCommitment,
                 merkleIndex: insertion.merkleIndex,
               };
             } else {
+              const meta = {
+                merkleIndex: insertion.merkleIndex,
+                note: insertion,
+              };
               logger &&
                 logger.debug("yielding note", {
-                  merkleIndex: insertion.merkleIndex,
-                  note: insertion,
+                  insertionKind: "note",
+                  meta,
                 });
+
               yield insertion as IncludedNote;
             }
           }
