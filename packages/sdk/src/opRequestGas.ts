@@ -144,15 +144,10 @@ export async function handleGasForOperationRequest(
         logger
       );
 
+    console.log("final joinSplitRequests:", joinSplitRequests);
+
     if (!gasAssetAndTicker) {
       throw new Error("not enough owned gas tokens pay for op");
-    }
-
-    // if we've added a new joinSplitRequest to pay for gas, we need to increase maxNumRefunds to reflect that change
-    if (
-      joinSplitRequests.length > gasEstimatedOpRequest.joinSplitRequests.length
-    ) {
-      gasEstimatedOpRequest.maxNumRefunds += 1n;
     }
 
     const gasAssetRefundThreshold = await deps.tokenConverter.weiToTargetErc20(
@@ -254,13 +249,10 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
     const estimateInGasAssetIncludingNewJoinSplit =
       gasEstimatesInGasAssets.get(ticker)! + extraJoinSplitCostInGasAsset;
     if (totalOwnedGasAsset >= estimateInGasAssetIncludingNewJoinSplit) {
-      const modifiedJoinSplitRequests = [
-        ...joinSplitRequests,
-        {
-          asset: gasAsset,
-          unwrapValue: estimateInGasAssetIncludingNewJoinSplit,
-        },
-      ];
+      const modifiedJoinSplitRequests = joinSplitRequests.concat({
+        asset: gasAsset,
+        unwrapValue: estimateInGasAssetIncludingNewJoinSplit,
+      });
 
       logger &&
         logger.debug(

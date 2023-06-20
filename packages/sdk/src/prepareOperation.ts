@@ -128,6 +128,12 @@ async function gatherNotes(
   noteMerkleIndicesToIgnore: Set<number> = new Set(),
   logger?: Logger
 ): Promise<IncludedNote[]> {
+  // TODO: remove
+  const allNotesBefore = await db.getAllNotes();
+  console.log("all notes before: ", allNotesBefore);
+
+  console.log("indices to ignore", noteMerkleIndicesToIgnore);
+
   // check that the user has enough notes to cover the request
   const notes = (await db.getNotesForAsset(asset)).filter(
     (n) => !noteMerkleIndicesToIgnore.has(n.merkleIndex)
