@@ -2960,7 +2960,7 @@ __metadata:
   resolution: "@nocturne-xyz/frontend-sdk@workspace:packages/frontend-sdk"
   dependencies:
     "@nocturne-xyz/contracts": "workspace:^"
-    "@nocturne-xyz/local-prover": "workspace:^"
+    "@nocturne-xyz/local-prover": 1.0.7-alpha
     "@nocturne-xyz/sdk": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -2979,6 +2979,19 @@ __metadata:
     typescript: ^4.8.4
   languageName: unknown
   linkType: soft
+
+"@nocturne-xyz/local-prover@npm:1.0.7-alpha":
+  version: 1.0.7-alpha
+  resolution: "@nocturne-xyz/local-prover@npm:1.0.7-alpha"
+  dependencies:
+    "@nocturne-xyz/circuit-utils": ^0.1.12
+    "@nocturne-xyz/sdk": ^1.0.151-alpha
+    bigint-conversion: ^2.3.0
+    bigint-json-serialization: ^1.0.1
+    snarkjs: ^0.7.0
+  checksum: 2099df86239aff3a1f73f595fe9b673d4094077cc889c673ec9dab26e97427e619ddb41fe779b17e03af60461d0f06e3fa235b7ed5ebf415187e3e7f05637dcf
+  languageName: node
+  linkType: hard
 
 "@nocturne-xyz/local-prover@workspace:^, @nocturne-xyz/local-prover@workspace:packages/local-prover":
   version: 0.0.0-use.local
@@ -3071,7 +3084,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@npm:1.0.151-alpha":
+"@nocturne-xyz/sdk@npm:1.0.151-alpha, @nocturne-xyz/sdk@npm:^1.0.151-alpha":
   version: 1.0.151-alpha
   resolution: "@nocturne-xyz/sdk@npm:1.0.151-alpha"
   dependencies:
