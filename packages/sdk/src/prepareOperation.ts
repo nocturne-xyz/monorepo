@@ -53,6 +53,7 @@ export async function prepareOperation(
   let joinSplits: PreSignJoinSplit[] = [];
   const usedMerkleIndices = new Set<number>();
   for (const joinSplitRequest of joinSplitRequests) {
+    console.log("preparing joinSplits for request: ", joinSplitRequest);
     const newJoinSplits = await prepareJoinSplits(
       deps,
       joinSplitRequest,

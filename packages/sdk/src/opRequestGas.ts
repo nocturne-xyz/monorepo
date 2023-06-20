@@ -150,6 +150,13 @@ export async function handleGasForOperationRequest(
       throw new Error("not enough owned gas tokens pay for op");
     }
 
+    // if we've added a new joinSplitRequest to pay for gas, we need to increase maxNumRefunds to reflect that change
+    if (
+      joinSplitRequests.length > gasEstimatedOpRequest.joinSplitRequests.length
+    ) {
+      gasEstimatedOpRequest.maxNumRefunds += 1n;
+    }
+
     const gasAssetRefundThreshold = await deps.tokenConverter.weiToTargetErc20(
       DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS * gasPrice,
       gasAssetAndTicker.ticker
