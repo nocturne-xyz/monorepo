@@ -25,6 +25,10 @@ const runServer = new Command("server")
     "dummy magic value that results in long delay (test purposes only)"
   )
   .option(
+    "--dummy-magic-rejection-value <number>",
+    "dummy magic deposit value that results in deposit being rejected (test purposes only)"
+  )
+  .option(
     "--log-dir <string>",
     "directory to write logs to",
     "./logs/deposit-screener"
@@ -39,6 +43,7 @@ const runServer = new Command("server")
       port,
       dummyScreeningDelay,
       dummyMagicLongDelayValue,
+      dummyMagicRejectionValue,
       logDir,
       stdoutLogLevel,
     } = options;
@@ -62,7 +67,7 @@ const runServer = new Command("server")
       logger,
       getRedis(),
       // TODO: use real screening api and delay calculator
-      new DummyScreeningApi(),
+      new DummyScreeningApi(dummyMagicRejectionValue),
       new DummyScreenerDelayCalculator(
         dummyScreeningDelay,
         dummyMagicLongDelayValue
