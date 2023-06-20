@@ -59,9 +59,6 @@
       "path": "./packages/e2e-tests"
     },
     {
-      "path": "./packages/site"
-    },
-    {
       "path": "./packages/subtree-updater"
     },
     {

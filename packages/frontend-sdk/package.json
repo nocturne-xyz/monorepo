@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/frontend-sdk",
-  "version": "1.0.20-alpha",
+  "version": "1.0.23-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,8 +13,8 @@
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",
-    "test:unit": "",
-    "publish": "yarn build; yarn npm publish --access public"
+    "publish": "yarn build; yarn npm publish --access public",
+    "test:unit": ""
   },
   "dependencies": {
     "@nocturne-xyz/contracts": "workspace:^",

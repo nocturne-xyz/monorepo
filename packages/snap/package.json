@@ -12,6 +12,7 @@
   "scripts": {
     "build": "mm-snap build",
     "build:clean": "yarn clean && yarn build",
+    "build:local": "NODE_ENV=development mm-snap build",
     "build:website": "node ./scripts/build-website.js",
     "clean": "rimraf dist",
     "cp-config": "cp ../config/configs/localhost.json ./src/config.json",
@@ -30,7 +31,7 @@
     "@metamask/snaps-ui": "^0.32.2",
     "@nocturne-xyz/circuit-utils": "^0.1.12",
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/sdk": "workspace:^",
+    "@nocturne-xyz/sdk": "1.0.151-alpha",
     "bigint-json-serialization": "^1.0.1",
     "buffer": "^6.0.3"
   },
