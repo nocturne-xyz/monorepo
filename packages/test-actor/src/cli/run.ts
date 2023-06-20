@@ -109,7 +109,7 @@ export const run = new Command("run")
     const kv = new InMemoryKVStore();
     const merkleProver = new SparseMerkleProver(kv);
     const db = new NocturneDB(kv);
-    const syncAdapter = new SubgraphSDKSyncAdapter(subgraphEndpoint);
+    const syncAdapter = new SubgraphSDKSyncAdapter(subgraphEndpoint, logger);
     const sdk = new NocturneWalletSDK(
       nocturneSigner,
       provider,
@@ -118,7 +118,8 @@ export const run = new Command("run")
       db,
       syncAdapter,
       new MockEthToTokenConverter(),
-      new BundlerOpTracker(bundlerEndpoint)
+      new BundlerOpTracker(bundlerEndpoint),
+      logger
     );
 
     const vkeyStr = fs.readFileSync(vkeyPath).toString();

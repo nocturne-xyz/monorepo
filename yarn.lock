@@ -3677,25 +3677,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@npm:1.0.151-alpha":
-  version: 1.0.151-alpha
-  resolution: "@nocturne-xyz/sdk@npm:1.0.151-alpha"
-  dependencies:
-    "@nocturne-xyz/circuit-utils": ^0.1.12
-    "@nocturne-xyz/config": ^1.0.14-alpha
-    "@nocturne-xyz/contracts": ^1.0.32-alpha
-    "@types/randombytes": ^2.0.0
-    "@zk-kit/incremental-merkle-tree": ^1.0.0
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    ethers: ^5.7.2
-    js-sha256: ^0.9.0
-    randombytes: ^2.1.0
-    sorted-btree: ^1.8.1
-  checksum: 7917666b361fbfda478f4c35d0a05cdfde76b49178904bb7aeb1390317670ccac8bec18ba8ea3cc91bcf83f6ac91f32afca51c59f6ee5f26e6fb4be296fc2f27
-  languageName: node
-  linkType: hard
-
 "@nocturne-xyz/sdk@npm:1.0.152-alpha":
   version: 1.0.152-alpha
   resolution: "@nocturne-xyz/sdk@npm:1.0.152-alpha"
@@ -3914,7 +3895,7 @@ __metadata:
     "@nocturne-xyz/contracts": 1.0.32-alpha
     "@nocturne-xyz/local-prover": 1.0.7-alpha
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": 1.0.151-alpha
+    "@nocturne-xyz/sdk": 1.0.153-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
