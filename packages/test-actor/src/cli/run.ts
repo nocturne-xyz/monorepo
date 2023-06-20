@@ -41,7 +41,7 @@ export const run = new Command("run")
   .option(
     "--log-dir <string>",
     "directory to write logs to",
-    "./logs/deposit-screener-processor"
+    "./logs/test-actor"
   )
   .option(
     "--stdout-log-level <string>",
