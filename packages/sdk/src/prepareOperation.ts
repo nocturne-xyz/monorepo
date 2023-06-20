@@ -182,7 +182,11 @@ async function gatherNotes(
     subseqIndex--;
   }
 
-  logger && logger.debug("notes to use: ", notesToUse);
+  logger &&
+    logger.debug(
+      `gathered notes to satisfy request for ${requestedAmount} of assest ${asset.assetAddr}`,
+      { notesToUse, requestedAmount, asset }
+    );
   return notesToUse;
 }
 

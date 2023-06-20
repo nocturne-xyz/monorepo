@@ -47,7 +47,7 @@ export async function syncSDK(
   const endTotalEntityIndex = TotalEntityIndexTrait.fromBlockNumber(
     opts?.endBlock ?? currentBlock
   );
-  const meta = {
+  const range = {
     startTotalEntityIndex,
     endTotalEntityIndex,
     startBlock: TotalEntityIndexTrait.toComponents(startTotalEntityIndex)
@@ -56,8 +56,8 @@ export async function syncSDK(
   };
   logger &&
     logger.info(
-      `[syncSDK] syncing SDK from totalEntityIndex ${startTotalEntityIndex} (block ${meta.startBlock}) to ${endTotalEntityIndex} (block ${currentBlock})...`,
-      { range: meta }
+      `[syncSDK] syncing SDK from totalEntityIndex ${startTotalEntityIndex} (block ${range.startBlock}) to ${endTotalEntityIndex} (block ${currentBlock})...`,
+      { range }
     );
 
   const newDiffs = adapter.iterStateDiffs(startTotalEntityIndex, {

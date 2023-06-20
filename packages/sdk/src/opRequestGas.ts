@@ -116,10 +116,20 @@ export async function handleGasForOperationRequest(
       numJoinSplits * PER_JOINSPLIT_GAS +
       maxNumRefunds * PER_REFUND_GAS;
 
-    logger && logger.debug("execution gas limit:", executionGasLimit);
     logger &&
-      logger.debug("joinsplits gas:", numJoinSplits * PER_JOINSPLIT_GAS);
-    logger && logger.debug("refunds gas:", maxNumRefunds * PER_REFUND_GAS);
+      logger.debug(`execution gas limit: ${executionGasLimit}`, {
+        executionGasLimit,
+      });
+    logger &&
+      logger.debug(`joinSplits gas: ${numJoinSplits * PER_JOINSPLIT_GAS}`, {
+        numJoinSplits,
+        joinSplitsGas: numJoinSplits * PER_JOINSPLIT_GAS,
+      });
+    logger &&
+      logger.debug(`refunds gas: ${maxNumRefunds * PER_REFUND_GAS}`, {
+        maxNumRefunds,
+        refundsGas: maxNumRefunds * PER_REFUND_GAS,
+      });
 
     // attempt to update the joinSplitRequests with gas compensation
     // gasAsset will be `undefined` if the user's too broke to pay for gas
@@ -218,8 +228,8 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
 
       logger &&
         logger.debug(
-          "amount to add for gas asset, matching:",
-          estimateInGasAsset
+          `amount to add for gas asset by modifying existing joinsplit for gas asset with ticker ${ticker}: ${estimateInGasAsset}}`,
+          { gasAssetTicker: ticker, gasAsset, estimateInGasAsset }
         );
 
       return [
@@ -254,8 +264,12 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
 
       logger &&
         logger.debug(
-          "amount to add for gas asset, not matching:",
-          estimateInGasAssetIncludingNewJoinSplit
+          `amount to add for gas asset by adding a new joinsplit for gas asset with ticker ${ticker}: ${estimateInGasAssetIncludingNewJoinSplit}`,
+          {
+            gasAssetTicker: ticker,
+            gasAsset,
+            estimateInGasAssetIncludingNewJoinSplit,
+          }
         );
 
       return [modifiedJoinSplitRequests, { asset: gasAsset, ticker }];

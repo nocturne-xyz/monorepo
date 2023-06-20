@@ -58,7 +58,7 @@ async function proveJoinSplit(
 ): Promise<ProvenJoinSplit> {
   const { opDigest, proofInputs, encSenderCanonAddr, ...baseJoinSplit } =
     signedJoinSplit;
-  logger && logger.debug("proofInputs: ", proofInputs);
+  logger && logger.debug("proving joinSplit", { proofInputs });
   const proof = await prover.proveJoinSplit(proofInputs);
 
   const decompressedC1 = decompressPoint(encSenderCanonAddr.c1);
@@ -84,20 +84,22 @@ async function proveJoinSplit(
     decompressedC1.y !== BigInt(publicSignals.encSenderCanonAddrC1Y) ||
     decompressedC2.y !== BigInt(publicSignals.encSenderCanonAddrC2Y)
   ) {
-    logger && logger.error("from proof, got", publicSignals);
     logger &&
-      logger.error("from sdk, got", {
-        newNoteACommitment: baseJoinSplit.newNoteACommitment,
-        newNoteBCommitment: baseJoinSplit.newNoteBCommitment,
-        commitmentTreeRoot: baseJoinSplit.commitmentTreeRoot,
-        publicSpend: baseJoinSplit.publicSpend,
-        nullifierA: baseJoinSplit.nullifierA,
-        nullifierB: baseJoinSplit.nullifierB,
-        encodedAssetAddr: baseJoinSplit.encodedAsset.encodedAssetAddr,
-        encodedAssetId: baseJoinSplit.encodedAsset.encodedAssetId,
-        decompressedC1Y: decompressedC1?.y,
-        decompressedC2Y: decompressedC2?.y,
-        opDigest,
+      logger.error("successfully generated proof, but PIs don't match", {
+        publicSignalsFromProof: publicSignals,
+        publicSignalsExpected: {
+          newNoteACommitment: baseJoinSplit.newNoteACommitment,
+          newNoteBCommitment: baseJoinSplit.newNoteBCommitment,
+          commitmentTreeRoot: baseJoinSplit.commitmentTreeRoot,
+          publicSpend: baseJoinSplit.publicSpend,
+          nullifierA: baseJoinSplit.nullifierA,
+          nullifierB: baseJoinSplit.nullifierB,
+          encodedAssetAddr: baseJoinSplit.encodedAsset.encodedAssetAddr,
+          encodedAssetId: baseJoinSplit.encodedAsset.encodedAssetId,
+          decompressedC1Y: decompressedC1?.y,
+          decompressedC2Y: decompressedC2?.y,
+          opDigest,
+        },
       });
 
     throw new Error(
@@ -105,7 +107,10 @@ async function proveJoinSplit(
     );
   }
 
-  logger && logger.debug("proofWithPis", proof);
+  logger &&
+    logger.debug("successfully generated proofs", {
+      proofWithPublicSignals: proof,
+    });
 
   const solidityProof = packToSolidityProof(proof.proof);
   return {
