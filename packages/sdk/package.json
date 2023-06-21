@@ -24,6 +24,7 @@
     "@nocturne-xyz/contracts": "workspace:^",
     "@types/randombytes": "^2.0.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
+    "async-retry": "^1.3.3",
     "big-integer": "^1.6.42",
     "bigint-json-serialization": "^1.0.1",
     "ethers": "^5.7.2",
@@ -33,6 +34,7 @@
     "winston": "^3.9.0"
   },
   "devDependencies": {
+    "@types/async-retry": "^1.4.5",
     "@types/bn.js": "^5.1.1",
     "@types/chai": "^4.3.3",
     "@types/chai-as-promised": "^7.1.5",
