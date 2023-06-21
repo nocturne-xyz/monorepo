@@ -88,7 +88,7 @@ export function makeQuoteHandler({
       const errorMsg = `asset ${quoteRequest.assetAddr} is not supported`;
       logger.warn(errorMsg);
       res.statusMessage = errorMsg;
-      res.status(405).json(errorMsg);
+      res.status(501).json(errorMsg);
       return;
     }
 
