@@ -22,6 +22,14 @@ import { Erc20Config } from "@nocturne-xyz/config";
 import { ethers } from "ethers";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import { Logger } from "winston";
+import * as ot from "@opentelemetry/api";
+import {
+  makeCreateCounterFn,
+  makeCreateHistogramFn,
+} from "@nocturne-xyz/offchain-utils";
+
+export const ACTOR_NAME = "test-actor";
+const COMPONENT_NAME = "main";
 
 const ONE_MINUTE_AS_SECS = 60;
 const ONE_DAY_SECONDS = 60n * 60n * 24n;
@@ -35,6 +43,14 @@ export class TestActorOpts {
   onlyOperations?: boolean;
 }
 
+export interface TestActorMetrics {
+  instantiatedDepositsCounter: ot.Counter;
+  instantiatedDepositsValueCounter: ot.Counter;
+  instantiatedDepositsValueHistogram: ot.Histogram;
+  dispatchedOperationsCounter: ot.Counter;
+  dispatchedOperationsValueOutCounter: ot.Counter;
+}
+
 export class TestActor {
   txSigner: ethers.Wallet;
   teller: Teller;
@@ -44,6 +60,7 @@ export class TestActor {
   bundlerEndpoint: string;
   erc20s: Map<string, Erc20Config>;
   logger: Logger;
+  metrics: TestActorMetrics;
 
   constructor(
     txSigner: ethers.Wallet,
@@ -64,6 +81,41 @@ export class TestActor {
 
     this.erc20s = erc20s;
     this.logger = logger;
+
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createCounter = makeCreateCounterFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+    const createHistogram = makeCreateHistogramFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+
+    this.metrics = {
+      instantiatedDepositsCounter: createCounter(
+        "instantiated_deposits.counter",
+        "Number of deposits instantiated"
+      ),
+      instantiatedDepositsValueCounter: createCounter(
+        "instantiated_deposits_value.counter",
+        "Value of deposits instantiated"
+      ),
+      instantiatedDepositsValueHistogram: createHistogram(
+        "instantiated_deposits_value.histogram",
+        "Histogram of value of deposits instantiated"
+      ),
+      dispatchedOperationsCounter: createCounter(
+        "dispatched_operations.counter",
+        "Number of operations dispatched"
+      ),
+      dispatchedOperationsValueOutCounter: createCounter(
+        "dispatched_operations_value_out.counter",
+        "Histogram of outgoing value of operations dispatched"
+      ),
+    };
   }
 
   async runDeposits(interval: number): Promise<void> {
