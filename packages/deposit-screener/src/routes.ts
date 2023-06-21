@@ -43,8 +43,8 @@ export function makeDepositStatusHandler({
       );
     } catch (err) {
       logger.warn(err);
-      res.statusMessage = String(err);
-      res.status(500).json(err);
+      res.statusMessage = "Internal Server Error";
+      res.status(500);
       return;
     }
 
@@ -88,7 +88,7 @@ export function makeQuoteHandler({
       const errorMsg = `asset ${quoteRequest.assetAddr} is not supported`;
       logger.warn(errorMsg);
       res.statusMessage = errorMsg;
-      res.status(400).json(errorMsg);
+      res.status(405).json(errorMsg);
       return;
     }
 
@@ -108,8 +108,8 @@ export function makeQuoteHandler({
       );
     } catch (err) {
       logger.warn(err);
-      res.statusMessage = String(err);
-      res.status(500).json(err);
+      res.statusMessage = "Internal Server Error";
+      res.status(500);
       return;
     }
 
