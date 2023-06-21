@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make logging more consistent
 - manually estimate gasPrice given implicit gas price estimate in function calls is too high
 - add metrics to server, batcher, and submitter components
 - add health check to server

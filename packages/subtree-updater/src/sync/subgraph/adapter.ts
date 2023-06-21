@@ -15,6 +15,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
 import { fetchTreeInsertions, fetchLatestSubtreeIndex } from "./fetch";
+import { Logger } from "winston";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
@@ -22,9 +23,11 @@ export class SubgraphSubtreeUpdaterSyncAdapter
   implements SubtreeUpdaterSyncAdapter
 {
   private readonly graphqlEndpoint: string;
+  private readonly logger?: Logger;
 
-  constructor(graphqlEndpoint: string) {
+  constructor(graphqlEndpoint: string, logger?: Logger) {
     this.graphqlEndpoint = graphqlEndpoint;
+    this.logger = logger;
   }
 
   iterInsertions(
@@ -32,6 +35,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<IncludedNote | IncludedNoteCommitment> {
     const endpoint = this.graphqlEndpoint;
+    const logger = this.logger;
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
 
     let closed = false;
@@ -49,13 +53,11 @@ export class SubgraphSubtreeUpdaterSyncAdapter
       };
 
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
-        console.log(
-          `fetching insertions from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
-            from
-          )} (block ${
-            TotalEntityIndexTrait.toComponents(from).blockNumber
-          }) ...`
-        );
+        logger &&
+          logger.info("fetching insertions", {
+            from,
+            fromBlock: TotalEntityIndexTrait.toComponents(from).blockNumber,
+          });
 
         const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
         await maybeApplyThrottle(latestIndexedBlock);
@@ -73,10 +75,15 @@ export class SubgraphSubtreeUpdaterSyncAdapter
           for (const { inner: insertion } of sorted) {
             if ("numZeros" in insertion) {
               const startIndex = insertion.merkleIndex;
-              console.log("yielding zeros", {
-                startIndex,
+              const meta = {
+                startIndex: startIndex,
                 numZeros: insertion.numZeros,
-              });
+              };
+              logger &&
+                logger.debug("yielding zeros", {
+                  insertionKind: "zeros",
+                  insertion: meta,
+                });
               for (let i = 0; i < insertion.numZeros; i++) {
                 yield {
                   noteCommitment: TreeConstants.ZERO_VALUE,
@@ -84,17 +91,33 @@ export class SubgraphSubtreeUpdaterSyncAdapter
                 };
               }
             } else if (NoteTrait.isEncryptedNote(insertion)) {
-              console.log("yielding commitment of encrypted note", {
+              const noteCommitment = (insertion as IncludedEncryptedNote)
+                .commitment;
+              const meta = {
                 merkleIndex: insertion.merkleIndex,
-              });
+                noteCommitment,
+              };
+
+              logger &&
+                logger.debug("yielding encrypted note", {
+                  insertionKind: "encrypted note",
+                  meta,
+                });
               yield {
-                noteCommitment: (insertion as IncludedEncryptedNote).commitment,
+                noteCommitment,
                 merkleIndex: insertion.merkleIndex,
               };
             } else {
-              console.log("yielding note", {
+              const meta = {
                 merkleIndex: insertion.merkleIndex,
-              });
+                note: insertion,
+              };
+              logger &&
+                logger.debug("yielding note", {
+                  insertionKind: "note",
+                  meta,
+                });
+
               yield insertion as IncludedNote;
             }
           }

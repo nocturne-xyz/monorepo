@@ -22,6 +22,7 @@ import { prepareOperation } from "./prepareOperation";
 import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
+import { Logger } from "winston";
 
 // refunds < 200k gas * gasPrice converted to gasAsset not worth refunding
 const DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS = 200_000n;
@@ -54,6 +55,7 @@ export interface HandleOpRequestGasDeps {
   gasAssets: Map<string, Asset>;
   tokenConverter: EthToTokenConverter;
   merkle: SparseMerkleProver;
+  logger?: Logger;
 }
 
 interface GasEstimatedOperationRequest
@@ -83,8 +85,9 @@ export async function handleGasForOperationRequest(
   deps: HandleOpRequestGasDeps,
   opRequest: OperationRequest
 ): Promise<GasAccountedOperationRequest> {
+  const { logger } = deps;
   // estimate gas params for opRequest
-  console.log("estimating gas for op request");
+  logger && logger.info("estimating gas for op request");
   const { gasPrice, numJoinSplits, executionGasLimit, maxNumRefunds } =
     await estimateGasForOperationRequest(deps, opRequest);
 
@@ -113,9 +116,20 @@ export async function handleGasForOperationRequest(
       numJoinSplits * PER_JOINSPLIT_GAS +
       maxNumRefunds * PER_REFUND_GAS;
 
-    console.log("execution gas limit:", executionGasLimit);
-    console.log("joinsplits gas:", numJoinSplits * PER_JOINSPLIT_GAS);
-    console.log("refunds gas:", maxNumRefunds * PER_REFUND_GAS);
+    logger &&
+      logger.debug(`execution gas limit: ${executionGasLimit}`, {
+        executionGasLimit,
+      });
+    logger &&
+      logger.debug(`joinSplits gas: ${numJoinSplits * PER_JOINSPLIT_GAS}`, {
+        numJoinSplits,
+        joinSplitsGas: numJoinSplits * PER_JOINSPLIT_GAS,
+      });
+    logger &&
+      logger.debug(`refunds gas: ${maxNumRefunds * PER_REFUND_GAS}`, {
+        maxNumRefunds,
+        refundsGas: maxNumRefunds * PER_REFUND_GAS,
+      });
 
     // attempt to update the joinSplitRequests with gas compensation
     // gasAsset will be `undefined` if the user's too broke to pay for gas
@@ -126,7 +140,8 @@ export async function handleGasForOperationRequest(
         gasEstimatedOpRequest.joinSplitRequests,
         totalGasUnitsEstimate,
         gasPrice,
-        deps.tokenConverter
+        deps.tokenConverter,
+        logger
       );
 
     if (!gasAssetAndTicker) {
@@ -163,7 +178,8 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
   joinSplitRequests: JoinSplitRequest[],
   gasUnitsEstimate: bigint,
   gasPrice: bigint,
-  tokenConverter: EthToTokenConverter
+  tokenConverter: EthToTokenConverter,
+  logger?: Logger
 ): Promise<[JoinSplitRequest[], AssetAndTicker | undefined]> {
   // group joinSplitRequests by asset address
   const joinSplitRequestsByAsset = groupByMap(
@@ -210,7 +226,11 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
         matchingJoinSplitRequests
       );
 
-      console.log("amount to add for gas asset, matching:", estimateInGasAsset);
+      logger &&
+        logger.debug(
+          `amount to add for gas asset by modifying existing joinsplit for gas asset with ticker ${ticker}: ${estimateInGasAsset}}`,
+          { gasAssetTicker: ticker, gasAsset, estimateInGasAsset }
+        );
 
       return [
         Array.from(joinSplitRequestsByAsset.values()).flat(),
@@ -242,10 +262,15 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
         },
       ];
 
-      console.log(
-        "amount to add for gas asset, not matching:",
-        estimateInGasAssetIncludingNewJoinSplit
-      );
+      logger &&
+        logger.debug(
+          `amount to add for gas asset by adding a new joinsplit for gas asset with ticker ${ticker}: ${estimateInGasAssetIncludingNewJoinSplit}`,
+          {
+            gasAssetTicker: ticker,
+            gasAsset,
+            estimateInGasAssetIncludingNewJoinSplit,
+          }
+        );
 
       return [modifiedJoinSplitRequests, { asset: gasAsset, ticker }];
     }
@@ -257,7 +282,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
 
 // estimate gas params for opRequest
 async function estimateGasForOperationRequest(
-  { handlerContract, ...deps }: HandleOpRequestGasDeps,
+  { handlerContract, logger, ...deps }: HandleOpRequestGasDeps,
   opRequest: OperationRequest
 ): Promise<GasParams> {
   let { executionGasLimit, maxNumRefunds, gasPrice } = opRequest;
@@ -288,7 +313,7 @@ async function estimateGasForOperationRequest(
 
   // simulate the operation
   if (!executionGasLimit || !maxNumRefunds) {
-    console.log("simulating operation");
+    logger && logger.info("simulating operation");
     const result = await simulateOperation(
       handlerContract,
       preparedOp as PreSignOperation

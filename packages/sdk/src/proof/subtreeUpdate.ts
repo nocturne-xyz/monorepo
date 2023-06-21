@@ -105,22 +105,17 @@ export function subtreeUpdateInputsFromBatch(
 
   // accumulatorHash
   const accumulatorHashU256 = BigInt("0x" + sha256.hex(accumulatorPreimage));
-  console.log("accumulatorHash", accumulatorHashU256);
   const [accumulatorHashHi, accumulatorHash] =
     bigInt256ToFieldElems(accumulatorHashU256);
-
-  console.log("accumulatorHashHi", accumulatorHashHi);
 
   const siblings = merkleProof.siblings.slice(TreeConstants.SUBTREE_DEPTH);
   const idx = merklePathToIndex(
     merkleProof.pathIndices.map(BigInt),
     "LEAF_TO_ROOT"
   );
-  console.log("index", idx);
 
   // encodedPathAndHash
   const encodedPathAndHash = encodePathAndHash(idx, accumulatorHashHi);
-  console.log("encodedPathAndHash", encodePathAndHash);
 
   return {
     encodedPathAndHash,

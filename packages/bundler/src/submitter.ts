@@ -151,7 +151,7 @@ export class BundlerSubmitter {
 
     logger.debug("dispatching bundle...");
     const tx = await this.dispatchBundle(logger, operations);
-    logger.info("dispatch bundle tx: ", tx);
+    logger.info("dispatch bundle tx: ", { tx });
 
     if (!tx) {
       logger.error("bundle reverted");
@@ -174,7 +174,10 @@ export class BundlerSubmitter {
     // Loop through current batch and set each job status to IN_FLIGHT
     const inflightStatusTransactions = operations.map((op) => {
       const jobId = computeOperationDigest(op).toString();
-      logger.info(`setting operation with digest ${jobId} to status IN_FLIGHT`);
+      logger.info(
+        `setting operation with digest ${jobId} to status IN_FLIGHT`,
+        { opDigest: jobId }
+      );
       return this.statusDB.getSetJobStatusTransaction(
         jobId,
         OperationStatus.IN_FLIGHT
@@ -260,7 +263,7 @@ export class BundlerSubmitter {
       this.tellerContract.interface.getEvent("OperationProcessed")
     ) as OperationProcessedEvent[];
 
-    logger.info("matching events:", matchingEvents);
+    logger.info("matching events:", { matchingEvents });
 
     const redisTxs: RedisTransaction[] = [];
     const statuses: OperationStatus[] = [];
@@ -277,7 +280,8 @@ export class BundlerSubmitter {
       }
 
       logger.info(
-        `setting operation with digest ${digest} to status ${status}`
+        `setting operation with digest ${digest} to status ${status}`,
+        { opDigest: digest, status: status.toString() }
       );
       redisTxs.push(
         this.statusDB.getSetJobStatusTransaction(digest.toString(), status)
@@ -286,7 +290,8 @@ export class BundlerSubmitter {
 
       if (status == OperationStatus.OPERATION_PROCESSING_FAILED) {
         logger.warn(
-          `op with digest ${args.operationDigest.toBigInt()} failed during handleOperation. removing nullifers from DB...`
+          `op with digest ${args.operationDigest.toBigInt()} failed during handleOperation. removing nullifers from DB...`,
+          { opDigest: args.operationDigest.toBigInt() }
         );
         const op = digestsToOps.get(args.operationDigest.toBigInt())!;
         redisTxs.push(...this.nullifierDB.getRemoveNullifierTransactions(op));

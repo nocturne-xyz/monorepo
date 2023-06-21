@@ -143,7 +143,7 @@ export class SubtreeUpdater {
       });
 
       prover.on("error", (err) => {
-        this.logger.error("prover error", err);
+        this.logger.error("prover error", { err });
         reject(err);
       });
 
@@ -171,7 +171,7 @@ export class SubtreeUpdater {
       try {
         await Promise.all([submitterProm, proverProm, queuerProm]);
       } catch (err) {
-        this.logger.error(`error in subtree updater`, err);
+        this.logger.error(`error in subtree updater`, { err });
         await teardown();
         throw err;
       }
@@ -314,8 +314,9 @@ export class SubtreeUpdater {
             : NoteTrait.toCommitment(noteOrCommitment as Note)
         );
 
-        logger.info(
-          `inserting batch into merkle tree. startIndex: ${subtreeBatchOffset}, leaves: ${leaves}}`
+        logger.debug(
+          `inserting batch into local SMP tree with offset ${subtreeBatchOffset}`,
+          { subtreeBatchOffset, leaves }
         );
         this.tree.insertBatch(
           subtreeBatchOffset,

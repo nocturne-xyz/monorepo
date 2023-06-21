@@ -41,7 +41,10 @@ export async function startSubtreeUpdater(
     config.handlerAddress,
     signer
   );
-  const syncAdapter = new SubgraphSubtreeUpdaterSyncAdapter(config.subgraphUrl);
+  const syncAdapter = new SubgraphSubtreeUpdaterSyncAdapter(
+    config.subgraphUrl,
+    logger
+  );
   const prover = config.useRapidsnark
     ? new RapidsnarkSubtreeUpdateProver(
         RADISNARK_EXECUTABLE_PATH,

@@ -48,7 +48,7 @@ export async function checkRevertError(
   logger: Logger,
   operation: ProvenOperation
 ): Promise<ErrString | undefined> {
-  logger.debug("submitting operation", operation);
+  logger.debug("simulating operation", { operation });
 
   const bundle: Bundle = { operations: [operation] };
   const data = tellerContract.interface.encodeFunctionData("processBundle", [
