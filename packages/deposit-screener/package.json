@@ -27,7 +27,7 @@
   "dependencies": {
     "@nocturne-xyz/config": "1.0.14-alpha",
     "@nocturne-xyz/contracts": "1.0.32-alpha",
-    "@nocturne-xyz/offchain-utils": "0.1.7",
+    "@nocturne-xyz/offchain-utils": "0.1.10",
     "@nocturne-xyz/sdk": "1.0.153-alpha",
     "@opentelemetry/api": "^1.4.1",
     "@opentelemetry/exporter-metrics-otlp-http": "^0.40.0",
