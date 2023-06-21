@@ -53,6 +53,7 @@ export async function prepareOperation(
   let joinSplits: PreSignJoinSplit[] = [];
   const usedMerkleIndices = new Set<number>();
   for (const joinSplitRequest of joinSplitRequests) {
+    console.log("preparing joinSplits for request: ", joinSplitRequest);
     const newJoinSplits = await prepareJoinSplits(
       deps,
       joinSplitRequest,
@@ -60,8 +61,13 @@ export async function prepareOperation(
     );
 
     newJoinSplits.forEach((js) => {
-      usedMerkleIndices.add(js.oldNoteA.merkleIndex);
-      usedMerkleIndices.add(js.oldNoteB.merkleIndex);
+      // If note value == 0, its just a dummy and we don't want to count in used merkle indices
+      if (js.oldNoteA.value !== 0n) {
+        usedMerkleIndices.add(js.oldNoteA.merkleIndex);
+      }
+      if (js.oldNoteB.value !== 0n) {
+        usedMerkleIndices.add(js.oldNoteB.merkleIndex);
+      }
     });
     joinSplits.push(...newJoinSplits);
   }
@@ -128,6 +134,8 @@ async function gatherNotes(
   noteMerkleIndicesToIgnore: Set<number> = new Set(),
   logger?: Logger
 ): Promise<IncludedNote[]> {
+  console.log("indices to ignore", noteMerkleIndicesToIgnore);
+
   // check that the user has enough notes to cover the request
   const notes = (await db.getNotesForAsset(asset)).filter(
     (n) => !noteMerkleIndicesToIgnore.has(n.merkleIndex)

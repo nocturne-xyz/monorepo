@@ -111,6 +111,7 @@ export class NocturneWalletSDK {
       deps,
       opRequest
     );
+
     return await prepareOperation(deps, gasAccountedOpRequest);
   }
 

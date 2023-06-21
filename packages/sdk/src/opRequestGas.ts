@@ -254,13 +254,10 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
     const estimateInGasAssetIncludingNewJoinSplit =
       gasEstimatesInGasAssets.get(ticker)! + extraJoinSplitCostInGasAsset;
     if (totalOwnedGasAsset >= estimateInGasAssetIncludingNewJoinSplit) {
-      const modifiedJoinSplitRequests = [
-        ...joinSplitRequests,
-        {
-          asset: gasAsset,
-          unwrapValue: estimateInGasAssetIncludingNewJoinSplit,
-        },
-      ];
+      const modifiedJoinSplitRequests = joinSplitRequests.concat({
+        asset: gasAsset,
+        unwrapValue: estimateInGasAssetIncludingNewJoinSplit,
+      });
 
       logger &&
         logger.debug(
