@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- put back redis utils
 - make logging more consistent
 - add logger to `SubgraphScreenerSyncAdapter`
 - sync through current block, not merely up to it
