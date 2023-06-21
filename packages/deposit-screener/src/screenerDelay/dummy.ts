@@ -1,7 +1,7 @@
 import { Address } from "@nocturne-xyz/sdk";
 
 export class DummyScreenerDelayCalculator {
-  normalDelaySeconds: number = 0;
+  normalDelaySeconds = 0;
   magicLongDelayValue?: bigint;
   readonly longDelaySeconds = 60 * 60 * 3; // default to 3 hours
 
