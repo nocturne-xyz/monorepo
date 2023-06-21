@@ -33,15 +33,7 @@ export function makeDepositStatusHandler({
 }: DepositStatusHandlerDeps): RequestHandler {
   return async (req: Request, res: Response) => {
     const depositHash = req.params.depositHash;
-
-    const maybeStatus = await db.getDepositRequestStatus(depositHash);
-    if (!maybeStatus) {
-      const errorMsg = `deposit request with hash ${depositHash} not found`;
-      logger.warn(errorMsg);
-      res.statusMessage = errorMsg;
-      res.status(400).json(errorMsg);
-      return;
-    }
+    const status = await db.getDepositRequestStatus(depositHash);
 
     let delay: number;
     try {
@@ -52,12 +44,12 @@ export function makeDepositStatusHandler({
     } catch (err) {
       logger.warn(err);
       res.statusMessage = String(err);
-      res.status(400).json(err);
+      res.status(500).json(err);
       return;
     }
 
     const response: DepositStatusResponse = {
-      status: maybeStatus,
+      status,
       estimatedWaitSeconds: delay,
     };
     res.json(response);
@@ -117,7 +109,7 @@ export function makeQuoteHandler({
     } catch (err) {
       logger.warn(err);
       res.statusMessage = String(err);
-      res.status(400).json(err);
+      res.status(500).json(err);
       return;
     }
 

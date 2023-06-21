@@ -85,11 +85,13 @@ export class DepositScreenerDB {
 
   async getDepositRequestStatus(
     depositRequestOrHash: DepositRequest | string
-  ): Promise<DepositRequestStatus | undefined> {
+  ): Promise<DepositRequestStatus> {
     const key =
       DepositScreenerDB.formatDepositRequestStatusKey(depositRequestOrHash);
     const val = await this.redis.get(key);
-    return val ? (val as DepositRequestStatus) : undefined;
+    return val
+      ? (val as DepositRequestStatus)
+      : DepositRequestStatus.DoesNotExist;
   }
 
   async setDepositAmountForAddress(

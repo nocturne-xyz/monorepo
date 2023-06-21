@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- return successfully with deposit status `DoesNotExist` if the given deposit request DNE
+- use error code 500, not 400 for wait estimation failures
 - fix server cli to also take `--dummy-screener-delay`
 - add dummy magic long delay value to cause dummy screener to give 3h delay
 - add dummy magic rejection value for screener to reject some deposits (test purposes)
