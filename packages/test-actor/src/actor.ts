@@ -45,10 +45,9 @@ export class TestActorOpts {
 
 export interface TestActorMetrics {
   instantiatedDepositsCounter: ot.Counter;
-  instantiatedDepositsValueCounter: ot.Counter;
   instantiatedDepositsValueHistogram: ot.Histogram;
   dispatchedOperationsCounter: ot.Counter;
-  dispatchedOperationsValueOutCounter: ot.Counter;
+  dispatchedOperationsValueOutHistogram: ot.Histogram;
 }
 
 export class TestActor {
@@ -99,10 +98,6 @@ export class TestActor {
         "instantiated_deposits.counter",
         "Number of deposits instantiated"
       ),
-      instantiatedDepositsValueCounter: createCounter(
-        "instantiated_deposits_value.counter",
-        "Value of deposits instantiated"
-      ),
       instantiatedDepositsValueHistogram: createHistogram(
         "instantiated_deposits_value.histogram",
         "Histogram of value of deposits instantiated"
@@ -111,7 +106,7 @@ export class TestActor {
         "dispatched_operations.counter",
         "Number of operations dispatched"
       ),
-      dispatchedOperationsValueOutCounter: createCounter(
+      dispatchedOperationsValueOutHistogram: createHistogram(
         "dispatched_operations_value_out.counter",
         "Histogram of outgoing value of operations dispatched"
       ),
@@ -268,6 +263,16 @@ export class TestActor {
       matchingEvents,
     });
 
+    const labels = {
+      spender: this.txSigner.address,
+      assetAddr: erc20Token.address,
+    };
+    this.metrics.instantiatedDepositsCounter.add(1, labels);
+    this.metrics.instantiatedDepositsValueHistogram.record(
+      Number(randomValue),
+      labels
+    ); // we assume we cap max deposit size to be < 2^53
+
     return true;
   }
 
@@ -333,6 +338,16 @@ export class TestActor {
       this.logger.info(
         `successfully submitted operation with digest ${opDigest}`
       );
+
+	const labels = {
+      spender: this.txSigner.address,
+      assetAddr: asset.assetAddr,
+    };
+    this.metrics.dispatchedOperationsCounter.add(1, labels);
+    this.metrics.dispatchedOperationsValueOutHistogram.record(
+      Number(value),
+      labels
+    ); // we assume we cap max deposit size to be < 2^53
 
       return true;
     } catch (err) {
