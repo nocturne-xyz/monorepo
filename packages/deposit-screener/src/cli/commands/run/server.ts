@@ -17,6 +17,18 @@ const runServer = new Command("server")
   )
   .requiredOption("--port <number>", "server port", parseInt)
   .option(
+    "--dummy-screening-delay <number>",
+    "dummy screening delay in seconds (test purposes only)"
+  )
+  .option(
+    "--dummy-magic-long-delay-value <number>",
+    "dummy magic value that results in long delay (test purposes only)"
+  )
+  .option(
+    "--dummy-magic-rejection-value <number>",
+    "dummy magic deposit value that results in deposit being rejected (test purposes only)"
+  )
+  .option(
     "--log-dir <string>",
     "directory to write logs to",
     "./logs/deposit-screener"
@@ -26,7 +38,15 @@ const runServer = new Command("server")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
-    const { configNameOrPath, port, logDir, stdoutLogLevel } = options;
+    const {
+      configNameOrPath,
+      port,
+      dummyScreeningDelay,
+      dummyMagicLongDelayValue,
+      dummyMagicRejectionValue,
+      logDir,
+      stdoutLogLevel,
+    } = options;
     const config = loadNocturneConfig(configNameOrPath);
 
     const supportedAssetRateLimits = new Map(
@@ -47,8 +67,11 @@ const runServer = new Command("server")
       logger,
       getRedis(),
       // TODO: use real screening api and delay calculator
-      new DummyScreeningApi(),
-      new DummyScreenerDelayCalculator(),
+      new DummyScreeningApi(dummyMagicRejectionValue),
+      new DummyScreenerDelayCalculator(
+        dummyScreeningDelay,
+        dummyMagicLongDelayValue
+      ),
       supportedAssetRateLimits
     );
 
