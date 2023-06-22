@@ -131,8 +131,8 @@ const send = async ({
   });
 
   return new Bluebird((resolve, reject) => {
-    let timeoutIds: NodeJS.Timeout[] = [];
-    let failedTxs: any[] = [];
+    const timeoutIds: NodeJS.Timeout[] = [];
+    const failedTxs: any[] = [];
 
     const finalTimeoutId = setTimeout(() => {
       reject(new Error("Transaction taking too long!"));
