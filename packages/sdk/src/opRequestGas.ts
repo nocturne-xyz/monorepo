@@ -339,7 +339,8 @@ async function estimateGasForOperationRequest(
   // if gasPrice is not specified, get it from RPC node
   // NOTE: gasPrice returned in wei
   gasPrice =
-    gasPrice ?? (await handlerContract.provider.getGasPrice()).toBigInt();
+    gasPrice ??
+    ((await handlerContract.provider.getGasPrice()).toBigInt() * 13n) / 10n;
 
   return {
     numJoinSplits: BigInt(preparedOp.joinSplits.length),
