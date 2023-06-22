@@ -10,6 +10,7 @@ import {
   Address,
   DepositStatusResponse,
   DepositQuoteResponse,
+  DepositRequestStatus,
 } from "@nocturne-xyz/sdk";
 import { ScreeningApi } from "./screening";
 import { DepositScreenerDB } from "./db";
@@ -33,14 +34,14 @@ export function makeDepositStatusHandler({
 }: DepositStatusHandlerDeps): RequestHandler {
   return async (req: Request, res: Response) => {
     const depositHash = req.params.depositHash;
+    const status = await db.getDepositRequestStatus(depositHash);
 
-    const maybeStatus = await db.getDepositRequestStatus(depositHash);
-    if (!maybeStatus) {
-      const errorMsg = `deposit request with hash ${depositHash} not found`;
-      logger.warn(errorMsg);
-      res.statusMessage = errorMsg;
-      res.status(400).json(errorMsg);
-      return;
+    if (status === DepositRequestStatus.DoesNotExist) {
+      const response: DepositStatusResponse = {
+        status,
+      };
+
+      res.json(response);
     }
 
     let delay: number;
@@ -51,13 +52,13 @@ export function makeDepositStatusHandler({
       );
     } catch (err) {
       logger.warn(err);
-      res.statusMessage = String(err);
-      res.status(400).json(err);
+      res.statusMessage = "Internal Server Error";
+      res.status(500);
       return;
     }
 
     const response: DepositStatusResponse = {
-      status: maybeStatus,
+      status,
       estimatedWaitSeconds: delay,
     };
     res.json(response);
@@ -96,7 +97,7 @@ export function makeQuoteHandler({
       const errorMsg = `asset ${quoteRequest.assetAddr} is not supported`;
       logger.warn(errorMsg);
       res.statusMessage = errorMsg;
-      res.status(400).json(errorMsg);
+      res.status(501).json(errorMsg);
       return;
     }
 
@@ -116,8 +117,8 @@ export function makeQuoteHandler({
       );
     } catch (err) {
       logger.warn(err);
-      res.statusMessage = String(err);
-      res.status(400).json(err);
+      res.statusMessage = "Internal Server Error";
+      res.status(500);
       return;
     }
 
