@@ -39,7 +39,6 @@ export function makeDepositStatusHandler({
     if (status === DepositRequestStatus.DoesNotExist) {
       const response: DepositStatusResponse = {
         status,
-        estimatedWaitSeconds: 0,
       };
 
       res.json(response);
