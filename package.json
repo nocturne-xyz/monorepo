@@ -8,7 +8,7 @@
     "build:nocache": "yarn turbo run --no-daemon build --force",
     "circuits:build": "yarn workspaces foreach run build-all-circuits --include @nocturne-xyz/circuits",
     "clean": "yarn workspaces foreach run clean && rm -rf ./node_modules/.cache/turbo",
-    "dev:site": "scripts/run_site_dev.sh --pre_startup=true",
+    "dev:site": "scripts/run_local.sh --pre_startup=true",
     "e2e-tests": "yarn workspace @nocturne-xyz/e2e-tests",
     "lint": "yarn turbo run --no-daemon lint",
     "local-prover:gen-test-cases": "yarn workspaces foreach run gen-test-cases --include @nocturne-xyz/local-prover",

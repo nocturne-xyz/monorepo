@@ -66,18 +66,6 @@ echo "outputting logs to $LOG_DIR/"
 
 yarn build
 
-# start the site
-pushd packages/site
-echo "starting site..."
-yarn start &
-SITE_PID=$!
-popd
-
-# wait a bit for site to finish building
-# this is to avoid gatsby throwing a fit because we have stuff running on the
-# same ports its dumb graphql server wants to use
-sleep 20
-
 # start hardhat
 pushd packages/e2e-tests
 echo "starting hardhat..."
@@ -140,7 +128,7 @@ popd
 # start the snap
 pushd packages/snap
 echo "starting snap..."
-yarn build
+yarn build:local
 sleep 10
 yarn start &
 SNAP_PID=$!
@@ -241,20 +229,11 @@ SUBTREE_UPDATER_PID=$!
 echo "subtree updater running at PID: $SUBTREE_UPDATER_PID"
 
 SNAP_INDEX_TS="$SCRIPT_DIR/../packages/snap/src/index.ts"
-SITE_TEST_PAGE="$SCRIPT_DIR/../packages/site/src/pages/index.tsx"
-SITE_CONTRACT_CONFIG_TS="$SCRIPT_DIR/../packages/site/src/config/contracts.ts"
 
 # Set snap handler contract address
 sed -i '' -r -e "s/const START_BLOCK = [0-9]*;/const START_BLOCK = ${START_BLOCK};/g" $SNAP_INDEX_TS
 
-# Set site teller address
-sed -i '' -r -e "s/export const TELLER_CONTRACT_ADDRESS = \"0x[0-9a-faA-F]+\";/export const TELLER_CONTRACT_ADDRESS = \"$TELLER_CONTRACT_ADDRESS\";/g" $SITE_CONTRACT_CONFIG_TS
 
-# Set test site token address
-sed -i '' -r -e "s/const TOKEN_ADDRESS = \"0x[0-9a-faA-F]+\";/const TOKEN_ADDRESS = \"$TOKEN_CONTRACT_ADDR1\";/g" $SITE_TEST_PAGE
-
-
-wait $SITE_PID
 wait $SNAP_PID
 wait $BUNDLER_PID
 wait $SCREENER_PID

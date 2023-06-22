@@ -40,12 +40,13 @@ const logger = createLogger({
  *  and point the frontend at the appropriate tag for the snap to pull at run-time (this is already happening).
  *  ("npm:@nocturne-xyz/snap@sepolia" | "npm:@nocturne-xyz/snap@mainnet")
  */
+// todo after ~6/27ish, change snap's "@nocturne-xyz/sdk" dep to workspace:^
 // Sepolia
 // const RPC_URL =
 //   "https://eth-sepolia.g.alchemy.com/v2/0xjMuoUbPaLxWwD9EqOUFoJTuRh7qh0t";
 // const BUNDLER_URL = "https://bundler.nocturnelabs.xyz";
 // const SUBGRAPH_API_URL =
-//   "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.7-alpha/gn";
+//   "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.18-alpha/gn";
 // const config = loadNocturneConfigBuiltin("sepolia");
 
 const Fr = BabyJubJub.ScalarField;
