@@ -3366,7 +3366,7 @@ __metadata:
     "@nocturne-xyz/contracts": 1.0.32-alpha
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.157-alpha
-    "@nocturne-xyz/tx-manager": 1.0.0-alpha
+    "@nocturne-xyz/tx-manager": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
@@ -3896,7 +3896,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/tx-manager@1.0.0-alpha, @nocturne-xyz/tx-manager@workspace:packages/tx-manager":
+"@nocturne-xyz/tx-manager@workspace:^, @nocturne-xyz/tx-manager@workspace:packages/tx-manager":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/tx-manager@workspace:packages/tx-manager"
   dependencies:

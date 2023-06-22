@@ -8,9 +8,17 @@ const MAX_INT32 = ~(1 << 31);
 
 const toGwei = (x: number): number => x * GWEI;
 
+interface GasPriceScalingParams {
+  x: number;
+  y?: number;
+  c?: number;
+}
+
+type GasPriceScalingFunction = (params: GasPriceScalingParams) => number;
+
 const EXPONENTIAL =
-  (base = 2, inGwei = true) =>
-  ({ x }: { x: number }): number => {
+  (base = 2, inGwei = true): GasPriceScalingFunction =>
+  ({ x }: GasPriceScalingParams): number => {
     let p = Math.pow(base, x);
     if (inGwei) {
       p = toGwei(p);
@@ -19,16 +27,18 @@ const EXPONENTIAL =
   };
 
 const LINEAR =
-  (slope = 1, inGwei = true) =>
-  ({ x, c }: { x: number; c: number }): number => {
+  (slope = 1, inGwei = true): GasPriceScalingFunction =>
+  ({ x, c = 0 }: GasPriceScalingParams): number => {
     let p = slope * x;
     if (inGwei) {
       p = toGwei(p);
     }
-    return c + p;
+    return x + p + c;
   };
 
-const DOUBLES = ({ y }: { y: number }): number => {
+const DOUBLES: GasPriceScalingFunction = ({
+  y = 0,
+}: GasPriceScalingParams): number => {
   return y * 2;
 };
 
@@ -51,14 +61,14 @@ const getGasPriceVariations = ({
 }: {
   minGasPrice: number;
   maxGasPrice: number;
-  gasPriceScalingFunction: Function;
+  gasPriceScalingFunction: GasPriceScalingFunction;
 }): number[] => {
   let i = 0;
   let curGasPrice = minGasPrice;
   let gasPrices: number[] = [];
 
   const firstGasPriceDelta =
-    gasPriceScalingFunction(minGasPrice, 1) - minGasPrice;
+    gasPriceScalingFunction({ x: minGasPrice, c: 1 }) - minGasPrice;
   if (firstGasPriceDelta / minGasPrice < 1e-6) {
     console.log(
       `WARNING: GasPrice is scaling very slowly. Might take a while.
@@ -85,6 +95,12 @@ const rejectOnRevert = (e: any): boolean => {
   return e.toString().toLowerCase().includes("revert");
 };
 
+type SendTransactionFunction = (
+  gasPrice: number
+) => Promise<ethers.ContractReceipt>;
+
+type RejectCondition = (e: any) => boolean;
+
 const send = async ({
   sendTransactionFunction,
   minGasPrice,
@@ -93,14 +109,12 @@ const send = async ({
   delay = 60000,
   rejectImmediatelyOnCondition = rejectOnRevert,
 }: {
-  sendTransactionFunction: (
-    gasPrice: number
-  ) => Promise<ethers.ContractReceipt>;
+  sendTransactionFunction: SendTransactionFunction;
   minGasPrice: number;
   maxGasPrice?: number;
-  gasPriceScalingFunction?: Function;
+  gasPriceScalingFunction?: GasPriceScalingFunction;
   delay?: number;
-  rejectImmediatelyOnCondition?: Function;
+  rejectImmediatelyOnCondition?: RejectCondition;
 }): Promise<ethers.ContractReceipt> => {
   minGasPrice = parseInt(minGasPrice.toString());
 
