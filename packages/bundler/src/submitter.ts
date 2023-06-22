@@ -27,6 +27,10 @@ import * as ot from "@opentelemetry/api";
 
 const COMPONENT_NAME = "submitter";
 
+export interface BundlerSubmitterOpts {
+  gasPriceMultiplier?: number;
+}
+
 interface BundlerSubmitterMetrics {
   bundlesSubmittedCounter: ot.Counter;
   operationsSubmittedCounter: ot.Counter;
@@ -41,6 +45,7 @@ export class BundlerSubmitter {
   nullifierDB: NullifierDB;
   logger: Logger;
   metrics: BundlerSubmitterMetrics;
+  gasPriceMultiplier: number = 1.2;
 
   readonly INTERVAL_SECONDS: number = 60;
   readonly BATCH_SIZE: number = 8;
@@ -49,7 +54,8 @@ export class BundlerSubmitter {
     tellerAddress: Address,
     signingProvider: ethers.Signer,
     redis: IORedis,
-    logger: Logger
+    logger: Logger,
+    opts?: BundlerSubmitterOpts
   ) {
     this.redis = redis;
     this.logger = logger;
@@ -60,6 +66,10 @@ export class BundlerSubmitter {
       tellerAddress,
       this.signingProvider
     );
+
+    if (opts?.gasPriceMultiplier) {
+      this.gasPriceMultiplier = opts.gasPriceMultiplier;
+    }
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
     const createCounter = makeCreateCounterFn(
@@ -209,7 +219,8 @@ export class BundlerSubmitter {
       });
 
       const gasPrice =
-        ((await this.tellerContract.provider.getGasPrice()).toBigInt() * 12n) /
+        ((await this.tellerContract.provider.getGasPrice()).toBigInt() *
+          BigInt(this.gasPriceMultiplier * 10)) /
         10n; // 20% higher than estimate
       logger.info(`estimated gas price w/ buffer: ${gasPrice}`);
 

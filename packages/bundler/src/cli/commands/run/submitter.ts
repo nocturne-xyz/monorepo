@@ -14,6 +14,7 @@ const runSubmitter = new Command("submitter")
     "--config-name-or-path <string>",
     "config name or path to Nocturne contract JSON config file"
   )
+  .option("--gas-price-multiplier <number>", "multiplier to apply to gas price")
   .option(
     "--log-dir <string>",
     "directory to write logs to",
@@ -24,7 +25,8 @@ const runSubmitter = new Command("submitter")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
-    const { configNameOrPath, logDir, stdoutLogLevel } = options;
+    const { configNameOrPath, gasPriceMultiplier, logDir, stdoutLogLevel } =
+      options;
     const config = loadNocturneConfig(configNameOrPath);
 
     const privateKey = process.env.TX_SIGNER_KEY;
@@ -44,7 +46,8 @@ const runSubmitter = new Command("submitter")
       config.tellerAddress(),
       signingProvider,
       getRedis(),
-      logger
+      logger,
+      { gasPriceMultiplier }
     );
 
     const { promise } = submitter.start();
