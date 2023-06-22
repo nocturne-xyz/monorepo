@@ -208,13 +208,18 @@ export class BundlerSubmitter {
         data,
       });
 
+      const gasPrice =
+        ((await this.tellerContract.provider.getGasPrice()).toBigInt() * 12n) /
+        10n; // 20% higher than estimate
+      logger.info(`estimated gas price w/ buffer: ${gasPrice}`);
+
       logger.info(`submtting bundle with ${operations.length} operations`);
       return this.tellerContract.processBundle(
         { operations },
         {
-          gasLimit: est.toBigInt() + 1_000_000n,
-          gasPrice: await this.tellerContract.provider.getGasPrice(),
-        } // Add gas est buffer
+          gasLimit: est.toBigInt() + 1_000_000n, // buffer
+          gasPrice,
+        }
       );
     } catch (err) {
       logger.error("failed to process bundle:", err);
