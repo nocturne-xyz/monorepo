@@ -10,6 +10,7 @@ import {
   Address,
   DepositStatusResponse,
   DepositQuoteResponse,
+  DepositRequestStatus,
 } from "@nocturne-xyz/sdk";
 import { ScreeningApi } from "./screening";
 import { DepositScreenerDB } from "./db";
@@ -34,6 +35,15 @@ export function makeDepositStatusHandler({
   return async (req: Request, res: Response) => {
     const depositHash = req.params.depositHash;
     const status = await db.getDepositRequestStatus(depositHash);
+
+    if (status === DepositRequestStatus.DoesNotExist) {
+      const response: DepositStatusResponse = {
+        status,
+        estimatedWaitSeconds: 0,
+      };
+
+      res.json(response);
+    }
 
     let delay: number;
     try {
