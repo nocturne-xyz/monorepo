@@ -38,6 +38,7 @@ import {
   getTokenContract,
   getWindowSigner,
 } from "./utils";
+import retry from "async-retry";
 
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
@@ -229,10 +230,15 @@ export class NocturneFrontendSDK {
   async fetchDepositRequestStatus(
     depositHash: string
   ): Promise<DepositStatusResponse> {
-    const res = await fetch(`${this.screenerEndpoint}/status/${depositHash}`, {
-      method: "GET",
+    return await retry(async () => {
+      const res = await fetch(`${this.screenerEndpoint}/status/${depositHash}`, {
+        method: "GET",
+      });
+      return (await res.json()) as DepositStatusResponse;
+    },
+    {
+      retries: 5,
     });
-    return (await res.json()) as DepositStatusResponse;
   }
 
   /**
@@ -248,18 +254,23 @@ export class NocturneFrontendSDK {
     const signer = await getWindowSigner();
     const spender = await signer.getAddress();
 
-    const res = await fetch(`${this.screenerEndpoint}/quote`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        spender,
-        assetAddr: erc20Address,
-        value: totalValue,
-      }),
+    return await retry(async () => {
+      const res = await fetch(`${this.screenerEndpoint}/quote`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          spender,
+          assetAddr: erc20Address,
+          value: totalValue,
+        }),
+      });
+      return (await res.json()) as DepositQuoteResponse;
+    },
+    {
+      retries: 5,
     });
-    return (await res.json()) as DepositQuoteResponse;
   }
 
   /**
@@ -331,24 +342,29 @@ export class NocturneFrontendSDK {
   async submitProvenOperation(
     operation: ProvenOperation
   ): Promise<BundlerOperationID> {
-    const res = await fetch(`${this.bundlerEndpoint}/relay`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ operation } as RelayRequest),
+    return await retry(async () => {
+      const res = await fetch(`${this.bundlerEndpoint}/relay`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ operation } as RelayRequest),
+      });
+
+      const resJSON = await res.json();
+      if (!res.ok) {
+        throw new Error(
+          `Failed to submit proven operation to bundler: ${JSON.stringify(
+            resJSON
+          )}`
+        );
+      }
+
+      return resJSON.id;
+    },
+    {
+      retries: 5,
     });
-
-    const resJSON = await res.json();
-    if (!res.ok) {
-      throw new Error(
-        `Failed to submit proven operation to bundler: ${JSON.stringify(
-          resJSON
-        )}`
-      );
-    }
-
-    return resJSON.id;
   }
 
   /**

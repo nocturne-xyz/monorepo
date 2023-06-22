@@ -23,7 +23,6 @@ export class BundlerOpTracker implements OpTracker {
     let response: OperationStatusResponse;
     try {
       response = await res.json();
-      console.log("response", response);
     } catch (err) {
       throw new Error(`failed to parse bundler response: ${err}`);
     }

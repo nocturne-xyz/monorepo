@@ -10,6 +10,7 @@ import {
   SubgraphUtils,
   max,
 } from "@nocturne-xyz/sdk";
+import { Logger } from "winston";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
@@ -17,9 +18,11 @@ import { DepositEventsBatch, ScreenerSyncAdapter } from "../syncAdapter";
 
 export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
   private readonly graphqlEndpoint: string;
+  private readonly logger?: Logger;
 
-  constructor(graphqlEndpoint: string) {
+  constructor(graphqlEndpoint: string, logger?: Logger) {
     this.graphqlEndpoint = graphqlEndpoint;
+    this.logger = logger;
   }
 
   iterDepositEvents(
@@ -28,6 +31,7 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<DepositEventsBatch> {
     const endpoint = this.graphqlEndpoint;
+    const logger = this.logger;
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
 
     let closed = false;
@@ -45,13 +49,11 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
       };
 
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
-        console.log(
-          `fetching deposit events from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
-            from
-          )} (block ${
-            TotalEntityIndexTrait.toComponents(from).blockNumber
-          }) ...`
-        );
+        logger &&
+          logger.info("fetching deposit events", {
+            from,
+            fromBlock: TotalEntityIndexTrait.toComponents(from).blockNumber,
+          });
 
         const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
         await maybeApplyThrottle(latestIndexedBlock);
@@ -74,7 +76,7 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
             (e) => e.inner
           );
 
-          console.log("yielding deposit events:", depositEvents);
+          logger && logger.debug("yielding deposit events", depositEvents);
 
           yield {
             totalEntityIndex: highestTotalEntityIndex,

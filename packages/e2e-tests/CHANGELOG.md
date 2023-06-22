@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- modify sleeps after subtree update to fix flakey sync e2e tests(?)
 - modify optimistic record tracking test to check op digest records
 - add config option to use rapidsnark prover in e2e tests
 - wait more intelligently for deposit completion

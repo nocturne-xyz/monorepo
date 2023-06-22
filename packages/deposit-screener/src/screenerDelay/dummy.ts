@@ -1,11 +1,17 @@
 import { Address } from "@nocturne-xyz/sdk";
 
 export class DummyScreenerDelayCalculator {
-  delaySeconds = 0;
+  normalDelaySeconds = 0;
+  magicLongDelayValue?: bigint;
+  readonly longDelaySeconds = 60 * 60 * 3; // default to 3 hours
 
-  constructor(delaySeconds?: number) {
+  constructor(delaySeconds?: number, magicLongDelayValue?: number) {
     if (delaySeconds) {
-      this.delaySeconds = delaySeconds;
+      this.normalDelaySeconds = delaySeconds;
+    }
+
+    if (magicLongDelayValue) {
+      this.magicLongDelayValue = BigInt(magicLongDelayValue);
     }
   }
 
@@ -16,11 +22,14 @@ export class DummyScreenerDelayCalculator {
   ): Promise<number> {
     spender;
     assetAddr;
-    value;
 
-    const twentyPercentOfDelay = this.delaySeconds / 5;
+    if (this.magicLongDelayValue && value === this.magicLongDelayValue) {
+      return this.longDelaySeconds;
+    }
+
+    const twentyPercentOfDelay = this.normalDelaySeconds / 5;
     return (
-      this.delaySeconds -
+      this.normalDelaySeconds -
       (Math.random() * 2 * twentyPercentOfDelay - twentyPercentOfDelay)
     );
   }

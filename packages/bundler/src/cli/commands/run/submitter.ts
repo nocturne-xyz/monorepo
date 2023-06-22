@@ -1,7 +1,8 @@
 import { Command } from "commander";
 import { ethers } from "ethers";
 import { BundlerSubmitter } from "../../../submitter";
-import { makeLogger, getRedis } from "@nocturne-xyz/offchain-utils";
+import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import { getRedis } from "./utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
 
 const runSubmitter = new Command("submitter")

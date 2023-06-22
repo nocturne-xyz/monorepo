@@ -135,7 +135,8 @@ export class DepositScreenerFulfiller {
                 job.data.depositRequestJson
               );
               logger.info(
-                `attempting to fulfill deposit request: ${depositRequest}`
+                `attempting to fulfill deposit request: ${depositRequest}`,
+                { depositRequest }
               );
               const hash = hashDepositRequest(depositRequest);
               const childLogger = logger.child({
@@ -162,7 +163,8 @@ export class DepositScreenerFulfiller {
               // if the deposit would exceed the rate limit, pause the queue
               if (window.wouldExceedRateLimit(depositRequest.value)) {
                 childLogger.warn(
-                  `fulfilling deposit ${hash} would exceed rate limit`
+                  `fulfilling deposit ${hash} would exceed rate limit`,
+                  { depositRequest }
                 );
 
                 // not sure if it's possible for the RHS to be < 0, but my gut tells me it is so adding the check just to be safe
@@ -234,7 +236,7 @@ export class DepositScreenerFulfiller {
       try {
         await Promise.all(proms);
       } catch (err) {
-        this.logger.error(`error in fulfiller: ${err}`, err);
+        this.logger.error(`error in fulfiller: ${err}`, { err });
         await teardown();
         throw err;
       }
@@ -294,7 +296,7 @@ export class DepositScreenerFulfiller {
       receipt,
       this.depositManagerContract.interface.getEvent("DepositCompleted")
     ) as DepositCompletedEvent[];
-    logger.info("matching events:", matchingEvents);
+    logger.info("matching events:", { matchingEvents });
 
     if (matchingEvents.length > 0) {
       logger.info(

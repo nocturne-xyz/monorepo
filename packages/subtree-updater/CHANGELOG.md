@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- put back redis utils
+- make logging more consistent
+- add logger to `SubgraphSubtreeUpdaterSyncAdapter`
 - sync through current block, not merely up to it
 - make teardown actually wait for all proms to settle
 - fix edge case that can cause totalEntityIndex to go backwards in subgraph sync adapter

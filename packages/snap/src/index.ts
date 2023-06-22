@@ -17,12 +17,21 @@ import { SnapKvStore } from "./snapdb";
 import * as JSON from "bigint-json-serialization";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import { panel, text, heading } from "@metamask/snaps-ui";
+import { createLogger } from "winston";
+import BrowserConsoleTransport from "winston-transport-browserconsole";
 
 // Local
 const RPC_URL = "http://127.0.0.1:8545/";
 const BUNDLER_URL = "http://127.0.0.1:3000";
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne";
+const LOG_LEVEL = "debug";
 const config = loadNocturneConfigBuiltin("localhost");
+
+const logger = createLogger({
+  exceptionHandlers: [new BrowserConsoleTransport()],
+  rejectionHandlers: [new BrowserConsoleTransport()],
+  transports: [new BrowserConsoleTransport({ level: LOG_LEVEL })],
+});
 
 /**  https://docs.metamask.io/snaps/how-to/develop-a-snap/#publish-your-snap
  * At runtime, snaps are pulled down + installed from npm by the MM extension, where we have no control over environment.
@@ -84,7 +93,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
   const merkleProver = await SparseMerkleProver.loadFromKV(kvStore);
   // const syncAdapter = new RPCSyncAdapter(provider, WALLET_ADDRESS);
-  const syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_API_URL);
+  const syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_API_URL, logger);
   const sdk = new NocturneWalletSDK(
     signer,
     provider,
@@ -93,7 +102,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     nocturneDB,
     syncAdapter,
     new MockEthToTokenConverter(),
-    new BundlerOpTracker(BUNDLER_URL)
+    new BundlerOpTracker(BUNDLER_URL),
+    logger
   );
 
   console.log("Switching on method: ", request.method);

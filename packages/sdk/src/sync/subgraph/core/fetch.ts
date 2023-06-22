@@ -79,8 +79,6 @@ export async function fetchSDKEvents(
   const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
   const res = await query({ fromIdx });
 
-  console.log("res.data", res.data);
-
   if (!res.data || res.data.sdkevents.length === 0) {
     return [];
   }

@@ -1,7 +1,8 @@
 import { Command } from "commander";
 import { ethers } from "ethers";
 import { BundlerServer } from "../../../server";
-import { makeLogger, getRedis } from "@nocturne-xyz/offchain-utils";
+import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import { getRedis } from "./utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
 
 const runServer = new Command("server")

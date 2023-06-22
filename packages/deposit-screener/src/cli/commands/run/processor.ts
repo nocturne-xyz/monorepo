@@ -2,11 +2,12 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { DepositScreenerScreener } from "../../../screener";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
-import { makeLogger, getRedis } from "@nocturne-xyz/offchain-utils";
+import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
 import { DummyScreeningApi } from "../../../screening";
 import { DummyScreenerDelayCalculator } from "../../../screenerDelay";
+import { getRedis } from "./utils";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
@@ -19,7 +20,15 @@ const runProcess = new Command("processor")
   )
   .option(
     "--dummy-screening-delay <number>",
-    "dummy screening delay in seconds"
+    "dummy screening delay in seconds (test purposes only)"
+  )
+  .option(
+    "--dummy-magic-long-delay-value <number>",
+    "dummy magic value that results in long delay (test purposes only)"
+  )
+  .option(
+    "--dummy-magic-rejection-value <number>",
+    "dummy magic deposit value that results in deposit being rejected (test purposes only)"
   )
   .option(
     "--log-dir <string>",
@@ -39,19 +48,32 @@ const runProcess = new Command("processor")
     const {
       configNameOrPath,
       dummyScreeningDelay,
+      dummyMagicLongDelayValue,
+      dummyMagicRejectionValue,
       logDir,
       throttleMs,
       stdoutLogLevel,
     } = options;
+
+    const logger = makeLogger(
+      logDir,
+      "deposit-screener",
+      "processor",
+      stdoutLogLevel
+    );
+
     const config = loadNocturneConfig(configNameOrPath);
-    console.log("config", config);
+    logger.info("config", { config });
 
     // TODO: enable switching on adapter impl
     const subgraphEndpoint = process.env.SUBGRAPH_URL;
     if (!subgraphEndpoint) {
       throw new Error("missing SUBGRAPH_URL");
     }
-    const adapter = new SubgraphScreenerSyncAdapter(subgraphEndpoint);
+    const adapter = new SubgraphScreenerSyncAdapter(
+      subgraphEndpoint,
+      logger.child({ function: "SubgraphScreenerSyncAdapter" })
+    );
 
     const rpcUrl = process.env.RPC_URL;
     if (!rpcUrl) {
@@ -71,12 +93,6 @@ const runProcess = new Command("processor")
     }
     const attestationSigner = new ethers.Wallet(attestationSignerKey);
 
-    const logger = makeLogger(
-      logDir,
-      "deposit-screener",
-      "processor",
-      stdoutLogLevel
-    );
     const supportedAssets = new Set(
       Array.from(config.erc20s.values()).map(({ address }) => address)
     );
@@ -88,8 +104,11 @@ const runProcess = new Command("processor")
       getRedis(),
       logger,
       // TODO: use real screening api and delay calculator
-      new DummyScreeningApi(),
-      new DummyScreenerDelayCalculator(dummyScreeningDelay),
+      new DummyScreeningApi(dummyMagicRejectionValue),
+      new DummyScreenerDelayCalculator(
+        dummyScreeningDelay,
+        dummyMagicLongDelayValue
+      ),
       supportedAssets,
       config.contracts.startBlock
     );

@@ -76,7 +76,6 @@ function computeDomainSeparator(domain: EIP712Domain): string {
       ),
     ]
   );
-  console.log(`domainSeparator: ${domainSeparator}`);
   return domainSeparator;
 }
 

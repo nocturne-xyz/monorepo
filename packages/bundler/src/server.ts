@@ -170,7 +170,7 @@ export class BundlerServer {
       });
 
       server.on("error", (err) => {
-        this.logger.error("server error", err);
+        this.logger.error("server error", { err });
         reject();
       });
 

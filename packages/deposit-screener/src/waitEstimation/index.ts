@@ -33,7 +33,7 @@ export async function estimateSecondsUntilDepositCompletion(
 ): Promise<number> {
   // get deposit request status
   const status = await db.getDepositRequestStatus(depositHash);
-  if (!status) {
+  if (status === DepositRequestStatus.DoesNotExist) {
     throw new Error(`No status found for deposit hash ${depositHash}`);
   }
 

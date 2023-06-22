@@ -20,6 +20,7 @@ import {
 } from "./primitives";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { consecutiveChunks } from "./utils/functional";
+import { Logger } from "winston";
 
 export interface SyncOpts {
   endBlock?: number;
@@ -27,10 +28,11 @@ export interface SyncOpts {
 
 export interface SyncDeps {
   viewer: NocturneViewer;
+  logger?: Logger;
 }
 
 export async function syncSDK(
-  { viewer }: SyncDeps,
+  { viewer, logger }: SyncDeps,
   adapter: SDKSyncAdapter,
   db: NocturneDB,
   merkle: SparseMerkleProver,
@@ -45,11 +47,18 @@ export async function syncSDK(
   const endTotalEntityIndex = TotalEntityIndexTrait.fromBlockNumber(
     opts?.endBlock ?? currentBlock
   );
-  console.log(
-    `[syncSDK] syncing SDK from totalEntityIndex ${startTotalEntityIndex} (block ${
-      TotalEntityIndexTrait.toComponents(startTotalEntityIndex).blockNumber
-    }) to ${endTotalEntityIndex} (block ${currentBlock})...`
-  );
+  const range = {
+    startTotalEntityIndex,
+    endTotalEntityIndex,
+    startBlock: TotalEntityIndexTrait.toComponents(startTotalEntityIndex)
+      .blockNumber,
+    endBlock: currentBlock,
+  };
+  logger &&
+    logger.info(
+      `[syncSDK] syncing SDK from totalEntityIndex ${startTotalEntityIndex} (block ${range.startBlock}) to ${endTotalEntityIndex} (block ${currentBlock})...`,
+      { range }
+    );
 
   const newDiffs = adapter.iterStateDiffs(startTotalEntityIndex, {
     endTotalEntityIndex,
@@ -108,10 +117,7 @@ async function updateMerkle(
   }
 
   // commit up to latest subtree commit
-  console.log("[syncSDK] committing up to index", latestCommittedMerkleIndex);
   merkle.commitUpToIndex(latestCommittedMerkleIndex);
-
-  console.log("[syncSDK] merkle root:", merkle.getRoot());
 
   // mark nullified ones for pruning
   for (const index of nfIndices) {
@@ -119,7 +125,6 @@ async function updateMerkle(
   }
 
   // persist merkle to underlying KV store
-  console.log("[syncSDK] persisting merkle");
   await merkle.persist();
 }
 

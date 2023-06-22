@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- setup browser logger for SDK to use
 - add method to fetch all inflight op digests and metadata `nocturne_getInflightOpDigestsAndMetadata`
 - parse metadata param in `nocturne_signOperation` method and pass to `applyOptimisticRecordsForOp` call
 - lock snaps-cli to finalized version `0.32.2` (https://github.com/MetaMask/snaps/discussions/1411)

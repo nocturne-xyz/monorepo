@@ -17,12 +17,15 @@ import {
   IncludedNote,
   Nullifier,
 } from "../../../primitives";
+import { Logger } from "winston";
 
 export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   private readonly graphqlEndpoint: string;
+  private readonly logger?: Logger;
 
-  constructor(graphqlEndpoint: string) {
+  constructor(graphqlEndpoint: string, logger?: Logger) {
     this.graphqlEndpoint = graphqlEndpoint;
+    this.logger = logger;
   }
 
   iterStateDiffs(
@@ -30,6 +33,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<EncryptedStateDiff> {
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
+    const logger = this.logger;
     let closed = false;
 
     const endpoint = this.graphqlEndpoint;
@@ -51,13 +55,20 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
       };
 
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
-        console.log(
-          `fetching state diffs from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
-            from
-          )} (block ${
-            TotalEntityIndexTrait.toComponents(from).blockNumber
-          }) ...`
-        );
+        const fromBlock = TotalEntityIndexTrait.toComponents(from).blockNumber;
+        logger &&
+          logger.info(
+            `fetching state diffs from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
+              from
+            )} (block ${fromBlock}) ...`,
+            {
+              range: {
+                startTotalEntityIndex:
+                  TotalEntityIndexTrait.toStringPadded(from),
+                fromBlock: TotalEntityIndexTrait.toComponents(from).blockNumber,
+              },
+            }
+          );
 
         const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
         await maybeApplyThrottle(latestIndexedBlock);
@@ -88,7 +99,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
             totalEntityIndex: highestTotalEntityIndex,
           };
 
-          console.log("yielding state diff:", stateDiff);
+          logger && logger.debug("yielding state diff", { stateDiff });
 
           yield stateDiff;
 

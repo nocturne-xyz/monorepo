@@ -8,13 +8,14 @@ COPY yarn.lock .
 COPY .yarn .yarn
 COPY .yarnrc.yml .
 COPY packages/test-actor packages/test-actor
+COPY circuit-artifacts/joinsplit circuit-artifacts/joinsplit
 
 RUN yarn install
 
-WORKDIR /app/packages/deposit-screener
+WORKDIR /app/packages/test-actor
 RUN yarn build
 RUN npm i -g
 
 COPY packages/config/configs /app/configs
 
-ENTRYPOINT ["screener-cli"]
+ENTRYPOINT ["test-actor-cli"]

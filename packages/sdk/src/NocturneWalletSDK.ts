@@ -25,6 +25,7 @@ import { EthToTokenConverter } from "./conversion";
 import { getMerkleIndicesAndNfsFromOp } from "./utils/misc";
 import { OpTracker } from "./OpTracker";
 import { getTotalEntityIndexOfNewestNoteInOp } from "./totalEntityIndexOfNewestNoteInOp";
+import { Logger } from "winston";
 
 // 10 minutes
 const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000;
@@ -41,6 +42,7 @@ export class NocturneWalletSDK {
 
   readonly signer: NocturneSigner;
   readonly gasAssets: Map<string, Asset>;
+  readonly logger?: Logger;
 
   constructor(
     signer: NocturneSigner,
@@ -50,7 +52,8 @@ export class NocturneWalletSDK {
     db: NocturneDB,
     syncAdapter: SDKSyncAdapter,
     tokenConverter: EthToTokenConverter,
-    nulliferChecker: OpTracker
+    nulliferChecker: OpTracker,
+    logger?: Logger
   ) {
     if (typeof configOrNetworkName == "string") {
       this.config = loadNocturneConfig(configOrNetworkName);
@@ -78,6 +81,7 @@ export class NocturneWalletSDK {
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
     this.opTracker = nulliferChecker;
+    this.logger = logger;
   }
 
   async sync(): Promise<void> {
@@ -101,11 +105,13 @@ export class NocturneWalletSDK {
       handlerContract: this.handlerContract,
       merkle: this.merkleProver,
       viewer: this.signer,
+      logger: this.logger,
     };
     const gasAccountedOpRequest = await handleGasForOperationRequest(
       deps,
       opRequest
     );
+
     return await prepareOperation(deps, gasAccountedOpRequest);
   }
 

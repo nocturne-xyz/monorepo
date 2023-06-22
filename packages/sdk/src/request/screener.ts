@@ -12,5 +12,5 @@ export interface DepositQuoteResponse {
 
 export interface DepositStatusResponse {
   status: DepositRequestStatus;
-  estimatedWaitSeconds: number;
+  estimatedWaitSeconds?: number;
 }
