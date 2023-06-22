@@ -215,8 +215,11 @@ export class BundlerSubmitter {
           }
         );
 
-        const receipt = tx.wait(1);
-        logger.info("dispatch bundle tx receipt:", { receipt });
+        const receipt = await tx.wait(1);
+        logger.info(
+          "attempted tx manager submission receipt (empty indicates retry):",
+          { receipt }
+        );
 
         return receipt;
       };
@@ -225,13 +228,14 @@ export class BundlerSubmitter {
       logger.info(`starting gas price: ${startingGasPrice}`);
 
       logger.info(`submitting bundle with ${operations.length} operations`);
-      return txManager.send({
+      const receipt = await txManager.send({
         sendTransactionFunction: contractTx,
         minGasPrice: startingGasPrice.toNumber(),
-        maxGasPrice: startingGasPrice.toNumber() * 5, // up to 5x starting gas price
-        gasPriceScalingFunction: txManager.LINEAR(5),
-        delay: 5_000, // Waits 10s between each try
+        maxGasPrice: startingGasPrice.toNumber() * 10, // up to 5x starting gas price
+        gasPriceScalingFunction: txManager.LINEAR(2),
+        delay: 10_000, // Waits 10s between each try
       });
+      return receipt;
     } catch (err) {
       logger.error("failed to process bundle:", err);
       const redisTxs = operations.flatMap((op) => {
