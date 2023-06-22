@@ -1,4 +1,6 @@
+// forked from https://github.com/kendricktan/ynatm
 import Bluebird from "bluebird";
+import { ethers } from "ethers";
 
 // GWEI = 1e9
 const GWEI = Math.pow(10, 9);
@@ -91,13 +93,15 @@ const send = async ({
   delay = 60000,
   rejectImmediatelyOnCondition = rejectOnRevert,
 }: {
-  sendTransactionFunction: (gasPrice: number) => Promise<any>;
+  sendTransactionFunction: (
+    gasPrice: number
+  ) => Promise<ethers.ContractReceipt>;
   minGasPrice: number;
   maxGasPrice?: number;
   gasPriceScalingFunction?: Function;
   delay?: number;
   rejectImmediatelyOnCondition?: Function;
-}): Promise<any> => {
+}): Promise<ethers.ContractReceipt> => {
   minGasPrice = parseInt(minGasPrice.toString());
 
   if (!maxGasPrice) {

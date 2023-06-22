@@ -24,6 +24,7 @@ import {
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
+import * as txManager from "@nocturne-xyz/tx-manager";
 
 const COMPONENT_NAME = "submitter";
 
@@ -160,18 +161,15 @@ export class BundlerSubmitter {
     await this.setOpsToInflight(logger, operations);
 
     logger.debug("dispatching bundle...");
-    const tx = await this.dispatchBundle(logger, operations);
-    logger.info("dispatch bundle tx: ", { tx });
+    const receipt = await this.submitBundle(logger, operations);
+    logger.info("dispatch bundle tx receipt: ", { receipt });
 
-    if (!tx) {
+    if (!receipt) {
       logger.error("bundle reverted");
       return;
     }
 
-    logger = logger.child({ txHash: tx?.hash });
-
-    logger.debug("waiting for confirmation...");
-    const receipt = await tx.wait(1);
+    logger = logger.child({ txHash: receipt.transactionHash });
 
     logger.debug("performing post-submission bookkeeping");
     await this.performPostSubmissionBookkeeping(logger, operations, receipt);
@@ -203,10 +201,10 @@ export class BundlerSubmitter {
     });
   }
 
-  async dispatchBundle(
+  async submitBundle(
     logger: Logger,
     operations: ProvenOperation[]
-  ): Promise<ethers.ContractTransaction | undefined> {
+  ): Promise<ethers.ContractReceipt | undefined> {
     try {
       // Estimate gas first
       const data = this.tellerContract.interface.encodeFunctionData(
@@ -218,20 +216,32 @@ export class BundlerSubmitter {
         data,
       });
 
-      const gasPrice =
-        ((await this.tellerContract.provider.getGasPrice()).toBigInt() *
-          BigInt(this.gasPriceMultiplier * 10)) /
-        10n; // 20% higher than estimate
-      logger.info(`estimated gas price w/ buffer: ${gasPrice}`);
+      const contractTx = async (gasPrice: number) => {
+        const tx = await this.tellerContract.processBundle(
+          { operations },
+          {
+            gasLimit: est.toBigInt() + 1_000_000n, // buffer
+            gasPrice,
+          }
+        );
 
-      logger.info(`submtting bundle with ${operations.length} operations`);
-      return this.tellerContract.processBundle(
-        { operations },
-        {
-          gasLimit: est.toBigInt() + 1_000_000n, // buffer
-          gasPrice,
-        }
-      );
+        const receipt = tx.wait(1);
+        logger.info("dispatch bundle tx receipt:", { receipt });
+
+        return receipt;
+      };
+
+      const startingGasPrice = await this.tellerContract.provider.getGasPrice();
+      logger.info(`starting gas price: ${startingGasPrice}`);
+
+      logger.info(`submitting bundle with ${operations.length} operations`);
+      return txManager.send({
+        sendTransactionFunction: contractTx,
+        minGasPrice: startingGasPrice.toNumber(),
+        maxGasPrice: startingGasPrice.toNumber() * 5, // up to 5x starting gas price
+        gasPriceScalingFunction: txManager.LINEAR(5),
+        delay: 5_000, // Waits 10s between each try
+      });
     } catch (err) {
       logger.error("failed to process bundle:", err);
       const redisTxs = operations.flatMap((op) => {

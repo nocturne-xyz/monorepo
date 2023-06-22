@@ -25,6 +25,7 @@
     "test:unit": "mocha --require ts-node/register test/**.test.ts --timeout 500000 --exit"
   },
   "dependencies": {
+    "@nocturne-xyz/tx-manager": "workspace:^",
     "@nocturne-xyz/config": "1.0.14-alpha",
     "@nocturne-xyz/contracts": "1.0.32-alpha",
     "@nocturne-xyz/offchain-utils": "0.1.10",
