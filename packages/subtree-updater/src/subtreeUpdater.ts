@@ -13,7 +13,6 @@ import {
   TreeConstants,
   IncludedNote,
   IncludedNoteCommitment,
-  TotalEntityIndexTrait,
 } from "@nocturne-xyz/sdk";
 import { Mutex } from "async-mutex";
 import IORedis from "ioredis";
@@ -27,6 +26,8 @@ import {
 import { Handler } from "@nocturne-xyz/contracts";
 import * as JSON from "bigint-json-serialization";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import { Insertion } from "./sync/syncAdapter";
+import { PersistentLog } from "./persistentLog";
 
 const { BATCH_SIZE } = TreeConstants;
 
@@ -39,7 +40,6 @@ const SUBTREE_INCLUDE_ARRAY = [true, ...range(BATCH_SIZE - 1).map(() => false)];
 
 export interface SubtreeUpdaterOpts {
   fillBatchLatency?: number;
-  startBlock?: number;
 }
 
 export class SubtreeUpdater {
@@ -58,7 +58,6 @@ export class SubtreeUpdater {
 
   fillBatchTimeout: NodeJS.Timeout | undefined;
   fillBatchLatency: number | undefined;
-  startBlock: number;
 
   constructor(
     handlerContract: Handler,
@@ -86,12 +85,10 @@ export class SubtreeUpdater {
     // TODO make this a redis KV store
     const kv = new InMemoryKVStore();
     this.tree = new SparseMerkleProver(kv);
-
-    this.startBlock = opts?.startBlock ?? 0;
   }
 
-  start(queryThrottleMs?: number): ActorHandle {
-    const proofJobs = this.getProofJobIterator(
+  async start(queryThrottleMs?: number): Promise<ActorHandle> {
+    const proofJobs = await this.getProofJobIterator(
       this.logger.child({ function: "iterator" }),
       queryThrottleMs
     );
@@ -254,19 +251,27 @@ export class SubtreeUpdater {
     );
   }
 
-  private getProofJobIterator(
+  private async getProofJobIterator(
     logger: Logger,
     queryThrottleMs?: number
-  ): ClosableAsyncIterator<ProofJobData> {
+  ): Promise<ClosableAsyncIterator<ProofJobData>> {
     logger.info(`subtree updater iterator starting`);
 
-    const startTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
-      blockNumber: BigInt(this.startBlock ?? 0),
-    });
-    return this.adapter
-      .iterInsertions(startTotalEntityIndex, {
-        throttleMs: queryThrottleMs,
-      })
+    const log = new PersistentLog<Insertion>(
+      this.redis,
+      logger.child({ function: "PersistentLog" })
+    );
+    const logTip = await log.getLatestTotalEntityIndex();
+
+    const previousInsertions = log.scan().map(({ inner }) => inner);
+    const newInsertions = log
+      .sync(
+        this.adapter.iterInsertions(logTip, { throttleMs: queryThrottleMs })
+      )
+      .map(({ inner }) => inner);
+
+    return previousInsertions
+      .chain(newInsertions)
       .tap(({ merkleIndex, ...insertion }) => {
         logger.debug(`got insertion at merkleIndex ${merkleIndex}`, {
           insertion,
@@ -295,7 +300,7 @@ export class SubtreeUpdater {
         }
       })
       .batches(BATCH_SIZE, true)
-      .map((insertions: (IncludedNote | IncludedNoteCommitment)[]) => {
+      .map((insertions: Insertion[]) => {
         const subtreeBatchOffset = insertions[0].merkleIndex;
         const oldRoot = this.tree.getRoot();
         logger.debug(`got batch with leftmost index ${subtreeBatchOffset}`, {

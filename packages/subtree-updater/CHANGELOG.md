@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- iterate over `PersistentLog` first, then start pulling from subgraph
+- add `PersistentLog`
 - put back redis utils
 - make logging more consistent
 - add logger to `SubgraphSubtreeUpdaterSyncAdapter`

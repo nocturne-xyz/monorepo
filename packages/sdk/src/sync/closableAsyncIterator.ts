@@ -62,4 +62,43 @@ export class ClosableAsyncIterator<T> {
 
     return new ClosableAsyncIterator(tapped(), async () => await this.close());
   }
+
+  tapAsync(f: (item: T) => Promise<void>): ClosableAsyncIterator<T> {
+    const thisIter = this.iter;
+    const tapped = async function* () {
+      for await (const item of thisIter) {
+        await f(item);
+        yield item;
+      }
+    };
+
+    return new ClosableAsyncIterator(tapped(), async () => await this.close());
+  }
+
+  chain(other: ClosableAsyncIterator<T>): ClosableAsyncIterator<T> {
+    const thisIter = this.iter;
+    const chained = async function* () {
+      for await (const item of thisIter) {
+        yield item;
+      }
+      for await (const item of other.iter) {
+        yield item;
+      }
+    };
+
+    return new ClosableAsyncIterator(chained(), async () => {
+      await this.close();
+      await other.close();
+    });
+  }
+
+  async collect(): Promise<T[]> {
+    const items: T[] = [];
+    for await (const item of this.iter) {
+      items.push(item);
+    }
+
+    await this.close();
+    return items;
+  }
 }
