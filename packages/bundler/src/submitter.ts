@@ -28,10 +28,6 @@ import * as txManager from "@nocturne-xyz/tx-manager";
 
 const COMPONENT_NAME = "submitter";
 
-export interface BundlerSubmitterOpts {
-  gasPriceMultiplier?: number;
-}
-
 interface BundlerSubmitterMetrics {
   bundlesSubmittedCounter: ot.Counter;
   operationsSubmittedCounter: ot.Counter;
@@ -46,7 +42,6 @@ export class BundlerSubmitter {
   nullifierDB: NullifierDB;
   logger: Logger;
   metrics: BundlerSubmitterMetrics;
-  gasPriceMultiplier: number = 1.2;
 
   readonly INTERVAL_SECONDS: number = 60;
   readonly BATCH_SIZE: number = 8;
@@ -55,8 +50,7 @@ export class BundlerSubmitter {
     tellerAddress: Address,
     signingProvider: ethers.Signer,
     redis: IORedis,
-    logger: Logger,
-    opts?: BundlerSubmitterOpts
+    logger: Logger
   ) {
     this.redis = redis;
     this.logger = logger;
@@ -67,10 +61,6 @@ export class BundlerSubmitter {
       tellerAddress,
       this.signingProvider
     );
-
-    if (opts?.gasPriceMultiplier) {
-      this.gasPriceMultiplier = opts.gasPriceMultiplier;
-    }
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
     const createCounter = makeCreateCounterFn(

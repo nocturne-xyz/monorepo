@@ -3900,9 +3900,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/tx-manager@workspace:packages/tx-manager"
   dependencies:
-    "@types/async-retry": ^1.4.5
     "@types/bluebird": ^3.5.38
-    "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
     "@types/mocha": ^10.0.0
