@@ -263,6 +263,8 @@ export class SubtreeUpdater {
     );
     const logTip = await log.getLatestTotalEntityIndex();
 
+    logger.debug(`latest TotalEntityIndex of persistent log ${logTip}`);
+
     const previousInsertions = log.scan().map(({ inner }) => inner);
     const newInsertions = log
       .sync(
