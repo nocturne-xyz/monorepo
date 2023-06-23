@@ -275,22 +275,15 @@ export class DepositScreenerFulfiller {
       case AssetType.ERC20:
         logger.info("submitting completeDeposit tx...");
 
-        tx = await this.signerMutex.runExclusive(async () => {
-          const gasPrice =
-            ((
-              await this.depositManagerContract.provider.getGasPrice()
-            ).toBigInt() *
-              12n) /
-            10n; // 20% higher than estimate
-          logger.info(`estimated gas price w/ buffer: ${gasPrice}`);
-
-          return await this.depositManagerContract
-            .completeErc20Deposit(depositRequest, signature, { gasPrice })
-            .catch((e) => {
-              logger.error(e);
-              throw new Error(e);
-            });
-        });
+        tx = await this.signerMutex.runExclusive(
+          async () =>
+            await this.depositManagerContract
+              .completeErc20Deposit(depositRequest, signature)
+              .catch((e) => {
+                logger.error(e);
+                throw new Error(e);
+              })
+        );
         break;
       default:
         throw new Error("currently only supporting erc20 deposits");

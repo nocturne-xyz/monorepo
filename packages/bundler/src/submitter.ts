@@ -151,7 +151,7 @@ export class BundlerSubmitter {
     await this.setOpsToInflight(logger, operations);
 
     logger.debug("dispatching bundle...");
-    const receipt = await this.submitBundle(logger, operations);
+    const receipt = await this.dispatchBundle(logger, operations);
     logger.info("dispatch bundle tx receipt: ", { receipt });
 
     if (!receipt) {
@@ -191,7 +191,7 @@ export class BundlerSubmitter {
     });
   }
 
-  async submitBundle(
+  async dispatchBundle(
     logger: Logger,
     operations: ProvenOperation[]
   ): Promise<ethers.ContractReceipt | undefined> {
@@ -207,6 +207,9 @@ export class BundlerSubmitter {
       });
 
       const contractTx = async (gasPrice: number) => {
+        logger.info(
+          `attempting tx manager submission with gas price: ${gasPrice}}`
+        );
         const tx = await this.tellerContract.processBundle(
           { operations },
           {
@@ -216,11 +219,6 @@ export class BundlerSubmitter {
         );
 
         const receipt = await tx.wait(1);
-        logger.info(
-          "attempted tx manager submission receipt (empty indicates retry):",
-          { receipt }
-        );
-
         return receipt;
       };
 

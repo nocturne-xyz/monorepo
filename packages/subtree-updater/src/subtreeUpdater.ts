@@ -227,12 +227,6 @@ export class SubtreeUpdater {
             "acquiring mutex on handler contract to submit update tx"
           );
           await this.handlerMutex.runExclusive(async () => {
-            const gasPrice =
-              ((await this.handlerContract.provider.getGasPrice()).toBigInt() *
-                12n) /
-              10n; // 20% higher than estimate
-            logger.info(`estimated gas price w/ buffer: ${gasPrice}`);
-
             logger.info("submitting tx...");
             const tx = await this.handlerContract.applySubtreeUpdate(
               newRoot,
