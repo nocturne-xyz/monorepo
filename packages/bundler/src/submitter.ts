@@ -229,8 +229,8 @@ export class BundlerSubmitter {
       const receipt = await txManager.send({
         sendTransactionFunction: contractTx,
         minGasPrice: startingGasPrice.toNumber(),
-        maxGasPrice: startingGasPrice.toNumber() * 10, // up to 10x starting gas price
-        gasPriceScalingFunction: txManager.LINEAR(2, false), // +20% each try
+        maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
+        gasPriceScalingFunction: txManager.LINEAR(2), // +2 gwei each time
         delay: 20_000, // Waits 20s between each try
       });
       return receipt;
