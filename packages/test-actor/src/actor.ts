@@ -284,7 +284,7 @@ export class TestActor {
           ONE_DAY_SECONDS
       )
       .gasPrice(
-        ((await this.txSigner.provider.getGasPrice()).toBigInt() * 12n) / 10n
+        ((await this.txSigner.provider.getGasPrice()).toBigInt() * 14n) / 10n
       )
       .build();
   }
