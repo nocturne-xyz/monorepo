@@ -147,6 +147,8 @@ export class BundlerBatcher {
             const allTransactions = setJobStatusTransactions.concat([
               popTransaction,
             ]);
+
+            logger.info(`Creating batch. batch size: ${batch.length}`);
             await this.redis.multi(allTransactions).exec((maybeErr) => {
               if (maybeErr) {
                 const msg = `failed to set operation job and/or remove batch from DB: ${maybeErr}`;
@@ -208,6 +210,8 @@ export class BundlerBatcher {
         const allTransactions = [batcherAddTransaction].concat([
           setJobStatusTransaction,
         ]);
+
+        logger.info(`Adding operation to batcher DB. op digest: ${job.id}`);
         await this.redis.multi(allTransactions).exec((maybeErr) => {
           if (maybeErr) {
             const msg = `failed to execute batcher add and set job status transaction: ${maybeErr}`;
