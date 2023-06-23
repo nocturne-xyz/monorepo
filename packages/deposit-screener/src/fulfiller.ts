@@ -39,6 +39,7 @@ import {
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import { millisToSeconds } from "./utils";
+import * as txManager from "@nocturne-xyz/tx-manager";
 
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 const COMPONENT_NAME = "fulfiller";
@@ -269,29 +270,50 @@ export class DepositScreenerFulfiller {
     );
 
     const asset = AssetTrait.decode(depositRequest.encodedAsset);
+    const receipt = await this.signerMutex.runExclusive(async () => {
+      const nonce = await this.txSigner.getTransactionCount(); // ensure tx manager replaces txs
 
-    let tx: ethers.ContractTransaction;
-    switch (asset.assetType) {
-      case AssetType.ERC20:
-        logger.info("submitting completeDeposit tx...");
+      let contractTx: (gasPrice: number) => Promise<ethers.ContractReceipt>;
+      switch (asset.assetType) {
+        case AssetType.ERC20:
+          logger.info("submitting completeDeposit tx...");
 
-        tx = await this.signerMutex.runExclusive(
-          async () =>
-            await this.depositManagerContract
-              .completeErc20Deposit(depositRequest, signature)
-              .catch((e) => {
-                logger.error(e);
-                throw new Error(e);
-              })
-        );
-        break;
-      default:
-        throw new Error("currently only supporting erc20 deposits");
-    }
+          contractTx = async (gasPrice: number) => {
+            const tx = await this.depositManagerContract.completeErc20Deposit(
+              depositRequest,
+              signature,
+              {
+                gasPrice,
+                nonce,
+              }
+            );
 
-    logger.info("waiting for receipt...");
-    const receipt = await tx.wait(1);
-    logger.info("completeDeposit receipt:", receipt);
+            logger.info(
+              `attempting tx manager submission. txhash: ${tx.hash} gas price: ${gasPrice}`
+            );
+
+            const receipt = await tx.wait(1);
+            return receipt;
+          };
+          break;
+        default:
+          throw new Error("currently only supporting erc20 deposits");
+      }
+
+      const startingGasPrice = await this.txSigner.getGasPrice();
+      logger.info(`starting gas price: ${startingGasPrice}`);
+
+      logger.info(`completing deposit with hash`);
+      return txManager.send({
+        sendTransactionFunction: contractTx,
+        minGasPrice: startingGasPrice.toNumber(),
+        maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
+        gasPriceScalingFunction: txManager.LINEAR(2), // +2 gwei each time
+        delay: 20_000, // Waits 20s between each try
+      });
+    });
+
+    logger.info("completeDeposit receipt:", { receipt });
 
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
