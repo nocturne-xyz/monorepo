@@ -274,6 +274,7 @@ export class DepositScreenerFulfiller {
     switch (asset.assetType) {
       case AssetType.ERC20:
         logger.info("submitting completeDeposit tx...");
+
         tx = await this.signerMutex.runExclusive(
           async () =>
             await this.depositManagerContract

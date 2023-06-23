@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- 20% buffer on sdk gas price
 - wrap fetch requests in `async-retry` with exponential backoff
 - fix bug in ignore indices that caused zero (dummy) notes to make sdk incorrectly ignore note at merkle index 0
 - pass in optional winston logger

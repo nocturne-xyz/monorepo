@@ -24,6 +24,7 @@ import {
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
+import * as txManager from "@nocturne-xyz/tx-manager";
 
 const COMPONENT_NAME = "submitter";
 
@@ -35,7 +36,7 @@ interface BundlerSubmitterMetrics {
 
 export class BundlerSubmitter {
   redis: IORedis;
-  signingProvider: ethers.Signer;
+  signingProvider: ethers.Wallet;
   tellerContract: Teller; // TODO: replace with tx manager
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
@@ -47,7 +48,7 @@ export class BundlerSubmitter {
 
   constructor(
     tellerAddress: Address,
-    signingProvider: ethers.Signer,
+    signingProvider: ethers.Wallet,
     redis: IORedis,
     logger: Logger
   ) {
@@ -150,18 +151,15 @@ export class BundlerSubmitter {
     await this.setOpsToInflight(logger, operations);
 
     logger.debug("dispatching bundle...");
-    const tx = await this.dispatchBundle(logger, operations);
-    logger.info("dispatch bundle tx: ", { tx });
+    const receipt = await this.dispatchBundle(logger, operations);
+    logger.info("dispatch bundle tx receipt: ", { receipt });
 
-    if (!tx) {
+    if (!receipt) {
       logger.error("bundle reverted");
       return;
     }
 
-    logger = logger.child({ txHash: tx?.hash });
-
-    logger.debug("waiting for confirmation...");
-    const receipt = await tx.wait(1);
+    logger = logger.child({ txHash: receipt.transactionHash });
 
     logger.debug("performing post-submission bookkeeping");
     await this.performPostSubmissionBookkeeping(logger, operations, receipt);
@@ -196,26 +194,49 @@ export class BundlerSubmitter {
   async dispatchBundle(
     logger: Logger,
     operations: ProvenOperation[]
-  ): Promise<ethers.ContractTransaction | undefined> {
+  ): Promise<ethers.ContractReceipt | undefined> {
     try {
       // Estimate gas first
       const data = this.tellerContract.interface.encodeFunctionData(
         "processBundle",
         [{ operations }]
       );
-      const est = await this.tellerContract.provider.estimateGas({
+      const gasEst = await this.signingProvider.estimateGas({
         to: this.tellerContract.address,
         data,
       });
+      const nonce = await this.signingProvider.getTransactionCount(); // ensure its replacement tx
 
-      logger.info(`submtting bundle with ${operations.length} operations`);
-      return this.tellerContract.processBundle(
-        { operations },
-        {
-          gasLimit: est.toBigInt() + 1_000_000n,
-          gasPrice: await this.tellerContract.provider.getGasPrice(),
-        } // Add gas est buffer
-      );
+      const contractTx = async (gasPrice: number) => {
+        const tx = await this.tellerContract.processBundle(
+          { operations },
+          {
+            gasLimit: gasEst.toBigInt() + 200_000n, // buffer
+            gasPrice,
+            nonce,
+          }
+        );
+
+        logger.info(
+          `attempting tx manager submission. txhash: ${tx.hash} gas price: ${gasPrice}`
+        );
+
+        const receipt = await tx.wait(1);
+        return receipt;
+      };
+
+      const startingGasPrice = await this.tellerContract.provider.getGasPrice();
+      logger.info(`starting gas price: ${startingGasPrice}`);
+
+      logger.info(`submitting bundle with ${operations.length} operations`);
+      const receipt = await txManager.send({
+        sendTransactionFunction: contractTx,
+        minGasPrice: startingGasPrice.toNumber(),
+        maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
+        gasPriceScalingFunction: txManager.LINEAR(2), // +2 gwei each time
+        delay: 20_000, // Waits 20s between each try
+      });
+      return receipt;
     } catch (err) {
       logger.error("failed to process bundle:", err);
       const redisTxs = operations.flatMap((op) => {

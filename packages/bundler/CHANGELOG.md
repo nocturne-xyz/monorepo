@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- integrate tx manager to fix stuck txs
 - put back redis utils
 - make logging more consistent
 - manually estimate gasPrice given implicit gas price estimate in function calls is too high
