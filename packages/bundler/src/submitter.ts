@@ -205,7 +205,7 @@ export class BundlerSubmitter {
         to: this.tellerContract.address,
         data,
       });
-      const nonce = await this.signingProvider.getTransactionCount();
+      const nonce = await this.signingProvider.getTransactionCount(); // ensure its replacement tx
 
       const contractTx = async (gasPrice: number) => {
         const tx = await this.tellerContract.processBundle(
