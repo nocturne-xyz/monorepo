@@ -229,14 +229,13 @@ export class BundlerSubmitter {
       logger.info(`starting gas price: ${startingGasPrice}`);
 
       logger.info(`submitting bundle with ${operations.length} operations`);
-      const receipt = await txManager.send({
+      return txManager.send({
         sendTransactionFunction: contractTx,
         minGasPrice: startingGasPrice.toNumber(),
         maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
         gasPriceScalingFunction: txManager.LINEAR(2), // +2 gwei each time
         delay: 20_000, // Waits 20s between each try
       });
-      return receipt;
     } catch (err) {
       logger.error("failed to process bundle:", err);
       const redisTxs = operations.flatMap((op) => {

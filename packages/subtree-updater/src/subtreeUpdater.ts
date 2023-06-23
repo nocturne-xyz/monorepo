@@ -28,6 +28,7 @@ import * as JSON from "bigint-json-serialization";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 import { Insertion } from "./sync/syncAdapter";
 import { PersistentLog } from "./persistentLog";
+import * as txManager from "@nocturne-xyz/tx-manager";
 
 const { BATCH_SIZE } = TreeConstants;
 
@@ -223,16 +224,36 @@ export class SubtreeUpdater {
           logger.debug(
             "acquiring mutex on handler contract to submit update tx"
           );
-          await this.handlerMutex.runExclusive(async () => {
-            logger.info("submitting tx...");
-            const tx = await this.handlerContract.applySubtreeUpdate(
-              newRoot,
-              solidityProof
-            );
-            logger.info("waiting for confirmation...");
-            await tx.wait(1);
+          const receipt = await this.handlerMutex.runExclusive(async () => {
+            const nonce =
+              await this.handlerContract.signer.getTransactionCount(); // ensure its replacement
+            const contractTx = async (gasPrice: number) => {
+              const tx = await this.handlerContract.applySubtreeUpdate(
+                newRoot,
+                solidityProof,
+                { gasPrice, nonce }
+              );
+
+              logger.info(
+                `attempting tx manager submission. txhash: ${tx.hash} gas price: ${gasPrice}`
+              );
+              return tx.wait(1);
+            };
+
+            const startingGasPrice =
+              await this.handlerContract.provider.getGasPrice();
+            logger.info(`starting gas price: ${startingGasPrice}`);
+
+            return txManager.send({
+              sendTransactionFunction: contractTx,
+              minGasPrice: startingGasPrice.toNumber(),
+              maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
+              gasPriceScalingFunction: txManager.LINEAR(2), // +2 gwei each time
+              delay: 20_000, // Waits 20s between each try
+            });
           });
 
+          logger.info("subtree update tx receipt:", { receipt });
           logger.info("successfully updated root", { newRoot });
         } catch (err: any) {
           // ignore errors that are due to duplicate submissions

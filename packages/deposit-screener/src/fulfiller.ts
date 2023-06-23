@@ -292,8 +292,7 @@ export class DepositScreenerFulfiller {
               `attempting tx manager submission. txhash: ${tx.hash} gas price: ${gasPrice}`
             );
 
-            const receipt = await tx.wait(1);
-            return receipt;
+            return tx.wait(1);
           };
           break;
         default:
