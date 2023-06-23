@@ -51,6 +51,11 @@ export interface Endpoints {
   bundlerEndpoint: string;
 }
 
+export interface HumanReadableInfo {
+  ticker: string;
+  humanReadableAmount: bigint;
+}
+
 export class NocturneFrontendSDK {
   joinSplitProver: WasmJoinSplitProver;
   depositManagerContract: DepositManager;
@@ -189,7 +194,8 @@ export class NocturneFrontendSDK {
   async anonTransferErc20(
     erc20Address: Address,
     amount: bigint,
-    recipientAddress: Address
+    recipientAddress: Address,
+    humanReadableInfo?: HumanReadableInfo
   ): Promise<BundlerOperationID> {
     const signer = await getWindowSigner();
     const provider = signer.provider;
@@ -218,7 +224,22 @@ export class NocturneFrontendSDK {
       .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
       .build();
 
-    const provenOperation = await this.signAndProveOperation(operationRequest);
+    // Fetch ticker and human readable amount from chain if not provided
+    if (!humanReadableInfo) {
+      const ticker: string = await erc20Contract.symbol();
+      const decimals: bigint = (await erc20Contract.decimals()).toBigInt();
+      humanReadableInfo = {
+        ticker,
+        humanReadableAmount: amount / decimals,
+      };
+    }
+
+    const { ticker, humanReadableAmount } = humanReadableInfo;
+    const description = `Transfer ${ticker} ${humanReadableAmount} to ${recipientAddress}`;
+
+    const provenOperation = await this.signAndProveOperation(operationRequest, {
+      description,
+    });
     return this.submitProvenOperation(provenOperation);
   }
 
@@ -230,15 +251,20 @@ export class NocturneFrontendSDK {
   async fetchDepositRequestStatus(
     depositHash: string
   ): Promise<DepositStatusResponse> {
-    return await retry(async () => {
-      const res = await fetch(`${this.screenerEndpoint}/status/${depositHash}`, {
-        method: "GET",
-      });
-      return (await res.json()) as DepositStatusResponse;
-    },
-    {
-      retries: 5,
-    });
+    return await retry(
+      async () => {
+        const res = await fetch(
+          `${this.screenerEndpoint}/status/${depositHash}`,
+          {
+            method: "GET",
+          }
+        );
+        return (await res.json()) as DepositStatusResponse;
+      },
+      {
+        retries: 5,
+      }
+    );
   }
 
   /**
@@ -254,23 +280,25 @@ export class NocturneFrontendSDK {
     const signer = await getWindowSigner();
     const spender = await signer.getAddress();
 
-    return await retry(async () => {
-      const res = await fetch(`${this.screenerEndpoint}/quote`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          spender,
-          assetAddr: erc20Address,
-          value: totalValue,
-        }),
-      });
-      return (await res.json()) as DepositQuoteResponse;
-    },
-    {
-      retries: 5,
-    });
+    return await retry(
+      async () => {
+        const res = await fetch(`${this.screenerEndpoint}/quote`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            spender,
+            assetAddr: erc20Address,
+            value: totalValue,
+          }),
+        });
+        return (await res.json()) as DepositQuoteResponse;
+      },
+      {
+        retries: 5,
+      }
+    );
   }
 
   /**
@@ -279,9 +307,10 @@ export class NocturneFrontendSDK {
    * @param operationRequest Operation request
    */
   async signAndProveOperation(
-    operationRequest: OperationRequest
+    operationRequest: OperationRequest,
+    opMetadata?: OperationMetadata
   ): Promise<ProvenOperation> {
-    const op = await this.requestSignOperation(operationRequest);
+    const op = await this.requestSignOperation(operationRequest, opMetadata);
 
     console.log("SignedOperation:", op);
     return await this.proveOperation(op);
@@ -342,29 +371,31 @@ export class NocturneFrontendSDK {
   async submitProvenOperation(
     operation: ProvenOperation
   ): Promise<BundlerOperationID> {
-    return await retry(async () => {
-      const res = await fetch(`${this.bundlerEndpoint}/relay`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ operation } as RelayRequest),
-      });
+    return await retry(
+      async () => {
+        const res = await fetch(`${this.bundlerEndpoint}/relay`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ operation } as RelayRequest),
+        });
 
-      const resJSON = await res.json();
-      if (!res.ok) {
-        throw new Error(
-          `Failed to submit proven operation to bundler: ${JSON.stringify(
-            resJSON
-          )}`
-        );
+        const resJSON = await res.json();
+        if (!res.ok) {
+          throw new Error(
+            `Failed to submit proven operation to bundler: ${JSON.stringify(
+              resJSON
+            )}`
+          );
+        }
+
+        return resJSON.id;
+      },
+      {
+        retries: 5,
       }
-
-      return resJSON.id;
-    },
-    {
-      retries: 5,
-    });
+    );
   }
 
   /**
@@ -424,7 +455,7 @@ export class NocturneFrontendSDK {
       spender: await (await getWindowSigner()).getAddress(),
     });
 
-    return withEntityIndices.map(e => e.inner);
+    return withEntityIndices.map((e) => e.inner);
   }
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
