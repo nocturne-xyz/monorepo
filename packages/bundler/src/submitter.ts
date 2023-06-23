@@ -36,7 +36,7 @@ interface BundlerSubmitterMetrics {
 
 export class BundlerSubmitter {
   redis: IORedis;
-  signingProvider: ethers.Signer;
+  signingProvider: ethers.Wallet;
   tellerContract: Teller; // TODO: replace with tx manager
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
@@ -48,7 +48,7 @@ export class BundlerSubmitter {
 
   constructor(
     tellerAddress: Address,
-    signingProvider: ethers.Signer,
+    signingProvider: ethers.Wallet,
     redis: IORedis,
     logger: Logger
   ) {
@@ -201,21 +201,26 @@ export class BundlerSubmitter {
         "processBundle",
         [{ operations }]
       );
-      const est = await this.tellerContract.provider.estimateGas({
+      const gasEst = await this.signingProvider.estimateGas({
         to: this.tellerContract.address,
         data,
       });
+      const nonce = await this.signingProvider.getTransactionCount(
+        this.signingProvider.address
+      );
 
       const contractTx = async (gasPrice: number) => {
-        logger.info(
-          `attempting tx manager submission with gas price: ${gasPrice}}`
-        );
         const tx = await this.tellerContract.processBundle(
           { operations },
           {
-            gasLimit: est.toBigInt() + 200_000n, // buffer
+            gasLimit: gasEst.toBigInt() + 200_000n, // buffer
             gasPrice,
+            nonce,
           }
+        );
+
+        logger.info(
+          `attempting tx manager submission. txhash: ${tx.hash} gas price: ${gasPrice}`
         );
 
         const receipt = await tx.wait(1);
