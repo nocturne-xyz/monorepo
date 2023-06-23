@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- use tx manager
 - return successfully with deposit status `DoesNotExist` if the given deposit request DNE
 - use error code 500, not 400 for wait estimation failures
 - fix server cli to also take `--dummy-screener-delay`
