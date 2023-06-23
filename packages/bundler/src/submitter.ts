@@ -210,7 +210,7 @@ export class BundlerSubmitter {
         const tx = await this.tellerContract.processBundle(
           { operations },
           {
-            gasLimit: est.toBigInt() + 1_000_000n, // buffer
+            gasLimit: est.toBigInt() + 200_000n, // buffer
             gasPrice,
           }
         );
@@ -231,9 +231,9 @@ export class BundlerSubmitter {
       const receipt = await txManager.send({
         sendTransactionFunction: contractTx,
         minGasPrice: startingGasPrice.toNumber(),
-        maxGasPrice: startingGasPrice.toNumber() * 10, // up to 5x starting gas price
-        gasPriceScalingFunction: txManager.LINEAR(2),
-        delay: 10_000, // Waits 10s between each try
+        maxGasPrice: startingGasPrice.toNumber() * 10, // up to 10x starting gas price
+        gasPriceScalingFunction: txManager.LINEAR(2, false), // +20% each try
+        delay: 20_000, // Waits 20s between each try
       });
       return receipt;
     } catch (err) {
