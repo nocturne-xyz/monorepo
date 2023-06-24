@@ -10,7 +10,7 @@ import * as JSON from "bigint-json-serialization";
 import { Logger } from "winston";
 
 const INSERTION_STREAM_KEY = "TREE_INSERTIONS";
-const REDIS_BATCH_SIZE = 1000;
+const REDIS_BATCH_SIZE = 100;
 const REDIS_BATCH_SIZE_STRING = REDIS_BATCH_SIZE.toString();
 
 export class PersistentLog<T> {
