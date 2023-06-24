@@ -227,7 +227,7 @@ export class NocturneFrontendSDK {
     // Fetch ticker and human readable amount from chain if not provided
     if (!humanReadableInfo) {
       const ticker: string = await erc20Contract.symbol();
-      const decimals: number = Number(await erc20Contract.decimals());
+      const decimals = Number(await erc20Contract.decimals());
       humanReadableInfo = {
         ticker,
         humanReadableAmount: Number(amount) / decimals,
