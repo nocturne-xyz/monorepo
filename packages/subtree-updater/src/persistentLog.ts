@@ -30,9 +30,9 @@ export class PersistentLog<T> {
       return;
     }
 
-    const multi = this.redis.multi();
+    let multi = this.redis.multi();
     for (const { inner, totalEntityIndex } of insertions) {
-      multi.xadd(
+      multi = multi.xadd(
         INSERTION_STREAM_KEY,
         formatID(totalEntityIndex),
         "inner",
