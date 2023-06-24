@@ -262,7 +262,7 @@ export class SubtreeUpdater {
       logger.child({ function: "PersistentLog" })
     );
     const logTip = await log.getLatestTotalEntityIndex();
-    logger.info("current tip in redis", { totalEntityIndex: logTip })
+    logger.info("current tip in redis", { totalEntityIndex: logTip });
 
     const previousInsertions = log.scan().map(({ inner }) => inner);
     const newInsertions = log
