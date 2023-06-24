@@ -184,6 +184,9 @@ export class NocturneWalletSDK {
       })
     );
 
+    this.logger?.info(
+      `Storing optimistic record for op ${opDigest}. Op description: ${metadata?.description}`
+    );
     await this.db.storeOptimisticRecords(
       opDigest,
       {

@@ -53,7 +53,7 @@ export interface Endpoints {
 
 export interface HumanReadableInfo {
   ticker: string;
-  humanReadableAmount: bigint;
+  humanReadableAmount: number;
 }
 
 export class NocturneFrontendSDK {
@@ -227,10 +227,10 @@ export class NocturneFrontendSDK {
     // Fetch ticker and human readable amount from chain if not provided
     if (!humanReadableInfo) {
       const ticker: string = await erc20Contract.symbol();
-      const decimals: bigint = (await erc20Contract.decimals()).toBigInt();
+      const decimals: number = Number(await erc20Contract.decimals());
       humanReadableInfo = {
         ticker,
-        humanReadableAmount: amount / decimals,
+        humanReadableAmount: Number(amount) / decimals,
       };
     }
 
