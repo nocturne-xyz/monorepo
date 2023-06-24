@@ -75,6 +75,8 @@ export class ClosableAsyncIterator<T> {
     return new ClosableAsyncIterator(tapped(), async () => await this.close());
   }
 
+  // return an iterator that will emit all of the elements of `this`, then all of the elements of `other`
+  // `other` will only begin to be consumed once `this` closes
   chain(other: ClosableAsyncIterator<T>): ClosableAsyncIterator<T> {
     const thisIter = this.iter;
     const chained = async function* () {
