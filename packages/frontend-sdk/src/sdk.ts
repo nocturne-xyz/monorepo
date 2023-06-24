@@ -235,7 +235,7 @@ export class NocturneFrontendSDK {
     }
 
     const { ticker, humanReadableAmount } = humanReadableInfo;
-    const description = `Transfer ${ticker} ${humanReadableAmount} to ${recipientAddress}`;
+    const description = `Transfer ${humanReadableAmount} ${ticker} to ${recipientAddress}`;
 
     const provenOperation = await this.signAndProveOperation(operationRequest, {
       description,
@@ -467,6 +467,7 @@ export class NocturneFrontendSDK {
     operationRequest: OperationRequest,
     opMetadata?: OperationMetadata
   ): Promise<SignedOperation> {
+    console.log("[fe-sdk] metadata:", opMetadata);
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {

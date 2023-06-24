@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix bug where snap was parsing op metadata as `.metadata` not `.opMetadata`
 - setup browser logger for SDK to use
 - add method to fetch all inflight op digests and metadata `nocturne_getInflightOpDigestsAndMetadata`
 - parse metadata param in `nocturne_signOperation` method and pass to `applyOptimisticRecordsForOp` call

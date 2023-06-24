@@ -141,7 +141,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         (request.params as any).operationRequest
       ) as OperationRequest;
 
-      const maybeMetadata = (request.params as any).metadata;
+      const maybeMetadata = (request.params as any).opMetadata;
       const opMetadata: OperationMetadata | undefined = maybeMetadata
         ? JSON.parse(maybeMetadata)
         : undefined;
