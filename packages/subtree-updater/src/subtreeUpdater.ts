@@ -264,15 +264,17 @@ export class SubtreeUpdater {
     const logTip = await log.getLatestTotalEntityIndex();
     logger.info("current tip in redis", { totalEntityIndex: logTip });
 
-    const previousInsertions = log.scan().map(({ inner }) => inner);
-    const newInsertions = log
-      .pipe(
-        this.adapter.iterInsertions(logTip, { throttleMs: queryThrottleMs })
-      )
-      .map(({ inner }) => inner);
+    const previousInsertions = log.scan();
+    const newInsertions = log.pipe(
+      this.adapter.iterInsertions(logTip + 1n, { throttleMs: queryThrottleMs })
+    );
 
-    return previousInsertions
-      .chain(newInsertions)
+    const allInsertions = ClosableAsyncIterator.flatMap(
+      previousInsertions.chain(newInsertions),
+      ({ inner }) => inner
+    );
+
+    return allInsertions
       .tap(({ merkleIndex, ...insertion }) => {
         logger.debug(`got insertion at merkleIndex ${merkleIndex}`, {
           insertion,

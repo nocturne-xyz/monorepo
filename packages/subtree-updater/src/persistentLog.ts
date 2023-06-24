@@ -24,9 +24,7 @@ export class PersistentLog<T> {
 
   async push(insertions: WithTotalEntityIndex<T>[]): Promise<void> {
     this.logger &&
-      this.logger.debug(`Pushing ${insertions.length} insertions via x-add`, {
-        insertions,
-      });
+      this.logger.debug(`Pushing ${insertions.length} insertions via x-add`);
     if (insertions.length === 0) {
       return;
     }
@@ -55,34 +53,34 @@ export class PersistentLog<T> {
   }
 
   pipe(
-    iterator: ClosableAsyncIterator<WithTotalEntityIndex<T>>
-  ): ClosableAsyncIterator<WithTotalEntityIndex<T>> {
+    iterator: ClosableAsyncIterator<WithTotalEntityIndex<T>[]>
+  ): ClosableAsyncIterator<WithTotalEntityIndex<T>[]> {
     // need to alias `this` bceause generator functions can't be arrow functions
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const log = this;
-    let batch: WithTotalEntityIndex<T>[] = [];
+    let buf: WithTotalEntityIndex<T>[] = [];
     const generator = async function* () {
-      for await (const item of iterator.iter) {
-        batch.push(item);
+      for await (const batch of iterator.iter) {
+        buf.push(...batch);
         if (batch.length >= REDIS_BATCH_SIZE) {
           await log.push(batch);
-          batch = [];
+          buf = [];
         }
-        yield item;
+        yield batch;
       }
 
-      await log.push(batch);
+      await log.push(buf);
     };
 
     return new ClosableAsyncIterator(generator(), async () => {
-      await log.push(batch);
+      await log.push(buf);
       await iterator.close();
     });
   }
 
   scan(
     startTotalEntityIndex?: TotalEntityIndex
-  ): ClosableAsyncIterator<WithTotalEntityIndex<T>> {
+  ): ClosableAsyncIterator<WithTotalEntityIndex<T>[]> {
     const redis = this.redis;
     const logger = this.logger;
     let closed = false;
@@ -104,11 +102,13 @@ export class PersistentLog<T> {
           break;
         }
 
-        for (const [id, fields] of entries) {
+        const batch = entries.map(([id, fields]) => {
           const totalEntityIndex = decompressTotalEntityIndex(parseID(id));
           const inner = JSON.parse(fields[1]).inner as T;
-          yield { inner, totalEntityIndex };
-        }
+          return { inner, totalEntityIndex };
+        });
+
+        yield batch;
 
         const lastId = entries[entries.length - 1][0];
         lowerBound = `(${lastId}`;

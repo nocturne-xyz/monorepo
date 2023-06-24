@@ -103,4 +103,41 @@ export class ClosableAsyncIterator<T> {
     await this.close();
     return items;
   }
+
+  static flatten<T>(
+    self: ClosableAsyncIterator<T[]>
+  ): ClosableAsyncIterator<T> {
+    const thisIter = self.iter;
+    const flattened = async function* () {
+      for await (const batch of thisIter) {
+        for (const item of batch) {
+          yield item;
+        }
+      }
+    };
+
+    return new ClosableAsyncIterator(
+      flattened(),
+      async () => await self.close()
+    );
+  }
+
+  static flatMap<T, U>(
+    self: ClosableAsyncIterator<T[]>,
+    f: (batch: T) => U
+  ): ClosableAsyncIterator<U> {
+    const thisIter = self.iter;
+    const flattened = async function* () {
+      for await (const batch of thisIter) {
+        for (const item of batch) {
+          yield f(item);
+        }
+      }
+    };
+
+    return new ClosableAsyncIterator(
+      flattened(),
+      async () => await self.close()
+    );
+  }
 }

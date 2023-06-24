@@ -67,7 +67,7 @@ describe("InsertionLog", () => {
       withTEI("To the top!"),
     ]);
 
-    const result = await log.scan().collect();
+    const result = (await log.scan().collect()).flat();
 
     expect(result.length).to.equal(5);
     expect(result[0].inner).to.equal("I'm gonna be the king of pirates!");
@@ -87,7 +87,7 @@ describe("InsertionLog", () => {
     await log.push(entries);
 
     const middle = entries[50].totalEntityIndex;
-    const result = await log.scan(middle).collect();
+    const result = (await log.scan(middle).collect()).flat();
 
     expect(result.length).to.equal(50);
     expect(result).to.eql(entries.slice(50));
@@ -105,7 +105,7 @@ describe("InsertionLog", () => {
     await log.push(secondBatch.map(withTEI));
     await log.push(thirdBatch.map(withTEI));
 
-    const result = await log.scan().collect();
+    const result = (await log.scan().collect()).flat();
 
     expect(result.map((entry) => entry.inner)).to.eql([
       ...firstBatch,
@@ -116,7 +116,6 @@ describe("InsertionLog", () => {
 
   it("returns latest TEI of 0 when empty", async () => {
     const log = new PersistentLog<number>(redis);
-
     expect(await log.getLatestTotalEntityIndex()).to.equal(0n);
   });
 
@@ -154,7 +153,7 @@ describe("InsertionLog", () => {
     const generator = async function* () {
       let i = 0;
       while (!closed && i < entries.length) {
-        yield entries[i++];
+        yield [entries[i++]];
       }
     };
 
@@ -164,7 +163,7 @@ describe("InsertionLog", () => {
 
     const iterator2 = log.pipe(iterator);
 
-    const result = await iterator2.collect();
+    const result = (await iterator2.collect()).flat();
 
     expect(result).to.eql(entries);
     expect(await log.getLatestTotalEntityIndex()).to.equal(

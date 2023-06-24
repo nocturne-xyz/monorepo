@@ -14,7 +14,7 @@ export interface SubtreeUpdaterSyncAdapter {
   iterInsertions(
     startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
-  ): ClosableAsyncIterator<WithTotalEntityIndex<Insertion>>;
+  ): ClosableAsyncIterator<WithTotalEntityIndex<Insertion>[]>;
 
   fetchLatestSubtreeIndex(): Promise<number | undefined>;
 }

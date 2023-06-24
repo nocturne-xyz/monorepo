@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add `flatten`, `flatMap` to `ClosableAsyncIterator`
 - add `collect`, `chain`, and `tapAsync` to `ClosableAsyncIterator`
 - 20% buffer on sdk gas price
 - wrap fetch requests in `async-retry` with exponential backoff
