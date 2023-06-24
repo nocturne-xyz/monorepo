@@ -30,9 +30,9 @@ export class PersistentLog<T> {
       return;
     }
 
-    const pipeline = this.redis.pipeline();
+    const multi = this.redis.multi();
     for (const { inner, totalEntityIndex } of insertions) {
-      pipeline.xadd(
+      multi.xadd(
         INSERTION_STREAM_KEY,
         formatID(totalEntityIndex),
         "inner",
@@ -40,8 +40,17 @@ export class PersistentLog<T> {
       );
     }
 
-    const res = await pipeline.exec();
-    this.logger && this.logger.debug(`executed batch x-add`, { res });
+    await multi.exec((maybeError) => {
+      if (maybeError) {
+        this.logger &&
+          this.logger.error(`Error pushing insertions`, { error: maybeError });
+
+        throw maybeError;
+      }
+
+      this.logger &&
+        this.logger.debug(`Pushed ${insertions.length} insertions`);
+    });
   }
 
   sync(
