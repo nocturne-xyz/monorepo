@@ -161,7 +161,7 @@ describe("InsertionLog", () => {
       closed = true;
     });
 
-    const iterator2 = log.pipe(iterator);
+    const iterator2 = log.syncAndPipe(iterator);
 
     const result = (await iterator2.collect()).flat();
 

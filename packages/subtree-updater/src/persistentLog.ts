@@ -52,7 +52,7 @@ export class PersistentLog<T> {
     });
   }
 
-  pipe(
+  syncAndPipe(
     iterator: ClosableAsyncIterator<WithTotalEntityIndex<T>[]>
   ): ClosableAsyncIterator<WithTotalEntityIndex<T>[]> {
     // need to alias `this` bceause generator functions can't be arrow functions

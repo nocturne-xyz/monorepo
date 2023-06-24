@@ -265,7 +265,7 @@ export class SubtreeUpdater {
     logger.info("current tip in redis", { totalEntityIndex: logTip });
 
     const previousInsertions = log.scan();
-    const newInsertions = log.pipe(
+    const newInsertions = log.syncAndPipe(
       this.adapter.iterInsertions(logTip ? logTip + 1n : 0n, {
         throttleMs: queryThrottleMs,
       })
