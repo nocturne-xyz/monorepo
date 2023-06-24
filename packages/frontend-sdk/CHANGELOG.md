@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- have `anonTransferErc20` format/pass metadata to snap
 - wrap fetch requests in `async-retry` with exponential backoff
 - add method to fetch all inflight op digests and metadata `getInflightOpDigestsAndMetadata`
 - `sdk.requestSignOperation` takes optional `OperationMetadata` parameter which is stored in wallet while op is still in flight
