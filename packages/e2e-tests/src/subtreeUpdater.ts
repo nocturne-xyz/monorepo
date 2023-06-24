@@ -65,7 +65,7 @@ export async function startSubtreeUpdater(
     }
   );
 
-  const { promise, teardown } = updater.start();
+  const { promise, teardown } = await updater.start();
 
   return async () => {
     await teardown();

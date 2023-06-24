@@ -6,14 +6,15 @@ import {
   IncludedEncryptedNote,
   NoteTrait,
   TreeConstants,
-  IncludedNoteCommitment,
   TotalEntityIndex,
   maxArray,
   SubgraphUtils,
   TotalEntityIndexTrait,
   max,
+  WithTotalEntityIndex,
+  range,
 } from "@nocturne-xyz/sdk";
-import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
+import { Insertion, SubtreeUpdaterSyncAdapter } from "../syncAdapter";
 import { fetchTreeInsertions, fetchLatestSubtreeIndex } from "./fetch";
 import { Logger } from "winston";
 
@@ -33,7 +34,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
   iterInsertions(
     startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
-  ): ClosableAsyncIterator<IncludedNote | IncludedNoteCommitment> {
+  ): ClosableAsyncIterator<WithTotalEntityIndex<Insertion>[]> {
     const endpoint = this.graphqlEndpoint;
     const logger = this.logger;
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
@@ -72,7 +73,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
         if (insertions.length > 0) {
           from = maxArray(sorted.map((i) => i.totalEntityIndex)) + 1n;
 
-          for (const { inner: insertion } of sorted) {
+          for (const { inner: insertion, totalEntityIndex } of sorted) {
             if ("numZeros" in insertion) {
               const startIndex = insertion.merkleIndex;
               const meta = {
@@ -84,12 +85,17 @@ export class SubgraphSubtreeUpdaterSyncAdapter
                   insertionKind: "zeros",
                   insertion: meta,
                 });
-              for (let i = 0; i < insertion.numZeros; i++) {
-                yield {
+
+              const batch = range(0, insertion.numZeros).map((i) => ({
+                inner: {
                   noteCommitment: TreeConstants.ZERO_VALUE,
                   merkleIndex: startIndex + i,
-                };
-              }
+                },
+                // HACK: add `i` to `totalEntityIndex` to ensure all of the zeros have unique `totalEntityIndex`s
+                totalEntityIndex: totalEntityIndex + BigInt(i),
+              }));
+
+              yield batch;
             } else if (NoteTrait.isEncryptedNote(insertion)) {
               const noteCommitment = (insertion as IncludedEncryptedNote)
                 .commitment;
@@ -103,10 +109,16 @@ export class SubgraphSubtreeUpdaterSyncAdapter
                   insertionKind: "encrypted note",
                   meta,
                 });
-              yield {
-                noteCommitment,
-                merkleIndex: insertion.merkleIndex,
+
+              const res = {
+                inner: {
+                  noteCommitment,
+                  merkleIndex: insertion.merkleIndex,
+                },
+                totalEntityIndex,
               };
+
+              yield [res];
             } else {
               const meta = {
                 merkleIndex: insertion.merkleIndex,
@@ -118,7 +130,12 @@ export class SubgraphSubtreeUpdaterSyncAdapter
                   meta,
                 });
 
-              yield insertion as IncludedNote;
+              const res = {
+                inner: insertion as IncludedNote,
+                totalEntityIndex,
+              };
+
+              yield [res];
             }
           }
         } else {

@@ -62,4 +62,82 @@ export class ClosableAsyncIterator<T> {
 
     return new ClosableAsyncIterator(tapped(), async () => await this.close());
   }
+
+  tapAsync(f: (item: T) => Promise<void>): ClosableAsyncIterator<T> {
+    const thisIter = this.iter;
+    const tapped = async function* () {
+      for await (const item of thisIter) {
+        await f(item);
+        yield item;
+      }
+    };
+
+    return new ClosableAsyncIterator(tapped(), async () => await this.close());
+  }
+
+  // return an iterator that will emit all of the elements of `this`, then all of the elements of `other`
+  // `other` will only begin to be consumed once `this` closes
+  chain(other: ClosableAsyncIterator<T>): ClosableAsyncIterator<T> {
+    const thisIter = this.iter;
+    const chained = async function* () {
+      for await (const item of thisIter) {
+        yield item;
+      }
+      for await (const item of other.iter) {
+        yield item;
+      }
+    };
+
+    return new ClosableAsyncIterator(chained(), async () => {
+      await this.close();
+      await other.close();
+    });
+  }
+
+  async collect(): Promise<T[]> {
+    const items: T[] = [];
+    for await (const item of this.iter) {
+      items.push(item);
+    }
+
+    await this.close();
+    return items;
+  }
+
+  static flatten<T>(
+    self: ClosableAsyncIterator<T[]>
+  ): ClosableAsyncIterator<T> {
+    const thisIter = self.iter;
+    const flattened = async function* () {
+      for await (const batch of thisIter) {
+        for (const item of batch) {
+          yield item;
+        }
+      }
+    };
+
+    return new ClosableAsyncIterator(
+      flattened(),
+      async () => await self.close()
+    );
+  }
+
+  static flatMap<T, U>(
+    self: ClosableAsyncIterator<T[]>,
+    f: (batch: T) => U
+  ): ClosableAsyncIterator<U> {
+    const thisIter = self.iter;
+    const flattened = async function* () {
+      for await (const batch of thisIter) {
+        for (const item of batch) {
+          yield f(item);
+        }
+      }
+    };
+
+    return new ClosableAsyncIterator(
+      flattened(),
+      async () => await self.close()
+    );
+  }
 }
