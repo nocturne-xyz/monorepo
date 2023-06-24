@@ -1,12 +1,13 @@
 import IORedis from "ioredis";
-import { ClosableAsyncIterator, TotalEntityIndex } from "@nocturne-xyz/sdk";
+import {
+  ClosableAsyncIterator,
+  TotalEntityIndex,
+  TotalEntityIndexTrait,
+  assertOrErr,
+  WithTotalEntityIndex,
+} from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { Logger } from "winston";
-
-type WithTotalEntityIndex<T> = {
-  inner: T;
-  totalEntityIndex: bigint;
-};
 
 const INSERTION_STREAM_KEY = "TREE_INSERTIONS";
 const REDIS_BATCH_SIZE = 100;
@@ -34,7 +35,7 @@ export class PersistentLog<T> {
     for (const { inner, totalEntityIndex } of insertions) {
       multi = multi.xadd(
         INSERTION_STREAM_KEY,
-        formatID(totalEntityIndex),
+        formatID(compressTotalEntityIndex(totalEntityIndex)),
         "inner",
         JSON.stringify({ inner })
       );
@@ -86,7 +87,7 @@ export class PersistentLog<T> {
     const logger = this.logger;
     let closed = false;
     let lowerBound = startTotalEntityIndex
-      ? formatID(startTotalEntityIndex)
+      ? formatID(compressTotalEntityIndex(startTotalEntityIndex))
       : "-";
 
     logger && logger.debug(`starting scan from ${lowerBound}`);
@@ -104,7 +105,7 @@ export class PersistentLog<T> {
         }
 
         for (const [id, fields] of entries) {
-          const totalEntityIndex = parseID(id);
+          const totalEntityIndex = decompressTotalEntityIndex(parseID(id));
           const inner = JSON.parse(fields[1]).inner as T;
           yield { inner, totalEntityIndex };
         }
@@ -128,16 +129,78 @@ export class PersistentLog<T> {
       "1"
     );
     if (lastEntry.length > 0) {
-      return parseID(lastEntry[0][0]);
+      return decompressTotalEntityIndex(parseID(lastEntry[0][0]));
     }
     return 0n;
   }
 }
 
-function formatID(totalEntityIndex: TotalEntityIndex): string {
-  return `${totalEntityIndex.toString()}-1`;
+// NOTE: this might be broken out into SDK later, but for now, this is the only place where it's used, so it's here
+// a TEI is 256 bits, which is too large for a redis stream id, so we define a "compressed" 128-bit version;
+// recall that a TEI is a 4-tuple `(blockNumber, txIndex, logIndex, entityIndex)`, where `blockNumber` is 160 bits and the rest are 32 bits
+// a "compressed" TEI is the same 4-tuple, but where the block number is 48 bits, txIndex and logIndex are both 32 bits, the entityIndex is 15 bits, and the least-significant bit is always 1
+// of course, not all TEIs can be compressed - only those whose respective components fit within their compressed sizes.
+//
+// to turn it into a redis stream ID, we split it into two 64-bit limbs, and format the ID as `${high}-${low}`. The reason why the least-significant bit is always 1 is that `0-0` is an invalid stream ID.
+
+const U32_MAX = (1n << 32n) - 1n;
+const U48_MAX = (1n << 48n) - 1n;
+const U64_MAX = (1n << 64n) - 1n;
+const U15_MAX = (1n << 15n) - 1n;
+
+export type CompressedTotalEntityIndex = bigint;
+
+function compressTotalEntityIndex(
+  totalEntityIndex: TotalEntityIndex
+): CompressedTotalEntityIndex {
+  const { blockNumber, txIdx, logIdx, eventIdx } =
+    TotalEntityIndexTrait.toComponents(totalEntityIndex);
+
+  assertOrErr(
+    blockNumber <= U48_MAX,
+    "blockNumber must be < 2^48 for CompressedTotalEntityIndex"
+  );
+  assertOrErr(
+    eventIdx <= U15_MAX,
+    "entityIdx must be < 2^15 for CompressedTotalEntityIndex"
+  );
+
+  return (
+    (blockNumber << 80n) |
+    (txIdx << 48n) |
+    (logIdx << 16n) |
+    (eventIdx << 1n) |
+    1n
+  );
 }
 
-function parseID(id: string): TotalEntityIndex {
-  return BigInt(id.split("-")[0]);
+function decompressTotalEntityIndex(
+  compressedTotalEntityIndex: CompressedTotalEntityIndex
+): TotalEntityIndex {
+  const blockNumber = compressedTotalEntityIndex >> 80n;
+  const txIdx = (compressedTotalEntityIndex >> 48n) & U32_MAX;
+  const logIdx = (compressedTotalEntityIndex >> 16n) & U32_MAX;
+  const eventIdx = (compressedTotalEntityIndex >> 1n) & U15_MAX;
+
+  return TotalEntityIndexTrait.fromComponents({
+    blockNumber,
+    txIdx,
+    logIdx,
+    eventIdx,
+  });
+}
+
+function formatID(
+  compressedTotalEntityIndex: CompressedTotalEntityIndex
+): string {
+  const hi = compressedTotalEntityIndex >> 64n;
+  const lo = compressedTotalEntityIndex & U64_MAX;
+  return `${hi.toString()}-${lo.toString()}`;
+}
+
+function parseID(id: string): CompressedTotalEntityIndex {
+  const [hiString, loString] = id.split("-");
+  const hi = BigInt(hiString);
+  const lo = BigInt(loString);
+  return (hi << 64n) | lo;
 }

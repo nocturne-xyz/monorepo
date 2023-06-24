@@ -5,6 +5,7 @@ import { RedisMemoryServer } from "redis-memory-server";
 import { PersistentLog } from "../src/persistentLog";
 import {
   ClosableAsyncIterator,
+  TotalEntityIndexTrait,
   WithTotalEntityIndex,
   range,
 } from "@nocturne-xyz/sdk";
@@ -13,7 +14,7 @@ function randomBigIntBounded(max: bigint): bigint {
   return BigInt(Math.floor(Math.random() * Number(max)));
 }
 
-const makeTEIWrapper = <T>(maxGap?: bigint) => {
+const makeTEIWrapper = <T>() => {
   let currentTotalEntityIndex = 0n;
 
   return (item: T): WithTotalEntityIndex<T> => {
@@ -22,12 +23,18 @@ const makeTEIWrapper = <T>(maxGap?: bigint) => {
       totalEntityIndex: currentTotalEntityIndex,
     };
 
-    if (maxGap) {
-      currentTotalEntityIndex =
-        currentTotalEntityIndex + randomBigIntBounded(maxGap);
-    } else {
-      currentTotalEntityIndex++;
-    }
+    let { blockNumber, txIdx, logIdx, eventIdx } =
+      TotalEntityIndexTrait.toComponents(currentTotalEntityIndex);
+    blockNumber += randomBigIntBounded(1000n);
+    txIdx = randomBigIntBounded((1n << 32n) - 1n);
+    logIdx = randomBigIntBounded((1n << 32n) - 1n);
+    eventIdx = randomBigIntBounded((1n << 15n) - 1n);
+    currentTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
+      blockNumber,
+      txIdx,
+      logIdx,
+      eventIdx,
+    });
 
     return res;
   };
@@ -74,13 +81,16 @@ describe("InsertionLog", () => {
     const log = new PersistentLog<number>(redis);
     const withTEI = makeTEIWrapper<number>();
 
-    const entries = range(0, 100).map((_) => Math.random());
-    await log.push(entries.map(withTEI));
+    const entries = range(0, 100)
+      .map((_) => Math.random())
+      .map(withTEI);
+    await log.push(entries);
 
-    const result = await log.scan(50n).collect();
+    const middle = entries[50].totalEntityIndex;
+    const result = await log.scan(middle).collect();
 
     expect(result.length).to.equal(50);
-    expect(result.map((entry) => entry.inner)).to.eql(entries.slice(50));
+    expect(result).to.eql(entries.slice(50));
   });
 
   it("pushes insertions in increments and scans over all", async () => {
@@ -104,19 +114,6 @@ describe("InsertionLog", () => {
     ]);
   });
 
-  it("works with gaps in TEIs", async () => {
-    const log = new PersistentLog<number>(redis);
-    const withTEI = makeTEIWrapper<number>(1_000_000n);
-
-    const entries = range(0, 100).map((_) => Math.random());
-    await log.push(entries.map(withTEI));
-
-    const result = await log.scan().collect();
-
-    expect(result.length).to.equal(100);
-    expect(result.map((entry) => entry.inner)).to.eql(entries);
-  });
-
   it("returns latest TEI of 0 when empty", async () => {
     const log = new PersistentLog<number>(redis);
 
@@ -128,15 +125,23 @@ describe("InsertionLog", () => {
     const withTEI = makeTEIWrapper<number>();
 
     {
-      const entries = range(0, 100).map((_) => Math.random());
-      await log.push(entries.map(withTEI));
-      expect(await log.getLatestTotalEntityIndex()).to.equal(99n);
+      const entries = range(0, 100)
+        .map((_) => Math.random())
+        .map(withTEI);
+      await log.push(entries);
+      expect(await log.getLatestTotalEntityIndex()).to.equal(
+        entries[entries.length - 1].totalEntityIndex
+      );
     }
 
     {
-      const entries = range(0, 100).map((_) => Math.random());
-      await log.push(entries.map(withTEI));
-      expect(await log.getLatestTotalEntityIndex()).to.equal(199n);
+      const entries = range(0, 100)
+        .map((_) => Math.random())
+        .map(withTEI);
+      await log.push(entries);
+      expect(await log.getLatestTotalEntityIndex()).to.equal(
+        entries[entries.length - 1].totalEntityIndex
+      );
     }
   });
 
@@ -162,6 +167,8 @@ describe("InsertionLog", () => {
     const result = await iterator2.collect();
 
     expect(result).to.eql(entries);
-    expect(await log.getLatestTotalEntityIndex()).to.equal(99n);
+    expect(await log.getLatestTotalEntityIndex()).to.equal(
+      entries[entries.length - 1].totalEntityIndex
+    );
   });
 });
