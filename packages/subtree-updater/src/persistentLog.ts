@@ -62,8 +62,8 @@ export class PersistentLog<T> {
     const generator = async function* () {
       for await (const batch of iterator.iter) {
         buf.push(...batch);
-        if (batch.length >= REDIS_BATCH_SIZE) {
-          await log.push(batch);
+        if (buf.length >= REDIS_BATCH_SIZE) {
+          await log.push(buf);
           buf = [];
         }
         yield batch;
