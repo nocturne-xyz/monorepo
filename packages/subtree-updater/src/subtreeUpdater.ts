@@ -266,7 +266,9 @@ export class SubtreeUpdater {
 
     const previousInsertions = log.scan();
     const newInsertions = log.pipe(
-      this.adapter.iterInsertions(logTip + 1n, { throttleMs: queryThrottleMs })
+      this.adapter.iterInsertions(logTip ? logTip + 1n : 0n, {
+        throttleMs: queryThrottleMs,
+      })
     );
 
     const allInsertions = ClosableAsyncIterator.flatMap(

@@ -114,9 +114,9 @@ describe("InsertionLog", () => {
     ]);
   });
 
-  it("returns latest TEI of 0 when empty", async () => {
+  it("returns latest TEI of `undefined` when empty", async () => {
     const log = new PersistentLog<number>(redis);
-    expect(await log.getLatestTotalEntityIndex()).to.equal(0n);
+    expect(await log.getLatestTotalEntityIndex()).to.be.undefined;
   });
 
   it("correctly returns TEI after pushing", async () => {

@@ -120,7 +120,7 @@ export class PersistentLog<T> {
     });
   }
 
-  async getLatestTotalEntityIndex(): Promise<TotalEntityIndex> {
+  async getLatestTotalEntityIndex(): Promise<TotalEntityIndex | undefined> {
     const lastEntry = await this.redis.xrevrange(
       INSERTION_STREAM_KEY,
       "+",
@@ -131,7 +131,7 @@ export class PersistentLog<T> {
     if (lastEntry.length > 0) {
       return decompressTotalEntityIndex(parseID(lastEntry[0][0]));
     }
-    return 0n;
+    return undefined;
   }
 }
 
