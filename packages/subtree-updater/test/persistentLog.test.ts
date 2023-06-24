@@ -3,7 +3,11 @@ import { expect } from "chai";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { PersistentLog } from "../src/persistentLog";
-import { WithTotalEntityIndex, range } from "@nocturne-xyz/sdk";
+import {
+  ClosableAsyncIterator,
+  WithTotalEntityIndex,
+  range,
+} from "@nocturne-xyz/sdk";
 
 function randomBigIntBounded(max: bigint): bigint {
   return BigInt(Math.floor(Math.random() * Number(max)));
@@ -134,5 +138,30 @@ describe("InsertionLog", () => {
       await log.push(entries.map(withTEI));
       expect(await log.getLatestTotalEntityIndex()).to.equal(199n);
     }
+  });
+
+  it("can iterate over entries, insert them, and spit them back out in the same order on an iterator", async () => {
+    const log = new PersistentLog<number>(redis);
+    const withTEI = makeTEIWrapper<number>();
+
+    const entries = range(0, 100).map((_) => withTEI(Math.random()));
+    let closed = false;
+    const generator = async function* () {
+      let i = 0;
+      while (!closed && i < entries.length) {
+        yield entries[i++];
+      }
+    };
+
+    const iterator = new ClosableAsyncIterator(generator(), async () => {
+      closed = true;
+    });
+
+    const iterator2 = log.sync(iterator);
+
+    const result = await iterator2.collect();
+
+    expect(result).to.eql(entries);
+    expect(await log.getLatestTotalEntityIndex()).to.equal(99n);
   });
 });
