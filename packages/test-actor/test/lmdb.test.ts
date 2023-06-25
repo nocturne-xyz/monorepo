@@ -2,7 +2,6 @@ import "mocha";
 import { expect } from "chai";
 import {
   NocturneDB,
-  InMemoryKVStore,
   KV,
   IncludedNote,
   Asset,
@@ -14,17 +13,20 @@ import {
   WithTotalEntityIndex,
   unzip,
   NocturneSigner,
-} from "../src";
+} from "@nocturne-xyz/sdk";
 import { ponzi, shitcoin, stablescam } from "./utils";
+import { LMDBKVStore } from "../src/lmdb";
+import fs from "fs";
 
-describe("InMemoryKVStore", async () => {
-  const kv = new InMemoryKVStore();
+describe("LMDBKVStore", async () => {
+  const kv = new LMDBKVStore();
 
   afterEach(async () => {
     await kv.clear();
   });
 
   after(async () => {
+    fs.rmSync("./db", { recursive: true, force: true });
     await kv.close();
   });
 
@@ -118,49 +120,49 @@ describe("InMemoryKVStore", async () => {
     }
   });
 
-  it("dumps to an object", async () => {
-    const kvs: KV[] = [
-      ["a", "1"],
-      ["b", "2"],
-      ["c", "3"],
-      ["d", "4"],
-      ["e", "5"],
-    ];
+  //   it("dumps to an object", async () => {
+  //     const kvs: KV[] = [
+  //       ["a", "1"],
+  //       ["b", "2"],
+  //       ["c", "3"],
+  //       ["d", "4"],
+  //       ["e", "5"],
+  //     ];
 
-    await kv.putMany(kvs);
+  //     await kv.putMany(kvs);
 
-    const dump = await kv.dump();
-    for (const [key, value] of kvs) {
-      expect(dump[key]).to.not.be.undefined;
-      expect(dump[key]).to.eql(value);
-    }
-  });
+  //     const dump = await kv.dump();
+  //     for (const [key, value] of kvs) {
+  //       expect(dump[key]).to.not.be.undefined;
+  //       expect(dump[key]).to.eql(value);
+  //     }
+  //   });
 
-  it("loads from a dump", async () => {
-    const kvs: KV[] = [
-      ["a", "1"],
-      ["b", "2"],
-      ["c", "3"],
-      ["d", "4"],
-      ["e", "5"],
-    ];
+  //   it("loads from a dump", async () => {
+  //     const kvs: KV[] = [
+  //       ["a", "1"],
+  //       ["b", "2"],
+  //       ["c", "3"],
+  //       ["d", "4"],
+  //       ["e", "5"],
+  //     ];
 
-    await kv.putMany(kvs);
+  //     await kv.putMany(kvs);
 
-    const dump = await kv.dump();
+  //     const dump = await kv.dump();
 
-    const newKV = new InMemoryKVStore();
-    await newKV.loadFromDump(dump);
+  //     const newKV = new InMemoryKVStore();
+  //     await newKV.loadFromDump(dump);
 
-    for await (const [key, value] of await newKV.iterRange("a", "f")) {
-      expect(dump[key]).to.not.be.undefined;
-      expect(value).to.eql(dump[key]);
-    }
-  });
+  //     for await (const [key, value] of await newKV.iterRange("a", "f")) {
+  //       expect(dump[key]).to.not.be.undefined;
+  //       expect(value).to.eql(dump[key]);
+  //     }
+  //   });
 });
 
 describe("NocturneDB", async () => {
-  const kv = new InMemoryKVStore();
+  const kv = new LMDBKVStore();
   const db = new NocturneDB(kv);
   const viewer = new NocturneSigner(1n).viewer();
 

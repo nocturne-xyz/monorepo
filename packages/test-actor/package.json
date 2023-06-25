@@ -19,7 +19,7 @@
     "prettier:check": "prettier --check ./src",
     "prettier:write": "prettier --write ./src",
     "build:docker": "docker build -f ./Dockerfile ../../ -t nocturnelabs/test-actor:dev",
-    "test:unit": ""
+    "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit"
   },
   "dependencies": {
     "@nocturne-xyz/config": "1.0.14-alpha",
