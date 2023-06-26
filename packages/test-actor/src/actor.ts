@@ -15,7 +15,7 @@ import {
   OperationRequestBuilder,
   computeOperationDigest,
   StealthAddressTrait,
-  max,
+  min,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { Erc20Config } from "@nocturne-xyz/config";
@@ -110,13 +110,13 @@ export class TestActor {
 
     // If random chosen doesn't have any funds, find the first one with funds
     if (randomAsset.balance > 0) {
-      const maxValue = max(randomAsset.balance, ONE_ETH_IN_WEI * 2n);
+      const maxValue = min(randomAsset.balance, ONE_ETH_IN_WEI * 3n);
       const value = randomBigIntBounded(maxValue);
       return [randomAsset.asset, value];
     } else {
       for (const asset of assetsWithBalance) {
         if (asset.balance > 0) {
-          const maxValue = max(randomAsset.balance, ONE_ETH_IN_WEI * 2n);
+          const maxValue = min(randomAsset.balance, ONE_ETH_IN_WEI * 3n);
           const value = randomBigIntBounded(maxValue);
           return [asset.asset, value];
         }
@@ -136,7 +136,7 @@ export class TestActor {
     );
     const randomValue = randomBigintInRange(
       ONE_ETH_IN_WEI,
-      10n * ONE_ETH_IN_WEI
+      5n * ONE_ETH_IN_WEI
     );
 
     this.logger.info(
