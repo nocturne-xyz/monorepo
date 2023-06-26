@@ -1,32 +1,18 @@
 import "mocha";
 import { expect } from "chai";
-import {
-  NocturneDB,
-  KV,
-  IncludedNote,
-  Asset,
-  zip,
-  range,
-  NoteTrait,
-  IncludedNoteWithNullifier,
-  AssetTrait,
-  WithTotalEntityIndex,
-  unzip,
-  NocturneSigner,
-} from "@nocturne-xyz/sdk";
-import { ponzi, shitcoin, stablescam } from "./utils";
+import { KV, zip } from "@nocturne-xyz/sdk";
 import { LMDBKVStore } from "../src/lmdb";
 import fs from "fs";
 
 describe("LMDBKVStore", async () => {
-  const kv = new LMDBKVStore();
+  const kv = new LMDBKVStore({ path: "./test-db" });
 
   afterEach(async () => {
     await kv.clear();
   });
 
   after(async () => {
-    fs.rmSync("./db", { recursive: true, force: true });
+    fs.rmSync("./test-db", { recursive: true, force: true });
     await kv.close();
   });
 
@@ -117,6 +103,31 @@ describe("LMDBKVStore", async () => {
     for (const [key, _] of kvs) {
       const val = await kv.getString(key);
       expect(val).to.be.undefined;
+    }
+  });
+
+  it("does not return undefined when getMany is called with DNE keys", async () => {
+    const kvs: KV[] = [
+      ["a", "1"],
+      ["b", "2"],
+      ["c", "3"],
+    ];
+
+    await kv.putMany(kvs);
+
+    for (const [key, value] of kvs) {
+      const val = await kv.getString(key);
+      expect(val).to.eql(value);
+    }
+
+    const keysWithDNE = ["a", "b", "c", "d", "e"];
+
+    const gotKvs = await kv.getMany(keysWithDNE);
+    expect(gotKvs.length).to.eql(3);
+
+    for (const [key, value] of gotKvs) {
+      expect(["a", "b", "c"].includes(key)).to.be.true;
+      expect(["1", "2", "3"].includes(value)).to.be.true;
     }
   });
 });
