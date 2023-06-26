@@ -4,7 +4,6 @@ import {
   Teller__factory,
 } from "@nocturne-xyz/contracts";
 import {
-  InMemoryKVStore,
   SparseMerkleProver,
   NocturneDB,
   NocturneSigner,
@@ -19,6 +18,7 @@ import { ethers } from "ethers";
 import { TestActor } from "../actor";
 import * as fs from "fs";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import { LMDBKVStore } from "../lmdb";
 
 export const run = new Command("run")
   .summary("run test actor")
@@ -35,6 +35,7 @@ export const run = new Command("run")
   )
   .requiredOption("--zkey-path <string>", "path to joinsplit zkey")
   .requiredOption("--vkey-path <string>", "path to joinsplit vkey")
+  .option("--db-path <string>", "path to lmdb database")
   .option("--interval <number>", "interval between deposits/ops in seconds")
   .option("--only-deposits", "only perform deposits")
   .option("--only-operations", "only perform operations")
@@ -53,6 +54,7 @@ export const run = new Command("run")
       wasmPath,
       zkeyPath,
       vkeyPath,
+      dbPath,
       interval,
       onlyDeposits,
       onlyOperations,
@@ -106,8 +108,8 @@ export const run = new Command("run")
     );
 
     const nocturneSigner = new NocturneSigner(nocturneSK);
-    const kv = new InMemoryKVStore();
-    const merkleProver = new SparseMerkleProver(kv);
+    const kv = new LMDBKVStore({ path: dbPath });
+    const merkleProver = await SparseMerkleProver.loadFromKV(kv);
     const db = new NocturneDB(kv);
     const syncAdapter = new SubgraphSDKSyncAdapter(subgraphEndpoint, logger);
     const sdk = new NocturneWalletSDK(

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add db test that ensures getMany doesn't returned entries for `undefined` values
 - add `flatten`, `flatMap` to `ClosableAsyncIterator`
 - add `collect`, `chain`, and `tapAsync` to `ClosableAsyncIterator`
 - 20% buffer on sdk gas price

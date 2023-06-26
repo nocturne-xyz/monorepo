@@ -92,7 +92,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   console.log("Snap Nocturne Canonical Address: ", signer.canonicalAddress());
 
   const merkleProver = await SparseMerkleProver.loadFromKV(kvStore);
-  // const syncAdapter = new RPCSyncAdapter(provider, WALLET_ADDRESS);
   const syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_API_URL, logger);
   const sdk = new NocturneWalletSDK(
     signer,

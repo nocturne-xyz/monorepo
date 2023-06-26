@@ -15,6 +15,7 @@ import {
   OperationRequestBuilder,
   computeOperationDigest,
   StealthAddressTrait,
+  min,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { Erc20Config } from "@nocturne-xyz/config";
@@ -109,12 +110,14 @@ export class TestActor {
 
     // If random chosen doesn't have any funds, find the first one with funds
     if (randomAsset.balance > 0) {
-      const value = randomBigIntBounded(randomAsset.balance / 25n);
+      const maxValue = min(randomAsset.balance / 1000n, ONE_ETH_IN_WEI);
+      const value = randomBigIntBounded(maxValue);
       return [randomAsset.asset, value];
     } else {
       for (const asset of assetsWithBalance) {
         if (asset.balance > 0) {
-          const value = randomBigIntBounded(randomAsset.balance / 25n);
+          const maxValue = min(randomAsset.balance / 1000n, ONE_ETH_IN_WEI);
+          const value = randomBigIntBounded(maxValue);
           return [asset.asset, value];
         }
       }
@@ -133,7 +136,7 @@ export class TestActor {
     );
     const randomValue = randomBigintInRange(
       ONE_ETH_IN_WEI,
-      10n * ONE_ETH_IN_WEI
+      5n * ONE_ETH_IN_WEI
     );
 
     this.logger.info(
@@ -236,9 +239,12 @@ export class TestActor {
     });
 
     const proven = await proveOperation(this.prover, signed);
-    this.logger.info(`proved operation with dipest ${opDigest}`, {
-      provenOp: proven,
-    });
+    this.logger.info(
+      `proved operation with digest ${opDigest}. submitting to bundler.`,
+      {
+        provenOp: proven,
+      }
+    );
 
     // submit
     const res = await fetch(`${this.bundlerEndpoint}/relay`, {

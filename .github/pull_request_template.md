@@ -30,5 +30,6 @@ tested your solution and it works.
 - [ ] Added Tests
 - [ ] Updated Documentation
 - [ ] Updated CHANGELOG.md for the appropriate package
+- [ ] Tested in dev/testnet
 - [ ] Tested site with snap (we haven't automated this yet)
 - [ ] Re-built & tested circuits if any of them changed
