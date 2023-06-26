@@ -209,7 +209,7 @@ export async function setupTestDeployment(
     actorConfig.configs.subgraph = subgraphConfig;
 
     stopSubgraph = await startSubgraph(subgraphConfig);
-    await sleep(12_000); // wait for subgraph to start up (TODO: better way to do this?)
+    await sleep(15_000); // wait for subgraph to start up (TODO: better way to do this?)
   }
 
   // deploy everything else
