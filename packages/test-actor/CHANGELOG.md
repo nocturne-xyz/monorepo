@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- add CLI option to perform 8 ops in rapid succession to fill a bundle every K ops
+- allow setting separate intervals for deposits and ops in CLI
+- run deposits and ops concurrently
 - test actor uses lmdb kv and loads merkle from kv
 - add lmdb implementation for kv store + unit tests forked from sdk unit tests
 - limit test actor unwrap amount to < 2 ETH

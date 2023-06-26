@@ -28,7 +28,9 @@ const ONE_DAY_SECONDS = 60n * 60n * 24n;
 const ONE_ETH_IN_WEI = 10n ** 18n;
 
 export class TestActorOpts {
-  intervalSeconds?: number;
+  depositIntervalSeconds?: number;
+  opIntervalSeconds?: number;
+  fullBatchEvery?: number;
   onlyDeposits?: boolean;
   onlyOperations?: boolean;
 }
@@ -64,37 +66,52 @@ export class TestActor {
     this.logger = logger;
   }
 
-  async run(opts?: TestActorOpts): Promise<void> {
-    const intervalMs = opts?.intervalSeconds
-      ? opts.intervalSeconds * 1000
-      : ONE_MINUTE_AS_MILLIS;
+  async runDeposits(interval: number): Promise<void> {
+    while (true) {
+      await this.deposit();
+      await sleep(interval);
+    }
+  }
 
+  async runOps(interval: number, batchEvery?: number): Promise<void> {
+    const i = 0;
     while (true) {
       await this.sdk.sync();
       const balances = await this.sdk.getAllAssetBalances();
       this.logger.info("balances: ", balances);
 
       let actionTaken = false;
-      if (opts?.onlyDeposits) {
-        this.logger.info("depositing");
-        actionTaken = await this.deposit();
-      } else if (opts?.onlyOperations) {
-        this.logger.info("performing operation");
-        actionTaken = await this.randomOperation();
-      } else {
-        if (flipCoin()) {
-          this.logger.info("depositing");
-          actionTaken = await this.deposit();
-        } else {
-          this.logger.info("performing operation");
+      if (batchEvery && i % batchEvery === 0) {
+        this.logger.info("performing 8 operations to fill a bundle");
+        for (let j = 0; j < 8; j++) {
           actionTaken = await this.randomOperation();
         }
+      } else {
+        this.logger.info("performing operation");
+        actionTaken = await this.randomOperation();
       }
 
       if (actionTaken) {
-        this.logger.info(`sleeping for ${intervalMs / 1000} seconds`);
-        await sleep(intervalMs);
+        this.logger.info(`sleeping for ${interval} seconds`);
+        await sleep(interval);
       }
+    }
+  }
+
+  async run(opts?: TestActorOpts): Promise<void> {
+    const depositIntervalSeconds =
+      opts?.depositIntervalSeconds ?? ONE_MINUTE_AS_MILLIS;
+    const opIntervalSeconds = opts?.opIntervalSeconds ?? ONE_MINUTE_AS_MILLIS;
+
+    if (opts?.onlyDeposits) {
+      await this.runDeposits(depositIntervalSeconds);
+    } else if (opts?.onlyOperations) {
+      await this.runOps(opIntervalSeconds, 1);
+    } else {
+      await Promise.all([
+        this.runDeposits(depositIntervalSeconds),
+        this.runOps(opIntervalSeconds, opts?.fullBatchEvery),
+      ]);
     }
   }
 
@@ -314,8 +331,4 @@ function randomElem<T>(arr: T[]): T {
   }
 
   return arr[randomInt(arr.length)];
-}
-
-function flipCoin(): boolean {
-  return Math.random() < 0.5;
 }

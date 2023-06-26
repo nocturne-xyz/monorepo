@@ -36,9 +36,23 @@ export const run = new Command("run")
   .requiredOption("--zkey-path <string>", "path to joinsplit zkey")
   .requiredOption("--vkey-path <string>", "path to joinsplit vkey")
   .option("--db-path <string>", "path to lmdb database")
-  .option("--interval <number>", "interval between deposits/ops in seconds")
+  .option(
+    "--deposit-interval <number>",
+    "interval in seconds between deposits in seconds. defaults to 600 (1 minute)",
+    "600"
+  )
+  .option(
+    "--op-interval <number>",
+    "interval in seconds between ops in seconds. defaults to 60 (1 minute)",
+    "600"
+  )
+  .option(
+    "--full-batch-every <number>",
+    "perform a batch of 8 ops in rapid succession every N ops"
+  )
   .option("--only-deposits", "only perform deposits")
   .option("--only-operations", "only perform operations")
+  .option("--kv-path", "path to kv file", "./kv.json")
   .option(
     "--log-dir <string>",
     "directory to write logs to",
@@ -55,7 +69,9 @@ export const run = new Command("run")
       zkeyPath,
       vkeyPath,
       dbPath,
-      interval,
+      depositInterval,
+      opInterval,
+      fullBatchEvery,
       onlyDeposits,
       onlyOperations,
       logDir,
@@ -150,7 +166,9 @@ export const run = new Command("run")
     }
 
     await actor.run({
-      intervalSeconds: interval,
+      depositIntervalSeconds: parseInt(depositInterval),
+      opIntervalSeconds: parseInt(opInterval),
+      fullBatchEvery: fullBatchEvery ? parseInt(fullBatchEvery) : undefined,
       onlyDeposits,
       onlyOperations,
     });
