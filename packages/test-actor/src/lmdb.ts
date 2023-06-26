@@ -69,6 +69,7 @@ export class LMDBKVStore implements KVStore {
   async putMany(kvs: KV[]): Promise<boolean> {
     const tx = this.db.transaction(() => {
       for (const [key, value] of kvs) {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         this.db.put(key, value);
       }
     });
@@ -84,6 +85,7 @@ export class LMDBKVStore implements KVStore {
   async removeMany(keys: string[]): Promise<boolean> {
     const tx = this.db.transaction(() => {
       for (const key of keys) {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         this.db.remove(key);
       }
     });
