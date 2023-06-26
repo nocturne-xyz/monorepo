@@ -110,13 +110,13 @@ export class TestActor {
 
     // If random chosen doesn't have any funds, find the first one with funds
     if (randomAsset.balance > 0) {
-      const maxValue = min(randomAsset.balance, ONE_ETH_IN_WEI * 3n);
+      const maxValue = min(randomAsset.balance, ONE_ETH_IN_WEI);
       const value = randomBigIntBounded(maxValue);
       return [randomAsset.asset, value];
     } else {
       for (const asset of assetsWithBalance) {
         if (asset.balance > 0) {
-          const maxValue = min(randomAsset.balance, ONE_ETH_IN_WEI * 3n);
+          const maxValue = min(randomAsset.balance, ONE_ETH_IN_WEI);
           const value = randomBigIntBounded(maxValue);
           return [asset.asset, value];
         }
