@@ -3287,7 +3287,7 @@ __metadata:
     "@nocturne-xyz/contracts": 1.0.32-alpha
     "@nocturne-xyz/local-prover": 1.0.7-alpha
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/sdk": 1.0.162-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
