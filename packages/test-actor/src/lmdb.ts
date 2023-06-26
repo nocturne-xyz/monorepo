@@ -43,7 +43,8 @@ export class LMDBKVStore implements KVStore {
   }
 
   async putBigInt(key: string, value: bigint): Promise<boolean> {
-    return this.db.put(key, value);
+    await this.db.put(key, String(value)); // cast to string since lmdb native number put only allows 64 bits
+    return true;
   }
 
   async iterRange(
@@ -76,8 +77,8 @@ export class LMDBKVStore implements KVStore {
   }
 
   async getMany(keys: string[]): Promise<KV[]> {
-    const values = (await this.db.getMany(keys)).map((v) => String(v));
-    return zip(keys, values);
+    const values = await this.db.getMany(keys);
+    return zip(keys, values).filter(([k, v]) => k && v); // only returned defined vals
   }
 
   async removeMany(keys: string[]): Promise<boolean> {
@@ -91,11 +92,11 @@ export class LMDBKVStore implements KVStore {
   }
 
   async clear(): Promise<void> {
-    await this.db.clearAsync();
+    return this.db.clearAsync();
   }
 
   async close(): Promise<void> {
-    return;
+    return this.db.close();
   }
 }
 
