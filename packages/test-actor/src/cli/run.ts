@@ -52,7 +52,6 @@ export const run = new Command("run")
   )
   .option("--only-deposits", "only perform deposits")
   .option("--only-operations", "only perform operations")
-  .option("--kv-path", "path to kv file", "./kv.json")
   .option(
     "--log-dir <string>",
     "directory to write logs to",
