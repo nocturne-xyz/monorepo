@@ -80,21 +80,18 @@ export class TestActor {
       const balances = await this.sdk.getAllAssetBalances();
       this.logger.info("balances: ", balances);
 
-      let actionTaken = false;
       if (batchEvery && i % batchEvery === 0) {
         this.logger.info("performing 8 operations to fill a bundle");
         for (let j = 0; j < 8; j++) {
-          actionTaken = await this.randomOperation();
+          await this.randomOperation();
         }
       } else {
         this.logger.info("performing operation");
-        actionTaken = await this.randomOperation();
+        await this.randomOperation();
       }
 
-      if (actionTaken) {
-        this.logger.info(`sleeping for ${interval} seconds`);
-        await sleep(interval);
-      }
+      this.logger.info(`sleeping for ${interval} seconds`);
+      await sleep(interval);
       i++;
     }
   }
@@ -246,45 +243,57 @@ export class TestActor {
     }
 
     // prepare, sign, and prove
-    const preSign = await this.sdk.prepareOperation(opRequest);
-    const signed = this.sdk.signOperation(preSign);
-    await this.sdk.applyOptimisticRecordsForOp(signed);
+    try {
+      const preSign = await this.sdk.prepareOperation(opRequest);
+      const signed = this.sdk.signOperation(preSign);
+      await this.sdk.applyOptimisticRecordsForOp(signed);
 
-    const opDigest = computeOperationDigest(signed);
-    this.logger.info(`proving operation with digest ${opDigest}`, {
-      opDigest,
-      signedOp: signed,
-    });
+      const opDigest = computeOperationDigest(signed);
+      this.logger.info(`proving operation with digest ${opDigest}`, {
+        opDigest,
+        signedOp: signed,
+      });
 
-    const proven = await proveOperation(this.prover, signed);
-    this.logger.info(`proved operation with digest ${opDigest}`, {
-      provenOp: proven,
-    });
+      const proven = await proveOperation(this.prover, signed);
+      this.logger.info(`proved operation with digest ${opDigest}`, {
+        provenOp: proven,
+      });
 
-    // submit
-    this.logger.info(`submitting operation with digest ${opDigest}`);
-    const res = await fetch(`${this.bundlerEndpoint}/relay`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ operation: proven }),
-    });
+      // submit
+      this.logger.info(`submitting operation with digest ${opDigest}`);
+      const res = await fetch(`${this.bundlerEndpoint}/relay`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ operation: proven }),
+      });
 
-    const resJSON = await res.json();
-    if (!res.ok) {
-      throw new Error(
-        `failed to submit proven operation to bundler: ${JSON.stringify(
-          resJSON
-        )}`
+      const resJSON = await res.json();
+      if (!res.ok) {
+        throw new Error(
+          `failed to submit proven operation to bundler: ${JSON.stringify(
+            resJSON
+          )}`
+        );
+      }
+
+      this.logger.info(
+        `successfully submitted operation with digest ${opDigest}`
       );
+
+      return true;
+    } catch (err) {
+      this.logger.error(`failed to perform operation`, { err });
+      if (
+        err instanceof Error &&
+        err.message.includes("not enough owned gas tokens")
+      ) {
+        return false;
+      }
+
+      throw err;
     }
-
-    this.logger.info(
-      `successfully submitted operation with digest ${opDigest}`
-    );
-
-    return true;
   }
 
   private async erc20TransferOpRequest(
