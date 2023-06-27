@@ -248,7 +248,7 @@ export class SubtreeUpdater {
               sendTransactionFunction: contractTx,
               minGasPrice: startingGasPrice.toNumber(),
               maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
-              gasPriceScalingFunction: txManager.LINEAR(2), // +2 gwei each time
+              gasPriceScalingFunction: txManager.LINEAR(1), // +1 gwei each time
               delay: 20_000, // Waits 20s between each try
             });
           });
