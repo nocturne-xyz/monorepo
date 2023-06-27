@@ -244,7 +244,7 @@ export class SubtreeUpdater {
               await this.handlerContract.provider.getGasPrice();
             logger.info(`starting gas price: ${startingGasPrice}`);
 
-            return txManager.send({
+            return await txManager.send({
               sendTransactionFunction: contractTx,
               minGasPrice: startingGasPrice.toNumber(),
               maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
