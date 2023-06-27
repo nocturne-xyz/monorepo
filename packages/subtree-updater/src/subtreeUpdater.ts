@@ -186,7 +186,9 @@ export class SubtreeUpdater {
     return new Worker(
       PROOF_QUEUE_NAME,
       async (job: Job<SerializedProofJobData>) => {
-        const { proofInputs, newRoot } = JSON.parse(job.data) as ProofJobData;
+        const { proofInputs, newRoot, subtreeIndex } = JSON.parse(
+          job.data
+        ) as ProofJobData;
         logger.info("handling subtree update prover job", { job: job.data });
 
         const proofWithPis = await this.prover.proveSubtreeUpdate(proofInputs);
@@ -195,6 +197,7 @@ export class SubtreeUpdater {
           proofWithPis,
         });
         const jobData: SubmissionJobData = {
+          subtreeIndex,
           proof: proofWithPis.proof,
           newRoot,
         };
@@ -217,12 +220,14 @@ export class SubtreeUpdater {
     return new Worker(
       SUBMISSION_QUEUE_NAME,
       async (job: Job<SerializedSubmissionJobData>) => {
-        const { proof, newRoot } = JSON.parse(job.data) as SubmissionJobData;
+        const { proof, newRoot, subtreeIndex } = JSON.parse(
+          job.data
+        ) as SubmissionJobData;
 
         const solidityProof = packToSolidityProof(proof);
         try {
           logger.debug(
-            "acquiring mutex on handler contract to submit update tx"
+            `acquiring mutex on handler contract to submit update tx for subtree index ${subtreeIndex}`
           );
           const receipt = await this.handlerMutex.runExclusive(async () => {
             const nonce =
@@ -235,7 +240,7 @@ export class SubtreeUpdater {
               );
 
               logger.info(
-                `attempting tx manager submission. txhash: ${tx.hash} gas price: ${gasPrice}`
+                `attempting tx manager submission. subtreIndex: ${subtreeIndex} txhash: ${tx.hash} gas price: ${gasPrice}`
               );
               return tx.wait(1);
             };
@@ -253,8 +258,8 @@ export class SubtreeUpdater {
             });
           });
 
-          logger.info("subtree update tx receipt:", { receipt });
-          logger.info("successfully updated root", { newRoot });
+          logger.info("subtree update tx receipt:", { receipt, subtreeIndex });
+          logger.info("successfully updated root", { newRoot, subtreeIndex });
         } catch (err: any) {
           // ignore errors that are due to duplicate submissions
           // this can happen if there are multiple instances of subtree updaters running
@@ -265,6 +270,7 @@ export class SubtreeUpdater {
 
           logger.warn("update already submitted by another agent", {
             error: err,
+            subtreeIndex,
           });
         }
       },

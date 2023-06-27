@@ -7,6 +7,7 @@ export interface ProofJobData {
 }
 
 export interface SubmissionJobData {
+  subtreeIndex: number;
   proof: BaseProof;
   newRoot: bigint;
 }
