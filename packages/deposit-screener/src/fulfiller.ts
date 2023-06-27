@@ -302,7 +302,7 @@ export class DepositScreenerFulfiller {
       const startingGasPrice = await this.txSigner.getGasPrice();
       logger.info(`starting gas price: ${startingGasPrice}`);
 
-      logger.info(`completing deposit with hash`);
+      logger.info(`completing deposit...`);
       return txManager.send({
         sendTransactionFunction: contractTx,
         minGasPrice: startingGasPrice.toNumber(),
