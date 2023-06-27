@@ -153,8 +153,8 @@ export class TestActor {
       Array.from(this.erc20s.entries())
     );
     const randomValue = randomBigintInRange(
-      ONE_ETH_IN_WEI,
-      5n * ONE_ETH_IN_WEI
+      10n * ONE_ETH_IN_WEI,
+      50n * ONE_ETH_IN_WEI
     );
 
     this.logger.info(
