@@ -262,7 +262,10 @@ export class SubtreeUpdater {
             logger.error("error submitting proof:", { err });
             throw err;
           }
-          logger.warn("update already submitted by another agent");
+
+          logger.warn("update already submitted by another agent", {
+            error: err,
+          });
         }
       },
       {
