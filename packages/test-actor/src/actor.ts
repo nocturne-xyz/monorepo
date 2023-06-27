@@ -23,14 +23,14 @@ import { ethers } from "ethers";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import { Logger } from "winston";
 
-const ONE_MINUTE_AS_MILLIS = 60 * 1000;
+const ONE_MINUTE_AS_SECS = 60;
 const ONE_DAY_SECONDS = 60n * 60n * 24n;
 const ONE_ETH_IN_WEI = 10n ** 18n;
 
 export class TestActorOpts {
   depositIntervalSeconds?: number;
   opIntervalSeconds?: number;
-  fullBatchEvery?: number;
+  fullBundleEvery?: number;
   onlyDeposits?: boolean;
   onlyOperations?: boolean;
 }
@@ -101,8 +101,8 @@ export class TestActor {
 
   async run(opts?: TestActorOpts): Promise<void> {
     const depositIntervalSeconds =
-      opts?.depositIntervalSeconds ?? ONE_MINUTE_AS_MILLIS;
-    const opIntervalSeconds = opts?.opIntervalSeconds ?? ONE_MINUTE_AS_MILLIS;
+      opts?.depositIntervalSeconds ?? ONE_MINUTE_AS_SECS;
+    const opIntervalSeconds = opts?.opIntervalSeconds ?? ONE_MINUTE_AS_SECS;
 
     if (opts?.onlyDeposits) {
       await this.runDeposits(depositIntervalSeconds * 1000);
@@ -111,7 +111,7 @@ export class TestActor {
     } else {
       await Promise.all([
         this.runDeposits(depositIntervalSeconds * 1000),
-        this.runOps(opIntervalSeconds * 1000, opts?.fullBatchEvery),
+        this.runOps(opIntervalSeconds * 1000, opts?.fullBundleEvery),
       ]);
     }
   }

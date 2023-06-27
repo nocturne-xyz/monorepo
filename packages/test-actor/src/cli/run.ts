@@ -47,8 +47,8 @@ export const run = new Command("run")
     "60"
   )
   .option(
-    "--full-batch-every <number>",
-    "perform a batch of 8 ops in rapid succession every N ops"
+    "--full-bundle-every <number>",
+    "perform 8 ops in rapid succession to fill a bundle every N iterations of the op loop"
   )
   .option("--only-deposits", "only perform deposits")
   .option("--only-operations", "only perform operations")
@@ -70,7 +70,7 @@ export const run = new Command("run")
       dbPath,
       depositInterval,
       opInterval,
-      fullBatchEvery,
+      fullBundleEvery,
       onlyDeposits,
       onlyOperations,
       logDir,
@@ -167,7 +167,7 @@ export const run = new Command("run")
     await actor.run({
       depositIntervalSeconds: parseInt(depositInterval),
       opIntervalSeconds: parseInt(opInterval),
-      fullBatchEvery: fullBatchEvery ? parseInt(fullBatchEvery) : undefined,
+      fullBundleEvery: fullBundleEvery ? parseInt(fullBundleEvery) : undefined,
       onlyDeposits,
       onlyOperations,
     });
