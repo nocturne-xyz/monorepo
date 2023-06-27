@@ -7,6 +7,7 @@ import {
   ClosableAsyncIterator,
   TotalEntityIndexTrait,
   WithTotalEntityIndex,
+  min,
   range,
 } from "@nocturne-xyz/sdk";
 
@@ -25,7 +26,7 @@ const makeTEIWrapper = <T>() => {
 
     let { blockNumber, txIdx, logIdx, eventIdx } =
       TotalEntityIndexTrait.toComponents(currentTotalEntityIndex);
-    blockNumber += randomBigIntBounded(1000n);
+    blockNumber += min(1n, randomBigIntBounded(1000n));
     txIdx = randomBigIntBounded((1n << 32n) - 1n);
     logIdx = randomBigIntBounded((1n << 32n) - 1n);
     eventIdx = randomBigIntBounded((1n << 15n) - 1n);

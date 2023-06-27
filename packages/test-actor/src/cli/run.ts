@@ -36,7 +36,20 @@ export const run = new Command("run")
   .requiredOption("--zkey-path <string>", "path to joinsplit zkey")
   .requiredOption("--vkey-path <string>", "path to joinsplit vkey")
   .option("--db-path <string>", "path to lmdb database")
-  .option("--interval <number>", "interval between deposits/ops in seconds")
+  .option(
+    "--deposit-interval <number>",
+    "interval in seconds between deposits in seconds. defaults to 60 (1 minute)",
+    "60"
+  )
+  .option(
+    "--op-interval <number>",
+    "interval in seconds between ops in seconds. defaults to 60 (1 minute)",
+    "60"
+  )
+  .option(
+    "--full-bundle-every <number>",
+    "perform 8 ops in rapid succession to fill a bundle every N iterations of the op loop"
+  )
   .option("--only-deposits", "only perform deposits")
   .option("--only-operations", "only perform operations")
   .option(
@@ -55,7 +68,9 @@ export const run = new Command("run")
       zkeyPath,
       vkeyPath,
       dbPath,
-      interval,
+      depositInterval,
+      opInterval,
+      fullBundleEvery,
       onlyDeposits,
       onlyOperations,
       logDir,
@@ -150,7 +165,9 @@ export const run = new Command("run")
     }
 
     await actor.run({
-      intervalSeconds: interval,
+      depositIntervalSeconds: parseInt(depositInterval),
+      opIntervalSeconds: parseInt(opInterval),
+      fullBundleEvery: fullBundleEvery ? parseInt(fullBundleEvery) : undefined,
       onlyDeposits,
       onlyOperations,
     });
