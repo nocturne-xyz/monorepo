@@ -74,7 +74,7 @@ export class TestActor {
   }
 
   async runOps(interval: number, batchEvery?: number): Promise<void> {
-    const i = 0;
+    let i = 0;
     while (true) {
       await this.sdk.sync();
       const balances = await this.sdk.getAllAssetBalances();
@@ -95,6 +95,7 @@ export class TestActor {
         this.logger.info(`sleeping for ${interval} seconds`);
         await sleep(interval);
       }
+      i++;
     }
   }
 
@@ -104,13 +105,13 @@ export class TestActor {
     const opIntervalSeconds = opts?.opIntervalSeconds ?? ONE_MINUTE_AS_MILLIS;
 
     if (opts?.onlyDeposits) {
-      await this.runDeposits(depositIntervalSeconds);
+      await this.runDeposits(depositIntervalSeconds * 1000);
     } else if (opts?.onlyOperations) {
-      await this.runOps(opIntervalSeconds, 1);
+      await this.runOps(opIntervalSeconds * 1000, 1);
     } else {
       await Promise.all([
-        this.runDeposits(depositIntervalSeconds),
-        this.runOps(opIntervalSeconds, opts?.fullBatchEvery),
+        this.runDeposits(depositIntervalSeconds * 1000),
+        this.runOps(opIntervalSeconds * 1000, opts?.fullBatchEvery),
       ]);
     }
   }
@@ -256,14 +257,12 @@ export class TestActor {
     });
 
     const proven = await proveOperation(this.prover, signed);
-    this.logger.info(
-      `proved operation with digest ${opDigest}. submitting to bundler.`,
-      {
-        provenOp: proven,
-      }
-    );
+    this.logger.info(`proved operation with digest ${opDigest}`, {
+      provenOp: proven,
+    });
 
     // submit
+    this.logger.info(`submitting operation with digest ${opDigest}`);
     const res = await fetch(`${this.bundlerEndpoint}/relay`, {
       method: "POST",
       headers: {
@@ -280,6 +279,10 @@ export class TestActor {
         )}`
       );
     }
+
+    this.logger.info(
+      `successfully submitted operation with digest ${opDigest}`
+    );
 
     return true;
   }

@@ -38,13 +38,13 @@ export const run = new Command("run")
   .option("--db-path <string>", "path to lmdb database")
   .option(
     "--deposit-interval <number>",
-    "interval in seconds between deposits in seconds. defaults to 600 (1 minute)",
-    "600"
+    "interval in seconds between deposits in seconds. defaults to 60 (1 minute)",
+    "60"
   )
   .option(
     "--op-interval <number>",
     "interval in seconds between ops in seconds. defaults to 60 (1 minute)",
-    "600"
+    "60"
   )
   .option(
     "--full-batch-every <number>",
