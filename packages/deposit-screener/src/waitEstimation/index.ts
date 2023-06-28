@@ -216,9 +216,18 @@ async function findScreenerQueueJobClosestInDelay(
   assetAddr: Address,
   delayMs: number
 ): Promise<Job<DepositRequestJobData> | undefined> {
+  let date = Date.now();
+  console.log(`Getting delayed jobs`);
   const screenerDelayed = await screenerQueue.getDelayed();
-  const screenerWaiting = await screenerQueue.getWaiting();
+  console.log(`Got delayed jobs. Latency ${Date.now() - date}`);
 
+  date = Date.now();
+  console.log(`Getting waiting jobs`);
+  const screenerWaiting = await screenerQueue.getWaiting();
+  console.log(`Got waiting jobs. Latency ${Date.now() - date}`);
+
+  date = Date.now();
+  console.log(`Filtering jobs`);
   const screenerJobs = [...screenerDelayed, ...screenerWaiting];
   const screenerJobsAhead = screenerJobs
     .filter((job) => {
@@ -231,6 +240,7 @@ async function findScreenerQueueJobClosestInDelay(
     })
     .filter((job) => job.delay <= delayMs);
   screenerJobsAhead.sort((a, b) => b.delay - a.delay);
+  console.log(`Filtered jobs. Latency ${Date.now() - date}`);
 
   if (screenerJobsAhead.length == 0) {
     return undefined;
