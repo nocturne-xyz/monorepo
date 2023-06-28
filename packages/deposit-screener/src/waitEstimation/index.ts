@@ -18,6 +18,7 @@ import {
   calculateSecondsLeftInJobDelay,
   convertAssetTotalToDelaySeconds,
 } from "./time";
+import * as JSON from "bigint-json-serialization";
 import { Logger } from "winston";
 
 export interface EstimateExistingWaitDeps {
@@ -227,18 +228,30 @@ async function findScreenerQueueJobClosestInDelay(
   console.log(`Got waiting jobs. Latency ${Date.now() - date}`);
 
   date = Date.now();
-  console.log(`Filtering jobs`);
+  console.log(
+    `Filtering jobs. Num screener jobs: ${screenerDelayed.length}. Num waiting jobs: ${screenerWaiting.length}`
+  );
   const screenerJobs = [...screenerDelayed, ...screenerWaiting];
   const screenerJobsAhead = screenerJobs
     .filter((job) => {
+      console.log();
       const depositRequest: DepositRequest = JSON.parse(
         job.data.depositRequestJson
+      );
+      console.log(
+        `checking asset addr for match. Addr: ${
+          AssetTrait.decode(depositRequest.encodedAsset).assetAddr
+        }`
       );
       return (
         AssetTrait.decode(depositRequest.encodedAsset).assetAddr == assetAddr
       );
     })
-    .filter((job) => job.delay <= delayMs);
+    .filter((job) => {
+      console.log(`checking job delay. delay: ${job.delay}`);
+      return job.delay <= delayMs;
+    });
+  console.log(`Sorting jobs...`);
   screenerJobsAhead.sort((a, b) => b.delay - a.delay);
   console.log(`Filtered jobs. Latency ${Date.now() - date}`);
 
