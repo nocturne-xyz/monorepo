@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/snap",
-  "version": "1.0.4-alpha",
+  "version": "1.0.6-alpha",
   "description": "Nocturne Snap",
   "license": "(MIT-0 OR Apache-2.0)",
   "main": "src/index.ts",
@@ -22,7 +22,7 @@
     "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' --ignore-path .gitignore",
     "prettier:check": "prettier --check ./src",
     "prettier:write": "prettier --write ./src",
-    "publish:sepolia": "yarn npm publish --tag sepolia --access public",
+    "publish:sepolia": "yarn build; yarn npm publish --tag sepolia --access public",
     "serve": "mm-snap serve",
     "start": "mm-snap watch",
     "test:unit": ""

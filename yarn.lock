@@ -3161,25 +3161,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@npm:1.0.151-alpha":
-  version: 1.0.151-alpha
-  resolution: "@nocturne-xyz/sdk@npm:1.0.151-alpha"
-  dependencies:
-    "@nocturne-xyz/circuit-utils": ^0.1.12
-    "@nocturne-xyz/config": ^1.0.14-alpha
-    "@nocturne-xyz/contracts": ^1.0.32-alpha
-    "@types/randombytes": ^2.0.0
-    "@zk-kit/incremental-merkle-tree": ^1.0.0
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    ethers: ^5.7.2
-    js-sha256: ^0.9.0
-    randombytes: ^2.1.0
-    sorted-btree: ^1.8.1
-  checksum: 7917666b361fbfda478f4c35d0a05cdfde76b49178904bb7aeb1390317670ccac8bec18ba8ea3cc91bcf83f6ac91f32afca51c59f6ee5f26e6fb4be296fc2f27
-  languageName: node
-  linkType: hard
-
 "@nocturne-xyz/sdk@npm:1.0.162-alpha":
   version: 1.0.162-alpha
   resolution: "@nocturne-xyz/sdk@npm:1.0.162-alpha"
@@ -3216,7 +3197,7 @@ __metadata:
     "@metamask/snaps-ui": ^0.32.2
     "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/sdk": 1.0.151-alpha
+    "@nocturne-xyz/sdk": "workspace:^"
     "@typescript-eslint/eslint-plugin": ^5.33.0
     "@typescript-eslint/parser": ^5.20.0
     bigint-json-serialization: ^1.0.1
