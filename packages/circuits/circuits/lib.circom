@@ -40,14 +40,15 @@ template DeriveNullifier() {
     nullifier <== hash.out;
 }
 
-template IsInSubgroup() {
-    signal input P[2];
+template IsOrderGreaterThan8() {
+    signal input PX;
+    signal input PY;
 
     signal P2X, P2Y, P4X, P4Y, P8X, P8Y;
 
-    (P2X, P2Y) = BbayDbl()(P, P2);
-    (P4X, P4Y) = BbayDbl()(P2X, P2Y);
-    (P8X, P8Y) = BbayDbl()(P4X, P4Y);
+    (P2X, P2Y) <== BabyDbl()(PX, PY);
+    (P4X, P4Y) <== BabyDbl()(P2X, P2Y);
+    (P8X, P8Y) <== BabyDbl()(P4X, P4Y);
 
     // check that 8P != (0, 1)
     // we do this by checking requiring prover to provide
@@ -57,25 +58,16 @@ template IsInSubgroup() {
     signal P8XInvOrZero;
     signal P8YMinusOneInvOrZero;
 
-    if (P8X == 0) {
-        P8XInvOrZero <-- 0;
-    } else {
-        P8XInvOrZero <-- 1 / P8X;
-    }
-
-    if (P8Y == 1) {
-        P8YMinusOneInvOrZero <-- 0;
-    } else {
-        P8YMinusOneInvOrZero <-- 1 / (P8Y - 1);
-    }
+    P8XInvOrZero <-- P8X != 0 ? 1 / P8X : 0;
+    P8YMinusOneInvOrZero <-- P8Y - 1 != 0 ? 1 / (P8Y - 1) : 0;
 
     // take product of "inverse or zero" signals with the original signals
     // if the original signal was 0, the product will be 0.
     // if the original signal was nonzero, the product will be 1 if the prover was honest, 0 otherwise
     // if we assume the prover was honest, then it suffices to check that both products are not 0
     // we will deal with the case where the signal was nonzero, but the dishonest prover lied about the inverse below
-    signal P8XProd <-- P8X * P8XInvOrZero;
-    signal P8YProd <-- (P8Y - 1) * P8YMinusOneInvOrZero;
+    signal P8XProd <== P8X * P8XInvOrZero;
+    signal P8YProd <== (P8Y - 1) * P8YMinusOneInvOrZero;
 
     // check that the product is either 0 or 1
     (1 - P8XProd) * P8XProd === 0;
@@ -88,7 +80,7 @@ template IsInSubgroup() {
     // if the product is zero, then the original value must also be zero
     // with this constraint, the product can only be 0 if the original value was indeed 0,
     // which means the product must be 1 if the original value was nonzero, 
-    // which means the prover *has* to find an inverse.
+    // in which case the prover *has* to find an inverse.
     (1 - P8XProd) * P8X === 0;
     (1 - P8YProd) * P8Y === 0;
 }
