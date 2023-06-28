@@ -18,17 +18,25 @@ import {
   calculateSecondsLeftInJobDelay,
   convertAssetTotalToDelaySeconds,
 } from "./time";
+import { Logger } from "winston";
 
 export interface EstimateExistingWaitDeps {
   db: DepositScreenerDB;
   rateLimits: Map<Address, bigint>;
   screenerQueue: Queue<DepositRequestJobData>;
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
+  logger: Logger;
 }
 
 // NOTE: This function can throw errors
 export async function estimateSecondsUntilDepositCompletion(
-  { db, screenerQueue, fulfillerQueues, rateLimits }: EstimateExistingWaitDeps,
+  {
+    db,
+    screenerQueue,
+    fulfillerQueues,
+    rateLimits,
+    logger,
+  }: EstimateExistingWaitDeps,
   depositHash: string
 ): Promise<number> {
   // get deposit request status
@@ -63,11 +71,21 @@ export async function estimateSecondsUntilDepositCompletion(
     }
     job = maybeJob;
 
+    let date = Date.now();
     const valueAheadInScreenerQueue =
       await totalValueAheadInScreenerQueueInclusive(screenerQueue, job);
+    logger.info(
+      `Got total value in screener queue. Latency ${Date.now() - date}`
+    );
+
+    date = Date.now();
     const valueInFulfillerQueue = await totalValueInFulfillerQueue(
       fulfillerQueue
     );
+    logger.info(
+      `Got total value in fulfiller queue. Latency ${Date.now() - date}`
+    );
+
     valueAhead = valueAheadInScreenerQueue + valueInFulfillerQueue;
   } else if (status == DepositRequestStatus.AwaitingFulfillment) {
     const maybeJob = await fulfillerQueue.getJob(depositHash);
@@ -78,9 +96,13 @@ export async function estimateSecondsUntilDepositCompletion(
     }
     job = maybeJob;
 
+    const date = Date.now();
     valueAhead = await totalValueAheadInFulfillerQueueInclusive(
       fulfillerQueue,
       job
+    );
+    logger.info(
+      `Got total value in fulfiller queue. Latency ${Date.now() - date}`
     );
   } else {
     throw new Error(
@@ -103,6 +125,7 @@ export interface EstimateProspectiveWaitDeps {
   rateLimits: Map<Address, bigint>;
   screenerQueue: Queue<DepositRequestJobData>;
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
+  logger: Logger;
 }
 
 // NOTE: This function can throw error
@@ -113,6 +136,7 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
     screenerQueue,
     fulfillerQueues,
     rateLimits,
+    logger,
   }: EstimateProspectiveWaitDeps,
   spender: Address,
   assetAddr: Address,
@@ -143,10 +167,14 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
   );
 
   // find closest job in screener queue to hypothetical job
+  let date = Date.now();
   const closestJob = await findScreenerQueueJobClosestInDelay(
     screenerQueue,
     assetAddr,
     screenerDelay
+  );
+  logger.info(
+    `Got closest job in screener queue. Latency ${Date.now() - date}`
   );
 
   // calculate value ahead of closest job
@@ -154,11 +182,21 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
   if (!closestJob) {
     valueAhead = 0n;
   } else {
+    date = Date.now();
     const valueAheadInScreenerQueue =
       await totalValueAheadInScreenerQueueInclusive(screenerQueue, closestJob);
+    logger.info(
+      `Got total value in screener queue. Latency ${Date.now() - date}`
+    );
+
+    date = Date.now();
     const valueInFulfillerQueue = await totalValueInFulfillerQueue(
       fulfillerQueue
     );
+    logger.info(
+      `Got total value in fulfiller queue. Latency ${Date.now() - date}`
+    );
+
     valueAhead = valueAheadInScreenerQueue + valueInFulfillerQueue;
   }
 

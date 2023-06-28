@@ -47,7 +47,13 @@ export function makeDepositStatusHandler({
     let delay: number;
     try {
       delay = await estimateSecondsUntilDepositCompletion(
-        { db, screenerQueue, fulfillerQueues, rateLimits },
+        {
+          db,
+          screenerQueue,
+          fulfillerQueues,
+          rateLimits,
+          logger: logger.child({ depositHash }),
+        },
         depositHash
       );
     } catch (err) {
@@ -103,6 +109,7 @@ export function makeQuoteHandler({
 
     let quote: number;
     try {
+      const { spender, assetAddr, value } = quoteRequest;
       quote = await estimateSecondsUntilCompletionForProspectiveDeposit(
         {
           screeningApi,
@@ -110,10 +117,11 @@ export function makeQuoteHandler({
           screenerQueue,
           fulfillerQueues,
           rateLimits,
+          logger: logger.child({ spender, assetAddr, value }),
         },
-        quoteRequest.spender,
-        quoteRequest.assetAddr,
-        quoteRequest.value
+        spender,
+        assetAddr,
+        value
       );
     } catch (err) {
       logger.warn(err);
