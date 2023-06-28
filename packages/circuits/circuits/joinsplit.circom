@@ -32,7 +32,11 @@ template JoinSplit(levels) {
     signal input z;
 
     // encodedAssetAddr, but with the sign bits of refundAddr placed at bits 248 and 249 (when zero-indexed in little-endian order)
-    signal input encodedAssetAddrWithSignBits;
+    signal input encodedAssetAddrWithSignBitsPub;
+    signal input encodedAssetIdPub;
+
+    // the two previous, but private inputs
+    signal input encodedAssetAddr;
     signal input encodedAssetId;
 
     // Old note A
@@ -73,7 +77,7 @@ template JoinSplit(levels) {
     signal output publicSpend;
     signal output nullifierA;
     signal output nullifierB;
-    signal output refundAddrHash;
+    signal output senderCommitment;
 
     var BASE8[2] = [
         5299619240641551281634865583518297030282874472190772894086521144482721001553,
@@ -116,17 +120,17 @@ template JoinSplit(levels) {
     BabyCheck()(oldNoteBOwnerH2X, oldNoteBOwnerH2Y);
     IsOrderGreaterThan8()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
 
-    // get encodedAssetAddr and sign bits out of encodedAssetAddrWithSignBits
+    // get encodedAssetAddr and sign bits out of encodedAssetAddrWithSignBitsPub
     // don't need Num2Bits_strict here because it's only 253 bits
-    signal encodedAssetAddrWithSignBitsBits[253] <==  Num2Bits(253)(encodedAssetAddrWithSignBits);
-    signal refundAddrH1Sign <== encodedAssetAddrWithSignBitsBits[248];
-    signal refundAddrH2Sign <== encodedAssetAddrWithSignBitsBits[249];
+    signal encodedAssetAddrWithSignBitsPubBits[253] <==  Num2Bits(253)(encodedAssetAddrWithSignBitsPub);
+    signal refundAddrH1Sign <== encodedAssetAddrWithSignBitsPubBits[248];
+    signal refundAddrH2Sign <== encodedAssetAddrWithSignBitsPubBits[249];
 
     // instead of doing another bit decomp, subtract 2^248 * refundAddrH1Sign + 2^249 * refundAddrH2Sign
-    // from encodedAssetAddrWithSignBits
+    // from encodedAssetAddrWithSignBitsPub to decode encodedAssetAddr
     signal refundAddrH1SignTimes2ToThe248 <== (1 << 248) * refundAddrH1Sign;
     signal encodedAssetAddrSubend <== (1 << 249) * refundAddrH2Sign + refundAddrH1SignTimes2ToThe248;
-    signal encodedAssetAddr <== encodedAssetAddrWithSignBits - encodedAssetAddrSubend;
+    signal encodedAssetAddrDecoded <== encodedAssetAddrWithSignBitsPub - encodedAssetAddrSubend;
 
     // oldNoteACommitment
     signal oldNoteACommitment <== NoteCommit()(
@@ -183,6 +187,16 @@ template JoinSplit(levels) {
     compOut === 1;
     publicSpend <== valInput - valOutput;
 
+
+    // if public spend is nonzero, assert that the encodedAssetAddr given as private input matches
+    // the encodedAssetAddr in from `encodedAssetAddrWithSignBitsPub` public input
+    signal publicSpendIsZero <== IsZero()(publicSpend);
+    (encodedAssetAddrDecoded - encodedAssetAddr) * (1 - publicSpendIsZero) === 0;
+
+    // if public spend is nonzero, assert that the encodedAssetIdPub given as public input
+    // matches encodedAssetId given as private input
+    (encodedAssetIdPub - encodedAssetId) * (1 - publicSpendIsZero) === 0;
+
     // check that old note owner addresses correspond to user's viewing key 
     VKIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, viewKeyBits);
     VKIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, viewKeyBits);
@@ -222,9 +236,9 @@ template JoinSplit(levels) {
     IsOrderGreaterThan8()(refundAddrH1X, refundAddrH1Y);
     VKIntegrity()(refundAddrH1X, refundAddrH1Y, refundAddrH2X, refundAddrH2Y, viewKeyBits);
 
-    // compress the two points of the ciphertext.
+    // compress the two points of the refund addr.
     // connect the y cordinates to the output signals
-    // and assert that the sign bits match what was given in `encodedAssetAddrWithSignBits`
+    // and assert that the sign bits match what was given in `encodedAssetAddrWithSignBitsPub`
     component compressors[2];
     compressors[0] = CompressPoint();
     compressors[0].in[0] <== refundAddrH1X;
@@ -238,10 +252,8 @@ template JoinSplit(levels) {
     refundAddrH2CompressedY === compressors[1].y;
     refundAddrH2Sign === compressors[1].sign;
 
-
-    // hash the refund addr as `H(refundAddrH1CompressedY, refundAddrH2CompressedY, refundAddrSigns, newNoteBNonce)`
-    signal refundAddrSigns <== refundAddrH1Sign + (refundAddrH2Sign * 2);
-    refundAddrHash <== Poseidon(4)([refundAddrH1CompressedY, refundAddrH2CompressedY, refundAddrSigns, newNoteBNonce]);
+    // hash the sender's canon addr as `H(senderCanonAddrX, senderCanonAddrY, newNoteBNonce)`
+    senderCommitment <== Poseidon(3)([senderCanonAddr[0], senderCanonAddr[1], newNoteBNonce]);
 }
 
-component main { public [encodedAssetAddrWithSignBits, encodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit(16);
+component main { public [encodedAssetAddrWithSignBitsPub, encodedAssetIdPub, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit(16);
