@@ -59,7 +59,7 @@ export function makeDepositStatusHandler({
     } catch (err) {
       logger.warn(err);
       res.statusMessage = "Internal Server Error";
-      res.status(500);
+      res.status(500).json(err);
       return;
     }
 
