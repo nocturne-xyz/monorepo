@@ -130,6 +130,8 @@ export function makeQuoteHandler({
       return;
     }
 
+    logger.info("[quote] Completed quote request!");
+
     const response: DepositQuoteResponse = { estimatedWaitSeconds: quote };
     res.json(response);
   };

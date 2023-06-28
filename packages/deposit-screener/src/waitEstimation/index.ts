@@ -143,11 +143,14 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
   value: bigint
 ): Promise<number> {
   // ensure passes screen
+  let date = Date.now();
   const passesScreen = await screeningApi.isSafeDepositRequest(
     spender,
     assetAddr,
     value
   );
+  logger.info(`[quote] Got screening result. Latency ${Date.now() - date}`);
+
   if (!passesScreen) {
     throw new Error(
       `Prospective deposit request failed screening. spender: ${spender}. assetAddr: ${assetAddr}, value: ${value}`
@@ -160,21 +163,23 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
   }
 
   // calculate hypothetical screener delay
+  date = Date.now();
   const screenerDelay = await screenerDelayCalculator.calculateDelaySeconds(
     spender,
     assetAddr,
     value
   );
+  logger.info(`[quote] Got screener delay. Latency ${Date.now() - date}`);
 
   // find closest job in screener queue to hypothetical job
-  let date = Date.now();
+  date = Date.now();
   const closestJob = await findScreenerQueueJobClosestInDelay(
     screenerQueue,
     assetAddr,
     screenerDelay
   );
   logger.info(
-    `Got closest job in screener queue. Latency ${Date.now() - date}`
+    `[quote] Got closest job in screener queue. Latency ${Date.now() - date}`
   );
 
   // calculate value ahead of closest job
@@ -186,7 +191,7 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
     const valueAheadInScreenerQueue =
       await totalValueAheadInScreenerQueueInclusive(screenerQueue, closestJob);
     logger.info(
-      `Got total value in screener queue. Latency ${Date.now() - date}`
+      `[quote] Got total value in screener queue. Latency ${Date.now() - date}`
     );
 
     date = Date.now();
@@ -194,7 +199,7 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
       fulfillerQueue
     );
     logger.info(
-      `Got total value in fulfiller queue. Latency ${Date.now() - date}`
+      `[quote] Got total value in fulfiller queue. Latency ${Date.now() - date}`
     );
 
     valueAhead = valueAheadInScreenerQueue + valueInFulfillerQueue;
