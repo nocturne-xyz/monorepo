@@ -17,15 +17,12 @@ import {
   IncludedNote,
   Nullifier,
 } from "../../../primitives";
-import { Logger } from "winston";
 
 export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   private readonly graphqlEndpoint: string;
-  private readonly logger?: Logger;
 
-  constructor(graphqlEndpoint: string, logger?: Logger) {
+  constructor(graphqlEndpoint: string) {
     this.graphqlEndpoint = graphqlEndpoint;
-    this.logger = logger;
   }
 
   iterStateDiffs(
@@ -33,7 +30,6 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<EncryptedStateDiff> {
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
-    const logger = this.logger;
     let closed = false;
 
     const endpoint = this.graphqlEndpoint;
@@ -56,19 +52,17 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
 
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
         const fromBlock = TotalEntityIndexTrait.toComponents(from).blockNumber;
-        logger &&
-          logger.info(
-            `fetching state diffs from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
-              from
-            )} (block ${fromBlock}) ...`,
-            {
-              range: {
-                startTotalEntityIndex:
-                  TotalEntityIndexTrait.toStringPadded(from),
-                fromBlock: TotalEntityIndexTrait.toComponents(from).blockNumber,
-              },
-            }
-          );
+        console.log(
+          `fetching state diffs from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
+            from
+          )} (block ${fromBlock}) ...`,
+          {
+            range: {
+              startTotalEntityIndex: TotalEntityIndexTrait.toStringPadded(from),
+              fromBlock: TotalEntityIndexTrait.toComponents(from).blockNumber,
+            },
+          }
+        );
 
         const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
         await maybeApplyThrottle(latestIndexedBlock);
@@ -99,7 +93,13 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
             totalEntityIndex: highestTotalEntityIndex,
           };
 
-          logger && logger.debug("yielding state diff", { stateDiff });
+          console.log("yielding state diff", { stateDiff });
+          console.log(
+            `num notes: ${notes.length}. num nullifiers: ${nullifiers.length}`
+          );
+          console.log(
+            `last committed merkle index ${lastCommittedMerkleIndex}`
+          );
 
           yield stateDiff;
 
