@@ -73,6 +73,7 @@ template JoinSplit(levels) {
     signal output publicSpend;
     signal output nullifierA;
     signal output nullifierB;
+    signal output refundAddrHash;
 
     var BASE8[2] = [
         5299619240641551281634865583518297030282874472190772894086521144482721001553,
@@ -240,7 +241,7 @@ template JoinSplit(levels) {
 
     // hash the refund addr as `H(refundAddrH1CompressedY, refundAddrH2CompressedY, refundAddrSigns, newNoteBNonce)`
     signal refundAddrSigns <== refundAddrH1Sign + (refundAddrH2Sign * 2);
-    signal refundAddrHash <== Poseidon(4)([refundAddrH1CompressedY, refundAddrH2CompressedY, refundAddrSigns, newNoteBNonce]);
+    refundAddrHash <== Poseidon(4)([refundAddrH1CompressedY, refundAddrH2CompressedY, refundAddrSigns, newNoteBNonce]);
 }
 
 component main { public [encodedAssetAddrWithSignBits, encodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit(16);
