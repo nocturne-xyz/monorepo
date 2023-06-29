@@ -18,6 +18,7 @@ import {
   calculateSecondsLeftInJobDelay,
   convertAssetTotalToDelaySeconds,
 } from "./time";
+import * as JSON from "bigint-json-serialization";
 
 export interface EstimateExistingWaitDeps {
   db: DepositScreenerDB;
