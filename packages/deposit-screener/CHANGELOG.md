@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix bug where res.json(...) in deposit DNE case was not returning immediately after
 - fix bug where screener method to find closest job doesn't use our bigint JSON library
 - return errors to user in screener server /quote
 - use tx manager
