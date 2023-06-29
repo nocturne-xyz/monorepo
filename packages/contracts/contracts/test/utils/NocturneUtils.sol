@@ -202,11 +202,10 @@ library NocturneUtils {
                     newNoteAEncrypted: newNoteAEncrypted,
                     newNoteBCommitment: uint256(currentIndex),
                     newNoteBEncrypted: newNoteBEncrypted,
+                    senderCommitment: uint256(currentIndex),
                     proof: dummyProof(),
                     encodedAsset: encodedAsset,
-                    publicSpend: args.joinSplitsPublicSpends[i][j],
-                    encSenderCanonAddrC1: 0,
-                    encSenderCanonAddrC2: 0
+                    publicSpend: args.joinSplitsPublicSpends[i][j]
                 });
                 currentIndex++;
             }

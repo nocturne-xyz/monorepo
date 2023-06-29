@@ -60,8 +60,9 @@ export interface JoinSplitInputs {
   merkleProofB: MerkleProofInput;
   newNoteA: EncodedNote;
   newNoteB: EncodedNote;
-  encodedAssetAddrWithSignBitsPub: bigint;
   refundAddr: CompressedStealthAddress;
+  encodedAssetAddrWithSignBitsPub: bigint;
+  encodedAssetIdPub: bigint;
 }
 
 export function joinSplitPublicSignalsFromArray(

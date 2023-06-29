@@ -148,6 +148,16 @@ const operationDigest = BigInt(12345);
 const opSig = nocturneSigner.sign(operationDigest);
 console.log(opSig);
 
+const publicSpend =
+  newNoteA.value + newNoteB.value - oldNoteA.value - oldNoteB.value;
+
+// if publicSpend is 0, mask public asset info to 0
+const encodedAssetAddrWithSignBitsPub = encodeEncodedAssetAddrWithSignBitsPI(
+  publicSpend === 0n ? 0n : oldNoteA.encodedAssetAddr,
+  refundAddr
+);
+const encodedAssetIdPub = publicSpend === 0n ? 0n : oldNoteA.encodedAssetId;
+
 const joinsplitInputs: JoinSplitInputs = {
   vk,
   vkNonce: nocturneSigner.vkNonce,
@@ -162,10 +172,9 @@ const joinsplitInputs: JoinSplitInputs = {
   merkleProofA: merkleProofAInput,
   merkleProofB: merkleProofBInput,
   refundAddr,
-  encodedAssetAddrWithSignBitsPub: encodeEncodedAssetAddrWithSignBitsPI(
-    oldNoteA.encodedAssetAddr,
-    refundAddr
-  ),
+
+  encodedAssetAddrWithSignBitsPub,
+  encodedAssetIdPub,
 };
 
 console.log(joinsplitInputs);

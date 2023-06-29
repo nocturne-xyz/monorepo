@@ -197,6 +197,12 @@ template JoinSplit(levels) {
     // matches encodedAssetId given as private input
     (encodedAssetIdPub - encodedAssetId) * (1 - publicSpendIsZero) === 0;
 
+    // if the public spend is zero, assert that encodedAssetAddr givenas public input is zero
+    encodedAssetAddrDecoded * publicSpendIsZero === 0;
+
+    // if the public spend is zero, assert that encodedAssetId given as public input is zero
+    encodedAssetIdPub * publicSpendIsZero === 0;
+
     // check that old note owner addresses correspond to user's viewing key 
     VKIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, viewKeyBits);
     VKIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, viewKeyBits);

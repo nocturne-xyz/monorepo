@@ -67,6 +67,7 @@ function makePreProofJoinSplit(
     receiver,
     refundAddr,
     senderCommitment,
+    publicSpend,
     ...baseJoinSplit
   } = preProofJoinSplit;
 
@@ -78,6 +79,20 @@ function makePreProofJoinSplit(
   const encodedOldNoteB = NoteTrait.encode(oldNoteB);
   const encodedNewNoteA = NoteTrait.encode(newNoteA);
   const encodedNewNoteB = NoteTrait.encode(newNoteB);
+
+  // if publicSpend is 0, hide the asset info by masking it to 0
+  const encodedAssetAddrWithSignBitsPub = encodeEncodedAssetAddrWithSignBitsPI(
+    publicSpend === 0n ? 0n : encodedNewNoteA.encodedAssetAddr,
+    refundAddr
+  );
+  const encodedAssetIdPub =
+    publicSpend === 0n ? 0n : encodedNewNoteA.encodedAssetId;
+  if (publicSpend === 0n) {
+    baseJoinSplit.encodedAsset = {
+      encodedAssetAddr: 0n,
+      encodedAssetId: 0n,
+    };
+  }
 
   const proofInputs: JoinSplitInputs = {
     vk: signer.vk,
@@ -93,10 +108,8 @@ function makePreProofJoinSplit(
     newNoteA: encodedNewNoteA,
     newNoteB: encodedNewNoteB,
     refundAddr,
-    encodedAssetAddrWithSignBitsPub: encodeEncodedAssetAddrWithSignBitsPI(
-      encodedNewNoteA.encodedAssetAddr,
-      refundAddr
-    ),
+    encodedAssetAddrWithSignBitsPub,
+    encodedAssetIdPub,
   };
 
   return {
@@ -104,6 +117,7 @@ function makePreProofJoinSplit(
     proofInputs,
     refundAddr,
     senderCommitment,
+    publicSpend,
     ...baseJoinSplit,
   };
 }
