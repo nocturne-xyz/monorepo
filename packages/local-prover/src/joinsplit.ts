@@ -5,7 +5,9 @@ import {
   JoinSplitInputs,
   JoinSplitProofWithPublicSignals,
   JoinSplitProver,
+  StealthAddressTrait,
   VerifyingKey,
+  decomposeCompressedPoint,
 } from "@nocturne-xyz/sdk";
 
 export class WasmJoinSplitProver implements JoinSplitProver {
@@ -35,9 +37,13 @@ export class WasmJoinSplitProver implements JoinSplitProver {
       merkleProofB,
       newNoteA,
       newNoteB,
-      encRandomness,
-      encodedAssetAddrWithSignBits,
+      refundAddr,
+      encodedAssetAddrWithSignBitsPub,
     } = inputs;
+
+    const [, refundAddrH1CompressedY] = decomposeCompressedPoint(refundAddr.h1);
+    const [, refundAddrH2CompressedY] = decomposeCompressedPoint(refundAddr.h2);
+    const decompressedRefundAddr = StealthAddressTrait.decompress(refundAddr);
 
     const signals = {
       userViewKey: vk,
@@ -45,11 +51,25 @@ export class WasmJoinSplitProver implements JoinSplitProver {
       spendPubKey: spendPk,
       userViewKeyNonce: vkNonce,
 
-      encodedAssetId: oldNoteA.encodedAssetId,
       operationDigest,
+
+      refundAddrH1CompressedY,
+      refundAddrH2CompressedY,
+
+      refundAddrH1X: decompressedRefundAddr.h1X,
+      refundAddrH1Y: decompressedRefundAddr.h1Y,
+      refundAddrH2X: decompressedRefundAddr.h2X,
+      refundAddrH2Y: decompressedRefundAddr.h2Y,
 
       c,
       z,
+
+      // TODO: when publicSpend is 0, mask pub asset info to 0
+      encodedAssetAddrWithSignBitsPub,
+      encodedAssetIdPub: oldNoteA.encodedAssetId,
+
+      encodedAssetAddr: oldNoteA.encodedAssetAddr,
+      encodedAssetId: oldNoteA.encodedAssetId,
 
       oldNoteAOwnerH1X: oldNoteA.owner.h1X,
       oldNoteAOwnerH1Y: oldNoteA.owner.h1Y,
@@ -75,9 +95,6 @@ export class WasmJoinSplitProver implements JoinSplitProver {
 
       receiverCanonAddr: [newNoteB.owner.h2X, newNoteB.owner.h2Y],
       newNoteBValue: newNoteB.value,
-
-      encRandomness,
-      encodedAssetAddrWithSignBits,
     };
 
     const proof = await snarkjs.groth16.fullProve(

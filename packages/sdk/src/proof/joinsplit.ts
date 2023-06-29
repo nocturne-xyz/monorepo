@@ -1,5 +1,5 @@
 import { decomposeCompressedPoint } from "../crypto";
-import { EncryptedCanonAddress } from "../crypto/address";
+import { CompressedStealthAddress } from "../crypto/address";
 import { EncodedNote } from "../primitives";
 import { BaseProof, MerkleProofInput } from "./types";
 
@@ -23,11 +23,12 @@ export interface JoinSplitProofWithPublicSignals {
     bigint, // publicSpend
     bigint, // nullifierA
     bigint, // nullifierB
-    bigint, // encSenderCanonAddrC1X
-    bigint, // encSenderCanonAddrC2X
+    bigint, // ssenderCommitment
     bigint, // operationDigest
-    bigint, // encodedAssetAddrWithSignBits
-    bigint // encodedAssetId
+    bigint, // refundAddrH1CompressedY
+    bigint, // refundAddrH2CompressedY
+    bigint, // encodedAssetAddrWithSignBitsPub
+    bigint // encodedAssetIdPub
   ];
 }
 
@@ -39,10 +40,11 @@ export interface JoinSplitPublicSignals {
   nullifierA: bigint;
   nullifierB: bigint;
   opDigest: bigint;
-  encodedAssetAddrWithSignBits: bigint;
-  encodedAssetId: bigint;
-  encSenderCanonAddrC1Y: bigint;
-  encSenderCanonAddrC2Y: bigint;
+  encodedAssetAddrWithSignBitsPub: bigint;
+  encodedAssetIdPub: bigint;
+  refundAddrH1CompressedY: bigint;
+  refundAddrH2CompressedY: bigint;
+  senderCommitment: bigint;
 }
 
 export interface JoinSplitInputs {
@@ -58,8 +60,8 @@ export interface JoinSplitInputs {
   merkleProofB: MerkleProofInput;
   newNoteA: EncodedNote;
   newNoteB: EncodedNote;
-  encRandomness: bigint;
-  encodedAssetAddrWithSignBits: bigint;
+  encodedAssetAddrWithSignBitsPub: bigint;
+  refundAddr: CompressedStealthAddress;
 }
 
 export function joinSplitPublicSignalsFromArray(
@@ -72,17 +74,19 @@ export function joinSplitPublicSignalsFromArray(
     publicSpend: publicSignals[3],
     nullifierA: publicSignals[4],
     nullifierB: publicSignals[5],
-    encSenderCanonAddrC1Y: publicSignals[6],
-    encSenderCanonAddrC2Y: publicSignals[7],
-    opDigest: publicSignals[8],
-    encodedAssetAddrWithSignBits: publicSignals[9],
-    encodedAssetId: publicSignals[10],
+    senderCommitment: publicSignals[6],
+    opDigest: publicSignals[7],
+    refundAddrH1CompressedY: publicSignals[8],
+    refundAddrH2CompressedY: publicSignals[9],
+    encodedAssetAddrWithSignBitsPub: publicSignals[10],
+    encodedAssetIdPub: publicSignals[11],
   };
 }
 
 export function joinSplitPublicSignalsToArray(
   publicSignals: JoinSplitPublicSignals
 ): [
+  bigint,
   bigint,
   bigint,
   bigint,
@@ -102,20 +106,21 @@ export function joinSplitPublicSignalsToArray(
     publicSignals.publicSpend,
     publicSignals.nullifierA,
     publicSignals.nullifierB,
-    publicSignals.encSenderCanonAddrC1Y,
-    publicSignals.encSenderCanonAddrC2Y,
+    publicSignals.senderCommitment,
     publicSignals.opDigest,
-    publicSignals.encodedAssetAddrWithSignBits,
-    publicSignals.encodedAssetId,
+    publicSignals.refundAddrH1CompressedY,
+    publicSignals.refundAddrH2CompressedY,
+    publicSignals.encodedAssetAddrWithSignBitsPub,
+    publicSignals.encodedAssetIdPub,
   ];
 }
 
 // encodedAssetAddr with the sign bits of the encrypted sender canon address placed at bits 248 and 249 (counting from LSB to MSB starting at 0)
 export function encodeEncodedAssetAddrWithSignBitsPI(
   encodedAssetAddr: bigint,
-  encSenderCanonAddr: EncryptedCanonAddress
+  refundAddr: CompressedStealthAddress
 ): bigint {
-  const [sign1] = decomposeCompressedPoint(encSenderCanonAddr.c1);
-  const [sign2] = decomposeCompressedPoint(encSenderCanonAddr.c2);
+  const [sign1] = decomposeCompressedPoint(refundAddr.h1);
+  const [sign2] = decomposeCompressedPoint(refundAddr.h2);
   return encodedAssetAddr | (BigInt(sign1) << 248n) | (BigInt(sign2) << 249n);
 }

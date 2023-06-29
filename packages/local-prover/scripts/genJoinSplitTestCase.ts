@@ -10,7 +10,6 @@ import {
   MerkleProofInput,
   EncodedNote,
   StealthAddressTrait,
-  randomFr,
   encodeEncodedAssetAddrWithSignBitsPI,
   TreeConstants,
 } from "@nocturne-xyz/sdk";
@@ -40,6 +39,10 @@ const vk = nocturneSigner.vk;
 const stealthAddrA = nocturneSigner.canonicalStealthAddress();
 const stealthAddrB = nocturneSigner.canonicalStealthAddress();
 const spendPk = nocturneSigner.spendPk;
+
+const refundAddr = StealthAddressTrait.compress(
+  nocturneSigner.generateRandomStealthAddress()
+);
 
 // Two old notes: 100 + 50 = 150
 const oldNoteA: EncodedNote = {
@@ -145,14 +148,6 @@ const operationDigest = BigInt(12345);
 const opSig = nocturneSigner.sign(operationDigest);
 console.log(opSig);
 
-const encRandomness = randomFr();
-const encSenderCanonAddr = nocturneSigner.encryptCanonAddrToReceiver(
-  nocturneSigner.canonicalAddress(),
-  encRandomness
-);
-
-console.log("encSenderCanonAddr", encSenderCanonAddr);
-
 const joinsplitInputs: JoinSplitInputs = {
   vk,
   vkNonce: nocturneSigner.vkNonce,
@@ -166,12 +161,13 @@ const joinsplitInputs: JoinSplitInputs = {
   newNoteB,
   merkleProofA: merkleProofAInput,
   merkleProofB: merkleProofBInput,
-  encRandomness,
-  encodedAssetAddrWithSignBits: encodeEncodedAssetAddrWithSignBitsPI(
+  refundAddr,
+  encodedAssetAddrWithSignBitsPub: encodeEncodedAssetAddrWithSignBitsPI(
     oldNoteA.encodedAssetAddr,
-    encSenderCanonAddr
+    refundAddr
   ),
 };
+
 console.log(joinsplitInputs);
 
 (async () => {

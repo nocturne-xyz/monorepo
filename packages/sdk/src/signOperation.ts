@@ -8,7 +8,6 @@ import {
 } from "./primitives";
 import { JoinSplitInputs } from "./proof";
 import { NocturneSignature, NocturneSigner } from "./crypto";
-import { randomFr } from "./crypto";
 import { encodeEncodedAssetAddrWithSignBitsPI } from "./proof/joinsplit";
 
 export function signOperation(
@@ -66,18 +65,14 @@ function makePreProofJoinSplit(
     newNoteA,
     newNoteB,
     receiver,
+    refundAddr,
+    senderCommitment,
     ...baseJoinSplit
   } = preProofJoinSplit;
 
   const { c, z } = opSig;
 
   const { x, y } = signer.spendPk;
-
-  const encRandomness = randomFr();
-  const encSenderCanonAddr = signer.encryptCanonAddrToReceiver(
-    receiver,
-    encRandomness
-  );
 
   const encodedOldNoteA = NoteTrait.encode(oldNoteA);
   const encodedOldNoteB = NoteTrait.encode(oldNoteB);
@@ -97,17 +92,18 @@ function makePreProofJoinSplit(
     oldNoteB: encodedOldNoteB,
     newNoteA: encodedNewNoteA,
     newNoteB: encodedNewNoteB,
-    encRandomness,
-    encodedAssetAddrWithSignBits: encodeEncodedAssetAddrWithSignBitsPI(
+    refundAddr,
+    encodedAssetAddrWithSignBitsPub: encodeEncodedAssetAddrWithSignBitsPI(
       encodedNewNoteA.encodedAssetAddr,
-      encSenderCanonAddr
+      refundAddr
     ),
   };
 
   return {
     opDigest,
     proofInputs,
-    encSenderCanonAddr,
+    refundAddr,
+    senderCommitment,
     ...baseJoinSplit,
   };
 }

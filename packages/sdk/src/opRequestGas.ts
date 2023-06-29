@@ -1,5 +1,5 @@
 import { Handler } from "@nocturne-xyz/contracts";
-import { NocturneViewer, StealthAddress } from "./crypto";
+import { NocturneViewer, StealthAddress, StealthAddressTrait } from "./crypto";
 import { NocturneDB } from "./NocturneDB";
 import {
   GasAccountedOperationRequest,
@@ -419,8 +419,13 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
       newNoteAEncrypted: joinSplit.newNoteAEncrypted,
       newNoteBEncrypted: joinSplit.newNoteBEncrypted,
       proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n] as SolidityProof,
-      encSenderCanonAddrC1: 0n,
-      encSenderCanonAddrC2: 0n,
+      senderCommitment: 0n,
+      refundAddr: StealthAddressTrait.compress(
+        StealthAddressTrait.fromPoints({
+          h1: { x: 0n, y: 1n },
+          h2: { x: 0n, y: 1n },
+        })
+      ),
     };
   });
   return {
