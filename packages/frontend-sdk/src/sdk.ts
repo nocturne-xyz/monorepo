@@ -30,6 +30,7 @@ import {
   joinSplitPublicSignalsToArray,
   proveOperation,
   unpackFromSolidityProof,
+  OperationStatusResponse,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction } from "ethers";
@@ -243,10 +244,7 @@ export class NocturneFrontendSDK {
     return await retry(
       async () => {
         const res = await fetch(
-          `${this.screenerEndpoint}/status/${depositHash}`,
-          {
-            method: "GET",
-          }
+          `${this.screenerEndpoint}/status/${depositHash}`
         );
         return (await res.json()) as DepositStatusResponse;
       },
@@ -419,6 +417,25 @@ export class NocturneFrontendSDK {
     })) as string;
 
     return JSON.parse(json) as OpDigestWithMetadata[];
+  }
+
+  /**
+   * Given an operation digest, fetches and returns the operation status, enum'd as OperationStatus.
+   */
+  async fetchBundlerOperationStatus(
+    opDigest: bigint
+  ): Promise<OperationStatusResponse> {
+    return await retry(
+      async () => {
+        const res = await fetch(
+          `${this.bundlerEndpoint}/operations/${opDigest}`
+        );
+        return (await res.json()) as OperationStatusResponse;
+      },
+      {
+        retries: 5,
+      }
+    );
   }
 
   /**
