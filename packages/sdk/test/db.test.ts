@@ -467,7 +467,14 @@ describe("NocturneDB", async () => {
       {
         expirationDate: 1234567890,
         merkleIndices,
-        metadata: { description: "" },
+        metadata: {
+          action: {
+            type: "Transfer",
+            recipientAddress: "0xdeadbeef",
+            erc20Address: shitcoin.assetAddr,
+            amount: 10n,
+          },
+        },
       },
       records
     );
