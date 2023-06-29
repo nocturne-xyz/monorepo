@@ -1,23 +1,23 @@
-import chai, { expect } from "chai";
-import chaiAsPromised from "chai-as-promised";
-import { setupTestDeployment, setupTestClient } from "../src/deploy";
-import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import {
-  Asset,
-  JoinSplitProver,
-  NocturneDB,
-  NocturneWalletSDK,
-  OperationAction,
-  OperationRequestBuilder,
-  computeOperationDigest,
-  proveOperation,
-} from "@nocturne-xyz/sdk";
-import { depositFundsSingleToken } from "../src/deposit";
 import {
   DepositManager,
   SimpleERC20Token__factory,
 } from "@nocturne-xyz/contracts";
+import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
+import {
+  ActionMetadata,
+  Asset,
+  JoinSplitProver,
+  NocturneDB,
+  NocturneWalletSDK,
+  OperationRequestBuilder,
+  computeOperationDigest,
+  proveOperation,
+} from "@nocturne-xyz/sdk";
+import chai, { expect } from "chai";
+import chaiAsPromised from "chai-as-promised";
 import { ethers } from "ethers";
+import { setupTestClient, setupTestDeployment } from "../src/deploy";
+import { depositFundsSingleToken } from "../src/deposit";
 import { ONE_DAY_SECONDS, submitAndProcessOperation } from "../src/utils";
 
 chai.use(chaiAsPromised);
@@ -115,7 +115,7 @@ describe("Optimistic nullifier tracking", () => {
     console.log("signedOp", signedOp);
 
     // apply op NFs
-    const action: OperationAction = {
+    const action: ActionMetadata = {
       type: "Transfer",
       erc20Address: erc20Asset.assetAddr,
       recipientAddress: eoa.address,
@@ -228,7 +228,7 @@ describe("Optimistic nullifier tracking", () => {
     console.log("signedOp", signedOp);
 
     // apply op NFs
-    const action: OperationAction = {
+    const action: ActionMetadata = {
       type: "Transfer",
       erc20Address: erc20Asset.assetAddr,
       recipientAddress: eoa.address,

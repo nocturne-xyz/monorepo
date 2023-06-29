@@ -4,6 +4,7 @@ import {
 } from "@nocturne-xyz/contracts";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
+  ActionMetadata,
   Address,
   AssetTrait,
   AssetType,
@@ -14,7 +15,6 @@ import {
   JoinSplitProofWithPublicSignals,
   OpDigestWithMetadata,
   OperationMetadata,
-  OperationAction,
   OperationRequest,
   OperationRequestBuilder,
   ProvenOperation,
@@ -220,7 +220,7 @@ export class NocturneFrontendSDK {
       .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
       .build();
 
-    const action: OperationAction = {
+    const action: ActionMetadata = {
       type: "Transfer",
       recipientAddress,
       erc20Address,

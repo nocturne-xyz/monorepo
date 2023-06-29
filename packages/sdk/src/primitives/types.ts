@@ -161,7 +161,7 @@ export interface OptimisticOpDigestRecord {
   metadata?: OperationMetadata;
 }
 
-export type OperationAction = {
+export type ActionMetadata = {
   type: "Transfer";
   recipientAddress: Address;
   erc20Address: Address;
@@ -169,7 +169,7 @@ export type OperationAction = {
 };
 
 export interface OperationMetadata {
-  action: OperationAction;
+  action: ActionMetadata;
 }
 
 export interface OpDigestWithMetadata {
