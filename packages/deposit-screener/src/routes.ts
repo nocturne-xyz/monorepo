@@ -42,6 +42,7 @@ export function makeDepositStatusHandler({
       };
 
       res.json(response);
+      return;
     }
 
     let delay: number;
@@ -51,9 +52,9 @@ export function makeDepositStatusHandler({
         depositHash
       );
     } catch (err) {
-      logger.warn(err);
+      logger.warn({ err });
       res.statusMessage = "Internal Server Error";
-      res.status(500);
+      res.status(500).json({ err });
       return;
     }
 

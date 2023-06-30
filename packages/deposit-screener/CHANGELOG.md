@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- fix bug where res.json(...) in deposit DNE case was not returning immediately after
+- fix bug where screener method to find closest job doesn't use our bigint JSON library
+- return errors to user in screener server /quote
 - use tx manager
 - return successfully with deposit status `DoesNotExist` if the given deposit request DNE
 - use error code 500, not 400 for wait estimation failures
