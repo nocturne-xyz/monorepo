@@ -130,7 +130,14 @@ describe("gatherNotes", () => {
       {
         expirationDate: Date.now() + 1_000_000,
         merkleIndices: [0],
-        metadata: { description: "" },
+        metadata: {
+          action: {
+            type: "Transfer",
+            recipientAddress: "0xdeadbeef",
+            erc20Address: shitcoin.assetAddr,
+            amount: 10n,
+          },
+        },
       },
       [{ nullifier: 420n }]
     );

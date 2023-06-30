@@ -4,6 +4,7 @@ import {
 } from "@nocturne-xyz/contracts";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
+  ActionMetadata,
   Address,
   AssetTrait,
   AssetType,
@@ -29,6 +30,7 @@ import {
   joinSplitPublicSignalsToArray,
   proveOperation,
   unpackFromSolidityProof,
+  OperationStatusResponse,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction } from "ethers";
@@ -49,11 +51,6 @@ export type BundlerOperationID = string;
 export interface Endpoints {
   screenerEndpoint: string;
   bundlerEndpoint: string;
-}
-
-export interface HumanReadableInfo {
-  ticker: string;
-  humanReadableAmount: number;
 }
 
 export class NocturneFrontendSDK {
@@ -194,8 +191,7 @@ export class NocturneFrontendSDK {
   async anonTransferErc20(
     erc20Address: Address,
     amount: bigint,
-    recipientAddress: Address,
-    humanReadableInfo?: HumanReadableInfo
+    recipientAddress: Address
   ): Promise<BundlerOperationID> {
     const signer = await getWindowSigner();
     const provider = signer.provider;
@@ -224,21 +220,15 @@ export class NocturneFrontendSDK {
       .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
       .build();
 
-    // Fetch ticker and human readable amount from chain if not provided
-    if (!humanReadableInfo) {
-      const ticker: string = await erc20Contract.symbol();
-      const decimals = Number(await erc20Contract.decimals());
-      humanReadableInfo = {
-        ticker,
-        humanReadableAmount: Number(amount) / decimals,
-      };
-    }
-
-    const { ticker, humanReadableAmount } = humanReadableInfo;
-    const description = `Transfer ${humanReadableAmount} ${ticker} to ${recipientAddress}`;
+    const action: ActionMetadata = {
+      type: "Transfer",
+      recipientAddress,
+      erc20Address,
+      amount,
+    };
 
     const provenOperation = await this.signAndProveOperation(operationRequest, {
-      description,
+      action,
     });
     return this.submitProvenOperation(provenOperation);
   }
@@ -254,10 +244,7 @@ export class NocturneFrontendSDK {
     return await retry(
       async () => {
         const res = await fetch(
-          `${this.screenerEndpoint}/status/${depositHash}`,
-          {
-            method: "GET",
-          }
+          `${this.screenerEndpoint}/status/${depositHash}`
         );
         return (await res.json()) as DepositStatusResponse;
       },
@@ -430,6 +417,25 @@ export class NocturneFrontendSDK {
     })) as string;
 
     return JSON.parse(json) as OpDigestWithMetadata[];
+  }
+
+  /**
+   * Given an operation digest, fetches and returns the operation status, enum'd as OperationStatus.
+   */
+  async fetchBundlerOperationStatus(
+    opDigest: bigint
+  ): Promise<OperationStatusResponse> {
+    return await retry(
+      async () => {
+        const res = await fetch(
+          `${this.bundlerEndpoint}/operations/${opDigest}`
+        );
+        return (await res.json()) as OperationStatusResponse;
+      },
+      {
+        retries: 5,
+      }
+    );
   }
 
   /**
