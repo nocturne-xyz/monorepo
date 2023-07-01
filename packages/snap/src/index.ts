@@ -19,6 +19,7 @@ import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import { panel, text, heading } from "@metamask/snaps-ui";
 import { createLogger } from "winston";
 import BrowserConsoleTransport from "winston-transport-browserconsole";
+import { GetNotesOpts } from "@nocturne-xyz/sdk/dist/src/NocturneDB";
 
 // Local
 const RPC_URL = "http://127.0.0.1:8545/";
@@ -112,7 +113,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     case "nocturne_getAllBalances":
       console.log("Syncing...");
       await sdk.sync();
-      return JSON.stringify(await sdk.getAllAssetBalances());
+      return JSON.stringify(
+        await sdk.getAllAssetBalances(request.params as unknown as GetNotesOpts) // yikes typing
+      );
     case "nocturne_sync":
       try {
         // set `skipMerkle` to true because we're not using the merkle tree during this RPC call

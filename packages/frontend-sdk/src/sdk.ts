@@ -387,14 +387,28 @@ export class NocturneFrontendSDK {
 
   /**
    * Return a list of snap's assets (address & id) along with its given balance.
+   * if includeUncommitted is defined and true, then the method include notes that are not yet committed to the commitment tree
+   * if ignoreOptimisticNFs is defined and true, then the method will include notes that have been used by the SDK, but may not have been nullified on-chain yet
+   * if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
    */
-  async getAllBalances(): Promise<AssetWithBalance[]> {
+  async getAllBalances({
+    includeUncommitted = false,
+    ignoreOptimisticNFs = false,
+  } = {}): Promise<AssetWithBalance[]> {
+    console.log("[fe-sdk] getAllBalances with params:", {
+      includeUncommitted,
+      ignoreOptimisticNFs,
+    });
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
           method: "nocturne_getAllBalances",
+          params: {
+            includeUncommitted,
+            ignoreOptimisticNFs,
+          },
         },
       },
     })) as string;
