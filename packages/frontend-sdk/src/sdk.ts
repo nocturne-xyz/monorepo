@@ -395,20 +395,18 @@ export class NocturneFrontendSDK {
     includeUncommitted = false,
     ignoreOptimisticNFs = false,
   } = {}): Promise<AssetWithBalance[]> {
-    console.log("[fe-sdk] getAllBalances with params:", {
+    const params = {
       includeUncommitted,
       ignoreOptimisticNFs,
-    });
+    };
+    console.log("[fe-sdk] getAllBalances with params:", params);
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
           method: "nocturne_getAllBalances",
-          params: {
-            includeUncommitted,
-            ignoreOptimisticNFs,
-          },
+          params,
         },
       },
     })) as string;
