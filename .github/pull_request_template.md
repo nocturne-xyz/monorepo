@@ -33,3 +33,11 @@ tested your solution and it works.
 - [ ] Tested in dev/testnet
 - [ ] Tested site with snap (we haven't automated this yet)
 - [ ] Re-built & tested circuits if any of them changed
+
+If you published snap, ensure you:
+- [ ] ran `yarn clean && yarn build` first
+- [ ] set hardcoded environment, including:
+  - [ ] RPC URL
+  - [ ] Subgraph URL
+  - [ ] Bundler URL
+  - [ ] config name
