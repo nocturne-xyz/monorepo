@@ -70,7 +70,6 @@ export class SubtreeUpdater {
 
   fillBatchTimeout: NodeJS.Timeout | undefined;
   fillBatchLatency: number | undefined;
-  startBlock: number;
   metrics: SubtreeUpdaterMetrics;
 
   constructor(
@@ -99,8 +98,6 @@ export class SubtreeUpdater {
     // TODO make this a redis KV store
     const kv = new InMemoryKVStore();
     this.tree = new SparseMerkleProver(kv);
-
-    this.startBlock = opts?.startBlock ?? 0;
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
     const createCounter = makeCreateCounterFn(
@@ -350,8 +347,8 @@ export class SubtreeUpdater {
     );
 
     return allInsertions
-      .tap(({ merkleIndex, ...insertion }) => {
-        logger.debug(`got insertion at merkleIndex ${merkleIndex}`, {
+      .tap((insertion) => {
+        logger.debug(`got insertion at merkleIndex ${insertion.merkleIndex}`, {
           insertion,
         });
 
