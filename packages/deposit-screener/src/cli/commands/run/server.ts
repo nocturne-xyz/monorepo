@@ -3,8 +3,11 @@ import { DepositScreenerServer } from "../../../server";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { getRedis } from "./utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
-import { DummyScreeningApi } from "../../../screening";
-import { DummyScreenerDelayCalculator } from "../../../screenerDelay";
+import { DummyScreeningApi, ScreeningApi } from "../../../screening";
+import {
+  DummyScreenerDelayCalculator,
+  ScreenerDelayCalculator,
+} from "../../../screenerDelay";
 
 const runServer = new Command("server")
   .summary("run deposit screener server")
@@ -40,11 +43,6 @@ const runServer = new Command("server")
 
     const { configNameOrPath, port, logDir, stdoutLogLevel } = options;
 
-    let dummyScreeningDelay: number | undefined;
-    if (env === "local" || env == "development") {
-      ({ dummyScreeningDelay } = options);
-    }
-
     const config = loadNocturneConfig(configNameOrPath);
 
     const supportedAssetRateLimits = new Map(
@@ -53,6 +51,18 @@ const runServer = new Command("server")
         BigInt(config.globalCapWholeTokens) * 10n ** config.precision,
       ])
     );
+
+    let screeningApi: ScreeningApi;
+    let screeningDelayCalculator: ScreenerDelayCalculator;
+    if (env === "local" || env == "development") {
+      const { dummyScreeningDelay } = options;
+      screeningApi = new DummyScreeningApi();
+      screeningDelayCalculator = new DummyScreenerDelayCalculator(
+        dummyScreeningDelay
+      );
+    } else {
+      throw new Error(`Not currently supporting non-dummy screening`);
+    }
 
     console.log("making logger");
     const logger = makeLogger(
@@ -65,8 +75,8 @@ const runServer = new Command("server")
       logger,
       getRedis(),
       // TODO: use real screening api and delay calculator
-      new DummyScreeningApi(),
-      new DummyScreenerDelayCalculator(dummyScreeningDelay),
+      screeningApi,
+      screeningDelayCalculator,
       supportedAssetRateLimits
     );
 

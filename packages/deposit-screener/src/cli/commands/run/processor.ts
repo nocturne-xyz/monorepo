@@ -5,8 +5,11 @@ import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
-import { DummyScreeningApi } from "../../../screening";
-import { DummyScreenerDelayCalculator } from "../../../screenerDelay";
+import { DummyScreeningApi, ScreeningApi } from "../../../screening";
+import {
+  DummyScreenerDelayCalculator,
+  ScreenerDelayCalculator,
+} from "../../../screenerDelay";
 import { getRedis } from "./utils";
 
 const runProcess = new Command("processor")
@@ -46,11 +49,6 @@ const runProcess = new Command("processor")
     }
 
     const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
-
-    let dummyScreeningDelay: number | undefined;
-    if (env === "local" || env == "development") {
-      ({ dummyScreeningDelay } = options);
-    }
 
     const logger = makeLogger(
       logDir,
@@ -94,6 +92,18 @@ const runProcess = new Command("processor")
       Array.from(config.erc20s.values()).map(({ address }) => address)
     );
 
+    let screeningApi: ScreeningApi;
+    let screeningDelayCalculator: ScreenerDelayCalculator;
+    if (env === "local" || env == "development") {
+      const { dummyScreeningDelay } = options;
+      screeningApi = new DummyScreeningApi();
+      screeningDelayCalculator = new DummyScreenerDelayCalculator(
+        dummyScreeningDelay
+      );
+    } else {
+      throw new Error(`Not currently supporting non-dummy screening`);
+    }
+
     const screener = new DepositScreenerScreener(
       adapter,
       config.depositManagerAddress(),
@@ -101,8 +111,8 @@ const runProcess = new Command("processor")
       getRedis(),
       logger,
       // TODO: use real screening api and delay calculator
-      new DummyScreeningApi(),
-      new DummyScreenerDelayCalculator(dummyScreeningDelay),
+      screeningApi,
+      screeningDelayCalculator,
       supportedAssets,
       config.contracts.startBlock
     );
