@@ -339,15 +339,15 @@ export class TestActor {
         `successfully submitted operation with digest ${opDigest}`
       );
 
-	const labels = {
-      spender: this.txSigner.address,
-      assetAddr: asset.assetAddr,
-    };
-    this.metrics.dispatchedOperationsCounter.add(1, labels);
-    this.metrics.dispatchedOperationsValueOutHistogram.record(
-      Number(value),
-      labels
-    ); // we assume we cap max deposit size to be < 2^53
+      const labels = {
+        spender: this.txSigner.address,
+        assetAddr: asset.assetAddr,
+      };
+      this.metrics.dispatchedOperationsCounter.add(1, labels);
+      this.metrics.dispatchedOperationsValueOutHistogram.record(
+        Number(value),
+        labels
+      ); // we assume we cap max deposit size to be < 2^53
 
       return true;
     } catch (err) {
