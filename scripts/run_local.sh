@@ -134,6 +134,8 @@ yarn start &
 SNAP_PID=$!
 popd
 
+ENVIRONMENT="local"
+
 # bundler default config variables
 BUNDLER_REDIS_URL="redis://redis:6379"
 REDIS_PASSWORD="baka"
@@ -185,6 +187,8 @@ echo "bundler running at PID: $BUNDLER_PID"
 # write screener's .env file
 pushd packages/deposit-screener
 cat > .env <<- EOM
+ENVIRONMENT=$ENVIRONMENT
+
 REDIS_URL=$SCREENER_REDIS_URL
 REDIS_PASSWORD=$REDIS_PASSWORD
 

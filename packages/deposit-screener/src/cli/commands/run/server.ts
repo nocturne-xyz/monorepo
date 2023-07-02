@@ -9,7 +9,7 @@ import { DummyScreenerDelayCalculator } from "../../../screenerDelay";
 const runServer = new Command("server")
   .summary("run deposit screener server")
   .description(
-    "must supply .env file with REDIS_URL and REDIS_PASSWORD. must supply config-name-or-path and port as options."
+    "must supply .env file with ENVIRONMENT, REDIS_URL, and REDIS_PASSWORD. must supply config-name-or-path and port as options."
   )
   .requiredOption(
     "--config-name-or-path <string>",
@@ -30,12 +30,12 @@ const runServer = new Command("server")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
-    const env = process.env.ENVIROMENT;
+    const env = process.env.ENVIRONMENT;
     if (!env) {
-      throw new Error("ENVIROMENT env var not set");
+      throw new Error("ENVIRONMENT env var not set");
     }
     if (env !== "production" && env !== "development" && env !== "local") {
-      throw new Error(`ENVIROMENT env var set to invalid value: ${env}`);
+      throw new Error(`ENVIRONMENT env var set to invalid value: ${env}`);
     }
 
     const { configNameOrPath, port, logDir, stdoutLogLevel } = options;

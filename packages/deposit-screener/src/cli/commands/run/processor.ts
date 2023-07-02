@@ -12,7 +12,7 @@ import { getRedis } from "./utils";
 const runProcess = new Command("processor")
   .summary("process deposit requests")
   .description(
-    "must supply the following environment variables: REDIS_URL, REDIS_PASSWORD, RPC_URL, and SUBGRAPH_URL. must supply config-name-or-path as option"
+    "must supply the following environment variables: ENVIRONMENT, REDIS_URL, REDIS_PASSWORD, RPC_URL, and SUBGRAPH_URL. must supply config-name-or-path as option"
   )
   .requiredOption(
     "--config-name-or-path <string>",
@@ -37,12 +37,12 @@ const runProcess = new Command("processor")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
-    const env = process.env.ENVIROMENT;
+    const env = process.env.ENVIRONMENT;
     if (!env) {
-      throw new Error("ENVIROMENT env var not set");
+      throw new Error("ENVIRONMENT env var not set");
     }
     if (env !== "production" && env !== "development" && env !== "local") {
-      throw new Error(`ENVIROMENT env var set to invalid value: ${env}`);
+      throw new Error(`ENVIRONMENT env var set to invalid value: ${env}`);
     }
 
     const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
