@@ -3,13 +3,16 @@ import { DepositScreenerServer } from "../../../server";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { getRedis } from "./utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
-import { DummyScreeningApi } from "../../../screening";
-import { DummyScreenerDelayCalculator } from "../../../screenerDelay";
+import { DummyScreeningApi, ScreeningApi } from "../../../screening";
+import {
+  DummyScreenerDelayCalculator,
+  ScreenerDelayCalculator,
+} from "../../../screenerDelay";
 
 const runServer = new Command("server")
   .summary("run deposit screener server")
   .description(
-    "must supply .env file with REDIS_URL and REDIS_PASSWORD. must supply config-name-or-path and port as options."
+    "must supply .env file with ENVIRONMENT, REDIS_URL, and REDIS_PASSWORD. must supply config-name-or-path and port as options."
   )
   .requiredOption(
     "--config-name-or-path <string>",
@@ -21,14 +24,6 @@ const runServer = new Command("server")
     "dummy screening delay in seconds (test purposes only)"
   )
   .option(
-    "--dummy-magic-long-delay-value <number>",
-    "dummy magic value that results in long delay (test purposes only)"
-  )
-  .option(
-    "--dummy-magic-rejection-value <number>",
-    "dummy magic deposit value that results in deposit being rejected (test purposes only)"
-  )
-  .option(
     "--log-dir <string>",
     "directory to write logs to",
     "./logs/deposit-screener"
@@ -38,15 +33,16 @@ const runServer = new Command("server")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
-    const {
-      configNameOrPath,
-      port,
-      dummyScreeningDelay,
-      dummyMagicLongDelayValue,
-      dummyMagicRejectionValue,
-      logDir,
-      stdoutLogLevel,
-    } = options;
+    const env = process.env.ENVIRONMENT;
+    if (!env) {
+      throw new Error("ENVIRONMENT env var not set");
+    }
+    if (env !== "production" && env !== "development" && env !== "local") {
+      throw new Error(`ENVIRONMENT env var set to invalid value: ${env}`);
+    }
+
+    const { configNameOrPath, port, logDir, stdoutLogLevel } = options;
+
     const config = loadNocturneConfig(configNameOrPath);
 
     const supportedAssetRateLimits = new Map(
@@ -55,6 +51,18 @@ const runServer = new Command("server")
         BigInt(config.globalCapWholeTokens) * 10n ** config.precision,
       ])
     );
+
+    let screeningApi: ScreeningApi;
+    let screeningDelayCalculator: ScreenerDelayCalculator;
+    if (env === "local" || env == "development") {
+      const { dummyScreeningDelay } = options;
+      screeningApi = new DummyScreeningApi();
+      screeningDelayCalculator = new DummyScreenerDelayCalculator(
+        dummyScreeningDelay
+      );
+    } else {
+      throw new Error(`Not currently supporting non-dummy screening`);
+    }
 
     console.log("making logger");
     const logger = makeLogger(
@@ -67,11 +75,8 @@ const runServer = new Command("server")
       logger,
       getRedis(),
       // TODO: use real screening api and delay calculator
-      new DummyScreeningApi(dummyMagicRejectionValue),
-      new DummyScreenerDelayCalculator(
-        dummyScreeningDelay,
-        dummyMagicLongDelayValue
-      ),
+      screeningApi,
+      screeningDelayCalculator,
       supportedAssetRateLimits
     );
 
