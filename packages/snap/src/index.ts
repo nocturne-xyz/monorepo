@@ -19,19 +19,13 @@ import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import { panel, text, heading } from "@metamask/snaps-ui";
 import { createLogger } from "winston";
 import BrowserConsoleTransport from "winston-transport-browserconsole";
+import { GetNotesOpts } from "@nocturne-xyz/sdk/dist/src/NocturneDB";
 
 // Local
-const RPC_URL = "http://127.0.0.1:8545/";
-const BUNDLER_URL = "http://127.0.0.1:3000";
-const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne";
-const LOG_LEVEL = "debug";
-const config = loadNocturneConfigBuiltin("localhost");
-
-const logger = createLogger({
-  exceptionHandlers: [new BrowserConsoleTransport()],
-  rejectionHandlers: [new BrowserConsoleTransport()],
-  transports: [new BrowserConsoleTransport({ level: LOG_LEVEL })],
-});
+// const RPC_URL = "http://127.0.0.1:8545/";
+// const BUNDLER_URL = "http://127.0.0.1:3000";
+// const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne";
+// const config = loadNocturneConfigBuiltin("localhost");
 
 /**  https://docs.metamask.io/snaps/how-to/develop-a-snap/#publish-your-snap
  * At runtime, snaps are pulled down + installed from npm by the MM extension, where we have no control over environment.
@@ -42,12 +36,20 @@ const logger = createLogger({
  */
 // todo after ~6/27ish, change snap's "@nocturne-xyz/sdk" dep to workspace:^
 // Sepolia
-// const RPC_URL =
-//   "https://eth-sepolia.g.alchemy.com/v2/0xjMuoUbPaLxWwD9EqOUFoJTuRh7qh0t";
-// const BUNDLER_URL = "https://bundler.nocturnelabs.xyz";
-// const SUBGRAPH_API_URL =
-//   "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.18-alpha/gn";
-// const config = loadNocturneConfigBuiltin("sepolia");
+const RPC_URL =
+  "https://eth-sepolia.g.alchemy.com/v2/0xjMuoUbPaLxWwD9EqOUFoJTuRh7qh0t";
+const BUNDLER_URL = "https://bundler.nocturnelabs.xyz";
+const SUBGRAPH_API_URL =
+  "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.18-alpha/gn";
+const config = loadNocturneConfigBuiltin("sepolia");
+
+// logger
+const LOG_LEVEL = "debug";
+const logger = createLogger({
+  exceptionHandlers: [new BrowserConsoleTransport()],
+  rejectionHandlers: [new BrowserConsoleTransport()],
+  transports: [new BrowserConsoleTransport({ level: LOG_LEVEL })],
+});
 
 const Fr = BabyJubJub.ScalarField;
 
@@ -112,7 +114,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     case "nocturne_getAllBalances":
       console.log("Syncing...");
       await sdk.sync();
-      return JSON.stringify(await sdk.getAllAssetBalances());
+      return JSON.stringify(
+        await sdk.getAllAssetBalances(request.params as unknown as GetNotesOpts) // yikes typing
+      );
     case "nocturne_sync":
       try {
         // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
