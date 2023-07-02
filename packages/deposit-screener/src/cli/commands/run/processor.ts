@@ -23,14 +23,6 @@ const runProcess = new Command("processor")
     "dummy screening delay in seconds (test purposes only)"
   )
   .option(
-    "--dummy-magic-long-delay-value <number>",
-    "dummy magic value that results in long delay (test purposes only)"
-  )
-  .option(
-    "--dummy-magic-rejection-value <number>",
-    "dummy magic deposit value that results in deposit being rejected (test purposes only)"
-  )
-  .option(
     "--log-dir <string>",
     "directory to write logs to",
     "./logs/deposit-screener-processor"
@@ -45,15 +37,20 @@ const runProcess = new Command("processor")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
-    const {
-      configNameOrPath,
-      dummyScreeningDelay,
-      dummyMagicLongDelayValue,
-      dummyMagicRejectionValue,
-      logDir,
-      throttleMs,
-      stdoutLogLevel,
-    } = options;
+    const env = process.env.ENVIROMENT;
+    if (!env) {
+      throw new Error("ENVIROMENT env var not set");
+    }
+    if (env !== "production" && env !== "development" && env !== "local") {
+      throw new Error(`ENVIROMENT env var set to invalid value: ${env}`);
+    }
+
+    const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
+
+    let dummyScreeningDelay: number | undefined;
+    if (env === "local" || env == "development") {
+      ({ dummyScreeningDelay } = options);
+    }
 
     const logger = makeLogger(
       logDir,
@@ -104,11 +101,8 @@ const runProcess = new Command("processor")
       getRedis(),
       logger,
       // TODO: use real screening api and delay calculator
-      new DummyScreeningApi(dummyMagicRejectionValue),
-      new DummyScreenerDelayCalculator(
-        dummyScreeningDelay,
-        dummyMagicLongDelayValue
-      ),
+      new DummyScreeningApi(),
+      new DummyScreenerDelayCalculator(dummyScreeningDelay),
       supportedAssets,
       config.contracts.startBlock
     );

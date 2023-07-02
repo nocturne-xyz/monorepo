@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- delete all dummy magic values and hardcode into dummy impls
+- add ENVIRONMENT env var to make sure we don't use dev values in production
 - fix bug where res.json(...) in deposit DNE case was not returning immediately after
 - fix bug where screener method to find closest job doesn't use our bigint JSON library
 - return errors to user in screener server /quote

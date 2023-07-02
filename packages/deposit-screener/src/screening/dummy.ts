@@ -2,13 +2,7 @@ import { Address } from "@nocturne-xyz/sdk";
 import { ScreeningApi } from ".";
 
 export class DummyScreeningApi implements ScreeningApi {
-  magicRejectionValue?: bigint;
-
-  constructor(magicRejectionValue?: number) {
-    if (magicRejectionValue) {
-      this.magicRejectionValue = BigInt(magicRejectionValue);
-    }
-  }
+  magicRejectionValue = 30303000000000000n; // 0.030303 for 18 decimals
 
   async isSafeDepositRequest(
     spender: Address,
