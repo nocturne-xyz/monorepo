@@ -127,6 +127,7 @@ export class NocturneWalletSDK {
       return {
         asset,
         balance,
+        numNotes: notes.length,
       };
     });
   }

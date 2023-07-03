@@ -117,6 +117,7 @@ async function prepareJoinSplits(
 
   const receiver = joinSplitRequest.payment?.receiver;
 
+  console.log(`getting joinsplits from notes. Num notes: ${notes.length}`);
   return getJoinSplitsFromNotes(
     viewer,
     merkle,

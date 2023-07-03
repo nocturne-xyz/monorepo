@@ -127,7 +127,7 @@ export class TestActor {
       const balances = await this.sdk.getAllAssetBalances();
       this.logger.info("balances: ", balances);
 
-      if (batchEvery && i % batchEvery === 0) {
+      if (batchEvery && i !== 0 && i % batchEvery === 0) {
         this.logger.info("performing 8 operations to fill a bundle");
         for (let j = 0; j < 8; j++) {
           await this.randomOperation();
@@ -172,13 +172,13 @@ export class TestActor {
 
     // If random chosen doesn't have any funds, find the first one with funds
     if (randomAsset.balance > 0) {
-      const maxValue = min(randomAsset.balance / 1000n, ONE_ETH_IN_WEI);
+      const maxValue = min(randomAsset.balance / 1_000_000n, 1_000_000n);
       const value = randomBigIntBounded(maxValue);
       return [randomAsset.asset, value];
     } else {
       for (const asset of assetsWithBalance) {
         if (asset.balance > 0) {
-          const maxValue = min(randomAsset.balance / 1000n, ONE_ETH_IN_WEI);
+          const maxValue = min(randomAsset.balance / 1_000_000n, 1_000_000n);
           const value = randomBigIntBounded(maxValue);
           return [asset.asset, value];
         }
