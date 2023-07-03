@@ -106,8 +106,11 @@ template JoinSplit(levels) {
     // check old note owners are composed of valid babyjubjub points
     BabyCheck()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y);
     BabyCheck()(oldNoteAOwnerH2X, oldNoteAOwnerH2Y);
+    IsOrderGreaterThan8()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y);
+
     BabyCheck()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
     BabyCheck()(oldNoteBOwnerH2X, oldNoteBOwnerH2Y);
+    IsOrderGreaterThan8()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
 
     // get encodedAssetAddr and sign bits out of encodedAssetAddrWithSignBits
     // don't need Num2Bits_strict here because it's only 253 bits
