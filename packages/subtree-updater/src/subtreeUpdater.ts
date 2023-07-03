@@ -136,6 +136,11 @@ export class SubtreeUpdater {
       for await (const job of proofJobs.iter) {
         const latestSubtreeIndex = await this.adapter.fetchLatestSubtreeIndex(); // update latest subtree index
 
+        // Ignore if job is for old subtree index
+        if (latestSubtreeIndex && job.subtreeIndex < latestSubtreeIndex) {
+          continue;
+        }
+
         await this.proofQueue.add(PROOF_JOB_TAG, JSON.stringify(job));
 
         // If this is not the first subtree, mark tree for pruning
