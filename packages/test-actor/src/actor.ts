@@ -317,7 +317,9 @@ export class TestActor {
       });
 
       // submit
-      this.logger.info(`submitting operation with digest ${opDigest}`);
+      this.logger.info(`submitting operation with digest ${opDigest}`, {
+        operation: proven,
+      });
       const res = await fetch(`${this.bundlerEndpoint}/relay`, {
         method: "POST",
         headers: {
