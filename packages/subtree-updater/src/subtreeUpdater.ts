@@ -143,7 +143,6 @@ export class SubtreeUpdater {
 
         await this.proofQueue.add(PROOF_JOB_TAG, JSON.stringify(job));
 
-        // If this is not the first subtree, mark tree for pruning
         if (latestSubtreeIndex && job.subtreeIndex > latestSubtreeIndex) {
           // mark leftmost leaf of subtree as ready for prune now that job has been queued
           this.tree.markForPruning(job.subtreeIndex * BATCH_SIZE);
