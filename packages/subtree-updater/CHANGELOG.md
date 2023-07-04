@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add metrics
 - use tx manager
 - iterate over `PersistentLog` first, then start pulling from subgraph
 - add `PersistentLog`

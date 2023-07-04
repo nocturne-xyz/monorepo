@@ -1,5 +1,7 @@
 import { BaseProof, SubtreeUpdateInputs } from "@nocturne-xyz/sdk";
 
+export const ACTOR_NAME = "subtree-updater";
+
 export interface ProofJobData {
   subtreeIndex: number;
   newRoot: bigint;

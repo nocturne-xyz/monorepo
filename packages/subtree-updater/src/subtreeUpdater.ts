@@ -18,6 +18,7 @@ import { Mutex } from "async-mutex";
 import IORedis from "ioredis";
 import { Job, Queue, Worker } from "bullmq";
 import {
+  ACTOR_NAME,
   ProofJobData,
   SerializedProofJobData,
   SerializedSubmissionJobData,
@@ -25,12 +26,15 @@ import {
 } from "./types";
 import { Handler } from "@nocturne-xyz/contracts";
 import * as JSON from "bigint-json-serialization";
-import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import { ActorHandle, makeCreateCounterFn } from "@nocturne-xyz/offchain-utils";
+import * as ot from "@opentelemetry/api";
 import { Insertion } from "./sync/syncAdapter";
 import { PersistentLog } from "./persistentLog";
 import * as txManager from "@nocturne-xyz/tx-manager";
 
 const { BATCH_SIZE } = TreeConstants;
+
+const COMPONENT_NAME = "subtree-updater";
 
 const PROOF_QUEUE_NAME = "PROOF_QUEUE";
 const PROOF_JOB_TAG = "PROOF_JOB";
@@ -41,6 +45,13 @@ const SUBTREE_INCLUDE_ARRAY = [true, ...range(BATCH_SIZE - 1).map(() => false)];
 
 export interface SubtreeUpdaterOpts {
   fillBatchLatency?: number;
+}
+
+interface SubtreeUpdaterMetrics {
+  insertionsReceivedCounter: ot.Counter;
+  proofJobsEnqueuedCounter: ot.Counter;
+  submissionJobsEnqueuedCounter: ot.Counter;
+  subtreeUpdatesSubmittedCounter: ot.Counter;
 }
 
 export class SubtreeUpdater {
@@ -59,6 +70,7 @@ export class SubtreeUpdater {
 
   fillBatchTimeout: NodeJS.Timeout | undefined;
   fillBatchLatency: number | undefined;
+  metrics: SubtreeUpdaterMetrics;
 
   constructor(
     handlerContract: Handler,
@@ -86,6 +98,32 @@ export class SubtreeUpdater {
     // TODO make this a redis KV store
     const kv = new InMemoryKVStore();
     this.tree = new SparseMerkleProver(kv);
+
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createCounter = makeCreateCounterFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+
+    this.metrics = {
+      insertionsReceivedCounter: createCounter(
+        "insertions_received.counter",
+        "Insertions received by proof job iterator"
+      ),
+      proofJobsEnqueuedCounter: createCounter(
+        "proof_jobs_enqueued.counter",
+        "Proof jobs enqueued for proving"
+      ),
+      submissionJobsEnqueuedCounter: createCounter(
+        "submission_jobs_enqueued.counter",
+        "Proven subtree updates enqueued for submission"
+      ),
+      subtreeUpdatesSubmittedCounter: createCounter(
+        "subtree_updates_submitted.counter",
+        "Subtree update txs submitted to chain"
+      ),
+    };
   }
 
   async start(queryThrottleMs?: number): Promise<ActorHandle> {
@@ -98,17 +136,20 @@ export class SubtreeUpdater {
       for await (const job of proofJobs.iter) {
         const latestSubtreeIndex = await this.adapter.fetchLatestSubtreeIndex(); // update latest subtree index
 
-        // If this is the first proof ever, enqueue
-        if (!latestSubtreeIndex) {
-          await this.proofQueue.add(PROOF_JOB_TAG, JSON.stringify(job));
-        } else if (job.subtreeIndex > latestSubtreeIndex) {
-          // If job is for new subtree, enqueue
-          await this.proofQueue.add(PROOF_JOB_TAG, JSON.stringify(job));
+        // Ignore if job is for old subtree index
+        if (latestSubtreeIndex && job.subtreeIndex < latestSubtreeIndex) {
+          continue;
+        }
 
+        await this.proofQueue.add(PROOF_JOB_TAG, JSON.stringify(job));
+
+        if (latestSubtreeIndex && job.subtreeIndex > latestSubtreeIndex) {
           // mark leftmost leaf of subtree as ready for prune now that job has been queued
           this.tree.markForPruning(job.subtreeIndex * BATCH_SIZE);
           this.tree.prune();
         }
+
+        this.metrics.proofJobsEnqueuedCounter.add(1);
       }
     };
 
@@ -205,6 +246,8 @@ export class SubtreeUpdater {
           SUBMISSION_JOB_TAG,
           JSON.stringify(jobData)
         );
+
+        this.metrics.submissionJobsEnqueuedCounter.add(1);
       },
       {
         connection: this.redis,
@@ -260,6 +303,7 @@ export class SubtreeUpdater {
 
           logger.info("subtree update tx receipt:", { receipt, subtreeIndex });
           logger.info("successfully updated root", { newRoot, subtreeIndex });
+          this.metrics.subtreeUpdatesSubmittedCounter.add(1);
         } catch (err: any) {
           // ignore errors that are due to duplicate submissions
           // this can happen if there are multiple instances of subtree updaters running
@@ -307,10 +351,16 @@ export class SubtreeUpdater {
     );
 
     return allInsertions
-      .tap(({ merkleIndex, ...insertion }) => {
-        logger.debug(`got insertion at merkleIndex ${merkleIndex}`, {
+      .tap((insertion) => {
+        logger.debug(`got insertion at merkleIndex ${insertion.merkleIndex}`, {
           insertion,
         });
+
+        const noteOrCommitment = NoteTrait.isCommitment(insertion)
+          ? "commitment"
+          : "note";
+        this.metrics.insertionsReceivedCounter.add(1, { noteOrCommitment });
+
         if (this.fillBatchLatency === undefined) {
           return;
         }
@@ -324,7 +374,7 @@ export class SubtreeUpdater {
         clearTimeout(this.fillBatchTimeout);
 
         // if the insertion we got is not at a batch boundry, re-set the timeout because we haven't organically filled the batch yet
-        if ((merkleIndex + 1) % BATCH_SIZE !== 0) {
+        if ((insertion.merkleIndex + 1) % BATCH_SIZE !== 0) {
           this.fillBatchTimeout = setTimeout(
             () =>
               this.fillBatchWithZeros(
