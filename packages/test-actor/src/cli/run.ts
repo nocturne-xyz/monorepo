@@ -135,8 +135,7 @@ export const run = new Command("run")
       db,
       syncAdapter,
       new MockEthToTokenConverter(),
-      new BundlerOpTracker(bundlerEndpoint),
-      logger
+      new BundlerOpTracker(bundlerEndpoint)
     );
 
     const vkeyStr = fs.readFileSync(vkeyPath).toString();
