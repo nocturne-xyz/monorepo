@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- remove all usage of winston logger except for in sync adapters (so we can debug test actor and snap)
+- fix bug where notes with 0 value were being stored in DB
 - refactor OperationMetadata to be structured
 - add db test that ensures getMany doesn't returned entries for `undefined` values
 - add `flatten`, `flatMap` to `ClosableAsyncIterator`

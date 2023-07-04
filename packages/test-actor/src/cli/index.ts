@@ -3,9 +3,12 @@
 import { program } from "commander";
 import { run } from "./run";
 import * as dotenv from "dotenv";
+import { setupDefaultInstrumentation } from "@nocturne-xyz/offchain-utils";
+import { ACTOR_NAME } from "../actor";
 
 export default async function main(): Promise<void> {
   dotenv.config();
+  setupDefaultInstrumentation(ACTOR_NAME);
 
   program
     .name("test-actor-cli")

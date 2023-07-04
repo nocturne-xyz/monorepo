@@ -22,6 +22,14 @@ import { Erc20Config } from "@nocturne-xyz/config";
 import { ethers } from "ethers";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import { Logger } from "winston";
+import * as ot from "@opentelemetry/api";
+import {
+  makeCreateCounterFn,
+  makeCreateHistogramFn,
+} from "@nocturne-xyz/offchain-utils";
+
+export const ACTOR_NAME = "test-actor";
+const COMPONENT_NAME = "main";
 
 const ONE_MINUTE_AS_SECS = 60;
 const ONE_DAY_SECONDS = 60n * 60n * 24n;
@@ -35,6 +43,13 @@ export class TestActorOpts {
   onlyOperations?: boolean;
 }
 
+export interface TestActorMetrics {
+  instantiatedDepositsCounter: ot.Counter;
+  instantiatedDepositsValueHistogram: ot.Histogram;
+  dispatchedOperationsCounter: ot.Counter;
+  dispatchedOperationsValueOutHistogram: ot.Histogram;
+}
+
 export class TestActor {
   txSigner: ethers.Wallet;
   teller: Teller;
@@ -44,6 +59,7 @@ export class TestActor {
   bundlerEndpoint: string;
   erc20s: Map<string, Erc20Config>;
   logger: Logger;
+  metrics: TestActorMetrics;
 
   constructor(
     txSigner: ethers.Wallet,
@@ -64,6 +80,37 @@ export class TestActor {
 
     this.erc20s = erc20s;
     this.logger = logger;
+
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createCounter = makeCreateCounterFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+    const createHistogram = makeCreateHistogramFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+
+    this.metrics = {
+      instantiatedDepositsCounter: createCounter(
+        "instantiated_deposits.counter",
+        "Number of deposits instantiated"
+      ),
+      instantiatedDepositsValueHistogram: createHistogram(
+        "instantiated_deposits_value.histogram",
+        "Histogram of value of deposits instantiated"
+      ),
+      dispatchedOperationsCounter: createCounter(
+        "dispatched_operations.counter",
+        "Number of operations dispatched"
+      ),
+      dispatchedOperationsValueOutHistogram: createHistogram(
+        "dispatched_operations_value_out.counter",
+        "Histogram of outgoing value of operations dispatched"
+      ),
+    };
   }
 
   async runDeposits(interval: number): Promise<void> {
@@ -80,7 +127,7 @@ export class TestActor {
       const balances = await this.sdk.getAllAssetBalances();
       this.logger.info("balances: ", balances);
 
-      if (batchEvery && i % batchEvery === 0) {
+      if (batchEvery && i !== 0 && i % batchEvery === 0) {
         this.logger.info("performing 8 operations to fill a bundle");
         for (let j = 0; j < 8; j++) {
           await this.randomOperation();
@@ -125,13 +172,13 @@ export class TestActor {
 
     // If random chosen doesn't have any funds, find the first one with funds
     if (randomAsset.balance > 0) {
-      const maxValue = min(randomAsset.balance / 1000n, ONE_ETH_IN_WEI);
+      const maxValue = min(randomAsset.balance / 1_000_000n, 1_000_000n);
       const value = randomBigIntBounded(maxValue);
       return [randomAsset.asset, value];
     } else {
       for (const asset of assetsWithBalance) {
         if (asset.balance > 0) {
-          const maxValue = min(randomAsset.balance / 1000n, ONE_ETH_IN_WEI);
+          const maxValue = min(randomAsset.balance / 1_000_000n, 1_000_000n);
           const value = randomBigIntBounded(maxValue);
           return [asset.asset, value];
         }
@@ -216,6 +263,16 @@ export class TestActor {
       matchingEvents,
     });
 
+    const labels = {
+      spender: this.txSigner.address,
+      assetAddr: erc20Token.address,
+    };
+    this.metrics.instantiatedDepositsCounter.add(1, labels);
+    this.metrics.instantiatedDepositsValueHistogram.record(
+      Number(randomValue),
+      labels
+    ); // we assume we cap max deposit size to be < 2^53
+
     return true;
   }
 
@@ -260,7 +317,9 @@ export class TestActor {
       });
 
       // submit
-      this.logger.info(`submitting operation with digest ${opDigest}`);
+      this.logger.info(`submitting operation with digest ${opDigest}`, {
+        operation: proven,
+      });
       const res = await fetch(`${this.bundlerEndpoint}/relay`, {
         method: "POST",
         headers: {
@@ -281,6 +340,16 @@ export class TestActor {
       this.logger.info(
         `successfully submitted operation with digest ${opDigest}`
       );
+
+      const labels = {
+        spender: this.txSigner.address,
+        assetAddr: asset.assetAddr,
+      };
+      this.metrics.dispatchedOperationsCounter.add(1, labels);
+      this.metrics.dispatchedOperationsValueOutHistogram.record(
+        Number(value),
+        labels
+      ); // we assume we cap max deposit size to be < 2^53
 
       return true;
     } catch (err) {

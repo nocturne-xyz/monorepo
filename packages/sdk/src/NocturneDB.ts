@@ -354,13 +354,15 @@ export class NocturneDB {
       totalEntityIndex,
     } = diff;
 
-    // TODO: make this all one write
     // NOTE: order matters here - some `notesAndCommitments` may be nullified in the same state diff
-    await this.storeNotes(
-      notesAndCommitments.filter(
-        ({ inner }) => !NoteTrait.isCommitment(inner)
-      ) as WithTotalEntityIndex<IncludedNoteWithNullifier>[]
-    );
+    const notesToStore = notesAndCommitments.filter(
+      ({ inner }) =>
+        !NoteTrait.isCommitment(inner) &&
+        (inner as IncludedNoteWithNullifier).value > 0n
+    ) as WithTotalEntityIndex<IncludedNoteWithNullifier>[];
+
+    // TODO: make this all one write
+    await this.storeNotes(notesToStore);
 
     const nfIndices = await this.nullifyNotes(nullifiers);
 

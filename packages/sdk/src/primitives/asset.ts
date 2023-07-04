@@ -23,6 +23,7 @@ export interface EncodedAsset {
 export interface AssetWithBalance {
   asset: Asset;
   balance: bigint;
+  numNotes: number;
 }
 
 export class AssetTrait {

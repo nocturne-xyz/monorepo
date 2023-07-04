@@ -1,4 +1,3 @@
-import { Logger } from "winston";
 import { decompressPoint } from "./crypto";
 import {
   PreProofJoinSplit,
@@ -14,11 +13,10 @@ import {
 
 export async function proveOperation(
   prover: JoinSplitProver,
-  op: SignedOperation,
-  logger?: Logger
+  op: SignedOperation
 ): Promise<ProvenOperation> {
   const joinSplits: ProvenJoinSplit[] = await Promise.all(
-    op.joinSplits.map((joinSplit) => proveJoinSplit(prover, joinSplit, logger))
+    op.joinSplits.map((joinSplit) => proveJoinSplit(prover, joinSplit))
   );
 
   const {
@@ -53,12 +51,11 @@ export async function proveOperation(
 
 async function proveJoinSplit(
   prover: JoinSplitProver,
-  signedJoinSplit: PreProofJoinSplit,
-  logger?: Logger
+  signedJoinSplit: PreProofJoinSplit
 ): Promise<ProvenJoinSplit> {
   const { opDigest, proofInputs, encSenderCanonAddr, ...baseJoinSplit } =
     signedJoinSplit;
-  logger && logger.debug("proving joinSplit", { proofInputs });
+  console.log("proving joinSplit", { proofInputs });
   const proof = await prover.proveJoinSplit(proofInputs);
 
   const decompressedC1 = decompressPoint(encSenderCanonAddr.c1);
@@ -84,33 +81,31 @@ async function proveJoinSplit(
     decompressedC1.y !== BigInt(publicSignals.encSenderCanonAddrC1Y) ||
     decompressedC2.y !== BigInt(publicSignals.encSenderCanonAddrC2Y)
   ) {
-    logger &&
-      logger.error("successfully generated proof, but PIs don't match", {
-        publicSignalsFromProof: publicSignals,
-        publicSignalsExpected: {
-          newNoteACommitment: baseJoinSplit.newNoteACommitment,
-          newNoteBCommitment: baseJoinSplit.newNoteBCommitment,
-          commitmentTreeRoot: baseJoinSplit.commitmentTreeRoot,
-          publicSpend: baseJoinSplit.publicSpend,
-          nullifierA: baseJoinSplit.nullifierA,
-          nullifierB: baseJoinSplit.nullifierB,
-          encodedAssetAddr: baseJoinSplit.encodedAsset.encodedAssetAddr,
-          encodedAssetId: baseJoinSplit.encodedAsset.encodedAssetId,
-          decompressedC1Y: decompressedC1?.y,
-          decompressedC2Y: decompressedC2?.y,
-          opDigest,
-        },
-      });
+    console.error("successfully generated proof, but PIs don't match", {
+      publicSignalsFromProof: publicSignals,
+      publicSignalsExpected: {
+        newNoteACommitment: baseJoinSplit.newNoteACommitment,
+        newNoteBCommitment: baseJoinSplit.newNoteBCommitment,
+        commitmentTreeRoot: baseJoinSplit.commitmentTreeRoot,
+        publicSpend: baseJoinSplit.publicSpend,
+        nullifierA: baseJoinSplit.nullifierA,
+        nullifierB: baseJoinSplit.nullifierB,
+        encodedAssetAddr: baseJoinSplit.encodedAsset.encodedAssetAddr,
+        encodedAssetId: baseJoinSplit.encodedAsset.encodedAssetId,
+        decompressedC1Y: decompressedC1?.y,
+        decompressedC2Y: decompressedC2?.y,
+        opDigest,
+      },
+    });
 
     throw new Error(
       `snarkjs generated public input differs from precomputed ones`
     );
   }
 
-  logger &&
-    logger.debug("successfully generated proofs", {
-      proofWithPublicSignals: proof,
-    });
+  console.log("successfully generated proofs", {
+    proofWithPublicSignals: proof,
+  });
 
   const solidityProof = packToSolidityProof(proof.proof);
   return {

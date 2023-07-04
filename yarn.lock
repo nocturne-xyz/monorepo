@@ -3122,6 +3122,46 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nocturne-xyz/sdk@1.0.168-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+  version: 0.0.0-use.local
+  resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
+  dependencies:
+    "@nocturne-xyz/circuit-utils": ^0.1.12
+    "@nocturne-xyz/config": "workspace:^"
+    "@nocturne-xyz/contracts": "workspace:^"
+    "@types/async-retry": ^1.4.5
+    "@types/bn.js": ^5.1.1
+    "@types/chai": ^4.3.3
+    "@types/chai-as-promised": ^7.1.5
+    "@types/mocha": ^10.0.0
+    "@types/node": ^18.8.0
+    "@types/randombytes": ^2.0.0
+    "@types/sinon": ^10.0.13
+    "@types/sinon-chai": ^3.2.9
+    "@typescript-eslint/eslint-plugin": ^5.20.0
+    "@typescript-eslint/parser": ^5.20.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    async-retry: ^1.3.3
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    chai: ^4.3.6
+    chai-as-promised: ^7.1.1
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.8.0
+    ethers: ^5.7.2
+    js-sha256: ^0.9.0
+    mocha: ^10.1.0
+    prettier: ^2.8.8
+    randombytes: ^2.1.0
+    sinon: ^15.0.1
+    sinon-chai: ^3.7.0
+    sorted-btree: ^1.8.1
+    ts-node: ^10.9.1
+    typescript: ^4.8.4
+    winston: ^3.9.0
+  languageName: unknown
+  linkType: soft
+
 "@nocturne-xyz/sdk@npm:1.0.162-alpha":
   version: 1.0.162-alpha
   resolution: "@nocturne-xyz/sdk@npm:1.0.162-alpha"
@@ -3164,46 +3204,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
-  version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
-  dependencies:
-    "@nocturne-xyz/circuit-utils": ^0.1.12
-    "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": "workspace:^"
-    "@types/async-retry": ^1.4.5
-    "@types/bn.js": ^5.1.1
-    "@types/chai": ^4.3.3
-    "@types/chai-as-promised": ^7.1.5
-    "@types/mocha": ^10.0.0
-    "@types/node": ^18.8.0
-    "@types/randombytes": ^2.0.0
-    "@types/sinon": ^10.0.13
-    "@types/sinon-chai": ^3.2.9
-    "@typescript-eslint/eslint-plugin": ^5.20.0
-    "@typescript-eslint/parser": ^5.20.0
-    "@zk-kit/incremental-merkle-tree": ^1.0.0
-    async-retry: ^1.3.3
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    chai: ^4.3.6
-    chai-as-promised: ^7.1.1
-    eslint: ^7.32.0
-    eslint-config-prettier: ^8.8.0
-    ethers: ^5.7.2
-    js-sha256: ^0.9.0
-    mocha: ^10.1.0
-    prettier: ^2.8.8
-    randombytes: ^2.1.0
-    sinon: ^15.0.1
-    sinon-chai: ^3.7.0
-    sorted-btree: ^1.8.1
-    ts-node: ^10.9.1
-    typescript: ^4.8.4
-    winston: ^3.9.0
-  languageName: unknown
-  linkType: soft
-
 "@nocturne-xyz/snap@workspace:packages/snap":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/snap@workspace:packages/snap"
@@ -3238,8 +3238,6 @@ __metadata:
     rimraf: ^3.0.2
     ts-node: ^10.9.1
     typescript: ^4.8.4
-    winston: ^3.9.0
-    winston-transport-browserconsole: ^1.0.5
   languageName: unknown
   linkType: soft
 
@@ -3292,7 +3290,7 @@ __metadata:
     "@nocturne-xyz/contracts": 1.0.32-alpha
     "@nocturne-xyz/local-prover": 1.0.7-alpha
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": 1.0.162-alpha
+    "@nocturne-xyz/sdk": 1.0.168-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -19550,17 +19548,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"winston-transport-browserconsole@npm:^1.0.5":
-  version: 1.0.5
-  resolution: "winston-transport-browserconsole@npm:1.0.5"
-  dependencies:
-    winston: ^3.2.1
-    winston-transport: ^4.3.0
-  checksum: 5df37e053d10bbe0238d4fcf2645d8fdf48124694ffaecdf9c44cf61851cd1704554a2d5ab8230e34fc67a8aae836027fc604cdba710b35f33b1279d9a66f21a
-  languageName: node
-  linkType: hard
-
-"winston-transport@npm:^4.3.0, winston-transport@npm:^4.5.0":
+"winston-transport@npm:^4.5.0":
   version: 4.5.0
   resolution: "winston-transport@npm:4.5.0"
   dependencies:
@@ -19568,25 +19556,6 @@ __metadata:
     readable-stream: ^3.6.0
     triple-beam: ^1.3.0
   checksum: a56e5678a80b88a73e77ed998fc6e19d0db19c989a356b137ec236782f2bf58ae4511b11c29163f99391fa4dc12102c7bc5738dcb6543f28877fa2819adc3ee9
-  languageName: node
-  linkType: hard
-
-"winston@npm:^3.2.1, winston@npm:^3.9.0":
-  version: 3.9.0
-  resolution: "winston@npm:3.9.0"
-  dependencies:
-    "@colors/colors": 1.5.0
-    "@dabh/diagnostics": ^2.0.2
-    async: ^3.2.3
-    is-stream: ^2.0.0
-    logform: ^2.4.0
-    one-time: ^1.0.0
-    readable-stream: ^3.4.0
-    safe-stable-stringify: ^2.3.1
-    stack-trace: 0.0.x
-    triple-beam: ^1.3.0
-    winston-transport: ^4.5.0
-  checksum: 410f82b7a502106e7d93e62cd21d7e9bcfd37884d0d95921b12526d2fe163e654ec9cd39e18f9884fad5cf6506a45d07bd2519c1dc9c88e82f0f12b2ce9fa510
   languageName: node
   linkType: hard
 
@@ -19606,6 +19575,25 @@ __metadata:
     triple-beam: ^1.3.0
     winston-transport: ^4.5.0
   checksum: f7b901798b92ab9e93c850110bf6e98500e9a0e762b62dab410cf928b2a4145533dfa6d3d2b24f7bf0dc94b53808d5bd28aaaeff9a4b43b89ea4c798cce308ea
+  languageName: node
+  linkType: hard
+
+"winston@npm:^3.9.0":
+  version: 3.9.0
+  resolution: "winston@npm:3.9.0"
+  dependencies:
+    "@colors/colors": 1.5.0
+    "@dabh/diagnostics": ^2.0.2
+    async: ^3.2.3
+    is-stream: ^2.0.0
+    logform: ^2.4.0
+    one-time: ^1.0.0
+    readable-stream: ^3.4.0
+    safe-stable-stringify: ^2.3.1
+    stack-trace: 0.0.x
+    triple-beam: ^1.3.0
+    winston-transport: ^4.5.0
+  checksum: 410f82b7a502106e7d93e62cd21d7e9bcfd37884d0d95921b12526d2fe163e654ec9cd39e18f9884fad5cf6506a45d07bd2519c1dc9c88e82f0f12b2ce9fa510
   languageName: node
   linkType: hard
 

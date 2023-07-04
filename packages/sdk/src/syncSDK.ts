@@ -20,7 +20,6 @@ import {
 } from "./primitives";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { consecutiveChunks } from "./utils/functional";
-import { Logger } from "winston";
 
 export interface SyncOpts {
   endBlock?: number;
@@ -28,11 +27,10 @@ export interface SyncOpts {
 
 export interface SyncDeps {
   viewer: NocturneViewer;
-  logger?: Logger;
 }
 
 export async function syncSDK(
-  { viewer, logger }: SyncDeps,
+  { viewer }: SyncDeps,
   adapter: SDKSyncAdapter,
   db: NocturneDB,
   merkle: SparseMerkleProver,
@@ -54,11 +52,10 @@ export async function syncSDK(
       .blockNumber,
     endBlock: currentBlock,
   };
-  logger &&
-    logger.info(
-      `[syncSDK] syncing SDK from totalEntityIndex ${startTotalEntityIndex} (block ${range.startBlock}) to ${endTotalEntityIndex} (block ${currentBlock})...`,
-      { range }
-    );
+  console.log(
+    `[syncSDK] syncing SDK from totalEntityIndex ${startTotalEntityIndex} (block ${range.startBlock}) to ${endTotalEntityIndex} (block ${currentBlock})...`,
+    { range }
+  );
 
   const newDiffs = adapter.iterStateDiffs(startTotalEntityIndex, {
     endTotalEntityIndex,
