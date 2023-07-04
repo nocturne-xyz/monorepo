@@ -28,7 +28,6 @@ import {
   groupByArr,
 } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
-import { Logger } from "winston";
 
 export const __private = {
   gatherNotes,
@@ -38,7 +37,6 @@ export interface PrepareOperationDeps {
   db: NocturneDB;
   viewer: NocturneViewer;
   merkle: SparseMerkleProver;
-  logger?: Logger;
 }
 
 export async function prepareOperation(
@@ -97,7 +95,7 @@ export async function prepareOperation(
 }
 
 async function prepareJoinSplits(
-  { db, viewer, merkle, logger }: PrepareOperationDeps,
+  { db, viewer, merkle }: PrepareOperationDeps,
   joinSplitRequest: JoinSplitRequest,
   alreadyUsedNoteMerkleIndices: Set<number> = new Set()
 ): Promise<PreSignJoinSplit[]> {
@@ -105,8 +103,7 @@ async function prepareJoinSplits(
     db,
     getJoinSplitRequestTotalValue(joinSplitRequest),
     joinSplitRequest.asset,
-    alreadyUsedNoteMerkleIndices,
-    logger
+    alreadyUsedNoteMerkleIndices
   );
 
   const unwrapAmount = joinSplitRequest.unwrapValue;
@@ -132,8 +129,7 @@ async function gatherNotes(
   db: NocturneDB,
   requestedAmount: bigint,
   asset: Asset,
-  noteMerkleIndicesToIgnore: Set<number> = new Set(),
-  logger?: Logger
+  noteMerkleIndicesToIgnore: Set<number> = new Set()
 ): Promise<IncludedNote[]> {
   console.log("indices to ignore", noteMerkleIndicesToIgnore);
 
@@ -191,11 +187,10 @@ async function gatherNotes(
     subseqIndex--;
   }
 
-  logger &&
-    logger.debug(
-      `gathered notes to satisfy request for ${requestedAmount} of assest ${asset.assetAddr}`,
-      { notesToUse, requestedAmount, asset }
-    );
+  console.log(
+    `gathered notes to satisfy request for ${requestedAmount} of assest ${asset.assetAddr}`,
+    { notesToUse, requestedAmount, asset }
+  );
   return notesToUse;
 }
 

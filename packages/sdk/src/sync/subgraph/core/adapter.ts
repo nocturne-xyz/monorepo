@@ -56,19 +56,21 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
 
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
         const fromBlock = TotalEntityIndexTrait.toComponents(from).blockNumber;
-        logger &&
-          logger.info(
-            `fetching state diffs from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
-              from
-            )} (block ${fromBlock}) ...`,
-            {
-              range: {
-                startTotalEntityIndex:
-                  TotalEntityIndexTrait.toStringPadded(from),
-                fromBlock: TotalEntityIndexTrait.toComponents(from).blockNumber,
-              },
-            }
-          );
+
+        const rangeLogMsg = [
+          `fetching state diffs from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
+            from
+          )} (block ${fromBlock}) ...`,
+          {
+            startTotalEntityIndex: TotalEntityIndexTrait.toStringPadded(from),
+            fromBlock: TotalEntityIndexTrait.toComponents(from).blockNumber,
+          },
+        ];
+        if (logger) {
+          logger.info(rangeLogMsg);
+        } else {
+          console.log(rangeLogMsg);
+        }
 
         const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
         await maybeApplyThrottle(latestIndexedBlock);
@@ -99,7 +101,12 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
             totalEntityIndex: highestTotalEntityIndex,
           };
 
-          logger && logger.debug("yielding state diff", { stateDiff });
+          const yieldedLogMsg = ["yielding state diff", { stateDiff }];
+          if (logger) {
+            logger.info(yieldedLogMsg);
+          } else {
+            console.log(yieldedLogMsg);
+          }
 
           yield stateDiff;
 

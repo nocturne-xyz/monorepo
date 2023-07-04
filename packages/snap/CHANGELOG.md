@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- remove use of winston logger
 - fix bug where snap was parsing op metadata as `.metadata` not `.opMetadata`
 - setup browser logger for SDK to use
 - add method to fetch all inflight op digests and metadata `nocturne_getInflightOpDigestsAndMetadata`
