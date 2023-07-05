@@ -20,8 +20,8 @@ sed -i '' -r -e "s|const SUBGRAPH_API_URL = .*|const SUBGRAPH_API_URL = \"$LOCAL
 echo "SUBGRAPH_API_URL after sed:"
 grep "const SUBGRAPH_API_URL =" $SNAP_BUNDLE_JS
 
-sed -i '' -r -e "s|const config = loadNocturneConfigBuiltin(\".*\");|const config = loadNocturneConfigBuiltin(\"$LOCAL_CONFIG\");|g" $SNAP_BUNDLE_JS
+sed -i '' -r -e "s|const config = .*|const config = (0, _config.loadNocturneConfigBuiltin)(\"$LOCAL_CONFIG\");|g" $SNAP_BUNDLE_JS
 echo "config after sed:"
-grep "const config = loadNocturneConfigBuiltin" $SNAP_BUNDLE_JS
+grep "(0, _config.loadNocturneConfigBuiltin)" $SNAP_BUNDLE_JS
 
 yarn manifest:fix

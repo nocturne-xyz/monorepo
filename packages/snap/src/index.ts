@@ -81,7 +81,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     new MockEthToTokenConverter(),
     new BundlerOpTracker(BUNDLER_URL)
   );
-  console.log("Config:", RPC_URL, BUNDLER_URL, SUBGRAPH_API_URL);
+  console.log("Config:", RPC_URL, BUNDLER_URL, SUBGRAPH_API_URL, config);
   console.log("Switching on method: ", request.method);
   switch (request.method) {
     case "nocturne_getRandomizedAddr":
