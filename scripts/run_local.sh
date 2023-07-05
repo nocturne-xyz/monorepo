@@ -128,9 +128,9 @@ popd
 # start the snap
 pushd packages/snap
 echo "starting snap..."
-yarn build:local
+./scripts/build_local.sh
 sleep 10
-yarn start &
+yarn serve &
 SNAP_PID=$!
 popd
 
