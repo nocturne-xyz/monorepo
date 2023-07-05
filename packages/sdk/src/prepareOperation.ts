@@ -18,6 +18,7 @@ import {
   StealthAddressTrait,
   encryptNote,
   randomBigInt,
+  CompressedStealthAddress,
 } from "./crypto";
 import { MerkleProofInput } from "./proof";
 import {
@@ -28,6 +29,7 @@ import {
   groupByArr,
 } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
+import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 
 export const __private = {
   gatherNotes,
@@ -47,6 +49,11 @@ export async function prepareOperation(
   const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
   const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
 
+  // if refundAddr is not set, generate a random one
+  const refundAddr = StealthAddressTrait.compress(
+    opRequest.refundAddr ?? deps.viewer.generateRandomStealthAddress()
+  );
+
   // prepare joinSplits
   let joinSplits: PreSignJoinSplit[] = [];
   const usedMerkleIndices = new Set<number>();
@@ -55,6 +62,7 @@ export async function prepareOperation(
     const newJoinSplits = await prepareJoinSplits(
       deps,
       joinSplitRequest,
+      refundAddr,
       usedMerkleIndices
     );
 
@@ -74,11 +82,6 @@ export async function prepareOperation(
     AssetTrait.encodedAssetToString(joinSplit.encodedAsset)
   ).flat();
 
-  // if refundAddr is not set, generate a random one
-  const refundAddr = StealthAddressTrait.compress(
-    opRequest.refundAddr ?? deps.viewer.generateRandomStealthAddress()
-  );
-
   // construct op.
   const op: PreSignOperation = {
     ...opRequest,
@@ -97,6 +100,7 @@ export async function prepareOperation(
 async function prepareJoinSplits(
   { db, viewer, merkle }: PrepareOperationDeps,
   joinSplitRequest: JoinSplitRequest,
+  refundAddr: CompressedStealthAddress,
   alreadyUsedNoteMerkleIndices: Set<number> = new Set()
 ): Promise<PreSignJoinSplit[]> {
   const notes = await gatherNotes(
@@ -121,6 +125,7 @@ async function prepareJoinSplits(
     notes,
     paymentAmount,
     amountToReturn,
+    refundAddr,
     receiver
   );
 }
@@ -200,6 +205,7 @@ async function getJoinSplitsFromNotes(
   notes: IncludedNote[],
   paymentAmount: bigint,
   amountLeftOver: bigint,
+  refundAddr: CompressedStealthAddress,
   receiver?: CanonAddress
 ): Promise<PreSignJoinSplit[]> {
   // add a dummy note if there are an odd number of notes.
@@ -235,6 +241,7 @@ async function getJoinSplitsFromNotes(
       noteB,
       paymentAmount,
       amountToReturn,
+      refundAddr,
       receiver
     );
 
@@ -251,6 +258,7 @@ async function makeJoinSplit(
   oldNoteB: IncludedNote,
   paymentAmount: bigint,
   amountToReturn: bigint,
+  refundAddr: CompressedStealthAddress,
   receiver?: CanonAddress
 ): Promise<PreSignJoinSplit> {
   const sender = viewer.canonicalAddress();
@@ -318,6 +326,14 @@ async function makeJoinSplit(
     };
   }
 
+  // commit to the sender's canonical address
+  const senderCanonAddr = viewer.canonicalAddress();
+  const senderCommitment = poseidonBN([
+    senderCanonAddr.x,
+    senderCanonAddr.y,
+    newNoteB.nonce,
+  ]);
+
   return {
     receiver,
     encodedAsset,
@@ -338,5 +354,8 @@ async function makeJoinSplit(
     newNoteBCommitment,
     merkleProofA,
     merkleProofB,
+
+    senderCommitment,
+    refundAddr,
   };
 }
