@@ -341,6 +341,9 @@ export class NocturneFrontendSDK {
           operation.refundAddr.h2
         );
 
+        const [, refundAddrH1CompressedY] = decomposeCompressedPoint(operation.refundAddr.h1);
+        const [, refundAddrH2CompressedY] = decomposeCompressedPoint(operation.refundAddr.h2);
+          
         const publicSignals = joinSplitPublicSignalsToArray({
           newNoteACommitment: joinSplit.newNoteACommitment,
           newNoteBCommitment: joinSplit.newNoteBCommitment,

@@ -112,6 +112,10 @@ function makeTestJoinSplitInputs(
   // console.log("merkleProofA", merkleProofA);
   // console.log("merkleProofB", merkleProofB);
 
+// Generate valid merkle proofs
+const tree = new IncrementalMerkleTree(poseidonBN, DEPTH, ZERO_VALUE, ARITY);
+tree.insert(oldNoteACommitment);
+tree.insert(oldNoteBCommitment);
   console.log("merkle root A: ", merkleProofA.root);
   console.log("merkle root B: ", merkleProofB.root);
 
