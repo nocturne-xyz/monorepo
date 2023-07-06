@@ -62,8 +62,9 @@ contract Teller is
         address handler,
         address joinSplitVerifier
     ) external initializer {
-        __Ownable_init();
+        __ReentrancyGuard_init();
         __Pausable_init();
+        __Ownable_init();
         _handler = IHandler(handler);
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
     }
