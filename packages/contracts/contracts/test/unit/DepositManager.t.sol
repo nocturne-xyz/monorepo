@@ -77,12 +77,12 @@ contract DepositManagerTest is Test {
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
+        teller.initialize(address(handler), address(joinSplitVerifier));
         handler.initialize(
-            address(teller),
             address(subtreeUpdateVerifier),
             address(0x111)
         );
-        teller.initialize(address(handler), address(joinSplitVerifier));
+        handler.setTeller(address(teller));
 
         depositManager = new TestDepositManager();
         depositManager.initialize(

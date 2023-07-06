@@ -38,17 +38,14 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     event TokenPermissionSet(address token, bool permission);
 
     /// @notice Initialization function
-    /// @param teller Address of the Teller contract
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
     /// @param leftoverTokensHolder Address of the leftover tokens holder contract
     function initialize(
-        address teller,
         address subtreeUpdateVerifier,
         address leftoverTokensHolder
     ) external initializer {
         __NocturneReentrancyGuard_init();
         __BalanceManager_init(
-            teller,
             subtreeUpdateVerifier,
             leftoverTokensHolder
         );

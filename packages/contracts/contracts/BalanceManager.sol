@@ -27,17 +27,26 @@ contract BalanceManager is CommitmentTreeManager {
     uint256[50] private __GAP;
 
     /// @notice Internal initializer function
-    /// @param teller Address of the teller contract
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
     /// @param leftoverTokensHolder Address of the leftover tokens holder contract
     function __BalanceManager_init(
-        address teller,
         address subtreeUpdateVerifier,
         address leftoverTokensHolder
     ) internal onlyInitializing {
         __CommitmentTreeManager_init(subtreeUpdateVerifier);
-        _teller = ITeller(teller);
         _leftoverTokensHolder = leftoverTokensHolder;
+    }
+
+    /// @notice Set teller contract after initialization
+    /// @dev Teller and Handler initialization depend on each other's deployments thus we cannot
+    ///      initialize the Teller and Handler in the same transaction (as we have to deploy one 
+    ///      before the other). We set Teller separately after initialization to avoid
+    ///      front-running risk.
+    /// @dev Because we require Teller address is 0x0, this method is only executable once.
+    /// @param teller Address of the teller contract
+    function setTeller(address teller) external onlyOwner {
+        require(address(_teller) == address(0), "Teller already set");
+        _teller = ITeller(teller);
     }
 
     /// @notice For each joinSplit in op.joinSplits, check root and nullifier validity against
