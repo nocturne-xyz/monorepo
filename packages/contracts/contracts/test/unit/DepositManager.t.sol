@@ -17,8 +17,6 @@ import {Teller} from "../../Teller.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
-import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
 import {WETH9} from "../tokens/WETH9.sol";
 
 contract DepositManagerTest is Test {
@@ -28,8 +26,6 @@ contract DepositManagerTest is Test {
     WETH9 public weth;
 
     SimpleERC20Token[3] ERC20s;
-    SimpleERC721Token[3] ERC721s;
-    SimpleERC1155Token[3] ERC1155s;
 
     string constant CONTRACT_NAME = "NocturneDepositManager";
     string constant CONTRACT_VERSION = "v1";

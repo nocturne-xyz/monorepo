@@ -19,8 +19,6 @@ import {ParseUtils} from "../utils/ParseUtils.sol";
 import {EventParsing} from "../utils/EventParsing.sol";
 import {WETH9} from "../tokens/WETH9.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
-import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
 import {Utils} from "../../libs/Utils.sol";
 import "../../libs/Types.sol";
 
@@ -46,11 +44,7 @@ contract InvariantsBase is Test {
     TokenSwapper public swapper;
 
     address[] public depositErc20s;
-    SimpleERC721Token public depositErc721;
-    SimpleERC1155Token public depositErc1155;
     SimpleERC20Token public swapErc20;
-    SimpleERC721Token public swapErc721;
-    SimpleERC1155Token public swapErc1155;
 
     function print_callSummary() internal view {
         depositManagerHandler.callSummary();
@@ -229,26 +223,6 @@ contract InvariantsBase is Test {
         uint256 expectedSwapErc20Balance = tellerHandler
             .ghost_totalSwapErc20Received();
         assertEq(swapErc20Balance, expectedSwapErc20Balance);
-    }
-
-    function assert_operation_tellerOwnsAllSwapErc721s() internal {
-        uint256[] memory ids = tellerHandler.ghost_swapErc721IdsReceived();
-        for (uint256 i = 0; i < ids.length; i++) {
-            assertEq(address(teller), swapErc721.ownerOf(ids[i]));
-        }
-    }
-
-    function assert_operation_totalSwapErc1155ReceivedMatchesTellerBalance()
-        internal
-    {
-        uint256[] memory ids = tellerHandler.ghost_swapErc1155IdsReceived();
-        for (uint256 i = 0; i < ids.length; i++) {
-            uint256 id = ids[i];
-            assertEq(
-                swapErc1155.balanceOf(address(teller), id),
-                tellerHandler.ghost_totalSwapErc1155ReceivedForId(id)
-            );
-        }
     }
 
     function assert_operation_bundlerBalanceMatchesTracked() internal {

@@ -20,8 +20,6 @@ import {ParseUtils} from "../utils/ParseUtils.sol";
 import {EventParsing} from "../utils/EventParsing.sol";
 import {WETH9} from "../tokens/WETH9.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
-import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
 import {Utils} from "../../libs/Utils.sol";
 import "../../libs/Types.sol";
 
@@ -51,8 +49,6 @@ contract ProtocolInvariants is Test, InvariantsBase {
         depositManager.setScreenerPermission(SCREENER_ADDRESS, true);
 
         SimpleERC20Token depositErc20 = new SimpleERC20Token();
-        depositErc721 = new SimpleERC721Token();
-        depositErc1155 = new SimpleERC1155Token();
 
         // WETH is always first
         depositErc20s.push(address(weth));
@@ -61,15 +57,11 @@ contract ProtocolInvariants is Test, InvariantsBase {
         depositManagerHandler = new DepositManagerHandler(
             depositManager,
             depositErc20s,
-            depositErc721,
-            depositErc1155,
             SCREENER_PRIVKEY
         );
 
         swapper = new TokenSwapper();
         swapErc20 = new SimpleERC20Token();
-        swapErc721 = new SimpleERC721Token();
-        swapErc1155 = new SimpleERC1155Token();
 
         tellerHandler = new TellerHandler(
             teller,
@@ -77,8 +69,6 @@ contract ProtocolInvariants is Test, InvariantsBase {
             swapper,
             depositErc20s,
             swapErc20,
-            swapErc721,
-            swapErc1155,
             BUNDLER_ADDRESS,
             TRANSFER_RECIPIENT_ADDRESS
         );
@@ -265,16 +255,6 @@ contract ProtocolInvariants is Test, InvariantsBase {
         external
     {
         assert_operation_totalSwapErc20ReceivedMatchesTellerBalance();
-    }
-
-    function invariant_operation_tellerOwnsAllSwapErc721s() external {
-        assert_operation_tellerOwnsAllSwapErc721s();
-    }
-
-    function invariant_operation_totalSwapErc1155ReceivedMatchesTellerBalance()
-        external
-    {
-        assert_operation_totalSwapErc1155ReceivedMatchesTellerBalance();
     }
 
     function invariant_operation_bundlerBalanceMatchesTracked() external {

@@ -188,12 +188,6 @@ contract BalanceManager is CommitmentTreeManager {
         for (uint256 i = 0; i < numRefundAssets; i++) {
             _handleRefundForAsset(op.encodedRefundAssets[i], op.refundAddr);
         }
-
-        uint256 numReceived = _receivedAssets.length;
-        for (uint256 i = 0; i < numReceived; i++) {
-            _handleRefundForAsset(_receivedAssets[i], op.refundAddr);
-        }
-        delete _receivedAssets;
     }
 
     /// @notice Handle a refund for a single asset
