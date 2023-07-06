@@ -378,9 +378,10 @@ export async function deployContractsWithDummyConfig(
       ],
     ]),
     protocolAllowlist: new Map([
-      ["erc721", erc721.address],
-      ["erc1155", erc1155.address],
+      ["erc721", { address: erc721.address, functionSignatures: ["ZERO"] }],
+      ["erc1155", { address: erc1155.address, functionSignatures: ["ZERO"] }],
     ]),
+    leftoverTokenHolder: "0x0000000000000000000000000000000000000123",
     opts: {
       useMockSubtreeUpdateVerifier:
         process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,

@@ -86,7 +86,7 @@ export async function deployNocturneCoreContracts(
   const startBlock = await connectedSigner.provider.getBlockNumber();
 
   // Maybe deploy proxy admin
-  const { opts } = config;
+  const { opts, leftoverTokenHolder } = config;
   let proxyAdmin = opts?.proxyAdmin;
   if (!proxyAdmin) {
     console.log("\ndeploying ProxyAdmin...");
@@ -133,7 +133,8 @@ export async function deployNocturneCoreContracts(
   console.log("\ninitializing proxied Handler");
   const handlerInitTx = await proxiedHandler.contract.initialize(
     proxiedTeller.address,
-    subtreeUpdateVerifier.address
+    subtreeUpdateVerifier.address,
+    leftoverTokenHolder
   );
   await handlerInitTx.wait(opts?.confirmations);
 

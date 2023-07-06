@@ -10,6 +10,7 @@ export interface NocturneDeployConfigProperties {
   wethAddress: Address;
   erc20s: [string, Erc20Config][];
   protocolAllowlist: [string, ProtocolAddressWithMethods][];
+  leftoverTokenHolder: Address;
   opts?: NocturneDeployOpts;
 }
 
@@ -20,16 +21,7 @@ export interface NocturneDeployConfig {
   wethAddress: Address;
   erc20s: Map<string, Erc20Config>;
   protocolAllowlist: Map<string, ProtocolAddressWithMethods>;
-  opts?: NocturneDeployOpts;
-}
-
-export interface NocturneDeployConfig {
-  proxyAdminOwner: Address;
-  screeners: Address[];
-  subtreeBatchFillers: Address[];
-  wethAddress: Address;
-  erc20s: Map<string, Erc20Config>;
-  protocolAllowlist: Map<string, ProtocolAddressWithMethods>;
+  leftoverTokenHolder: Address;
   opts?: NocturneDeployOpts;
 }
 
