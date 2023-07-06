@@ -132,12 +132,12 @@ contract ProtocolInvariants is Test, InvariantsBase {
         handler.setSupportedContractAllowlistPermission(
             address(swapErc20),
             swapErc20.approve.selector,
+            true
         );
-            true
         handler.setSupportedContractAllowlistPermission(
-            true
             address(swapErc20),
             swapErc20.transfer.selector,
+            true
         );
 
         handler.setSupportedContractAllowlistPermission(
