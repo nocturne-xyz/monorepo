@@ -141,18 +141,6 @@ contract ProtocolInvariants is Test, InvariantsBase {
         );
 
         handler.setSupportedContractAllowlistPermission(
-            address(swapErc721),
-            bytes4(0),
-            true
-        );
-
-        handler.setSupportedContractAllowlistPermission(
-            address(swapErc1155),
-            bytes4(0),
-            true
-        );
-
-        handler.setSupportedContractAllowlistPermission(
             address(swapper),
             swapper.swap.selector,
             true
@@ -166,8 +154,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
         handlerHandler = new HandlerHandler(
             handler,
             SUBTREE_BATCH_FILLER_ADDRESS,
-            depositErc20,
-            depositErc1155
+            depositErc20
         );
 
         bytes4[] memory depositManagerHandlerSelectors = new bytes4[](4);

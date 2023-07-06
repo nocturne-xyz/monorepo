@@ -86,7 +86,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         deployPoseidon3Through6();
 
         teller = new Teller();
-        handler = new TestHandler();
+        handler = new Handler();
 
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
@@ -110,8 +110,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
             ERC20s[i] = new SimpleERC20Token();
-            ERC721s[i] = new SimpleERC721Token();
-            ERC1155s[i] = new SimpleERC1155Token();
 
             // Prefill the handler with 1 token
             ERC20s[i].reserveTokens(address(handler), 1);
@@ -129,18 +127,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             handler.setSupportedContractAllowlistPermission(
                 address(ERC20s[i]),
                 ERC20s[i].transfer.selector,
-                true
-            );
-
-            handler.setSupportedContractAllowlistPermission(
-                address(ERC721s[i]),
-                bytes4(0),
-                true
-            );
-
-            handler.setSupportedContractAllowlistPermission(
-                address(ERC1155s[i]),
-                bytes4(0),
                 true
             );
         }
