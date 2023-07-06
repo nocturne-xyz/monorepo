@@ -26,8 +26,18 @@
     ]
   ],
   "protocolAllowlist": [
-    ["PROTOCOL_NAME", "0x7b79995e5f793a07bc00c21412e50ecae098e7f9"]
+    [
+      "PROTOCOL_NAME",
+      {
+        "address": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+        "functionSignatures": [
+          "transfer(address,uint256)",
+          "approve(address,uint256)"
+        ]
+      }
+    ]
   ],
+  "leftoverTokenHolder": "0x0000000000000000000000000000000000000123",
   "opts": {
     "useMockSubtreeUpdateVerifier": true
   }
