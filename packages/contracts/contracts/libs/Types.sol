@@ -40,6 +40,20 @@ struct JoinSplit {
     EncryptedNote newNoteBEncrypted;
 }
 
+struct EIP712JoinSplit {
+    uint256 commitmentTreeRoot;
+    uint256 nullifierA;
+    uint256 nullifierB;
+    uint256 newNoteACommitment;
+    uint256 newNoteBCommitment;
+    uint256 encSenderCanonAddrC1;
+    uint256 encSenderCanonAddrC2;
+    uint256[8] proof;
+    uint256 publicSpend;
+    EncryptedNote newNoteAEncrypted;
+    EncryptedNote newNoteBEncrypted;
+}
+
 struct EncodedNote {
     uint256 ownerH1;
     uint256 ownerH2;
