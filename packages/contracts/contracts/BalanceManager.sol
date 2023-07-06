@@ -20,8 +20,6 @@ contract BalanceManager is CommitmentTreeManager {
     // Teller contract to send/request assets to/from
     ITeller public _teller;
 
-    // Array of received erc721/1155s, populated by Handler onReceived hooks
-    EncodedAsset[] public _receivedAssets;
 
     // Gap for upgrade safety
     uint256[50] private __GAP;
@@ -145,18 +143,6 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
-    /// @notice Returns max number of refunds to handle.
-    /// @dev The number of refunds actually inserted into commitment tree may be less than this
-    ///      number, this is upper bound. This is used by Handler to ensure
-    ///      outstanding refunds < op.maxNumRefunds.
-    /// @param op Operation to calculate max number of refunds for
-    function _totalNumRefundsToHandle(
-        Operation calldata op
-    ) internal view returns (uint256) {
-        return
-            op.joinSplits.length +
-            op.encodedRefundAssets.length +
-            _receivedAssets.length;
     }
 
     /// @notice Handle all refunds for an operation, potentially sending back any leftover assets

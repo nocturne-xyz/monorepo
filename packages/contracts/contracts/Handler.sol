@@ -17,13 +17,10 @@ import "./libs/Types.sol";
 /// @notice Handler contract for processing and executing operations.
 contract Handler is
     IHandler,
-    IERC721ReceiverUpgradeable,
-    IERC1155ReceiverUpgradeable,
     BalanceManager,
     NocturneReentrancyGuard
 {
-    // Set of callable protocols and tokens
-    mapping(address => bool) public _supportedContractAllowlist;
+    using OperationLib for Operation;
 
     // Gap for upgrade safety
     uint256[50] private __GAP;
@@ -184,7 +181,7 @@ contract Handler is
             op.executionGasLimit,
             preExecutionGas - gasleft()
         );
-        opResult.numRefunds = _totalNumRefundsToHandle(op);
+        opResult.numRefunds = op.totalNumRefundsToHandle();
 
         // Gather reserved gas asset and process gas payment to bundler
         _gatherReservedGasAssetAndPayBundler(
@@ -242,7 +239,7 @@ contract Handler is
         // Ensure number of refunds didn't exceed max specified in op.
         // If it did, executeActions is reverts and all action state changes
         // are rolled back.
-        uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
+        uint256 numRefundsToHandle = op.totalNumRefundsToHandle();
         require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
     }
 
