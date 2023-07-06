@@ -103,6 +103,10 @@ template JoinSplit(levels) {
     signal newNoteBOwnerH2X <== receiverCanonAddr[0];
     signal newNoteBOwnerH2Y <== receiverCanonAddr[1];
 
+    // check receiver canon addr is a valid babyjubjub point
+    BabyCheck()(receiverCanonAddr[0], receiverCanonAddr[1]);
+    IsOrderGreaterThan8()(receiverCanonAddr[0], receiverCanonAddr[1]);
+
     // check old note owners are composed of valid babyjubjub points
     BabyCheck()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y);
     BabyCheck()(oldNoteAOwnerH2X, oldNoteAOwnerH2Y);
