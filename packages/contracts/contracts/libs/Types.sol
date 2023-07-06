@@ -127,10 +127,4 @@ library OperationLib {
     ) internal pure returns (uint256) {
         return self.gasPrice * maxGasLimit(self, perJoinSplitVerifyGas);
     }
-
-    function totalNumRefundsToHandle(
-        Operation calldata self
-    ) internal pure returns (uint256) {
-        return self.joinSplits.length + self.encodedRefundAssets.length;
-    }
 }

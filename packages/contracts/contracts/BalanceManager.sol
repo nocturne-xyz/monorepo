@@ -150,6 +150,26 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
+    /// @notice Returns max number of refunds to handle.
+    /// @dev The number of refunds actually inserted into commitment tree may be less than this
+    ///      number, this is upper bound. This is used by Handler to ensure
+    ///      outstanding refunds < op.maxNumRefunds.
+    /// @param op Operation to calculate max number of refunds for
+    function _totalNumRefundsToHandle(
+        Operation calldata op
+    ) internal view returns (uint256) {
+        return
+            op.joinSplits.length +
+            op.encodedRefundAssets.length +
+            _receivedAssets.length;
+    }
+
+    /// @notice Ensure all balances for joinsplit and refund tokens are zeroed out (1 or 0 for 
+    ///         erc20s).
+    /// @dev This is to prevent user from pre-transferring tokens to Handler and claiming in a 
+    ///      subsequent op, as this would bypass deposit limits by letting uncontrolled token 
+    ///      inflow.
+    /// @param op Operation containing joinsplit/refund tokens
     function _ensureZeroedBalances(Operation calldata op) internal {
         uint256 numJoinSplits = op.joinSplits.length;
         for (
@@ -174,6 +194,8 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
+    /// @notice Ensure balance for asset is zeroed out (1 or 0 for erc20s) for single asset.
+    /// @param encodedAsset Encoded asset to zero out balance for
     function _ensureZeroedBalanceForAsset(
         EncodedAsset calldata encodedAsset
     ) internal {

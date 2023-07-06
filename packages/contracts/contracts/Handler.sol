@@ -27,8 +27,6 @@ contract Handler is
     BalanceManager,
     NocturneReentrancyGuard
 {
-    using OperationLib for Operation;
-
     // Set of callable protocol and token methods
     mapping(uint192 => bool) public _supportedContractAllowlist;
 
@@ -211,7 +209,7 @@ contract Handler is
             op.executionGasLimit,
             preExecutionGas - gasleft()
         );
-        opResult.numRefunds = op.totalNumRefundsToHandle();
+        opResult.numRefunds = _totalNumRefundsToHandle(op);
 
         // Gather reserved gas asset and process gas payment to bundler
         _gatherReservedGasAssetAndPayBundler(
@@ -269,7 +267,7 @@ contract Handler is
         // Ensure number of refunds didn't exceed max specified in op.
         // If it did, executeActions is reverts and all action state changes
         // are rolled back.
-        uint256 numRefundsToHandle = op.totalNumRefundsToHandle();
+        uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
         require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
     }
 
