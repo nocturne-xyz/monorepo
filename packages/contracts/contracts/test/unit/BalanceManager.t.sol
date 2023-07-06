@@ -17,8 +17,6 @@ import {Teller} from "../../Teller.sol";
 import {TestBalanceManager} from "../harnesses/TestBalanceManager.sol";
 import "../utils/NocturneUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
-import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
 import {Utils} from "../../libs/Utils.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
 import "../../libs/Types.sol";
@@ -47,8 +45,6 @@ contract BalanceManagerTest is Test {
     IJoinSplitVerifier joinSplitVerifier;
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
-    SimpleERC721Token[3] ERC721s;
-    SimpleERC1155Token[3] ERC1155s;
 
     function setUp() public virtual {
         // Instantiate teller, joinSplitVerifier, tree, and balanceManager
@@ -72,8 +68,6 @@ contract BalanceManagerTest is Test {
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
             ERC20s[i] = new SimpleERC20Token();
-            ERC721s[i] = new SimpleERC721Token();
-            ERC1155s[i] = new SimpleERC1155Token();
 
             // Prefill the balance manager with 1 token
             ERC20s[i].reserveTokens(address(balanceManager), 1);

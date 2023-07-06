@@ -18,8 +18,6 @@ import {ParseUtils} from "../../utils/ParseUtils.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {WETH9} from "../../tokens/WETH9.sol";
 import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
-import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} from "../helpers/OperationGenerator.sol";
 import {TokenIdSet, LibTokenIdSet} from "../helpers/TokenIdSet.sol";
 import {Utils} from "../../../libs/Utils.sol";
@@ -41,8 +39,6 @@ contract TellerHandler is OperationGenerator {
     address[] public joinSplitTokens;
 
     SimpleERC20Token public swapErc20;
-    SimpleERC721Token public swapErc721;
-    SimpleERC1155Token public swapErc1155;
 
     bytes32 public lastCall;
     uint256 public ghost_totalBundlerPayout;
@@ -58,8 +54,6 @@ contract TellerHandler is OperationGenerator {
 
     TransferRequest[] internal _successfulTransfers;
     SwapRequest[] internal _successfulSwaps;
-    TokenIdSet internal _receivedErc721Ids;
-    TokenIdSet internal _receivedErc1155Ids;
 
     constructor(
         Teller _teller,
@@ -67,8 +61,6 @@ contract TellerHandler is OperationGenerator {
         TokenSwapper _swapper,
         address[] memory _joinSplitTokens,
         SimpleERC20Token _swapErc20,
-        SimpleERC721Token _swapErc721,
-        SimpleERC1155Token _swapErc1155,
         address _bundlerAddress,
         address _transferRecipientAddress
     ) OperationGenerator(_transferRecipientAddress) {
@@ -77,8 +69,6 @@ contract TellerHandler is OperationGenerator {
         swapper = _swapper;
         joinSplitTokens = _joinSplitTokens;
         swapErc20 = _swapErc20;
-        swapErc721 = _swapErc721;
-        swapErc1155 = _swapErc1155;
         bundlerAddress = _bundlerAddress;
 
         // dummy, only for pure fns that only work for calldata
@@ -112,16 +102,6 @@ contract TellerHandler is OperationGenerator {
         }
 
         console.log("swap erc20 received:", ghost_totalSwapErc20Received());
-
-        uint256[] memory swapErc721Ids = ghost_swapErc721IdsReceived();
-        for (uint256 i = 0; i < swapErc721Ids.length; i++) {
-            console.log("swap erc721 received id:", swapErc721Ids[i]);
-        }
-
-        uint256[] memory swapErc1155Ids = ghost_swapErc1155IdsReceived();
-        for (uint256 i = 0; i < swapErc1155Ids.length; i++) {
-            console.log("swap erc1155s received id:", swapErc1155Ids[i]);
-        }
 
         console.log("Failure reasons:");
         for (uint256 i = 0; i < _failureReasons.length; i++) {
@@ -176,9 +156,7 @@ contract TellerHandler is OperationGenerator {
                     exceedJoinSplitsMarginInTokens: 1,
                     swapper: swapper,
                     joinSplitTokens: joinSplitTokens,
-                    swapErc20: swapErc20,
-                    swapErc721: swapErc721,
-                    swapErc1155: swapErc1155
+                    swapErc20: swapErc20
                 })
             );
 
@@ -211,8 +189,6 @@ contract TellerHandler is OperationGenerator {
                     _successfulTransfers.push(meta.transfers[i]);
                 } else if (meta.isSwap[i]) {
                     _successfulSwaps.push(meta.swaps[i]);
-                    _receivedErc721Ids.add(meta.swaps[i].erc721OutId);
-                    _receivedErc1155Ids.add(meta.swaps[i].erc1155OutId);
                 }
                 _numSuccessfulActions += 1;
             }
@@ -273,34 +249,6 @@ contract TellerHandler is OperationGenerator {
             total += _successfulSwaps[i].erc20OutAmount;
         }
         return total;
-    }
-
-    function ghost_totalSwapErc1155ReceivedForId(
-        uint256 id
-    ) public view returns (uint256) {
-        uint256 total = 0;
-        for (uint256 i = 0; i < _successfulSwaps.length; i++) {
-            if (_successfulSwaps[i].erc1155OutId == id) {
-                total += _successfulSwaps[i].erc1155OutAmount;
-            }
-        }
-        return total;
-    }
-
-    function ghost_swapErc721IdsReceived()
-        public
-        view
-        returns (uint256[] memory)
-    {
-        return _receivedErc721Ids.getIds();
-    }
-
-    function ghost_swapErc1155IdsReceived()
-        public
-        view
-        returns (uint256[] memory)
-    {
-        return _receivedErc1155Ids.getIds();
     }
 
     // ______UTILS______
