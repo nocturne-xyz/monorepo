@@ -365,6 +365,7 @@ export async function deployContractsWithDummyConfig(
       ],
     ]),
     protocolAllowlist: new Map(),
+    leftoverTokenHolder: "0x0000000000000000000000000000000000000123",
     opts: {
       useMockSubtreeUpdateVerifier:
         process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,
