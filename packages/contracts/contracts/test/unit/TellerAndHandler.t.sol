@@ -114,14 +114,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 address(ERC20s[i]),
                 true
             );
-            handler.setSupportedContractAllowlistPermission(
-                address(ERC721s[i]),
-                true
-            );
-            handler.setSupportedContractAllowlistPermission(
-                address(ERC1155s[i]),
-                true
-            );
         }
     }
 

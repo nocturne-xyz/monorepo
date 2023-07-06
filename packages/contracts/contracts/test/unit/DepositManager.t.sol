@@ -102,19 +102,9 @@ contract DepositManagerTest is Test {
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
             ERC20s[i] = new SimpleERC20Token();
-            ERC721s[i] = new SimpleERC721Token();
-            ERC1155s[i] = new SimpleERC1155Token();
 
             handler.setSupportedContractAllowlistPermission(
                 address(ERC20s[i]),
-                true
-            );
-            handler.setSupportedContractAllowlistPermission(
-                address(ERC721s[i]),
-                true
-            );
-            handler.setSupportedContractAllowlistPermission(
-                address(ERC1155s[i]),
                 true
             );
 

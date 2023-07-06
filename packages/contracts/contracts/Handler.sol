@@ -22,6 +22,9 @@ contract Handler is
 {
     using OperationLib for Operation;
 
+    // Set of callable protocols and tokens
+    mapping(address => bool) public _supportedContractAllowlist;
+
     // Gap for upgrade safety
     uint256[50] private __GAP;
 

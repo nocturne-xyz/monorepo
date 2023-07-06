@@ -93,25 +93,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
             address(depositErc20),
             true
         );
-        handler.setSupportedContractAllowlistPermission(
-            address(depositErc721),
-            true
-        );
-        handler.setSupportedContractAllowlistPermission(
-            address(depositErc1155),
-            true
-        );
         handler.setSupportedContractAllowlistPermission(address(swapper), true);
         handler.setSupportedContractAllowlistPermission(
             address(swapErc20),
-            true
-        );
-        handler.setSupportedContractAllowlistPermission(
-            address(swapErc721),
-            true
-        );
-        handler.setSupportedContractAllowlistPermission(
-            address(swapErc1155),
             true
         );
 

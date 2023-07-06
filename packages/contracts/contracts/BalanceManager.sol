@@ -20,7 +20,6 @@ contract BalanceManager is CommitmentTreeManager {
     // Teller contract to send/request assets to/from
     ITeller public _teller;
 
-
     // Gap for upgrade safety
     uint256[50] private __GAP;
 
@@ -141,8 +140,6 @@ contract BalanceManager is CommitmentTreeManager {
 
             AssetUtils.transferAssetTo(encodedGasAsset, bundler, bundlerPayout);
         }
-    }
-
     }
 
     /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
