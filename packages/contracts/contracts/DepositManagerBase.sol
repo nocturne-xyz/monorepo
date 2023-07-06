@@ -20,16 +20,16 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
             )
         );
 
+    bytes32 public constant COMPRESSED_STEALTH_ADDRESS_TYPEHASH =
+        keccak256(
+            // solhint-disable-next-line max-line-length
+            "CompressedStealthAddress(uint256 h1,uint256 h2)"
+        );
+
     bytes32 public constant ENCODED_ASSET_TYPEHASH =
         keccak256(
             // solhint-disable-next-line max-line-length
             "EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)"
-        );
-
-    bytes32 public constant STEALTH_ADDRESS_TYPEHASH =
-        keccak256(
-            // solhint-disable-next-line max-line-length
-            "CompressedStealthAddress(uint256 h1,uint256 h2)"
         );
 
     /// @notice Internal initializer
@@ -77,9 +77,24 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
                     req.spender,
                     _hashEncodedAsset(req.encodedAsset),
                     req.value,
-                    _hashStealthAddress(req.depositAddr),
+                    _hashCompressedStealthAddress(req.depositAddr),
                     req.nonce,
                     req.gasCompensation
+                )
+            );
+    }
+
+    /// @notice Hashes stealth address
+    /// @param stealthAddress Compressed stealth address
+    function _hashCompressedStealthAddress(
+        CompressedStealthAddress memory stealthAddress
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    COMPRESSED_STEALTH_ADDRESS_TYPEHASH,
+                    stealthAddress.h1,
+                    stealthAddress.h2
                 )
             );
     }
@@ -95,21 +110,6 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
                     ENCODED_ASSET_TYPEHASH,
                     encodedAsset.encodedAssetAddr,
                     encodedAsset.encodedAssetId
-                )
-            );
-    }
-
-    /// @notice Hashes stealth address
-    /// @param stealthAddress Stealth address
-    function _hashStealthAddress(
-        CompressedStealthAddress memory stealthAddress
-    ) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    STEALTH_ADDRESS_TYPEHASH,
-                    stealthAddress.h1,
-                    stealthAddress.h2
                 )
             );
     }
