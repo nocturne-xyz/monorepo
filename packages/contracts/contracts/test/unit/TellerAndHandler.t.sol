@@ -131,7 +131,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 ERC20s[i].transfer.selector,
                 true
             );
-
         }
     }
 
