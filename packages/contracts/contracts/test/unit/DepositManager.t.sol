@@ -81,7 +81,11 @@ contract DepositManagerTest is Test {
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
-        handler.initialize(address(teller), address(subtreeUpdateVerifier));
+        handler.initialize(
+            address(teller),
+            address(subtreeUpdateVerifier),
+            address(0x111)
+        );
         teller.initialize(address(handler), address(joinSplitVerifier));
 
         depositManager = new TestDepositManager();
@@ -95,7 +99,22 @@ contract DepositManagerTest is Test {
         depositManager.setScreenerPermission(SCREENER, true);
         teller.setDepositSourcePermission(address(depositManager), true);
 
-        handler.setSupportedContractAllowlistPermission(address(weth), true);
+        handler.setSupportedContractAllowlistPermission(
+            address(weth),
+            bytes4(0),
+            true
+        );
+        handler.setSupportedContractAllowlistPermission(
+            address(weth),
+            weth.approve.selector,
+            true
+        );
+        handler.setSupportedContractAllowlistPermission(
+            address(weth),
+            weth.transfer.selector,
+            true
+        );
+
         depositManager.setErc20Cap(
             address(weth),
             GLOBAL_CAP,
@@ -106,19 +125,20 @@ contract DepositManagerTest is Test {
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
             ERC20s[i] = new SimpleERC20Token();
-            ERC721s[i] = new SimpleERC721Token();
-            ERC1155s[i] = new SimpleERC1155Token();
 
             handler.setSupportedContractAllowlistPermission(
                 address(ERC20s[i]),
+                bytes4(0),
                 true
             );
             handler.setSupportedContractAllowlistPermission(
-                address(ERC721s[i]),
+                address(ERC20s[i]),
+                ERC20s[i].approve.selector,
                 true
             );
             handler.setSupportedContractAllowlistPermission(
-                address(ERC1155s[i]),
+                address(ERC20s[i]),
+                ERC20s[i].transfer.selector,
                 true
             );
 

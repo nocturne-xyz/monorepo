@@ -21,10 +21,12 @@ import {
   TransparentProxyAddresses,
   NocturneContractDeployment,
   Erc20Config,
+  ProtocolAddressWithMethods,
 } from "@nocturne-xyz/config";
 import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
-import { NocturneConfig } from "@nocturne-xyz/config/dist/src/config";
-import { Address } from "./utils";
+import { NocturneConfig } from "@nocturne-xyz/config";
+import { getSelector } from "./utils";
+import { protocolWhitelistKey } from "@nocturne-xyz/sdk";
 
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
@@ -53,7 +55,15 @@ export async function deployNocturne(
     connectedSigner
   );
   for (const [name, erc20Config] of Array.from(config.erc20s)) {
-    config.protocolAllowlist.set(name, erc20Config.address);
+    const addressWithSignatures: ProtocolAddressWithMethods = {
+      address: erc20Config.address,
+      functionSignatures: [
+        "ZERO",
+        "approve(address,uint256)",
+        "transfer(address,uint256)",
+      ],
+    };
+    config.protocolAllowlist.set(name, addressWithSignatures);
   }
   await whitelistProtocols(connectedSigner, config.protocolAllowlist, handler);
 
@@ -233,22 +243,29 @@ async function setErc20Caps(
 
 export async function whitelistProtocols(
   connectedSigner: ethers.Wallet,
-  protocolWhitelist: Map<string, Address>,
+  protocolWhitelist: Map<string, ProtocolAddressWithMethods>,
   handler: Handler
 ): Promise<void> {
   handler = handler.connect(connectedSigner);
 
   console.log("whitelisting protocols...");
-  for (const [name, contractAddress] of Array.from(protocolWhitelist)) {
-    if (!(await handler._supportedContractAllowlist(contractAddress))) {
-      console.log(
-        `whitelisting protocol: ${name}. address: ${contractAddress}.`
-      );
-      const tx = await handler.setSupportedContractAllowlistPermission(
-        contractAddress,
-        true
-      );
-      await tx.wait(1);
+  for (const [name, addressWithMethods] of Array.from(protocolWhitelist)) {
+    const contractAddress = addressWithMethods.address;
+    for (const signature of addressWithMethods.functionSignatures) {
+      const selector = getSelector(signature);
+      const key = protocolWhitelistKey(contractAddress, selector);
+
+      if (!(await handler._supportedContractAllowlist(key))) {
+        console.log(
+          `whitelisting protocol: ${name}. address: ${contractAddress}. method: ${signature}`
+        );
+        const tx = await handler.setSupportedContractAllowlistPermission(
+          contractAddress,
+          selector,
+          true
+        );
+        await tx.wait(1);
+      }
     }
   }
 }

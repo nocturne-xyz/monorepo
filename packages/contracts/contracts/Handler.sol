@@ -27,8 +27,10 @@ contract Handler is
     BalanceManager,
     NocturneReentrancyGuard
 {
-    // Set of callable protocols and tokens
-    mapping(address => bool) public _supportedContractAllowlist;
+    using OperationLib for Operation;
+
+    // Set of callable protocol and token methods
+    mapping(uint192 => bool) public _supportedContractAllowlist;
 
     // Gap for upgrade safety
     uint256[50] private __GAP;
@@ -36,6 +38,7 @@ contract Handler is
     /// @notice Event emitted when a contract is given/revoked allowlist permission
     event SupportedContractAllowlistPermissionSet(
         address contractAddress,
+        bytes4 selector,
         bool permission
     );
 
@@ -44,10 +47,15 @@ contract Handler is
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
     function initialize(
         address teller,
-        address subtreeUpdateVerifier
+        address subtreeUpdateVerifier,
+        address leftoverTokensHolder
     ) external initializer {
         __NocturneReentrancyGuard_init();
-        __BalanceManager_init(teller, subtreeUpdateVerifier);
+        __BalanceManager_init(
+            teller,
+            subtreeUpdateVerifier,
+            leftoverTokensHolder
+        );
     }
 
     /// @notice Only callable by the handler itself (used so handler can message call itself)
@@ -77,11 +85,17 @@ contract Handler is
     /// @param permission Whether to enable or revoke permission
     function setSupportedContractAllowlistPermission(
         address contractAddress,
+        bytes4 selector,
         bool permission
     ) external onlyOwner {
-        _supportedContractAllowlist[contractAddress] = permission;
+        uint192 addressAndSelector = _addressAndSelector(
+            contractAddress,
+            selector
+        );
+        _supportedContractAllowlist[addressAndSelector] = permission;
         emit SupportedContractAllowlistPermissionSet(
             contractAddress,
+            selector,
             permission
         );
     }
@@ -95,8 +109,9 @@ contract Handler is
     ) external override whenNotPaused onlyTeller {
         EncodedAsset memory encodedAsset = deposit.encodedAsset;
         (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
+        uint192 addressAndSelector = _addressAndSelector(assetAddr, bytes4(0));
         require(
-            _supportedContractAllowlist[assetAddr],
+            _supportedContractAllowlist[addressAndSelector],
             "!supported deposit asset"
         );
 
@@ -145,11 +160,18 @@ contract Handler is
             (, address assetAddr, ) = AssetUtils.decodeAsset(
                 op.encodedRefundAssets[i]
             );
+            uint192 addressAndSelector = _addressAndSelector(
+                assetAddr,
+                bytes4(0)
+            );
             require(
-                _supportedContractAllowlist[assetAddr],
+                _supportedContractAllowlist[addressAndSelector],
                 "!supported refund asset"
             );
         }
+
+        // Ensure all token balances of tokens to be used are zeroed out
+        _ensureZeroedBalances(op);
 
         // Handle all joinsplits
         _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
@@ -189,7 +211,7 @@ contract Handler is
             op.executionGasLimit,
             preExecutionGas - gasleft()
         );
-        opResult.numRefunds = _totalNumRefundsToHandle(op);
+        opResult.numRefunds = op.totalNumRefundsToHandle();
 
         // Gather reserved gas asset and process gas payment to bundler
         _gatherReservedGasAssetAndPayBundler(
@@ -247,7 +269,7 @@ contract Handler is
         // Ensure number of refunds didn't exceed max specified in op.
         // If it did, executeActions is reverts and all action state changes
         // are rolled back.
-        uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
+        uint256 numRefundsToHandle = op.totalNumRefundsToHandle();
         require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
     }
 
@@ -265,7 +287,12 @@ contract Handler is
     ) external override whenNotPaused returns (bytes4) {
         // Must reject the transfer outside of an operation handling
         uint256 stage = reentrancyGuardStage();
-        if (stage == NOT_ENTERED || !_supportedContractAllowlist[msg.sender]) {
+        if (
+            stage == NOT_ENTERED ||
+            !_supportedContractAllowlist[
+                _addressAndSelector(msg.sender, bytes4(0))
+            ]
+        ) {
             return 0;
         }
 
@@ -295,7 +322,12 @@ contract Handler is
     ) external override whenNotPaused returns (bytes4) {
         // Reject the transfer outside of an operation handling
         uint256 stage = reentrancyGuardStage();
-        if (stage == NOT_ENTERED || !_supportedContractAllowlist[msg.sender]) {
+        if (
+            stage == NOT_ENTERED ||
+            !_supportedContractAllowlist[
+                _addressAndSelector(msg.sender, bytes4(0))
+            ]
+        ) {
             return 0;
         }
 
@@ -325,7 +357,12 @@ contract Handler is
     ) external override whenNotPaused returns (bytes4) {
         // Reject the transfer outside of an operation handling
         uint256 stage = reentrancyGuardStage();
-        if (stage == NOT_ENTERED || !_supportedContractAllowlist[msg.sender]) {
+        if (
+            stage == NOT_ENTERED ||
+            !_supportedContractAllowlist[
+                _addressAndSelector(msg.sender, bytes4(0))
+            ]
+        ) {
             return 0;
         }
 
@@ -369,11 +406,35 @@ contract Handler is
             action.contractAddress != address(_teller),
             "Cannot call the Nocturne Teller"
         );
+
+        uint192 addressAndSelector = _addressAndSelector(
+            action.contractAddress,
+            _extractFunctionSelector(action.encodedFunction)
+        );
         require(
-            _supportedContractAllowlist[action.contractAddress],
-            "Cannot call non-allowed protocol"
+            _supportedContractAllowlist[addressAndSelector],
+            "Cannot call non-allowed protocol method"
         );
 
         (success, result) = action.contractAddress.call(action.encodedFunction);
+    }
+
+    /// @notice Extract function selector from encoded function data
+    /// @param encodedFunctionData Encoded function data
+    function _extractFunctionSelector(
+        bytes calldata encodedFunctionData
+    ) internal pure returns (bytes4 selector) {
+        require(encodedFunctionData.length >= 4, "!encoded fn length");
+        return bytes4(encodedFunctionData[:4]);
+    }
+
+    /// @notice Concat address and selector as key to contract allowlist
+    /// @param contractAddress Address of the contract
+    /// @param selector Selector of the function
+    function _addressAndSelector(
+        address contractAddress,
+        bytes4 selector
+    ) internal pure returns (uint192) {
+        return (uint192(uint160(contractAddress)) << 32) | uint32(selector);
     }
 }

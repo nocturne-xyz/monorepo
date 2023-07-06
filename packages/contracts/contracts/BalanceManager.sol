@@ -23,6 +23,9 @@ contract BalanceManager is CommitmentTreeManager {
     // Array of received erc721/1155s, populated by Handler onReceived hooks
     EncodedAsset[] public _receivedAssets;
 
+    // Leftover tokens holder contract
+    address public _leftoverTokensHolder;
+
     // Gap for upgrade safety
     uint256[50] private __GAP;
 
@@ -31,10 +34,12 @@ contract BalanceManager is CommitmentTreeManager {
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
     function __BalanceManager_init(
         address teller,
-        address subtreeUpdateVerifier
+        address subtreeUpdateVerifier,
+        address leftoverTokensHolder
     ) internal onlyInitializing {
         __CommitmentTreeManager_init(subtreeUpdateVerifier);
         _teller = ITeller(teller);
+        _leftoverTokensHolder = leftoverTokensHolder;
     }
 
     /// @notice For each joinSplit in op.joinSplits, check root and nullifier validity against
@@ -145,26 +150,53 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
-    /// @notice Returns max number of refunds to handle.
-    /// @dev The number of refunds actually inserted into commitment tree may be less than this
-    ///      number, this is upper bound. This is used by Handler to ensure
-    ///      outstanding refunds < op.maxNumRefunds.
-    /// @param op Operation to calculate max number of refunds for
-    function _totalNumRefundsToHandle(
-        Operation calldata op
-    ) internal view returns (uint256) {
-        return
-            op.joinSplits.length +
-            op.encodedRefundAssets.length +
-            _receivedAssets.length;
+    function _ensureZeroedBalances(Operation calldata op) internal {
+        uint256 numJoinSplits = op.joinSplits.length;
+        for (
+            uint256 subarrayStartIndex = 0;
+            subarrayStartIndex < numJoinSplits;
+
+        ) {
+            uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
+                op.joinSplits,
+                subarrayStartIndex
+            );
+
+            _ensureZeroedBalanceForAsset(
+                op.joinSplits[subarrayStartIndex].encodedAsset
+            );
+            subarrayStartIndex = subarrayEndIndex + 1;
+        }
+
+        uint256 numRefundAssets = op.encodedRefundAssets.length;
+        for (uint256 i = 0; i < numRefundAssets; i++) {
+            _ensureZeroedBalanceForAsset(op.encodedRefundAssets[i]);
+        }
+    }
+
+    function _ensureZeroedBalanceForAsset(
+        EncodedAsset calldata encodedAsset
+    ) internal {
+        uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
+        (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
+        uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
+
+        if (currentBalance > amountToWithhold) {
+            uint256 difference = currentBalance - amountToWithhold;
+            AssetUtils.transferAssetTo(
+                encodedAsset,
+                address(_leftoverTokensHolder),
+                difference
+            );
+        }
     }
 
     /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
     ///         to the Teller and inserting new note commitments for the sent back assets.
-    /// @dev Checks for refunds from joinSplits, op.encodedRefundAssets, any assets received from
-    ///      onReceived hooks (erc721/1155s). A refund occurs if any of the checked assets have
-    ///      outstanding balance > 0 in the Handler. If a refund occurs, the Handler will transfer
-    ///      the asset back to the Teller and insert a new note commitment into the commitment tree.
+    /// @dev Checks for refunds from joinSplits and op.encodedRefundAssets. A refund occurs if any
+    ///      of the checked assets have outstanding balance > 0 in the Handler. If a refund occurs,
+    ///      the Handler will transfer the asset back to the Teller and insert a new note
+    ///      commitment into the commitment tree.
     /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
         uint256 numJoinSplits = op.joinSplits.length;

@@ -60,7 +60,8 @@ contract BalanceManagerTest is Test {
 
         balanceManager.initialize(
             address(teller),
-            address(subtreeUpdateVerifier)
+            address(subtreeUpdateVerifier),
+            address(0x1)
         );
 
         // NOTE: TestBalanceManager implements IHandler so we can test with

@@ -11,9 +11,14 @@ contract TestBalanceManager is IHandler, BalanceManager {
 
     function initialize(
         address teller,
-        address subtreeUpdateVerifier
+        address subtreeUpdateVerifier,
+        address leftoverTokensHolder
     ) external initializer {
-        __BalanceManager_init(teller, subtreeUpdateVerifier);
+        __BalanceManager_init(
+            teller,
+            subtreeUpdateVerifier,
+            leftoverTokensHolder
+        );
     }
 
     modifier onlyTeller() {
