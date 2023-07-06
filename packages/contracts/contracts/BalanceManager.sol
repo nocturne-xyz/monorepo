@@ -29,6 +29,7 @@ contract BalanceManager is CommitmentTreeManager {
     /// @notice Internal initializer function
     /// @param teller Address of the teller contract
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
+    /// @param leftoverTokensHolder Address of the leftover tokens holder contract
     function __BalanceManager_init(
         address teller,
         address subtreeUpdateVerifier,

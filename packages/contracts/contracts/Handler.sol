@@ -34,6 +34,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     /// @notice Initialization function
     /// @param teller Address of the Teller contract
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
+    /// @param leftoverTokensHolder Address of the leftover tokens holder contract
     function initialize(
         address teller,
         address subtreeUpdateVerifier,
