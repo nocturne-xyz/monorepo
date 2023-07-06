@@ -77,7 +77,11 @@ contract DepositManagerTest is Test {
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
-        handler.initialize(address(teller), address(subtreeUpdateVerifier));
+        handler.initialize(
+            address(teller),
+            address(subtreeUpdateVerifier),
+            address(0x111)
+        );
         teller.initialize(address(handler), address(joinSplitVerifier));
 
         depositManager = new TestDepositManager();
@@ -91,7 +95,22 @@ contract DepositManagerTest is Test {
         depositManager.setScreenerPermission(SCREENER, true);
         teller.setDepositSourcePermission(address(depositManager), true);
 
-        handler.setSupportedContractAllowlistPermission(address(weth), true);
+        handler.setSupportedContractAllowlistPermission(
+            address(weth),
+            bytes4(0),
+            true
+        );
+        handler.setSupportedContractAllowlistPermission(
+            address(weth),
+            weth.approve.selector,
+            true
+        );
+        handler.setSupportedContractAllowlistPermission(
+            address(weth),
+            weth.transfer.selector,
+            true
+        );
+
         depositManager.setErc20Cap(
             address(weth),
             GLOBAL_CAP,
@@ -105,6 +124,17 @@ contract DepositManagerTest is Test {
 
             handler.setSupportedContractAllowlistPermission(
                 address(ERC20s[i]),
+                bytes4(0),
+                true
+            );
+            handler.setSupportedContractAllowlistPermission(
+                address(ERC20s[i]),
+                ERC20s[i].approve.selector,
+                true
+            );
+            handler.setSupportedContractAllowlistPermission(
+                address(ERC20s[i]),
+                ERC20s[i].transfer.selector,
                 true
             );
 

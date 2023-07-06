@@ -7,10 +7,15 @@ import {
   Teller__factory,
 } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
-import { Erc20Config, NocturneContractDeployment } from "@nocturne-xyz/config";
+import {
+  NocturneContractDeployment,
+  Erc20Config,
+  ProtocolAddressWithMethods,
+} from "@nocturne-xyz/config";
 import { proxyAdmin, proxyImplementation } from "./proxyUtils";
-import { Address, assertOrErr } from "./utils";
+import { assertOrErr, getSelector } from "./utils";
 import { NocturneConfig } from "@nocturne-xyz/config/dist/src/config";
+import { protocolWhitelistKey } from "@nocturne-xyz/sdk";
 
 export async function checkNocturneDeployment(
   config: NocturneConfig,
@@ -180,21 +185,45 @@ async function checkErc20Caps(
 async function checkProtocolAllowlist(
   handler: Handler,
   erc20s: Map<string, Erc20Config>,
-  protocolAllowlist: Map<string, Address>
+  protocolAllowlist: Map<string, ProtocolAddressWithMethods>
 ): Promise<void> {
   for (const [ticker, { address }] of erc20s.entries()) {
-    const isOnAllowlist = await handler._supportedContractAllowlist(address);
+    const zeroKey = protocolWhitelistKey(address, "0x00000000");
+    const approveKey = protocolWhitelistKey(address, "0x095ea7b3");
+    const transferKey = protocolWhitelistKey(address, "0xa9059cbb");
+
+    const zeroOnAllowlist = await handler._supportedContractAllowlist(zeroKey);
     assertOrErr(
-      isOnAllowlist,
-      `erc20 ${ticker} is not on the allowlist. Address: ${address}`
+      zeroOnAllowlist,
+      `erc20 ${ticker} is not on the allowlist. Address: ${address}. Signature: ${zeroKey}`
+    );
+
+    const approveOnAllowlist = await handler._supportedContractAllowlist(
+      approveKey
+    );
+    assertOrErr(
+      approveOnAllowlist,
+      `erc20 ${ticker} is not on the allowlist. Address: ${address}. Signature: ${approveKey}`
+    );
+
+    const transferOnAllowlist = await handler._supportedContractAllowlist(
+      transferKey
+    );
+    assertOrErr(
+      transferOnAllowlist,
+      `erc20 ${ticker} is not on the allowlist. Address: ${address}. Signature: ${transferKey}`
     );
   }
 
-  for (const [name, address] of protocolAllowlist) {
-    const isOnAllowlist = await handler._supportedContractAllowlist(address);
-    assertOrErr(
-      isOnAllowlist,
-      `Protocol ${name} is not on the allowlist. Address: ${address}`
-    );
+  for (const [name, { address, functionSignatures }] of protocolAllowlist) {
+    for (const signature of functionSignatures) {
+      const selector = getSelector(signature);
+      const key = protocolWhitelistKey(address, selector);
+      const isOnAllowlist = await handler._supportedContractAllowlist(key);
+      assertOrErr(
+        isOnAllowlist,
+        `Protocol ${name} is not on the allowlist. Address: ${address}`
+      );
+    }
   }
 }

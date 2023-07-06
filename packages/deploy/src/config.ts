@@ -1,6 +1,6 @@
 import { Address } from "./utils";
 import { ProxyAdmin } from "@nocturne-xyz/contracts";
-import { Erc20Config } from "@nocturne-xyz/config";
+import { Erc20Config, ProtocolAddressWithMethods } from "@nocturne-xyz/config";
 import * as JSON from "bigint-json-serialization";
 
 export interface NocturneDeployConfigProperties {
@@ -9,7 +9,7 @@ export interface NocturneDeployConfigProperties {
   subtreeBatchFillers: Address[];
   wethAddress: Address;
   erc20s: [string, Erc20Config][];
-  protocolAllowlist: [string, Address][];
+  protocolAllowlist: [string, ProtocolAddressWithMethods][];
   opts?: NocturneDeployOpts;
 }
 
@@ -19,7 +19,7 @@ export interface NocturneDeployConfig {
   subtreeBatchFillers: Address[];
   wethAddress: Address;
   erc20s: Map<string, Erc20Config>;
-  protocolAllowlist: Map<string, Address>;
+  protocolAllowlist: Map<string, ProtocolAddressWithMethods>;
   opts?: NocturneDeployOpts;
 }
 
@@ -29,7 +29,7 @@ export interface NocturneDeployConfig {
   subtreeBatchFillers: Address[];
   wethAddress: Address;
   erc20s: Map<string, Erc20Config>;
-  protocolAllowlist: Map<string, Address>;
+  protocolAllowlist: Map<string, ProtocolAddressWithMethods>;
   opts?: NocturneDeployOpts;
 }
 

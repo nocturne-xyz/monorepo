@@ -20,6 +20,9 @@ contract BalanceManager is CommitmentTreeManager {
     // Teller contract to send/request assets to/from
     ITeller public _teller;
 
+    // Leftover tokens holder contract
+    address public _leftoverTokensHolder;
+
     // Gap for upgrade safety
     uint256[50] private __GAP;
 
@@ -28,10 +31,12 @@ contract BalanceManager is CommitmentTreeManager {
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
     function __BalanceManager_init(
         address teller,
-        address subtreeUpdateVerifier
+        address subtreeUpdateVerifier,
+        address leftoverTokensHolder
     ) internal onlyInitializing {
         __CommitmentTreeManager_init(subtreeUpdateVerifier);
         _teller = ITeller(teller);
+        _leftoverTokensHolder = leftoverTokensHolder;
     }
 
     /// @notice For each joinSplit in op.joinSplits, check root and nullifier validity against
@@ -139,6 +144,47 @@ contract BalanceManager is CommitmentTreeManager {
             }
 
             AssetUtils.transferAssetTo(encodedGasAsset, bundler, bundlerPayout);
+        }
+    }
+
+    function _ensureZeroedBalances(Operation calldata op) internal {
+        uint256 numJoinSplits = op.joinSplits.length;
+        for (
+            uint256 subarrayStartIndex = 0;
+            subarrayStartIndex < numJoinSplits;
+
+        ) {
+            uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
+                op.joinSplits,
+                subarrayStartIndex
+            );
+
+            _ensureZeroedBalanceForAsset(
+                op.joinSplits[subarrayStartIndex].encodedAsset
+            );
+            subarrayStartIndex = subarrayEndIndex + 1;
+        }
+
+        uint256 numRefundAssets = op.encodedRefundAssets.length;
+        for (uint256 i = 0; i < numRefundAssets; i++) {
+            _ensureZeroedBalanceForAsset(op.encodedRefundAssets[i]);
+        }
+    }
+
+    function _ensureZeroedBalanceForAsset(
+        EncodedAsset calldata encodedAsset
+    ) internal {
+        uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
+        (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
+        uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
+
+        if (currentBalance > amountToWithhold) {
+            uint256 difference = currentBalance - amountToWithhold;
+            AssetUtils.transferAssetTo(
+                encodedAsset,
+                address(_leftoverTokensHolder),
+                difference
+            );
         }
     }
 

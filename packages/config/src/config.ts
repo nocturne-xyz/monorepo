@@ -6,6 +6,11 @@ import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
 import { ensureChecksumAddresses } from "./utils";
 
+export interface ProtocolAddressWithMethods {
+  address: Address;
+  functionSignatures: string[];
+}
+
 export interface Erc20Config {
   address: Address;
   globalCapWholeTokens: bigint;
@@ -17,18 +22,18 @@ export interface Erc20Config {
 export interface NocturneConfigProperties {
   contracts: NocturneContractDeployment;
   erc20s: [string, Erc20Config][]; // ticker -> erc20 config
-  protocolAllowlist: [string, Address][]; // name -> entry
+  protocolAllowlist: [string, ProtocolAddressWithMethods][]; // name -> entry
 }
 
 export class NocturneConfig {
   contracts: NocturneContractDeployment;
   erc20s: Map<string, Erc20Config>; // ticker -> erc20 config
-  protocolAllowlist: Map<string, Address>;
+  protocolAllowlist: Map<string, ProtocolAddressWithMethods>;
 
   constructor(
     contracts: NocturneContractDeployment,
     erc20s: Map<string, Erc20Config>,
-    protocolAllowlist: Map<string, Address>
+    protocolAllowlist: Map<string, ProtocolAddressWithMethods>
   ) {
     this.contracts = contracts;
     this.erc20s = erc20s;

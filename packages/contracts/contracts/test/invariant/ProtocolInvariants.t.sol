@@ -34,7 +34,11 @@ contract ProtocolInvariants is Test, InvariantsBase {
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
-        handler.initialize(address(teller), address(subtreeUpdateVerifier));
+        handler.initialize(
+            address(teller),
+            address(subtreeUpdateVerifier),
+            address(0x111)
+        );
         teller.initialize(address(handler), address(joinSplitVerifier));
 
         teller.setDepositSourcePermission(address(depositManager), true);
@@ -88,14 +92,57 @@ contract ProtocolInvariants is Test, InvariantsBase {
         );
 
         // TODO: allow other tokens once we enable transacting with them
-        handler.setSupportedContractAllowlistPermission(address(weth), true);
         handler.setSupportedContractAllowlistPermission(
-            address(depositErc20),
+            address(weth),
+            bytes4(0),
             true
         );
-        handler.setSupportedContractAllowlistPermission(address(swapper), true);
+        handler.setSupportedContractAllowlistPermission(
+            address(weth),
+            weth.approve.selector,
+            true
+        );
+        handler.setSupportedContractAllowlistPermission(
+            address(weth),
+            weth.transfer.selector,
+            true
+        );
+
+        handler.setSupportedContractAllowlistPermission(
+            address(depositErc20),
+            bytes4(0),
+            true
+        );
+        handler.setSupportedContractAllowlistPermission(
+            address(depositErc20),
+            depositErc20.approve.selector,
+            true
+        );
+        handler.setSupportedContractAllowlistPermission(
+            address(depositErc20),
+            depositErc20.transfer.selector,
+            true
+        );
+
         handler.setSupportedContractAllowlistPermission(
             address(swapErc20),
+            bytes4(0),
+            true
+        );
+        handler.setSupportedContractAllowlistPermission(
+            address(swapErc20),
+            swapErc20.approve.selector,
+        );
+            true
+        handler.setSupportedContractAllowlistPermission(
+            true
+            address(swapErc20),
+            swapErc20.transfer.selector,
+        );
+
+        handler.setSupportedContractAllowlistPermission(
+            address(swapper),
+            swapper.swap.selector,
             true
         );
 
@@ -171,7 +218,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
         handler.transferOwnership(OWNER);
     }
 
-    function invariant_callSummary() external {
+    function invariant_callSummary() external view {
         print_callSummary();
     }
 
