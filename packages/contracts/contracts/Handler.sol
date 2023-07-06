@@ -15,11 +15,7 @@ import "./libs/Types.sol";
 /// @title Handler
 /// @author Nocturne Labs
 /// @notice Handler contract for processing and executing operations.
-contract Handler is
-    IHandler,
-    BalanceManager,
-    NocturneReentrancyGuard
-{
+contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     using OperationLib for Operation;
 
     // Set of callable protocols and tokens
