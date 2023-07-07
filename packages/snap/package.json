@@ -12,7 +12,7 @@
   "scripts": {
     "build": "mm-snap build",
     "build:clean": "yarn clean && yarn build",
-    "build:local": "NODE_ENV=development mm-snap build",
+    "build:local": "./scripts/build-local.sh",
     "build:website": "node ./scripts/build-website.js",
     "clean": "rimraf dist",
     "cp-config": "cp ../config/configs/localhost.json ./src/config.json",
@@ -20,9 +20,10 @@
     "lint:eslint": "eslint . --cache --ext js,ts",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
     "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' --ignore-path .gitignore",
+    "manifest:fix": "mm-snap manifest --fix",
     "prettier:check": "prettier --check ./src",
     "prettier:write": "prettier --write ./src",
-    "publish": "yarn npm publish --access public",
+    "publish": "yarn build && yarn npm publish --access public",
     "serve": "mm-snap serve",
     "start": "mm-snap watch",
     "test:unit": ""
