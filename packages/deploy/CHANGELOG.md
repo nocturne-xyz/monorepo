@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- revert back to per-method protocol allowlist
 - add dev only upgrade script that assumes deployer = proxyAdmin owner
 - add "bump configs package` to readme
 - update `README` with better instructions on how to deploy

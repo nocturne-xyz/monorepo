@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add functions to ensure Handler balances are zeroed out pre-operation
+- make protocol allowlist per-method
 - Remove ERC721/1155s from all unit and invariant tests
 - Remove ERC721/1155 onReceived hooks in the Teller and Handler
 - Remove the \_receivedAssets mechanism in the Handler now that the onReceived hooks are gone
