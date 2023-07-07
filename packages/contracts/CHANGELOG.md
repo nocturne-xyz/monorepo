@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- separate setting of `_teller` from Handler initialization to remove front-running risk (TOB-9)
 - add functions to ensure Handler balances are zeroed out pre-operation
 - make protocol allowlist per-method, add separate allowlist for tokens
 - Remove ERC721/1155s from all unit and invariant tests
