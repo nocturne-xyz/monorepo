@@ -67,13 +67,10 @@ library OperationUtils {
                 allPis[index][5] = op.joinSplits[j].nullifierB;
                 allPis[index][6] = op.joinSplits[j].senderCommitment;
                 allPis[index][7] = digests[i];
-                allPis[index][8] = refundAddrH1YCoordinate;
-                allPis[index][8] = refundAddrH2YCoordinate;
-                allPis[index][10] = encodedAssetAddrWithSignBits;
-                allPis[index][11] = op
-                    .joinSplits[j]
-                    .encodedAsset
-                    .encodedAssetId;
+                allPis[index][8] = encodedAssetAddrWithSignBits;
+                allPis[index][9] = op.joinSplits[j].encodedAsset.encodedAssetId;
+                allPis[index][10] = refundAddrH1YCoordinate;
+                allPis[index][11] = refundAddrH2YCoordinate;
                 index++;
             }
         }

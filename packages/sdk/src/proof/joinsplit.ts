@@ -25,10 +25,10 @@ export interface JoinSplitProofWithPublicSignals {
     bigint, // nullifierB
     bigint, // ssenderCommitment
     bigint, // operationDigest
-    bigint, // refundAddrH1CompressedY
-    bigint, // refundAddrH2CompressedY
     bigint, // encodedAssetAddrWithSignBits
-    bigint // encodedAssetId
+    bigint, // encodedAssetId
+    bigint, // refundAddrH1CompressedY
+    bigint // refundAddrH2CompressedY
   ];
 }
 

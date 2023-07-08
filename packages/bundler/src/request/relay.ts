@@ -63,6 +63,7 @@ const joinSplitType = {
   type: "object",
   required: [
     "proof",
+    "senderCommitment",
     "commitmentTreeRoot",
     "nullifierA",
     "nullifierB",
@@ -72,11 +73,10 @@ const joinSplitType = {
     "publicSpend",
     "newNoteAEncrypted",
     "newNoteBEncrypted",
-    "encSenderCanonAddrC1",
-    "encSenderCanonAddrC2",
   ],
   properties: {
     proof: solidityProofType,
+    senderCommitment: bigintType,
     commitmentTreeRoot: bigintType,
     nullifierA: bigintType,
     nullifierB: bigintType,
@@ -86,8 +86,6 @@ const joinSplitType = {
     publicSpend: bigintType,
     newNoteAEncrypted: encryptedNoteType,
     newNoteBEncrypted: encryptedNoteType,
-    encSenderCanonAddrC1: bigintType,
-    encSenderCanonAddrC2: bigintType,
   },
   additionalProperties: false,
 };
