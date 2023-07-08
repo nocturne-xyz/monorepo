@@ -3,7 +3,11 @@
   "description": "Nocturne Snap",
   "proposedName": "Nocturne Snap",
   "source": {
+<<<<<<< HEAD
     "shasum": "C9FpO3gOec0ORYU0emaL8wsXZbLRsVmA8Z8BWfZDmtY=",
+=======
+    "shasum": "odWAwkEOd9AxhWm2QQl3ujyj4Lqlhk5WVk5nDTT4aa8=",
+>>>>>>> 3c4b48b8 (rebase and signal types)
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",

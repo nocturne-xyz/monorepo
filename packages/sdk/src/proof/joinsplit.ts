@@ -77,10 +77,10 @@ export function joinSplitPublicSignalsFromArray(
     nullifierB: publicSignals[5],
     senderCommitment: publicSignals[6],
     opDigest: publicSignals[7],
-    refundAddrH1CompressedY: publicSignals[8],
-    refundAddrH2CompressedY: publicSignals[9],
-    encodedAssetAddrWithSignBits: publicSignals[10],
-    encodedAssetId: publicSignals[11],
+    encodedAssetAddrWithSignBits: publicSignals[8],
+    encodedAssetId: publicSignals[9],
+    refundAddrH1CompressedY: publicSignals[10],
+    refundAddrH2CompressedY: publicSignals[11],
   };
 }
 
@@ -109,10 +109,10 @@ export function joinSplitPublicSignalsToArray(
     publicSignals.nullifierB,
     publicSignals.senderCommitment,
     publicSignals.opDigest,
-    publicSignals.refundAddrH1CompressedY,
-    publicSignals.refundAddrH2CompressedY,
     publicSignals.encodedAssetAddrWithSignBits,
     publicSignals.encodedAssetId,
+    publicSignals.refundAddrH1CompressedY,
+    publicSignals.refundAddrH2CompressedY,
   ];
 }
 

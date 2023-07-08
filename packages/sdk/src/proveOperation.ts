@@ -1,4 +1,4 @@
-import { decompressPoint } from "./crypto";
+import { decomposeCompressedPoint } from "./crypto";
 import {
   PreProofJoinSplit,
   SignedOperation,
@@ -64,29 +64,22 @@ async function proveJoinSplit(
 
   const proof = await prover.proveJoinSplit(proofInputs);
 
-  const decompressedRefundAddrH1 = decompressPoint(refundAddr.h1);
-  const decompressedRefundAddrH2 = decompressPoint(refundAddr.h2);
+  const [, refundAddrH1CompressedY] = decomposeCompressedPoint(refundAddr.h1);
+  const [, refundAddrH2CompressedY] = decomposeCompressedPoint(refundAddr.h2);
 
   // Check that snarkjs output is consistent with our precomputed joinsplit values
   const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
   if (
-    baseJoinSplit.newNoteACommitment !==
-      BigInt(publicSignals.newNoteACommitment) ||
-    baseJoinSplit.newNoteBCommitment !==
-      BigInt(publicSignals.newNoteBCommitment) ||
-    baseJoinSplit.commitmentTreeRoot !==
-      BigInt(publicSignals.commitmentTreeRoot) ||
-    baseJoinSplit.publicSpend !== BigInt(publicSignals.publicSpend) ||
-    baseJoinSplit.nullifierA !== BigInt(publicSignals.nullifierA) ||
-    baseJoinSplit.nullifierB !== BigInt(publicSignals.nullifierB) ||
-    opDigest !== BigInt(publicSignals.opDigest) ||
-    decompressedRefundAddrH1 === undefined ||
-    decompressedRefundAddrH2 === undefined ||
-    decompressedRefundAddrH1.y !==
-      BigInt(publicSignals.refundAddrH1CompressedY) ||
-    decompressedRefundAddrH2.y !==
-      BigInt(publicSignals.refundAddrH2CompressedY) ||
-    publicSignals.senderCommitment !== BigInt(senderCommitment)
+    baseJoinSplit.newNoteACommitment !== publicSignals.newNoteACommitment ||
+    baseJoinSplit.newNoteBCommitment !== publicSignals.newNoteBCommitment ||
+    baseJoinSplit.commitmentTreeRoot !== publicSignals.commitmentTreeRoot ||
+    baseJoinSplit.publicSpend !== publicSignals.publicSpend ||
+    baseJoinSplit.nullifierA !== publicSignals.nullifierA ||
+    baseJoinSplit.nullifierB !== publicSignals.nullifierB ||
+    opDigest !== publicSignals.opDigest ||
+    refundAddrH1CompressedY !== publicSignals.refundAddrH1CompressedY ||
+    refundAddrH2CompressedY !== publicSignals.refundAddrH2CompressedY ||
+    senderCommitment !== publicSignals.senderCommitment
   ) {
     console.error("successfully generated proof, but PIs don't match", {
       publicSignalsFromProof: publicSignals,
@@ -97,10 +90,13 @@ async function proveJoinSplit(
         publicSpend: baseJoinSplit.publicSpend,
         nullifierA: baseJoinSplit.nullifierA,
         nullifierB: baseJoinSplit.nullifierB,
-        decompressedRefundAddrH1Y: decompressedRefundAddrH1?.y,
-        decompressedRefundAddrH2Y: decompressedRefundAddrH2?.y,
         senderCommitment,
         opDigest,
+        encododedAssetAddrWithSignBits:
+          proofInputs.encodedAssetAddrWithSignBits,
+        encodedAssetID: proofInputs.encodedAssetId,
+        refundAddrH1CompressedY: refundAddrH1CompressedY,
+        refundAddrH2CompressedY: refundAddrH2CompressedY,
       },
     });
 

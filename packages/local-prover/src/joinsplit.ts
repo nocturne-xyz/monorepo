@@ -100,6 +100,10 @@ export class WasmJoinSplitProver implements JoinSplitProver {
       this.zkeyPath
     );
 
+    // ensure publicSignals are BigInts
+    proof.publicSignals = proof.publicSignals.map((val: any) =>
+      BigInt(val as string)
+    );
     return proof;
   }
 

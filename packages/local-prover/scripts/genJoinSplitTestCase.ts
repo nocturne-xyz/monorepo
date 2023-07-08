@@ -1,6 +1,7 @@
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
+import * as JSON from "bigint-json-serialization";
 import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { WasmJoinSplitProver } from "../src/joinsplit";
 import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
