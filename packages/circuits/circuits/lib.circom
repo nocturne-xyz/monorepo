@@ -5,6 +5,7 @@ include "include/escalarmulany.circom";
 include "include/aliascheck.circom";
 include "include/compconstant.circom";
 include "include/bitify.circom";
+include "include/comparators.circom";
 
 // Note structure
 // owner, nonce, encodedAsset, encodedAssetId, value
@@ -50,41 +51,9 @@ template IsOrderGreaterThan8() {
     (P4X, P4Y) <== BabyDbl()(P2X, P2Y);
     (P8X, P8Y) <== BabyDbl()(P4X, P4Y);
 
-    // check that 8P != (0, 1)
-    // we do this by checking requiring prover to provide
-    // the inverse of 8P's X coordinate and 8P's Y coordinate minus 1, or 0 if either does not exist
-    // using the "inverse trick" (more below) to ensure the prover doesn't lie.
-    // and then checking that
-
-    signal P8XInvOrZero;
-    signal P8YMinusOneInvOrZero;
-
-    P8XInvOrZero <-- P8X != 0 ? 1 / P8X : 0;
-    P8YMinusOneInvOrZero <-- P8Y - 1 != 0 ? 1 / (P8Y - 1) : 0;
-
-    // take product of "inverse or zero" signals with the original signals
-    // if the original signal was 0, the product will be 0.
-    // if the original signal was nonzero, the product will be either 1 or 0, depending on whether or not the prover was honest
-    // if the prover was honest, then the product will be 1, because the honest prover will have computed and provided the inverse
-    // a dishonest prover can lie by claiming there's no inverse, setting it to 0. In this case, the product will be 0.
-    // in the honest prover case, it suffices to check that at least one of the products are nonzero
-    // we separately handle the dishonest prover case (prover says there's no inverse when there really is) below
-    signal P8XProd <== P8X * P8XInvOrZero;
-    signal P8YProd <== (P8Y - 1) * P8YMinusOneInvOrZero;
-
-    // check that the product is either 0 or 1
-    (1 - P8XProd) * P8XProd === 0;
-    (1 - P8XProd) * P8YProd === 0; 
-
-    // check that it is not the case that both products are 0
-    (1 - P8XProd) * (1 - P8YProd) === 0;
-
-    // to prevent the prover from lying about the inverse, we assert the following:
-    // if the product is zero, then the original value must also be zero
-    // with this constraint, the product can only be 0 if the original value was indeed 0, which has no inverse.
-    // thus, the verifier will reject if the prover pretends the inverse DNE for a nonzero original value.
-    (1 - P8XProd) * P8X === 0;
-    (1 - P8YProd) * (P8Y - 1) === 0;
+    // check that 8P's X coordinate is not zero
+    signal p8XIsZero <== IsZero()(P8X);
+    p8XIsZero === 0;
 }
 
 // checks that a stealth address belongs to a given vk
