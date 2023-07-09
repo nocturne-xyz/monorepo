@@ -15,7 +15,7 @@
     "prettier:write": "prettier --write ./tests ./src",
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
     "setup-subgraph": "../../scripts/setup_subgraph.sh",
-    "test:e2e": "yarn setup-subgraph && mocha --require ts-node/register tests/** --timeout 10000000 --exit -g 'syncs nullifiers'"
+    "test:e2e": "yarn setup-subgraph && mocha --require ts-node/register tests/** --timeout 10000000"
   },
   "dependencies": {
     "@nocturne-xyz/offchain-utils": "workspace:^",
