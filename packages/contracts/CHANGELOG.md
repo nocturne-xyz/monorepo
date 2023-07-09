@@ -2,13 +2,14 @@
 
 ### Unreleased
 
+- use `Ownable2StepUpgradeable` instead of normal `OwnableUpgradeable` in DepositManager, Teller, and Handler (TOB-7)
 - separate setting of `_teller` from Handler initialization to remove front-running risk (TOB-9)
 - add functions to ensure Handler balances are zeroed out pre-operation (TOB-16)
 - make protocol allowlist per-method, add separate allowlist for tokens (TOB-16)
 - Remove ERC721/1155s from all unit and invariant tests
-- Remove ERC721/1155 onReceived hooks in the Teller and Handler
-- Remove the `_receivedAssets` mechanism in the Handler now that the onReceived hooks are gone
+- Remove ERC721/1155 onReceived hooks in the Teller and Handler (TOB-10/16/23)
 - Estimate totalNumRefundsToHandle as number of joinsplits + number of refunds assets
+- Remove the `_receivedAssets` mechanism in the Handler now that the onReceived hooks are gone (TOB-10/16/23)
 - fix eip712 deposit request typehash ordering
 - update gas comp numbers in `Types.sol` and remove verify gas estimate since not needed
 - use new compressed encoding to compute note hashes in subtree update logic

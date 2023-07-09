@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 // External
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 // Internal
@@ -16,7 +16,7 @@ import "./libs/Types.sol";
 ///         nullifiers.
 contract CommitmentTreeManager is
     Initializable,
-    OwnableUpgradeable,
+    Ownable2StepUpgradeable,
     PausableUpgradeable
 {
     using LibOffchainMerkleTree for OffchainMerkleTree;
@@ -78,7 +78,7 @@ contract CommitmentTreeManager is
     function __CommitmentTreeManager_init(
         address subtreeUpdateVerifier
     ) internal onlyInitializing {
-        __Ownable_init();
+        __Ownable2Step_init();
         __Pausable_init();
         _merkle.initialize(subtreeUpdateVerifier);
         _pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
