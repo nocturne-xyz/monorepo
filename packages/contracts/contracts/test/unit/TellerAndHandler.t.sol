@@ -17,7 +17,7 @@ import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import {ReentrantCaller} from "../utils/ReentrantCaller.sol";
-import {TokenSwapper, SwapRequest} from "../utils/TokenSwapper.sol";
+import {TokenSwapper, SwapRequest, Erc721TransferFromRequest, Erc721And1155SafeTransferFromRequest} from "../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../utils/TreeTest.sol";
 import "../utils/NocturneUtils.sol";
 import "../utils/ForgeUtils.sol";
@@ -26,6 +26,8 @@ import {Handler} from "../../Handler.sol";
 import {CommitmentTreeManager} from "../../CommitmentTreeManager.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
+import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
+import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Utils} from "../../libs/Utils.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
@@ -1653,6 +1655,187 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(PER_NOTE_AMOUNT));
     }
 
+    function testProcessBundleUnspecifiedTokensNoRefunds() public {
+        SimpleERC20Token joinSplitToken = ERC20s[0];
+        reserveAndDepositFunds(ALICE, joinSplitToken, 2 * PER_NOTE_AMOUNT);
+
+        TokenSwapper swapper = new TokenSwapper();
+
+        Action[] memory actions = new Action[](1);
+
+        SimpleERC721Token erc721 = new SimpleERC721Token();
+
+        actions[0] = Action({
+            contractAddress: address(swapper),
+            encodedFunction: abi.encodeWithSelector(
+                swapper.transferFromErc721.selector,
+                Erc721TransferFromRequest({
+                    erc721Out: address(erc721),
+                    erc721OutId: 1
+                })
+            )
+        });
+
+        // No refund assets
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(joinSplitToken)
+                ),
+                gasToken: address(joinSplitToken),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
+                encodedRefundAssets: encodedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 4,
+                gasPrice: 50,
+                actions: actions,
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Ensure 100M joinSplitToken in teller and nothing else
+        assertEq(
+            joinSplitToken.balanceOf(address(teller)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertEq(erc721.balanceOf(address(handler)), uint256(0));
+
+        // Check OperationProcessed event
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "",
+                assetsUnwrapped: true
+            })
+        );
+
+        // Whitelist token swapper for sake of simulation
+        handler.setSupportedContractAllowlistPermission(address(swapper), true);
+
+        // Get total leaf count before bundle
+        uint256 totalCount = handler.totalCount();
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, processed, assets unwrapped
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
+
+        // Teller lost some joinSplitToken to BUNDLER due to bundler gas fee
+        assertLt(
+            joinSplitToken.balanceOf(address(teller)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertGt(joinSplitToken.balanceOf(BUNDLER), 0);
+
+        // Tokens are stuck in handler, no refunds for stuck tokens
+        assertEq(erc721.balanceOf(address(handler)), uint256(1));
+        assertEq(totalCount + 5, handler.totalCount()); // 4 notes for 2 JSs, 1 refund for unwrapped erc20s, no erc721
+    }
+
+    function testProcessBundleUnsupportedRefundToken() public {
+        SimpleERC20Token joinSplitToken = ERC20s[0];
+        reserveAndDepositFunds(ALICE, joinSplitToken, 2 * PER_NOTE_AMOUNT);
+
+        TokenSwapper swapper = new TokenSwapper();
+
+        Action[] memory actions = new Action[](1);
+
+        SimpleERC721Token erc721 = new SimpleERC721Token();
+
+        actions[0] = Action({
+            contractAddress: address(swapper),
+            encodedFunction: abi.encodeWithSelector(
+                swapper.transferFromErc721.selector,
+                Erc721TransferFromRequest({
+                    erc721Out: address(erc721),
+                    erc721OutId: 1
+                })
+            )
+        });
+
+        // Encode erc721 as refund asset
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
+        encodedRefundAssets[0] = AssetUtils.encodeAsset(
+            AssetType.ERC721,
+            address(erc721),
+            1
+        );
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(joinSplitToken)
+                ),
+                gasToken: address(joinSplitToken),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
+                encodedRefundAssets: encodedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 4,
+                gasPrice: 50,
+                actions: actions,
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Ensure 100M joinSplitToken in teller and nothing else
+        assertEq(
+            joinSplitToken.balanceOf(address(teller)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertEq(erc721.balanceOf(address(handler)), uint256(0));
+
+        // Check OperationProcessed event
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "!supported refund asset",
+                assetsUnwrapped: false
+            })
+        );
+
+        // Whitelist token swapper for sake of simulation
+        handler.setSupportedContractAllowlistPermission(address(swapper), true);
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, not processed, no assets unwrapped
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, false);
+        assertEq(opResults[0].failureReason, "!supported refund asset");
+
+        // Bundler not compensated because it should have checked refund token was supported
+        assertEq(joinSplitToken.balanceOf(BUNDLER), 0);
+
+        // No tokens received
+        assertEq(erc721.balanceOf(address(teller)), uint256(0));
+        assertEq(erc721.balanceOf(address(handler)), uint256(0));
+    }
+
     function testProcessBundleFailureTooManyRefunds() public {
         SimpleERC20Token tokenIn = ERC20s[0];
         reserveAndDepositFunds(ALICE, tokenIn, 2 * PER_NOTE_AMOUNT);
@@ -1760,8 +1943,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         );
 
-        // Teller lost some tokenIn to BUNDLER due to bundler gas fee, but
-        // otherwise no state changes
+        // Teller lost some tokenIn to BUNDLER due to bundler gas fee
         assertLt(
             tokenIn.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
