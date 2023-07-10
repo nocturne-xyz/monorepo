@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add `IsOrderGreaterThan8` template and use it to check BJJ points given as input in joinsplit circuit
 - skip contributions for subtree update circuit in dev
 - clean before building C++ witness generators
 - use compressed encodings of note owners to compute accumulator hashes

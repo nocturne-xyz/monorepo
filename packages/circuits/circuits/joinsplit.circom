@@ -103,11 +103,18 @@ template JoinSplit(levels) {
     signal newNoteBOwnerH2X <== receiverCanonAddr[0];
     signal newNoteBOwnerH2Y <== receiverCanonAddr[1];
 
+    // check receiver canon addr is a valid babyjubjub point
+    BabyCheck()(receiverCanonAddr[0], receiverCanonAddr[1]);
+    IsOrderGreaterThan8()(receiverCanonAddr[0], receiverCanonAddr[1]);
+
     // check old note owners are composed of valid babyjubjub points
     BabyCheck()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y);
     BabyCheck()(oldNoteAOwnerH2X, oldNoteAOwnerH2Y);
+    IsOrderGreaterThan8()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y);
+
     BabyCheck()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
     BabyCheck()(oldNoteBOwnerH2X, oldNoteBOwnerH2Y);
+    IsOrderGreaterThan8()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
 
     // get encodedAssetAddr and sign bits out of encodedAssetAddrWithSignBits
     // don't need Num2Bits_strict here because it's only 253 bits
