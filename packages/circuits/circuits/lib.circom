@@ -5,6 +5,7 @@ include "include/escalarmulany.circom";
 include "include/aliascheck.circom";
 include "include/compconstant.circom";
 include "include/bitify.circom";
+include "include/comparators.circom";
 
 // Note structure
 // owner, nonce, encodedAsset, encodedAssetId, value
@@ -38,6 +39,21 @@ template DeriveNullifier() {
     hash.inputs[0] <== vk;
     hash.inputs[1] <== noteCommitment;
     nullifier <== hash.out;
+}
+
+template IsOrderGreaterThan8() {
+    signal input PX;
+    signal input PY;
+
+    signal P2X, P2Y, P4X, P4Y, P8X, P8Y;
+
+    (P2X, P2Y) <== BabyDbl()(PX, PY);
+    (P4X, P4Y) <== BabyDbl()(P2X, P2Y);
+    (P8X, P8Y) <== BabyDbl()(P4X, P4Y);
+
+    // check that 8P's X coordinate is not zero
+    signal p8XIsZero <== IsZero()(P8X);
+    p8XIsZero === 0;
 }
 
 // checks that a stealth address belongs to a given vk
