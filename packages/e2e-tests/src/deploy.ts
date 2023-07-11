@@ -8,8 +8,6 @@ import {
   DepositManager,
   DepositManager__factory,
   WETH9__factory,
-  SimpleERC721Token__factory,
-  SimpleERC1155Token__factory,
   SimpleERC20Token__factory,
 } from "@nocturne-xyz/contracts";
 
@@ -27,7 +25,6 @@ import {
   thunk,
   Asset,
   AssetTrait,
-  AssetType,
   MockEthToTokenConverter,
   RPCSDKSyncAdapter,
   BundlerOpTracker,
@@ -50,8 +47,6 @@ import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
 import { startSubgraph, SubgraphConfig } from "./subgraph";
 import { KEYS_TO_WALLETS } from "./keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
-import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
 import { BUNDLER_ENDPOINT } from "./utils";
 
 // eslint-disable-next-line
@@ -90,10 +85,6 @@ export interface TestActorsConfig {
 export interface TestDeploymentTokens {
   erc20: SimpleERC20Token;
   erc20Asset: Asset;
-  erc721: SimpleERC721Token;
-  erc721Asset: Asset;
-  erc1155: SimpleERC1155Token;
-  erc1155Asset: Asset;
   gasToken: SimpleERC20Token;
   gasTokenAsset: Asset;
 }
@@ -336,10 +327,6 @@ export async function deployContractsWithDummyConfig(
   const weth = await new WETH9__factory(connectedSigner).deploy();
   console.log("weth address:", weth.address);
 
-  const [erc721, erc1155] = await deployNonErc20Tokens(connectedSigner);
-  console.log("erc721 address:", erc721.address);
-  console.log("erc1155 address:", erc1155.address);
-
   const deployConfig: NocturneDeployConfig = {
     proxyAdminOwner: connectedSigner.address,
     screeners: args.screeners,
@@ -377,10 +364,7 @@ export async function deployContractsWithDummyConfig(
         },
       ],
     ]),
-    protocolAllowlist: new Map([
-      ["erc721", erc721.address],
-      ["erc1155", erc1155.address],
-    ]),
+    protocolAllowlist: new Map(),
     opts: {
       useMockSubtreeUpdateVerifier:
         process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,
@@ -417,22 +401,10 @@ export async function deployContractsWithDummyConfig(
     formatTestTokens(
       connectedSigner,
       erc20s[0][1].address,
-      erc20s[1][1].address,
-      erc721.address,
-      erc1155.address
+      erc20s[1][1].address
     ),
     { teller, handler, depositManager },
   ];
-}
-
-async function deployNonErc20Tokens(
-  connectedSigner: ethers.Wallet
-): Promise<[SimpleERC721Token, SimpleERC1155Token]> {
-  const erc721 = await new SimpleERC721Token__factory(connectedSigner).deploy();
-  const erc1155 = await new SimpleERC1155Token__factory(
-    connectedSigner
-  ).deploy();
-  return [erc721, erc1155];
 }
 
 async function prefillErc20s(
@@ -453,27 +425,13 @@ async function prefillErc20s(
 function formatTestTokens(
   eoa: ethers.Wallet,
   erc20: Address,
-  gasToken: Address,
-  erc721: Address,
-  erc1155: Address
+  gasToken: Address
 ): TestDeploymentTokens {
   return {
     erc20: SimpleERC20Token__factory.connect(erc20, eoa),
     erc20Asset: AssetTrait.erc20AddressToAsset(erc20),
     gasToken: SimpleERC20Token__factory.connect(gasToken, eoa),
     gasTokenAsset: AssetTrait.erc20AddressToAsset(gasToken),
-    erc721: SimpleERC721Token__factory.connect(erc721, eoa),
-    erc721Asset: {
-      assetType: AssetType.ERC721,
-      assetAddr: erc721,
-      id: 0n,
-    },
-    erc1155: SimpleERC1155Token__factory.connect(erc1155, eoa),
-    erc1155Asset: {
-      assetType: AssetType.ERC721,
-      assetAddr: erc721,
-      id: 0n,
-    },
   };
 }
 

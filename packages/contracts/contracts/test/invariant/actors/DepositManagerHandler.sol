@@ -12,8 +12,6 @@ import {TestDepositManager} from "../../harnesses/TestDepositManager.sol";
 import {ParseUtils} from "../../utils/ParseUtils.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
-import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {AddressSet, LibAddressSet} from "../helpers/AddressSet.sol";
 import {ActorSumSet, LibActorSumSet} from "../helpers/ActorSumSet.sol";
 import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
@@ -43,8 +41,6 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
     // First erc20 is always weth
     address[] public erc20s;
-    SimpleERC721Token public erc721;
-    SimpleERC1155Token public erc1155;
 
     bytes32 public lastCall;
 
@@ -67,14 +63,10 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     constructor(
         TestDepositManager _depositManager,
         address[] memory _erc20s,
-        SimpleERC721Token _erc721,
-        SimpleERC1155Token _erc1155,
         uint256 _screenerPrivkey
     ) {
         depositManager = _depositManager;
         erc20s = _erc20s;
-        erc721 = _erc721;
-        erc1155 = _erc1155;
         screenerPrivkey = _screenerPrivkey;
         screenerAddress = vm.addr(screenerPrivkey);
 

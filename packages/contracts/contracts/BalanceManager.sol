@@ -20,9 +20,6 @@ contract BalanceManager is CommitmentTreeManager {
     // Teller contract to send/request assets to/from
     ITeller public _teller;
 
-    // Array of received erc721/1155s, populated by Handler onReceived hooks
-    EncodedAsset[] public _receivedAssets;
-
     // Gap for upgrade safety
     uint256[50] private __GAP;
 
@@ -145,26 +142,12 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
-    /// @notice Returns max number of refunds to handle.
-    /// @dev The number of refunds actually inserted into commitment tree may be less than this
-    ///      number, this is upper bound. This is used by Handler to ensure
-    ///      outstanding refunds < op.maxNumRefunds.
-    /// @param op Operation to calculate max number of refunds for
-    function _totalNumRefundsToHandle(
-        Operation calldata op
-    ) internal view returns (uint256) {
-        return
-            op.joinSplits.length +
-            op.encodedRefundAssets.length +
-            _receivedAssets.length;
-    }
-
     /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
     ///         to the Teller and inserting new note commitments for the sent back assets.
-    /// @dev Checks for refunds from joinSplits, op.encodedRefundAssets, any assets received from
-    ///      onReceived hooks (erc721/1155s). A refund occurs if any of the checked assets have
-    ///      outstanding balance > 0 in the Handler. If a refund occurs, the Handler will transfer
-    ///      the asset back to the Teller and insert a new note commitment into the commitment tree.
+    /// @dev Checks for refunds from joinSplits and op.encodedRefundAssets. A refund occurs if any
+    ///      of the checked assets have outstanding balance > 0 in the Handler. If a refund occurs,
+    ///      the Handler will transfer the asset back to the Teller and insert a new note
+    ///      commitment into the commitment tree.
     /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
         uint256 numJoinSplits = op.joinSplits.length;
@@ -188,12 +171,6 @@ contract BalanceManager is CommitmentTreeManager {
         for (uint256 i = 0; i < numRefundAssets; i++) {
             _handleRefundForAsset(op.encodedRefundAssets[i], op.refundAddr);
         }
-
-        uint256 numReceived = _receivedAssets.length;
-        for (uint256 i = 0; i < numReceived; i++) {
-            _handleRefundForAsset(_receivedAssets[i], op.refundAddr);
-        }
-        delete _receivedAssets;
     }
 
     /// @notice Handle a refund for a single asset

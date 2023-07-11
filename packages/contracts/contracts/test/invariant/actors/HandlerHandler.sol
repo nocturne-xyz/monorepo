@@ -17,8 +17,6 @@ import {ParseUtils} from "../../utils/ParseUtils.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {WETH9} from "../../tokens/WETH9.sol";
 import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
-import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} from "../helpers/OperationGenerator.sol";
 import {TokenIdSet, LibTokenIdSet} from "../helpers/TokenIdSet.sol";
 import {Utils} from "../../../libs/Utils.sol";
@@ -35,25 +33,21 @@ contract HandlerHandler is CommonBase, StdCheats, StdUtils {
     address subtreeBatchFiller;
 
     SimpleERC20Token public depositErc20;
-    SimpleERC1155Token public depositErc1155;
 
     // ______PUBLIC______
     bytes32 public lastCall;
 
     // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
-    TokenIdSet _depositErc1155IdSet;
 
     constructor(
         Handler _handler,
         address _subtreeBatchFiller,
-        SimpleERC20Token _depositErc20,
-        SimpleERC1155Token _depositErc1155
+        SimpleERC20Token _depositErc20
     ) {
         handler = _handler;
         subtreeBatchFiller = _subtreeBatchFiller;
         depositErc20 = _depositErc20;
-        depositErc1155 = _depositErc1155;
     }
 
     modifier trackCall(bytes32 key) {

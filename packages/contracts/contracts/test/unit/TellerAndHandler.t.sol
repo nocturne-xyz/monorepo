@@ -17,20 +17,18 @@ import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import {ReentrantCaller} from "../utils/ReentrantCaller.sol";
-import {TokenSwapper, SwapRequest} from "../utils/TokenSwapper.sol";
+import {TokenSwapper, SwapRequest, Erc721TransferFromRequest, Erc721And1155SafeTransferFromRequest} from "../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../utils/TreeTest.sol";
 import "../utils/NocturneUtils.sol";
 import "../utils/ForgeUtils.sol";
-import {TestHandler} from "../harnesses/TestHandler.sol";
 import {Teller} from "../../Teller.sol";
+import {Handler} from "../../Handler.sol";
 import {CommitmentTreeManager} from "../../CommitmentTreeManager.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {Utils} from "../../libs/Utils.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
 import "../../libs/Types.sol";
@@ -57,11 +55,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     uint256 constant PER_NOTE_AMOUNT = uint256(50_000_000);
 
     Teller teller;
-    TestHandler handler;
+    Handler handler;
     TreeTest treeTest;
     SimpleERC20Token[3] ERC20s;
-    SimpleERC721Token[3] ERC721s;
-    SimpleERC1155Token[3] ERC1155s;
     IHasherT3 hasherT3;
     IHasherT5 hasherT5;
     IHasherT6 hasherT6;
@@ -92,7 +88,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         deployPoseidon3Through6();
 
         teller = new Teller();
-        handler = new TestHandler();
+        handler = new Handler();
 
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
@@ -112,22 +108,12 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
             ERC20s[i] = new SimpleERC20Token();
-            ERC721s[i] = new SimpleERC721Token();
-            ERC1155s[i] = new SimpleERC1155Token();
 
             // Prefill the handler with 1 token
             ERC20s[i].reserveTokens(address(handler), 1);
 
             handler.setSupportedContractAllowlistPermission(
                 address(ERC20s[i]),
-                true
-            );
-            handler.setSupportedContractAllowlistPermission(
-                address(ERC721s[i]),
-                true
-            );
-            handler.setSupportedContractAllowlistPermission(
-                address(ERC1155s[i]),
                 true
             );
         }
@@ -1490,13 +1476,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        // Call swapper.swap, asking for erc20/721/1155 tokens back
+        // Call swapper.swap, asking for erc20 tokens back
         SimpleERC20Token erc20Out = ERC20s[1];
-        SimpleERC721Token erc721Out = ERC721s[1];
-        SimpleERC1155Token erc1155Out = ERC1155s[1];
-
-        uint256 erc721OutId = 0x1;
-        uint256 erc1155OutId = 0x2;
 
         actions[1] = Action({
             contractAddress: address(swapper),
@@ -1511,12 +1492,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     ),
                     assetInAmount: PER_NOTE_AMOUNT,
                     erc20Out: address(erc20Out),
-                    erc20OutAmount: PER_NOTE_AMOUNT,
-                    erc721Out: address(erc721Out),
-                    erc721OutId: erc721OutId,
-                    erc1155Out: address(erc1155Out),
-                    erc1155OutId: erc1155OutId,
-                    erc1155OutAmount: PER_NOTE_AMOUNT
+                    erc20OutAmount: PER_NOTE_AMOUNT
                 })
             )
         });
@@ -1558,11 +1534,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
         assertEq(tokenIn.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
-        assertEq(erc721Out.balanceOf(address(teller)), uint256(0));
-        assertEq(
-            erc1155Out.balanceOf(address(teller), erc1155OutId),
-            uint256(0)
-        );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
 
         vmExpectOperationProcessed(
@@ -1597,13 +1568,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        // Call swapper.swap, asking for erc20/721/1155 tokens back
+        // Call swapper.swap, asking for erc20 tokens back
         SimpleERC20Token erc20Out = ERC20s[1];
-        SimpleERC721Token erc721Out = ERC721s[1];
-        SimpleERC1155Token erc1155Out = ERC1155s[1];
-
-        uint256 erc721OutId = 0x1;
-        uint256 erc1155OutId = 0x2;
 
         actions[1] = Action({
             contractAddress: address(swapper),
@@ -1618,12 +1584,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     ),
                     assetInAmount: PER_NOTE_AMOUNT,
                     erc20Out: address(erc20Out),
-                    erc20OutAmount: PER_NOTE_AMOUNT,
-                    erc721Out: address(erc721Out),
-                    erc721OutId: erc721OutId,
-                    erc1155Out: address(erc1155Out),
-                    erc1155OutId: erc1155OutId,
-                    erc1155OutAmount: PER_NOTE_AMOUNT
+                    erc20OutAmount: PER_NOTE_AMOUNT
                 })
             )
         });
@@ -1665,11 +1626,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
         assertEq(tokenIn.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1)); // +1 from prefill
-        assertEq(erc721Out.balanceOf(address(teller)), uint256(0));
-        assertEq(
-            erc1155Out.balanceOf(address(teller), erc1155OutId),
-            uint256(0)
-        );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
 
         vmExpectOperationProcessed(
@@ -1696,13 +1652,188 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // in teller
         assertEq(tokenIn.balanceOf(address(handler)), uint256(1));
         assertEq(erc20Out.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
-        assertEq(erc721Out.balanceOf(address(teller)), uint256(1));
-        assertEq(erc721Out.ownerOf(erc721OutId), address(teller));
-        assertEq(
-            erc1155Out.balanceOf(address(teller), erc1155OutId),
-            PER_NOTE_AMOUNT
-        );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(PER_NOTE_AMOUNT));
+    }
+
+    function testProcessBundleUnspecifiedTokensNoRefunds() public {
+        SimpleERC20Token joinSplitToken = ERC20s[0];
+        reserveAndDepositFunds(ALICE, joinSplitToken, 2 * PER_NOTE_AMOUNT);
+
+        TokenSwapper swapper = new TokenSwapper();
+
+        Action[] memory actions = new Action[](1);
+
+        SimpleERC721Token erc721 = new SimpleERC721Token();
+
+        actions[0] = Action({
+            contractAddress: address(swapper),
+            encodedFunction: abi.encodeWithSelector(
+                swapper.transferFromErc721.selector,
+                Erc721TransferFromRequest({
+                    erc721Out: address(erc721),
+                    erc721OutId: 1
+                })
+            )
+        });
+
+        // No refund assets
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(joinSplitToken)
+                ),
+                gasToken: address(joinSplitToken),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
+                encodedRefundAssets: encodedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 4,
+                gasPrice: 50,
+                actions: actions,
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Ensure 100M joinSplitToken in teller and nothing else
+        assertEq(
+            joinSplitToken.balanceOf(address(teller)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertEq(erc721.balanceOf(address(handler)), uint256(0));
+
+        // Check OperationProcessed event
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "",
+                assetsUnwrapped: true
+            })
+        );
+
+        // Whitelist token swapper for sake of simulation
+        handler.setSupportedContractAllowlistPermission(address(swapper), true);
+
+        // Get total leaf count before bundle
+        uint256 totalCount = handler.totalCount();
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, processed, assets unwrapped
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
+
+        // Teller lost some joinSplitToken to BUNDLER due to bundler gas fee
+        assertLt(
+            joinSplitToken.balanceOf(address(teller)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertGt(joinSplitToken.balanceOf(BUNDLER), 0);
+
+        // Tokens are stuck in handler, no refunds for stuck tokens
+        assertEq(erc721.balanceOf(address(handler)), uint256(1));
+        assertEq(totalCount + 5, handler.totalCount()); // 4 notes for 2 JSs, 1 refund for unwrapped erc20s, no erc721
+    }
+
+    function testProcessBundleUnsupportedRefundToken() public {
+        SimpleERC20Token joinSplitToken = ERC20s[0];
+        reserveAndDepositFunds(ALICE, joinSplitToken, 2 * PER_NOTE_AMOUNT);
+
+        TokenSwapper swapper = new TokenSwapper();
+
+        Action[] memory actions = new Action[](1);
+
+        SimpleERC721Token erc721 = new SimpleERC721Token();
+
+        actions[0] = Action({
+            contractAddress: address(swapper),
+            encodedFunction: abi.encodeWithSelector(
+                swapper.transferFromErc721.selector,
+                Erc721TransferFromRequest({
+                    erc721Out: address(erc721),
+                    erc721OutId: 1
+                })
+            )
+        });
+
+        // Encode erc721 as refund asset
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
+        encodedRefundAssets[0] = AssetUtils.encodeAsset(
+            AssetType.ERC721,
+            address(erc721),
+            1
+        );
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(joinSplitToken)
+                ),
+                gasToken: address(joinSplitToken),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
+                encodedRefundAssets: encodedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 4,
+                gasPrice: 50,
+                actions: actions,
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Ensure 100M joinSplitToken in teller and nothing else
+        assertEq(
+            joinSplitToken.balanceOf(address(teller)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertEq(erc721.balanceOf(address(handler)), uint256(0));
+
+        // Check OperationProcessed event
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "!supported refund asset",
+                assetsUnwrapped: false
+            })
+        );
+
+        // Whitelist token swapper for sake of simulation
+        handler.setSupportedContractAllowlistPermission(address(swapper), true);
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, not processed, no assets unwrapped
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, false);
+        assertEq(opResults[0].failureReason, "!supported refund asset");
+
+        // Bundler not compensated because it should have checked refund token was supported
+        assertEq(joinSplitToken.balanceOf(BUNDLER), 0);
+
+        // No tokens received
+        assertEq(erc721.balanceOf(address(teller)), uint256(0));
+        assertEq(erc721.balanceOf(address(handler)), uint256(0));
     }
 
     function testProcessBundleFailureTooManyRefunds() public {
@@ -1723,13 +1854,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        // Call swapper.swap, asking for erc20/721/1155 tokens back
+        // Call swapper.swap, asking for erc20 tokens back
         SimpleERC20Token erc20Out = ERC20s[1];
-        SimpleERC721Token erc721Out = ERC721s[1];
-        SimpleERC1155Token erc1155Out = ERC1155s[1];
-
-        uint256 erc721OutId = 0x1;
-        uint256 erc1155OutId = 0x2;
 
         actions[1] = Action({
             contractAddress: address(swapper),
@@ -1744,12 +1870,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     ),
                     assetInAmount: PER_NOTE_AMOUNT,
                     erc20Out: address(erc20Out),
-                    erc20OutAmount: PER_NOTE_AMOUNT,
-                    erc721Out: address(erc721Out),
-                    erc721OutId: erc721OutId,
-                    erc1155Out: address(erc1155Out),
-                    erc1155OutId: erc1155OutId,
-                    erc1155OutAmount: PER_NOTE_AMOUNT
+                    erc20OutAmount: PER_NOTE_AMOUNT
                 })
             )
         });
@@ -1795,11 +1916,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(erc20Out.balanceOf(address(teller)), uint256(0));
-        assertEq(erc721Out.balanceOf(address(teller)), uint256(0));
-        assertEq(
-            erc1155Out.balanceOf(address(teller), erc1155OutId),
-            uint256(0)
-        );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
 
         // Check OperationProcessed event emits processed = false
@@ -1827,228 +1943,14 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         );
 
-        // Teller lost some tokenIn to BUNDLER due to bundler gas fee, but
-        // otherwise no state changes
+        // Teller lost some tokenIn to BUNDLER due to bundler gas fee
         assertLt(
             tokenIn.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertGt(tokenIn.balanceOf(BUNDLER), 0);
         assertEq(erc20Out.balanceOf(address(teller)), uint256(0));
-        assertEq(erc721Out.balanceOf(address(teller)), uint256(0));
-        assertEq(
-            erc1155Out.balanceOf(address(teller), erc1155OutId),
-            uint256(0)
-        );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
-    }
-
-    function testOnErc721ReceivedSuccessEnteredExecute() public {
-        // Override reentrancy guard so balance manager can receive token
-        vm.store(
-            address(handler),
-            bytes32(OPERATION_STAGE_STORAGE_SLOT),
-            bytes32(ENTERED_EXECUTE_ACTIONS)
-        );
-
-        // Token balance manager will receive
-        SimpleERC721Token erc721 = ERC721s[0];
-        uint256 tokenId = 1;
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC721,
-            address(erc721),
-            tokenId
-        );
-
-        // Mint and send token to balance manager
-        assertEq(handler.receivedAssetsLength(), 0);
-        erc721.reserveToken(ALICE, tokenId);
-        vm.prank(ALICE);
-        erc721.safeTransferFrom(ALICE, address(handler), tokenId);
-
-        // Ensure token was received
-        assertEq(handler.receivedAssetsLength(), 1);
-        EncodedAsset memory received = handler.getReceivedAssetsByIndex(0);
-        assertEq(received.encodedAssetAddr, encodedToken.encodedAssetAddr);
-        assertEq(received.encodedAssetId, encodedToken.encodedAssetId);
-    }
-
-    function testOnErc721ReceivedFailureNotEntered() public {
-        // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
-
-        // Token balance manager will receive
-        SimpleERC721Token erc721 = ERC721s[0];
-        uint256 tokenId = 1;
-
-        // Expect safeTransferFrom to fail because balance stage = NOT_ENTERED
-        assertEq(handler.receivedAssetsLength(), 0);
-        erc721.reserveToken(ALICE, tokenId);
-        vm.prank(ALICE);
-        vm.expectRevert("ERC721: transfer to non ERC721Receiver implementer");
-        erc721.safeTransferFrom(ALICE, address(handler), tokenId);
-        assertEq(handler.receivedAssetsLength(), 0);
-    }
-
-    function testOnErc1155ReceivedSuccessEnteredExecute() public {
-        // Override reentrancy guard so balance manager can receive token
-        vm.store(
-            address(handler),
-            bytes32(OPERATION_STAGE_STORAGE_SLOT),
-            bytes32(ENTERED_EXECUTE_ACTIONS)
-        );
-
-        // Token balance manager will receive
-        SimpleERC1155Token erc1155 = ERC1155s[0];
-        uint256 tokenId = 1;
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC1155,
-            address(erc1155),
-            tokenId
-        );
-
-        // Mint and send token to balance manager
-        uint256 tokenAmount = 100;
-        assertEq(erc1155.balanceOf(address(handler), tokenId), 0);
-        assertEq(handler.receivedAssetsLength(), 0);
-        erc1155.reserveTokens(ALICE, tokenId, tokenAmount);
-        vm.prank(ALICE);
-        erc1155.safeTransferFrom(
-            ALICE,
-            address(handler),
-            tokenId,
-            tokenAmount,
-            bytes("")
-        );
-
-        // Ensure tokens were received
-        assertEq(erc1155.balanceOf(address(handler), tokenId), tokenAmount);
-        assertEq(handler.receivedAssetsLength(), 1);
-        EncodedAsset memory received = handler.getReceivedAssetsByIndex(0);
-        assertEq(received.encodedAssetAddr, encodedToken.encodedAssetAddr);
-        assertEq(received.encodedAssetId, encodedToken.encodedAssetId);
-    }
-
-    function testOnErc1155ReceivedFailureNotEntered() public {
-        // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
-
-        // Token balance manager will attempt to receive
-        SimpleERC1155Token erc1155 = ERC1155s[0];
-        uint256 tokenId = 1;
-
-        uint256 tokenAmount = 100;
-
-        // Mint but transfer attempt will revert
-        assertEq(handler.receivedAssetsLength(), 0);
-        erc1155.reserveTokens(ALICE, tokenId, tokenAmount);
-        vm.prank(ALICE);
-        vm.expectRevert("ERC1155: ERC1155Receiver rejected tokens");
-        erc1155.safeTransferFrom(
-            ALICE,
-            address(handler),
-            tokenId,
-            tokenAmount,
-            bytes("")
-        );
-        assertEq(handler.receivedAssetsLength(), 0);
-    }
-
-    function testOnErc1155BatchReceivedSuccessEnteredExecute() public {
-        // Override reentrancy guard so balance manager can receive token
-        vm.store(
-            address(handler),
-            bytes32(OPERATION_STAGE_STORAGE_SLOT),
-            bytes32(ENTERED_EXECUTE_ACTIONS)
-        );
-
-        // Token balance manager will receive
-        SimpleERC1155Token erc1155 = ERC1155s[0];
-        uint256 tokenId1 = 1;
-        uint256 tokenId2 = 2;
-        EncodedAsset memory encodedToken1 = AssetUtils.encodeAsset(
-            AssetType.ERC1155,
-            address(erc1155),
-            tokenId1
-        );
-        EncodedAsset memory encodedToken2 = AssetUtils.encodeAsset(
-            AssetType.ERC1155,
-            address(erc1155),
-            tokenId2
-        );
-
-        // Mint and send token to balance manager
-        uint256 tokenAmount = 100;
-        assertEq(erc1155.balanceOf(address(handler), tokenId1), 0);
-        assertEq(erc1155.balanceOf(address(handler), tokenId2), 0);
-        assertEq(handler.receivedAssetsLength(), 0);
-        erc1155.reserveTokens(ALICE, tokenId1, tokenAmount);
-        erc1155.reserveTokens(ALICE, tokenId2, tokenAmount);
-
-        uint256[] memory tokenIds = new uint256[](2);
-        tokenIds[0] = tokenId1;
-        tokenIds[1] = tokenId2;
-
-        uint256[] memory amounts = new uint256[](2);
-        amounts[0] = tokenAmount;
-        amounts[1] = tokenAmount;
-
-        vm.prank(ALICE);
-        erc1155.safeBatchTransferFrom(
-            ALICE,
-            address(handler),
-            tokenIds,
-            amounts,
-            bytes("")
-        );
-
-        // Ensure tokens were received
-        assertEq(erc1155.balanceOf(address(handler), tokenId1), tokenAmount);
-        assertEq(erc1155.balanceOf(address(handler), tokenId2), tokenAmount);
-        assertEq(handler.receivedAssetsLength(), 2);
-
-        EncodedAsset memory received1 = handler.getReceivedAssetsByIndex(0);
-        EncodedAsset memory received2 = handler.getReceivedAssetsByIndex(1);
-        assertEq(received1.encodedAssetAddr, encodedToken1.encodedAssetAddr);
-        assertEq(received1.encodedAssetId, encodedToken1.encodedAssetId);
-        assertEq(received2.encodedAssetAddr, encodedToken2.encodedAssetAddr);
-        assertEq(received2.encodedAssetId, encodedToken2.encodedAssetId);
-    }
-
-    function testOnErc1155BatchReceivedFailureNotEntered() public {
-        // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
-
-        // Token balance manager will receive
-        SimpleERC1155Token erc1155 = ERC1155s[0];
-        uint256 tokenId1 = 1;
-        uint256 tokenId2 = 2;
-
-        // Mint and send token to balance manager
-        uint256 tokenAmount = 100;
-
-        erc1155.reserveTokens(ALICE, tokenId1, tokenAmount);
-        erc1155.reserveTokens(ALICE, tokenId2, tokenAmount);
-
-        uint256[] memory tokenIds = new uint256[](2);
-        tokenIds[0] = tokenId1;
-        tokenIds[1] = tokenId2;
-
-        uint256[] memory amounts = new uint256[](2);
-        amounts[0] = tokenAmount;
-        amounts[1] = tokenAmount;
-
-        vm.prank(ALICE);
-        vm.expectRevert("ERC1155: ERC1155Receiver rejected tokens");
-        erc1155.safeBatchTransferFrom(
-            ALICE,
-            address(handler),
-            tokenIds,
-            amounts,
-            bytes("")
-        );
-
-        // Ensure tokens were not received
-        assertEq(handler.receivedAssetsLength(), 0);
-        assertEq(erc1155.balanceOf(address(handler), tokenId1), 0);
-        assertEq(erc1155.balanceOf(address(handler), tokenId2), 0);
     }
 
     function testProcessBundleFailureNotEnoughBundlerComp() public {
