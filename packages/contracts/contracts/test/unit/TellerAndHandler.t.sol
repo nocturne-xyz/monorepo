@@ -1769,7 +1769,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setSupportedContractAllowlistPermission(address(swapper), true);
+        handler.setSupportedContractAllowlistPermission(
+            address(swapper),
+            swapper.swap.selector,
+            true
+        );
 
         // Get total leaf count before bundle
         uint256 totalCount = handler.totalCount();
@@ -1865,7 +1869,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setSupportedContractAllowlistPermission(address(swapper), true);
+        handler.setSupportedContractAllowlistPermission(
+            address(swapper),
+            swapper.swap.selector,
+            true
+        );
 
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
