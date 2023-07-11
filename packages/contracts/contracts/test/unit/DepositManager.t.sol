@@ -95,17 +95,16 @@ contract DepositManagerTest is Test {
         depositManager.setScreenerPermission(SCREENER, true);
         teller.setDepositSourcePermission(address(depositManager), true);
 
-        handler.setSupportedContractAllowlistPermission(
+        handler.setTokenPermission(
             address(weth),
-            bytes4(0),
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(weth),
             weth.approve.selector,
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(weth),
             weth.transfer.selector,
             true
@@ -122,17 +121,16 @@ contract DepositManagerTest is Test {
         for (uint256 i = 0; i < 3; i++) {
             ERC20s[i] = new SimpleERC20Token();
 
-            handler.setSupportedContractAllowlistPermission(
+            handler.setTokenPermission(
                 address(ERC20s[i]),
-                bytes4(0),
                 true
             );
-            handler.setSupportedContractAllowlistPermission(
+            handler.setContractMethodPermission(
                 address(ERC20s[i]),
                 ERC20s[i].approve.selector,
                 true
             );
-            handler.setSupportedContractAllowlistPermission(
+            handler.setContractMethodPermission(
                 address(ERC20s[i]),
                 ERC20s[i].transfer.selector,
                 true

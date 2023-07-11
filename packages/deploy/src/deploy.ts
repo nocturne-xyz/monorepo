@@ -260,7 +260,7 @@ export async function whitelistProtocols(
         console.log(
           `whitelisting protocol: ${name}. address: ${contractAddress}. method: ${signature}`
         );
-        const tx = await handler.setSupportedContractAllowlistPermission(
+        const tx = await handler.setSupportedContractMethodPermission(
           contractAddress,
           selector,
           true

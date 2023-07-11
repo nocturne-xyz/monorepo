@@ -92,55 +92,52 @@ contract ProtocolInvariants is Test, InvariantsBase {
         );
 
         // TODO: allow other tokens once we enable transacting with them
-        handler.setSupportedContractAllowlistPermission(
+        handler.setTokenPermission(
             address(weth),
-            bytes4(0),
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(weth),
             weth.approve.selector,
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(weth),
             weth.transfer.selector,
             true
         );
 
-        handler.setSupportedContractAllowlistPermission(
+        handler.setTokenPermission(
             address(depositErc20),
-            bytes4(0),
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(depositErc20),
             depositErc20.approve.selector,
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(depositErc20),
             depositErc20.transfer.selector,
             true
         );
 
-        handler.setSupportedContractAllowlistPermission(
+        handler.setTokenPermission(
             address(swapErc20),
-            bytes4(0),
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(swapErc20),
             swapErc20.approve.selector,
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(swapErc20),
             swapErc20.transfer.selector,
             true
         );
 
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(swapper),
             swapper.swap.selector,
             true

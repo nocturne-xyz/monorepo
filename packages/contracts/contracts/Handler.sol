@@ -18,19 +18,24 @@ import "./libs/Types.sol";
 contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     using OperationLib for Operation;
 
-    // Set of callable protocol and token methods
-    // NOTE: address + bytes(0) key represents whether or not a token is supported
-    mapping(uint192 => bool) public _supportedContractAllowlist;
+    // Set of supported tokens
+    mapping(address => bool) public _supportedTokens;
+
+    // Set of callable protocol methods (includes tokens)
+    mapping(uint192 => bool) public _supportedContractMethods;
 
     // Gap for upgrade safety
     uint256[50] private __GAP;
 
     /// @notice Event emitted when a contract is given/revoked allowlist permission
-    event SupportedContractAllowlistPermissionSet(
+    event ContractMethodPermissionSet(
         address contractAddress,
         bytes4 selector,
         bool permission
     );
+
+    /// @notice Event emitted when a token is given/revoked allowlist permission
+    event TokenPermissionSet(address token, bool permission);
 
     /// @notice Initialization function
     /// @param teller Address of the Teller contract
@@ -71,10 +76,15 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         _unpause();
     }
 
+    function setTokenPermission(address token, bool permission) external onlyOwner {
+        _supportedTokens[token] = permission;
+        emit TokenPermissionSet(token, permission);
+    }
+
     /// @notice Sets allowlist permission of the given contract, only callable by owner
     /// @param contractAddress Address of the contract to add
     /// @param permission Whether to enable or revoke permission
-    function setSupportedContractAllowlistPermission(
+    function setContractMethodPermission(
         address contractAddress,
         bytes4 selector,
         bool permission
@@ -83,8 +93,8 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             contractAddress,
             selector
         );
-        _supportedContractAllowlist[addressAndSelector] = permission;
-        emit SupportedContractAllowlistPermissionSet(
+        _supportedContractMethods[addressAndSelector] = permission;
+        emit ContractMethodPermissionSet(
             contractAddress,
             selector,
             permission
@@ -100,9 +110,8 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     ) external override whenNotPaused onlyTeller {
         EncodedAsset memory encodedAsset = deposit.encodedAsset;
         (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
-        uint192 addressAndSelector = _addressAndSelector(assetAddr, bytes4(0));
         require(
-            _supportedContractAllowlist[addressAndSelector],
+            _supportedTokens[assetAddr],
             "!supported deposit asset"
         );
 
@@ -151,12 +160,8 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             (, address assetAddr, ) = AssetUtils.decodeAsset(
                 op.encodedRefundAssets[i]
             );
-            uint192 addressAndSelector = _addressAndSelector(
-                assetAddr,
-                bytes4(0)
-            );
             require(
-                _supportedContractAllowlist[addressAndSelector],
+                _supportedTokens[assetAddr],
                 "!supported refund asset"
             );
         }
@@ -280,7 +285,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             _extractFunctionSelector(action.encodedFunction)
         );
         require(
-            _supportedContractAllowlist[addressAndSelector],
+            _supportedContractMethods[addressAndSelector],
             "Cannot call non-allowed protocol method"
         );
 

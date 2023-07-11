@@ -116,17 +116,16 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             // Prefill the handler with 1 token
             ERC20s[i].reserveTokens(address(handler), 1);
 
-            handler.setSupportedContractAllowlistPermission(
+            handler.setTokenPermission(
                 address(ERC20s[i]),
-                bytes4(0),
                 true
             );
-            handler.setSupportedContractAllowlistPermission(
+            handler.setContractMethodPermission(
                 address(ERC20s[i]),
                 ERC20s[i].approve.selector,
                 true
             );
-            handler.setSupportedContractAllowlistPermission(
+            handler.setContractMethodPermission(
                 address(ERC20s[i]),
                 ERC20s[i].transfer.selector,
                 true
@@ -938,12 +937,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist reentrantCaller for sake of simulation
-        handler.setSupportedContractAllowlistPermission(
+        handler.setTokenPermission(
             address(reentrantCaller),
-            bytes4(0),
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(reentrantCaller),
             reentrantCaller.reentrantProcessBundle.selector,
             true
@@ -1165,12 +1163,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist handler for sake of simulation
-        handler.setSupportedContractAllowlistPermission(
+        handler.setTokenPermission(
             address(handler),
-            bytes4(0),
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(handler),
             handler.handleOperation.selector,
             true
@@ -1291,12 +1288,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist handler for sake of simulation
-        handler.setSupportedContractAllowlistPermission(
+        handler.setTokenPermission(
             address(handler),
-            bytes4(0),
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(handler),
             handler.executeActions.selector,
             true
@@ -1675,12 +1671,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setSupportedContractAllowlistPermission(
+        handler.setTokenPermission(
             address(swapper),
-            bytes4(0),
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(swapper),
             swapper.swap.selector,
             true
@@ -1769,7 +1764,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(swapper),
             swapper.transferFromErc721.selector,
             true
@@ -1945,7 +1940,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(swapper),
             swapper.swap.selector,
             true
@@ -2059,12 +2054,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setSupportedContractAllowlistPermission(
+        handler.setTokenPermission(
             address(swapper),
-            bytes4(0),
             true
         );
-        handler.setSupportedContractAllowlistPermission(
+        handler.setContractMethodPermission(
             address(swapper),
             swapper.swap.selector,
             true
