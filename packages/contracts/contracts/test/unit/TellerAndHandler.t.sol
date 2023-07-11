@@ -1771,7 +1771,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Whitelist token swapper for sake of simulation
         handler.setSupportedContractAllowlistPermission(
             address(swapper),
-            swapper.swap.selector,
+            swapper.transferFromErc721.selector,
             true
         );
 

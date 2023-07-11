@@ -19,6 +19,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     using OperationLib for Operation;
 
     // Set of callable protocol and token methods
+    // NOTE: address + bytes(0) key represents whether or not a token is supported
     mapping(uint192 => bool) public _supportedContractAllowlist;
 
     // Gap for upgrade safety
