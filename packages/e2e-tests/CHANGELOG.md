@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- remove mint 721/1155 test case
+- remove deployment and deposits of erc721/1155s
 - modify sleeps after subtree update to fix flakey sync e2e tests(?)
 - modify optimistic record tracking test to check op digest records
 - add config option to use rapidsnark prover in e2e tests

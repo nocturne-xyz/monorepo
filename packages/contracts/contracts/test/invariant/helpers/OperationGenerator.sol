@@ -16,8 +16,6 @@ import {ParseUtils} from "../../utils/ParseUtils.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {WETH9} from "../../tokens/WETH9.sol";
 import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
-import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {AddressSet, LibAddressSet} from "../helpers/AddressSet.sol";
 import {ActorSumSet, LibActorSumSet} from "../helpers/ActorSumSet.sol";
 import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
@@ -35,8 +33,6 @@ struct GenerateOperationArgs {
     TokenSwapper swapper;
     address[] joinSplitTokens;
     SimpleERC20Token swapErc20;
-    SimpleERC721Token swapErc721;
-    SimpleERC1155Token swapErc1155;
 }
 
 struct GeneratedOperationMetadata {
@@ -322,22 +318,12 @@ contract OperationGenerator is InvariantUtils {
             0,
             type(uint256).max - args.swapErc20.totalSupply()
         );
-        uint256 swapErc1155OutAmount = bound(
-            _rerandomize(args.seed),
-            0,
-            10_000_000
-        );
         SwapRequest memory swapRequest = SwapRequest({
             assetInOwner: address(args.handler),
             encodedAssetIn: encodedAssetIn,
             assetInAmount: swapInAmount,
             erc20Out: address(args.swapErc20),
-            erc20OutAmount: swapErc20OutAmount,
-            erc721Out: address(args.swapErc721),
-            erc721OutId: nonErc20IdCounter,
-            erc1155Out: address(args.swapErc1155),
-            erc1155OutId: nonErc20IdCounter,
-            erc1155OutAmount: swapErc1155OutAmount
+            erc20OutAmount: swapErc20OutAmount
         });
 
         ++nonErc20IdCounter;

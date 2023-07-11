@@ -15,6 +15,14 @@ struct SwapRequest {
     uint256 assetInAmount;
     address erc20Out;
     uint256 erc20OutAmount;
+}
+
+struct Erc721TransferFromRequest {
+    address erc721Out;
+    uint256 erc721OutId;
+}
+
+struct Erc721And1155SafeTransferFromRequest {
     address erc721Out;
     uint256 erc721OutId;
     address erc1155Out;
@@ -40,6 +48,25 @@ contract TokenSwapper is IERC721Receiver, IERC1155Receiver {
                 request.erc20OutAmount
             );
         }
+    }
+
+    function transferFromErc721(
+        Erc721TransferFromRequest memory request
+    ) public {
+        ISimpleERC721Token(request.erc721Out).reserveToken(
+            address(this),
+            request.erc721OutId
+        );
+        ISimpleERC721Token(request.erc721Out).transferFrom(
+            address(this),
+            msg.sender,
+            request.erc721OutId
+        );
+    }
+
+    function safeTransferFromErc721And1155(
+        Erc721And1155SafeTransferFromRequest memory request
+    ) public {
         if (address(request.erc721Out) != address(0x0)) {
             ISimpleERC721Token(request.erc721Out).reserveToken(
                 address(this),
@@ -51,6 +78,7 @@ contract TokenSwapper is IERC721Receiver, IERC1155Receiver {
                 request.erc721OutId
             );
         }
+
         if (address(request.erc1155Out) != address(0x0)) {
             ISimpleERC1155Token(request.erc1155Out).reserveTokens(
                 address(this),

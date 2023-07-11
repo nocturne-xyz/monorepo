@@ -5,14 +5,10 @@ import { ethers } from "ethers";
 import {
   DepositManager,
   Handler,
-  SimpleERC1155Token__factory,
   SimpleERC20Token__factory,
-  SimpleERC721Token__factory,
   Teller,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
-import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
 import {
   NocturneWalletSDK,
   NocturneDB,
@@ -30,10 +26,7 @@ import {
   ONE_DAY_SECONDS,
   submitAndProcessOperation,
 } from "../src/utils";
-import {
-  depositFundsMultiToken,
-  depositFundsSingleToken,
-} from "../src/deposit";
+import { depositFundsMultiToken } from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
 
 chai.use(chaiAsPromised);
@@ -44,8 +37,6 @@ const PER_NOTE_AMOUNT = 100n * 1_000_000n;
 const ALICE_UNWRAP_VAL = 120n * 1_000_000n;
 const ALICE_TO_BOB_PUB_VAL = 100n * 1_000_000n;
 const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
-
-const PLUTOCRACY_AMOUNT = 3n;
 
 describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", async () => {
   let teardown: () => Promise<void>;
@@ -67,12 +58,6 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
   let erc20: SimpleERC20Token;
   let erc20Asset: Asset;
-
-  let erc721: SimpleERC721Token;
-  let erc721Asset: Asset;
-
-  let erc1155: SimpleERC1155Token;
-  let erc1155Asset: Asset;
 
   let gasToken: SimpleERC20Token;
   let gasTokenAsset: Asset;
@@ -99,16 +84,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       fillSubtreeBatch,
     } = testDeployment);
 
-    ({
-      erc20,
-      erc20Asset,
-      erc721,
-      erc721Asset,
-      erc1155,
-      erc1155Asset,
-      gasToken,
-      gasTokenAsset,
-    } = testDeployment.tokens);
+    ({ erc20, erc20Asset, gasToken, gasTokenAsset } = testDeployment.tokens);
 
     ({
       nocturneDBAlice,
@@ -349,87 +325,6 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       console.log("bundler gas asset balance after op:", bundlerBalanceAfter);
       // for some reason, mocha `.gte` doesn't work here
       expect(bundlerBalanceAfter > bundlerBalanceBefore).to.be.true;
-    };
-
-    await testE2E(
-      operationRequest,
-      contractChecks,
-      offchainChecks,
-      OperationStatus.EXECUTED_SUCCESS
-    );
-  });
-
-  it(`alice mints an ERC721 and ERC1155 and receives them privately them as refunds to her Nocturne address`, async () => {
-    console.log("deposit funds and commit note commitments");
-    await depositFundsSingleToken(
-      depositManager,
-      gasToken,
-      aliceEoa,
-      nocturneWalletSDKAlice.signer.canonicalStealthAddress(),
-      [GAS_FAUCET_DEFAULT_AMOUNT]
-    );
-    await fillSubtreeBatch();
-
-    console.log("encode reserve erc721 action");
-    const erc721ReserveCalldata =
-      SimpleERC721Token__factory.createInterface().encodeFunctionData(
-        "reserveToken",
-        // mint a ERC721 token directly to the teller contract
-        [handler.address, erc721Asset.id]
-      );
-
-    console.log("encode reserve erc1155 action");
-    const erc1155ReserveCalldata =
-      SimpleERC1155Token__factory.createInterface().encodeFunctionData(
-        "reserveTokens",
-        // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the teller contract
-        [handler.address, erc1155Asset.id, PLUTOCRACY_AMOUNT]
-      );
-
-    // unwrap 1 erc20 to satisfy gas token requirement
-    const operationRequest = new OperationRequestBuilder()
-      .action(erc721.address, erc721ReserveCalldata)
-      .action(erc1155.address, erc1155ReserveCalldata)
-      .unwrap(gasTokenAsset, 1n)
-      .gasPrice(GAS_PRICE)
-      .chainId(BigInt((await provider.getNetwork()).chainId))
-      .deadline(
-        BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
-      )
-      .build();
-
-    const contractChecks = async () => {
-      console.log("check for OperationProcessed event");
-      const latestBlock = await provider.getBlockNumber();
-      const events: OperationProcessedEvent[] = await queryEvents(
-        teller,
-        teller.filters.OperationProcessed(),
-        0,
-        latestBlock
-      );
-
-      expect(events[0].args.opProcessed).to.equal(true);
-      expect(events[0].args.callSuccesses[0]).to.equal(true);
-      expect(events[0].args.callSuccesses[1]).to.equal(true);
-    };
-
-    const offchainChecks = async () => {
-      console.log("alice: Sync SDK post-operation");
-      await nocturneWalletSDKAlice.sync();
-
-      // Alice should have a note for minted ERC721 token
-      const erc721NotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc721Asset,
-        { includeUncommitted: true }
-      )!;
-      expect(erc721NotesAlice.length).to.equal(1);
-
-      // Alice should have a note for minted ERC1155 token
-      const erc1155NotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc1155Asset,
-        { includeUncommitted: true }
-      )!;
-      expect(erc1155NotesAlice.length).to.equal(1);
     };
 
     await testE2E(

@@ -8,10 +8,6 @@ import {Versioned} from "./upgrade/Versioned.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {IERC721ReceiverUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
-import {IERC1155ReceiverUpgradeable, IERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 // Internal
 import {ITeller} from "./interfaces/ITeller.sol";
 import {IHandler} from "./interfaces/IHandler.sol";
@@ -30,8 +26,6 @@ contract Teller is
     ReentrancyGuardUpgradeable,
     PausableUpgradeable,
     OwnableUpgradeable,
-    IERC721ReceiverUpgradeable,
-    IERC1155ReceiverUpgradeable,
     Versioned
 {
     using OperationLib for Operation;
@@ -68,8 +62,9 @@ contract Teller is
         address handler,
         address joinSplitVerifier
     ) external initializer {
-        __Ownable_init();
+        __ReentrancyGuard_init();
         __Pausable_init();
+        __Ownable_init();
         _handler = IHandler(handler);
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
     }
@@ -192,55 +187,6 @@ contract Teller is
             );
         }
         return opResults;
-    }
-
-    /// @notice Called when Teller is safe transferred an ERC721. Always returns valid selector.
-    /// @dev We always return selector because the Handler will revert if the ERC721 contract is
-    ///      not supported mid deposit. Thus any actual deposits of unsupported ERC721s will be
-    ///      reverted too.
-    function onERC721Received(
-        address, // operator
-        address, // from
-        uint256, // tokenId
-        bytes calldata // data
-    ) external pure override returns (bytes4) {
-        return IERC721ReceiverUpgradeable.onERC721Received.selector;
-    }
-
-    /// @notice Called when Teller is safe transferred an ERC1155. Always returns valid selector.
-    /// @dev Same rationale for ERC1155 received as ERC721 (above).
-    function onERC1155Received(
-        address, // operator
-        address, // from
-        uint256, // id
-        uint256, // value
-        bytes calldata // data
-    ) external pure override returns (bytes4) {
-        return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
-    }
-
-    /// @notice Called when Teller is safe batch transferred an ERC1155. Always returns valid
-    ///         selector.
-    /// @dev Same rationale for ERC1155 batched received as ERC721 (above).
-    function onERC1155BatchReceived(
-        address, // operator
-        address, // from
-        uint256[] calldata, // ids
-        uint256[] calldata, // values
-        bytes calldata // data
-    ) external pure override returns (bytes4) {
-        return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
-    }
-
-    /// @notice Indicates to caller that Tandler supports ERC165, ERC721Receiver, and
-    ///         ERC1155Receiver
-    function supportsInterface(
-        bytes4 interfaceId
-    ) external pure override returns (bool) {
-        return
-            (interfaceId == type(IERC165Upgradeable).interfaceId) ||
-            (interfaceId == type(IERC721ReceiverUpgradeable).interfaceId) ||
-            (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 
     /// @notice Verifies or batch verifies joinSplit proofs for an array of operations.
