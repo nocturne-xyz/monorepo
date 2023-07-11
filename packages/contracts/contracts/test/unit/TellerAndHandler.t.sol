@@ -1798,7 +1798,83 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(totalCount + 5, handler.totalCount()); // 4 notes for 2 JSs, 1 refund for unwrapped erc20s, no erc721
     }
 
-    function testProcessBundleUnsupportedRefundToken() public {
+    function testProcessBundleRejectsActionsWithUnsupportedMethods() public {
+        SimpleERC20Token erc20 = ERC20s[0];
+        reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
+
+        erc20.reserveTokens(ALICE, PER_NOTE_AMOUNT);
+        vm.prank(ALICE);
+        erc20.approve(address(handler), PER_NOTE_AMOUNT);
+
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({
+            contractAddress: address(erc20),
+            encodedFunction: abi.encodeWithSelector(
+                erc20.transferFrom.selector,
+                address(handler),
+                PER_NOTE_AMOUNT
+            )
+        });
+
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
+        encodedRefundAssets[0] = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(erc20),
+            ERC20_ID
+        );
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(erc20)
+                ),
+                gasToken: address(erc20),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                encodedRefundAssets: encodedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 3,
+                gasPrice: 50,
+                actions: actions,
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Check OperationProcessed event
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "Cannot call non-allowed protocol method",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, not processed, no assets unwrapped
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(
+            opResults[0].failureReason,
+            "Cannot call non-allowed protocol method"
+        );
+
+        assertGt(erc20.balanceOf(BUNDLER), 0);
+        assertLt(erc20.balanceOf(address(teller)), PER_NOTE_AMOUNT);
+        assertEq(erc20.balanceOf(address(ALICE)), PER_NOTE_AMOUNT);
+    }
+
+    function testProcessBundleUnsupportedRefundTokenNoRefunds() public {
         SimpleERC20Token joinSplitToken = ERC20s[0];
         reserveAndDepositFunds(ALICE, joinSplitToken, 2 * PER_NOTE_AMOUNT);
 
