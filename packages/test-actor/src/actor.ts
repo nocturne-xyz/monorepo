@@ -11,7 +11,6 @@ import {
   proveOperation,
   parseEventsFromContractReceipt,
   Asset,
-  randomBigInt,
   OperationRequestBuilder,
   computeOperationDigest,
   StealthAddressTrait,
@@ -27,6 +26,7 @@ import {
   makeCreateCounterFn,
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
+import randomBytes from "randombytes";
 
 export const ACTOR_NAME = "test-actor";
 const COMPONENT_NAME = "main";
@@ -399,7 +399,9 @@ function randomInt(max: number) {
 }
 
 function randomBigIntBounded(max: bigint) {
-  return randomBigInt() % max;
+  const maxBytes = max.toString(16).length / 2;
+  const bytes = randomBytes(maxBytes);
+  return BigInt("0x" + bytes.toString("hex"));
 }
 
 function randomBigintInRange(min: bigint, max: bigint) {

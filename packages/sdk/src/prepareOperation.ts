@@ -17,7 +17,7 @@ import {
   CanonAddress,
   StealthAddressTrait,
   encryptNote,
-  randomBigInt,
+  randomFr,
   CompressedStealthAddress,
 } from "./crypto";
 import { MerkleProofInput } from "./proof";
@@ -29,7 +29,7 @@ import {
   groupByArr,
 } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
-import { poseidonBN } from "@nocturne-xyz/circuit-utils";
+import { poseidonBN } from "@nocturne-xyz/crypto-utils";
 
 export const __private = {
   gatherNotes,
@@ -211,7 +211,7 @@ async function getJoinSplitsFromNotes(
   // add a dummy note if there are an odd number of notes.
   if (notes.length % 2 == 1) {
     const newAddr = viewer.generateRandomStealthAddress();
-    const nonce = randomBigInt();
+    const nonce = randomFr();
     notes.push({
       owner: newAddr,
       nonce,

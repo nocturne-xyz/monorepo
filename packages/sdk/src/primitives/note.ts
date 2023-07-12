@@ -1,6 +1,6 @@
 import { StealthAddressTrait, StealthAddress } from "../crypto";
 import { Asset, AssetTrait, EncodedAsset } from "./asset";
-import { poseidonBN } from "@nocturne-xyz/circuit-utils";
+import { poseidonBN } from "@nocturne-xyz/crypto-utils";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "../utils";
 import { EncryptedNote } from "./types";

@@ -168,7 +168,7 @@
   - make exports explicit
   - clean up imports so that they don't depend on internal structure of other modules
 - merge `NocturnePrivKey` and `NocturneSigner`
-- replace `circomlibjs` and `ffjavascript` with `@nocturne-xyz/circuit-utils`
+- replace `circomlibjs` and `ffjavascript` with `@nocturne-xyz/crypto-utils`
 - replace `NocturneContext.test.ts` with unit tests for each of the newly-split-out parts
 - disembowel `NocturneContext`, reducing it to a convencience wrapper for all private state
 - add new module / function `proveOperation` that separates the proving logic form `NocturneContext`

@@ -7,15 +7,15 @@ import {
   StealthAddressTrait,
   bigInt256ToFieldElems,
   bigintToBEPadded,
-  randomBigInt,
   range,
   TreeConstants,
 } from "../src";
-import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
+import { BabyJubJub, poseidonBN } from "@nocturne-xyz/crypto-utils";
 import { SparseMerkleProver, TreeNode } from "../src/SparseMerkleProver";
 import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
 import { encodePathAndHash } from "../src/proof/subtreeUpdate";
+import { randomBigInt } from "./utils";
 
 const { ARITY, ZERO_VALUE, DEPTH } = TreeConstants;
 

@@ -6,7 +6,7 @@ import {
 } from "./address";
 import { ViewingKey } from "./keys";
 import randomBytes from "randombytes";
-import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
+import { BabyJubJub, poseidonBN } from "@nocturne-xyz/crypto-utils";
 import { IncludedNote, Note, NoteTrait } from "../primitives/note";
 import { EncryptedNote } from "../primitives/types";
 import { Asset } from "../primitives/asset";

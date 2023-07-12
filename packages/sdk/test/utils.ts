@@ -13,6 +13,12 @@ import {
   WithTotalEntityIndex,
 } from "../src";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
+import randomBytes from "randombytes";
+
+export function randomBigInt(): bigint {
+  const rand = randomBytes(32);
+  return BigInt("0x" + rand.toString("hex"));
+}
 
 export const DUMMY_CONTRACT_ADDR = ethers.utils.getAddress(
   "0x67f8f9a5d4290325506b119980660624dc7d3ba9"
