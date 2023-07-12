@@ -188,17 +188,16 @@ async function checkProtocolAllowlist(
   protocolAllowlist: Map<string, ProtocolAddressWithMethods>
 ): Promise<void> {
   for (const [ticker, { address }] of erc20s.entries()) {
-    const zeroKey = protocolWhitelistKey(address, "0x00000000");
+    const tokenSupported = await handler._supportedTokens(address);
+    assertOrErr(
+      tokenSupported,
+      `erc20 ${ticker} is not on the allowlist. Address: ${address}`
+    );
+
     const approveKey = protocolWhitelistKey(address, "0x095ea7b3");
     const transferKey = protocolWhitelistKey(address, "0xa9059cbb");
 
-    const zeroOnAllowlist = await handler._supportedContractAllowlist(zeroKey);
-    assertOrErr(
-      zeroOnAllowlist,
-      `erc20 ${ticker} is not on the allowlist. Address: ${address}. Signature: ${zeroKey}`
-    );
-
-    const approveOnAllowlist = await handler._supportedContractAllowlist(
+    const approveOnAllowlist = await handler._supportedContractMethods(
       approveKey
     );
     assertOrErr(
@@ -206,7 +205,7 @@ async function checkProtocolAllowlist(
       `erc20 ${ticker} is not on the allowlist. Address: ${address}. Signature: ${approveKey}`
     );
 
-    const transferOnAllowlist = await handler._supportedContractAllowlist(
+    const transferOnAllowlist = await handler._supportedContractMethods(
       transferKey
     );
     assertOrErr(
@@ -219,7 +218,7 @@ async function checkProtocolAllowlist(
     for (const signature of functionSignatures) {
       const selector = getSelector(signature);
       const key = protocolWhitelistKey(address, selector);
-      const isOnAllowlist = await handler._supportedContractAllowlist(key);
+      const isOnAllowlist = await handler._supportedContractMethods(key);
       assertOrErr(
         isOnAllowlist,
         `Protocol ${name} is not on the allowlist. Address: ${address}`

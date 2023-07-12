@@ -54,17 +54,24 @@ export async function deployNocturne(
     contracts.handlerProxy.proxy,
     connectedSigner
   );
+
+  const tokens = Array.from(config.erc20s.values()).map(
+    (erc20) => erc20.address
+  );
+
   for (const [name, erc20Config] of Array.from(config.erc20s)) {
     const addressWithSignatures: ProtocolAddressWithMethods = {
       address: erc20Config.address,
       functionSignatures: [
-        "ZERO",
         "approve(address,uint256)",
         "transfer(address,uint256)",
       ],
     };
     config.protocolAllowlist.set(name, addressWithSignatures);
   }
+
+  await whitelistTokens(connectedSigner, tokens, handler);
+
   await whitelistProtocols(connectedSigner, config.protocolAllowlist, handler);
 
   await relinquishContractOwnership(connectedSigner, config, contracts);
@@ -242,6 +249,23 @@ async function setErc20Caps(
   }
 }
 
+export async function whitelistTokens(
+  connectedSigner: ethers.Wallet,
+  tokens: string[],
+  handler: Handler
+): Promise<void> {
+  handler = handler.connect(connectedSigner);
+
+  console.log("whitelisting tokens...");
+  for (const token of tokens) {
+    if (!(await handler._supportedTokens(token))) {
+      console.log(`whitelisting token: ${token}`);
+      const tx = await handler.setTokenPermission(token, true);
+      await tx.wait(1);
+    }
+  }
+}
+
 export async function whitelistProtocols(
   connectedSigner: ethers.Wallet,
   protocolWhitelist: Map<string, ProtocolAddressWithMethods>,
@@ -256,11 +280,11 @@ export async function whitelistProtocols(
       const selector = getSelector(signature);
       const key = protocolWhitelistKey(contractAddress, selector);
 
-      if (!(await handler._supportedContractAllowlist(key))) {
+      if (!(await handler._supportedContractMethods(key))) {
         console.log(
           `whitelisting protocol: ${name}. address: ${contractAddress}. method: ${signature}`
         );
-        const tx = await handler.setSupportedContractMethodPermission(
+        const tx = await handler.setContractMethodPermission(
           contractAddress,
           selector,
           true
