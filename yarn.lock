@@ -2915,7 +2915,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/crypto-utils@npm:^0.1.3":
+"@nocturne-xyz/crypto-utils@npm:^0.1.4":
   version: 0.1.5
   resolution: "@nocturne-xyz/crypto-utils@npm:0.1.5"
   dependencies:
@@ -3075,7 +3075,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/local-prover@workspace:packages/local-prover"
   dependencies:
-    "@nocturne-xyz/crypto-utils": ^0.1.3
+    "@nocturne-xyz/crypto-utils": ^0.1.4
     "@nocturne-xyz/sdk": "workspace:^"
     "@nocturne-xyz/subtree-updater": "workspace:^"
     "@types/bn.js": ^5.1.1
@@ -3131,7 +3131,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
-    "@nocturne-xyz/crypto-utils": ^0.1.3
+    "@nocturne-xyz/crypto-utils": ^0.1.4
     "@types/async-retry": ^1.4.5
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -3179,7 +3179,7 @@ __metadata:
     "@metamask/snaps-types": 0.32.2
     "@metamask/snaps-ui": ^0.32.2
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/crypto-utils": ^0.1.3
+    "@nocturne-xyz/crypto-utils": ^0.1.4
     "@nocturne-xyz/sdk": "workspace:^"
     "@typescript-eslint/eslint-plugin": ^5.33.0
     "@typescript-eslint/parser": ^5.20.0
@@ -3208,7 +3208,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": 1.0.14-alpha
     "@nocturne-xyz/contracts": 1.0.33-alpha
-    "@nocturne-xyz/crypto-utils": ^0.1.3
+    "@nocturne-xyz/crypto-utils": ^0.1.4
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.174-alpha
     "@nocturne-xyz/tx-manager": 1.0.1-alpha

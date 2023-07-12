@@ -143,19 +143,19 @@ function joinSplitEventFromRaw(
       },
       publicSpend: publicSpend.toBigInt(),
       newNoteAEncrypted: {
-        ciphertextBytes: ethers.utils.arrayify(
-          newNoteAEncrypted.ciphertextBytes
+        ciphertextBytes: Array.from(
+          ethers.utils.arrayify(newNoteAEncrypted.ciphertextBytes)
         ),
-        encapsulatedSecretBytes: ethers.utils.arrayify(
-          newNoteAEncrypted.encapsulatedSecretBytes
+        encapsulatedSecretBytes: Array.from(
+          ethers.utils.arrayify(newNoteAEncrypted.encapsulatedSecretBytes)
         ),
       },
       newNoteBEncrypted: {
-        ciphertextBytes: ethers.utils.arrayify(
-          newNoteBEncrypted.ciphertextBytes
+        ciphertextBytes: Array.from(
+          ethers.utils.arrayify(newNoteBEncrypted.ciphertextBytes)
         ),
-        encapsulatedSecretBytes: ethers.utils.arrayify(
-          newNoteBEncrypted.encapsulatedSecretBytes
+        encapsulatedSecretBytes: Array.from(
+          ethers.utils.arrayify(newNoteBEncrypted.encapsulatedSecretBytes)
         ),
       },
     },

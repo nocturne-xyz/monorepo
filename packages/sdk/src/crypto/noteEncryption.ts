@@ -1,7 +1,12 @@
 import { CanonAddress } from "./address";
 import { Note, NoteTrait } from "../primitives";
 import { EncryptedNote } from "../primitives/types";
-import { BabyJubJub, HybridCipher } from "@nocturne-xyz/crypto-utils";
+import {
+  BabyJubJub,
+  HybridCipher,
+  deserializeHybridCiphertext,
+  serializeHybridCiphertext,
+} from "@nocturne-xyz/crypto-utils";
 
 const cipher = new HybridCipher(BabyJubJub, 64);
 
@@ -18,7 +23,7 @@ const cipher = new HybridCipher(BabyJubJub, 64);
 export function encryptNote(receiver: CanonAddress, note: Note): EncryptedNote {
   const noteBytes = NoteTrait.serializeCompact(note);
   const ciphertext = cipher.encrypt(noteBytes, receiver);
-  return ciphertext;
+  return serializeHybridCiphertext(ciphertext);
 }
 
 /**
@@ -33,6 +38,7 @@ export function encryptNote(receiver: CanonAddress, note: Note): EncryptedNote {
  * will work as long as `encryptedNote` was encrypted with `vk`'s corresponding `CanonicalAddress`
  */
 export function decryptNote(vk: bigint, encryptedNote: EncryptedNote): Note {
-  const noteBytes = cipher.decrypt(encryptedNote, vk);
+  const ciphertext = deserializeHybridCiphertext(encryptedNote);
+  const noteBytes = cipher.decrypt(ciphertext, vk);
   return NoteTrait.deserializeCompact(noteBytes);
 }

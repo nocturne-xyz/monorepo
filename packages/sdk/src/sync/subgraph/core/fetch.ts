@@ -243,11 +243,11 @@ export function encryptedNoteFromEncryptedNoteResponse(
   encryptedNoteResponse: EncryptedNoteResponse,
   merkleIndex: number
 ): IncludedEncryptedNote {
-  const ciphertextBytes = ethers.utils.arrayify(
-    encryptedNoteResponse.ciphertextBytes
+  const ciphertextBytes = Array.from(
+    ethers.utils.arrayify(encryptedNoteResponse.ciphertextBytes)
   );
-  const encapsulatedSecretBytes = ethers.utils.arrayify(
-    encryptedNoteResponse.encapsulatedSecretBytes
+  const encapsulatedSecretBytes = Array.from(
+    ethers.utils.arrayify(encryptedNoteResponse.encapsulatedSecretBytes)
   );
   const commitment = BigInt(encryptedNoteResponse.commitment);
 

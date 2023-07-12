@@ -58,13 +58,8 @@ query fetchTreeInsertionEvents($fromIdx: String!) {
         value
       }
       encryptedNote {
-        ownerH1
-        ownerH2
-        encappedKey
-        encryptedNonce
-        encryptedValue
-        encodedAssetAddr
-        encodedAssetId
+        ciphertextBytes
+        encapsulatedSecretBytes
         commitment
       }
     }

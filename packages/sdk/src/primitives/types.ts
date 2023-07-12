@@ -2,7 +2,7 @@ import { CanonAddress, CompressedStealthAddress } from "../crypto";
 import { JoinSplitInputs, MerkleProofInput, SolidityProof } from "../proof";
 import { IncludedNote, Note } from "./note";
 import { EncodedAsset } from "./asset";
-import { HybridCiphertext } from "@nocturne-xyz/crypto-utils";
+import { SerializedHybridCiphertext } from "@nocturne-xyz/crypto-utils";
 
 export const BN254_SCALAR_FIELD_MODULUS =
   21888242871839275222246405745257275088548364400416034343698204186575808495617n;
@@ -39,7 +39,7 @@ export interface OperationResult {
   numRefunds: bigint;
 }
 
-export type EncryptedNote = HybridCiphertext;
+export type EncryptedNote = SerializedHybridCiphertext;
 
 export interface IncludedEncryptedNote extends EncryptedNote {
   merkleIndex: number;
