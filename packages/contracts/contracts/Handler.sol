@@ -76,7 +76,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         _unpause();
     }
 
-    function setTokenPermission(address token, bool permission) external onlyOwner {
+    function setTokenPermission(
+        address token,
+        bool permission
+    ) external onlyOwner {
         _supportedTokens[token] = permission;
         emit TokenPermissionSet(token, permission);
     }
@@ -94,11 +97,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             selector
         );
         _supportedContractMethods[addressAndSelector] = permission;
-        emit ContractMethodPermissionSet(
-            contractAddress,
-            selector,
-            permission
-        );
+        emit ContractMethodPermissionSet(contractAddress, selector, permission);
     }
 
     /// @notice Handles deposit call from Teller. Inserts new note commitment for deposit.
@@ -110,10 +109,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     ) external override whenNotPaused onlyTeller {
         EncodedAsset memory encodedAsset = deposit.encodedAsset;
         (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
-        require(
-            _supportedTokens[assetAddr],
-            "!supported deposit asset"
-        );
+        require(_supportedTokens[assetAddr], "!supported deposit asset");
 
         _handleRefundNote(encodedAsset, deposit.depositAddr, deposit.value);
     }
@@ -160,10 +156,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             (, address assetAddr, ) = AssetUtils.decodeAsset(
                 op.encodedRefundAssets[i]
             );
-            require(
-                _supportedTokens[assetAddr],
-                "!supported refund asset"
-            );
+            require(_supportedTokens[assetAddr], "!supported refund asset");
         }
 
         // Ensure all token balances of tokens to be used are zeroed out
