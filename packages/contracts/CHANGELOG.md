@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- update `EncryptedNote` type for new note encryption scheme
 - use `Ownable2StepUpgradeable` instead of normal `OwnableUpgradeable` in DepositManager, Teller, and Handler (TOB-7)
 - separate setting of `_teller` from Handler initialization to remove front-running risk (TOB-9)
 - add functions to ensure Handler balances are zeroed out pre-operation (TOB-16)

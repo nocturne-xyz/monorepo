@@ -13,6 +13,15 @@ export function bigintToBEPadded(n: bigint, numBytes: number): number[] {
   return res;
 }
 
+export function bigintFromBEBytes(buf: Uint8Array): bigint {
+  let hex = "0x";
+  for (let i = 0; i < buf.length; i++) {
+    hex += buf[i].toString(16).padStart(2, "0");
+  }
+
+  return BigInt(hex);
+}
+
 // splits bigint256 into two limbs, where the lower limb has `lowerBits` bits
 function splitBigint256ToLimbs(n: bigint, lowerBits: number): [bigint, bigint] {
   n = BigInt.asUintN(256, n);

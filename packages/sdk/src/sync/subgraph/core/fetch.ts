@@ -15,6 +15,7 @@ import {
   TotalEntityIndexTrait,
   WithTotalEntityIndex,
 } from "../../totalEntityIndex";
+import { ethers } from "ethers";
 
 export type SDKEvent = IncludedNote | IncludedEncryptedNote | Nullifier;
 
@@ -49,13 +50,8 @@ query fetchSDKEvents($fromIdx: String!) {
         value
       }
       encryptedNote {
-        ownerH1
-        ownerH2
-        encappedKey
-        encryptedNonce
-        encryptedValue
-        encodedAssetAddr
-        encodedAssetId
+        ciphertextBytes
+        encapsulatedSecretBytes
         commitment
       }
     }
@@ -130,13 +126,8 @@ export interface NoteResponse {
 }
 
 export interface EncryptedNoteResponse {
-  ownerH1: string;
-  ownerH2: string;
-  encappedKey: string;
-  encryptedNonce: string;
-  encryptedValue: string;
-  encodedAssetAddr: string;
-  encodedAssetId: string;
+  ciphertextBytes: string;
+  encapsulatedSecretBytes: string;
   commitment: string;
 }
 
@@ -252,28 +243,19 @@ export function encryptedNoteFromEncryptedNoteResponse(
   encryptedNoteResponse: EncryptedNoteResponse,
   merkleIndex: number
 ): IncludedEncryptedNote {
-  const h1 = BigInt(encryptedNoteResponse.ownerH1);
-  const h2 = BigInt(encryptedNoteResponse.ownerH2);
-  const owner = { h1, h2 };
-
-  const encodedAssetAddr = BigInt(encryptedNoteResponse.encodedAssetAddr);
-  const encodedAssetId = BigInt(encryptedNoteResponse.encodedAssetId);
-  const asset = AssetTrait.decode({ encodedAssetAddr, encodedAssetId });
-
-  const encappedKey = BigInt(encryptedNoteResponse.encappedKey);
-  const encryptedNonce = BigInt(encryptedNoteResponse.encryptedNonce);
-  const encryptedValue = BigInt(encryptedNoteResponse.encryptedValue);
+  const ciphertextBytes = ethers.utils.arrayify(
+    encryptedNoteResponse.ciphertextBytes
+  );
+  const encapsulatedSecretBytes = ethers.utils.arrayify(
+    encryptedNoteResponse.encapsulatedSecretBytes
+  );
   const commitment = BigInt(encryptedNoteResponse.commitment);
 
   return {
-    owner,
-    encappedKey,
-    encryptedNonce,
-    encryptedValue,
-
-    merkleIndex,
-    asset,
+    ciphertextBytes,
+    encapsulatedSecretBytes,
     commitment,
+    merkleIndex,
   };
 }
 

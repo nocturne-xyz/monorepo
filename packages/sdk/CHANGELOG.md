@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- change `EncryptedNote` to be an alias of `HybridCiphertext` and remove all other fields (including owner)
 - replace `encSenderCanonAddr` with `senderCommitment`
 - add contract.ts utils method for concatenating contract address and function selector
 - fix eip712 deposit request typehash ordering

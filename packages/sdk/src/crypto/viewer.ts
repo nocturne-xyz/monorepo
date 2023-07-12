@@ -1,22 +1,10 @@
-import {
-  CanonAddress,
-  EncryptedCanonAddress,
-  StealthAddress,
-  StealthAddressTrait,
-} from "./address";
+import { CanonAddress, StealthAddress, StealthAddressTrait } from "./address";
 import { ViewingKey } from "./keys";
-import randomBytes from "randombytes";
 import { BabyJubJub, poseidonBN } from "@nocturne-xyz/crypto-utils";
 import { IncludedNote, Note, NoteTrait } from "../primitives/note";
 import { EncryptedNote } from "../primitives/types";
-import { Asset } from "../primitives/asset";
-import {
-  decryptCanonAddr,
-  decryptNote,
-  encryptCanonAddr,
-} from "./noteEncryption";
-
-const Fr = BabyJubJub.ScalarField;
+import { decryptNote } from "./noteEncryption";
+import { randomFr } from "./utils";
 
 export class NocturneViewer {
   vk: ViewingKey;
@@ -43,8 +31,7 @@ export class NocturneViewer {
   }
 
   generateRandomStealthAddress(): StealthAddress {
-    const r_buf = randomBytes(Math.floor(256 / 8));
-    const r = Fr.fromBytes(r_buf);
+    const r = randomFr();
     const h1 = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
     const h2 = BabyJubJub.scalarMul(h1, this.vk);
     return StealthAddressTrait.fromPoints({ h1, h2 });
@@ -79,38 +66,12 @@ export class NocturneViewer {
    * @param asset, id, merkleIndex additional params from the joinsplit event
    * @return note
    */
-  getNoteFromEncryptedNote(
-    encryptedNote: EncryptedNote,
-    merkleIndex: number,
-    asset: Asset
-  ): IncludedNote {
-    if (
-      !this.isOwnAddress(StealthAddressTrait.decompress(encryptedNote.owner))
-    ) {
-      throw Error("cannot decrypt a note that is not owned by signer");
-    }
-
-    const note = decryptNote(
-      this.canonicalStealthAddress(),
-      this.vk,
-      encryptedNote,
-      asset
-    );
+  decryptNote(encryptedNote: EncryptedNote, merkleIndex: number): IncludedNote {
+    const note = decryptNote(this.vk, encryptedNote);
 
     return {
       ...note,
       merkleIndex,
     };
-  }
-
-  encryptCanonAddrToReceiver(
-    receiver: CanonAddress,
-    nonce: bigint
-  ): EncryptedCanonAddress {
-    return encryptCanonAddr(this.canonicalAddress(), receiver, nonce);
-  }
-
-  decryptCanonAddr(encryptedCanonAddr: EncryptedCanonAddress): CanonAddress {
-    return decryptCanonAddr(encryptedCanonAddr, this.vk);
   }
 }

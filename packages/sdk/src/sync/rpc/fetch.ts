@@ -16,6 +16,7 @@ import {
   TotalEntityIndexTrait,
   WithTotalEntityIndex,
 } from "../totalEntityIndex";
+import { ethers } from "ethers";
 
 export interface SubtreeUpdateCommit {
   newRoot: bigint;
@@ -126,25 +127,6 @@ function joinSplitEventFromRaw(
     publicSpend,
   } = raw.args;
   const { encodedAssetAddr, encodedAssetId } = encodedAsset;
-  let { owner, encappedKey, encryptedNonce, encryptedValue } =
-    newNoteAEncrypted;
-  let { h1, h2 } = owner;
-  const newNoteAOwner = {
-    h1: h1.toBigInt(),
-    h2: h2.toBigInt(),
-  };
-  const encappedKeyA = encappedKey.toBigInt();
-  const encryptedNonceA = encryptedNonce.toBigInt();
-  const encryptedValueA = encryptedValue.toBigInt();
-  ({ owner, encappedKey, encryptedNonce, encryptedValue } = newNoteBEncrypted);
-  ({ h1, h2 } = owner);
-  const newNoteBOwner = {
-    h1: h1.toBigInt(),
-    h2: h2.toBigInt(),
-  };
-  const encappedKeyB = encappedKey.toBigInt();
-  const encryptedNonceB = encryptedNonce.toBigInt();
-  const encryptedValueB = encryptedValue.toBigInt();
 
   return {
     totalEntityIndex: TotalEntityIndexTrait.fromTypedEvent(raw),
@@ -161,16 +143,20 @@ function joinSplitEventFromRaw(
       },
       publicSpend: publicSpend.toBigInt(),
       newNoteAEncrypted: {
-        owner: newNoteAOwner,
-        encappedKey: encappedKeyA,
-        encryptedNonce: encryptedNonceA,
-        encryptedValue: encryptedValueA,
+        ciphertextBytes: ethers.utils.arrayify(
+          newNoteAEncrypted.ciphertextBytes
+        ),
+        encapsulatedSecretBytes: ethers.utils.arrayify(
+          newNoteAEncrypted.encapsulatedSecretBytes
+        ),
       },
       newNoteBEncrypted: {
-        owner: newNoteBOwner,
-        encappedKey: encappedKeyB,
-        encryptedNonce: encryptedNonceB,
-        encryptedValue: encryptedValueB,
+        ciphertextBytes: ethers.utils.arrayify(
+          newNoteBEncrypted.ciphertextBytes
+        ),
+        encapsulatedSecretBytes: ethers.utils.arrayify(
+          newNoteBEncrypted.encapsulatedSecretBytes
+        ),
       },
     },
   };
