@@ -1,4 +1,4 @@
-import { ethers, utils } from "ethers";
+import { ethers } from "ethers";
 import { Address } from "./types";
 import { bigintToBEPadded } from "../utils";
 import { bigintFromBEBytes } from "../utils/bits";
@@ -33,7 +33,8 @@ export interface AssetWithBalance {
 // 1. assetType: 1 byte
 // 2. assetAddr: 20 bytes
 // 3. id: 32 bytes
-const COMPACT_SERIALIZE_OFFSETS = {
+const ASSET_COMPACT_SERIALIZE_BYTES = 53;
+const ASSET_COMPACT_SERIALIZE_OFFSETS = {
   assetType: 0,
   assetAddr: 1,
   id: 21,
@@ -42,13 +43,13 @@ const COMPACT_SERIALIZE_OFFSETS = {
 
 export class AssetTrait {
   static hash(asset: Asset): string {
-    return utils.keccak256(
-      utils.toUtf8Bytes(`${asset.assetAddr}:${asset.id.toString()}`)
+    return ethers.utils.keccak256(
+      ethers.utils.toUtf8Bytes(`${asset.assetAddr}:${asset.id.toString()}`)
     );
   }
 
   static serializeCompact(asset: Asset): Uint8Array {
-    const buf = new Uint8Array(53);
+    const buf = new Uint8Array(ASSET_COMPACT_SERIALIZE_BYTES);
     const { assetType, assetAddr, id } = asset;
 
     let assetTypeByte: number;
@@ -64,32 +65,32 @@ export class AssetTrait {
         break;
     }
 
-    buf.set([assetTypeByte], COMPACT_SERIALIZE_OFFSETS.assetType);
+    buf.set([assetTypeByte], ASSET_COMPACT_SERIALIZE_OFFSETS.assetType);
     buf.set(
-      bigintToBEPadded(BigInt(assetAddr), 20),
-      COMPACT_SERIALIZE_OFFSETS.assetAddr
+      ethers.utils.arrayify(assetAddr),
+      ASSET_COMPACT_SERIALIZE_OFFSETS.assetAddr
     );
-    buf.set(bigintToBEPadded(id, 32), COMPACT_SERIALIZE_OFFSETS.id);
+    buf.set(bigintToBEPadded(id, 32), ASSET_COMPACT_SERIALIZE_OFFSETS.id);
 
     return buf;
   }
 
   static deserializeCompact(buf: Uint8Array): Asset {
     const assetType = AssetTrait.parseAssetType(
-      buf[COMPACT_SERIALIZE_OFFSETS.assetType].toString()
+      buf[ASSET_COMPACT_SERIALIZE_OFFSETS.assetType].toString()
     );
 
     const assetAddrBytes = buf.slice(
-      COMPACT_SERIALIZE_OFFSETS.assetAddr,
-      COMPACT_SERIALIZE_OFFSETS.id
+      ASSET_COMPACT_SERIALIZE_OFFSETS.assetAddr,
+      ASSET_COMPACT_SERIALIZE_OFFSETS.id
     );
     const assetAddr = ethers.utils.getAddress(
-      "0x" + bigintFromBEBytes(assetAddrBytes).toString(16)
+      ethers.utils.hexlify(assetAddrBytes)
     );
 
     const idBytes = buf.slice(
-      COMPACT_SERIALIZE_OFFSETS.id,
-      COMPACT_SERIALIZE_OFFSETS.end
+      ASSET_COMPACT_SERIALIZE_OFFSETS.id,
+      ASSET_COMPACT_SERIALIZE_OFFSETS.end
     );
     const id = bigintFromBEBytes(idBytes);
 

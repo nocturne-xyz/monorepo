@@ -40,7 +40,8 @@ export interface EncodedNote {
 // 2. asset: 53 bytes (AssetTrait.serializeCompact(asset))
 // 3. nonce: 32 bytes
 // 4. value: 32 bytes
-const COMPACT_SERIALIZE_OFFSETS = {
+const NOTE_COMPACT_SERIALIZE_BYTES = 181;
+const NOTE_COMPACT_SERIALIZE_OFFSETS = {
   owner: {
     h1: 0,
     h2: 32,
@@ -147,19 +148,19 @@ export class NoteTrait {
 
   // see above for serialization format
   static serializeCompact<N extends Note>(note: N): Uint8Array {
-    const buf = new Uint8Array(180);
+    const buf = new Uint8Array(NOTE_COMPACT_SERIALIZE_BYTES);
 
     const { owner, nonce, asset, value } = note;
     const { h1, h2 } = StealthAddressTrait.compress(owner);
 
-    buf.set(bigintToBEPadded(h1, 32), COMPACT_SERIALIZE_OFFSETS.owner.h1);
-    buf.set(bigintToBEPadded(h2, 32), COMPACT_SERIALIZE_OFFSETS.owner.h2);
+    buf.set(bigintToBEPadded(h1, 32), NOTE_COMPACT_SERIALIZE_OFFSETS.owner.h1);
+    buf.set(bigintToBEPadded(h2, 32), NOTE_COMPACT_SERIALIZE_OFFSETS.owner.h2);
     buf.set(
       AssetTrait.serializeCompact(asset),
-      COMPACT_SERIALIZE_OFFSETS.asset
+      NOTE_COMPACT_SERIALIZE_OFFSETS.asset
     );
-    buf.set(bigintToBEPadded(nonce, 32), COMPACT_SERIALIZE_OFFSETS.nonce);
-    buf.set(bigintToBEPadded(value, 32), COMPACT_SERIALIZE_OFFSETS.value);
+    buf.set(bigintToBEPadded(nonce, 32), NOTE_COMPACT_SERIALIZE_OFFSETS.nonce);
+    buf.set(bigintToBEPadded(value, 32), NOTE_COMPACT_SERIALIZE_OFFSETS.value);
 
     return buf;
   }
@@ -167,14 +168,14 @@ export class NoteTrait {
   static deserializeCompact(buf: Uint8Array): Note {
     const h1 = bigintFromBEBytes(
       buf.slice(
-        COMPACT_SERIALIZE_OFFSETS.owner.h1,
-        COMPACT_SERIALIZE_OFFSETS.owner.h2
+        NOTE_COMPACT_SERIALIZE_OFFSETS.owner.h1,
+        NOTE_COMPACT_SERIALIZE_OFFSETS.owner.h2
       )
     );
     const h2 = bigintFromBEBytes(
       buf.slice(
-        COMPACT_SERIALIZE_OFFSETS.owner.h2,
-        COMPACT_SERIALIZE_OFFSETS.asset
+        NOTE_COMPACT_SERIALIZE_OFFSETS.owner.h2,
+        NOTE_COMPACT_SERIALIZE_OFFSETS.asset
       )
     );
     const compressedOwner = { h1, h2 };
@@ -182,18 +183,21 @@ export class NoteTrait {
 
     const asset = AssetTrait.deserializeCompact(
       buf.slice(
-        COMPACT_SERIALIZE_OFFSETS.asset,
-        COMPACT_SERIALIZE_OFFSETS.nonce
+        NOTE_COMPACT_SERIALIZE_OFFSETS.asset,
+        NOTE_COMPACT_SERIALIZE_OFFSETS.nonce
       )
     );
     const nonce = bigintFromBEBytes(
       buf.slice(
-        COMPACT_SERIALIZE_OFFSETS.nonce,
-        COMPACT_SERIALIZE_OFFSETS.value
+        NOTE_COMPACT_SERIALIZE_OFFSETS.nonce,
+        NOTE_COMPACT_SERIALIZE_OFFSETS.value
       )
     );
     const value = bigintFromBEBytes(
-      buf.slice(COMPACT_SERIALIZE_OFFSETS.value, COMPACT_SERIALIZE_OFFSETS.end)
+      buf.slice(
+        NOTE_COMPACT_SERIALIZE_OFFSETS.value,
+        NOTE_COMPACT_SERIALIZE_OFFSETS.end
+      )
     );
 
     return { owner, nonce, asset, value };
