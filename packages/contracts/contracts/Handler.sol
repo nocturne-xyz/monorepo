@@ -45,10 +45,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         address leftoverTokensHolder
     ) external initializer {
         __NocturneReentrancyGuard_init();
-        __BalanceManager_init(
-            subtreeUpdateVerifier,
-            leftoverTokensHolder
-        );
+        __BalanceManager_init(subtreeUpdateVerifier, leftoverTokensHolder);
     }
 
     /// @notice Only callable by the handler itself (used so handler can message call itself)

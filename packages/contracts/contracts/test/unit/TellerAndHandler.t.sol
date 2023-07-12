@@ -94,10 +94,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
         teller.initialize(address(handler), address(joinSplitVerifier));
-        handler.initialize(
-            address(subtreeUpdateVerifier),
-            address(0x111)
-        );
+        handler.initialize(address(subtreeUpdateVerifier), address(0x111));
         handler.setTeller(address(teller));
 
         teller.setDepositSourcePermission(DEPOSIT_SOURCE, true);

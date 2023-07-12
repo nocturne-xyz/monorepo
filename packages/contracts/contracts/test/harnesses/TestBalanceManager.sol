@@ -14,10 +14,7 @@ contract TestBalanceManager is IHandler, BalanceManager {
         address subtreeUpdateVerifier,
         address leftoverTokensHolder
     ) external initializer {
-        __BalanceManager_init(
-            subtreeUpdateVerifier,
-            leftoverTokensHolder
-        );
+        __BalanceManager_init(subtreeUpdateVerifier, leftoverTokensHolder);
     }
 
     modifier onlyTeller() {

@@ -39,7 +39,7 @@ contract BalanceManager is CommitmentTreeManager {
 
     /// @notice Set teller contract after initialization
     /// @dev Teller and Handler initialization depend on each other's deployments thus we cannot
-    ///      initialize the Teller and Handler in the same transaction (as we have to deploy one 
+    ///      initialize the Teller and Handler in the same transaction (as we have to deploy one
     ///      before the other). We set Teller separately after initialization to avoid
     ///      front-running risk.
     /// @dev Because we require Teller address is 0x0, this method is only executable once.
