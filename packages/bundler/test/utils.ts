@@ -3,6 +3,7 @@ export const VALID_RELAY_REQUEST = {
     joinSplits: [
       {
         proof: ["0n", "0n", "0n", "0n", "0n", "0n", "0n", "0n"],
+        senderCommitment: "0n",
         commitmentTreeRoot: "0n",
         nullifierA: "0n",
         nullifierB: "0n",
@@ -14,25 +15,13 @@ export const VALID_RELAY_REQUEST = {
         },
         publicSpend: "0n",
         newNoteAEncrypted: {
-          owner: {
-            h1: "0n",
-            h2: "0n",
-          },
-          encappedKey: "0n",
-          encryptedNonce: "0n",
-          encryptedValue: "0n",
+          encapsulatedSecretBytes: [1, 2, 3, 4],
+          ciphertextBytes: [1, 2, 3, 4],
         },
         newNoteBEncrypted: {
-          owner: {
-            h1: "0n",
-            h2: "0n",
-          },
-          encappedKey: "0n",
-          encryptedNonce: "0n",
-          encryptedValue: "0n",
+          encapsulatedSecretBytes: [1, 2, 3, 4],
+          ciphertextBytes: [1, 2, 3, 4],
         },
-        encSenderCanonAddrC1: "0n",
-        encSenderCanonAddrC2: "0n",
       },
     ],
     refundAddr: {
