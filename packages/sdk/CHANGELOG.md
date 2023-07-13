@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- `syncSDK` returns latest synced merkle index so fe-sdk can access and return
+- sync adapters return latest synced merkle index
+- `syncSDK` takes `SyncOpts` as params, add `timeoutSeconds` to `SyncOpts`
 - op request builder takes `.network(networkName | NetworkInfo)` now that we need chainid and teller contract for opdigest calculation
 - add script to generate op digest test case for solidity unit tests
 - remove custom op digest calculation for builtin ethers typed data hashing implementation
