@@ -102,14 +102,6 @@ export async function deployNocturneCoreContracts(
     await tx.wait(opts?.confirmations);
   }
 
-  // Deploy handler proxy, un-initialized
-  console.log("\ndeploying proxied Handler...");
-  const proxiedHandler = await deployProxiedContract(
-    new Handler__factory(connectedSigner),
-    proxyAdmin
-  );
-  console.log("deployed proxied Handler:", proxiedHandler.proxyAddresses);
-
   console.log("\ndeploying JoinSplitVerifier...");
   const joinSplitVerifier = await new JoinSplitVerifier__factory(
     connectedSigner
@@ -129,6 +121,15 @@ export async function deployNocturneCoreContracts(
   }
   await subtreeUpdateVerifier.deployTransaction.wait(opts?.confirmations);
 
+  // Deploy handler proxy
+  console.log("\ndeploying proxied Handler...");
+  const proxiedHandler = await deployProxiedContract(
+    new Handler__factory(connectedSigner),
+    proxyAdmin,
+    [subtreeUpdateVerifier.address, leftoverTokenHolder]
+  );
+  console.log("deployed proxied Handler:", proxiedHandler.proxyAddresses);
+
   console.log("\ndeploying proxied Teller...");
   const proxiedTeller = await deployProxiedContract(
     new Teller__factory(connectedSigner),
@@ -137,13 +138,11 @@ export async function deployNocturneCoreContracts(
   );
   console.log("deployed proxied Teller:", proxiedTeller.proxyAddresses);
 
-  console.log("\ninitializing proxied Handler");
-  const handlerInitTx = await proxiedHandler.contract.initialize(
-    proxiedTeller.address,
-    subtreeUpdateVerifier.address,
-    leftoverTokenHolder
+  console.log("\nSetting Teller address in Handler...");
+  const setTellerTx = await proxiedHandler.contract.setTeller(
+    proxiedTeller.address
   );
-  await handlerInitTx.wait(opts?.confirmations);
+  await setTellerTx.wait(opts?.confirmations);
 
   console.log("\ndeploying proxied DepositManager...");
   const proxiedDepositManager = await deployProxiedContract(
