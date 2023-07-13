@@ -6,6 +6,7 @@ export {
   getMerkleIndicesAndNfsFromOp,
 } from "./misc";
 export { bigInt256ToFieldElems, bigintToBEPadded } from "./bits";
+export { protocolWhitelistKey } from "./contract";
 export {
   zip,
   unzip,

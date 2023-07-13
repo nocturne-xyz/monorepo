@@ -42,7 +42,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     using TreeTestLib for TreeTest;
 
     // Check storage layout file
-    uint256 constant OPERATION_STAGE_STORAGE_SLOT = 277;
+    uint256 constant OPERATION_STAGE_STORAGE_SLOT = 278;
     uint256 constant ENTERED_EXECUTE_ACTIONS = 3;
 
     uint256 constant DEFAULT_GAS_LIMIT = 500_000;
@@ -93,7 +93,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
-        handler.initialize(address(teller), address(subtreeUpdateVerifier));
+        handler.initialize(
+            address(teller),
+            address(subtreeUpdateVerifier),
+            address(0x111)
+        );
         teller.initialize(address(handler), address(joinSplitVerifier));
 
         teller.setDepositSourcePermission(DEPOSIT_SOURCE, true);
@@ -112,8 +116,15 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             // Prefill the handler with 1 token
             ERC20s[i].reserveTokens(address(handler), 1);
 
-            handler.setSupportedContractAllowlistPermission(
+            handler.setTokenPermission(address(ERC20s[i]), true);
+            handler.setContractMethodPermission(
                 address(ERC20s[i]),
+                ERC20s[i].approve.selector,
+                true
+            );
+            handler.setContractMethodPermission(
+                address(ERC20s[i]),
+                ERC20s[i].transfer.selector,
                 true
             );
         }
@@ -923,8 +934,10 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist reentrantCaller for sake of simulation
-        handler.setSupportedContractAllowlistPermission(
+        handler.setTokenPermission(address(reentrantCaller), true);
+        handler.setContractMethodPermission(
             address(reentrantCaller),
+            reentrantCaller.reentrantProcessBundle.selector,
             true
         );
 
@@ -1144,7 +1157,12 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist handler for sake of simulation
-        handler.setSupportedContractAllowlistPermission(address(handler), true);
+        handler.setTokenPermission(address(handler), true);
+        handler.setContractMethodPermission(
+            address(handler),
+            handler.handleOperation.selector,
+            true
+        );
 
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
@@ -1261,7 +1279,12 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist handler for sake of simulation
-        handler.setSupportedContractAllowlistPermission(address(handler), true);
+        handler.setTokenPermission(address(handler), true);
+        handler.setContractMethodPermission(
+            address(handler),
+            handler.executeActions.selector,
+            true
+        );
 
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
@@ -1636,7 +1659,12 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setSupportedContractAllowlistPermission(address(swapper), true);
+        handler.setTokenPermission(address(swapper), true);
+        handler.setContractMethodPermission(
+            address(swapper),
+            swapper.swap.selector,
+            true
+        );
 
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
@@ -1721,7 +1749,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setSupportedContractAllowlistPermission(address(swapper), true);
+        handler.setContractMethodPermission(
+            address(swapper),
+            swapper.transferFromErc721.selector,
+            true
+        );
 
         // Get total leaf count before bundle
         uint256 totalCount = handler.totalCount();
@@ -1746,7 +1778,83 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(totalCount + 5, handler.totalCount()); // 4 notes for 2 JSs, 1 refund for unwrapped erc20s, no erc721
     }
 
-    function testProcessBundleUnsupportedRefundToken() public {
+    function testProcessBundleRejectsActionsWithUnsupportedMethods() public {
+        SimpleERC20Token erc20 = ERC20s[0];
+        reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
+
+        erc20.reserveTokens(ALICE, PER_NOTE_AMOUNT);
+        vm.prank(ALICE);
+        erc20.approve(address(handler), PER_NOTE_AMOUNT);
+
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({
+            contractAddress: address(erc20),
+            encodedFunction: abi.encodeWithSelector(
+                erc20.transferFrom.selector,
+                address(handler),
+                PER_NOTE_AMOUNT
+            )
+        });
+
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
+        encodedRefundAssets[0] = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(erc20),
+            ERC20_ID
+        );
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(erc20)
+                ),
+                gasToken: address(erc20),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                encodedRefundAssets: encodedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 3,
+                gasPrice: 50,
+                actions: actions,
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Check OperationProcessed event
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "Cannot call non-allowed protocol method",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, not processed, no assets unwrapped
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(
+            opResults[0].failureReason,
+            "Cannot call non-allowed protocol method"
+        );
+
+        assertGt(erc20.balanceOf(BUNDLER), 0);
+        assertLt(erc20.balanceOf(address(teller)), PER_NOTE_AMOUNT);
+        assertEq(erc20.balanceOf(address(ALICE)), PER_NOTE_AMOUNT);
+    }
+
+    function testProcessBundleUnsupportedRefundTokenNoRefunds() public {
         SimpleERC20Token joinSplitToken = ERC20s[0];
         reserveAndDepositFunds(ALICE, joinSplitToken, 2 * PER_NOTE_AMOUNT);
 
@@ -1817,7 +1925,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setSupportedContractAllowlistPermission(address(swapper), true);
+        handler.setContractMethodPermission(
+            address(swapper),
+            swapper.swap.selector,
+            true
+        );
 
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
@@ -1927,7 +2039,12 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setSupportedContractAllowlistPermission(address(swapper), true);
+        handler.setTokenPermission(address(swapper), true);
+        handler.setContractMethodPermission(
+            address(swapper),
+            swapper.swap.selector,
+            true
+        );
 
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);

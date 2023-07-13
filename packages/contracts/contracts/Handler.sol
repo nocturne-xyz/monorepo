@@ -18,27 +18,40 @@ import "./libs/Types.sol";
 contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     using OperationLib for Operation;
 
-    // Set of callable protocols and tokens
-    mapping(address => bool) public _supportedContractAllowlist;
+    // Set of supported tokens
+    mapping(address => bool) public _supportedTokens;
+
+    // Set of callable protocol methods (includes tokens)
+    mapping(uint192 => bool) public _supportedContractMethods;
 
     // Gap for upgrade safety
     uint256[50] private __GAP;
 
     /// @notice Event emitted when a contract is given/revoked allowlist permission
-    event SupportedContractAllowlistPermissionSet(
+    event ContractMethodPermissionSet(
         address contractAddress,
+        bytes4 selector,
         bool permission
     );
+
+    /// @notice Event emitted when a token is given/revoked allowlist permission
+    event TokenPermissionSet(address token, bool permission);
 
     /// @notice Initialization function
     /// @param teller Address of the Teller contract
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
+    /// @param leftoverTokensHolder Address of the leftover tokens holder contract
     function initialize(
         address teller,
-        address subtreeUpdateVerifier
+        address subtreeUpdateVerifier,
+        address leftoverTokensHolder
     ) external initializer {
         __NocturneReentrancyGuard_init();
-        __BalanceManager_init(teller, subtreeUpdateVerifier);
+        __BalanceManager_init(
+            teller,
+            subtreeUpdateVerifier,
+            leftoverTokensHolder
+        );
     }
 
     /// @notice Only callable by the handler itself (used so handler can message call itself)
@@ -63,18 +76,28 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         _unpause();
     }
 
+    function setTokenPermission(
+        address token,
+        bool permission
+    ) external onlyOwner {
+        _supportedTokens[token] = permission;
+        emit TokenPermissionSet(token, permission);
+    }
+
     /// @notice Sets allowlist permission of the given contract, only callable by owner
     /// @param contractAddress Address of the contract to add
     /// @param permission Whether to enable or revoke permission
-    function setSupportedContractAllowlistPermission(
+    function setContractMethodPermission(
         address contractAddress,
+        bytes4 selector,
         bool permission
     ) external onlyOwner {
-        _supportedContractAllowlist[contractAddress] = permission;
-        emit SupportedContractAllowlistPermissionSet(
+        uint192 addressAndSelector = _addressAndSelector(
             contractAddress,
-            permission
+            selector
         );
+        _supportedContractMethods[addressAndSelector] = permission;
+        emit ContractMethodPermissionSet(contractAddress, selector, permission);
     }
 
     /// @notice Handles deposit call from Teller. Inserts new note commitment for deposit.
@@ -86,10 +109,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     ) external override whenNotPaused onlyTeller {
         EncodedAsset memory encodedAsset = deposit.encodedAsset;
         (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
-        require(
-            _supportedContractAllowlist[assetAddr],
-            "!supported deposit asset"
-        );
+        require(_supportedTokens[assetAddr], "!supported deposit asset");
 
         _handleRefundNote(encodedAsset, deposit.depositAddr, deposit.value);
     }
@@ -136,11 +156,11 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             (, address assetAddr, ) = AssetUtils.decodeAsset(
                 op.encodedRefundAssets[i]
             );
-            require(
-                _supportedContractAllowlist[assetAddr],
-                "!supported refund asset"
-            );
+            require(_supportedTokens[assetAddr], "!supported refund asset");
         }
+
+        // Ensure all token balances of tokens to be used are zeroed out
+        _ensureZeroedBalances(op);
 
         // Handle all joinsplits
         _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
@@ -252,11 +272,35 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             action.contractAddress != address(_teller),
             "Cannot call the Nocturne Teller"
         );
+
+        uint192 addressAndSelector = _addressAndSelector(
+            action.contractAddress,
+            _extractFunctionSelector(action.encodedFunction)
+        );
         require(
-            _supportedContractAllowlist[action.contractAddress],
-            "Cannot call non-allowed protocol"
+            _supportedContractMethods[addressAndSelector],
+            "Cannot call non-allowed protocol method"
         );
 
         (success, result) = action.contractAddress.call(action.encodedFunction);
+    }
+
+    /// @notice Extract function selector from encoded function data
+    /// @param encodedFunctionData Encoded function data
+    function _extractFunctionSelector(
+        bytes calldata encodedFunctionData
+    ) internal pure returns (bytes4 selector) {
+        require(encodedFunctionData.length >= 4, "!encoded fn length");
+        return bytes4(encodedFunctionData[:4]);
+    }
+
+    /// @notice Concat address and selector as key to contract allowlist
+    /// @param contractAddress Address of the contract
+    /// @param selector Selector of the function
+    function _addressAndSelector(
+        address contractAddress,
+        bytes4 selector
+    ) internal pure returns (uint192) {
+        return (uint192(uint160(contractAddress)) << 32) | uint32(selector);
     }
 }

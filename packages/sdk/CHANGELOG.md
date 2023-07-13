@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add contract.ts utils method for concatenating contract address and function selector
 - fix eip712 deposit request typehash ordering
 - remove all usage of winston logger except for in sync adapters (so we can debug test actor and snap)
 - fix bug where notes with 0 value were being stored in DB
