@@ -20,18 +20,24 @@ contract BalanceManager is CommitmentTreeManager {
     // Teller contract to send/request assets to/from
     ITeller public _teller;
 
+    // Leftover tokens holder contract
+    address public _leftoverTokensHolder;
+
     // Gap for upgrade safety
     uint256[50] private __GAP;
 
     /// @notice Internal initializer function
     /// @param teller Address of the teller contract
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
+    /// @param leftoverTokensHolder Address of the leftover tokens holder contract
     function __BalanceManager_init(
         address teller,
-        address subtreeUpdateVerifier
+        address subtreeUpdateVerifier,
+        address leftoverTokensHolder
     ) internal onlyInitializing {
         __CommitmentTreeManager_init(subtreeUpdateVerifier);
         _teller = ITeller(teller);
+        _leftoverTokensHolder = leftoverTokensHolder;
     }
 
     /// @notice For each joinSplit in op.joinSplits, check root and nullifier validity against
@@ -142,6 +148,34 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
+    function _ensureZeroedBalances(Operation calldata op) internal {
+        uint256 numJoinSplits = op.joinSplits.length;
+        for (
+            uint256 subarrayStartIndex = 0;
+            subarrayStartIndex < numJoinSplits;
+
+        ) {
+            uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
+                op.joinSplits,
+                subarrayStartIndex
+            );
+
+            _transferOutstandingAssetToAndReturnAmount(
+                op.joinSplits[subarrayStartIndex].encodedAsset,
+                _leftoverTokensHolder
+            );
+            subarrayStartIndex = subarrayEndIndex + 1;
+        }
+
+        uint256 numRefundAssets = op.encodedRefundAssets.length;
+        for (uint256 i = 0; i < numRefundAssets; i++) {
+            _transferOutstandingAssetToAndReturnAmount(
+                op.encodedRefundAssets[i],
+                _leftoverTokensHolder
+            );
+        }
+    }
+
     /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
     ///         to the Teller and inserting new note commitments for the sent back assets.
     /// @dev Checks for refunds from joinSplits and op.encodedRefundAssets. A refund occurs if any
@@ -160,22 +194,38 @@ contract BalanceManager is CommitmentTreeManager {
                 op.joinSplits,
                 subarrayStartIndex
             );
-            _handleRefundForAsset(
-                op.joinSplits[subarrayStartIndex].encodedAsset,
-                op.refundAddr
+
+            EncodedAsset calldata encodedAsset = op
+                .joinSplits[subarrayStartIndex]
+                .encodedAsset;
+
+            uint256 refundAmount = _transferOutstandingAssetToAndReturnAmount(
+                encodedAsset,
+                address(_teller)
             );
+            if (refundAmount > 0) {
+                _handleRefundNote(encodedAsset, op.refundAddr, refundAmount);
+            }
             subarrayStartIndex = subarrayEndIndex + 1;
         }
 
         uint256 numRefundAssets = op.encodedRefundAssets.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
-            _handleRefundForAsset(op.encodedRefundAssets[i], op.refundAddr);
+            EncodedAsset calldata encodedAsset = op.encodedRefundAssets[i];
+
+            uint256 refundAmount = _transferOutstandingAssetToAndReturnAmount(
+                encodedAsset,
+                address(_teller)
+            );
+            if (refundAmount > 0) {
+                _handleRefundNote(encodedAsset, op.refundAddr, refundAmount);
+            }
         }
     }
 
-    /// @notice Handle a refund for a single asset
+    /// @notice Refund Teller for a single asset
     /// @dev Checks if asset has outstanding balance in the Handler. If so, transfers the asset
-    ///      back to the Teller and inserts a new note commitment into the commitment tree.
+    ///      back to the Teller and returns the amount transferred.
     /// @dev To prevent clearing the handler's token balances to 0 each time for erc20s, we attempt
     ///      to withold 1 token from the refund each time if the handler's current balance is 0.
     ///      This saves gas for future users because it avoids writing to a zeroed out storage slot
@@ -183,11 +233,15 @@ contract BalanceManager is CommitmentTreeManager {
     ///      user. The goal is to keep the handler's balance non-zero as often as possible to save
     ///      on user gas.
     /// @param encodedAsset Encoded asset to check for refund
-    /// @param refundAddr Stealth address to refund to
-    function _handleRefundForAsset(
+    function _transferOutstandingAssetToAndReturnAmount(
         EncodedAsset memory encodedAsset,
-        CompressedStealthAddress calldata refundAddr
-    ) internal {
+        address to
+    ) internal returns (uint256) {
+        require(
+            to == address(_teller) || to == address(_leftoverTokensHolder),
+            "Invalid to addr"
+        );
+
         uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
 
         (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
@@ -195,13 +249,12 @@ contract BalanceManager is CommitmentTreeManager {
 
         if (currentBalance > amountToWithhold) {
             uint256 difference = currentBalance - amountToWithhold;
-            AssetUtils.transferAssetTo(
-                encodedAsset,
-                address(_teller),
-                difference
-            );
-            _handleRefundNote(encodedAsset, refundAddr, difference);
+            AssetUtils.transferAssetTo(encodedAsset, address(to), difference);
+
+            return difference;
         }
+
+        return 0;
     }
 
     /// @notice Get highest index for contiguous subarray of joinsplits of same encodedAssetType
