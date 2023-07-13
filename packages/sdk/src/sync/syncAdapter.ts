@@ -12,6 +12,9 @@ interface BaseStateDiff {
   // new nullifiers in arbitrary order
   nullifiers: Nullifier[];
 
+  // `merkleIndex` of the last leaf to be synced
+  lastSyncedMerkleIndex: number | undefined;
+
   // `merkleIndex` of the last leaf to be committed to the commitment tree
   lastCommittedMerkleIndex: number | undefined;
 

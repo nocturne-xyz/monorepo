@@ -90,13 +90,19 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
           const notes = notesAndNullifiers.filter(
             ({ inner }) => typeof inner !== "bigint"
           ) as WithTotalEntityIndex<IncludedNote | IncludedEncryptedNote>[];
+
           const nullifiers = notesAndNullifiers.filter(
             ({ inner }) => typeof inner === "bigint"
           ) as WithTotalEntityIndex<Nullifier>[];
 
+          const lastSyncedMerkleIndex = maxArray(
+            Array.from(notes.map((n) => n.inner.merkleIndex))
+          );
+
           const stateDiff: EncryptedStateDiff = {
             notes,
             nullifiers: nullifiers.map((n) => n.inner),
+            lastSyncedMerkleIndex,
             lastCommittedMerkleIndex,
             totalEntityIndex: highestTotalEntityIndex,
           };
