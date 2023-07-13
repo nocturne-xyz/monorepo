@@ -23,19 +23,21 @@ import { consecutiveChunks } from "./utils/functional";
 
 export interface SyncOpts {
   endBlock?: number;
+  timeoutSeconds?: number;
 }
 
 export interface SyncDeps {
   viewer: NocturneViewer;
 }
 
+// Sync SDK, returning last synced merkle index of last state diff
 export async function syncSDK(
   { viewer }: SyncDeps,
   adapter: SDKSyncAdapter,
   db: NocturneDB,
   merkle: SparseMerkleProver,
   opts?: SyncOpts
-): Promise<void> {
+): Promise<number | undefined> {
   const currTotalEntityIndex = await db.currentTotalEntityIndex();
   const startTotalEntityIndex = currTotalEntityIndex
     ? currTotalEntityIndex + 1n
@@ -66,7 +68,13 @@ export async function syncSDK(
     decryptStateDiff(viewer, diff)
   );
 
+  if (opts?.timeoutSeconds) {
+    setTimeout(() => diffs.close(), opts.timeoutSeconds * 1000);
+  }
+
   // apply diffs
+  let lastSyncedMerkleIndex: number | undefined =
+    await db.lastSyncedMerkleIndex();
   for await (const diff of diffs.iter) {
     // update notes in DB
     const nfIndices = await db.applyStateDiff(diff);
@@ -81,7 +89,11 @@ export async function syncSDK(
         nfIndices
       );
     }
+
+    lastSyncedMerkleIndex = diff.lastSyncedMerkleIndex;
   }
+
+  return lastSyncedMerkleIndex;
 }
 
 async function updateMerkle(
@@ -131,6 +143,7 @@ function decryptStateDiff(
     notes,
     nullifiers,
     lastCommittedMerkleIndex,
+    lastSyncedMerkleIndex,
     totalEntityIndex,
   }: EncryptedStateDiff
 ): StateDiff {
@@ -193,6 +206,7 @@ function decryptStateDiff(
     notesAndCommitments,
     nullifiers,
     lastCommittedMerkleIndex,
+    lastSyncedMerkleIndex,
     totalEntityIndex,
   };
 }

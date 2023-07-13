@@ -132,6 +132,10 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
             (!endTotalEntityIndex || totalEntityIndex <= endTotalEntityIndex)
         );
 
+        const lastSyncedMerkleIndex = maxArray(
+          Array.from(filteredNotes.map((n) => n.inner.merkleIndex))
+        );
+
         currTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
           blockNumber: BigInt(to),
         });
@@ -143,6 +147,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
             nullifiers: filteredNullifiers.map((n) => n.inner),
             totalEntityIndex: currTotalEntityIndex,
             lastCommittedMerkleIndex,
+            lastSyncedMerkleIndex,
           };
           yield diff;
         }

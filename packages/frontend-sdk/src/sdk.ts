@@ -31,6 +31,7 @@ import {
   proveOperation,
   unpackFromSolidityProof,
   OperationStatusResponse,
+  SyncOpts,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction } from "ethers";
@@ -451,18 +452,29 @@ export class NocturneFrontendSDK {
   }
 
   /**
-   * Invoke snap `syncNotes` method.
+   * Invoke snap `syncNotes` method, returning latest synced merkle index.
    */
-  async sync(): Promise<void> {
-    await window.ethereum.request({
+  async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
+    console.log("FE-SDK syncOpts", syncOpts);
+    const latestSyncedMerkleIndexJson = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
           method: "nocturne_sync",
+          params: {
+            syncOpts: syncOpts ? JSON.stringify(syncOpts) : undefined,
+          },
         },
       },
-    });
+    })) as string;
+
+    const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
+      ? JSON.parse(latestSyncedMerkleIndexJson)
+      : undefined;
+
+    console.log("FE-SDK latestSyncedMerkleIndex", latestSyncedMerkleIndex);
+    return latestSyncedMerkleIndex;
   }
 
   /**
