@@ -2898,8 +2898,8 @@ __metadata:
     "@nomiclabs/hardhat-ethers": ^2.0.4
     "@nomiclabs/hardhat-etherscan": ^2.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.1
-    "@openzeppelin/contracts": 4.8.2
-    "@openzeppelin/contracts-upgradeable": 4.8.2
+    "@openzeppelin/contracts": 4.9.2
+    "@openzeppelin/contracts-upgradeable": 4.9.2
     "@openzeppelin/hardhat-upgrades": ^1.22.1
     "@typechain/ethers-v5": 7.2.0
     "@typechain/hardhat": ^2.0.1
@@ -3991,17 +3991,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts-upgradeable@npm:4.8.2":
-  version: 4.8.2
-  resolution: "@openzeppelin/contracts-upgradeable@npm:4.8.2"
-  checksum: b1ad40e5d0c4d3bcfea7c74b772fb2c830562f2863ea8f816a603113146e0614dc806b32d9b1649f8c88ceb93dbf8b394abf8dbeb9022fc09e546858c4fe71e9
+"@openzeppelin/contracts-upgradeable@npm:4.9.2":
+  version: 4.9.2
+  resolution: "@openzeppelin/contracts-upgradeable@npm:4.9.2"
+  checksum: 88df083e886006b9fac61848edf224a725b99e1b8a302173165a857e3bbc1d00d61cb9c71590b37d955b179fe23652fc157347a086dbaad8f66ce8470603f151
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts@npm:4.8.2":
-  version: 4.8.2
-  resolution: "@openzeppelin/contracts@npm:4.8.2"
-  checksum: 1d362f0b9c880549cb82544e23fb70270fbbbe24a69e10bd5aa07649fd82347686173998ae484defafdc473d04004d519f839e3cd3d3e7733d0895b950622243
+"@openzeppelin/contracts@npm:4.9.2":
+  version: 4.9.2
+  resolution: "@openzeppelin/contracts@npm:4.9.2"
+  checksum: 0538b18fe222e5414a5a539c240b155e0bef2a23c5182fb8e137d71a0c390fe899160f2d55701f75b127f54cc61aee4375370acc832475f19829368ac65c1fc6
   languageName: node
   linkType: hard
 
