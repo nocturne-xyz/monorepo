@@ -21,10 +21,12 @@ import {
   TransparentProxyAddresses,
   NocturneContractDeployment,
   Erc20Config,
+  ProtocolAddressWithMethods,
 } from "@nocturne-xyz/config";
 import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
-import { NocturneConfig } from "@nocturne-xyz/config/dist/src/config";
-import { Address } from "./utils";
+import { NocturneConfig } from "@nocturne-xyz/config";
+import { getSelector } from "./utils";
+import { protocolWhitelistKey } from "@nocturne-xyz/sdk";
 
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
@@ -52,9 +54,24 @@ export async function deployNocturne(
     contracts.handlerProxy.proxy,
     connectedSigner
   );
+
+  const tokens = Array.from(config.erc20s.values()).map(
+    (erc20) => erc20.address
+  );
+
   for (const [name, erc20Config] of Array.from(config.erc20s)) {
-    config.protocolAllowlist.set(name, erc20Config.address);
+    const addressWithSignatures: ProtocolAddressWithMethods = {
+      address: erc20Config.address,
+      functionSignatures: [
+        "approve(address,uint256)",
+        "transfer(address,uint256)",
+      ],
+    };
+    config.protocolAllowlist.set(name, addressWithSignatures);
   }
+
+  await whitelistTokens(connectedSigner, tokens, handler);
+
   await whitelistProtocols(connectedSigner, config.protocolAllowlist, handler);
 
   await relinquishContractOwnership(connectedSigner, config, contracts);
@@ -76,7 +93,7 @@ export async function deployNocturneCoreContracts(
   const startBlock = await connectedSigner.provider.getBlockNumber();
 
   // Maybe deploy proxy admin
-  const { opts } = config;
+  const { opts, leftoverTokenHolder } = config;
   let proxyAdmin = opts?.proxyAdmin;
   if (!proxyAdmin) {
     console.log("\ndeploying ProxyAdmin...");
@@ -123,7 +140,8 @@ export async function deployNocturneCoreContracts(
   console.log("\ninitializing proxied Handler");
   const handlerInitTx = await proxiedHandler.contract.initialize(
     proxiedTeller.address,
-    subtreeUpdateVerifier.address
+    subtreeUpdateVerifier.address,
+    leftoverTokenHolder
   );
   await handlerInitTx.wait(opts?.confirmations);
 
@@ -231,24 +249,48 @@ async function setErc20Caps(
   }
 }
 
+export async function whitelistTokens(
+  connectedSigner: ethers.Wallet,
+  tokens: string[],
+  handler: Handler
+): Promise<void> {
+  handler = handler.connect(connectedSigner);
+
+  console.log("whitelisting tokens...");
+  for (const token of tokens) {
+    if (!(await handler._supportedTokens(token))) {
+      console.log(`whitelisting token: ${token}`);
+      const tx = await handler.setTokenPermission(token, true);
+      await tx.wait(1);
+    }
+  }
+}
+
 export async function whitelistProtocols(
   connectedSigner: ethers.Wallet,
-  protocolWhitelist: Map<string, Address>,
+  protocolWhitelist: Map<string, ProtocolAddressWithMethods>,
   handler: Handler
 ): Promise<void> {
   handler = handler.connect(connectedSigner);
 
   console.log("whitelisting protocols...");
-  for (const [name, contractAddress] of Array.from(protocolWhitelist)) {
-    if (!(await handler._supportedContractAllowlist(contractAddress))) {
-      console.log(
-        `whitelisting protocol: ${name}. address: ${contractAddress}.`
-      );
-      const tx = await handler.setSupportedContractAllowlistPermission(
-        contractAddress,
-        true
-      );
-      await tx.wait(1);
+  for (const [name, addressWithMethods] of Array.from(protocolWhitelist)) {
+    const contractAddress = addressWithMethods.address;
+    for (const signature of addressWithMethods.functionSignatures) {
+      const selector = getSelector(signature);
+      const key = protocolWhitelistKey(contractAddress, selector);
+
+      if (!(await handler._supportedContractMethods(key))) {
+        console.log(
+          `whitelisting protocol: ${name}. address: ${contractAddress}. method: ${signature}`
+        );
+        const tx = await handler.setContractMethodPermission(
+          contractAddress,
+          selector,
+          true
+        );
+        await tx.wait(1);
+      }
     }
   }
 }
