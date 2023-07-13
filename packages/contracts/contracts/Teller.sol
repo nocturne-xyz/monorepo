@@ -7,7 +7,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {Versioned} from "./upgrade/Versioned.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 // Internal
 import {ITeller} from "./interfaces/ITeller.sol";
 import {IHandler} from "./interfaces/IHandler.sol";
@@ -25,7 +25,7 @@ contract Teller is
     ITeller,
     ReentrancyGuardUpgradeable,
     PausableUpgradeable,
-    OwnableUpgradeable,
+    Ownable2StepUpgradeable,
     Versioned
 {
     using OperationLib for Operation;
@@ -62,9 +62,9 @@ contract Teller is
         address handler,
         address joinSplitVerifier
     ) external initializer {
-        __ReentrancyGuard_init();
         __Pausable_init();
-        __Ownable_init();
+        __Ownable2Step_init();
+        __ReentrancyGuard_init();
         _handler = IHandler(handler);
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
     }
