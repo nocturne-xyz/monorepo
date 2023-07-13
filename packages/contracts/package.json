@@ -30,8 +30,8 @@
     "publish": "yarn build; yarn npm publish --access public"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "4.8.2",
-    "@openzeppelin/contracts-upgradeable": "4.8.2"
+    "@openzeppelin/contracts": "4.9.2",
+    "@openzeppelin/contracts-upgradeable": "4.9.2"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.4",

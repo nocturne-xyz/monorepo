@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // Internal
@@ -23,7 +23,7 @@ import "./libs/Types.sol";
 contract DepositManager is
     DepositManagerBase,
     ReentrancyGuardUpgradeable,
-    OwnableUpgradeable
+    Ownable2StepUpgradeable
 {
     using SafeERC20 for IERC20;
 
@@ -116,7 +116,7 @@ contract DepositManager is
         address teller,
         address weth
     ) external initializer {
-        __Ownable_init();
+        __Ownable2Step_init();
         __DepositManagerBase_init(contractName, contractVersion);
         _teller = ITeller(teller);
         _weth = IWeth(weth);
