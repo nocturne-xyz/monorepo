@@ -472,7 +472,6 @@ export class NocturneFrontendSDK {
    * Invoke snap `syncNotes` method, returning latest synced merkle index.
    */
   async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
-    console.log("FE-SDK syncOpts", syncOpts);
     const latestSyncedMerkleIndexJson = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
