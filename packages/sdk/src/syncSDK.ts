@@ -148,9 +148,10 @@ function decryptStateDiff(
         };
       } catch (err) {
         const encryptedNote = note as IncludedEncryptedNote;
+        const { commitment, merkleIndex } = encryptedNote;
         const nc = {
-          noteCommitment: encryptedNote.commitment,
-          merkleIndex: encryptedNote.merkleIndex,
+          noteCommitment: commitment,
+          merkleIndex,
         };
 
         return {

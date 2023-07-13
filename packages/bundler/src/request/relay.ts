@@ -5,13 +5,14 @@ const addressPattern = "^0x[a-fA-F0-9]{40}$";
 const booleanType = { type: "boolean" };
 const bigintType = { type: "string", pattern: bigintPattern };
 const addressType = { type: "string", pattern: addressPattern };
-// I don't know how complete this is, but it's probably good enough
-const uint8ArrayType = {
-  type: "object",
-  patternProperties: {
-    "^d+$": { type: "number" },
+const byteArrayType = {
+  type: "array",
+  items: {
+    type: "integer",
+    minimum: 0,
+    maximum: 255,
   },
-  additionalProperties: false,
+  minItems: 0,
 };
 const solidityProofType = {
   type: "array",
@@ -31,8 +32,8 @@ const encryptedNoteType = {
   type: "object",
   required: ["ciphertextBytes", "encapsulatedSecretBytes"],
   properties: {
-    ciphertextBytes: uint8ArrayType,
-    encapsulatedSecretBytes: uint8ArrayType,
+    ciphertextBytes: byteArrayType,
+    encapsulatedSecretBytes: byteArrayType,
   },
   additionalProperties: false,
 };

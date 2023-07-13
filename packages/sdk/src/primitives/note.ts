@@ -104,7 +104,7 @@ export class NoteTrait {
   static isEncryptedNote<N extends Note, E extends EncryptedNote>(
     note: N | E
   ): boolean {
-    return Object.hasOwn(note, "encappedKey");
+    return Object.hasOwn(note, "encapsulatedSecretBytes");
   }
 
   static sha256<N extends Note>(note: N): number[] {
