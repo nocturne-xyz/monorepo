@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- update `proveOperation` with new `JoinSplitInput`s
 - add method to fetch operationstatus from bundler
 - have `anonTransferErc20` format/pass metadata to snap
 - wrap fetch requests in `async-retry` with exponential backoff

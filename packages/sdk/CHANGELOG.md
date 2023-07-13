@@ -3,6 +3,8 @@
 ### Unreleased
 
 - change `EncryptedNote` to be an alias of `HybridCiphertext` and remove all other fields (including owner)
+  - includes (many) cascading changes through sync, op preparation, and witness generation code
+- add `refundAddr` circuit input
 - replace `encSenderCanonAddr` with `senderCommitment`
 - add contract.ts utils method for concatenating contract address and function selector
 - fix eip712 deposit request typehash ordering
