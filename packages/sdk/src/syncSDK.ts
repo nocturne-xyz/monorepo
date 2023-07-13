@@ -68,13 +68,13 @@ export async function syncSDK(
     decryptStateDiff(viewer, diff)
   );
 
+  let lastSyncedMerkleIndex: number | undefined =
+    await db.lastSyncedMerkleIndex();
+
   if (opts?.timeoutSeconds) {
     setTimeout(() => diffs.close(), opts.timeoutSeconds * 1000);
   }
-
   // apply diffs
-  let lastSyncedMerkleIndex: number | undefined =
-    await db.lastSyncedMerkleIndex();
   for await (const diff of diffs.iter) {
     // update notes in DB
     const nfIndices = await db.applyStateDiff(diff);
