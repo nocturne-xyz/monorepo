@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import "../../libs/Types.sol";
 import "../../libs/OperationUtils.sol";
+import {ITeller} from "../../interfaces/ITeller.sol";
 import {IHandler} from "../../interfaces/IHandler.sol";
 import {BalanceManager} from "../../BalanceManager.sol";
 
@@ -10,15 +11,10 @@ contract TestBalanceManager is IHandler, BalanceManager {
     using OperationLib for Operation;
 
     function initialize(
-        address teller,
         address subtreeUpdateVerifier,
         address leftoverTokensHolder
     ) external initializer {
-        __BalanceManager_init(
-            teller,
-            subtreeUpdateVerifier,
-            leftoverTokensHolder
-        );
+        __BalanceManager_init(subtreeUpdateVerifier, leftoverTokensHolder);
     }
 
     modifier onlyTeller() {
