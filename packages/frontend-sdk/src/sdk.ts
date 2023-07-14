@@ -1,6 +1,8 @@
 import {
   DepositManager,
   DepositManager__factory,
+  Handler,
+  Handler__factory,
 } from "@nocturne-xyz/contracts";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
@@ -32,6 +34,7 @@ import {
   unpackFromSolidityProof,
   OperationStatusResponse,
   SyncOpts,
+  ClosableAsyncIterator,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction } from "ethers";
@@ -58,16 +61,28 @@ export interface Endpoints {
   bundlerEndpoint: string;
 }
 
+export interface ContractAddresses {
+  depositManagerAddress: string;
+  handlerAddress: string;
+}
+
+export interface SyncWithProgressOutput {
+  tipMerkleIndex: number;
+  latestSyncedMerkleIndexIter: ClosableAsyncIterator<number | undefined>;
+}
+
 export class NocturneFrontendSDK {
   joinSplitProver: WasmJoinSplitProver;
   config: NocturneConfig;
   depositManagerContract: DepositManager;
+  handlerContract: Handler;
   bundlerEndpoint: string;
   screenerEndpoint: string;
 
   private constructor(
     config: NocturneConfig,
     depositManagerContract: DepositManager,
+    handlerContract: Handler,
     endpoints: Endpoints,
     wasmPath: string,
     zkeyPath: string,
@@ -75,7 +90,7 @@ export class NocturneFrontendSDK {
   ) {
     this.config = config;
     this.depositManagerContract = depositManagerContract;
-    this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
+    this.handlerContract = handlerContract;
     this.screenerEndpoint = endpoints.screenerEndpoint;
     this.bundlerEndpoint = endpoints.bundlerEndpoint;
   }
@@ -91,7 +106,8 @@ export class NocturneFrontendSDK {
    * @param vkey Vkey object
    */
   static async instantiate(
-    config: NocturneConfig,
+    depositManagerAddress: string,
+    handlerAddress: string,
     endpoints: Endpoints,
     wasmPath: string,
     zkeyPath: string,
@@ -103,10 +119,11 @@ export class NocturneFrontendSDK {
       depositManagerAddress,
       signer
     );
-
+    const handlerContract = Handler__factory.connect(handlerAddress, signer);
     return new NocturneFrontendSDK(
       config,
       depositManagerContract,
+      handlerContract,
       endpoints,
       wasmPath,
       zkeyPath,
@@ -469,6 +486,32 @@ export class NocturneFrontendSDK {
   }
 
   /**
+   * Start syncing process, returning current merkle index at tip of chain and iterator
+   * returning newly synced merkle indices as syncing process occurs.
+   */
+  async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
+    const tipMerkleIndex = (await this.handlerContract.totalCount()).toNumber();
+
+    const generator = async function* (sdk: NocturneFrontendSDK) {
+      let lastSyncedMerkleIndex = await sdk.sync(syncOpts);
+
+      while (lastSyncedMerkleIndex && lastSyncedMerkleIndex < tipMerkleIndex) {
+        yield lastSyncedMerkleIndex;
+        lastSyncedMerkleIndex = await sdk.sync(syncOpts);
+      }
+    };
+
+    const iter = new ClosableAsyncIterator(generator(this), async () => {
+      closed = true;
+    });
+
+    return {
+      tipMerkleIndex,
+      latestSyncedMerkleIndexIter: iter,
+    };
+  }
+
+  /**
    * Invoke snap `syncNotes` method, returning latest synced merkle index.
    */
   async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
@@ -563,17 +606,16 @@ export class NocturneFrontendSDK {
  * @param vkeyPath Vkey path
  */
 export async function loadNocturneFrontendSDK(
-  configName: string,
+  { depositManagerAddress, handlerAddress }: ContractAddresses,
   endpoints: Endpoints,
   wasmPath: string = WASM_PATH,
   zkeyPath: string = ZKEY_PATH,
   vkeyPath: string = VKEY_PATH
 ): Promise<NocturneFrontendSDK> {
-  const config = loadNocturneConfigBuiltin(configName);
-
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
   return await NocturneFrontendSDK.instantiate(
-    config,
+    depositManagerAddress,
+    handlerAddress,
     endpoints,
     wasmPath,
     zkeyPath,
