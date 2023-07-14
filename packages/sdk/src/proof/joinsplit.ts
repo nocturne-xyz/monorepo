@@ -25,8 +25,8 @@ export interface JoinSplitProofWithPublicSignals {
     bigint, // nullifierB
     bigint, // ssenderCommitment
     bigint, // operationDigest
-    bigint, // encodedAssetAddrWithSignBits
-    bigint, // encodedAssetId
+    bigint, // pubEncodedAssetAddrWithSignBits
+    bigint, // pubEncodedAssetId
     bigint, // refundAddrH1CompressedY
     bigint // refundAddrH2CompressedY
   ];
@@ -40,8 +40,8 @@ export interface JoinSplitPublicSignals {
   nullifierA: bigint;
   nullifierB: bigint;
   opDigest: bigint;
-  encodedAssetAddrWithSignBits: bigint;
-  encodedAssetId: bigint;
+  pubEncodedAssetAddrWithSignBits: bigint;
+  pubEncodedAssetId: bigint;
   refundAddrH1CompressedY: bigint;
   refundAddrH2CompressedY: bigint;
   senderCommitment: bigint;
@@ -61,8 +61,8 @@ export interface JoinSplitInputs {
   newNoteA: EncodedNote;
   newNoteB: EncodedNote;
   refundAddr: CompressedStealthAddress;
-  encodedAssetAddrWithSignBits: bigint;
-  encodedAssetId: bigint;
+  pubEncodedAssetAddrWithSignBits: bigint;
+  pubEncodedAssetId: bigint;
 }
 
 export function joinSplitPublicSignalsFromArray(
@@ -77,8 +77,8 @@ export function joinSplitPublicSignalsFromArray(
     nullifierB: publicSignals[5],
     senderCommitment: publicSignals[6],
     opDigest: publicSignals[7],
-    encodedAssetAddrWithSignBits: publicSignals[8],
-    encodedAssetId: publicSignals[9],
+    pubEncodedAssetAddrWithSignBits: publicSignals[8],
+    pubEncodedAssetId: publicSignals[9],
     refundAddrH1CompressedY: publicSignals[10],
     refundAddrH2CompressedY: publicSignals[11],
   };
@@ -109,8 +109,8 @@ export function joinSplitPublicSignalsToArray(
     publicSignals.nullifierB,
     publicSignals.senderCommitment,
     publicSignals.opDigest,
-    publicSignals.encodedAssetAddrWithSignBits,
-    publicSignals.encodedAssetId,
+    publicSignals.pubEncodedAssetAddrWithSignBits,
+    publicSignals.pubEncodedAssetId,
     publicSignals.refundAddrH1CompressedY,
     publicSignals.refundAddrH2CompressedY,
   ];

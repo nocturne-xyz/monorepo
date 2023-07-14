@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- in `verifyProvenOperation`, mask `encodedAsset` PIs to 0 if `publicSpend` is 0
 - instantiate fe-sdk with just `configName`
 - update `proveOperation` with new `JoinSplitInput`s
 - add method to fetch operationstatus from bundler

@@ -60,7 +60,7 @@ contract CommitmentTreeManager is
         uint256 newNoteACommitment,
         uint256 newNoteBCommitment,
         uint256 senderCommitment,
-        // TODO can be zero if public spend is 0
+        // will be (0, 0) if publicSpend is 0
         EncodedAsset encodedAsset,
         uint256 publicSpend,
         EncryptedNote newNoteAEncrypted,

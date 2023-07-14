@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- in `JoinSplitInputs` generation code, mask `encodedAsset` PIs to zero when `publicSpend` is 0.
+- update `src/proof/joinsplit.ts` to match circuit with `encodedAsset` zeroing when `publicSpend` is 0
 - op request builder takes `.network(networkName | NetworkInfo)` now that we need chainid and teller contract for opdigest calculation
 - add script to generate op digest test case for solidity unit tests
 - remove custom op digest calculation for builtin ethers typed data hashing implementation

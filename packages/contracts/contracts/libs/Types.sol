@@ -34,6 +34,8 @@ struct JoinSplit {
     uint256 newNoteBCommitment;
     uint256 senderCommitment;
     uint256[8] proof;
+    // can be masked to 0 if publicSpend is 0 (checked by circuit)
+    // TODO it seems protocol just works as-is and there's no special handling for "0 encodedAsset", but do we want to explicitly handle check this case?
     EncodedAsset encodedAsset;
     uint256 publicSpend;
     EncryptedNote newNoteAEncrypted;
