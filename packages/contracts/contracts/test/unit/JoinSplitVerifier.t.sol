@@ -15,7 +15,10 @@ import {Utils} from "../../libs/Utils.sol";
 contract TestJoinSplitVerifier is Test, JsonDecodings {
     using stdJson for string;
 
-    string constant BASIC_FIXTURE_PATH = "/fixtures/joinsplitProof.json";
+    string constant FIXTURE_PATH_0_PUBLIC_SPEND =
+        "/fixtures/joinsplit_0_publicSpend.json";
+    string constant FIXTURE_PATH_100_PUBLIC_SPEND =
+        "/fixtures/joinsplit_100_publicSpend.json";
     uint256 constant NUM_PIS = 12;
 
     IJoinSplitVerifier joinSplitVerifier;
@@ -61,7 +64,7 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
 
     function testBatchVerifySingle() public {
         (uint256[8] memory proof, uint256[] memory pis) = loadJoinSplitProof(
-            BASIC_FIXTURE_PATH
+            FIXTURE_PATH_0_PUBLIC_SPEND
         );
         uint256[8][] memory proofs = new uint256[8][](1);
         uint256[][] memory allPis = new uint256[][](1);
@@ -75,13 +78,17 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
         );
     }
 
-    function testBasicVerify() public {
-        verifyFixture(BASIC_FIXTURE_PATH);
+    function testBasicVerify0PublicSpend() public {
+        verifyFixture(FIXTURE_PATH_0_PUBLIC_SPEND);
+    }
+
+    function testBasicVerify100PublicSpend() public {
+        verifyFixture(FIXTURE_PATH_100_PUBLIC_SPEND);
     }
 
     function testBatchVerify() public {
-        batchVerifyFixture(BASIC_FIXTURE_PATH, 8);
-        batchVerifyFixture(BASIC_FIXTURE_PATH, 16);
-        batchVerifyFixture(BASIC_FIXTURE_PATH, 32);
+        batchVerifyFixture(FIXTURE_PATH_0_PUBLIC_SPEND, 8);
+        batchVerifyFixture(FIXTURE_PATH_0_PUBLIC_SPEND, 16);
+        batchVerifyFixture(FIXTURE_PATH_0_PUBLIC_SPEND, 32);
     }
 }

@@ -13,6 +13,8 @@ import {
   StealthAddressTrait,
   encodeEncodedAssetAddrWithSignBitsPI,
   TreeConstants,
+  EncodedAsset,
+  JoinSplitProver,
 } from "@nocturne-xyz/sdk";
 
 const { ZERO_VALUE, ARITY, DEPTH } = TreeConstants;
@@ -23,10 +25,7 @@ const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
 const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
 const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
-const JOINSPLIT_FIXTURE_PATH = path.join(
-  ROOT_DIR,
-  "fixtures/joinsplitProof.json"
-);
+const JOINSPLIT_FIXTURE_DIR = path.join(ROOT_DIR, "fixtures");
 
 const writeToFixture = process.argv[2] == "--writeFixture";
 
@@ -37,166 +36,210 @@ const sk = BigInt(
 // Instantiate nocturne keypair and addr
 const nocturneSigner = new NocturneSigner(sk);
 const vk = nocturneSigner.vk;
-const stealthAddrA = nocturneSigner.canonicalStealthAddress();
-const stealthAddrB = nocturneSigner.canonicalStealthAddress();
 const spendPk = nocturneSigner.spendPk;
 
-const refundAddr = StealthAddressTrait.compress(
-  nocturneSigner.generateRandomStealthAddress()
-);
+function makeTestJoinSplitInputs(
+  asset: EncodedAsset,
+  oldNoteAValue: bigint,
+  oldNoteBValue: bigint,
+  newNoteAValue: bigint,
+  newNoteBValue: bigint
+): JoinSplitInputs {
+  const stealthAddrA = nocturneSigner.canonicalStealthAddress();
+  const stealthAddrB = nocturneSigner.canonicalStealthAddress();
 
-// Two old notes: 100 + 50 = 150
-const oldNoteA: EncodedNote = {
-  owner: stealthAddrA,
-  nonce: 1n,
-  encodedAssetAddr: 10n,
-  encodedAssetId: 5n,
-  value: 100n,
-};
-console.log("old note A: ", oldNoteA);
+  const refundAddr = StealthAddressTrait.compress(
+    nocturneSigner.generateRandomStealthAddress()
+  );
 
-const oldNoteAOwnerHash = StealthAddressTrait.hash(stealthAddrA);
-const oldNoteACommitment = poseidonBN([
-  oldNoteAOwnerHash,
-  oldNoteA.nonce,
-  oldNoteA.encodedAssetAddr,
-  oldNoteA.encodedAssetId,
-  oldNoteA.value,
-]);
-console.log("old note commitment A: ", oldNoteACommitment);
+  const { encodedAssetAddr, encodedAssetId } = asset;
 
-const oldNoteB: EncodedNote = {
-  owner: stealthAddrB,
-  nonce: 2n,
-  encodedAssetAddr: 10n,
-  encodedAssetId: 5n,
-  value: 50n,
-};
-console.log("old note B: ", oldNoteB);
+  const oldNoteA: EncodedNote = {
+    owner: stealthAddrA,
+    nonce: 1n,
+    encodedAssetAddr,
+    encodedAssetId,
+    value: oldNoteAValue,
+  };
+  console.log("old note A: ", oldNoteA);
 
-const oldNoteBOwnerHash = StealthAddressTrait.hash(stealthAddrB);
-const oldNoteBCommitment = poseidonBN([
-  oldNoteBOwnerHash,
-  oldNoteB.nonce,
-  oldNoteB.encodedAssetAddr,
-  oldNoteB.encodedAssetId,
-  oldNoteB.value,
-]);
-console.log("old note commitment B: ", oldNoteBCommitment);
+  const oldNoteAOwnerHash = StealthAddressTrait.hash(stealthAddrA);
+  const oldNoteACommitment = poseidonBN([
+    oldNoteAOwnerHash,
+    oldNoteA.nonce,
+    oldNoteA.encodedAssetAddr,
+    oldNoteA.encodedAssetId,
+    oldNoteA.value,
+  ]);
+  console.log("old note commitment A: ", oldNoteACommitment);
 
-// Generate valid merkle proofs
-const tree = new IncrementalMerkleTree(poseidonBN, DEPTH, ZERO_VALUE, ARITY);
-tree.insert(oldNoteACommitment);
-tree.insert(oldNoteBCommitment);
+  const oldNoteB: EncodedNote = {
+    owner: stealthAddrB,
+    nonce: 2n,
+    encodedAssetAddr,
+    encodedAssetId,
+    value: oldNoteBValue,
+  };
+  console.log("old note B: ", oldNoteB);
 
-const merkleProofA = tree.createProof(0);
-const merkleProofB = tree.createProof(1);
+  const oldNoteBOwnerHash = StealthAddressTrait.hash(stealthAddrB);
+  const oldNoteBCommitment = poseidonBN([
+    oldNoteBOwnerHash,
+    oldNoteB.nonce,
+    oldNoteB.encodedAssetAddr,
+    oldNoteB.encodedAssetId,
+    oldNoteB.value,
+  ]);
+  console.log("old note commitment B: ", oldNoteBCommitment);
 
-// console.log("merkleProofA", merkleProofA);
-// console.log("merkleProofB", merkleProofB);
+  // Generate valid merkle proofs
+  const tree = new IncrementalMerkleTree(poseidonBN, DEPTH, ZERO_VALUE, ARITY);
+  tree.insert(oldNoteACommitment);
+  tree.insert(oldNoteBCommitment);
 
-console.log("merkle root A: ", merkleProofA.root);
-console.log("merkle root B: ", merkleProofB.root);
+  const merkleProofA = tree.createProof(0);
+  const merkleProofB = tree.createProof(1);
 
-const merkleProofAInput: MerkleProofInput = {
-  path: merkleProofA.pathIndices.map((n) => BigInt(n)),
-  siblings: merkleProofA.siblings,
-};
-const merkleProofBInput: MerkleProofInput = {
-  path: merkleProofB.pathIndices.map((n) => BigInt(n)),
-  siblings: merkleProofB.siblings,
-};
+  // console.log("merkleProofA", merkleProofA);
+  // console.log("merkleProofB", merkleProofB);
 
-// New notes where 75 + 75 = 150
-const newNoteA: EncodedNote = {
-  owner: stealthAddrA,
-  nonce: 3n,
-  encodedAssetAddr: 10n,
-  encodedAssetId: 5n,
-  value: 75n,
-};
-console.log("new note A: ", newNoteA);
+  console.log("merkle root A: ", merkleProofA.root);
+  console.log("merkle root B: ", merkleProofB.root);
 
-const newNoteB: EncodedNote = {
-  owner: stealthAddrB,
-  nonce: 4n,
-  encodedAssetAddr: 10n,
-  encodedAssetId: 5n,
-  value: 75n,
-};
-console.log("new note B: ", newNoteB);
+  const merkleProofAInput: MerkleProofInput = {
+    path: merkleProofA.pathIndices.map((n) => BigInt(n)),
+    siblings: merkleProofA.siblings,
+  };
+  const merkleProofBInput: MerkleProofInput = {
+    path: merkleProofB.pathIndices.map((n) => BigInt(n)),
+    siblings: merkleProofB.siblings,
+  };
 
-const newNoteACommitment = poseidonBN([
-  oldNoteAOwnerHash,
-  newNoteA.nonce,
-  newNoteA.encodedAssetAddr,
-  newNoteA.encodedAssetId,
-  newNoteA.value,
-]);
-console.log("new note commitment A: ", newNoteACommitment);
+  const newNoteA: EncodedNote = {
+    owner: stealthAddrA,
+    nonce: 3n,
+    encodedAssetAddr,
+    encodedAssetId,
+    value: newNoteAValue,
+  };
+  console.log("new note A: ", newNoteA);
 
-const newNoteBCommitment = poseidonBN([
-  oldNoteBOwnerHash,
-  newNoteB.nonce,
-  newNoteB.encodedAssetAddr,
-  newNoteB.encodedAssetId,
-  newNoteB.value,
-]);
-console.log("new note commitment B: ", newNoteBCommitment);
+  const newNoteB: EncodedNote = {
+    owner: stealthAddrB,
+    nonce: 4n,
+    encodedAssetAddr,
+    encodedAssetId,
+    value: newNoteBValue,
+  };
+  console.log("new note B: ", newNoteB);
 
-// Sign operation hash
-const operationDigest = BigInt(12345);
-const opSig = nocturneSigner.sign(operationDigest);
-console.log(opSig);
+  const newNoteACommitment = poseidonBN([
+    oldNoteAOwnerHash,
+    newNoteA.nonce,
+    newNoteA.encodedAssetAddr,
+    newNoteA.encodedAssetId,
+    newNoteA.value,
+  ]);
+  console.log("new note commitment A: ", newNoteACommitment);
 
-const publicSpend =
-  oldNoteA.value + oldNoteB.value - (newNoteA.value + newNoteB.value);
-console.log("public spend");
+  const newNoteBCommitment = poseidonBN([
+    oldNoteBOwnerHash,
+    newNoteB.nonce,
+    newNoteB.encodedAssetAddr,
+    newNoteB.encodedAssetId,
+    newNoteB.value,
+  ]);
+  console.log("new note commitment B: ", newNoteBCommitment);
 
-const pubEncodedAssetAddrWithSignBits = encodeEncodedAssetAddrWithSignBitsPI(
-  publicSpend === 0n ? 0n : oldNoteA.encodedAssetAddr,
-  refundAddr
-);
-const pubEncodedAssetId = publicSpend === 0n ? 0n : oldNoteA.encodedAssetId;
+  // Sign operation hash
+  const operationDigest = BigInt(12345);
+  const opSig = nocturneSigner.sign(operationDigest);
+  console.log(opSig);
 
-const joinsplitInputs: JoinSplitInputs = {
-  vk,
-  vkNonce: nocturneSigner.vkNonce,
-  spendPk: [spendPk.x, spendPk.y],
-  operationDigest,
-  c: opSig.c,
-  z: opSig.z,
-  oldNoteA,
-  oldNoteB,
-  newNoteA,
-  newNoteB,
-  merkleProofA: merkleProofAInput,
-  merkleProofB: merkleProofBInput,
-  refundAddr,
+  const publicSpend =
+    oldNoteA.value + oldNoteB.value - (newNoteA.value + newNoteB.value);
+  console.log("public spend");
 
-  pubEncodedAssetAddrWithSignBits,
-  pubEncodedAssetId,
-};
+  const pubEncodedAssetAddrWithSignBits = encodeEncodedAssetAddrWithSignBitsPI(
+    publicSpend === 0n ? 0n : oldNoteA.encodedAssetAddr,
+    refundAddr
+  );
+  const pubEncodedAssetId = publicSpend === 0n ? 0n : oldNoteA.encodedAssetId;
 
-console.log(joinsplitInputs);
+  const joinsplitInputs: JoinSplitInputs = {
+    vk,
+    vkNonce: nocturneSigner.vkNonce,
+    spendPk: [spendPk.x, spendPk.y],
+    operationDigest,
+    c: opSig.c,
+    z: opSig.z,
+    oldNoteA,
+    oldNoteB,
+    newNoteA,
+    newNoteB,
+    merkleProofA: merkleProofAInput,
+    merkleProofB: merkleProofBInput,
+    refundAddr,
+
+    pubEncodedAssetAddrWithSignBits,
+    pubEncodedAssetId,
+  };
+  console.log(joinsplitInputs);
+
+  return joinsplitInputs;
+}
+
+function makeGenerateProofFn(
+  prover: JoinSplitProver
+): (inputs: JoinSplitInputs, filename: string) => Promise<void> {
+  return async (inputs: JoinSplitInputs, filename: string): Promise<void> => {
+    const startTime = Date.now();
+    const proof = await prover.proveJoinSplit(inputs);
+    console.log("Proof generated in: ", Date.now() - startTime, "ms");
+
+    if (!(await prover.verifyJoinSplitProof(proof))) {
+      throw new Error("proof invalid!");
+    }
+    const json = JSON.stringify(proof);
+    console.log(json);
+
+    if (writeToFixture) {
+      fs.writeFileSync(filename, json, {
+        encoding: "utf8",
+        flag: "w",
+      });
+    }
+  };
+}
 
 (async () => {
   const prover = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
-  const startTime = Date.now();
-  const proof = await prover.proveJoinSplit(joinsplitInputs);
-  console.log("Proof generated in: ", Date.now() - startTime, "ms");
+  const generateProof = makeGenerateProofFn(prover);
 
-  if (!(await prover.verifyJoinSplitProof(proof))) {
-    throw new Error("proof invalid!");
-  }
-  const json = JSON.stringify(proof);
-  console.log(json);
+  const asset: EncodedAsset = {
+    encodedAssetAddr: 10n,
+    encodedAssetId: 5n,
+  };
 
-  if (writeToFixture) {
-    fs.writeFileSync(JOINSPLIT_FIXTURE_PATH, json, {
-      encoding: "utf8",
-      flag: "w",
-    });
+  // generate proof with 0 publicSpend
+  {
+    const inputs = makeTestJoinSplitInputs(asset, 100n, 200n, 50n, 250n);
+    const filename = path.join(
+      JOINSPLIT_FIXTURE_DIR,
+      "joinsplit_0_publicSpend.json"
+    );
+    await generateProof(inputs, filename);
   }
+
+  // generate proof with 100 publicSpend
+  {
+    const inputs = makeTestJoinSplitInputs(asset, 100n, 200n, 50n, 150n);
+    const filename = path.join(
+      JOINSPLIT_FIXTURE_DIR,
+      "joinsplit_100_publicSpend.json"
+    );
+    await generateProof(inputs, filename);
+  }
+
   process.exit(0);
 })();
