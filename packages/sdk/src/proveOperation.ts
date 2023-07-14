@@ -90,9 +90,9 @@ async function proveJoinSplit(
         nullifierB: baseJoinSplit.nullifierB,
         senderCommitment,
         opDigest,
-        encododedAssetAddrWithSignBits:
-          proofInputs.encodedAssetAddrWithSignBits,
-        encodedAssetID: proofInputs.encodedAssetId,
+        pubEncododedAssetAddrWithSignBits:
+          proofInputs.pubEncodedAssetAddrWithSignBits,
+        pubEncodedAssetID: proofInputs.pubEncodedAssetId,
         refundAddrH1CompressedY: refundAddrH1CompressedY,
         refundAddrH2CompressedY: refundAddrH2CompressedY,
       },
