@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- in `JoinSplitInputs` generation code, mask `encodedAsset` PIs to zero when `publicSpend` is 0.
+- update `src/proof/joinsplit.ts` to match circuit with `encodedAsset` zeroing when `publicSpend` is 0
 - update gas estimation logic now that `maxNumRefunds` is removed from op
 - add `SubmittableOperation` types for the separation of asset index and tracked joinsplit assets (have sdk convert to submittable ops during op simulation)
 - op request builder takes `.network(networkName | NetworkInfo)` now that we need chainid and teller contract for opdigest calculation
