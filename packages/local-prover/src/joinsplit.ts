@@ -38,8 +38,8 @@ export class WasmJoinSplitProver implements JoinSplitProver {
       newNoteA,
       newNoteB,
       refundAddr,
-      encodedAssetAddrWithSignBits,
-      encodedAssetId,
+      pubEncodedAssetAddrWithSignBits,
+      pubEncodedAssetId,
     } = inputs;
 
     const [, refundAddrH1CompressedY] = decomposeCompressedPoint(refundAddr.h1);
@@ -57,8 +57,11 @@ export class WasmJoinSplitProver implements JoinSplitProver {
       c,
       z,
 
-      encodedAssetAddrWithSignBits,
-      encodedAssetId,
+      pubEncodedAssetAddrWithSignBits,
+      pubEncodedAssetId,
+
+      encodedAssetAddr: newNoteA.encodedAssetAddr,
+      encodedAssetId: newNoteA.encodedAssetId,
 
       refundAddrH1CompressedY,
       refundAddrH2CompressedY,

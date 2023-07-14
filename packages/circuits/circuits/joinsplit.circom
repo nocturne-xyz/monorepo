@@ -24,8 +24,15 @@ template JoinSplit(levels) {
     signal input z;
 
     // encodedAssetAddr, but with the sign bits of refundAddr placed at bits 248 and 249 (when zero-indexed in little-endian order)
-    signal input encodedAssetAddrWithSignBits;
+    // if publicSpend is nonzero, we assert that `encodedAssetAddr` matches that specified in the `encodedAssetAddr` bits of this input
+    // if publicSpend is 0, we assert that this the `encodedAssetAddr` part of this PI is 0.
+    signal input pubEncodedAssetAddrWithSignBits;
+    // if publicSpend is nonzero, we assert that `encodedAssetId` is equal to this input.
+    // if publicSpend is 0, we assert that this PI is equal to 0.
+    signal input pubEncodedAssetId;
+
     signal input encodedAssetId;
+    signal input encodedAssetAddr;
 
     signal input refundAddrH1CompressedY;
     signal input refundAddrH2CompressedY;
@@ -120,17 +127,40 @@ template JoinSplit(levels) {
     BabyCheck()(oldNoteBOwnerH2X, oldNoteBOwnerH2Y);
     IsOrderGreaterThan8()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
 
-    // get encodedAssetAddr and sign bits of refund addr out of encodedAssetAddrWithSignBits
+    // get encodedAssetAddr and sign bits of refund addr out of pubEncodedAssetAddrWithSignBits
     // don't need Num2Bits_strict here because it's only 253 bits
-    signal encodedAssetAddrWithSignBitsBits[253] <==  Num2Bits(253)(encodedAssetAddrWithSignBits);
-    signal refundAddrH1Sign <== encodedAssetAddrWithSignBitsBits[248];
-    signal refundAddrH2Sign <== encodedAssetAddrWithSignBitsBits[249];
+    signal pubEncodedAssetAddrWithSignBitsBits[253] <==  Num2Bits(253)(pubEncodedAssetAddrWithSignBits);
+    signal refundAddrH1Sign <== pubEncodedAssetAddrWithSignBitsBits[248];
+    signal refundAddrH2Sign <== pubEncodedAssetAddrWithSignBitsBits[249];
+
+    // check that the sum of old and new note values are in range [0, 2**252)
+    // this can't overflow because all four note values are in range [0, 2**252) and field is 254 bits
+    signal valInput <== oldNoteAValue + oldNoteBValue;
+    signal valOutput <== newNoteAValue + newNoteBValue;
+    BitRange(252)(valInput);
+    BitRange(252)(valOutput);
+
+    // check that old note values hold at least as much value as new note values
+    signal compOut <== LessEqThan(252)([valOutput, valInput]);
+    compOut === 1;
+    publicSpend <== valInput - valOutput;
 
     // instead of doing another bit decomp, subtract 2^248 * refundAddrH1Sign + 2^249 * refundAddrH2Sign 
-    // from encodedAssetAddrWithSignBits
+    // from pubEncodedAssetAddrWithSignBits
     signal refundAddrH1SignTimes2ToThe248 <== (1 << 248) * refundAddrH1Sign;
     signal encodedAssetAddrSubend <== (1 << 249) * refundAddrH2Sign + refundAddrH1SignTimes2ToThe248;
-    signal encodedAssetAddr <== encodedAssetAddrWithSignBits - encodedAssetAddrSubend;
+    signal encodedAssetAddrDecoded <== pubEncodedAssetAddrWithSignBits - encodedAssetAddrSubend;
+
+    signal publicSpendIsZero <== IsZero()(publicSpend);
+    // if publicSpend is nonzero, check that encodedAssetAddr matches encodedAssetAddrDecoded
+    (1 - publicSpendIsZero) * (encodedAssetAddr - encodedAssetAddrDecoded) === 0;
+    // otherwise, assert that encodedAssetAddrDecoded is also zero
+    publicSpendIsZero * encodedAssetAddrDecoded === 0;
+
+    // if publicSpend is nonzero, check that `pubEncodedAssetId` matches `encodedAssetId`
+    (1 - publicSpendIsZero) * (encodedAssetId - pubEncodedAssetId) === 0;
+    // otherwise, assert that `pubEncodedAssetId` is also zero
+    publicSpendIsZero * pubEncodedAssetId === 0;
 
     // oldNoteACommitment
     signal oldNoteACommitment <== NoteCommit()(
@@ -175,18 +205,6 @@ template JoinSplit(levels) {
     BitRange(252)(oldNoteAValue);
     BitRange(252)(oldNoteBValue);
 
-    // check that the sum of old and new note values are in range [0, 2**252)
-    // this can't overflow because all four note values are in range [0, 2**252) and field is 254 bits
-    signal valInput <== oldNoteAValue + oldNoteBValue;
-    signal valOutput <== newNoteAValue + newNoteBValue;
-    BitRange(252)(valInput);
-    BitRange(252)(valOutput);
-
-    // check that old note values hold at least as much value as new note values
-    signal compOut <== LessEqThan(252)([valOutput, valInput]);
-    compOut === 1;
-    publicSpend <== valInput - valOutput;
-
     // check that old note owner addresses correspond to user's viewing key 
     VKIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, viewKeyBits);
     VKIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, viewKeyBits);
@@ -228,7 +246,7 @@ template JoinSplit(levels) {
 
     // compress the two points of the refund addr.
     // connect the y cordinates to the output signals
-    // and assert that the sign bits match what was given in `encodedAssetAddrWithSignBits`
+    // and assert that the sign bits match what was given in `pubEncodedAssetAddrWithSignBits`
     component compressors[2];
     compressors[0] = CompressPoint();
     compressors[0].in[0] <== refundAddrH1X;
@@ -247,4 +265,4 @@ template JoinSplit(levels) {
     senderCommitment <== Poseidon(4)([SENDER_COMMITMENT_DOMAIN_SEPARATOR, senderCanonAddr[0], senderCanonAddr[1], newNoteBNonce]);
 }
 
-component main { public [encodedAssetAddrWithSignBits, encodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit(16);
+component main { public [pubEncodedAssetAddrWithSignBits, pubEncodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit(16);
