@@ -139,7 +139,9 @@ function decryptStateDiff(
       try {
         const { merkleIndex, commitment, ...encryptedNote } =
           note as IncludedEncryptedNote;
-        const includedNote = viewer.decryptNote(encryptedNote, merkleIndex);
+
+        // TODO: come up with a way to handle sender mismatches when we implement history proofs
+        const [includedNote] = viewer.decryptNote(encryptedNote, merkleIndex);
         const nullifier = viewer.createNullifier(includedNote);
         const res = { ...includedNote, nullifier };
         return {

@@ -66,12 +66,18 @@ export class NocturneViewer {
    * @param asset, id, merkleIndex additional params from the joinsplit event
    * @return note
    */
-  decryptNote(encryptedNote: EncryptedNote, merkleIndex: number): IncludedNote {
-    const note = decryptNote(this.vk, encryptedNote);
+  decryptNote(
+    encryptedNote: EncryptedNote,
+    merkleIndex: number
+  ): [IncludedNote, CanonAddress] {
+    const { sender, ...note } = decryptNote(this.vk, encryptedNote);
 
-    return {
-      ...note,
-      merkleIndex,
-    };
+    return [
+      {
+        ...note,
+        merkleIndex,
+      },
+      sender,
+    ];
   }
 }

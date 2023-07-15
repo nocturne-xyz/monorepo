@@ -1,4 +1,4 @@
-import { StealthAddressTrait, StealthAddress } from "../crypto";
+import { StealthAddressTrait, StealthAddress, CanonAddress } from "../crypto";
 import { Asset, AssetTrait, EncodedAsset } from "./asset";
 import { poseidonBN } from "@nocturne-xyz/crypto-utils";
 import { sha256 } from "js-sha256";
@@ -15,6 +15,10 @@ export interface Note {
 
 export interface IncludedNote extends Note {
   merkleIndex: number;
+}
+
+export interface NoteWithSender extends Note {
+  sender: CanonAddress;
 }
 
 export interface IncludedNoteWithNullifier extends IncludedNote {

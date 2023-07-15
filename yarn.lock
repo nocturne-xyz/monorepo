@@ -2925,6 +2925,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nocturne-xyz/crypto-utils@npm:^0.1.7":
+  version: 0.1.7
+  resolution: "@nocturne-xyz/crypto-utils@npm:0.1.7"
+  dependencies:
+    "@noble/hashes": ^1.3.1
+    "@stablelib/chacha20poly1305": ^1.0.1
+  checksum: 01b8659e456633b671c1832ae29d4c67c64b1da3dce7076dbbb50c20a62f0cb86655714a84f50c3e084c39cece1fc9a02f500df4527951390e90b732081c0457
+  languageName: node
+  linkType: hard
+
 "@nocturne-xyz/deploy@workspace:^, @nocturne-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deploy@workspace:packages/deploy"
@@ -3186,7 +3196,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
-    "@nocturne-xyz/crypto-utils": ^0.1.5
+    "@nocturne-xyz/crypto-utils": ^0.1.7
     "@types/async-retry": ^1.4.5
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3

@@ -1,5 +1,5 @@
 import { CanonAddress } from "./address";
-import { Note, NoteTrait } from "../primitives";
+import { NoteTrait } from "../primitives";
 import { EncryptedNote } from "../primitives/types";
 import {
   BabyJubJub,
@@ -7,6 +7,7 @@ import {
   deserializeHybridCiphertext,
   serializeHybridCiphertext,
 } from "@nocturne-xyz/crypto-utils";
+import { NoteWithSender } from "../primitives/note";
 
 const cipher = new HybridCipher(BabyJubJub, 64);
 
@@ -20,8 +21,18 @@ const cipher = new HybridCipher(BabyJubJub, 64);
  * @remarks
  * The viewing key corresponding to the receiver's canonical address is the decryption key
  */
-export function encryptNote(receiver: CanonAddress, note: Note): EncryptedNote {
+export function encryptNote(
+  receiver: CanonAddress,
+  noteWithSender: NoteWithSender
+): EncryptedNote {
+  const { sender, ...note } = noteWithSender;
+  const senderBytes = BabyJubJub.toBytes(sender);
   const noteBytes = NoteTrait.serializeCompact(note);
+
+  const msg = new Uint8Array(senderBytes.length + noteBytes.length);
+  msg.set(senderBytes);
+  msg.set(noteBytes, senderBytes.length);
+
   const ciphertext = cipher.encrypt(noteBytes, receiver);
   return serializeHybridCiphertext(ciphertext);
 }
@@ -37,8 +48,19 @@ export function encryptNote(receiver: CanonAddress, note: Note): EncryptedNote {
  * `vk` need not be the viewing key corresponding to the owner's canonical address. The decryption process
  * will work as long as `encryptedNote` was encrypted with `vk`'s corresponding `CanonicalAddress`
  */
-export function decryptNote(vk: bigint, encryptedNote: EncryptedNote): Note {
+export function decryptNote(
+  vk: bigint,
+  encryptedNote: EncryptedNote
+): NoteWithSender {
   const ciphertext = deserializeHybridCiphertext(encryptedNote);
-  const noteBytes = cipher.decrypt(ciphertext, vk);
-  return NoteTrait.deserializeCompact(noteBytes);
+  const msgBytes = cipher.decrypt(ciphertext, vk);
+
+  const senderBytes = msgBytes.slice(0, BabyJubJub.NumBytes);
+  const noteBytes = msgBytes.slice(BabyJubJub.NumBytes);
+
+  const sender = BabyJubJub.fromBytes(senderBytes);
+  if (!sender) throw new Error("Invalid sender");
+  const note = NoteTrait.deserializeCompact(noteBytes);
+
+  return { sender, ...note };
 }
