@@ -33,12 +33,14 @@ describe("note encryption", () => {
   it("can encrypt and decrypt notes", () => {
     const vk = randomFr();
     const viewer = new NocturneViewer(vk, 1n);
+    const sender = viewer.canonicalAddress();
     range(10).forEach(() => {
       const note = randomNote(viewer);
-      const encrypted = encryptNote(viewer.canonicalAddress(), note);
+      const noteWithSender = { ...note, sender };
+      const encrypted = encryptNote(viewer.canonicalAddress(), noteWithSender);
       const decrypted = decryptNote(vk, encrypted);
 
-      expect(note).to.eql(decrypted);
+      expect(noteWithSender).to.eql(decrypted);
     });
   });
 });

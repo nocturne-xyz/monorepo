@@ -293,8 +293,8 @@ async function makeJoinSplit(
   const newNoteACommitment = NoteTrait.toCommitment(newNoteA);
   const newNoteBCommitment = NoteTrait.toCommitment(newNoteB);
 
-  const newNoteAEncrypted = encryptNote(sender, newNoteA);
-  const newNoteBEncrypted = encryptNote(receiver, newNoteB);
+  const newNoteAEncrypted = encryptNote(sender, { ...newNoteA, sender });
+  const newNoteBEncrypted = encryptNote(receiver, { ...newNoteB, sender });
 
   const membershipProof = merkle.getProof(oldNoteA.merkleIndex);
   const commitmentTreeRoot = membershipProof.root;

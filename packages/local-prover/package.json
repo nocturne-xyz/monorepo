@@ -22,7 +22,7 @@
     "publish": "yarn build; yarn npm publish --access public"
   },
   "dependencies": {
-    "@nocturne-xyz/crypto-utils": "^0.1.5",
+    "@nocturne-xyz/crypto-utils": "^0.1.7",
     "@nocturne-xyz/sdk": "workspace:^",
     "bigint-conversion": "^2.3.0",
     "bigint-json-serialization": "^1.0.1",

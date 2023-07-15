@@ -33,7 +33,7 @@ export function encryptNote(
   msg.set(senderBytes);
   msg.set(noteBytes, senderBytes.length);
 
-  const ciphertext = cipher.encrypt(noteBytes, receiver);
+  const ciphertext = cipher.encrypt(msg, receiver);
   return serializeHybridCiphertext(ciphertext);
 }
 
