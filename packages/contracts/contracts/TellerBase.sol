@@ -13,7 +13,7 @@ contract TellerBase is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "Operation(JoinSplit[] joinSplits,CompressedStealthAddress refundAddr,EncodedAsset[] encodedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 maxNumRefunds,uint256 gasPrice,uint256 chainId,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 encSenderCanonAddrC1,uint256 encSenderCanonAddrC2,uint256[8] proof,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(CompressedStealthAddress owner,uint256 encappedKey,uint256 encryptedNonce,uint256 encryptedValue)"
+                "Operation(JoinSplit[] joinSplits,CompressedStealthAddress refundAddr,EncodedAsset[] encodedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 maxNumRefunds,uint256 gasPrice,uint256 chainId,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)"
             )
         );
 
@@ -35,15 +35,7 @@ contract TellerBase is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 encSenderCanonAddrC1,uint256 encSenderCanonAddrC2,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)"
-            )
-        );
-
-    bytes32 public constant ENCRYPTED_NOTE_TYPEHASH =
-        keccak256(
-            bytes(
-                // solhint-disable-next-line max-line-length
-                "EncryptedNote(CompressedStealthAddress owner,uint256 encappedKey,uint256 encryptedNonce,uint256 encryptedValue)"
+                "EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)"
             )
         );
 
@@ -51,6 +43,14 @@ contract TellerBase is EIP712Upgradeable {
         keccak256(
             // solhint-disable-next-line max-line-length
             "EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)"
+        );
+
+    bytes32 public constant ENCRYPTED_NOTE_TYPEHASH =
+        keccak256(
+            bytes(
+                // solhint-disable-next-line max-line-length
+                "EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)"
+            )
         );
 
     /// @notice Internal initializer
@@ -63,19 +63,30 @@ contract TellerBase is EIP712Upgradeable {
         __EIP712_init(contractName, contractVersion);
     }
 
-    // /// @notice Hashes operation
-    // /// @param op Operation
-    // function _hashDepositRequest(
-    //     Operation memory op
-    // ) internal pure returns (bytes32) {
-    //     return
-    //         keccak256(
-    //             abi.encode(
-    //                 OPERATION_REQUEST_TYPEHASH,
-
-    //             )
-    //         );
-    // }
+    /// @notice Hashes operation
+    /// @param op Operation
+    function _hashOperation(
+        Operation calldata op
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    OPERATION_REQUEST_TYPEHASH,
+                    _hashJoinSplits(op.joinSplits),
+                    _hashCompressedStealthAddress(op.refundAddr),
+                    _hashEncodedRefundAssets(op.encodedRefundAssets),
+                    _hashActions(op.actions),
+                    _hashEncodedAsset(op.encodedGasAsset),
+                    op.gasAssetRefundThreshold,
+                    op.executionGasLimit,
+                    op.maxNumRefunds,
+                    op.gasPrice,
+                    op.chainId,
+                    op.deadline,
+                    uint256(op.atomicActions ? 1 : 0)
+                )
+            );
+    }
 
     function _hashJoinSplits(
         JoinSplit[] calldata joinSplits
@@ -85,25 +96,59 @@ contract TellerBase is EIP712Upgradeable {
         for (uint256 i = 0; i < numJoinSplits; i++) {
             joinSplitsPayload = abi.encode(
                 joinSplitsPayload,
-                abi.encode(
-                    joinSplits[i].commitmentTreeRoot,
-                    joinSplits[i].nullifierA,
-                    joinSplits[i].nullifierB,
-                    joinSplits[i].newNoteACommitment,
-                    joinSplits[i].newNoteBCommitment,
-                    joinSplits[i].publicSpend,
-                    _hashEncodedAsset(joinSplits[i].encodedAsset),
-                    _hashEncryptedNote(
-                        joinSplits[i].newNoteAEncrypted
-                    ),
-                    _hashEncryptedNote(
-                        joinSplits[i].newNoteBEncrypted
-                    )
-                )
+                _hashJoinSplit(joinSplits[i])
             );
         }
 
         return keccak256(joinSplitsPayload);
+    }
+
+    function _hashJoinSplit(
+        JoinSplit calldata joinSplit
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    EIP712_JOINSPLIT_TYPEHASH,
+                    joinSplit.commitmentTreeRoot,
+                    joinSplit.nullifierA,
+                    joinSplit.nullifierB,
+                    joinSplit.newNoteACommitment,
+                    joinSplit.newNoteBCommitment,
+                    _hashEncodedAsset(joinSplit.encodedAsset),
+                    joinSplit.publicSpend,
+                    _hashEncryptedNote(joinSplit.newNoteAEncrypted),
+                    _hashEncryptedNote(joinSplit.newNoteBEncrypted)
+                )
+            );
+    }
+
+    function _hashActions(
+        Action[] calldata actions
+    ) internal pure returns (bytes32) {
+        bytes memory actionsPayload;
+        uint256 numActions = actions.length;
+        for (uint256 i = 0; i < numActions; i++) {
+            actionsPayload = abi.encode(
+                actionsPayload,
+                _hashAction(actions[i])
+            );
+        }
+
+        return keccak256(actionsPayload);
+    }
+
+    function _hashAction(
+        Action calldata action
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    ACTION_TYPEHASH,
+                    action.contractAddress,
+                    keccak256(action.encodedFunction)
+                )
+            );
     }
 
     /// @notice Hashes encrypted note
@@ -111,21 +156,20 @@ contract TellerBase is EIP712Upgradeable {
     function _hashEncryptedNote(
         EncryptedNote calldata encryptedNote
     ) internal pure returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                ENCRYPTED_NOTE_TYPEHASH,
-                _hashCompressedStealthAddress(encryptedNote.owner),
-                encryptedNote.encappedKey,
-                encryptedNote.encryptedNonce,
-                encryptedNote.encryptedValue
-            )
-        );
+        return
+            keccak256(
+                abi.encode(
+                    ENCRYPTED_NOTE_TYPEHASH,
+                    keccak256(encryptedNote.ciphertextBytes),
+                    keccak256(encryptedNote.encapsulatedSecretBytes)
+                )
+            );
     }
 
     /// @notice Hashes stealth address
     /// @param stealthAddress Compressed stealth address
     function _hashCompressedStealthAddress(
-        CompressedStealthAddress memory stealthAddress
+        CompressedStealthAddress calldata stealthAddress
     ) internal pure returns (bytes32) {
         return
             keccak256(
@@ -137,10 +181,27 @@ contract TellerBase is EIP712Upgradeable {
             );
     }
 
+    /// @notice Hashes encoded refund assets
+    /// @param encodedRefundAssets Encoded refund assets
+    function _hashEncodedRefundAssets(
+        EncodedAsset[] calldata encodedRefundAssets
+    ) internal pure returns (bytes32) {
+        bytes memory refundAssetsPayload;
+        uint256 numRefundAssets = encodedRefundAssets.length;
+        for (uint256 i = 0; i < numRefundAssets; i++) {
+            refundAssetsPayload = abi.encode(
+                refundAssetsPayload,
+                _hashEncodedAsset(encodedRefundAssets[i])
+            );
+        }
+
+        return keccak256(refundAssetsPayload);
+    }
+
     /// @notice Hashes encoded asset
     /// @param encodedAsset Encoded asset
     function _hashEncodedAsset(
-        EncodedAsset memory encodedAsset
+        EncodedAsset calldata encodedAsset
     ) internal pure returns (bytes32) {
         return
             keccak256(
