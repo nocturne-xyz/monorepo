@@ -29,7 +29,7 @@
     "@nocturne-xyz/contracts": "1.0.34-alpha",
     "@nocturne-xyz/crypto-utils": "0.1.6",
     "@nocturne-xyz/offchain-utils": "0.1.10",
-    "@nocturne-xyz/sdk": "1.0.180-alpha",
+    "@nocturne-xyz/sdk": "1.0.183-alpha",
     "@nocturne-xyz/tx-manager": "1.0.1-alpha",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
