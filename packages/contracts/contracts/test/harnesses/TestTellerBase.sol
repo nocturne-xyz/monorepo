@@ -48,9 +48,7 @@ contract TestTellerBase is TellerBase {
         return _hashActions(actions);
     }
 
-    function hashAction(
-        Action calldata action
-    ) public pure returns (bytes32) {
+    function hashAction(Action calldata action) public pure returns (bytes32) {
         return _hashAction(action);
     }
 

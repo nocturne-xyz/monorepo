@@ -72,7 +72,10 @@ contract TellerBase is EIP712Upgradeable {
         bytes32 domainSeparator = _domainSeparatorV4();
         bytes32 structHash = _hashOperation(op);
 
-        return ECDSAUpgradeable.toTypedDataHash(domainSeparator, structHash);
+        // Must ensure hash < BN254 since operation digest is used as circuit PI
+        return uint256(
+            ECDSAUpgradeable.toTypedDataHash(domainSeparator, structHash)
+        ) % Utils.BN254_SCALAR_MODULUS;
     }
 
     /// @notice Hashes operation
@@ -106,7 +109,7 @@ contract TellerBase is EIP712Upgradeable {
         uint256 numJoinSplits = joinSplits.length;
         bytes32[] memory joinSplitHashes = new bytes32[](numJoinSplits);
         for (uint256 i = 0; i < numJoinSplits; i++) {
-            joinSplitHashes[i] =_hashJoinSplit(joinSplits[i]);
+            joinSplitHashes[i] = _hashJoinSplit(joinSplits[i]);
         }
 
         return keccak256(abi.encodePacked(joinSplitHashes));
@@ -139,7 +142,7 @@ contract TellerBase is EIP712Upgradeable {
         uint256 numActions = actions.length;
         bytes32[] memory actionHashes = new bytes32[](numActions);
         for (uint256 i = 0; i < numActions; i++) {
-            actionHashes[i] =_hashAction(actions[i]);
+            actionHashes[i] = _hashAction(actions[i]);
         }
 
         return keccak256(abi.encodePacked(actionHashes));
@@ -193,11 +196,10 @@ contract TellerBase is EIP712Upgradeable {
     function _hashEncodedRefundAssets(
         EncodedAsset[] calldata encodedRefundAssets
     ) internal pure returns (bytes32) {
-
         uint256 numRefundAssets = encodedRefundAssets.length;
         bytes32[] memory assetHashes = new bytes32[](numRefundAssets);
         for (uint256 i = 0; i < numRefundAssets; i++) {
-            assetHashes[i] =_hashEncodedAsset(encodedRefundAssets[i]);
+            assetHashes[i] = _hashEncodedAsset(encodedRefundAssets[i]);
         }
 
         return keccak256(abi.encodePacked(assetHashes));
