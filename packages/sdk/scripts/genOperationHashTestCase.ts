@@ -14,12 +14,12 @@ import { BaseJoinSplit, BasicOperation, hashOperation } from "../src";
     publicSpend: 1n,
     senderCommitment: 1n,
     newNoteAEncrypted: {
-      ciphertextBytes: [1],
-      encapsulatedSecretBytes: [1],
+      ciphertextBytes: [],
+      encapsulatedSecretBytes: [],
     },
     newNoteBEncrypted: {
-      ciphertextBytes: [1],
-      encapsulatedSecretBytes: [1],
+      ciphertextBytes: [],
+      encapsulatedSecretBytes: [],
     },
   };
 

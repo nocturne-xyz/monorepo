@@ -83,6 +83,21 @@ struct Action {
     bytes encodedFunction;
 }
 
+struct EIP712Operation {
+    EIP712JoinSplit[] joinSplits;
+    CompressedStealthAddress refundAddr;
+    EncodedAsset[] encodedRefundAssets;
+    Action[] actions;
+    EncodedAsset encodedGasAsset;
+    uint256 gasAssetRefundThreshold;
+    uint256 executionGasLimit;
+    uint256 maxNumRefunds;
+    uint256 gasPrice;
+    uint256 chainId;
+    uint256 deadline;
+    bool atomicActions;
+}
+
 struct Operation {
     JoinSplit[] joinSplits;
     CompressedStealthAddress refundAddr;

@@ -13,7 +13,7 @@ contract TellerBase is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "Operation(JoinSplit[] joinSplits,CompressedStealthAddress refundAddr,EncodedAsset[] encodedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 maxNumRefunds,uint256 gasPrice,uint256 chainId,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)"
+                "EIP712Operation(JoinSplit[] joinSplits,CompressedStealthAddress refundAddr,EncodedAsset[] encodedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 maxNumRefunds,uint256 gasPrice,uint256 chainId,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)"
             )
         );
 
@@ -63,10 +63,22 @@ contract TellerBase is EIP712Upgradeable {
         __EIP712_init(contractName, contractVersion);
     }
 
+    /// @notice Computes EIP712 digest of operation
+    /// @dev The inherited EIP712 domain separator includes block.chainid for replay protection.
+    /// @param op EIP712Operation
+    function _computeDigest(
+        EIP712Operation calldata op
+    ) public view returns (bytes32) {
+        bytes32 domainSeparator = _domainSeparatorV4();
+        bytes32 structHash = _hashOperation(op);
+
+        return ECDSAUpgradeable.toTypedDataHash(domainSeparator, structHash);
+    }
+
     /// @notice Hashes operation
-    /// @param op Operation
+    /// @param op EIP712Operation
     function _hashOperation(
-        Operation calldata op
+        EIP712Operation calldata op
     ) internal pure returns (bytes32) {
         return
             keccak256(
@@ -89,22 +101,19 @@ contract TellerBase is EIP712Upgradeable {
     }
 
     function _hashJoinSplits(
-        JoinSplit[] calldata joinSplits
+        EIP712JoinSplit[] calldata joinSplits
     ) internal pure returns (bytes32) {
-        bytes memory joinSplitsPayload;
         uint256 numJoinSplits = joinSplits.length;
+        bytes32[] memory joinSplitHashes = new bytes32[](numJoinSplits);
         for (uint256 i = 0; i < numJoinSplits; i++) {
-            joinSplitsPayload = abi.encode(
-                joinSplitsPayload,
-                _hashJoinSplit(joinSplits[i])
-            );
+            joinSplitHashes[i] =_hashJoinSplit(joinSplits[i]);
         }
 
-        return keccak256(joinSplitsPayload);
+        return keccak256(abi.encodePacked(joinSplitHashes));
     }
 
     function _hashJoinSplit(
-        JoinSplit calldata joinSplit
+        EIP712JoinSplit calldata joinSplit
     ) internal pure returns (bytes32) {
         return
             keccak256(
@@ -115,6 +124,7 @@ contract TellerBase is EIP712Upgradeable {
                     joinSplit.nullifierB,
                     joinSplit.newNoteACommitment,
                     joinSplit.newNoteBCommitment,
+                    joinSplit.senderCommitment,
                     _hashEncodedAsset(joinSplit.encodedAsset),
                     joinSplit.publicSpend,
                     _hashEncryptedNote(joinSplit.newNoteAEncrypted),
@@ -126,16 +136,13 @@ contract TellerBase is EIP712Upgradeable {
     function _hashActions(
         Action[] calldata actions
     ) internal pure returns (bytes32) {
-        bytes memory actionsPayload;
         uint256 numActions = actions.length;
+        bytes32[] memory actionHashes = new bytes32[](numActions);
         for (uint256 i = 0; i < numActions; i++) {
-            actionsPayload = abi.encode(
-                actionsPayload,
-                _hashAction(actions[i])
-            );
+            actionHashes[i] =_hashAction(actions[i]);
         }
 
-        return keccak256(actionsPayload);
+        return keccak256(abi.encodePacked(actionHashes));
     }
 
     function _hashAction(
@@ -186,16 +193,14 @@ contract TellerBase is EIP712Upgradeable {
     function _hashEncodedRefundAssets(
         EncodedAsset[] calldata encodedRefundAssets
     ) internal pure returns (bytes32) {
-        bytes memory refundAssetsPayload;
+
         uint256 numRefundAssets = encodedRefundAssets.length;
+        bytes32[] memory assetHashes = new bytes32[](numRefundAssets);
         for (uint256 i = 0; i < numRefundAssets; i++) {
-            refundAssetsPayload = abi.encode(
-                refundAssetsPayload,
-                _hashEncodedAsset(encodedRefundAssets[i])
-            );
+            assetHashes[i] =_hashEncodedAsset(encodedRefundAssets[i]);
         }
 
-        return keccak256(refundAssetsPayload);
+        return keccak256(abi.encodePacked(assetHashes));
     }
 
     /// @notice Hashes encoded asset
