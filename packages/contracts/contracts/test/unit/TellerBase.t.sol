@@ -14,12 +14,8 @@ contract DepositManagerBaseTest is Test {
     TestTellerBase public tellerBase;
 
     function testOperationHashMatchesOffchainImpl() public {
-
         tellerBase = new TestTellerBase();
-        tellerBase.initialize(
-            "NocturneTeller",
-            "v1"
-        );
+        tellerBase.initialize("NocturneTeller", "v1");
 
         EIP712JoinSplit[] memory joinSplits = new EIP712JoinSplit[](1);
         joinSplits[0] = EIP712JoinSplit({
@@ -46,7 +42,9 @@ contract DepositManagerBaseTest is Test {
 
         Action[] memory actions = new Action[](1);
         actions[0] = Action({
-            contractAddress: address(0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990),
+            contractAddress: address(
+                0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990
+            ),
             encodedFunction: hex"1234"
         });
 
@@ -58,9 +56,8 @@ contract DepositManagerBaseTest is Test {
 
         bytes32 joinSplitsArrayHash = tellerBase.hashJoinSplits(joinSplits);
         bytes32 actionsArrayHash = tellerBase.hashActions(actions);
-        bytes32 encodedRefundAssetsArrayHash = tellerBase.hashEncodedRefundAssets(
-            encodedRefundAssets
-        );
+        bytes32 encodedRefundAssetsArrayHash = tellerBase
+            .hashEncodedRefundAssets(encodedRefundAssets);
         bytes32 actionHash = tellerBase.hashAction(actions[0]);
         bytes32 encodedFunctionHash = tellerBase.hashEncodedFunction(
             actions[0].encodedFunction
@@ -89,10 +86,7 @@ contract DepositManagerBaseTest is Test {
         bytes32 operationHash = tellerBase.hashOperation(
             EIP712Operation({
                 joinSplits: joinSplits,
-                refundAddr: CompressedStealthAddress({
-                    h1: 1,
-                    h2: 1
-                }),
+                refundAddr: CompressedStealthAddress({h1: 1, h2: 1}),
                 encodedRefundAssets: encodedRefundAssets,
                 actions: actions,
                 encodedGasAsset: EncodedAsset({
@@ -108,7 +102,6 @@ contract DepositManagerBaseTest is Test {
                 atomicActions: true
             })
         );
-        
 
         console.log("operationHash:");
         console.logBytes32(operationHash);
