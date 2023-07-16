@@ -29,7 +29,7 @@ contract TestTreeUtils is Test {
         assertEq(expected, encodedPathAndhash);
     }
 
-    function testSha256FieldElems() public {
+    function testSha256U256ArrayBE() public {
         uint256[] memory preimage = new uint256[](6);
         preimage[
             0
@@ -42,7 +42,7 @@ contract TestTreeUtils is Test {
         preimage[4] = 5;
         preimage[5] = 100;
 
-        bytes32 digest = TreeUtils.sha256FieldElems(preimage);
+        bytes32 digest = TreeUtils.sha256U256ArrayBE(preimage);
         bytes32 expectedDigest = 0xb8c4f8495d1187262f374f23d92f892ccaa2336f819094ef59394ff138789a95;
 
         assertEq(expectedDigest, digest);

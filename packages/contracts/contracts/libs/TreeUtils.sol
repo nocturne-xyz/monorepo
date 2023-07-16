@@ -37,8 +37,8 @@ library TreeUtils {
         return encodedPathAndHash;
     }
 
-    // hash array of field elements / uint256s as big-endian bytes with sha256
-    function sha256FieldElems(
+    // hash array of uint256s as big-endian bytes with sha256
+    function sha256U256ArrayBE(
         uint256[] memory elems
     ) internal pure returns (bytes32) {
         return sha256(abi.encodePacked(elems));
@@ -54,7 +54,7 @@ library TreeUtils {
         elems[3] = note.encodedAssetAddr;
         elems[4] = note.encodedAssetId;
         elems[5] = note.value;
-        return uint256(sha256FieldElems(elems));
+        return uint256(sha256U256ArrayBE(elems));
     }
 
     // return uint256 as two limbs - one uint256 containing the 3 hi bits, the
