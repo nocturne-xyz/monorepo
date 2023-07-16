@@ -4,17 +4,22 @@ import {
   PreSignOperation,
   SignedOperation,
   ProvenOperation,
+  BasicOperation,
 } from "./types";
 
 export function computeOperationDigest(
-  operation: PreSignOperation | SignedOperation | ProvenOperation
+  operation:
+    | BasicOperation
+    | PreSignOperation
+    | SignedOperation
+    | ProvenOperation
 ): bigint {
   const operationHash = hashOperation(operation);
   return BigInt(operationHash) % BN254_SCALAR_FIELD_MODULUS;
 }
 
 function hashOperation(
-  op: PreSignOperation | SignedOperation | ProvenOperation
+  op: BasicOperation | PreSignOperation | SignedOperation | ProvenOperation
 ): string {
   let joinSplitsPayload = [] as any;
   for (const joinsplit of op.joinSplits) {

@@ -84,7 +84,7 @@ export interface ProvenJoinSplit extends BaseJoinSplit {
   senderCommitment: bigint;
 }
 
-interface BaseOperation {
+export interface BaseOperation {
   refundAddr: CompressedStealthAddress;
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
@@ -96,6 +96,10 @@ interface BaseOperation {
   chainId: bigint;
   deadline: bigint;
   atomicActions: boolean;
+}
+
+export interface BasicOperation extends BaseOperation {
+  joinSplits: BaseJoinSplit[];
 }
 
 export interface PreSignOperation extends BaseOperation {
