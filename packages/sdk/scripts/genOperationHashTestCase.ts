@@ -1,4 +1,4 @@
-import { BaseJoinSplit, BasicOperation, computeOperationDigest } from "../src";
+import { BaseJoinSplit, BasicOperation, hashOperation } from "../src";
 
 (async () => {
   const joinSplit: BaseJoinSplit = {
@@ -12,13 +12,14 @@ import { BaseJoinSplit, BasicOperation, computeOperationDigest } from "../src";
       encodedAssetId: 1n,
     },
     publicSpend: 1n,
+    senderCommitment: 1n,
     newNoteAEncrypted: {
-      ciphertextBytes: [1, 1, 1],
-      encapsulatedSecretBytes: [1, 1, 1],
+      ciphertextBytes: [1],
+      encapsulatedSecretBytes: [1],
     },
     newNoteBEncrypted: {
-      ciphertextBytes: [1, 1, 1],
-      encapsulatedSecretBytes: [1, 1, 1],
+      ciphertextBytes: [1],
+      encapsulatedSecretBytes: [1],
     },
   };
 
@@ -55,6 +56,6 @@ import { BaseJoinSplit, BasicOperation, computeOperationDigest } from "../src";
 
   console.log("operation", operation);
 
-  const opDigest = computeOperationDigest(operation);
-  console.log("opDigest", opDigest);
+  const opHash = hashOperation(operation);
+  console.log("operation hash", opHash);
 })();

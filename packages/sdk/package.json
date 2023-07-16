@@ -17,7 +17,7 @@
     "prettier:write": "prettier --write ./src ./test",
     "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit",
     "publish": "yarn build; yarn npm publish --access public",
-    "gen-test-cases:opdigest": "npx ts-node ./scripts/genOperationDigestTestCase.ts"
+    "gen-test-cases:operationhash": "npx ts-node ./scripts/genOperationHashTestCase.ts"
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",

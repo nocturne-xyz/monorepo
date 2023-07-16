@@ -52,6 +52,7 @@ export interface BaseJoinSplit {
   nullifierB: bigint;
   newNoteACommitment: bigint;
   newNoteBCommitment: bigint;
+  senderCommitment: bigint;
   encodedAsset: EncodedAsset;
   publicSpend: bigint;
   newNoteAEncrypted: EncryptedNote;
@@ -66,20 +67,17 @@ export interface PreSignJoinSplit extends BaseJoinSplit {
   newNoteB: Note;
   merkleProofA: MerkleProofInput;
   merkleProofB: MerkleProofInput;
-  senderCommitment: bigint;
   refundAddr: CompressedStealthAddress;
 }
 
 export interface PreProofJoinSplit extends BaseJoinSplit {
   opDigest: bigint;
   proofInputs: JoinSplitInputs;
-  senderCommitment: bigint;
   refundAddr: CompressedStealthAddress;
 }
 
 export interface ProvenJoinSplit extends BaseJoinSplit {
   proof: SolidityProof;
-  senderCommitment: bigint;
 }
 
 export interface BaseOperation {
