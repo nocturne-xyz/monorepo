@@ -9,7 +9,7 @@ import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/crypt
 import "./libs/Types.sol";
 
 contract TellerBase is EIP712Upgradeable {
-    bytes32 public constant OPERATION_REQUEST_TYPEHASH =
+    bytes32 public constant OPERATION_TYPEHASH =
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
@@ -71,7 +71,7 @@ contract TellerBase is EIP712Upgradeable {
         return
             keccak256(
                 abi.encode(
-                    OPERATION_REQUEST_TYPEHASH,
+                    OPERATION_TYPEHASH,
                     _hashJoinSplits(op.joinSplits),
                     _hashCompressedStealthAddress(op.refundAddr),
                     _hashEncodedRefundAssets(op.encodedRefundAssets),
