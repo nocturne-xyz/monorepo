@@ -1,6 +1,6 @@
 import { BaseProof } from "./types";
 import { Note, NoteTrait, AssetTrait, TreeConstants } from "../primitives";
-import { bigintToBEPadded, bigInt256ToFieldElems, iterChunks } from "../utils";
+import { bigintToBEPadded, bigInt256ToFieldElems } from "../utils";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
 import { merklePathToIndex } from "../utils/misc";
