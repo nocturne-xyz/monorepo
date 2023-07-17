@@ -254,11 +254,11 @@ template SubtreeUpdate(r, s) {
     }
     // set bitmap part of input
     for (var i = 0; i < 4**s; i++) {
-        hasher.in[(4**s + 1) * 256 + i] <== bitmap[i];
+        hasher.in[256 * (4**s) + i] <== bitmap[i];
     }
     // pad the rest to 0
     for (var i = 4**s; i < 256; i++) {
-        hasher.in[(4**s + 1) * 256 + i] <== 0;
+        hasher.in[256 * (4**s) + i] <== 0;
     }
     
 
