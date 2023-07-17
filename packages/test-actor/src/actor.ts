@@ -401,7 +401,7 @@ function randomInt(max: number) {
 function randomBigIntBounded(max: bigint) {
   const maxBytes = max.toString(16).length / 2;
   const bytes = randomBytes(maxBytes);
-  return BigInt("0x" + bytes.toString("hex"));
+  return BigInt("0x" + bytes.toString("hex")) % max;
 }
 
 function randomBigintInRange(min: bigint, max: bigint) {

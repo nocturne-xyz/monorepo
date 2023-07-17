@@ -42,12 +42,6 @@ library OperationUtils {
                 uint256 refundAddrH2SignBit,
                 uint256 refundAddrH2YCoordinate
             ) = decomposeCompressedPoint(op.refundAddr.h2);
-            // range-check y-coordinates
-            require(
-                refundAddrH1YCoordinate < Utils.BN254_SCALAR_FIELD_MODULUS &&
-                    refundAddrH2YCoordinate < Utils.BN254_SCALAR_FIELD_MODULUS,
-                "OperationUtils: invalid y-coordinate"
-            );
 
             uint256 numJoinSplitsForOp = op.joinSplits.length;
             for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
