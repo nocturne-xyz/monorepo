@@ -109,9 +109,13 @@ export function computeOperationDigest(
     | SignedOperation
     | ProvenOperation
 ): bigint {
-  const encoder = _TypedDataEncoder.from(OPERATION_TYPES);
-  console.log(encoder);
-  console.log(encoder.encodeData("EIP712Operation", operation));
+  const hashedDomain = _TypedDataEncoder.hashDomain(domain);
+  console.log("Domain:", domain);
+  console.log("BULTIN Domain hash:", hashedDomain);
+
+  // const encoder = _TypedDataEncoder.from(OPERATION_TYPES);
+  // console.log(encoder);
+  // console.log(encoder.encodeData("EIP712Operation", operation));
 
   const encodedType = encodeType(
     "EIP712Operation",

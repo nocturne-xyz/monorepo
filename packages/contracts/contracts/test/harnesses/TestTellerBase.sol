@@ -5,7 +5,24 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.
 import "../../libs/Types.sol";
 import {TellerBase} from "../../TellerBase.sol";
 
-contract TestTellerBase is TellerBase {
+interface ITestTellerBase {
+    // function recoverDepositRequestSigner(
+    //     DepositRequest calldata req,
+    //     bytes calldata signature
+    // ) external view returns (address);
+
+    function computeDigest(
+        EIP712Operation calldata op
+    ) external view returns (bytes32);
+
+    function domainSeparatorV4() external view returns (bytes32);
+
+    function nameHash() external view returns (bytes32);
+
+    function versionHash() external view returns (bytes32);
+}
+
+contract TestTellerBase is ITestTellerBase, TellerBase {
     function initialize(
         string memory contractName,
         string memory contractVersion
@@ -22,11 +39,11 @@ contract TestTellerBase is TellerBase {
 
     function computeDigest(
         EIP712Operation calldata op
-    ) external view returns (bytes32) {
+    ) external view override returns (bytes32) {
         return _computeDigest(op);
     }
 
-    function domainSeparatorV4() external view returns (bytes32) {
+    function domainSeparatorV4() external view override returns (bytes32) {
         return _domainSeparatorV4();
     }
 
