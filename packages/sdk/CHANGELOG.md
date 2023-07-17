@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- update test case that generates `calculatePublicInputs` test vector
+- append `bitmap` to preimage of `accumulatorHash` to match contracts
 - in `JoinSplitInputs` generation code, mask `encodedAsset` PIs to zero when `publicSpend` is 0.
 - update `src/proof/joinsplit.ts` to match circuit with `encodedAsset` zeroing when `publicSpend` is 0
 - update gas estimation logic now that `maxNumRefunds` is removed from op

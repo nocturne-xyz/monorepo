@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add test lib `AlgebraicUtils` that implements BN254 field arithmetic and point decrompression
+- append `bitmap` to preimage of `accumulatorHash` to prevent prover from lying about insertion type (TOB-4)
 - check code size of contract called in `_makeExternalCall` (TOB-13)
 - remove `op.maxNumRefunds` now that number of refund assets is statically determined
 - add test cases to ensure min return value functionality works as expected

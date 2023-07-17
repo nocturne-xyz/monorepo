@@ -46,7 +46,11 @@ library NocturneUtils {
         pure
         returns (CompressedStealthAddress memory)
     {
-        return CompressedStealthAddress({h1: 1938477, h2: 1032988});
+        return
+            CompressedStealthAddress({
+                h1: 16950150798460657717958625567821834550301663161624707787222815936182638968203,
+                h2: 49380694508107827227871038662877111842066638251616884143503987031630145436076
+            });
     }
 
     function dummyProof() internal pure returns (uint256[8] memory _values) {

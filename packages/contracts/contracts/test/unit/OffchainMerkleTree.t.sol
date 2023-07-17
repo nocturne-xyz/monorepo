@@ -22,7 +22,6 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
 
     OffchainMerkleTree merkle;
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
-    IHasherT3 hasherT3;
     IHasherT5 hasherT5;
     IHasherT6 hasherT6;
     TreeTest treeTest;
@@ -40,10 +39,9 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         subtreeUpdateVerifier = ISubtreeUpdateVerifier(
             new TestSubtreeUpdateVerifier()
         );
-        hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
         hasherT5 = IHasherT5(new PoseidonHasherT5(poseidonT5));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
-        treeTest.initialize(hasherT3, hasherT5, hasherT6);
+        treeTest.initialize(hasherT5, hasherT6);
         merkle.initialize(address(subtreeUpdateVerifier));
     }
 
@@ -244,7 +242,7 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         uint256[][3] memory path = treeTest.computeInitialPaths(batch);
         uint256 _newRoot = path[0][DEPTH_TO_SUBTREE];
 
-        uint256 newRoot = 17851036531648172315007085202360506341175596362706882083251817558375094796263;
+        uint256 newRoot = 20081964780122031994222145234909207539202862934118288839297549633004122581351;
 
         assertEq(newRoot, _newRoot);
 
@@ -257,10 +255,12 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         uint256[] memory pis = merkle._calculatePublicInputs(newRoot);
         assertEq(pis[0], TreeUtils.EMPTY_TREE_ROOT);
         assertEq(pis[1], newRoot);
-        assertEq(pis[2], 1879048192);
+
+        // generated using disabled "test" in `sdk/test/SparseMerkleProver.test.ts`
+        assertEq(pis[2], 1342177280);
         assertEq(
             pis[3],
-            13761535849878919798310125019909519451162264697046676736248712268787268459921
+            4293781911030164809833619861172635788578413063354128217176997382673280783273
         );
     }
 
@@ -271,8 +271,8 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
 
     function dummyNote() internal pure returns (EncodedNote memory) {
         EncodedNote memory note = EncodedNote({
-            ownerH1: 20053872845712750666020333248434368879858874000328815279916175647306793909806,
-            ownerH2: 10878178814994881930842668029692572520203302021151403528591159382456948662398,
+            ownerH1: 16950150798460657717958625567821834550301663161624707787222815936182638968203,
+            ownerH2: 49380694508107827227871038662877111842066638251616884143503987031630145436076,
             nonce: 1,
             encodedAssetAddr: 917551056842671309452305380979543736893630245704,
             encodedAssetId: 5,

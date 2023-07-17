@@ -9,6 +9,7 @@ import {
   bigintToBEPadded,
   range,
   TreeConstants,
+  NocturneSigner,
 } from "../src";
 import { BabyJubJub, poseidonBN } from "@nocturne-xyz/crypto-utils";
 import { SparseMerkleProver, TreeNode } from "../src/SparseMerkleProver";
@@ -365,12 +366,15 @@ describe("SparseMerkleProver", () => {
     const kv = new InMemoryKVStore();
     const prover = new SparseMerkleProver(kv);
 
+    const ownerViewer = new NocturneSigner(69n);
+    const owner = ownerViewer.canonicalStealthAddress();
+    console.log("uncompressed owner", owner);
+    const compressedOwner = StealthAddressTrait.compress(owner);
+    console.log("owner:", compressedOwner);
+
     // copy of what's in packages/contracts/contracts/test/unit/OffchainMerkleTree.t.sol
     const dummyNote = NoteTrait.decode({
-      owner: StealthAddressTrait.decompress({
-        h1: 20053872845712750666020333248434368879858874000328815279916175647306793909806n,
-        h2: 10878178814994881930842668029692572520203302021151403528591159382456948662398n,
-      }),
+      owner,
       nonce: 1n,
       encodedAssetAddr: 917551056842671309452305380979543736893630245704n,
       encodedAssetId: 5n,
@@ -389,6 +393,12 @@ describe("SparseMerkleProver", () => {
         ...range(9).map(() => dummyNc),
         ...range(2).map(() => dummyNote),
       ];
+      const bitmap = [
+        ...range(1).map(() => 1n),
+        ...range(4).map(() => 1n),
+        ...range(9).map(() => 0n),
+        ...range(2).map(() => 1n),
+      ];
 
       const accumulatorHashPreimage: number[] = [];
       for (const noteOrCommitment of batch) {
@@ -400,6 +410,12 @@ describe("SparseMerkleProver", () => {
           accumulatorHashPreimage.push(...NoteTrait.sha256(noteOrCommitment));
         }
       }
+
+      const bitmapAsBigint = bitmap.reduce(
+        (acc, bit, i) => acc | (bit << (255n - BigInt(i))),
+        0n
+      );
+      accumulatorHashPreimage.push(...bigintToBEPadded(bitmapAsBigint, 32));
 
       const accumulatorHashU256 = BigInt(
         "0x" + sha256.hex(accumulatorHashPreimage)
