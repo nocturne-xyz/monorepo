@@ -62,6 +62,12 @@ contract DepositManagerBaseTest is Test {
         bytes32 encodedFunctionHash = tellerBase.hashEncodedFunction(
             actions[0].encodedFunction
         );
+        bytes32 gasAssetHash = tellerBase.hashEncodedAsset(
+            EncodedAsset({
+                encodedAssetAddr: 1,
+                encodedAssetId: 1
+            })
+        );
 
         console.log("joinSplitsArrayHash:");
         console.logBytes32(joinSplitsArrayHash);
@@ -82,28 +88,59 @@ contract DepositManagerBaseTest is Test {
         console.log("encodedFunctionHash:");
         console.logBytes32(encodedFunctionHash);
         console.log("");
+        
+        console.log("gasAssetHash:");
+        console.logBytes32(gasAssetHash);
+        console.log("");
 
-        bytes32 operationHash = tellerBase.hashOperation(
-            EIP712Operation({
-                joinSplits: joinSplits,
-                refundAddr: CompressedStealthAddress({h1: 1, h2: 1}),
-                encodedRefundAssets: encodedRefundAssets,
-                actions: actions,
-                encodedGasAsset: EncodedAsset({
-                    encodedAssetAddr: 1,
-                    encodedAssetId: 1
-                }),
-                gasAssetRefundThreshold: 1,
-                executionGasLimit: 1,
-                maxNumRefunds: 1,
-                gasPrice: 1,
-                chainId: 1,
-                deadline: 1,
-                atomicActions: true
-            })
-        );
+        EIP712Operation memory operation = EIP712Operation({
+            joinSplits: joinSplits,
+            refundAddr: CompressedStealthAddress({h1: 1, h2: 1}),
+            encodedRefundAssets: encodedRefundAssets,
+            actions: actions,
+            encodedGasAsset: EncodedAsset({
+                encodedAssetAddr: 1,
+                encodedAssetId: 1
+            }),
+            gasAssetRefundThreshold: 1,
+            executionGasLimit: 1,
+            maxNumRefunds: 1,
+            gasPrice: 1,
+            chainId: 1,
+            deadline: 1,
+            atomicActions: true
+        });
+
+        bytes32 operationHash = tellerBase.hashOperation(operation);
 
         console.log("operationHash:");
         console.logBytes32(operationHash);
+        console.log("");
+
+        vm.chainId(123);
+        vm.etch(
+            address(0x1111111111111111111111111111111111111111),
+            address(tellerBase).code
+        );
+        vm.store(
+            address(0x1111111111111111111111111111111111111111),
+            bytes32(uint256(1)),
+            keccak256(bytes("NocturneTeller"))
+        );
+        vm.store(
+            address(0x1111111111111111111111111111111111111111),
+            bytes32(uint256(2)),
+            keccak256(bytes("v1"))
+        );
+        bytes32 operationDigest = tellerBase.computeDigest(operation);
+
+        bytes32 domainSeparator = tellerBase.domainSeparatorV4();
+        console.log("domainSeparator:");
+        console.logBytes32(domainSeparator);
+        console.log("");
+
+        console.log("operationDigest:");
+        console.logBytes32(operationDigest);
+        console.log("");
     }
 }

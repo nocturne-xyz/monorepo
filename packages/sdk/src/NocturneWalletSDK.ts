@@ -5,7 +5,7 @@ import {
   OptimisticNFRecord,
   OperationMetadata,
   OpDigestWithMetadata,
-  computeOperationDigest,
+  // computeOperationDigest,
 } from "./primitives";
 import { NocturneSigner } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
@@ -165,7 +165,8 @@ export class NocturneWalletSDK {
     metadata?: OperationMetadata
   ): Promise<void> {
     // Create op digest record
-    const opDigest = computeOperationDigest(op);
+    // const opDigest = computeOperationDigest(op);
+    const opDigest = 1n;
     const expirationDate = Date.now() + OPTIMISTIC_RECORD_TTL;
 
     // Create NF records
