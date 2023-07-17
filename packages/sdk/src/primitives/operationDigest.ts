@@ -1,6 +1,6 @@
 import {
   Action,
-  BN254_SCALAR_FIELD_MODULUS,
+  // BN254_SCALAR_FIELD_MODULUS,
   BaseJoinSplit,
   BasicOperation,
   EncryptedNote,
@@ -10,51 +10,141 @@ import {
 } from "./types";
 import { EncodedAsset } from "./asset";
 import { CompressedStealthAddress } from "../crypto";
-import { solidityPackedKeccak256, solidityPacked, AbiCoder } from "ethers";
+import { ethers, TypedDataDomain } from "ethers";
+const { _TypedDataEncoder } = ethers.utils;
 
-const OPERATION_TYPEHASH = solidityPackedKeccak256(
+export const TELLER_CONTRACT_NAME = "NocturneDepositManager";
+export const TELLER_CONTRACT_VERSION = "v1";
+
+export const OPERATION_TYPES = {
+  EIP712Operation: [
+    { name: "joinSplits", type: "EIP712JoinSplit[]" },
+    { name: "refundAddr", type: "CompressedStealthAddress" },
+    { name: "encodedRefundAssets", type: "EncodedAsset[]" },
+    { name: "actions", type: "Action[]" },
+    { name: "encodedGasAsset", type: "EncodedAsset" },
+    { name: "gasAssetRefundThreshold", type: "uint256" },
+    { name: "executionGasLimit", type: "uint256" },
+    { name: "maxNumRefunds", type: "uint256" },
+    { name: "gasPrice", type: "uint256" },
+    { name: "chainId", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+    { name: "atomicActions", type: "bool" },
+  ],
+  EIP712JoinSplit: [
+    { name: "commitmentTreeRoot", type: "uint256" },
+    { name: "nullifierA", type: "uint256" },
+    { name: "nullifierB", type: "uint256" },
+    { name: "newNoteACommitment", type: "uint256" },
+    { name: "newNoteBCommitment", type: "uint256" },
+    { name: "senderCommitment", type: "uint256" },
+    { name: "encodedAsset", type: "EncodedAsset" },
+    { name: "publicSpend", type: "uint256" },
+    { name: "newNoteAEncrypted", type: "EncryptedNote" },
+    { name: "newNoteBEncrypted", type: "EncryptedNote" },
+  ],
+  Action: [
+    { name: "contractAddress", type: "address" },
+    { name: "encodedFunction", type: "bytes" },
+  ],
+  CompressedStealthAddress: [
+    { name: "h1", type: "uint256" },
+    { name: "h2", type: "uint256" },
+  ],
+  EncodedAsset: [
+    { name: "encodedAssetAddr", type: "uint256" },
+    { name: "encodedAssetId", type: "uint256" },
+  ],
+  EncryptedNote: [
+    { name: "ciphertextBytes", type: "bytes" },
+    { name: "encapsulatedSecretBytes", type: "bytes" },
+  ],
+};
+
+const OPERATION_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],
   [
     "EIP712Operation(JoinSplit[] joinSplits,CompressedStealthAddress refundAddr,EncodedAsset[] encodedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 maxNumRefunds,uint256 gasPrice,uint256 chainId,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)",
   ]
 );
 
-const COMPRESSED_STEALTH_ADDRESS_TYPEHASH = solidityPackedKeccak256(
+const COMPRESSED_STEALTH_ADDRESS_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],
   ["CompressedStealthAddress(uint256 h1,uint256 h2)"]
 );
 
-const ACTION_TYPEHASH = solidityPackedKeccak256(
+const ACTION_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],
   ["Action(address contractAddress,bytes encodedFunction)"]
 );
 
-const EIP712_JOINSPLIT_TYPEHASH = solidityPackedKeccak256(
+const EIP712_JOINSPLIT_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],
   [
-    "EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)",
+    "EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)",
   ]
 );
 
-const ENCODED_ASSET_TYPEHASH = solidityPackedKeccak256(
+const ENCODED_ASSET_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],
   ["EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)"]
 );
 
-const ENCRYPTED_NOTE_TYPEHASH = solidityPackedKeccak256(
+const ENCRYPTED_NOTE_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],
   ["EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)"]
 );
 
 export function computeOperationDigest(
+  domain: TypedDataDomain,
   operation:
     | BasicOperation
     | PreSignOperation
     | SignedOperation
     | ProvenOperation
 ): bigint {
-  const operationHash = hashOperation(operation);
-  return BigInt(operationHash) % BN254_SCALAR_FIELD_MODULUS;
+  const digest = _TypedDataEncoder.hash(domain, OPERATION_TYPES, operation);
+  const opHash = _TypedDataEncoder.hashStruct(
+    "EIP712Operation",
+    OPERATION_TYPES,
+    operation
+  );
+  console.log("Operation hash (builtin):", opHash);
+
+  const joinSplitsHash = _TypedDataEncoder.hashStruct(
+    "EIP712JoinSplit[]",
+    OPERATION_TYPES,
+    operation.joinSplits
+  );
+  console.log("joinSplits array hash (builtin):", joinSplitsHash);
+
+  const encodedRefundAssetsHash = _TypedDataEncoder.hashStruct(
+    "EncodedAsset[]",
+    OPERATION_TYPES,
+    operation.encodedRefundAssets
+  );
+  console.log(
+    "encodedRefundAssets array hash (builtin):",
+    encodedRefundAssetsHash
+  );
+
+  const actionsHash = _TypedDataEncoder.hashStruct(
+    "Action[]",
+    OPERATION_TYPES,
+    operation.actions
+  );
+  console.log("actions array hash (builtin):", actionsHash);
+
+  const gasAssetHash = _TypedDataEncoder.hashStruct(
+    "EncodedAsset",
+    OPERATION_TYPES,
+    operation.encodedGasAsset
+  );
+  console.log("encodedGasAsset hash (builtin):", gasAssetHash);
+
+  console.log("Operation digest (pre-mod):", digest);
+  // TODO: mod BN254
+  return BigInt(digest);
 }
 
 export function hashOperation(
@@ -64,10 +154,10 @@ export function hashOperation(
     | SignedOperation
     | ProvenOperation
 ): string {
-  return solidityPackedKeccak256(
+  return ethers.utils.solidityKeccak256(
     ["bytes"],
     [
-      new AbiCoder().encode(
+      ethers.utils.defaultAbiCoder.encode(
         [
           "bytes32",
           "bytes32",
@@ -109,9 +199,9 @@ function hashJoinSplits(joinSplits: BaseJoinSplit[]): string {
     joinSplitHashes.push(hashJoinSplit(joinSplit));
   }
 
-  const hash = solidityPackedKeccak256(
+  const hash = ethers.utils.solidityKeccak256(
     ["bytes"],
-    [solidityPacked(["bytes32[]"], [joinSplitHashes])]
+    [ethers.utils.solidityPack(["bytes32[]"], [joinSplitHashes])]
   );
 
   console.log("joinSplits array hash", hash);
@@ -119,10 +209,10 @@ function hashJoinSplits(joinSplits: BaseJoinSplit[]): string {
 }
 
 function hashJoinSplit(joinSplit: BaseJoinSplit): string {
-  const hash = solidityPackedKeccak256(
+  const hash = ethers.utils.solidityKeccak256(
     ["bytes"],
     [
-      new AbiCoder().encode(
+      ethers.utils.defaultAbiCoder.encode(
         [
           "bytes32",
           "uint256",
@@ -160,12 +250,13 @@ function hashJoinSplit(joinSplit: BaseJoinSplit): string {
 function hashActions(actions: Action[]): string {
   let actionHashes = [] as any;
   for (const action of actions) {
+    console.log("action hash (alone):", action);
     actionHashes.push(hashAction(action));
   }
 
-  const hash = solidityPackedKeccak256(
+  const hash = ethers.utils.solidityKeccak256(
     ["bytes"],
-    [solidityPacked(["bytes32[]"], [actionHashes])]
+    [ethers.utils.solidityPack(["bytes32[]"], [actionHashes])]
   );
 
   console.log("actions array hash", hash);
@@ -173,16 +264,16 @@ function hashActions(actions: Action[]): string {
 }
 
 function hashAction(action: Action): string {
-  const encodedFunctionHash = solidityPackedKeccak256(
+  const encodedFunctionHash = ethers.utils.solidityKeccak256(
     ["bytes"],
     [action.encodedFunction]
   );
   console.log("encodedFunction hash", encodedFunctionHash);
 
-  const hash = solidityPackedKeccak256(
+  const hash = ethers.utils.solidityKeccak256(
     ["bytes"],
     [
-      new AbiCoder().encode(
+      ethers.utils.defaultAbiCoder.encode(
         ["bytes32", "address", "bytes32"],
         [ACTION_TYPEHASH, action.contractAddress, encodedFunctionHash]
       ),
@@ -196,10 +287,10 @@ function hashAction(action: Action): string {
 function hashCompressedStealthAddress(
   stealthAddress: CompressedStealthAddress
 ): string {
-  return solidityPackedKeccak256(
+  return ethers.utils.solidityKeccak256(
     ["bytes"],
     [
-      new AbiCoder().encode(
+      ethers.utils.defaultAbiCoder.encode(
         ["bytes32", "uint256", "uint256"],
         [
           COMPRESSED_STEALTH_ADDRESS_TYPEHASH,
@@ -217,9 +308,9 @@ function hashEncodedRefundAssets(encodedRefundAssets: EncodedAsset[]): string {
     assetHashes.push(hashEncodedAsset(encodedAsset));
   }
 
-  const hash = solidityPackedKeccak256(
+  const hash = ethers.utils.solidityKeccak256(
     ["bytes"],
-    [solidityPacked(["bytes32[]"], [assetHashes])]
+    [ethers.utils.solidityPack(["bytes32[]"], [assetHashes])]
   );
 
   console.log("encodedRefundAssets array hash", hash);
@@ -227,10 +318,10 @@ function hashEncodedRefundAssets(encodedRefundAssets: EncodedAsset[]): string {
 }
 
 function hashEncodedAsset(encodedAsset: EncodedAsset): string {
-  return solidityPackedKeccak256(
+  return ethers.utils.solidityKeccak256(
     ["bytes"],
     [
-      new AbiCoder().encode(
+      ethers.utils.defaultAbiCoder.encode(
         ["bytes32", "uint256", "uint256"],
         [
           ENCODED_ASSET_TYPEHASH,
@@ -243,15 +334,18 @@ function hashEncodedAsset(encodedAsset: EncodedAsset): string {
 }
 
 function hashEncryptedNote(encryptedNote: EncryptedNote): string {
-  return solidityPackedKeccak256(
+  return ethers.utils.solidityKeccak256(
     ["bytes"],
     [
-      new AbiCoder().encode(
+      ethers.utils.defaultAbiCoder.encode(
         ["bytes32", "bytes32", "bytes32"],
         [
           ENCRYPTED_NOTE_TYPEHASH,
-          solidityPackedKeccak256(["bytes"], [encryptedNote.ciphertextBytes]),
-          solidityPackedKeccak256(
+          ethers.utils.solidityKeccak256(
+            ["bytes"],
+            [encryptedNote.ciphertextBytes]
+          ),
+          ethers.utils.solidityKeccak256(
             ["bytes"],
             [encryptedNote.encapsulatedSecretBytes]
           ),

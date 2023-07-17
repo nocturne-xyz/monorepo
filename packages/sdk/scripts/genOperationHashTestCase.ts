@@ -1,4 +1,10 @@
-import { BaseJoinSplit, BasicOperation, hashOperation } from "../src";
+import {
+  BaseJoinSplit,
+  BasicOperation,
+  computeOperationDigest,
+  hashOperation,
+} from "../src";
+import { ethers } from "ethers";
 
 (async () => {
   const joinSplit: BaseJoinSplit = {
@@ -58,4 +64,13 @@ import { BaseJoinSplit, BasicOperation, hashOperation } from "../src";
 
   const opHash = hashOperation(operation);
   console.log("operation hash", opHash);
+
+  const domain: ethers.TypedDataDomain = {
+    name: "NocturneTeller",
+    version: "v1",
+    chainId: 123,
+    verifyingContract: "0x1111111111111111111111111111111111111111",
+  };
+  const opDigest = computeOperationDigest(domain, operation);
+  console.log("operation digest", opDigest.toString(16));
 })();

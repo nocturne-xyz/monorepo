@@ -6,6 +6,7 @@ import {ECDSAUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/crypto
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 // Internal
+import {Utils} from "./libs/Utils.sol";
 import "./libs/Types.sol";
 
 contract TellerBase is EIP712Upgradeable {
@@ -35,7 +36,7 @@ contract TellerBase is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)"
+                "EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)"
             )
         );
 
@@ -72,10 +73,8 @@ contract TellerBase is EIP712Upgradeable {
         bytes32 domainSeparator = _domainSeparatorV4();
         bytes32 structHash = _hashOperation(op);
 
-        // Must ensure hash < BN254 since operation digest is used as circuit PI
-        return uint256(
-            ECDSAUpgradeable.toTypedDataHash(domainSeparator, structHash)
-        ) % Utils.BN254_SCALAR_MODULUS;
+        // TODO: Must ensure hash < BN254 since operation digest is used as circuit PI
+        return ECDSAUpgradeable.toTypedDataHash(domainSeparator, structHash);
     }
 
     /// @notice Hashes operation

@@ -6,10 +6,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { ERC20_ID } from "@nocturne-xyz/sdk/dist/src/primitives/asset";
 import { ethers, Wallet } from "ethers";
-import {
-  EIP712Domain,
-  signDepositRequest,
-} from "../src";
+import { EIP712Domain, signDepositRequest } from "../src";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
@@ -18,6 +15,7 @@ import {
   DEPOSIT_MANAGER_CONTRACT_VERSION,
   DEPOSIT_REQUEST_TYPES,
 } from "../src/typedData/constants";
+const { _TypedDataEncoder } = ethers.utils;
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const SIGNED_DEPOSIT_REQ_FIXTURE_PATH = path.join(
@@ -67,12 +65,15 @@ function toObject(obj: any) {
     gasCompensation: 50n,
   };
 
-  const signature = await signDepositRequest(
-    signer,
-    domain,
+  const signature = await signDepositRequest(signer, domain, depositRequest);
+  const hash = hashDepositRequest(depositRequest);
+  const hashBuiltin = _TypedDataEncoder.hashStruct(
+    "DepositRequest",
+    DEPOSIT_REQUEST_TYPES,
     depositRequest
   );
-  const hash = hashDepositRequest(depositRequest);
+
+  console.log("depositHash BUILTIN", hashBuiltin);
 
   console.log("sig", signature);
 

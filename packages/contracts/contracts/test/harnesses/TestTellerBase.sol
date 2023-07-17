@@ -20,11 +20,11 @@ contract TestTellerBase is TellerBase {
     //     return _recoverOperationSigner(op, signature);
     // }
 
-    // function computeDigest(
-    //     EIP712Operation calldata op
-    // ) external view override returns (bytes32) {
-    //     return _computeDigest(op);
-    // }
+    function computeDigest(
+        EIP712Operation calldata op
+    ) external view returns (bytes32) {
+        return _computeDigest(op);
+    }
 
     function domainSeparatorV4() external view returns (bytes32) {
         return _domainSeparatorV4();
@@ -62,6 +62,14 @@ contract TestTellerBase is TellerBase {
         EncodedAsset[] calldata encodedRefundAssets
     ) public pure returns (bytes32) {
         return _hashEncodedRefundAssets(encodedRefundAssets);
+    }
+
+    function hashEncodedAsset(EncodedAsset calldata encodedAsset)
+        public
+        pure
+        returns (bytes32)
+    {
+        return _hashEncodedAsset(encodedAsset);
     }
 
     function nameHash() public view returns (bytes32) {
