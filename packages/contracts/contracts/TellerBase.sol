@@ -73,8 +73,8 @@ contract TellerBase is EIP712Upgradeable {
         bytes32 domainSeparator = _domainSeparatorV4();
         bytes32 structHash = _hashOperation(op);
 
-        // TODO: Must ensure hash < BN254 since operation digest is used as circuit PI
-        return ECDSAUpgradeable.toTypedDataHash(domainSeparator, structHash);
+        bytes32 digest = ECDSAUpgradeable.toTypedDataHash(domainSeparator, structHash);
+        return bytes32(uint256(digest) % Utils.BN254_SCALAR_FIELD_MODULUS);
     }
 
     /// @notice Hashes operation

@@ -1,5 +1,6 @@
 import {
   Action,
+  BN254_SCALAR_FIELD_MODULUS,
   // BN254_SCALAR_FIELD_MODULUS,
   BaseJoinSplit,
   BasicOperation,
@@ -10,7 +11,7 @@ import {
 } from "./types";
 import { EncodedAsset } from "./asset";
 import { CompressedStealthAddress } from "../crypto";
-import { ethers, TypedDataDomain, TypedDataField } from "ethers";
+import { ethers, TypedDataDomain } from "ethers";
 const { _TypedDataEncoder } = ethers.utils;
 
 export const TELLER_CONTRACT_NAME = "NocturneDepositManager";
@@ -95,12 +96,6 @@ const ENCRYPTED_NOTE_TYPEHASH = ethers.utils.solidityKeccak256(
   ["EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)"]
 );
 
-function encodeType(name: string, fields: Array<TypedDataField>): string {
-  return `${name}(${fields
-    .map(({ name, type }) => type + " " + name)
-    .join(",")})`;
-}
-
 export function computeOperationDigest(
   domain: TypedDataDomain,
   operation:
@@ -109,89 +104,8 @@ export function computeOperationDigest(
     | SignedOperation
     | ProvenOperation
 ): bigint {
-  const hashedDomain = _TypedDataEncoder.hashDomain(domain);
-  console.log("Domain:", domain);
-  console.log("BULTIN Domain hash:", hashedDomain);
-
-  // const encoder = _TypedDataEncoder.from(OPERATION_TYPES);
-  // console.log(encoder);
-  // console.log(encoder.encodeData("EIP712Operation", operation));
-
-  const encodedType = encodeType(
-    "EIP712Operation",
-    OPERATION_TYPES.EIP712Operation
-  );
-  console.log("Encoded Type:", encodedType);
-
   const digest = _TypedDataEncoder.hash(domain, OPERATION_TYPES, operation);
-  const opHash = _TypedDataEncoder.hashStruct(
-    "EIP712Operation",
-    OPERATION_TYPES,
-    operation
-  );
-  console.log("BULTIN Operation hash:", opHash);
-
-  const refundAddrHash = _TypedDataEncoder.hashStruct(
-    "CompressedStealthAddress",
-    OPERATION_TYPES,
-    operation.refundAddr
-  );
-  console.log("BULTIN refundAddr hash:", refundAddrHash);
-
-  const joinSplitsHash = _TypedDataEncoder.hashStruct(
-    "EIP712JoinSplit[]",
-    OPERATION_TYPES,
-    operation.joinSplits
-  );
-  console.log("BULTIN joinSplits array hash:", joinSplitsHash);
-
-  const joinSplitHash = _TypedDataEncoder.hashStruct(
-    "EIP712JoinSplit",
-    OPERATION_TYPES,
-    operation.joinSplits[0]
-  );
-  console.log("BULTIN joinSplit hash:", joinSplitHash);
-
-  const encodedRefundAssetsHash = _TypedDataEncoder.hashStruct(
-    "EncodedAsset[]",
-    OPERATION_TYPES,
-    operation.encodedRefundAssets
-  );
-  console.log(
-    "BULTIN encodedRefundAssets array hash:",
-    encodedRefundAssetsHash
-  );
-
-  const actionsHash = _TypedDataEncoder.hashStruct(
-    "Action[]",
-    OPERATION_TYPES,
-    operation.actions
-  );
-  console.log("BULTIN actions array hash:", actionsHash);
-
-  const actionHashSingle = _TypedDataEncoder.hashStruct(
-    "Action",
-    OPERATION_TYPES,
-    operation.actions[0]
-  );
-  console.log("BULTIN action hash (alone):", actionHashSingle);
-
-  const hashActionHash = ethers.utils.keccak256(
-    ethers.utils.solidityPack(["bytes32[]"], [[actionHashSingle]])
-  );
-  console.log("Hash action hash:", hashActionHash);
-  console.log("hash hash action hash:", ethers.utils.keccak256(hashActionHash));
-
-  const gasAssetHash = _TypedDataEncoder.hashStruct(
-    "EncodedAsset",
-    OPERATION_TYPES,
-    operation.encodedGasAsset
-  );
-  console.log("BULTIN encodedGasAsset hash:", gasAssetHash);
-
-  console.log("Operation digest (pre-mod):", digest);
-  // TODO: mod BN254
-  return BigInt(digest);
+  return BigInt(digest) % BN254_SCALAR_FIELD_MODULUS;
 }
 
 export function hashOperation(
