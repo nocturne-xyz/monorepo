@@ -42,6 +42,12 @@ contract TestTellerBase is TellerBase {
         return _hashJoinSplits(joinSplits);
     }
 
+    function hashJoinSplit(
+        EIP712JoinSplit calldata joinSplit
+    ) public pure returns (bytes32) {
+        return _hashJoinSplit(joinSplit);
+    }
+
     function hashActions(
         Action[] calldata actions
     ) public pure returns (bytes32) {
@@ -50,6 +56,12 @@ contract TestTellerBase is TellerBase {
 
     function hashAction(Action calldata action) public pure returns (bytes32) {
         return _hashAction(action);
+    }
+
+    function hashCompressedStealthAddress(
+        CompressedStealthAddress calldata compressedStealthAddress
+    ) public pure returns (bytes32) {
+        return _hashCompressedStealthAddress(compressedStealthAddress);
     }
 
     function hashEncodedFunction(
@@ -64,11 +76,9 @@ contract TestTellerBase is TellerBase {
         return _hashEncodedRefundAssets(encodedRefundAssets);
     }
 
-    function hashEncodedAsset(EncodedAsset calldata encodedAsset)
-        public
-        pure
-        returns (bytes32)
-    {
+    function hashEncodedAsset(
+        EncodedAsset calldata encodedAsset
+    ) public pure returns (bytes32) {
         return _hashEncodedAsset(encodedAsset);
     }
 

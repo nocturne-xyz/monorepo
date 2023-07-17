@@ -10,7 +10,7 @@ import {
 } from "./types";
 import { EncodedAsset } from "./asset";
 import { CompressedStealthAddress } from "../crypto";
-import { ethers, TypedDataDomain } from "ethers";
+import { ethers, TypedDataDomain, TypedDataField } from "ethers";
 const { _TypedDataEncoder } = ethers.utils;
 
 export const TELLER_CONTRACT_NAME = "NocturneDepositManager";
@@ -31,6 +31,14 @@ export const OPERATION_TYPES = {
     { name: "deadline", type: "uint256" },
     { name: "atomicActions", type: "bool" },
   ],
+  Action: [
+    { name: "contractAddress", type: "address" },
+    { name: "encodedFunction", type: "bytes" },
+  ],
+  CompressedStealthAddress: [
+    { name: "h1", type: "uint256" },
+    { name: "h2", type: "uint256" },
+  ],
   EIP712JoinSplit: [
     { name: "commitmentTreeRoot", type: "uint256" },
     { name: "nullifierA", type: "uint256" },
@@ -42,14 +50,6 @@ export const OPERATION_TYPES = {
     { name: "publicSpend", type: "uint256" },
     { name: "newNoteAEncrypted", type: "EncryptedNote" },
     { name: "newNoteBEncrypted", type: "EncryptedNote" },
-  ],
-  Action: [
-    { name: "contractAddress", type: "address" },
-    { name: "encodedFunction", type: "bytes" },
-  ],
-  CompressedStealthAddress: [
-    { name: "h1", type: "uint256" },
-    { name: "h2", type: "uint256" },
   ],
   EncodedAsset: [
     { name: "encodedAssetAddr", type: "uint256" },
@@ -64,7 +64,7 @@ export const OPERATION_TYPES = {
 const OPERATION_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],
   [
-    "EIP712Operation(JoinSplit[] joinSplits,CompressedStealthAddress refundAddr,EncodedAsset[] encodedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 maxNumRefunds,uint256 gasPrice,uint256 chainId,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)",
+    "EIP712Operation(EIP712JoinSplit[] joinSplits,CompressedStealthAddress refundAddr,EncodedAsset[] encodedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 maxNumRefunds,uint256 gasPrice,uint256 chainId,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EIP712JoinSplit(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)",
   ]
 );
 
@@ -95,6 +95,12 @@ const ENCRYPTED_NOTE_TYPEHASH = ethers.utils.solidityKeccak256(
   ["EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)"]
 );
 
+function encodeType(name: string, fields: Array<TypedDataField>): string {
+  return `${name}(${fields
+    .map(({ name, type }) => type + " " + name)
+    .join(",")})`;
+}
+
 export function computeOperationDigest(
   domain: TypedDataDomain,
   operation:
@@ -103,20 +109,44 @@ export function computeOperationDigest(
     | SignedOperation
     | ProvenOperation
 ): bigint {
+  const encoder = _TypedDataEncoder.from(OPERATION_TYPES);
+  console.log(encoder);
+  console.log(encoder.encodeData("EIP712Operation", operation));
+
+  const encodedType = encodeType(
+    "EIP712Operation",
+    OPERATION_TYPES.EIP712Operation
+  );
+  console.log("Encoded Type:", encodedType);
+
   const digest = _TypedDataEncoder.hash(domain, OPERATION_TYPES, operation);
   const opHash = _TypedDataEncoder.hashStruct(
     "EIP712Operation",
     OPERATION_TYPES,
     operation
   );
-  console.log("Operation hash (builtin):", opHash);
+  console.log("BULTIN Operation hash:", opHash);
+
+  const refundAddrHash = _TypedDataEncoder.hashStruct(
+    "CompressedStealthAddress",
+    OPERATION_TYPES,
+    operation.refundAddr
+  );
+  console.log("BULTIN refundAddr hash:", refundAddrHash);
 
   const joinSplitsHash = _TypedDataEncoder.hashStruct(
     "EIP712JoinSplit[]",
     OPERATION_TYPES,
     operation.joinSplits
   );
-  console.log("joinSplits array hash (builtin):", joinSplitsHash);
+  console.log("BULTIN joinSplits array hash:", joinSplitsHash);
+
+  const joinSplitHash = _TypedDataEncoder.hashStruct(
+    "EIP712JoinSplit",
+    OPERATION_TYPES,
+    operation.joinSplits[0]
+  );
+  console.log("BULTIN joinSplit hash:", joinSplitHash);
 
   const encodedRefundAssetsHash = _TypedDataEncoder.hashStruct(
     "EncodedAsset[]",
@@ -124,7 +154,7 @@ export function computeOperationDigest(
     operation.encodedRefundAssets
   );
   console.log(
-    "encodedRefundAssets array hash (builtin):",
+    "BULTIN encodedRefundAssets array hash:",
     encodedRefundAssetsHash
   );
 
@@ -133,14 +163,27 @@ export function computeOperationDigest(
     OPERATION_TYPES,
     operation.actions
   );
-  console.log("actions array hash (builtin):", actionsHash);
+  console.log("BULTIN actions array hash:", actionsHash);
+
+  const actionHashSingle = _TypedDataEncoder.hashStruct(
+    "Action",
+    OPERATION_TYPES,
+    operation.actions[0]
+  );
+  console.log("BULTIN action hash (alone):", actionHashSingle);
+
+  const hashActionHash = ethers.utils.keccak256(
+    ethers.utils.solidityPack(["bytes32[]"], [[actionHashSingle]])
+  );
+  console.log("Hash action hash:", hashActionHash);
+  console.log("hash hash action hash:", ethers.utils.keccak256(hashActionHash));
 
   const gasAssetHash = _TypedDataEncoder.hashStruct(
     "EncodedAsset",
     OPERATION_TYPES,
     operation.encodedGasAsset
   );
-  console.log("encodedGasAsset hash (builtin):", gasAssetHash);
+  console.log("BULTIN encodedGasAsset hash:", gasAssetHash);
 
   console.log("Operation digest (pre-mod):", digest);
   // TODO: mod BN254

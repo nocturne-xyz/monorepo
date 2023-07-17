@@ -63,14 +63,23 @@ contract DepositManagerBaseTest is Test {
             actions[0].encodedFunction
         );
         bytes32 gasAssetHash = tellerBase.hashEncodedAsset(
-            EncodedAsset({
-                encodedAssetAddr: 1,
-                encodedAssetId: 1
-            })
+            EncodedAsset({encodedAssetAddr: 1, encodedAssetId: 1})
         );
+        bytes32 joinSplitHash = tellerBase.hashJoinSplit(joinSplits[0]);
+        bytes32 refundAddrHash = tellerBase.hashCompressedStealthAddress(
+            CompressedStealthAddress({h1: 1, h2: 1})
+        );
+
+        console.log("Hash of joinSplitsArrayHash:");
+        console.logBytes32(keccak256(abi.encodePacked(joinSplitsArrayHash)));
+        console.log("");
 
         console.log("joinSplitsArrayHash:");
         console.logBytes32(joinSplitsArrayHash);
+        console.log("");
+
+        console.log("joinSplitHash:");
+        console.logBytes32(joinSplitHash);
         console.log("");
 
         console.log("actionsArrayHash:");
@@ -88,9 +97,23 @@ contract DepositManagerBaseTest is Test {
         console.log("encodedFunctionHash:");
         console.logBytes32(encodedFunctionHash);
         console.log("");
-        
+
         console.log("gasAssetHash:");
         console.logBytes32(gasAssetHash);
+        console.log("");
+
+        console.log("refundAddrHash:");
+        console.logBytes32(refundAddrHash);
+        console.log("");
+
+        bytes32[] memory actionHashesTest = new bytes32[](1);
+        actionHashesTest[0] = actionHash;
+        console.log("actionHashesAbiEncodePacked:");
+        console.logBytes(abi.encodePacked(actionHashesTest));
+        console.log("");
+
+        console.log("actionHashesTest:");
+        console.logBytes32(keccak256(abi.encodePacked(actionHashesTest)));
         console.log("");
 
         EIP712Operation memory operation = EIP712Operation({
@@ -115,6 +138,10 @@ contract DepositManagerBaseTest is Test {
 
         console.log("operationHash:");
         console.logBytes32(operationHash);
+        console.log("");
+
+        console.log("Hash of operationHash:");
+        console.logBytes32(keccak256(abi.encodePacked(operationHash)));
         console.log("");
 
         vm.chainId(123);
