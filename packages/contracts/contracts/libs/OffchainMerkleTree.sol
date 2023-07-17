@@ -49,7 +49,9 @@ library LibOffchainMerkleTree {
         // root starts as the root of the empty depth-32 tree.
         self.root = TreeUtils.EMPTY_TREE_ROOT;
         self.count = 0;
+        self.bitmap = 0;
         _setBatchLen(self, 0);
+
         self.subtreeUpdateVerifier = ISubtreeUpdateVerifier(
             subtreeUpdateVerifier
         );
@@ -175,7 +177,7 @@ library LibOffchainMerkleTree {
             accumulatorInputs[i] = TreeUtils.ZERO_VALUE;
         }
 
-        // shift over and pad out to a multiple of 256
+        // shift over to pad input out to a multiple of 256 bits
         accumulatorInputs[TreeUtils.BATCH_SIZE] = uint256(self.bitmap) << 192;
 
         return uint256(TreeUtils.sha256U256ArrayBE(accumulatorInputs));
