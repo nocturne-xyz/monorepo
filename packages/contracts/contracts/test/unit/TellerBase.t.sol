@@ -159,7 +159,25 @@ contract DepositManagerBaseTest is Test {
             bytes32(uint256(2)),
             keccak256(bytes("v1"))
         );
-        bytes32 operationDigest = tellerBase.computeDigest(operation);
+
+        console.log("chain id:");
+        console.logUint(block.chainid);
+        console.log("");
+
+        console.log("name hash:");
+        console.logBytes32(
+            ITestTellerBase(address(0x1111111111111111111111111111111111111111))
+                .nameHash()
+        );
+        console.log("");
+
+        console.log("version hash:");
+        console.logBytes32(
+            ITestTellerBase(address(0x1111111111111111111111111111111111111111)).versionHash()
+        );
+        console.log("");
+
+        bytes32 operationDigest = ITestTellerBase(address(0x1111111111111111111111111111111111111111)).computeDigest(operation);
 
         bytes32 domainSeparator = tellerBase.domainSeparatorV4();
         console.log("domainSeparator:");
