@@ -2,11 +2,11 @@
 pragma solidity ^0.8.17;
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {TreeUtils} from "../../libs/TreeUtils.sol";
+import {AlgebraicUtils} from "./AlgebraicUtils.sol";
 import "../../libs/Types.sol";
 import "forge-std/Test.sol";
 
 struct TreeTest {
-    IHasherT3 hasherT3;
     IHasherT5 hasherT5;
     IHasherT6 hasherT6;
 }
@@ -17,11 +17,9 @@ library TreeTestLib {
 
     function initialize(
         TreeTest storage self,
-        IHasherT3 _hasherT3,
         IHasherT5 _hasherT5,
         IHasherT6 _hasherT6
     ) internal {
-        self.hasherT3 = _hasherT3;
         self.hasherT5 = _hasherT5;
         self.hasherT6 = _hasherT6;
     }
@@ -160,7 +158,13 @@ library TreeTestLib {
         TreeTest storage self,
         EncodedNote memory note
     ) internal view returns (uint256) {
-        uint256 addrHash = self.hasherT3.hash([note.ownerH1, note.ownerH2]);
+        (uint256 h1X, uint256 h1Y) = AlgebraicUtils.decompressPoint(
+            note.ownerH1
+        );
+        (uint256 h2X, uint256 h2Y) = AlgebraicUtils.decompressPoint(
+            note.ownerH2
+        );
+        uint256 addrHash = self.hasherT5.hash([h1X, h1Y, h2X, h2Y]);
         return
             self.hasherT6.hash(
                 [
