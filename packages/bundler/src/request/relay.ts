@@ -117,6 +117,8 @@ export const provenOperationType = {
     "atomicActions",
   ],
   properties: {
+    chainId: bigintType,
+    tellerContract: addressType,
     joinSplits: joinSplitsType,
     refundAddr: stealthAddressType,
     encodedRefundAssets: encodedRefundAssetsType,
@@ -126,7 +128,6 @@ export const provenOperationType = {
     executionGasLimit: bigintType,
     maxNumRefunds: bigintType,
     gasPrice: bigintType,
-    chainId: bigintType,
     deadline: bigintType,
     atomicActions: booleanType,
   },
