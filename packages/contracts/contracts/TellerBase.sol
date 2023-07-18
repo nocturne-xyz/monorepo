@@ -14,7 +14,7 @@ contract TellerBase is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "OperationWithoutProof(JoinSplitWithoutProof[] joinSplits,CompressedStealthAddress refundAddr,EncodedAsset[] encodedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 maxNumRefunds,uint256 gasPrice,uint256 chainId,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)"
+                "OperationWithoutProofs(JoinSplitWithoutProof[] joinSplits,CompressedStealthAddress refundAddr,EncodedAsset[] encodedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 maxNumRefunds,uint256 gasPrice,uint256 chainId,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)"
             )
         );
 
@@ -64,23 +64,12 @@ contract TellerBase is EIP712Upgradeable {
         __EIP712_init(contractName, contractVersion);
     }
 
-    /// @notice Recovers signer from signature on operation
-    /// @param op Operation without proof
-    /// @param signature Signature on operation
-    function _recoverOperationSigner(
-        OperationWithoutProof calldata op,
-        bytes calldata signature
-    ) internal view returns (address) {
-        bytes32 digest = _computeDigest(op);
-        return ECDSAUpgradeable.recover(digest, signature);
-    }
-
     /// @notice Computes EIP712 digest of operation
     /// @dev The inherited EIP712 domain separator includes block.chainid for replay protection.
     /// @param op OperationWithoutProof
     function _computeDigest(
-        OperationWithoutProof calldata op
-    ) public view returns (bytes32) {
+        Operation calldata op
+    ) public view returns (uint256) {
         bytes32 domainSeparator = _domainSeparatorV4();
         bytes32 structHash = _hashOperation(op);
 
@@ -90,13 +79,14 @@ contract TellerBase is EIP712Upgradeable {
         );
 
         // mod digest by BN254 since this is PI to joinsplit circuit
-        return bytes32(uint256(digest) % Utils.BN254_SCALAR_FIELD_MODULUS);
+        return uint256(digest) % Utils.BN254_SCALAR_FIELD_MODULUS;
     }
 
     /// @notice Hashes operation
-    /// @param op OperationWithoutProof
+    /// @param op Operation
+    /// @dev We hash every field of operation except for the joinsplit proofs
     function _hashOperation(
-        OperationWithoutProof calldata op
+        Operation calldata op
     ) internal pure returns (bytes32) {
         return
             keccak256(
@@ -120,8 +110,9 @@ contract TellerBase is EIP712Upgradeable {
 
     /// @notice Hashes array of joinsplits
     /// @param joinSplits JoinSplits
+    /// @dev We hash every field except for the joinSplit proofs
     function _hashJoinSplits(
-        JoinSplitWithoutProof[] calldata joinSplits
+        JoinSplit[] calldata joinSplits
     ) internal pure returns (bytes32) {
         uint256 numJoinSplits = joinSplits.length;
         bytes32[] memory joinSplitHashes = new bytes32[](numJoinSplits);
@@ -134,8 +125,9 @@ contract TellerBase is EIP712Upgradeable {
 
     /// @notice Hashes single joinsplit
     /// @param joinSplit JoinSplit
+    /// @dev We hash every field except for the proof
     function _hashJoinSplit(
-        JoinSplitWithoutProof calldata joinSplit
+        JoinSplit calldata joinSplit
     ) internal pure returns (bytes32) {
         return
             keccak256(

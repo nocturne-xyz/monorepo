@@ -12,6 +12,7 @@ import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/acces
 import {ITeller} from "./interfaces/ITeller.sol";
 import {IHandler} from "./interfaces/IHandler.sol";
 import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
+import {TellerBase} from "./TellerBase.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
@@ -23,6 +24,7 @@ import "./libs/Types.sol";
 /// @notice Teller stores deposited funds and serves as the entry point contract for operations.
 contract Teller is
     ITeller,
+    TellerBase,
     ReentrancyGuardUpgradeable,
     PausableUpgradeable,
     Ownable2StepUpgradeable,
@@ -142,9 +144,10 @@ contract Teller is
         Operation[] calldata ops = bundle.operations;
         require(ops.length > 0, "empty bundle");
 
-        uint256[] memory opDigests = OperationUtils.computeOperationDigests(
-            ops
-        );
+        uint256[] memory opDigests = new uint256[](ops.length);
+        for (uint256 i = 0; i < ops.length; i++) {
+            opDigests[i] = uint256(_computeDigest(ops[i]));
+        }
 
         (bool success, uint256 perJoinSplitVerifyGas) = _verifyAllProofsMetered(
             ops,

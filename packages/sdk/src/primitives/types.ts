@@ -81,6 +81,8 @@ export interface ProvenJoinSplit extends BaseJoinSplit {
 }
 
 export interface BaseOperation {
+  chainId: bigint;
+  tellerContract: Address;
   refundAddr: CompressedStealthAddress;
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
@@ -89,7 +91,6 @@ export interface BaseOperation {
   executionGasLimit: bigint;
   maxNumRefunds: bigint;
   gasPrice: bigint;
-  chainId: bigint;
   deadline: bigint;
   atomicActions: boolean;
 }

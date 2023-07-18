@@ -175,7 +175,7 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
-      .chainId(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .build();
 
@@ -229,7 +229,7 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_00n,
         gasPrice: 0n,
       })
-      .chainId(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .build();
 
@@ -280,7 +280,7 @@ describe("prepareOperation", async () => {
         executionGasLimit: 20n,
         gasPrice: 0n,
       })
-      .chainId(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .maxNumRefunds(1n)
       .build();
@@ -337,7 +337,7 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
-      .chainId(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .maxNumRefunds(1n)
       .build();
@@ -399,7 +399,7 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
-      .chainId(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .build();
 
@@ -454,6 +454,7 @@ describe("prepareOperation", async () => {
       .unwrap(shitcoin, 4000n)
       .unwrap(ponzi, 4000n)
       .maxNumRefunds(3n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
@@ -493,6 +494,7 @@ describe("prepareOperation", async () => {
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 1000n)
       .maxNumRefunds(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,

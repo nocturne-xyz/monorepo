@@ -429,6 +429,7 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
     gasPrice: op.gasPrice,
     joinSplits: provenJoinSplits,
     chainId: op.chainId,
+    tellerContract: op.tellerContract,
     deadline: op.deadline,
     atomicActions: op.atomicActions,
   };

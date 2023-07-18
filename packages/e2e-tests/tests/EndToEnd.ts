@@ -154,10 +154,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     // make an operation with gas price < chain's gas price (1 wei <<< 1 gwei)
     // HH's default gas price seems to be somewhere around 1 gwei experimentally
     // unfortunately it doesn't have a way to set it in the chain itself, only in hre
+    const chainId = BigInt((await provider.getNetwork()).chainId);
     const operationRequest = new OperationRequestBuilder()
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
       .gasPrice(1n)
-      .chainId(BigInt((await provider.getNetwork()).chainId))
+      .network({ chainId, tellerContract: teller.address })
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
       )
@@ -193,6 +194,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [await bobEoa.getAddress(), ALICE_TO_BOB_PUB_VAL]
       );
 
+    const chainId = BigInt((await provider.getNetwork()).chainId);
     const operationRequest = new OperationRequestBuilder()
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
       .action(erc20.address, encodedFunction)
@@ -200,7 +202,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         executionGasLimit: 1n, // Intentionally too low
         gasPrice: GAS_PRICE,
       })
-      .chainId(BigInt((await provider.getNetwork()).chainId))
+      .network({ chainId, tellerContract: teller.address })
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
       )
@@ -234,6 +236,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [await bobEoa.getAddress(), ALICE_TO_BOB_PUB_VAL]
       );
 
+    const chainId = BigInt((await provider.getNetwork()).chainId);
     const operationRequest = new OperationRequestBuilder()
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
       .confidentialPayment(
@@ -243,7 +246,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       )
       .action(erc20.address, encodedFunction)
       .gasPrice(GAS_PRICE)
-      .chainId(BigInt((await provider.getNetwork()).chainId))
+      .network({ chainId, tellerContract: teller.address })
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
       )

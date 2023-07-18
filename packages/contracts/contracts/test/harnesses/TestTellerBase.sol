@@ -6,14 +6,9 @@ import "../../libs/Types.sol";
 import {TellerBase} from "../../TellerBase.sol";
 
 interface ITestTellerBase {
-    function recoverOperationSigner(
-        OperationWithoutProof calldata op,
-        bytes calldata signature
-    ) external view returns (address);
-
     function computeDigest(
-        OperationWithoutProof calldata op
-    ) external view returns (bytes32);
+        Operation calldata op
+    ) external view returns (uint256);
 
     function domainSeparatorV4() external view returns (bytes32);
 
@@ -30,16 +25,9 @@ contract TestTellerBase is ITestTellerBase, TellerBase {
         __TellerBase_init(contractName, contractVersion);
     }
 
-    function recoverOperationSigner(
-        OperationWithoutProof calldata op,
-        bytes calldata signature
-    ) external view override returns (address) {
-        return _recoverOperationSigner(op, signature);
-    }
-
     function computeDigest(
-        OperationWithoutProof calldata op
-    ) external view override returns (bytes32) {
+        Operation calldata op
+    ) external view override returns (uint256) {
         return _computeDigest(op);
     }
 
@@ -48,19 +36,19 @@ contract TestTellerBase is ITestTellerBase, TellerBase {
     }
 
     function hashOperation(
-        OperationWithoutProof calldata op
+        Operation calldata op
     ) public pure returns (bytes32) {
         return _hashOperation(op);
     }
 
     function hashJoinSplits(
-        JoinSplitWithoutProof[] calldata joinSplits
+        JoinSplit[] calldata joinSplits
     ) public pure returns (bytes32) {
         return _hashJoinSplits(joinSplits);
     }
 
     function hashJoinSplit(
-        JoinSplitWithoutProof calldata joinSplit
+        JoinSplit calldata joinSplit
     ) public pure returns (bytes32) {
         return _hashJoinSplit(joinSplit);
     }
