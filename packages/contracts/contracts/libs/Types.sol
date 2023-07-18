@@ -40,7 +40,7 @@ struct JoinSplit {
     EncryptedNote newNoteBEncrypted;
 }
 
-struct EIP712JoinSplit {
+struct JoinSplitWithoutProof {
     uint256 commitmentTreeRoot;
     uint256 nullifierA;
     uint256 nullifierB;
@@ -83,8 +83,8 @@ struct Action {
     bytes encodedFunction;
 }
 
-struct EIP712Operation {
-    EIP712JoinSplit[] joinSplits;
+struct OperationWithoutProof {
+    JoinSplitWithoutProof[] joinSplits;
     CompressedStealthAddress refundAddr;
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;

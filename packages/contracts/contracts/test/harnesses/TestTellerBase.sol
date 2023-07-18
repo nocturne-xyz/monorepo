@@ -6,13 +6,13 @@ import "../../libs/Types.sol";
 import {TellerBase} from "../../TellerBase.sol";
 
 interface ITestTellerBase {
-    // function recoverDepositRequestSigner(
-    //     DepositRequest calldata req,
-    //     bytes calldata signature
-    // ) external view returns (address);
+    function recoverOperationSigner(
+        OperationWithoutProof calldata op,
+        bytes calldata signature
+    ) external view returns (address);
 
     function computeDigest(
-        EIP712Operation calldata op
+        OperationWithoutProof calldata op
     ) external view returns (bytes32);
 
     function domainSeparatorV4() external view returns (bytes32);
@@ -30,15 +30,15 @@ contract TestTellerBase is ITestTellerBase, TellerBase {
         __TellerBase_init(contractName, contractVersion);
     }
 
-    // function recoverOperationSigner(
-    //     EIP712Operation calldata op,
-    //     bytes calldata signature
-    // ) external view override returns (address) {
-    //     return _recoverOperationSigner(op, signature);
-    // }
+    function recoverOperationSigner(
+        OperationWithoutProof calldata op,
+        bytes calldata signature
+    ) external view override returns (address) {
+        return _recoverOperationSigner(op, signature);
+    }
 
     function computeDigest(
-        EIP712Operation calldata op
+        OperationWithoutProof calldata op
     ) external view override returns (bytes32) {
         return _computeDigest(op);
     }
@@ -48,19 +48,19 @@ contract TestTellerBase is ITestTellerBase, TellerBase {
     }
 
     function hashOperation(
-        EIP712Operation calldata op
+        OperationWithoutProof calldata op
     ) public pure returns (bytes32) {
         return _hashOperation(op);
     }
 
     function hashJoinSplits(
-        EIP712JoinSplit[] calldata joinSplits
+        JoinSplitWithoutProof[] calldata joinSplits
     ) public pure returns (bytes32) {
         return _hashJoinSplits(joinSplits);
     }
 
     function hashJoinSplit(
-        EIP712JoinSplit calldata joinSplit
+        JoinSplitWithoutProof calldata joinSplit
     ) public pure returns (bytes32) {
         return _hashJoinSplit(joinSplit);
     }

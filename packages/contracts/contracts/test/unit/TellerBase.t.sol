@@ -17,8 +17,8 @@ contract DepositManagerBaseTest is Test {
         tellerBase = new TestTellerBase();
         tellerBase.initialize("NocturneTeller", "v1");
 
-        EIP712JoinSplit[] memory joinSplits = new EIP712JoinSplit[](1);
-        joinSplits[0] = EIP712JoinSplit({
+        JoinSplitWithoutProof[] memory joinSplits = new JoinSplitWithoutProof[](1);
+        joinSplits[0] = JoinSplitWithoutProof({
             commitmentTreeRoot: 1,
             nullifierA: 1,
             nullifierB: 1,
@@ -116,7 +116,7 @@ contract DepositManagerBaseTest is Test {
         console.logBytes32(keccak256(abi.encodePacked(actionHashesTest)));
         console.log("");
 
-        EIP712Operation memory operation = EIP712Operation({
+        OperationWithoutProof memory operation = OperationWithoutProof({
             joinSplits: joinSplits,
             refundAddr: CompressedStealthAddress({h1: 1, h2: 1}),
             encodedRefundAssets: encodedRefundAssets,
