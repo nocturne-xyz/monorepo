@@ -11,6 +11,7 @@ import {
   Asset,
   AssetTrait,
   PreSignOperation,
+  SENDER_COMMITMENT_DOMAIN_SEPARATOR,
 } from "./primitives";
 import {
   NocturneViewer,
@@ -329,6 +330,7 @@ async function makeJoinSplit(
   // commit to the sender's canonical address
   const senderCanonAddr = viewer.canonicalAddress();
   const senderCommitment = poseidonBN([
+    SENDER_COMMITMENT_DOMAIN_SEPARATOR,
     senderCanonAddr.x,
     senderCanonAddr.y,
     newNoteB.nonce,
