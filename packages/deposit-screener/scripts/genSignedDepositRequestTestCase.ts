@@ -15,7 +15,6 @@ import {
   DEPOSIT_MANAGER_CONTRACT_VERSION,
   DEPOSIT_REQUEST_TYPES,
 } from "../src/typedData/constants";
-const { _TypedDataEncoder } = ethers.utils;
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const SIGNED_DEPOSIT_REQ_FIXTURE_PATH = path.join(
@@ -67,13 +66,6 @@ function toObject(obj: any) {
 
   const signature = await signDepositRequest(signer, domain, depositRequest);
   const hash = hashDepositRequest(depositRequest);
-  const hashBuiltin = _TypedDataEncoder.hashStruct(
-    "DepositRequest",
-    DEPOSIT_REQUEST_TYPES,
-    depositRequest
-  );
-
-  console.log("depositHash BUILTIN", hashBuiltin);
 
   console.log("sig", signature);
 

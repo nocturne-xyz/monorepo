@@ -5,7 +5,7 @@ import {
   OptimisticNFRecord,
   OperationMetadata,
   OpDigestWithMetadata,
-  // computeOperationDigest,
+  computeOperationDigest,
 } from "./primitives";
 import { NocturneSigner } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
@@ -160,13 +160,13 @@ export class NocturneWalletSDK {
     );
   }
 
+  // TODO: remove chainid from operation (already included in 712)
   async applyOptimisticRecordsForOp(
     op: PreSignOperation | SignedOperation,
     metadata?: OperationMetadata
   ): Promise<void> {
     // Create op digest record
-    // const opDigest = computeOperationDigest(op);
-    const opDigest = 1n;
+    const opDigest = computeOperationDigest(op);
     const expirationDate = Date.now() + OPTIMISTIC_RECORD_TTL;
 
     // Create NF records
