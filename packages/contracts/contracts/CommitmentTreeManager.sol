@@ -148,6 +148,19 @@ contract CommitmentTreeManager is
     /// @notice Inserts note into commitment tree
     /// @param note note to insert
     function _insertNote(EncodedNote memory note) internal {
+        // ensure note can be decommitted by subtree update circuit
+        Utils.validateCompressedPoint(note.ownerH1);
+        Utils.validateCompressedPoint(note.ownerH2);
+        require(
+            note.encodedAssetAddr < Utils.BN254_SCALAR_FIELD_MODULUS,
+            "encodedAssetAddr !in bn254 scalar field"
+        );
+        require(
+            note.encodedAssetId < Utils.BN254_SCALAR_FIELD_MODULUS,
+            "encodedAssetId !in bn254 scalar field"
+        );
+        require(note.value <= NOCTURNE_MAX_NOTE_VALUE, "value >= 2^252");
+
         _merkle.insertNote(note);
     }
 
@@ -242,16 +255,6 @@ contract CommitmentTreeManager is
             encodedAssetId: encodedAsset.encodedAssetId,
             value: value
         });
-
-        // ensure note can be decommitted by subtree update circuit
-        Utils.validateCompressedPoint(note.ownerH1);
-        Utils.validateCompressedPoint(note.ownerH2);
-        require(
-            note.encodedAssetAddr < Utils.BN254_SCALAR_FIELD_MODULUS &&
-                note.encodedAssetId < Utils.BN254_SCALAR_FIELD_MODULUS &&
-                note.value < Utils.BN254_SCALAR_FIELD_MODULUS,
-            "invalid encodedAssetAddr / id"
-        );
 
         _insertNote(note);
 

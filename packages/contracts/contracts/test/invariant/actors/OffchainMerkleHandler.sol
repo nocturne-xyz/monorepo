@@ -112,11 +112,29 @@ contract OffchainMerkleHandler is InvariantUtils {
     function _generateEncodedNote(
         uint256 seed
     ) internal returns (EncodedNote memory _encodedNote) {
-        _encodedNote.ownerH1 = _rerandomize(seed);
-        _encodedNote.ownerH2 = _rerandomize(seed);
-        _encodedNote.nonce = _rerandomize(seed);
-        _encodedNote.encodedAssetAddr = _rerandomize(seed);
-        _encodedNote.encodedAssetId = _rerandomize(seed);
-        _encodedNote.value = _rerandomize(seed);
+        _encodedNote
+            .ownerH1 = 16950150798460657717958625567821834550301663161624707787222815936182638968203;
+        _encodedNote
+            .ownerH2 = 49380694508107827227871038662877111842066638251616884143503987031630145436076;
+        _encodedNote.nonce = bound(
+            _rerandomize(seed),
+            0,
+            Utils.BN254_SCALAR_FIELD_MODULUS - 1
+        );
+        _encodedNote.encodedAssetAddr = bound(
+            _rerandomize(seed),
+            0,
+            Utils.BN254_SCALAR_FIELD_MODULUS - 1
+        );
+        _encodedNote.encodedAssetId = bound(
+            _rerandomize(seed),
+            0,
+            Utils.BN254_SCALAR_FIELD_MODULUS - 1
+        );
+        _encodedNote.value = bound(
+            _rerandomize(seed),
+            0,
+            NOCTURNE_MAX_NOTE_VALUE
+        );
     }
 }

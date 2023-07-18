@@ -172,19 +172,15 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
         );
 
         CompressedStealthAddress memory refundAddr = CompressedStealthAddress({
-            h1: bound(
-                _rerandomize(seed),
-                0,
-                Utils.BN254_SCALAR_FIELD_MODULUS - 1
-            ),
-            h2: bound(
-                _rerandomize(seed),
-                0,
-                Utils.BN254_SCALAR_FIELD_MODULUS - 1
-            )
+            h1: 16950150798460657717958625567821834550301663161624707787222815936182638968203,
+            h2: 49380694508107827227871038662877111842066638251616884143503987031630145436076
         });
 
-        commitmentTreeManager.handleRefundNote(encodedAsset, refundAddr, seed);
+        commitmentTreeManager.handleRefundNote(
+            encodedAsset,
+            refundAddr,
+            bound(seed, 0, NOCTURNE_MAX_NOTE_VALUE)
+        );
         ghost_refundNotesLeafCount += 1;
         handleRefundNotesLength = 1;
     }
@@ -204,6 +200,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
     function insertNote(
         EncodedNote memory note
     ) public trackCall("insertNote") {
+        _boundNoteValues(note);
         commitmentTreeManager.insertNote(note);
         ghost_insertNoteLeafCount += 1;
         insertNotesLength = 1;
@@ -250,5 +247,24 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             0,
             Utils.BN254_SCALAR_FIELD_MODULUS - 1
         );
+	}
+
+    function _boundNoteValues(EncodedNote memory note) internal view {
+        note
+            .ownerH1 = 16950150798460657717958625567821834550301663161624707787222815936182638968203;
+        note
+            .ownerH2 = 49380694508107827227871038662877111842066638251616884143503987031630145436076;
+        note.nonce = bound(note.nonce, 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1);
+        note.encodedAssetAddr = bound(
+            note.encodedAssetAddr,
+            0,
+            Utils.BN254_SCALAR_FIELD_MODULUS - 1
+        );
+        note.encodedAssetId = bound(
+            note.encodedAssetId,
+            0,
+            Utils.BN254_SCALAR_FIELD_MODULUS - 1
+        );
+        note.value = bound(note.value, 0, NOCTURNE_MAX_NOTE_VALUE);
     }
 }
