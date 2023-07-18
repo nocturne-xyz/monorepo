@@ -3,6 +3,7 @@ import { DepositRequest } from "./types";
 import { EncodedAsset } from "./asset";
 import { CompressedStealthAddress } from "../crypto";
 
+// TODO: replace with _TypedDataEncoder builtins
 const DEPOSIT_REQUEST_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],
   [

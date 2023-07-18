@@ -1,10 +1,10 @@
 import {
   PreSignJoinSplit,
   NoteTrait,
-  hashOperation,
   PreSignOperation,
   PreProofJoinSplit,
   SignedOperation,
+  computeOperationDigest,
 } from "./primitives";
 import { JoinSplitInputs } from "./proof";
 import { NocturneSignature, NocturneSigner } from "./crypto";
@@ -14,7 +14,7 @@ export function signOperation(
   signer: NocturneSigner,
   op: PreSignOperation
 ): SignedOperation {
-  const opDigest = BigInt(hashOperation(op));
+  const opDigest = computeOperationDigest(op); // TODO: fix
   const opSig = signer.sign(opDigest);
 
   const joinSplits: PreProofJoinSplit[] = op.joinSplits.map((joinSplit) =>
