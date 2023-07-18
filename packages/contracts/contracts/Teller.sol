@@ -149,7 +149,7 @@ contract Teller is
 
         uint256[] memory opDigests = new uint256[](ops.length);
         for (uint256 i = 0; i < ops.length; i++) {
-            opDigests[i] = uint256(_computeDigest(ops[i]));
+            opDigests[i] = _computeDigest(ops[i]);
         }
 
         (bool success, uint256 perJoinSplitVerifyGas) = _verifyAllProofsMetered(
@@ -171,9 +171,8 @@ contract Teller is
             returns (OperationResult memory result) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
-                // Indicates revert because of invalid chainid, expired
-                // deadline, or error processing joinsplits. Bundler is not
-                // compensated and we do not bubble up further OperationResult
+                // Indicates revert because of expired deadline or error processing joinsplits. 
+                // Bundler is not compensated and we do not bubble up further OperationResult
                 // info other than failureReason.
                 string memory revertMsg = OperationUtils.getRevertMsg(reason);
                 if (bytes(revertMsg).length == 0) {

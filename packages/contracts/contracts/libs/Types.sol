@@ -80,7 +80,6 @@ struct Operation {
     uint256 executionGasLimit;
     uint256 maxNumRefunds;
     uint256 gasPrice;
-    uint256 chainId;
     uint256 deadline;
     bool atomicActions;
 }

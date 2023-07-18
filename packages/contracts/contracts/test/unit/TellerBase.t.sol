@@ -70,7 +70,6 @@ contract TellerBaseTest is Test {
             executionGasLimit: 1,
             maxNumRefunds: 1,
             gasPrice: 1,
-            chainId: 1,
             deadline: 1,
             atomicActions: true
         });
@@ -85,7 +84,7 @@ contract TellerBaseTest is Test {
         assertEq(
             operationHash,
             bytes32(
-                0x338864053efb99cb2befa1f91c4688c2cf9e8f4d808ee3acd8f407b9d2d52c9c
+                0x28521a7bff47545ad661b3d432b33a3e95c261196a19bbfcf47b016283029281
             )
         );
 
@@ -117,7 +116,7 @@ contract TellerBaseTest is Test {
         assertEq(
             operationDigest,
             uint256(
-                0x292e7aea136960f03c1bf7ed4f619575d37239fb3dbe12f878938dee8de9ae50
+                0x1abb68eb6c8208a19c8c10d28205db21bcff9faa91aca28cae650070e338fed
             )
         );
     }

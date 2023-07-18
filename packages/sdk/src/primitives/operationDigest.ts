@@ -22,7 +22,6 @@ export const OPERATION_TYPES = {
     { name: "executionGasLimit", type: "uint256" },
     { name: "maxNumRefunds", type: "uint256" },
     { name: "gasPrice", type: "uint256" },
-    { name: "chainId", type: "uint256" },
     { name: "deadline", type: "uint256" },
     { name: "atomicActions", type: "bool" },
   ],

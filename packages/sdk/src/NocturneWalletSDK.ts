@@ -160,7 +160,6 @@ export class NocturneWalletSDK {
     );
   }
 
-  // TODO: remove chainid from operation (already included in 712)
   async applyOptimisticRecordsForOp(
     op: PreSignOperation | SignedOperation,
     metadata?: OperationMetadata
