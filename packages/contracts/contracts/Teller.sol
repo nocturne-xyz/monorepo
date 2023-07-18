@@ -61,12 +61,15 @@ contract Teller is
     /// @param handler Address of the handler contract
     /// @param joinSplitVerifier Address of the joinsplit verifier contract
     function initialize(
+        string calldata contractName,
+        string calldata contractVersion,
         address handler,
         address joinSplitVerifier
     ) external initializer {
         __Pausable_init();
         __Ownable2Step_init();
         __ReentrancyGuard_init();
+        __TellerBase_init(contractName, contractVersion);
         _handler = IHandler(handler);
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
     }
