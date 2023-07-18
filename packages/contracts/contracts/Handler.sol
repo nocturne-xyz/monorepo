@@ -18,6 +18,8 @@ import "./libs/Types.sol";
 contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     using OperationLib for Operation;
 
+    bytes4 constant ERC20_APPROVE_SELECTOR = bytes4(0x095ea7b3);
+
     // Set of supported tokens
     mapping(address => bool) public _supportedTokens;
 
