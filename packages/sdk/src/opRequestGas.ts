@@ -419,6 +419,7 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
     };
   });
   return {
+    networkInfo: op.networkInfo,
     refundAddr: op.refundAddr,
     encodedRefundAssets: op.encodedRefundAssets,
     actions: op.actions,
@@ -428,8 +429,6 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
     maxNumRefunds: op.maxNumRefunds,
     gasPrice: op.gasPrice,
     joinSplits: provenJoinSplits,
-    chainId: op.chainId,
-    tellerContract: op.tellerContract,
     deadline: op.deadline,
     atomicActions: op.atomicActions,
   };

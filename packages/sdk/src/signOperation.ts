@@ -22,6 +22,7 @@ export function signOperation(
   );
 
   const {
+    networkInfo,
     actions,
     refundAddr,
     encodedRefundAssets,
@@ -30,13 +31,12 @@ export function signOperation(
     executionGasLimit,
     gasPrice,
     maxNumRefunds,
-    chainId,
-    tellerContract,
     deadline,
     atomicActions,
   } = op;
 
   return {
+    networkInfo,
     joinSplits,
     refundAddr,
     encodedRefundAssets,
@@ -46,8 +46,6 @@ export function signOperation(
     executionGasLimit,
     gasPrice,
     maxNumRefunds,
-    chainId,
-    tellerContract,
     deadline,
     atomicActions,
   };

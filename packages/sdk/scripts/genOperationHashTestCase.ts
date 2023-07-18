@@ -29,6 +29,10 @@ import {
   };
 
   const operation: BasicOperation = {
+    networkInfo: {
+      chainId: 1n,
+      tellerContract: "0x1111111111111111111111111111111111111111",
+    },
     joinSplits: [joinSplit],
     refundAddr: {
       h1: 1n,
@@ -54,8 +58,6 @@ import {
     executionGasLimit: 1n,
     maxNumRefunds: 1n,
     gasPrice: 1n,
-    chainId: 1n,
-    tellerContract: "0x1111111111111111111111111111111111111111",
     deadline: 1n,
     atomicActions: true,
   };

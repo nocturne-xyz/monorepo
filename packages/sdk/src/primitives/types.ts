@@ -82,9 +82,13 @@ export interface ProvenJoinSplit extends BaseJoinSplit {
   proof: SolidityProof;
 }
 
-export interface BaseOperation {
+export interface NetworkInfo {
   chainId: bigint;
   tellerContract: Address;
+}
+
+export interface BaseOperation {
+  networkInfo: NetworkInfo;
   refundAddr: CompressedStealthAddress;
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];

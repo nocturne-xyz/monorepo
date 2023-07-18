@@ -65,8 +65,8 @@ export function computeOperationDigest(
   const domain: TypedDataDomain = {
     name: TELLER_CONTRACT_NAME,
     version: TELLER_CONTRACT_VERSION,
-    chainId: operation.chainId,
-    verifyingContract: operation.tellerContract,
+    chainId: operation.networkInfo.chainId,
+    verifyingContract: operation.networkInfo.tellerContract,
   };
 
   const digest = _TypedDataEncoder.hash(domain, OPERATION_TYPES, operation);

@@ -148,18 +148,6 @@ export class OperationRequestBuilder {
     return this;
   }
 
-  // // Attach chainId to operation
-  // chainId(chainId: bigint): OperationRequestBuilder {
-  //   this.op.chainId = chainId;
-  //   return this;
-  // }
-
-  // // Attach chainId to operation
-  // tellerContract(tellerContract: Address): OperationRequestBuilder {
-  //   this.op.tellerContract = tellerContract;
-  //   return this;
-  // }
-
   network(network: string | NetworkConfig): OperationRequestBuilder {
     if (typeof network === "string") {
       const config = loadNocturneConfigBuiltin(network);
