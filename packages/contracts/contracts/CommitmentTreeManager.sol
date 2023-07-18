@@ -243,6 +243,16 @@ contract CommitmentTreeManager is
             value: value
         });
 
+        // ensure note can be decommitted by subtree update circuit
+        Utils.validateCompressedPoint(note.ownerH1);
+        Utils.validateCompressedPoint(note.ownerH2);
+        require(
+            note.encodedAssetAddr < Utils.BN254_SCALAR_FIELD_MODULUS &&
+                note.encodedAssetId < Utils.BN254_SCALAR_FIELD_MODULUS &&
+                note.value < Utils.BN254_SCALAR_FIELD_MODULUS,
+            "invalid encodedAssetAddr / id"
+        );
+
         _insertNote(note);
 
         emit RefundProcessed(
