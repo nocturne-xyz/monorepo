@@ -171,7 +171,7 @@ contract Teller is
             returns (OperationResult memory result) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
-                // Indicates revert because of expired deadline or error processing joinsplits. 
+                // Indicates revert because of expired deadline or error processing joinsplits.
                 // Bundler is not compensated and we do not bubble up further OperationResult
                 // info other than failureReason.
                 string memory revertMsg = OperationUtils.getRevertMsg(reason);
