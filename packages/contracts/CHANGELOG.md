@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Teller contract init function takes contract name and version
+- add `TellerBase.t.sol` for eip712 unit tests
+- add and integrate `TellerBase` for EIP712 op digest calculation, remove old op digest calculation
 - update `EncryptedNote` type for new note encryption scheme
 - use `Ownable2StepUpgradeable` instead of normal `OwnableUpgradeable` in DepositManager, Teller, and Handler (TOB-7)
 - separate setting of `_teller` from Handler initialization to remove front-running risk (TOB-9)

@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- op request builder takes `.network(networkName | NetworkInfo)` now that we need chainid and teller contract for opdigest calculation
+- add script to generate op digest test case for solidity unit tests
+- remove custom op digest calculation for builtin ethers typed data hashing implementation
+- remove chainId from operation in place of `networkInfo` used for eip712 domain hash
 - change `EncryptedNote` to be an alias of `HybridCiphertext` and remove all other fields (including owner)
   - includes (many) cascading changes through sync, op preparation, and witness generation code
 - add `refundAddr` circuit input
