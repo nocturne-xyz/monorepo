@@ -2,8 +2,14 @@ import { Asset, Address, Action } from "./primitives";
 import { CanonAddress, StealthAddress } from "./crypto";
 import { groupByArr } from "./utils";
 import { ethers } from "ethers";
+import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 
 const ONE_DAY_SECONDS = 24 * 60 * 60;
+
+export interface NetworkConfig {
+  chainId: bigint;
+  tellerContract: Address;
+}
 
 // A joinsplit request is an unwrapRequest plus an optional payment
 export interface JoinSplitRequest {
@@ -17,6 +23,7 @@ export interface OperationRequest {
   refundAssets: Asset[];
   actions: Action[];
   chainId: bigint;
+  tellerContract: Address;
   deadline: bigint;
   refundAddr?: StealthAddress;
   executionGasLimit?: bigint;
@@ -65,6 +72,7 @@ export class OperationRequestBuilder {
       refundAssets: [],
       actions: [],
       chainId: 0n,
+      tellerContract: ethers.constants.AddressZero,
       deadline: 0n,
     };
 
@@ -140,9 +148,28 @@ export class OperationRequestBuilder {
     return this;
   }
 
-  // Attach chainId to operation
-  chainId(chainId: bigint): OperationRequestBuilder {
-    this.op.chainId = chainId;
+  // // Attach chainId to operation
+  // chainId(chainId: bigint): OperationRequestBuilder {
+  //   this.op.chainId = chainId;
+  //   return this;
+  // }
+
+  // // Attach chainId to operation
+  // tellerContract(tellerContract: Address): OperationRequestBuilder {
+  //   this.op.tellerContract = tellerContract;
+  //   return this;
+  // }
+
+  network(network: string | NetworkConfig): OperationRequestBuilder {
+    if (typeof network === "string") {
+      const config = loadNocturneConfigBuiltin(network);
+      this.op.chainId = BigInt(config.contracts.network.chainId);
+      this.op.tellerContract = config.contracts.tellerProxy.proxy;
+    } else {
+      this.op.chainId = network.chainId;
+      this.op.tellerContract = network.tellerContract;
+    }
+
     return this;
   }
 
@@ -184,6 +211,10 @@ export class OperationRequestBuilder {
   // In the output, unwraps, actions, and refunds are guaranteed
   // to appear in the order their corresponding methods were invoked
   build(): OperationRequest {
+    if (this.op.tellerContract === ethers.constants.AddressZero) {
+      throw new Error("tellerContract not set");
+    }
+
     const joinSplitRequests = [];
 
     // consolidate joinSplits and payments for each asset

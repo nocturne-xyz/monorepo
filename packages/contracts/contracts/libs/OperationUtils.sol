@@ -90,47 +90,6 @@ library OperationUtils {
         return encodedAssetAddr | (c1SignBit << 248) | (c2SignBit << 249);
     }
 
-    function computeOperationDigests(
-        Operation[] calldata ops
-    ) internal pure returns (uint256[] memory) {
-        uint256 numOps = ops.length;
-        uint256[] memory opDigests = new uint256[](numOps);
-        for (uint256 i = 0; i < numOps; i++) {
-            opDigests[i] = computeOperationDigest(ops[i]);
-        }
-
-        return opDigests;
-    }
-
-    // Careful about declaring local variables in this function. Stack depth is around the limit.
-    function computeOperationDigest(
-        Operation calldata op
-    ) internal pure returns (uint256) {
-        // Split payload packing due to stack size limit
-        bytes memory payload = abi.encodePacked(
-            _createJoinSplitsPayload(op.joinSplits),
-            abi.encodePacked(op.refundAddr.h1, op.refundAddr.h2),
-            _createRefundAssetsPayload(op.encodedRefundAssets),
-            _createActionsPayload(op.actions),
-            abi.encodePacked(
-                op.encodedGasAsset.encodedAssetAddr,
-                op.encodedGasAsset.encodedAssetId
-            )
-        );
-        payload = abi.encodePacked(
-            payload,
-            op.gasAssetRefundThreshold,
-            op.executionGasLimit,
-            op.maxNumRefunds,
-            op.gasPrice,
-            op.chainId,
-            op.deadline,
-            op.atomicActions
-        );
-
-        return uint256(keccak256(payload)) % Utils.BN254_SCALAR_FIELD_MODULUS;
-    }
-
     function calculateBundlerGasAssetPayout(
         Operation calldata op,
         OperationResult memory opResult
@@ -163,65 +122,5 @@ library OperationUtils {
             reason := add(reason, 0x04)
         }
         return abi.decode(reason, (string)); // All that remains is the revert string
-    }
-
-    function _createJoinSplitsPayload(
-        JoinSplit[] calldata joinSplits
-    ) internal pure returns (bytes memory) {
-        bytes memory joinSplitsPayload;
-        uint256 numJoinSplits = joinSplits.length;
-        for (uint256 i = 0; i < numJoinSplits; i++) {
-            joinSplitsPayload = abi.encodePacked(
-                joinSplitsPayload,
-                keccak256(
-                    abi.encodePacked(
-                        joinSplits[i].commitmentTreeRoot,
-                        joinSplits[i].nullifierA,
-                        joinSplits[i].nullifierB,
-                        joinSplits[i].newNoteACommitment,
-                        joinSplits[i].newNoteBCommitment,
-                        joinSplits[i].publicSpend,
-                        joinSplits[i].encodedAsset.encodedAssetAddr,
-                        joinSplits[i].encodedAsset.encodedAssetId
-                    )
-                )
-            );
-        }
-
-        return joinSplitsPayload;
-    }
-
-    function _createRefundAssetsPayload(
-        EncodedAsset[] calldata encodedRefundAssets
-    ) internal pure returns (bytes memory) {
-        bytes memory refundAssetsPayload;
-        uint256 numRefundAssets = encodedRefundAssets.length;
-        for (uint256 i = 0; i < numRefundAssets; i++) {
-            refundAssetsPayload = abi.encodePacked(
-                refundAssetsPayload,
-                encodedRefundAssets[i].encodedAssetAddr,
-                encodedRefundAssets[i].encodedAssetId
-            );
-        }
-
-        return refundAssetsPayload;
-    }
-
-    function _createActionsPayload(
-        Action[] calldata actions
-    ) internal pure returns (bytes memory) {
-        bytes memory actionsPayload;
-        Action memory action;
-        uint256 numActions = actions.length;
-        for (uint256 i = 0; i < numActions; i++) {
-            action = actions[i];
-            actionsPayload = abi.encodePacked(
-                actionsPayload,
-                action.contractAddress,
-                keccak256(action.encodedFunction)
-            );
-        }
-
-        return actionsPayload;
     }
 }

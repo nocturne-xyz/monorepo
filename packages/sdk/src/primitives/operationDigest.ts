@@ -12,7 +12,7 @@ export const TELLER_CONTRACT_NAME = "NocturneTeller";
 export const TELLER_CONTRACT_VERSION = "v1";
 
 export const OPERATION_TYPES = {
-  OperationWithoutProof: [
+  OperationWithoutProofs: [
     { name: "joinSplits", type: "JoinSplitWithoutProof[]" },
     { name: "refundAddr", type: "CompressedStealthAddress" },
     { name: "encodedRefundAssets", type: "EncodedAsset[]" },
@@ -57,13 +57,19 @@ export const OPERATION_TYPES = {
 };
 
 export function computeOperationDigest(
-  domain: TypedDataDomain,
   operation:
     | BasicOperation
     | PreSignOperation
     | SignedOperation
     | ProvenOperation
 ): bigint {
+  const domain: TypedDataDomain = {
+    name: TELLER_CONTRACT_NAME,
+    version: TELLER_CONTRACT_VERSION,
+    chainId: operation.chainId,
+    verifyingContract: operation.tellerContract,
+  };
+
   const digest = _TypedDataEncoder.hash(domain, OPERATION_TYPES, operation);
   return BigInt(digest) % BN254_SCALAR_FIELD_MODULUS;
 }
@@ -76,7 +82,7 @@ export function hashOperation(
     | ProvenOperation
 ): string {
   return _TypedDataEncoder.hashStruct(
-    "OperationWithoutProof",
+    "OperationWithoutProofs",
     OPERATION_TYPES,
     operation
   );

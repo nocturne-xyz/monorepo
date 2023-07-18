@@ -29,6 +29,7 @@ export async function proveOperation(
     gasPrice,
     maxNumRefunds,
     chainId,
+    tellerContract,
     deadline,
     atomicActions,
   } = op;
@@ -44,6 +45,7 @@ export async function proveOperation(
     gasPrice,
     maxNumRefunds,
     chainId,
+    tellerContract,
     deadline,
     atomicActions,
   };

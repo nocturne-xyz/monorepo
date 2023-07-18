@@ -40,19 +40,6 @@ struct JoinSplit {
     EncryptedNote newNoteBEncrypted;
 }
 
-struct JoinSplitWithoutProof {
-    uint256 commitmentTreeRoot;
-    uint256 nullifierA;
-    uint256 nullifierB;
-    uint256 newNoteACommitment;
-    uint256 newNoteBCommitment;
-    uint256 senderCommitment;
-    EncodedAsset encodedAsset;
-    uint256 publicSpend;
-    EncryptedNote newNoteAEncrypted;
-    EncryptedNote newNoteBEncrypted;
-}
-
 struct EncodedNote {
     uint256 ownerH1;
     uint256 ownerH2;
@@ -81,21 +68,6 @@ struct Deposit {
 struct Action {
     address contractAddress;
     bytes encodedFunction;
-}
-
-struct OperationWithoutProof {
-    JoinSplitWithoutProof[] joinSplits;
-    CompressedStealthAddress refundAddr;
-    EncodedAsset[] encodedRefundAssets;
-    Action[] actions;
-    EncodedAsset encodedGasAsset;
-    uint256 gasAssetRefundThreshold;
-    uint256 executionGasLimit;
-    uint256 maxNumRefunds;
-    uint256 gasPrice;
-    uint256 chainId;
-    uint256 deadline;
-    bool atomicActions;
 }
 
 struct Operation {

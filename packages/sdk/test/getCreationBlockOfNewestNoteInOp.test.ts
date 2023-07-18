@@ -42,7 +42,7 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
-      .chainId(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .build();
 

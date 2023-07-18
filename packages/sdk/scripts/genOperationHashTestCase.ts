@@ -4,7 +4,6 @@ import {
   computeOperationDigest,
   hashOperation,
 } from "../src";
-import { ethers } from "ethers";
 
 (async () => {
   const joinSplit: BaseJoinSplit = {
@@ -56,6 +55,7 @@ import { ethers } from "ethers";
     maxNumRefunds: 1n,
     gasPrice: 1n,
     chainId: 1n,
+    tellerContract: "0x1111111111111111111111111111111111111111",
     deadline: 1n,
     atomicActions: true,
   };
@@ -65,12 +65,6 @@ import { ethers } from "ethers";
   const opHash = hashOperation(operation);
   console.log("operation hash", opHash);
 
-  const domain: ethers.TypedDataDomain = {
-    name: "NocturneTeller",
-    version: "v1",
-    chainId: 123,
-    verifyingContract: "0x1111111111111111111111111111111111111111",
-  };
-  const opDigest = computeOperationDigest(domain, operation);
-  console.log("operation digest", opDigest.toString(16));
+  const opDigest = computeOperationDigest(operation);
+  console.log("operation digest", "0x" + opDigest.toString(16));
 })();

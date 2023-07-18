@@ -31,6 +31,7 @@ export function signOperation(
     gasPrice,
     maxNumRefunds,
     chainId,
+    tellerContract,
     deadline,
     atomicActions,
   } = op;
@@ -46,6 +47,7 @@ export function signOperation(
     gasPrice,
     maxNumRefunds,
     chainId,
+    tellerContract,
     deadline,
     atomicActions,
   };

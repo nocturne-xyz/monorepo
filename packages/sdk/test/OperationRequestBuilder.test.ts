@@ -34,6 +34,7 @@ describe("OperationRequestBuilder", () => {
         },
       ],
       chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
       deadline: 2n,
     };
 
@@ -42,7 +43,7 @@ describe("OperationRequestBuilder", () => {
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
-      .chainId(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(2n)
       .build();
 
@@ -73,6 +74,7 @@ describe("OperationRequestBuilder", () => {
         },
       ],
       chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
       deadline: 2n,
     };
 
@@ -82,7 +84,7 @@ describe("OperationRequestBuilder", () => {
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .confidentialPayment(shitcoin, 1n, receiver)
-      .chainId(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(2n)
       .build();
 
@@ -113,6 +115,7 @@ describe("OperationRequestBuilder", () => {
       gasPrice: 30n,
       maxNumRefunds: 1n,
       chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
       deadline: 2n,
     };
 
@@ -127,7 +130,7 @@ describe("OperationRequestBuilder", () => {
         gasPrice: 30n,
       })
       .maxNumRefunds(1n)
-      .chainId(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(2n)
       .build();
 
@@ -162,6 +165,7 @@ describe("OperationRequestBuilder", () => {
       refundAssets: [],
       actions: [],
       chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
       deadline: 2n,
     };
 
@@ -169,7 +173,7 @@ describe("OperationRequestBuilder", () => {
     const opRequest = builder
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(stablescam, 2n, receivers[1])
-      .chainId(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(2n)
       .build();
 
@@ -237,6 +241,7 @@ describe("OperationRequestBuilder", () => {
       refundAddr: refundAddr,
       actions,
       chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
       deadline: 2n,
     };
 
@@ -257,7 +262,7 @@ describe("OperationRequestBuilder", () => {
       .refundAsset(stablescam)
       .refundAsset(plutocracy)
       .refundAddr(refundAddr)
-      .chainId(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(2n)
       .build();
 
@@ -296,6 +301,7 @@ describe("OperationRequestBuilder", () => {
       refundAddr: refundAddr,
       actions,
       chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
       deadline: 2n,
     };
 
@@ -310,7 +316,7 @@ describe("OperationRequestBuilder", () => {
       .unwrap(shitcoin, 100n)
       .unwrap(ponzi, 100n)
       .refundAddr(refundAddr)
-      .chainId(1n)
+      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(2n)
       .build();
 
