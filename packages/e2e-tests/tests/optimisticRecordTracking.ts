@@ -1,6 +1,7 @@
 import {
   DepositManager,
   SimpleERC20Token__factory,
+  Teller,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
@@ -28,6 +29,7 @@ describe("Optimistic nullifier tracking", () => {
 
   let sdk: NocturneWalletSDK;
   let db: NocturneDB;
+  let teller: Teller;
   let depositManager: DepositManager;
   let eoa: ethers.Wallet;
 
@@ -50,7 +52,7 @@ describe("Optimistic nullifier tracking", () => {
       },
     });
 
-    ({ teardown, fillSubtreeBatch, depositManager } = testDeployment);
+    ({ teardown, fillSubtreeBatch, depositManager, teller } = testDeployment);
 
     eoa = testDeployment.aliceEoa;
 
@@ -105,7 +107,7 @@ describe("Optimistic nullifier tracking", () => {
         BigInt((await depositManager.provider.getBlock("latest")).timestamp) +
           ONE_DAY_SECONDS
       )
-      .chainId(31337n)
+      .network({ chainId: 31337n, tellerContract: teller.address })
       .build();
 
     // prepare op
@@ -218,7 +220,7 @@ describe("Optimistic nullifier tracking", () => {
         BigInt((await depositManager.provider.getBlock("latest")).timestamp) +
           ONE_DAY_SECONDS
       )
-      .chainId(31337n)
+      .network({ chainId: 31337n, tellerContract: teller.address })
       .build();
 
     // prepare op

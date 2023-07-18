@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import {
   DepositManager,
   SimpleERC20Token__factory,
+  Teller,
 } from "@nocturne-xyz/contracts";
 import {
   AssetType,
@@ -50,6 +51,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
     let aliceEoa: ethers.Wallet;
 
+    let teller: Teller;
     let depositManager: DepositManager;
     let token: SimpleERC20Token;
     let gasToken: SimpleERC20Token;
@@ -67,7 +69,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         },
       });
 
-      ({ teardown, provider, depositManager, fillSubtreeBatch } =
+      ({ teardown, provider, depositManager, teller, fillSubtreeBatch } =
         testDeployment);
 
       const [_aliceEoa] = KEYS_TO_WALLETS(provider);
@@ -163,12 +165,13 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
           [await aliceEoa.getAddress(), 80n]
         );
 
+      const chainId = BigInt((await provider.getNetwork()).chainId);
       const builder = new OperationRequestBuilder();
       const opRequest = builder
         .unwrap(asset, 80n)
         .action(token.address, transfer)
         .gasPrice(GAS_PRICE)
-        .chainId(BigInt((await provider.getNetwork()).chainId))
+        .network({ chainId, tellerContract: teller.address })
         .deadline(
           BigInt((await provider.getBlock("latest")).timestamp) +
             ONE_DAY_SECONDS
