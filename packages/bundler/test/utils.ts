@@ -1,5 +1,9 @@
 export const VALID_RELAY_REQUEST = {
   operation: {
+    networkInfo: {
+      chainId: "123n",
+      tellerContract: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+    },
     joinSplits: [
       {
         proof: ["0n", "0n", "0n", "0n", "0n", "0n", "0n", "0n"],
@@ -48,7 +52,6 @@ export const VALID_RELAY_REQUEST = {
     executionGasLimit: "10000000n",
     maxNumRefunds: "2n",
     gasPrice: "10n",
-    chainId: "123n",
     deadline: "1000n",
     atomicActions: true,
   },
