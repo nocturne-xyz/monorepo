@@ -21,7 +21,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     bytes4 constant ERC20_APPROVE_SELECTOR = bytes4(0x095ea7b3);
 
     // Set of supported tokens
-    mapping(address => bool) public _supportedTokens;
+    mapping(address => bool) public _supportedContracts;
 
     // Set of callable protocol methods (includes tokens)
     mapping(uint192 => bool) public _supportedContractMethods;
@@ -76,7 +76,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         address token,
         bool permission
     ) external onlyOwner {
-        _supportedTokens[token] = permission;
+        _supportedContracts[token] = permission;
         emit TokenPermissionSet(token, permission);
     }
 
@@ -105,7 +105,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     ) external override whenNotPaused onlyTeller {
         EncodedAsset memory encodedAsset = deposit.encodedAsset;
         (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
-        require(_supportedTokens[assetAddr], "!supported deposit asset");
+        require(_supportedContracts[assetAddr], "!supported deposit asset");
 
         _handleRefundNote(encodedAsset, deposit.depositAddr, deposit.value);
     }
@@ -151,7 +151,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             (, address assetAddr, ) = AssetUtils.decodeAsset(
                 op.encodedRefundAssets[i]
             );
-            require(_supportedTokens[assetAddr], "!supported refund asset");
+            require(_supportedContracts[assetAddr], "!supported refund asset");
         }
 
         // Ensure all token balances of tokens to be used are zeroed out
@@ -268,14 +268,20 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             "Cannot call the Nocturne Teller"
         );
 
+        bytes4 selector = _extractFunctionSelector(action.encodedFunction);
         uint192 addressAndSelector = _addressAndSelector(
             action.contractAddress,
-            _extractFunctionSelector(action.encodedFunction)
+            selector
         );
         require(
             _supportedContractMethods[addressAndSelector],
             "Cannot call non-allowed protocol method"
         );
+
+        if (selector == ERC20_APPROVE_SELECTOR) {
+            (address spender,) = abi.decode(action.encodedFunction[4:], (address, uint256));
+            require(_supportedContracts[spender], "!approve spender");
+        }
 
         (success, result) = action.contractAddress.call(action.encodedFunction);
     }
