@@ -73,6 +73,7 @@ template JoinSplit(levels) {
     signal output publicSpend;
     signal output nullifierA;
     signal output nullifierB;
+    // Poseidon4(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce"))
     signal output senderCommitment;
 
     var BASE8[2] = [
@@ -241,8 +242,9 @@ template JoinSplit(levels) {
     refundAddrH2CompressedY === compressors[1].y;
     refundAddrH2Sign === compressors[1].sign;
 
-    // hash the sender's canon addr as `H(senderCanonAddrX, senderCanonAddrY, newNoteBNonce)`
-    senderCommitment <== Poseidon(3)([senderCanonAddr[0], senderCanonAddr[1], newNoteBNonce]);
+    // hash the sender's canon addr as `Poseidon4(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce)`
+    var SENDER_COMMITMENT_DOMAIN_SEPARATOR = 5680996188676417870015190585682285899130949254168256752199352013418366665222;
+    senderCommitment <== Poseidon(4)([SENDER_COMMITMENT_DOMAIN_SEPARATOR, senderCanonAddr[0], senderCanonAddr[1], newNoteBNonce]);
 }
 
 component main { public [encodedAssetAddrWithSignBits, encodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit(16);
