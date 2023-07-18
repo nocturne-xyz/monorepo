@@ -134,7 +134,7 @@ export async function deployNocturneCoreContracts(
   const proxiedTeller = await deployProxiedContract(
     new Teller__factory(connectedSigner),
     proxyAdmin,
-    [proxiedHandler.address, joinSplitVerifier.address] // initialize here
+    ["NocturneTeller", "v1", proxiedHandler.address, joinSplitVerifier.address] // initialize here
   );
   console.log("deployed proxied Teller:", proxiedTeller.proxyAddresses);
 

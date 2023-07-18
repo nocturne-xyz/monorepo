@@ -19,9 +19,7 @@ contract TellerBaseTest is Test {
         tellerBase.initialize("NocturneTeller", "v1");
 
         uint256[8] memory dummyProof;
-        JoinSplit[] memory joinSplits = new JoinSplit[](
-            1
-        );
+        JoinSplit[] memory joinSplits = new JoinSplit[](1);
         joinSplits[0] = JoinSplit({
             commitmentTreeRoot: 1,
             nullifierA: 1,

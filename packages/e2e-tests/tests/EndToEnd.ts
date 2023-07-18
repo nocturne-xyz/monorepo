@@ -127,9 +127,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const signed = nocturneWalletSDKAlice.signOperation(preSign);
     const operation = await proveOperation(joinSplitProver, signed);
 
-    //@ts-ignore
-    console.log(nocturneWalletSDKAlice.merkleProver.root.hash);
-
+    console.log("proven operation:", operation);
     const status = await submitAndProcessOperation(operation);
 
     await contractChecks();

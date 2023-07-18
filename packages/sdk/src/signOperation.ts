@@ -14,7 +14,7 @@ export function signOperation(
   signer: NocturneSigner,
   op: PreSignOperation
 ): SignedOperation {
-  const opDigest = computeOperationDigest(op); // TODO: fix
+  const opDigest = computeOperationDigest(op);
   const opSig = signer.sign(opDigest);
 
   const joinSplits: PreProofJoinSplit[] = op.joinSplits.map((joinSplit) =>
