@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 import {Groth16} from "../libs/Groth16.sol";
-import {Utils} from "../libs/Utils.sol";
+import {Utils} from "./Utils.sol";
 import "../libs/Types.sol";
 
 // Helpers for extracting data / formatting operations

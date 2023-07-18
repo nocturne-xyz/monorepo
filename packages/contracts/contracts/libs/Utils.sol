@@ -27,7 +27,7 @@ library Utils {
         return total;
     }
 
-    function validateCompressedPoint(uint256 p) public view {
+    function validateCompressedPoint(uint256 p) internal view {
         // Clear X-sign bit. Leaves MSB untouched for the next check.
         uint256 y = p & COMPRESSED_POINT_Y_MASK;
         // Simultaneously check that high-bit is unset, Y is a canonical field element and Y != 0
@@ -70,19 +70,12 @@ library Utils {
             (bool success, bytes memory response) = address(0x05).staticcall(
                 modexp_args
             );
-            require(success, "ModExp must succeed");
-
-            // `response` will be 0 if the input point is the identity
             require(
-                uint256(bytes32(response)) == 1,
-                "Compressed point must be on-curve and non-zero"
-            );
-            // Check that the point is not of order 8.
-            // 4-torsion points have already been eliminated.
-            require(
-                mulmod(y2_1, CURVE_A, BN254_SCALAR_FIELD_MODULUS) !=
+                success &&
+                    uint256(bytes32(response)) == 1 &&
+                    mulmod(y2_1, CURVE_A, BN254_SCALAR_FIELD_MODULUS) !=
                     mulmod(y2, dy2_a, BN254_SCALAR_FIELD_MODULUS),
-                "Points must not be in small subgroup"
+                "invalid point"
             );
         }
     }
