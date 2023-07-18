@@ -68,7 +68,7 @@ export interface ContractAddresses {
 
 export interface SyncWithProgressOutput {
   tipMerkleIndex: number;
-  latestSyncedMerkleIndexIter: ClosableAsyncIterator<number | undefined>;
+  latestSyncedMerkleIndexIter: ClosableAsyncIterator<number>;
 }
 
 export class NocturneFrontendSDK {
