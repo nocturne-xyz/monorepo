@@ -3,9 +3,10 @@ import {
   BabyJubJub,
   poseidonBN,
 } from "@nocturne-xyz/crypto-utils";
-import { SpendingKey, spendPkFromFromSk, vkFromSpendPk } from "./keys";
+import { RootKey, deriveSpendPK, vkFromSpendPk } from "./keys";
 import { NocturneViewer } from "./viewer";
-import { randomFr } from "./utils";
+import * as ethers from "ethers";
+import randomBytes from "randombytes";
 
 const Fr = BabyJubJub.ScalarField;
 
@@ -17,15 +18,15 @@ export interface NocturneSignature {
 }
 
 export class NocturneSigner extends NocturneViewer {
-  sk: SpendingKey;
+  rk: RootKey;
   spendPk: SpendPk;
 
-  constructor(sk: SpendingKey) {
-    const spendPk = spendPkFromFromSk(sk);
+  constructor(rootKey: RootKey) {
+    const spendPk = deriveSpendPK(rootKey);
     const [vk, vkNonce] = vkFromSpendPk(spendPk);
     super(vk, vkNonce);
 
-    this.sk = sk;
+    this.rk = rootKey;
     this.spendPk = spendPk;
   }
 
@@ -33,17 +34,26 @@ export class NocturneSigner extends NocturneViewer {
     return new NocturneViewer(this.vk, this.vkNonce);
   }
 
+  // TODO: use appendix sig process
   sign(m: bigint): NocturneSignature {
-    // TODO: make this deterministic
-    const r = randomFr();
+    // derive signing key and nonce entropy
+    const h = ethers.utils.arrayify(ethers.utils.sha256(this.rk));
+    const s = h.slice(0, 32);
+
+    // derive nonce
+    const x = h.slice(32, 64);
+    const v = randomBytes(32);
+    const r = Fr.fromEntropy(
+      ethers.utils.arrayify(
+        ethers.utils.sha256(ethers.utils.concat([x, v, Fr.toBytes(m)]))
+      )
+    );
+
+    // sign
     const R = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
     const c = poseidonBN([this.spendPk.x, R.x, R.y, m]);
-
     // eslint-disable-next-line
-    let z = Fr.reduce(r - (this.sk as any) * c);
-    if (z < 0) {
-      z += BabyJubJub.PrimeSubgroupOrder;
-    }
+    let z = Fr.reduce(Fr.sub(r, Fr.mul(Fr.fromEntropy(s), c)));
 
     return {
       c,

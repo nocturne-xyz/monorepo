@@ -5,7 +5,7 @@ import {
   OperationRequest,
   range,
   NocturneSigner,
-  generateRandomSpendingKey,
+  generateRandomRootKey,
 } from "../src";
 import {
   shitcoin,
@@ -53,8 +53,8 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds OperaionRequest with 1 action, 1 unwrap, 1 payment, no params set", () => {
-    const sk = generateRandomSpendingKey();
-    const signer = new NocturneSigner(sk);
+    const rk = generateRandomRootKey();
+    const signer = new NocturneSigner(rk);
     const receiver = signer.canonicalAddress();
 
     const expected: OperationRequest = {
@@ -96,8 +96,8 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds OperationRuqestion with 1 action, 1 unwrap, 0 payments, all params set", () => {
-    const sk = generateRandomSpendingKey();
-    const signer = new NocturneSigner(sk);
+    const rk = generateRandomRootKey();
+    const signer = new NocturneSigner(rk);
     const refundAddr = signer.generateRandomStealthAddress();
 
     const expected: OperationRequest = {
@@ -143,8 +143,8 @@ describe("OperationRequestBuilder", () => {
 
   it("builds operation with 0 actions, 0 unwraps, 2 payments, no params set", () => {
     const receivers = range(2)
-      .map((_) => generateRandomSpendingKey())
-      .map((sk) => new NocturneSigner(sk))
+      .map((_) => generateRandomRootKey())
+      .map((rk) => new NocturneSigner(rk))
       .map((signer) => signer.canonicalAddress());
 
     const expected: OperationRequest = {
@@ -195,13 +195,13 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds OperaionRequest with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", () => {
-    const sk = generateRandomSpendingKey();
-    const signer = new NocturneSigner(sk);
+    const rk = generateRandomRootKey();
+    const signer = new NocturneSigner(rk);
     const refundAddr = signer.generateRandomStealthAddress();
 
     const receivers = range(3)
-      .map((_) => generateRandomSpendingKey())
-      .map((sk) => new NocturneSigner(sk))
+      .map((_) => generateRandomRootKey())
+      .map((rk) => new NocturneSigner(rk))
       .map((signer) => signer.canonicalAddress());
 
     const actions = range(2).map((i) => ({
@@ -286,8 +286,8 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("combines requests of same asset when no conf payments", () => {
-    const sk = generateRandomSpendingKey();
-    const signer = new NocturneSigner(sk);
+    const rk = generateRandomRootKey();
+    const signer = new NocturneSigner(rk);
     const refundAddr = signer.generateRandomStealthAddress();
 
     const actions = range(2).map((i) => ({
