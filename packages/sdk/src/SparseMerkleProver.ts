@@ -1,6 +1,6 @@
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { assertOrErr, zip } from "./utils";
-import { poseidonBN } from "@nocturne-xyz/circuit-utils";
+import { poseidonBN } from "@nocturne-xyz/crypto-utils";
 import { KVStore } from "./store";
 import * as JSON from "bigint-json-serialization";
 import {

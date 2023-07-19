@@ -1,4 +1,4 @@
-import { decompressPoint } from "./crypto";
+import { decomposeCompressedPoint } from "./crypto";
 import {
   PreProofJoinSplit,
   SignedOperation,
@@ -53,33 +53,33 @@ async function proveJoinSplit(
   prover: JoinSplitProver,
   signedJoinSplit: PreProofJoinSplit
 ): Promise<ProvenJoinSplit> {
-  const { opDigest, proofInputs, encSenderCanonAddr, ...baseJoinSplit } =
-    signedJoinSplit;
+  const {
+    opDigest,
+    proofInputs,
+    refundAddr,
+    senderCommitment,
+    ...baseJoinSplit
+  } = signedJoinSplit;
   console.log("proving joinSplit", { proofInputs });
+
   const proof = await prover.proveJoinSplit(proofInputs);
 
-  const decompressedC1 = decompressPoint(encSenderCanonAddr.c1);
-  const decompressedC2 = decompressPoint(encSenderCanonAddr.c2);
+  const [, refundAddrH1CompressedY] = decomposeCompressedPoint(refundAddr.h1);
+  const [, refundAddrH2CompressedY] = decomposeCompressedPoint(refundAddr.h2);
 
   // Check that snarkjs output is consistent with our precomputed joinsplit values
   const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
   if (
-    baseJoinSplit.newNoteACommitment !==
-      BigInt(publicSignals.newNoteACommitment) ||
-    baseJoinSplit.newNoteBCommitment !==
-      BigInt(publicSignals.newNoteBCommitment) ||
-    baseJoinSplit.commitmentTreeRoot !==
-      BigInt(publicSignals.commitmentTreeRoot) ||
-    baseJoinSplit.publicSpend !== BigInt(publicSignals.publicSpend) ||
-    baseJoinSplit.nullifierA !== BigInt(publicSignals.nullifierA) ||
-    baseJoinSplit.nullifierB !== BigInt(publicSignals.nullifierB) ||
-    baseJoinSplit.encodedAsset.encodedAssetId !==
-      BigInt(publicSignals.encodedAssetId) ||
-    opDigest !== BigInt(publicSignals.opDigest) ||
-    decompressedC1 === undefined ||
-    decompressedC2 === undefined ||
-    decompressedC1.y !== BigInt(publicSignals.encSenderCanonAddrC1Y) ||
-    decompressedC2.y !== BigInt(publicSignals.encSenderCanonAddrC2Y)
+    baseJoinSplit.newNoteACommitment !== publicSignals.newNoteACommitment ||
+    baseJoinSplit.newNoteBCommitment !== publicSignals.newNoteBCommitment ||
+    baseJoinSplit.commitmentTreeRoot !== publicSignals.commitmentTreeRoot ||
+    baseJoinSplit.publicSpend !== publicSignals.publicSpend ||
+    baseJoinSplit.nullifierA !== publicSignals.nullifierA ||
+    baseJoinSplit.nullifierB !== publicSignals.nullifierB ||
+    opDigest !== publicSignals.opDigest ||
+    refundAddrH1CompressedY !== publicSignals.refundAddrH1CompressedY ||
+    refundAddrH2CompressedY !== publicSignals.refundAddrH2CompressedY ||
+    senderCommitment !== publicSignals.senderCommitment
   ) {
     console.error("successfully generated proof, but PIs don't match", {
       publicSignalsFromProof: publicSignals,
@@ -90,11 +90,13 @@ async function proveJoinSplit(
         publicSpend: baseJoinSplit.publicSpend,
         nullifierA: baseJoinSplit.nullifierA,
         nullifierB: baseJoinSplit.nullifierB,
-        encodedAssetAddr: baseJoinSplit.encodedAsset.encodedAssetAddr,
-        encodedAssetId: baseJoinSplit.encodedAsset.encodedAssetId,
-        decompressedC1Y: decompressedC1?.y,
-        decompressedC2Y: decompressedC2?.y,
+        senderCommitment,
         opDigest,
+        encododedAssetAddrWithSignBits:
+          proofInputs.encodedAssetAddrWithSignBits,
+        encodedAssetID: proofInputs.encodedAssetId,
+        refundAddrH1CompressedY: refundAddrH1CompressedY,
+        refundAddrH2CompressedY: refundAddrH2CompressedY,
       },
     });
 
@@ -110,8 +112,7 @@ async function proveJoinSplit(
   const solidityProof = packToSolidityProof(proof.proof);
   return {
     proof: solidityProof,
-    encSenderCanonAddrC1: encSenderCanonAddr.c1,
-    encSenderCanonAddrC2: encSenderCanonAddr.c2,
+    senderCommitment,
     ...baseJoinSplit,
   };
 }

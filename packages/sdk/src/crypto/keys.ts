@@ -2,8 +2,8 @@ import {
   AffinePoint,
   BabyJubJub,
   poseidonBN,
-} from "@nocturne-xyz/circuit-utils";
-import randomBytes from "randombytes";
+} from "@nocturne-xyz/crypto-utils";
+import { randomFr } from "./utils";
 
 const Fr = BabyJubJub.ScalarField;
 
@@ -12,8 +12,7 @@ export type SpendingKey = bigint;
 export type ViewingKey = bigint;
 
 export function generateRandomSpendingKey(): bigint {
-  const sk_buf = randomBytes(Math.floor(256 / 8));
-  return Fr.fromBytes(sk_buf);
+  return randomFr();
 }
 
 export function spendPkFromFromSk(sk: SpendingKey): SpendPk {

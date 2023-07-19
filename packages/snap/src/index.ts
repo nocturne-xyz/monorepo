@@ -9,7 +9,7 @@ import {
   BundlerOpTracker,
   OperationMetadata,
 } from "@nocturne-xyz/sdk";
-import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
+import { BabyJubJub } from "@nocturne-xyz/crypto-utils";
 import { ethers } from "ethers";
 import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
 import { OnRpcRequestHandler } from "@metamask/snaps-types";

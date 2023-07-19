@@ -263,7 +263,7 @@ export async function setupTestDeployment(
       console.log("tearing down subgraph...");
       await stopSubgraph();
       // wait for subgraph to tear down
-      await sleep(10_000);
+      await sleep(15_000);
     }
 
     console.log("resetting hardhat...");

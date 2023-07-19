@@ -1,4 +1,4 @@
-import { AffinePoint, BabyJubJub } from "@nocturne-xyz/circuit-utils";
+import { AffinePoint, BabyJubJub } from "@nocturne-xyz/crypto-utils";
 
 export type CompressedPoint = bigint;
 

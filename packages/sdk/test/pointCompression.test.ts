@@ -1,6 +1,6 @@
 import "mocha";
 import { expect } from "chai";
-import { AffinePoint, BabyJubJub } from "@nocturne-xyz/circuit-utils";
+import { AffinePoint, BabyJubJub } from "@nocturne-xyz/crypto-utils";
 import {
   compressPoint,
   decompressPoint,

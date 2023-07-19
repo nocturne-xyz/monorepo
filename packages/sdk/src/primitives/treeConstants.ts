@@ -1,4 +1,4 @@
-import { BN254ScalarField } from "@nocturne-xyz/circuit-utils";
+import { BN254ScalarField } from "@nocturne-xyz/crypto-utils";
 import { ethers } from "ethers";
 
 export const ARITY = 4;

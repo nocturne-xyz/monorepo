@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- update `JoinSplitInputs` type with `refundAddr` and `senderCommitment` instead of `encSenderCanoAddr` and `encRandomness`
+- coerce `publicSignals` to `bigint[]`
 - in `genSubtreeUpdateTestCase`, get zero value, depth, and arity from `TreeConstants`
 - update fixture scripts
 - `genJoinSplitTestCase` prints out proving time
@@ -9,7 +11,7 @@
 - add `encSenderCanonAddrC1X`, `encSenderCanonAddrC2X` to public signals
 - add `encRandomness` to inputs
 - clean up module hierarchy, remove unnecessary exports, and make exports explicit
-- use `poseidonBN` from `@nocturne-xyz/circuit-utils`
+- use `poseidonBN` from `@nocturne-xyz/crypto-utils`
 - Rename 
 	- `LocalJoinSplitProver` -> `WasmJoinSplitProver`
 	- `LocalSubtreeUpdateProver` -> `WasmSubtreeUpdateProver`
