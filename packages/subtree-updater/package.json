@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@nocturne-xyz/config": "1.0.15-alpha",
-    "@nocturne-xyz/contracts": "1.0.34-alpha",
+    "@nocturne-xyz/contracts": "1.0.35-alpha",
     "@nocturne-xyz/crypto-utils": "0.1.6",
     "@nocturne-xyz/offchain-utils": "0.1.10",
     "@nocturne-xyz/sdk": "1.0.187-alpha",

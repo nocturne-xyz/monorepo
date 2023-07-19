@@ -25,7 +25,6 @@ import {
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import * as txManager from "@nocturne-xyz/tx-manager";
-import { toSubmittableOperation } from "@nocturne-xyz/sdk";
 
 const COMPONENT_NAME = "submitter";
 
@@ -196,12 +195,11 @@ export class BundlerSubmitter {
     logger: Logger,
     operations: ProvenOperation[]
   ): Promise<ethers.ContractReceipt | undefined> {
-    const submittableOps = operations.map(toSubmittableOperation);
     try {
       // Estimate gas first
       const data = this.tellerContract.interface.encodeFunctionData(
         "processBundle",
-        [{ operations: submittableOps }]
+        [{ operations }]
       );
       const gasEst = await this.signingProvider.estimateGas({
         to: this.tellerContract.address,
@@ -211,7 +209,7 @@ export class BundlerSubmitter {
 
       const contractTx = async (gasPrice: number) => {
         const tx = await this.tellerContract.processBundle(
-          { operations: submittableOps },
+          { operations },
           {
             gasLimit: gasEst.toBigInt() + 200_000n, // buffer
             gasPrice,

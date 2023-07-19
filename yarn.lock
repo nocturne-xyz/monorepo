@@ -2804,7 +2804,7 @@ __metadata:
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
     "@nocturne-xyz/config": 1.0.15-alpha
-    "@nocturne-xyz/contracts": 1.0.34-alpha
+    "@nocturne-xyz/contracts": 1.0.35-alpha
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.187-alpha
     "@nocturne-xyz/tx-manager": 1.0.1-alpha
@@ -2884,7 +2884,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@1.0.34-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/contracts@1.0.35-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -2964,7 +2964,7 @@ __metadata:
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
     "@nocturne-xyz/config": 1.0.15-alpha
-    "@nocturne-xyz/contracts": 1.0.34-alpha
+    "@nocturne-xyz/contracts": 1.0.35-alpha
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.187-alpha
     "@nocturne-xyz/tx-manager": 1.0.1-alpha
@@ -3218,7 +3218,7 @@ __metadata:
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
     "@nocturne-xyz/config": 1.0.15-alpha
-    "@nocturne-xyz/contracts": 1.0.34-alpha
+    "@nocturne-xyz/contracts": 1.0.35-alpha
     "@nocturne-xyz/crypto-utils": 0.1.6
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.187-alpha
@@ -3259,7 +3259,7 @@ __metadata:
   resolution: "@nocturne-xyz/test-actor@workspace:packages/test-actor"
   dependencies:
     "@nocturne-xyz/config": 1.0.15-alpha
-    "@nocturne-xyz/contracts": 1.0.34-alpha
+    "@nocturne-xyz/contracts": 1.0.35-alpha
     "@nocturne-xyz/local-prover": 1.0.10-alpha
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.187-alpha

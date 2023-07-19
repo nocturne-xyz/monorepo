@@ -8,7 +8,6 @@ import { Teller } from "@nocturne-xyz/contracts";
 import { NullifierDB } from "./db";
 import { Logger } from "winston";
 import { ErrString } from "@nocturne-xyz/offchain-utils";
-import { toSubmittableOperation } from "@nocturne-xyz/sdk";
 
 export async function checkNullifierConflictError(
   db: NullifierDB,
@@ -49,10 +48,8 @@ export async function checkRevertError(
   logger: Logger,
   operation: ProvenOperation
 ): Promise<ErrString | undefined> {
-  const submittableOp = toSubmittableOperation(operation);
-  logger.debug("simulating operation", { submittableOp });
-
-  const bundle: Bundle = { operations: [submittableOp] };
+  logger.debug("simulating operation", { operation });
+  const bundle: Bundle = { operations: [operation] };
 
   try {
     const data = tellerContract.interface.encodeFunctionData("processBundle", [
