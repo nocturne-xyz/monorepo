@@ -9,11 +9,11 @@ export { encryptNote } from "./noteEncryption";
 export { NocturneSigner, NocturneSignature } from "./signer";
 export { NocturneViewer } from "./viewer";
 export {
-  generateRandomSpendingKey,
-  spendPkFromFromSk,
+  generateRandomRootKey,
+  deriveSpendPK,
   vkFromSpendPk,
   SpendPk,
-  SpendingKey,
+  RootKey,
   ViewingKey,
 } from "./keys";
 export { randomFr } from "./utils";

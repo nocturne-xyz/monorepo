@@ -11,9 +11,12 @@ import {
   SparseMerkleProver,
   IncludedNoteWithNullifier,
   WithTotalEntityIndex,
+  range,
 } from "../src";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import randomBytes from "randombytes";
+
+export const DUMMY_ROOT_KEY = Uint8Array.from(range(32));
 
 export function randomBigInt(): bigint {
   const rand = randomBytes(32);
@@ -90,7 +93,7 @@ export async function setup(
   assets: Asset[],
   opts?: TestSetupOpts
 ): Promise<[NocturneDB, SparseMerkleProver, NocturneSigner, Handler]> {
-  const signer = new NocturneSigner(1n);
+  const signer = new NocturneSigner(Uint8Array.from(DUMMY_ROOT_KEY));
 
   const kv = new InMemoryKVStore();
   const nocturneDB = new NocturneDB(kv);

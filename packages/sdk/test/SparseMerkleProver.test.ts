@@ -16,7 +16,7 @@ import { SparseMerkleProver, TreeNode } from "../src/SparseMerkleProver";
 import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
 import { encodePathAndHash } from "../src/proof/subtreeUpdate";
-import { randomBigInt } from "./utils";
+import { DUMMY_ROOT_KEY, randomBigInt } from "./utils";
 import { keccak256 } from "ethers/lib/utils";
 
 const { ARITY, ZERO_VALUE, DEPTH } = TreeConstants;
@@ -366,7 +366,7 @@ describe("SparseMerkleProver", () => {
     const kv = new InMemoryKVStore();
     const prover = new SparseMerkleProver(kv);
 
-    const ownerViewer = new NocturneSigner(69n);
+    const ownerViewer = new NocturneSigner(Uint8Array.from(DUMMY_ROOT_KEY));
     const owner = ownerViewer.canonicalStealthAddress();
     console.log("uncompressed owner", owner);
     const compressedOwner = StealthAddressTrait.compress(owner);

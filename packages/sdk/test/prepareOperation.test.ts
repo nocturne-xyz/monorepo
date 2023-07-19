@@ -5,7 +5,7 @@ import { expect } from "chai";
 import {
   NocturneSigner,
   StealthAddressTrait,
-  generateRandomSpendingKey,
+  generateRandomRootKey,
 } from "../src/crypto";
 import { range } from "../src/utils";
 import { AssetTrait, OperationRequestBuilder } from "../src";
@@ -215,8 +215,8 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const receiverSk = generateRandomSpendingKey();
-    const receiverSigner = new NocturneSigner(receiverSk);
+    const receiverRk = generateRandomRootKey();
+    const receiverSigner = new NocturneSigner(receiverRk);
     const receiver = receiverSigner.canonicalAddress();
 
     const builder = new OperationRequestBuilder({
@@ -328,8 +328,8 @@ describe("prepareOperation", async () => {
     };
 
     const receivers = range(2)
-      .map((_) => generateRandomSpendingKey())
-      .map((sk) => new NocturneSigner(sk))
+      .map((_) => generateRandomRootKey())
+      .map((rk) => new NocturneSigner(rk))
       .map((signer) => signer.canonicalAddress());
 
     const builder = new OperationRequestBuilder({
@@ -377,8 +377,8 @@ describe("prepareOperation", async () => {
     };
 
     const receivers = range(3)
-      .map((_) => generateRandomSpendingKey())
-      .map((sk) => new NocturneSigner(sk))
+      .map((_) => generateRandomRootKey())
+      .map((rk) => new NocturneSigner(rk))
       .map((signer) => signer.canonicalAddress());
 
     const refundAddr = signer.generateRandomStealthAddress();

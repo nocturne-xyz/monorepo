@@ -15,7 +15,7 @@ import {
   unzip,
   NocturneSigner,
 } from "../src";
-import { ponzi, shitcoin, stablescam } from "./utils";
+import { DUMMY_ROOT_KEY, ponzi, shitcoin, stablescam } from "./utils";
 
 describe("InMemoryKVStore", async () => {
   const kv = new InMemoryKVStore();
@@ -187,7 +187,7 @@ describe("InMemoryKVStore", async () => {
 describe("NocturneDB", async () => {
   const kv = new InMemoryKVStore();
   const db = new NocturneDB(kv);
-  const viewer = new NocturneSigner(1n).viewer();
+  const viewer = new NocturneSigner(DUMMY_ROOT_KEY).viewer();
 
   const dummyNotesAndNfs = (
     notesPerAsset: number,
