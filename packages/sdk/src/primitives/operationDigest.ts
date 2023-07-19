@@ -1,6 +1,7 @@
 import {
   BN254_SCALAR_FIELD_MODULUS,
   BasicOperation,
+  OnchainOperation,
   PreSignOperation,
   ProvenOperation,
   SignedOperation,
@@ -85,4 +86,12 @@ export function hashOperation(
     OPERATION_TYPES,
     operation
   );
+}
+
+export function toSubmittableOperation(
+  provenOp: ProvenOperation
+): OnchainOperation {
+  return {
+    ...provenOp,
+  };
 }

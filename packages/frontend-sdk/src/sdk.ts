@@ -41,6 +41,10 @@ import {
   getWindowSigner,
 } from "./utils";
 import retry from "async-retry";
+import {
+  NocturneConfig,
+  loadNocturneConfigBuiltin,
+} from "@nocturne-xyz/config";
 
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
@@ -55,19 +59,22 @@ export interface Endpoints {
 
 export class NocturneFrontendSDK {
   joinSplitProver: WasmJoinSplitProver;
+  config: NocturneConfig;
   depositManagerContract: DepositManager;
   bundlerEndpoint: string;
   screenerEndpoint: string;
 
   private constructor(
+    config: NocturneConfig,
     depositManagerContract: DepositManager,
     endpoints: Endpoints,
     wasmPath: string,
     zkeyPath: string,
     vkey: VerifyingKey
   ) {
-    this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
+    this.config = config;
     this.depositManagerContract = depositManagerContract;
+    this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
     this.screenerEndpoint = endpoints.screenerEndpoint;
     this.bundlerEndpoint = endpoints.bundlerEndpoint;
   }
@@ -83,18 +90,21 @@ export class NocturneFrontendSDK {
    * @param vkey Vkey object
    */
   static async instantiate(
-    depositManagerAddress: string,
+    config: NocturneConfig,
     endpoints: Endpoints,
     wasmPath: string,
     zkeyPath: string,
     vkey: any
   ): Promise<NocturneFrontendSDK> {
     const signer = await getWindowSigner();
+    const depositManagerAddress = config.depositManagerAddress();
     const depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
       signer
     );
+
     return new NocturneFrontendSDK(
+      config,
       depositManagerContract,
       endpoints,
       wasmPath,
@@ -194,6 +204,7 @@ export class NocturneFrontendSDK {
     recipientAddress: Address
   ): Promise<BundlerOperationID> {
     const signer = await getWindowSigner();
+    const chainId = BigInt(await signer.getChainId());
     const provider = signer.provider;
 
     if (!provider) {
@@ -218,6 +229,7 @@ export class NocturneFrontendSDK {
       .action(erc20Address, encodedFunction)
       .maxNumRefunds(1n)
       .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
+      .network({ chainId, tellerContract: this.config.tellerAddress() })
       .build();
 
     const action: ActionMetadata = {
@@ -539,15 +551,17 @@ export class NocturneFrontendSDK {
  * @param vkeyPath Vkey path
  */
 export async function loadNocturneFrontendSDK(
-  depositManagerAddress: Address,
+  configName: string,
   endpoints: Endpoints,
   wasmPath: string = WASM_PATH,
   zkeyPath: string = ZKEY_PATH,
   vkeyPath: string = VKEY_PATH
 ): Promise<NocturneFrontendSDK> {
+  const config = loadNocturneConfigBuiltin(configName);
+
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
   return await NocturneFrontendSDK.instantiate(
-    depositManagerAddress,
+    config,
     endpoints,
     wasmPath,
     zkeyPath,

@@ -3058,6 +3058,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/frontend-sdk@workspace:packages/frontend-sdk"
   dependencies:
+    "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/sdk": "workspace:^"

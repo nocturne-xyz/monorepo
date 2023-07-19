@@ -117,6 +117,9 @@ export interface ProvenOperation extends BaseOperation {
   joinSplits: ProvenJoinSplit[];
 }
 
+export interface OnchainOperation
+  extends Omit<ProvenOperation, "networkInfo"> {}
+
 export type Operation = PreSignOperation | SignedOperation | ProvenOperation;
 
 export interface DepositRequest {
