@@ -152,8 +152,13 @@ contract CommitmentTreeManager is
         Utils.validateCompressedPoint(note.ownerH1);
         Utils.validateCompressedPoint(note.ownerH2);
         require(
+            // encodedAssetAddr is a valid field element
             note.encodedAssetAddr < Utils.BN254_SCALAR_FIELD_MODULUS &&
-                note.encodedAssetId < Utils.BN254_SCALAR_FIELD_MODULUS &&
+                // encodedAssetAddr doesn't have any bits set outside bits 0-162 and 250-252
+                note.encodedAssetAddr & (~ENCODED_ASSET_ADDR_MASK) == 0 &&
+                // encodedAssetId is a 253 bit number (and therefore a valid field element)
+                note.encodedAssetId < (1 << 253) &&
+                // value is < the 2^252 limit (and therefore a valid field element)
                 note.value <= NOCTURNE_MAX_NOTE_VALUE,
             "invalid note"
         );
