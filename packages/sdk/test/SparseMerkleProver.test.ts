@@ -7,15 +7,16 @@ import {
   StealthAddressTrait,
   bigInt256ToFieldElems,
   bigintToBEPadded,
-  randomBigInt,
   range,
   TreeConstants,
 } from "../src";
-import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
+import { BabyJubJub, poseidonBN } from "@nocturne-xyz/crypto-utils";
 import { SparseMerkleProver, TreeNode } from "../src/SparseMerkleProver";
 import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
 import { encodePathAndHash } from "../src/proof/subtreeUpdate";
+import { randomBigInt } from "./utils";
+import { keccak256 } from "ethers/lib/utils";
 
 const { ARITY, ZERO_VALUE, DEPTH } = TreeConstants;
 
@@ -427,6 +428,11 @@ describe("SparseMerkleProver", () => {
       // print new root
       console.log("new root: ", prover.getRoot().toString());
     }
+  });
+
+  it.skip("generates domain separators", () => {
+    const hash = keccak256(Buffer.from("SENDER_COMMITMENT"));
+    console.log("senderCommitmentDomainSeparator", F.reduce(BigInt(hash)));
   });
 });
 

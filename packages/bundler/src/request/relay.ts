@@ -5,6 +5,15 @@ const addressPattern = "^0x[a-fA-F0-9]{40}$";
 const booleanType = { type: "boolean" };
 const bigintType = { type: "string", pattern: bigintPattern };
 const addressType = { type: "string", pattern: addressPattern };
+const byteArrayType = {
+  type: "array",
+  items: {
+    type: "integer",
+    minimum: 0,
+    maximum: 255,
+  },
+  minItems: 0,
+};
 const solidityProofType = {
   type: "array",
   items: bigintType,
@@ -18,16 +27,13 @@ const stealthAddressType = {
     h1: bigintType,
     h2: bigintType,
   },
-  additionalProperties: false,
 };
 const encryptedNoteType = {
   type: "object",
-  required: ["owner", "encappedKey", "encryptedNonce", "encryptedValue"],
+  required: ["ciphertextBytes", "encapsulatedSecretBytes"],
   properties: {
-    owner: stealthAddressType,
-    encappedKey: bigintType,
-    encryptedNonce: bigintType,
-    encryptedValue: bigintType,
+    ciphertextBytes: byteArrayType,
+    encapsulatedSecretBytes: byteArrayType,
   },
   additionalProperties: false,
 };
@@ -63,6 +69,7 @@ const joinSplitType = {
   type: "object",
   required: [
     "proof",
+    "senderCommitment",
     "commitmentTreeRoot",
     "nullifierA",
     "nullifierB",
@@ -72,11 +79,10 @@ const joinSplitType = {
     "publicSpend",
     "newNoteAEncrypted",
     "newNoteBEncrypted",
-    "encSenderCanonAddrC1",
-    "encSenderCanonAddrC2",
   ],
   properties: {
     proof: solidityProofType,
+    senderCommitment: bigintType,
     commitmentTreeRoot: bigintType,
     nullifierA: bigintType,
     nullifierB: bigintType,
@@ -86,8 +92,6 @@ const joinSplitType = {
     publicSpend: bigintType,
     newNoteAEncrypted: encryptedNoteType,
     newNoteBEncrypted: encryptedNoteType,
-    encSenderCanonAddrC1: bigintType,
-    encSenderCanonAddrC2: bigintType,
   },
   additionalProperties: false,
 };

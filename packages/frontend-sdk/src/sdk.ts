@@ -313,17 +313,20 @@ export class NocturneFrontendSDK {
 
     const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] =
       operation.joinSplits.map((joinSplit) => {
-        const c1 = joinSplit.encSenderCanonAddrC1;
-        const c2 = joinSplit.encSenderCanonAddrC2;
-        const encSenderCanonAddr = { c1, c2 };
         const encodedAssetAddrWithSignBits =
           encodeEncodedAssetAddrWithSignBitsPI(
             joinSplit.encodedAsset.encodedAssetAddr,
-            encSenderCanonAddr
+            operation.refundAddr
           );
 
-        const [, encSenderCanonAddrC1Y] = decomposeCompressedPoint(c1);
-        const [, encSenderCanonAddrC2Y] = decomposeCompressedPoint(c1);
+        const encodedAssetId = joinSplit.encodedAsset.encodedAssetId;
+
+        const [, refundAddrH1CompressedY] = decomposeCompressedPoint(
+          operation.refundAddr.h1
+        );
+        const [, refundAddrH2CompressedY] = decomposeCompressedPoint(
+          operation.refundAddr.h2
+        );
 
         const publicSignals = joinSplitPublicSignalsToArray({
           newNoteACommitment: joinSplit.newNoteACommitment,
@@ -334,9 +337,10 @@ export class NocturneFrontendSDK {
           nullifierB: joinSplit.nullifierB,
           opDigest,
           encodedAssetAddrWithSignBits,
-          encodedAssetId: joinSplit.encodedAsset.encodedAssetId,
-          encSenderCanonAddrC1Y,
-          encSenderCanonAddrC2Y,
+          encodedAssetId,
+          refundAddrH1CompressedY,
+          refundAddrH2CompressedY,
+          senderCommitment: joinSplit.senderCommitment,
         });
 
         const proof = unpackFromSolidityProof(joinSplit.proof);

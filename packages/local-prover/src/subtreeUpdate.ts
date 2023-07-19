@@ -21,11 +21,14 @@ export class WasmSubtreeUpdateProver implements SubtreeUpdateProver {
   async proveSubtreeUpdate(
     inputs: SubtreeUpdateInputs
   ): Promise<SubtreeUpdateProofWithPublicSignals> {
-    return await snarkjs.groth16.fullProve(
+    const proof = await snarkjs.groth16.fullProve(
       inputs,
       this.wasmPath,
       this.zkeyPath
     );
+
+    proof.publicSignals = proof.publicSignals.map((val: any) => BigInt(val));
+    return proof;
   }
 
   async verifySubtreeUpdate({

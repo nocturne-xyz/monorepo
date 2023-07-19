@@ -10,7 +10,7 @@ import "../../libs/Types.sol";
 import {ParseUtils} from "./ParseUtils.sol";
 
 struct JoinSplitProofWithPublicSignals {
-    uint256[11] publicSignals;
+    uint256[12] publicSignals;
     BaseProof proof;
 }
 
@@ -210,8 +210,8 @@ contract JsonDecodings is Test {
         bytes memory proofBytes = json.parseRaw(".proof");
         BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
 
-        uint256[11] memory publicSignals;
-        for (uint256 i = 0; i < 11; i++) {
+        uint256[12] memory publicSignals;
+        for (uint256 i = 0; i < 12; i++) {
             bytes memory jsonSelector = abi.encodePacked(
                 bytes(".publicSignals["),
                 Strings.toString(i)

@@ -161,24 +161,8 @@ library NocturneUtils {
         }
 
         uint256 root = args.root;
-        EncryptedNote memory newNoteAEncrypted = EncryptedNote({
-            owner: CompressedStealthAddress({
-                h1: uint256(123),
-                h2: uint256(123)
-            }),
-            encappedKey: uint256(111),
-            encryptedNonce: uint256(111),
-            encryptedValue: uint256(111)
-        });
-        EncryptedNote memory newNoteBEncrypted = EncryptedNote({
-            owner: CompressedStealthAddress({
-                h1: uint256(123),
-                h2: uint256(123)
-            }),
-            encappedKey: uint256(111),
-            encryptedNonce: uint256(111),
-            encryptedValue: uint256(111)
-        });
+        EncryptedNote memory newNoteAEncrypted = _dummyEncryptedNote();
+        EncryptedNote memory newNoteBEncrypted = _dummyEncryptedNote();
 
         JoinSplit[] memory joinSplits = new JoinSplit[](totalNumJoinSplits);
 
@@ -202,11 +186,10 @@ library NocturneUtils {
                     newNoteAEncrypted: newNoteAEncrypted,
                     newNoteBCommitment: uint256(currentIndex),
                     newNoteBEncrypted: newNoteBEncrypted,
+                    senderCommitment: uint256(currentIndex),
                     proof: dummyProof(),
                     encodedAsset: encodedAsset,
-                    publicSpend: args.joinSplitsPublicSpends[i][j],
-                    encSenderCanonAddrC1: 0,
-                    encSenderCanonAddrC2: 0
+                    publicSpend: args.joinSplitsPublicSpends[i][j]
                 });
                 currentIndex++;
             }
@@ -299,5 +282,20 @@ library NocturneUtils {
         uint256[][] memory publicSpendsArray = new uint256[][](1);
         publicSpendsArray[0] = publicSpends;
         return publicSpendsArray;
+    }
+
+    function _dummyEncryptedNote()
+        internal
+        pure
+        returns (EncryptedNote memory)
+    {
+        bytes memory ciphertextBytes = new bytes(181);
+        bytes memory encapsulatedSecretBytes = new bytes(64);
+
+        return
+            EncryptedNote({
+                ciphertextBytes: ciphertextBytes,
+                encapsulatedSecretBytes: encapsulatedSecretBytes
+            });
     }
 }

@@ -33,52 +33,38 @@ library OperationUtils {
         // Batch verify all the joinsplit proofs
         for (uint256 i = 0; i < numOps; i++) {
             Operation memory op = ops[i];
+
+            (
+                uint256 refundAddrH1SignBit,
+                uint256 refundAddrH1YCoordinate
+            ) = decomposeCompressedPoint(op.refundAddr.h1);
+            (
+                uint256 refundAddrH2SignBit,
+                uint256 refundAddrH2YCoordinate
+            ) = decomposeCompressedPoint(op.refundAddr.h2);
+
             uint256 numJoinSplitsForOp = op.joinSplits.length;
             for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
-                (
-                    uint256 encSenderC1SignBit,
-                    uint256 encSenderC1YCoordinate
-                ) = decomposeCompressedPoint(
-                        op.joinSplits[j].encSenderCanonAddrC1
-                    );
-
-                (
-                    uint256 encSenderC2SignBit,
-                    uint256 encSenderC2YCoordinate
-                ) = decomposeCompressedPoint(
-                        op.joinSplits[j].encSenderCanonAddrC2
-                    );
-
-                // range-check y-coordinate
-                require(
-                    encSenderC1YCoordinate < Utils.BN254_SCALAR_FIELD_MODULUS &&
-                        encSenderC2YCoordinate <
-                        Utils.BN254_SCALAR_FIELD_MODULUS,
-                    "OperationUtils: invalid y-coordinate"
-                );
-
                 uint256 encodedAssetAddrWithSignBits = encodeEncodedAssetAddrWithSignBitsPI(
                         op.joinSplits[j].encodedAsset.encodedAssetAddr,
-                        encSenderC1SignBit,
-                        encSenderC2SignBit
+                        refundAddrH1SignBit,
+                        refundAddrH2SignBit
                     );
 
                 proofs[index] = op.joinSplits[j].proof;
-                allPis[index] = new uint256[](11);
+                allPis[index] = new uint256[](12);
                 allPis[index][0] = op.joinSplits[j].newNoteACommitment;
                 allPis[index][1] = op.joinSplits[j].newNoteBCommitment;
                 allPis[index][2] = op.joinSplits[j].commitmentTreeRoot;
                 allPis[index][3] = op.joinSplits[j].publicSpend;
                 allPis[index][4] = op.joinSplits[j].nullifierA;
                 allPis[index][5] = op.joinSplits[j].nullifierB;
-                allPis[index][6] = encSenderC1YCoordinate;
-                allPis[index][7] = encSenderC2YCoordinate;
-                allPis[index][8] = digests[i];
-                allPis[index][9] = encodedAssetAddrWithSignBits;
-                allPis[index][10] = op
-                    .joinSplits[j]
-                    .encodedAsset
-                    .encodedAssetId;
+                allPis[index][6] = op.joinSplits[j].senderCommitment;
+                allPis[index][7] = digests[i];
+                allPis[index][8] = encodedAssetAddrWithSignBits;
+                allPis[index][9] = op.joinSplits[j].encodedAsset.encodedAssetId;
+                allPis[index][10] = refundAddrH1YCoordinate;
+                allPis[index][11] = refundAddrH2YCoordinate;
                 index++;
             }
         }

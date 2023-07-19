@@ -16,7 +16,7 @@ export {
   SpendingKey,
   ViewingKey,
 } from "./keys";
-export { randomBigInt, randomFr } from "./utils";
+export { randomFr } from "./utils";
 export {
   compressPoint,
   decompressPoint,

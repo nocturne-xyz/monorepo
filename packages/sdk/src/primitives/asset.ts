@@ -1,5 +1,7 @@
-import { ethers, utils } from "ethers";
+import { ethers } from "ethers";
 import { Address } from "./types";
+import { bigintToBEPadded } from "../utils";
+import { bigintFromBEBytes } from "../utils/bits";
 
 export const ERC20_ID = 0n;
 
@@ -26,11 +28,77 @@ export interface AssetWithBalance {
   numNotes: number;
 }
 
+// compact asset byte-serialization format (53 bytes)
+// all bigints are represented in big-endian encoding
+// 1. assetType: 1 byte
+// 2. assetAddr: 20 bytes
+// 3. id: 32 bytes
+const ASSET_COMPACT_SERIALIZE_BYTES = 53;
+const ASSET_COMPACT_SERIALIZE_OFFSETS = {
+  assetType: 0,
+  assetAddr: 1,
+  id: 21,
+  end: 53,
+};
+
 export class AssetTrait {
   static hash(asset: Asset): string {
-    return utils.keccak256(
-      utils.toUtf8Bytes(`${asset.assetAddr}:${asset.id.toString()}`)
+    return ethers.utils.keccak256(
+      ethers.utils.toUtf8Bytes(`${asset.assetAddr}:${asset.id.toString()}`)
     );
+  }
+
+  static serializeCompact(asset: Asset): Uint8Array {
+    const buf = new Uint8Array(ASSET_COMPACT_SERIALIZE_BYTES);
+    const { assetType, assetAddr, id } = asset;
+
+    let assetTypeByte: number;
+    switch (assetType) {
+      case AssetType.ERC20:
+        assetTypeByte = 0;
+        break;
+      case AssetType.ERC721:
+        assetTypeByte = 1;
+        break;
+      case AssetType.ERC1155:
+        assetTypeByte = 2;
+        break;
+    }
+
+    buf.set([assetTypeByte], ASSET_COMPACT_SERIALIZE_OFFSETS.assetType);
+    buf.set(
+      ethers.utils.arrayify(assetAddr),
+      ASSET_COMPACT_SERIALIZE_OFFSETS.assetAddr
+    );
+    buf.set(bigintToBEPadded(id, 32), ASSET_COMPACT_SERIALIZE_OFFSETS.id);
+
+    return buf;
+  }
+
+  static deserializeCompact(buf: Uint8Array): Asset {
+    const assetType = AssetTrait.parseAssetType(
+      buf[ASSET_COMPACT_SERIALIZE_OFFSETS.assetType].toString()
+    );
+
+    const assetAddrBytes = buf.slice(
+      ASSET_COMPACT_SERIALIZE_OFFSETS.assetAddr,
+      ASSET_COMPACT_SERIALIZE_OFFSETS.id
+    );
+    const assetAddr = ethers.utils.getAddress(
+      ethers.utils.hexlify(assetAddrBytes)
+    );
+
+    const idBytes = buf.slice(
+      ASSET_COMPACT_SERIALIZE_OFFSETS.id,
+      ASSET_COMPACT_SERIALIZE_OFFSETS.end
+    );
+    const id = bigintFromBEBytes(idBytes);
+
+    return {
+      assetType,
+      assetAddr,
+      id,
+    };
   }
 
   static parseAssetType(type: string): AssetType {
