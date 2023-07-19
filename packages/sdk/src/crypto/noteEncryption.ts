@@ -1,17 +1,15 @@
-import {
-  CanonAddress,
-  EncryptedCanonAddress,
-  StealthAddress,
-  StealthAddressTrait,
-} from "./address";
-import { Note, Asset } from "../primitives";
+import { CanonAddress } from "./address";
+import { NoteTrait } from "../primitives";
 import { EncryptedNote } from "../primitives/types";
-import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
-import { randomFr } from "./utils";
-import { decompressPoint, compressPoint } from "./pointCompression";
+import {
+  BabyJubJub,
+  HybridCipher,
+  deserializeHybridCiphertext,
+  serializeHybridCiphertext,
+} from "@nocturne-xyz/crypto-utils";
+import { NoteWithSender } from "../primitives/note";
 
-const F = BabyJubJub.BaseField;
-const Fr = BabyJubJub.ScalarField;
+const cipher = new HybridCipher(BabyJubJub, 64);
 
 /**
  * Encrypt a note to be decrypted by a given receiver
@@ -23,27 +21,20 @@ const Fr = BabyJubJub.ScalarField;
  * @remarks
  * The viewing key corresponding to the receiver's canonical address is the decryption key
  */
-export function encryptNote(receiver: CanonAddress, note: Note): EncryptedNote {
-  const r = randomFr();
-  const R = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
+export function encryptNote(
+  receiver: CanonAddress,
+  noteWithSender: NoteWithSender
+): EncryptedNote {
+  const { sender, ...note } = noteWithSender;
+  const senderBytes = BabyJubJub.toBytes(sender);
+  const noteBytes = NoteTrait.serializeCompact(note);
 
-  const encryptedNonce = F.add(
-    poseidonBN([compressPoint(R)]),
-    F.reduce(note.nonce)
-  );
-  const encryptedValue = F.add(
-    poseidonBN([F.reduce(compressPoint(R) + F.One)]),
-    F.reduce(note.value)
-  );
+  const msg = new Uint8Array(senderBytes.length + noteBytes.length);
+  msg.set(senderBytes);
+  msg.set(noteBytes, senderBytes.length);
 
-  return {
-    owner: StealthAddressTrait.compress(
-      StealthAddressTrait.randomize(note.owner)
-    ),
-    encappedKey: compressPoint(BabyJubJub.scalarMul(receiver, r)),
-    encryptedNonce,
-    encryptedValue,
-  };
+  const ciphertext = cipher.encrypt(msg, receiver);
+  return serializeHybridCiphertext(ciphertext);
 }
 
 /**
@@ -58,67 +49,18 @@ export function encryptNote(receiver: CanonAddress, note: Note): EncryptedNote {
  * will work as long as `encryptedNote` was encrypted with `vk`'s corresponding `CanonicalAddress`
  */
 export function decryptNote(
-  owner: StealthAddress,
   vk: bigint,
-  encryptedNote: EncryptedNote,
-  asset: Asset
-): Note {
-  let vkInv = Fr.inv(vk);
-  if (vkInv < BabyJubJub.PrimeSubgroupOrder) {
-    vkInv += BabyJubJub.PrimeSubgroupOrder;
-  }
+  encryptedNote: EncryptedNote
+): NoteWithSender {
+  const ciphertext = deserializeHybridCiphertext(encryptedNote);
+  const msgBytes = cipher.decrypt(ciphertext, vk);
 
-  const eR = decompressPoint(encryptedNote.encappedKey);
-  if (!eR) {
-    throw new Error("Invalid encapped key");
-  }
+  const senderBytes = msgBytes.slice(0, BabyJubJub.NumBytes);
+  const noteBytes = msgBytes.slice(BabyJubJub.NumBytes);
 
-  const R = BabyJubJub.scalarMul(eR, vkInv);
-  const nonce = F.sub(
-    F.reduce(encryptedNote.encryptedNonce),
-    F.reduce(poseidonBN([compressPoint(R)]))
-  );
+  const sender = BabyJubJub.fromBytes(senderBytes);
+  if (!sender) throw new Error("Invalid sender");
+  const note = NoteTrait.deserializeCompact(noteBytes);
 
-  const value = F.sub(
-    F.reduce(encryptedNote.encryptedValue),
-    F.reduce(poseidonBN([F.reduce(compressPoint(R) + 1n)]))
-  );
-
-  return {
-    owner,
-    nonce,
-    asset,
-    value,
-  };
-}
-
-// ElGamal encryption using receiver's canonical address as the public key (vk the private key)
-export function encryptCanonAddr(
-  plaintext: CanonAddress,
-  pubkey: CanonAddress,
-  nonce: bigint
-): EncryptedCanonAddress {
-  const s = BabyJubJub.scalarMul(pubkey, nonce);
-  const c1 = BabyJubJub.scalarMul(BabyJubJub.BasePoint, nonce);
-  const c2 = BabyJubJub.add(plaintext, s);
-
-  return {
-    c1: compressPoint(c1),
-    c2: compressPoint(c2),
-  };
-}
-
-export function decryptCanonAddr(
-  ciphertext: EncryptedCanonAddress,
-  vk: bigint
-): CanonAddress {
-  const c1 = decompressPoint(ciphertext.c1);
-  const c2 = decompressPoint(ciphertext.c2);
-
-  if (!c1 || !c2) {
-    throw new Error("Invalid ciphertext");
-  }
-
-  const sInv = BabyJubJub.scalarMul(c1, Fr.neg(vk));
-  return BabyJubJub.add(c2, sInv);
+  return { sender, ...note };
 }

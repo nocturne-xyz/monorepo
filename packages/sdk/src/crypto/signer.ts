@@ -2,7 +2,7 @@ import {
   AffinePoint,
   BabyJubJub,
   poseidonBN,
-} from "@nocturne-xyz/circuit-utils";
+} from "@nocturne-xyz/crypto-utils";
 import { SpendingKey, spendPkFromFromSk, vkFromSpendPk } from "./keys";
 import { NocturneViewer } from "./viewer";
 import { randomFr } from "./utils";

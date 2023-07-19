@@ -1,9 +1,4 @@
-import {
-  CompressedStealthAddress,
-  NocturneViewer,
-  StealthAddress,
-  StealthAddressTrait,
-} from "./crypto";
+import { NocturneViewer } from "./crypto";
 import { NocturneDB } from "./NocturneDB";
 import {
   ClosableAsyncIterator,
@@ -137,55 +132,59 @@ function decryptStateDiff(
   const notesAndCommitments = notes.map(({ inner, totalEntityIndex }) => {
     const note = inner;
     const isEncrypted = NoteTrait.isEncryptedNote(note);
-    const owner = isEncrypted
-      ? StealthAddressTrait.decompress(note.owner as CompressedStealthAddress)
-      : (note.owner as StealthAddress);
-    const isOwn = viewer.isOwnAddress(owner);
+    if (isEncrypted) {
+      // if it's encrypted, attempt to decrypt.
+      // if it succeeds, then return the decrypted note
+      // if it fails, assume it's not ours and just the commitment and merkle index
+      try {
+        const { merkleIndex, commitment, ...encryptedNote } =
+          note as IncludedEncryptedNote;
 
-    if (isOwn && isEncrypted) {
-      // if it's ours and its encrypted, decrypt it, get the nullifier, and return it
-      const { merkleIndex, asset, ...encryptedNote } =
-        note as IncludedEncryptedNote;
-      const includedNote = viewer.getNoteFromEncryptedNote(
-        encryptedNote,
-        merkleIndex,
-        asset
-      );
-      const nullifier = viewer.createNullifier(includedNote);
-      const res = { ...includedNote, nullifier };
-      return {
-        inner: res,
-        totalEntityIndex,
-      };
-    } else if (isOwn && !isEncrypted) {
-      // if it's ours and it's not encrypted, get the nullifier and return it
-      const includedNote = note as IncludedNote;
-      const nullifier = viewer.createNullifier(includedNote);
-      const res = { ...includedNote, nullifier };
-      return {
-        inner: res,
-        totalEntityIndex,
-      };
-    } else if (!isOwn && isEncrypted) {
-      // if it's not ours and it's encrypted, return the given commitment
-      const encryptedNote = note as IncludedEncryptedNote;
-      const nc = {
-        noteCommitment: encryptedNote.commitment,
-        merkleIndex: encryptedNote.merkleIndex,
-      };
+        // TODO: come up with a way to handle sender mismatches when we implement history proofs
+        const [includedNote] = viewer.decryptNote(encryptedNote, merkleIndex);
+        const nullifier = viewer.createNullifier(includedNote);
+        const res = { ...includedNote, nullifier };
+        return {
+          inner: res,
+          totalEntityIndex,
+        };
+      } catch (err) {
+        const encryptedNote = note as IncludedEncryptedNote;
+        const { commitment, merkleIndex } = encryptedNote;
+        const nc = {
+          noteCommitment: commitment,
+          merkleIndex,
+        };
 
-      return {
-        inner: nc,
-        totalEntityIndex,
-      };
+        return {
+          inner: nc,
+          totalEntityIndex,
+        };
+      }
     } else {
-      // otherwise, it's not ours and it's not encrypted. compute and return the commitment
+      // if it's not encrypted, check if it's ours.
+      // if it is, then return it
+      // if it's not, return only the commitment
       const includedNote = note as IncludedNote;
-      const nc = NoteTrait.toIncludedCommitment(includedNote);
-      return {
-        inner: nc,
-        totalEntityIndex,
-      };
+      const isOwn = viewer.isOwnAddress(includedNote.owner);
+
+      if (isOwn) {
+        const nullifier = viewer.createNullifier(includedNote);
+        const res = { ...includedNote, nullifier };
+        return {
+          inner: res,
+          totalEntityIndex,
+        };
+      } else {
+        const nc = {
+          noteCommitment: NoteTrait.toCommitment(includedNote),
+          merkleIndex: includedNote.merkleIndex,
+        };
+        return {
+          inner: nc,
+          totalEntityIndex,
+        };
+      }
     }
   });
 

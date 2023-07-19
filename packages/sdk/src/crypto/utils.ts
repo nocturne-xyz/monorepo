@@ -1,16 +1,11 @@
-import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
+import { BabyJubJub } from "@nocturne-xyz/crypto-utils";
 import randomBytes from "randombytes";
 
-const BIGINT_BYTES = 32;
 const Fr = BabyJubJub.ScalarField;
-
-export function randomBigInt(): bigint {
-  const rand = randomBytes(BIGINT_BYTES);
-  return BigInt("0x" + rand.toString("hex"));
-}
+const FR_WIDE_REDUCTION_BYTES = 64;
 
 export function randomFr(): bigint {
-  const r_buf = randomBytes(BIGINT_BYTES);
-  const r = Fr.fromBytes(r_buf);
+  const r_buf = randomBytes(FR_WIDE_REDUCTION_BYTES);
+  const r = Fr.fromEntropy(r_buf);
   return r;
 }

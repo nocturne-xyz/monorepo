@@ -23,9 +23,17 @@ template JoinSplit(levels) {
     signal input c;
     signal input z;
 
-    // encodedAssetAddr, but with the sign bits of encSenderCanonAddr placed at bits 248 and 249 (when zero-indexed in little-endian order)
+    // encodedAssetAddr, but with the sign bits of refundAddr placed at bits 248 and 249 (when zero-indexed in little-endian order)
     signal input encodedAssetAddrWithSignBits;
     signal input encodedAssetId;
+
+    signal input refundAddrH1CompressedY;
+    signal input refundAddrH2CompressedY;
+
+    signal input refundAddrH1X;
+    signal input refundAddrH1Y;
+    signal input refundAddrH2X;
+    signal input refundAddrH2Y;
 
     // Old note A
     signal input oldNoteAOwnerH1X;
@@ -58,10 +66,6 @@ template JoinSplit(levels) {
     signal input receiverCanonAddr[2];
     signal input newNoteBValue;
 
-    // randomness encrypting sender address
-    // must be an element of Fr (251 bits)
-    signal input encRandomness;
-
     // Public outputs
     signal output newNoteACommitment;
     signal output newNoteBCommitment;
@@ -69,8 +73,8 @@ template JoinSplit(levels) {
     signal output publicSpend;
     signal output nullifierA;
     signal output nullifierB;
-    signal output encSenderCanonAddrC1CompressedY;
-    signal output encSenderCanonAddrC2CompressedY;
+    // Poseidon4(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce"))
+    signal output senderCommitment;
 
     var BASE8[2] = [
         5299619240641551281634865583518297030282874472190772894086521144482721001553,
@@ -116,16 +120,16 @@ template JoinSplit(levels) {
     BabyCheck()(oldNoteBOwnerH2X, oldNoteBOwnerH2Y);
     IsOrderGreaterThan8()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
 
-    // get encodedAssetAddr and sign bits out of encodedAssetAddrWithSignBits
+    // get encodedAssetAddr and sign bits of refund addr out of encodedAssetAddrWithSignBits
     // don't need Num2Bits_strict here because it's only 253 bits
     signal encodedAssetAddrWithSignBitsBits[253] <==  Num2Bits(253)(encodedAssetAddrWithSignBits);
-    signal c1Sign <== encodedAssetAddrWithSignBitsBits[248];
-    signal c2Sign <== encodedAssetAddrWithSignBitsBits[249];
+    signal refundAddrH1Sign <== encodedAssetAddrWithSignBitsBits[248];
+    signal refundAddrH2Sign <== encodedAssetAddrWithSignBitsBits[249];
 
-    // instead of doing another bit decomp, subtract 2^248 * c1Sign + 2^249 * c2Sign
+    // instead of doing another bit decomp, subtract 2^248 * refundAddrH1Sign + 2^249 * refundAddrH2Sign 
     // from encodedAssetAddrWithSignBits
-    signal c1SignTimes2ToThe248 <== (1 << 248) * c1Sign;
-    signal encodedAssetAddrSubend <== (1 << 249) * c2Sign + c1SignTimes2ToThe248;
+    signal refundAddrH1SignTimes2ToThe248 <== (1 << 248) * refundAddrH1Sign;
+    signal encodedAssetAddrSubend <== (1 << 249) * refundAddrH2Sign + refundAddrH1SignTimes2ToThe248;
     signal encodedAssetAddr <== encodedAssetAddrWithSignBits - encodedAssetAddrSubend;
 
     // oldNoteACommitment
@@ -216,43 +220,31 @@ template JoinSplit(levels) {
       newNoteBValue
     );
 
-    // encrypt sender's canonical address to receiver with ElGamal
-    // receiver's public key is receiverCanonAddr
+    // check refund addr is valid and derived from same VK to prevent transfers via refunds
+    BabyCheck()(refundAddrH1X, refundAddrH1Y);
+    BabyCheck()(refundAddrH2X, refundAddrH2Y);
+    IsOrderGreaterThan8()(refundAddrH1X, refundAddrH1Y);
+    VKIntegrity()(refundAddrH1X, refundAddrH1Y, refundAddrH2X, refundAddrH2Y, viewKeyBits);
 
-    // s := receiverCanonAddr x randomness
-    signal nonceBits[251] <== Num2Bits(251)(encRandomness);
-    signal sharedSecret[2] <== EscalarMulAny(251)(
-      nonceBits,
-      receiverCanonAddr
-    );
-    // c1 := basepoint x randomness
-    signal c1[2] <== EscalarMulFix(251, BASE8)(
-      nonceBits
-    );
-
-    // c2 := senderCanonAddr + s
-    component adder = BabyAdd();
-    adder.x1 <== senderCanonAddr[0];
-    adder.y1 <== senderCanonAddr[1];
-    adder.x2 <== sharedSecret[0];
-    adder.y2 <== sharedSecret[1];
-    signal c2[2];
-    c2[0] <== adder.xout;
-    c2[1] <== adder.yout;
-
-    // compress the two points of the ciphertext.
+    // compress the two points of the refund addr.
     // connect the y cordinates to the output signals
     // and assert that the sign bits match what was given in `encodedAssetAddrWithSignBits`
     component compressors[2];
     compressors[0] = CompressPoint();
-    compressors[0].in <== c1;
-    encSenderCanonAddrC1CompressedY <== compressors[0].y;
-    c1Sign === compressors[0].sign;
+    compressors[0].in[0] <== refundAddrH1X;
+    compressors[0].in[1] <== refundAddrH1Y;
+    refundAddrH1CompressedY === compressors[0].y;
+    refundAddrH1Sign === compressors[0].sign;
 
     compressors[1] = CompressPoint();
-    compressors[1].in <== c2;
-    encSenderCanonAddrC2CompressedY <== compressors[1].y;
-    c2Sign === compressors[1].sign;
+    compressors[1].in[0] <== refundAddrH2X;
+    compressors[1].in[1] <== refundAddrH2Y;
+    refundAddrH2CompressedY === compressors[1].y;
+    refundAddrH2Sign === compressors[1].sign;
+
+    // hash the sender's canon addr as `Poseidon4(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce)`
+    var SENDER_COMMITMENT_DOMAIN_SEPARATOR = 5680996188676417870015190585682285899130949254168256752199352013418366665222;
+    senderCommitment <== Poseidon(4)([SENDER_COMMITMENT_DOMAIN_SEPARATOR, senderCanonAddr[0], senderCanonAddr[1], newNoteBNonce]);
 }
 
-component main { public [encodedAssetAddrWithSignBits, encodedAssetId, operationDigest] } = JoinSplit(16);
+component main { public [encodedAssetAddrWithSignBits, encodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit(16);

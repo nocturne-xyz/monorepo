@@ -2,7 +2,7 @@ import {
   AffinePoint,
   BabyJubJub,
   poseidonBN,
-} from "@nocturne-xyz/circuit-utils";
+} from "@nocturne-xyz/crypto-utils";
 import { assertOrErr } from "../utils";
 import * as JSON from "bigint-json-serialization";
 import { randomFr } from "./utils";

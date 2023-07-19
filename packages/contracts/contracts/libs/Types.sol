@@ -22,10 +22,8 @@ struct CompressedStealthAddress {
 }
 
 struct EncryptedNote {
-    CompressedStealthAddress owner;
-    uint256 encappedKey;
-    uint256 encryptedNonce;
-    uint256 encryptedValue;
+    bytes ciphertextBytes;
+    bytes encapsulatedSecretBytes;
 }
 
 struct JoinSplit {
@@ -34,8 +32,7 @@ struct JoinSplit {
     uint256 nullifierB;
     uint256 newNoteACommitment;
     uint256 newNoteBCommitment;
-    uint256 encSenderCanonAddrC1;
-    uint256 encSenderCanonAddrC2;
+    uint256 senderCommitment;
     uint256[8] proof;
     EncodedAsset encodedAsset;
     uint256 publicSpend;

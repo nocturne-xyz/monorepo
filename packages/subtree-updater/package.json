@@ -25,11 +25,11 @@
     "test:unit": "yarn setup-rapidsnark && mocha --timeout 500000 --require ts-node/register --exit test/**"
   },
   "dependencies": {
-    "@nocturne-xyz/circuit-utils": "^0.1.12",
-    "@nocturne-xyz/config": "1.0.14-alpha",
-    "@nocturne-xyz/contracts": "1.0.33-alpha",
+    "@nocturne-xyz/config": "1.0.15-alpha",
+    "@nocturne-xyz/contracts": "1.0.34-alpha",
+    "@nocturne-xyz/crypto-utils": "0.1.6",
     "@nocturne-xyz/offchain-utils": "0.1.10",
-    "@nocturne-xyz/sdk": "1.0.170-alpha",
+    "@nocturne-xyz/sdk": "1.0.183-alpha",
     "@nocturne-xyz/tx-manager": "1.0.1-alpha",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",

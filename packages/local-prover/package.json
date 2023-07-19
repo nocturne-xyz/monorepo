@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/local-prover",
-  "version": "1.0.7-alpha",
+  "version": "1.0.10-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -22,7 +22,7 @@
     "publish": "yarn build; yarn npm publish --access public"
   },
   "dependencies": {
-    "@nocturne-xyz/circuit-utils": "^0.1.12",
+    "@nocturne-xyz/crypto-utils": "^0.1.7",
     "@nocturne-xyz/sdk": "workspace:^",
     "bigint-conversion": "^2.3.0",
     "bigint-json-serialization": "^1.0.1",
