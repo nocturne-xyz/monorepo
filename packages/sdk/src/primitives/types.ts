@@ -20,7 +20,7 @@ export interface Action {
 }
 
 export interface Bundle {
-  operations: ProvenOperation[];
+  operations: OnchainOperation[];
 }
 
 export interface Deposit {
@@ -119,6 +119,14 @@ export interface ProvenOperation extends BaseOperation {
 
 export interface OnchainOperation
   extends Omit<ProvenOperation, "networkInfo"> {}
+
+export function toSubmittableOperation(
+  provenOp: ProvenOperation
+): OnchainOperation {
+  return {
+    ...provenOp,
+  };
+}
 
 export type Operation = PreSignOperation | SignedOperation | ProvenOperation;
 

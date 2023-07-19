@@ -25,7 +25,7 @@ import {
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import * as txManager from "@nocturne-xyz/tx-manager";
-import { toSubmittableOperation } from "@nocturne-xyz/sdk/dist/src/primitives/operationDigest";
+import { toSubmittableOperation } from "@nocturne-xyz/sdk";
 
 const COMPONENT_NAME = "submitter";
 

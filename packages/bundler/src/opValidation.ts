@@ -8,6 +8,7 @@ import { Teller } from "@nocturne-xyz/contracts";
 import { NullifierDB } from "./db";
 import { Logger } from "winston";
 import { ErrString } from "@nocturne-xyz/offchain-utils";
+import { toSubmittableOperation } from "@nocturne-xyz/sdk";
 
 export async function checkNullifierConflictError(
   db: NullifierDB,
@@ -48,14 +49,16 @@ export async function checkRevertError(
   logger: Logger,
   operation: ProvenOperation
 ): Promise<ErrString | undefined> {
-  logger.debug("simulating operation", { operation });
+  const submittableOp = toSubmittableOperation(operation);
+  logger.debug("simulating operation", { submittableOp });
 
-  const bundle: Bundle = { operations: [operation] };
-  const data = tellerContract.interface.encodeFunctionData("processBundle", [
-    bundle,
-  ]);
+  const bundle: Bundle = { operations: [submittableOp] };
 
   try {
+    const data = tellerContract.interface.encodeFunctionData("processBundle", [
+      bundle,
+    ]);
+
     const est = await provider.estimateGas({
       to: tellerContract.address,
       data,
