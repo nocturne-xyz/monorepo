@@ -3,7 +3,7 @@ import {
   BabyJubJub,
   poseidonBN,
 } from "@nocturne-xyz/crypto-utils";
-import { RootKey, deriveSpendPK, vkFromSpendPk } from "./keys";
+import { SpendingKey, deriveSpendPK, vkFromSpendPk } from "./keys";
 import { NocturneViewer } from "./viewer";
 import * as ethers from "ethers";
 import randomBytes from "randombytes";
@@ -18,10 +18,10 @@ export interface NocturneSignature {
 }
 
 export class NocturneSigner extends NocturneViewer {
-  rk: RootKey;
+  rk: SpendingKey;
   spendPk: SpendPk;
 
-  constructor(rootKey: RootKey) {
+  constructor(rootKey: SpendingKey) {
     const spendPk = deriveSpendPK(rootKey);
     const [vk, vkNonce] = vkFromSpendPk(spendPk);
     super(vk, vkNonce);
