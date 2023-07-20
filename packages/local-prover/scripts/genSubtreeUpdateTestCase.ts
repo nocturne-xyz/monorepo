@@ -9,6 +9,7 @@ import {
   NocturneSigner,
   Note,
   NoteTrait,
+  range,
   subtreeUpdateInputsFromBatch,
   TreeConstants,
 } from "@nocturne-xyz/sdk";
@@ -20,9 +21,8 @@ const ROOT_DIR = findWorkspaceRoot()!;
 const FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/subtreeupdateProof.json");
 const TMP_DIR = `${ROOT_DIR}/rapidsnark--tmp`;
 
-const sk = BigInt(
-  "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
-);
+const sk = Uint8Array.from(range(32).map((n) => n));
+
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
 const WASM_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_js/subtreeupdate.wasm`;
 const ZKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey`;

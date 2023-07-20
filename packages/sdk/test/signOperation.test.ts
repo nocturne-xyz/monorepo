@@ -3,7 +3,7 @@ import { expect } from "chai";
 import {
   NocturneSigner,
   NocturneSignature,
-  generateRandomRootKey,
+  generateRandomSpendingKey,
 } from "../src/crypto";
 import {
   shitcoin,
@@ -33,7 +33,7 @@ describe("signOperation", () => {
       handlerContract,
     };
 
-    const receiverRk = generateRandomRootKey();
+    const receiverRk = generateRandomSpendingKey();
     const receiverSigner = new NocturneSigner(receiverRk);
     const receiver = receiverSigner.canonicalAddress();
 
