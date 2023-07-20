@@ -7,15 +7,15 @@ import "forge-std/StdJson.sol";
 import "forge-std/console.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
-import "../harnesses/TestTellerBase.sol";
+import "../harnesses/TestOperationEIP712.sol";
 import "../../libs/Types.sol";
 
-contract TellerBaseTest is Test {
-    TestTellerBase public tellerBase;
+contract OperationEIP712Test is Test {
+    TestOperationEIP712 public tellerBase;
 
     function testOperationHashMatchesOffchainImpl() public {
         // NOTE: reference sdk/scripts/generateOperationHashTestCase.ts for inputs/expected outputs
-        tellerBase = new TestTellerBase();
+        tellerBase = new TestOperationEIP712();
         tellerBase.initialize("NocturneTeller", "v1");
 
         uint256[8] memory dummyProof;
@@ -104,7 +104,7 @@ contract TellerBaseTest is Test {
             keccak256(bytes("v1"))
         );
 
-        uint256 operationDigest = ITestTellerBase(
+        uint256 operationDigest = ITestOperationEIP712(
             address(0x1111111111111111111111111111111111111111)
         ).computeDigest(operation);
 

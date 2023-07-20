@@ -12,7 +12,7 @@ import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/acces
 import {ITeller} from "./interfaces/ITeller.sol";
 import {IHandler} from "./interfaces/IHandler.sol";
 import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
-import {TellerBase} from "./TellerBase.sol";
+import {OperationEIP712} from "./OperationEIP712.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
@@ -24,7 +24,7 @@ import "./libs/Types.sol";
 /// @notice Teller stores deposited funds and serves as the entry point contract for operations.
 contract Teller is
     ITeller,
-    TellerBase,
+    OperationEIP712,
     ReentrancyGuardUpgradeable,
     PausableUpgradeable,
     Ownable2StepUpgradeable,
@@ -69,7 +69,7 @@ contract Teller is
         __Pausable_init();
         __Ownable2Step_init();
         __ReentrancyGuard_init();
-        __TellerBase_init(contractName, contractVersion);
+        __OperationEIP712_init(contractName, contractVersion);
         _handler = IHandler(handler);
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
     }

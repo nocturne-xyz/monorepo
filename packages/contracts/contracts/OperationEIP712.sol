@@ -9,7 +9,7 @@ import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/crypt
 import {Utils} from "./libs/Utils.sol";
 import "./libs/Types.sol";
 
-contract TellerBase is EIP712Upgradeable {
+contract OperationEIP712 is EIP712Upgradeable {
     bytes32 public constant OPERATION_TYPEHASH =
         keccak256(
             bytes(
@@ -57,7 +57,7 @@ contract TellerBase is EIP712Upgradeable {
     /// @notice Internal initializer
     /// @param contractName Name of the contract
     /// @param contractVersion Version of the contract
-    function __TellerBase_init(
+    function __OperationEIP712_init(
         string memory contractName,
         string memory contractVersion
     ) internal onlyInitializing {

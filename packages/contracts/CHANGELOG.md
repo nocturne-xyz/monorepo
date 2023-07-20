@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Rename `DepositManagerBase` and `TellerBase` to `DepositRequestEIP712` and `OperationEIP712`
 - Teller contract init function takes contract name and version
 - add `TellerBase.t.sol` for eip712 unit tests
 - add and integrate `TellerBase` for EIP712 op digest calculation, remove old op digest calculation

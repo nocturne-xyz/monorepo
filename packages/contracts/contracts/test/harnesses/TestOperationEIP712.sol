@@ -3,9 +3,9 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "../../libs/Types.sol";
-import {TellerBase} from "../../TellerBase.sol";
+import {OperationEIP712} from "../../OperationEIP712.sol";
 
-interface ITestTellerBase {
+interface ITestOperationEIP712 {
     function computeDigest(
         Operation calldata op
     ) external view returns (uint256);
@@ -17,12 +17,12 @@ interface ITestTellerBase {
     function versionHash() external view returns (bytes32);
 }
 
-contract TestTellerBase is ITestTellerBase, TellerBase {
+contract TestOperationEIP712 is ITestOperationEIP712, OperationEIP712 {
     function initialize(
         string memory contractName,
         string memory contractVersion
     ) external initializer {
-        __TellerBase_init(contractName, contractVersion);
+        __OperationEIP712_init(contractName, contractVersion);
     }
 
     function computeDigest(
