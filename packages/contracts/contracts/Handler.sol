@@ -19,11 +19,12 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     using OperationLib for Operation;
 
     bytes4 constant ERC20_APPROVE_SELECTOR = bytes4(0x095ea7b3);
+    uint256 constant ERC_20_APPROVE_FN_DATA_LENGTH = 68;
 
-    // Set of supported tokens
+    // Set of supported contracts
     mapping(address => bool) public _supportedContracts;
 
-    // Set of callable protocol methods (includes tokens)
+    // Set of callable protocol methods (key = address | selector)
     mapping(uint192 => bool) public _supportedContractMethods;
 
     // Gap for upgrade safety
@@ -37,7 +38,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     );
 
     /// @notice Event emitted when a token is given/revoked allowlist permission
-    event TokenPermissionSet(address token, bool permission);
+    event ContractPermissionSet(address token, bool permission);
 
     /// @notice Initialization function
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
@@ -72,12 +73,12 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         _unpause();
     }
 
-    function setTokenPermission(
-        address token,
+    function setContractPermission(
+        address contractAddress,
         bool permission
     ) external onlyOwner {
-        _supportedContracts[token] = permission;
-        emit TokenPermissionSet(token, permission);
+        _supportedContracts[contractAddress] = permission;
+        emit ContractPermissionSet(contractAddress, permission);
     }
 
     /// @notice Sets allowlist permission of the given contract, only callable by owner
@@ -278,8 +279,19 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             "Cannot call non-allowed protocol method"
         );
 
+        // NOTE: if protocol and selector are allowed but there's selector clash with erc20 
+        // approve, then abi.decode will yield whatever data is formatted at bytes 4:23 for spender 
+        // which could be valid if 20 bytes happens to line up as an allowed address, or invalid if 
+        // not (worst case scenario is rejecting contract calls for allowed method due to clash). 
         if (selector == ERC20_APPROVE_SELECTOR) {
-            (address spender,) = abi.decode(action.encodedFunction[4:], (address, uint256));
+            require(
+                action.encodedFunction.length == ERC_20_APPROVE_FN_DATA_LENGTH,
+                "!approve fn length"
+            );
+            (address spender, ) = abi.decode(
+                action.encodedFunction[4:],
+                (address, uint256)
+            );
             require(_supportedContracts[spender], "!approve spender");
         }
 
