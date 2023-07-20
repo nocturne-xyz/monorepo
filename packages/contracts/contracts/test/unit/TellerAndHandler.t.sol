@@ -2160,14 +2160,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(erc20.allowance(address(handler), NOT_ALLOWED_CONTRACT), 0);
     }
 
-    function testProcessBundleFailsErc20FunctionSelectorClashWithInvalidSpender()
-        public
-    {
+    function testProcessBundleFailsErc20FunctionSelectorClashWithInvalidSpender() public {
         SimpleERC20Token erc20 = ERC20s[0];
         reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
 
-        TokenSwapper swapper = new TokenSwapper();
-        // Approve other contract which is meant to be allowed contract that has fn selector clash
+        // Approve other contract which is meant to be allowed contract that has fn selector clash 
         // with erc20.approve
         address CONTRACT_WITH_SELECTOR_CLASH = address(0x4444);
         handler.setContractPermission(CONTRACT_WITH_SELECTOR_CLASH, true);
@@ -2177,21 +2174,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             true
         );
 
-        // Format action that is correct encoded fn selector and length as erc20.approve but field
+        // Format action that is correct encoded fn selector and length as erc20.approve but field 
         // gets abi.decoded into invalid spender
         Action[] memory actions = new Action[](1);
-
-        SimpleERC721Token erc721 = new SimpleERC721Token();
-
         actions[0] = Action({
-            contractAddress: address(swapper),
-            encodedFunction: abi.encodeWithSelector(
-                swapper.transferFromErc721.selector,
-                Erc721TransferFromRequest({
-                    erc721Out: address(erc721),
-                    erc721OutId: 1
-                })
-            contractAddress: CONTRACT_WITH_SELECTOR_CLASH,
+            contractAddress: address(CONTRACT_WITH_SELECTOR_CLASH),
             encodedFunction: abi.encodePacked(
                 handler.ERC20_APPROVE_SELECTOR(),
                 bytes32(uint256(0x123456789)),
@@ -2199,13 +2186,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        // Encode erc721 as refund asset
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
-        encodedRefundAssets[0] = AssetUtils.encodeAsset(
-            AssetType.ERC721,
-            address(erc721),
-            1
-        );
         // Set clashing selector contract code to be non-zero to avoid "!zero code" revert
         vm.etch(CONTRACT_WITH_SELECTOR_CLASH, bytes("something"));
 
@@ -2213,18 +2193,14 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    address(joinSplitToken)
                     address(erc20)
                 ),
-                gasToken: address(joinSplitToken),
-                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
                         NocturneUtils.fillJoinSplitPublicSpends(
                             PER_NOTE_AMOUNT,
-                            2
                             1
                         )
                     ),
@@ -2232,7 +2208,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 4,
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: true,
@@ -2240,24 +2215,14 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Ensure 100M joinSplitToken in teller and nothing else
-        assertEq(
-            joinSplitToken.balanceOf(address(teller)),
-            uint256(2 * PER_NOTE_AMOUNT)
-        );
-        assertEq(erc721.balanceOf(address(handler)), uint256(0));
-
         // Check OperationProcessed event
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "!supported refund asset",
-                assetsUnwrapped: false
                 maybeFailureReason: "!approve spender",
                 assetsUnwrapped: true
             })
         );
 
-        // Whitelist token swapper for sake of simulation
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
@@ -2268,20 +2233,16 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].failureReason, "!approve spender");
     }
 
-    function testProcessBundleFailsErc20FunctionSelectorClashWithInvalidFnDataLength()
-        public
-    {
+    function testProcessBundleFailsErc20FunctionSelectorClashWithInvalidFnDataLength() public {
         SimpleERC20Token erc20 = ERC20s[0];
         reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
 
-        // Approve other contract which is meant to be allowed contract that has fn selector clash
+        // Approve other contract which is meant to be allowed contract that has fn selector clash 
         // with erc20.approve
         address CONTRACT_WITH_SELECTOR_CLASH = address(0x4444);
         handler.setContractPermission(CONTRACT_WITH_SELECTOR_CLASH, true);
         handler.setContractMethodPermission(
-            address(swapper),
-            swapper.swap.selector,
-            CONTRACT_WITH_SELECTOR_CLASH,
+            address(CONTRACT_WITH_SELECTOR_CLASH),
             erc20.approve.selector,
             true
         );
@@ -2336,21 +2297,14 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
-        // One op, not processed, no assets unwrapped
         // One op, not processed, failure reason for approve check failure
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
-        assertEq(opResults[0].assetsUnwrapped, false);
-        assertEq(opResults[0].failureReason, "!supported refund asset");
-
-        // Bundler not compensated because it should have checked refund token was supported
-        assertEq(joinSplitToken.balanceOf(BUNDLER), 0);
-
-        // No tokens received
-        assertEq(erc721.balanceOf(address(teller)), uint256(0));
-        assertEq(erc721.balanceOf(address(handler)), uint256(0));
         assertEq(opResults[0].assetsUnwrapped, true);
-        assertEq(opResults[0].failureReason, "!approve fn length");
+        assertEq(
+            opResults[0].failureReason,
+            "!approve fn length"
+        );
     }
 
     function testProcessBundleUnsupportedRefundTokenNoRefunds() public {
