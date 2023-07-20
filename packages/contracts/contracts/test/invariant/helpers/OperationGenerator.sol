@@ -123,12 +123,31 @@ contract OperationGenerator is InvariantUtils {
             numActions
         );
 
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
-        encodedRefundAssets[0] = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(args.swapErc20),
-            ERC20_ID
+        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](
+            args.joinSplitTokens.length + 1
         );
+        {
+        address[] memory joinSplitTokens = args.joinSplitTokens;
+        address swapErc20 = address(args.swapErc20);
+            for (uint256 i = 0; i < args.joinSplitTokens.length; i++) {
+                expectedRefunds[i] = ExpectedRefund({
+                    encodedAsset: AssetUtils.encodeAsset(
+                        AssetType.ERC20,
+                        address(joinSplitTokens[i]),
+                        ERC20_ID
+                    ),
+                    minReturnValue: 0
+                });
+            }
+            expectedRefunds[joinSplitTokens.length] = ExpectedRefund({
+                encodedAsset: AssetUtils.encodeAsset(
+                    AssetType.ERC20,
+                    address(swapErc20),
+                    ERC20_ID
+                ),
+                minReturnValue: 0
+            });
+        }
 
         console.log("getting gas asset refund threshold");
         uint256 gasAssetRefundThreshold = bound(
@@ -142,7 +161,7 @@ contract OperationGenerator is InvariantUtils {
             gasToken: args.joinSplitTokens[0], // weth is used as gas token
             root: args.root,
             joinSplitsPublicSpends: joinSplitsPublicSpends,
-            encodedRefundAssets: encodedRefundAssets,
+            expectedRefunds: expectedRefunds,
             gasAssetRefundThreshold: gasAssetRefundThreshold,
             executionGasLimit: DEFAULT_EXECUTION_GAS_LIMIT,
             maxNumRefunds: DEFAULT_MAX_NUM_REFUNDS, // TODO: take based on number of swaps

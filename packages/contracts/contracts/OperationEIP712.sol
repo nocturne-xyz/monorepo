@@ -14,7 +14,7 @@ contract OperationEIP712 is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "OperationWithoutProofs(JoinSplitWithoutProof[] joinSplits,CompressedStealthAddress refundAddr,EncodedAsset[] encodedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 maxNumRefunds,uint256 gasPrice,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)"
+                "OperationWithoutProofs(JoinSplitWithoutProof[] joinSplits,CompressedStealthAddress refundAddr,ExpectedRefund[] expectedRefunds,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 maxNumRefunds,uint256 gasPrice,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncodedAsset encodedAsset,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)"
             )
         );
 
@@ -94,7 +94,7 @@ contract OperationEIP712 is EIP712Upgradeable {
                     OPERATION_TYPEHASH,
                     _hashJoinSplits(op.joinSplits),
                     _hashCompressedStealthAddress(op.refundAddr),
-                    _hashEncodedRefundAssets(op.encodedRefundAssets),
+                    _hashExpectedRefunds(op.expectedRefunds),
                     _hashActions(op.actions),
                     _hashEncodedAsset(op.encodedGasAsset),
                     op.gasAssetRefundThreshold,
@@ -206,17 +206,29 @@ contract OperationEIP712 is EIP712Upgradeable {
     }
 
     /// @notice Hashes encoded refund assets
-    /// @param encodedRefundAssets Encoded refund assets
-    function _hashEncodedRefundAssets(
-        EncodedAsset[] calldata encodedRefundAssets
+    /// @param expectedRefunds Encoded refund assets
+    function _hashExpectedRefunds(
+        ExpectedRefund[] calldata expectedRefunds
     ) internal pure returns (bytes32) {
-        uint256 numRefundAssets = encodedRefundAssets.length;
-        bytes32[] memory assetHashes = new bytes32[](numRefundAssets);
-        for (uint256 i = 0; i < numRefundAssets; i++) {
-            assetHashes[i] = _hashEncodedAsset(encodedRefundAssets[i]);
+        uint256 numRefunds = expectedRefunds.length;
+        bytes32[] memory refundHashes = new bytes32[](numRefunds);
+        for (uint256 i = 0; i < numRefunds; i++) {
+            refundHashes[i] = _hashExpectedRefund(expectedRefunds[i]);
         }
 
-        return keccak256(abi.encodePacked(assetHashes));
+        return keccak256(abi.encodePacked(refundHashes));
+    }
+
+    function _hashExpectedRefund(
+        ExpectedRefund calldata expectedRefund
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    _hashEncodedAsset(expectedRefund.encodedAsset),
+                    expectedRefund.minReturnValue
+                )
+            );
     }
 
     /// @notice Hashes encoded asset

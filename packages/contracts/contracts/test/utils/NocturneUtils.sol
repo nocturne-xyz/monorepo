@@ -21,7 +21,7 @@ struct FormatOperationArgs {
     uint256[][] joinSplitsPublicSpends;
     address gasToken;
     uint256 root;
-    EncodedAsset[] encodedRefundAssets;
+    ExpectedRefund[] expectedRefunds;
     uint256 gasAssetRefundThreshold;
     uint256 executionGasLimit;
     uint256 maxNumRefunds;
@@ -216,7 +216,7 @@ library NocturneUtils {
         Operation memory op = Operation({
             joinSplits: joinSplits,
             refundAddr: defaultStealthAddress(),
-            encodedRefundAssets: args.encodedRefundAssets,
+            expectedRefunds: args.expectedRefunds,
             actions: args.actions,
             encodedGasAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
@@ -247,7 +247,7 @@ library NocturneUtils {
                 executionGas: op.executionGasLimit,
                 verificationGas: op.joinSplits.length *
                     GAS_PER_JOINSPLIT_VERIFY,
-                numRefunds: op.joinSplits.length + op.encodedRefundAssets.length
+                numRefunds: op.expectedRefunds.length
             });
     }
 

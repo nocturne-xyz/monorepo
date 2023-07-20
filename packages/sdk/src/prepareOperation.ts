@@ -48,7 +48,7 @@ export async function prepareOperation(
 ): Promise<PreSignOperation> {
   const { refundAssets, joinSplitRequests, chainId, tellerContract, deadline } =
     opRequest;
-  const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
+  const encodedRefundAssets = refundAssets.map(AssetTrait.encode); // TODO: THROW ERROR if joinsplit assets not in expectedRefunds
   const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
 
   // if refundAddr is not set, generate a random one
