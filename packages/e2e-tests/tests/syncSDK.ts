@@ -166,12 +166,14 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         );
 
       const chainId = BigInt((await provider.getNetwork()).chainId);
-      const builder = new OperationRequestBuilder();
+      const builder = new OperationRequestBuilder({
+        chainId,
+        tellerContract: teller.address,
+      });
       const opRequest = builder
         .unwrap(asset, 80n)
         .action(token.address, transfer)
         .gasPrice(GAS_PRICE)
-        .network({ chainId, tellerContract: teller.address })
         .deadline(
           BigInt((await provider.getBlock("latest")).timestamp) +
             ONE_DAY_SECONDS

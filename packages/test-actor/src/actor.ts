@@ -385,10 +385,12 @@ export class TestActor {
 
     const chainId = this.chainId ?? BigInt(await this.txSigner.getChainId());
 
-    return new OperationRequestBuilder()
+    return new OperationRequestBuilder({
+      chainId,
+      tellerContract: this.teller.address,
+    })
       .unwrap(asset, value)
       .action(simpleErc20.address, transferData)
-      .network({ chainId, tellerContract: this.teller.address })
       .deadline(
         BigInt((await this.txSigner.provider.getBlock("latest")).timestamp) +
           ONE_DAY_SECONDS

@@ -38,12 +38,14 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(2n)
       .build();
 
@@ -78,13 +80,15 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .confidentialPayment(shitcoin, 1n, receiver)
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(2n)
       .build();
 
@@ -119,7 +123,10 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -130,7 +137,6 @@ describe("OperationRequestBuilder", () => {
         gasPrice: 30n,
       })
       .maxNumRefunds(1n)
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(2n)
       .build();
 
@@ -169,11 +175,13 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(stablescam, 2n, receivers[1])
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(2n)
       .build();
 
@@ -245,7 +253,10 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
@@ -262,7 +273,6 @@ describe("OperationRequestBuilder", () => {
       .refundAsset(stablescam)
       .refundAsset(plutocracy)
       .refundAddr(refundAddr)
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(2n)
       .build();
 
@@ -305,7 +315,10 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
@@ -316,7 +329,6 @@ describe("OperationRequestBuilder", () => {
       .unwrap(shitcoin, 100n)
       .unwrap(ponzi, 100n)
       .refundAddr(refundAddr)
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(2n)
       .build();
 

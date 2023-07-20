@@ -6,7 +6,7 @@ import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 
 const ONE_DAY_SECONDS = 24 * 60 * 60;
 
-export interface NetworkConfig {
+export interface NetworkInfo {
   chainId: bigint;
   tellerContract: Address;
 }
@@ -66,13 +66,24 @@ export class OperationRequestBuilder {
   >;
 
   // constructor takes no parameters. `new NocturneOperationBuilder()`
-  constructor() {
+  constructor(network: string | NetworkInfo) {
+    let chainId: bigint;
+    let tellerContract: Address;
+    if (typeof network === "string") {
+      const config = loadNocturneConfigBuiltin(network);
+      chainId = BigInt(config.contracts.network.chainId);
+      tellerContract = config.contracts.tellerProxy.proxy;
+    } else {
+      chainId = network.chainId;
+      tellerContract = network.tellerContract;
+    }
+
     this.op = {
+      chainId,
+      tellerContract,
       joinSplitRequests: [],
       refundAssets: [],
       actions: [],
-      chainId: 0n,
-      tellerContract: ethers.constants.AddressZero,
       deadline: 0n,
     };
 
@@ -148,19 +159,6 @@ export class OperationRequestBuilder {
     return this;
   }
 
-  network(network: string | NetworkConfig): OperationRequestBuilder {
-    if (typeof network === "string") {
-      const config = loadNocturneConfigBuiltin(network);
-      this.op.chainId = BigInt(config.contracts.network.chainId);
-      this.op.tellerContract = config.contracts.tellerProxy.proxy;
-    } else {
-      this.op.chainId = network.chainId;
-      this.op.tellerContract = network.tellerContract;
-    }
-
-    return this;
-  }
-
   // Attach deadline to operation
   deadline(deadline: bigint): OperationRequestBuilder {
     this.op.deadline = deadline;
@@ -199,10 +197,6 @@ export class OperationRequestBuilder {
   // In the output, unwraps, actions, and refunds are guaranteed
   // to appear in the order their corresponding methods were invoked
   build(): OperationRequest {
-    if (this.op.tellerContract === ethers.constants.AddressZero) {
-      throw new Error("tellerContract not set");
-    }
-
     const joinSplitRequests = [];
 
     // consolidate joinSplits and payments for each asset

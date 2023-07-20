@@ -39,7 +39,10 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -49,7 +52,6 @@ describe("handleGasForOperationRequest", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .build();
 
@@ -76,7 +78,10 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 100_000n)
@@ -86,7 +91,6 @@ describe("handleGasForOperationRequest", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 1n,
       })
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .build();
 
@@ -120,7 +124,10 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 1_000_000n)
@@ -130,7 +137,6 @@ describe("handleGasForOperationRequest", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 1n,
       })
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .build();
 
@@ -173,7 +179,10 @@ describe("handleGasForOperationRequest", async () => {
       db: nocturneDB,
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 100_000n)
@@ -184,7 +193,6 @@ describe("handleGasForOperationRequest", async () => {
         executionGasLimit: 1_500_000n,
         gasPrice: 1n,
       })
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .build();
 

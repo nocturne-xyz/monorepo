@@ -165,7 +165,10 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -175,7 +178,6 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .build();
 
@@ -218,7 +220,10 @@ describe("prepareOperation", async () => {
     const receiverSigner = new NocturneSigner(receiverSk);
     const receiver = receiverSigner.canonicalAddress();
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -229,7 +234,6 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_00n,
         gasPrice: 0n,
       })
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .build();
 
@@ -269,7 +273,10 @@ describe("prepareOperation", async () => {
     };
     const refundAddr = signer.generateRandomStealthAddress();
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -280,7 +287,6 @@ describe("prepareOperation", async () => {
         executionGasLimit: 20n,
         gasPrice: 0n,
       })
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .maxNumRefunds(1n)
       .build();
@@ -329,7 +335,10 @@ describe("prepareOperation", async () => {
       .map((sk) => new NocturneSigner(sk))
       .map((signer) => signer.canonicalAddress());
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(stablescam, 2n, receivers[1])
@@ -337,7 +346,6 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .maxNumRefunds(1n)
       .build();
@@ -378,7 +386,10 @@ describe("prepareOperation", async () => {
 
     const refundAddr = signer.generateRandomStealthAddress();
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
@@ -399,7 +410,6 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .build();
 
@@ -447,14 +457,16 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 4000n)
       .unwrap(ponzi, 4000n)
       .maxNumRefunds(3n)
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
@@ -488,13 +500,15 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 1000n)
       .maxNumRefunds(1n)
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,

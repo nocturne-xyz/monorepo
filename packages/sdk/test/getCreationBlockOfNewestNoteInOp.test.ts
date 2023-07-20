@@ -32,7 +32,10 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
       tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 130n)
@@ -42,7 +45,6 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
-      .network({ chainId: 1n, tellerContract: DUMMY_CONTRACT_ADDR })
       .deadline(1n)
       .build();
 

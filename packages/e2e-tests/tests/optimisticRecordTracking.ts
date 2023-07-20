@@ -99,7 +99,10 @@ describe("Optimistic nullifier tracking", () => {
 
     // make op request spending 200 tokens
     const amountToSpend = 200n;
-    const opRequest = new OperationRequestBuilder()
+    const opRequest = new OperationRequestBuilder({
+      chainId: 31337n,
+      tellerContract: teller.address,
+    })
       .unwrap(erc20Asset, amountToSpend)
       .action(erc20.address, encodedTransfer)
       .gasPrice(0n)
@@ -107,7 +110,6 @@ describe("Optimistic nullifier tracking", () => {
         BigInt((await depositManager.provider.getBlock("latest")).timestamp) +
           ONE_DAY_SECONDS
       )
-      .network({ chainId: 31337n, tellerContract: teller.address })
       .build();
 
     // prepare op
@@ -212,7 +214,10 @@ describe("Optimistic nullifier tracking", () => {
 
     // make op request spending 200 tokens
     const amountToSpend = 200n;
-    const opRequest = new OperationRequestBuilder()
+    const opRequest = new OperationRequestBuilder({
+      chainId: 31337n,
+      tellerContract: teller.address,
+    })
       .unwrap(erc20Asset, amountToSpend)
       .action(erc20.address, encodedTransfer)
       .gasPrice(0n)
@@ -220,7 +225,6 @@ describe("Optimistic nullifier tracking", () => {
         BigInt((await depositManager.provider.getBlock("latest")).timestamp) +
           ONE_DAY_SECONDS
       )
-      .network({ chainId: 31337n, tellerContract: teller.address })
       .build();
 
     // prepare op

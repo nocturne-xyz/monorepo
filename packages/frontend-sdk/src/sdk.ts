@@ -224,12 +224,14 @@ export class NocturneFrontendSDK {
 
     const encodedErc20 = AssetTrait.erc20AddressToAsset(erc20Address);
 
-    const operationRequest = new OperationRequestBuilder()
+    const operationRequest = new OperationRequestBuilder({
+      chainId,
+      tellerContract: this.config.tellerAddress(),
+    })
       .unwrap(encodedErc20, amount)
       .action(erc20Address, encodedFunction)
       .maxNumRefunds(1n)
       .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
-      .network({ chainId, tellerContract: this.config.tellerAddress() })
       .build();
 
     const action: ActionMetadata = {
