@@ -2640,5 +2640,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         handler.executeActions(op);
     }
 
-    // TODO: add testcase for leftover tokens in handler
+    // TODO: add testcase for leftover tokens in handler sent to leftover holder
+    // TODO: add testcase for stealing from handler and min return value preventing
 }

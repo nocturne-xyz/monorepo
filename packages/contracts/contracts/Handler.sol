@@ -170,7 +170,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         _ensureZeroedBalances(op);
 
         // Handle all joinsplits
-        uint256 numJoinSplitAssets = _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
+        uint256 numJoinSplitAssets = _processJoinSplitsReservingFee(
+            op,
+            perJoinSplitVerifyGas
+        );
 
         // If reached this point, assets have been unwrapped and will have refunds to handle
         opResult.assetsUnwrapped = true;
@@ -202,10 +205,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
                 opResult.failureReason = revertMsg;
             }
 
-            // In case that action execution reverted, num refunds to handle will be number of 
-            // joinSplit assets. NOTE that this could be higher estimate than actual if joinsplits 
+            // In case that action execution reverted, num refunds to handle will be number of
+            // joinSplit assets. NOTE that this could be higher estimate than actual if joinsplits
             // are not organized in contiguous subarrays by user.
-            opResult.numRefunds = numJoinSplitAssets;  
+            opResult.numRefunds = numJoinSplitAssets;
         }
 
         // Set verification and execution gas after getting opResult
@@ -243,7 +246,11 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         whenNotPaused
         onlyThis
         executeActionsGuard
-        returns (bool[] memory successes, bytes[] memory results, uint256 numRefundsToHandle)
+        returns (
+            bool[] memory successes,
+            bytes[] memory results,
+            uint256 numRefundsToHandle
+        )
     {
         uint256 numActions = op.actions.length;
         successes = new bool[](numActions);
