@@ -21,7 +21,7 @@ const ROOT_DIR = findWorkspaceRoot()!;
 const FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/subtreeupdateProof.json");
 const TMP_DIR = `${ROOT_DIR}/rapidsnark--tmp`;
 
-const sk = Uint8Array.from(range(32).map((n) => n));
+const sk = Uint8Array.from(range(32));
 
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
 const WASM_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_js/subtreeupdate.wasm`;

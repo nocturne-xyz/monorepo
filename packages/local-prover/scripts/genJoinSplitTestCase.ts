@@ -30,7 +30,7 @@ const JOINSPLIT_FIXTURE_DIR = path.join(ROOT_DIR, "fixtures");
 
 const writeToFixture = process.argv[2] == "--writeFixture";
 
-const sk = Uint8Array.from(range(32).map((n) => n));
+const sk = Uint8Array.from(range(32));
 
 // Instantiate nocturne keypair and addr
 const nocturneSigner = new NocturneSigner(sk);

@@ -28,6 +28,7 @@ import {
   MockEthToTokenConverter,
   RPCSDKSyncAdapter,
   BundlerOpTracker,
+  range,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -473,7 +474,7 @@ export async function setupTestClient(
   const nocturneDBAlice = new NocturneDB(aliceKV);
   const merkleProverAlice = new SparseMerkleProver(aliceKV);
   const nocturneWalletSDKAlice = setupNocturneWalletSDK(
-    3n,
+    Uint8Array.from(range(32)),
     config,
     provider,
     nocturneDBAlice,
@@ -486,7 +487,7 @@ export async function setupTestClient(
   const nocturneDBBob = new NocturneDB(bobKV);
   const merkleProverBob = new SparseMerkleProver(aliceKV);
   const nocturneWalletSDKBob = setupNocturneWalletSDK(
-    5n,
+    Uint8Array.from(range(32).map((n) => 2 * n)),
     config,
     provider,
     nocturneDBBob,
@@ -506,7 +507,7 @@ export async function setupTestClient(
 }
 
 function setupNocturneWalletSDK(
-  sk: bigint,
+  sk: Uint8Array,
   config: NocturneConfig,
   provider: ethers.providers.Provider,
   nocturneDB: NocturneDB,
