@@ -18,15 +18,15 @@ export interface NocturneSignature {
 }
 
 export class NocturneSigner extends NocturneViewer {
-  rk: SpendingKey;
+  sk: SpendingKey;
   spendPk: SpendPk;
 
-  constructor(rootKey: SpendingKey) {
-    const spendPk = deriveSpendPK(rootKey);
+  constructor(sk: SpendingKey) {
+    const spendPk = deriveSpendPK(sk);
     const [vk, vkNonce] = vkFromSpendPk(spendPk);
     super(vk, vkNonce);
 
-    this.rk = rootKey;
+    this.sk = sk;
     this.spendPk = spendPk;
   }
 
@@ -37,7 +37,7 @@ export class NocturneSigner extends NocturneViewer {
   // TODO: use appendix sig process
   sign(m: bigint): NocturneSignature {
     // derive signing key and nonce entropy
-    const h = ethers.utils.arrayify(ethers.utils.sha256(this.rk));
+    const h = ethers.utils.arrayify(ethers.utils.sha256(this.sk));
     const s = h.slice(0, 32);
 
     // derive nonce

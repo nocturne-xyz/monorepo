@@ -9,6 +9,7 @@ import {
   NoteTrait,
   AssetType,
   subtreeUpdateInputsFromBatch,
+  range,
 } from "@nocturne-xyz/sdk";
 import { RapidsnarkSubtreeUpdateProver } from "../src/rapidsnarkProver";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -24,9 +25,7 @@ const TMP_PATH = `${ARTIFACTS_DIR}/subtreeupdate/`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
 
 describe("rapidsnark subtree update prover", async () => {
-  const sk = BigInt(
-    "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
-  );
+  const sk = Uint8Array.from(range(32).map((n) => n));
   const nocturneSigner = new NocturneSigner(sk);
   const stealthAddr = nocturneSigner.generateRandomStealthAddress();
 

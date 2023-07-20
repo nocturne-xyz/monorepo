@@ -16,10 +16,10 @@ export function generateRandomSpendingKey(): SpendingKey {
   return randomBytes(32);
 }
 
-export function deriveSpendPK(rootKey: SpendingKey): SpendPk {
-  const h = ethers.utils.arrayify(ethers.utils.sha256(rootKey));
-  const sk = Fr.fromEntropy(h.slice(0, 32));
-  return BabyJubJub.scalarMul(BabyJubJub.BasePoint, sk);
+export function deriveSpendPK(sk: SpendingKey): SpendPk {
+  const h = ethers.utils.arrayify(ethers.utils.sha256(sk));
+  const s = Fr.fromEntropy(h.slice(0, 32));
+  return BabyJubJub.scalarMul(BabyJubJub.BasePoint, s);
 }
 
 // returns [vk, vkNonce]
