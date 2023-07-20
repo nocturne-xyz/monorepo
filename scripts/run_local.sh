@@ -46,6 +46,14 @@ cleanup() {
     echo "SIGINT signal caught, cleaning up..."
     docker stop $(docker ps -aq)
     docker rm $(docker ps -aq)
+    
+    pid=$(lsof -t -i:8545)
+    if [ -n "$pid" ]; then
+        echo "Lurking zombie process on 8545, killing process"
+        kill $pid
+        echo "Killed process $pid ✅. Headshot! 🧟‍♂️"
+    fi
+    
     echo "——————————————————————————————"
     echo "Done 🧹🧹🧹"
     exit
