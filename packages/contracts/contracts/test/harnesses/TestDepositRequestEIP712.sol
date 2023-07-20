@@ -18,7 +18,10 @@ interface ITestDepositRequestEIP712 {
     function domainSeparatorV4() external view returns (bytes32);
 }
 
-contract TestDepositRequestEIP712 is ITestDepositRequestEIP712, DepositRequestEIP712 {
+contract TestDepositRequestEIP712 is
+    ITestDepositRequestEIP712,
+    DepositRequestEIP712
+{
     function initialize(
         string memory contractName,
         string memory contractVersion
