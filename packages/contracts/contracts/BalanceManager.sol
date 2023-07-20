@@ -121,10 +121,10 @@ contract BalanceManager is CommitmentTreeManager {
                 _teller.requestAsset(encodedAsset, valueToGatherForSubarray);
             }
 
-            // NOTE: numJoinSplitAssets can be over-counted if not ordered in contiguous 
-            // subarrays by asset. This increases estimated numRefunds and therefore bundler 
+            // NOTE: numJoinSplitAssets can be over-counted if not ordered in contiguous
+            // subarrays by asset. This increases estimated numRefunds and therefore bundler
             // gas compensation.
-            numJoinSplitAssets++; 
+            numJoinSplitAssets++;
         }
 
         require(gasAssetToReserve == 0, "Too few gas tokens");
@@ -224,6 +224,13 @@ contract BalanceManager is CommitmentTreeManager {
 
             if (refundValue > 0) {
                 numRefundsToHandle++;
+                
+                if (
+                    !refundsAlreadyIncludeGasAsset &&
+                    AssetUtils.eq(encodedAsset, op.encodedGasAsset)
+                ) {
+                    refundsAlreadyIncludeGasAsset = true;
+                }
             }
         }
 
