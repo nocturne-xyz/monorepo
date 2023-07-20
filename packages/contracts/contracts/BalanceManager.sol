@@ -66,7 +66,7 @@ contract BalanceManager is CommitmentTreeManager {
     function _processJoinSplitsReservingFee(
         Operation calldata op,
         uint256 perJoinSplitVerifyGas
-    ) internal {
+    ) internal returns (uint256 numJoinSplitAssets) {
         // process nullifiers and insert new noteCommitments for each joinSplit
         // will throw an error if nullifiers are invalid or tree root invalid
         _handleJoinSplits(op);
@@ -120,6 +120,11 @@ contract BalanceManager is CommitmentTreeManager {
             if (valueToGatherForSubarray > 0) {
                 _teller.requestAsset(encodedAsset, valueToGatherForSubarray);
             }
+
+            // NOTE: numJoinSplitAssets can be over-counted if not ordered in contiguous 
+            // subarrays by asset. This increases estimated numRefunds and therefore bundler 
+            // gas compensation.
+            numJoinSplitAssets++; 
         }
 
         require(gasAssetToReserve == 0, "Too few gas tokens");
