@@ -126,9 +126,15 @@ contract OffchainMerkleHandler is InvariantUtils {
             0,
             Utils.BN254_SCALAR_FIELD_MODULUS - 1
         );
-        _encodedNote.encodedAssetId =
-            _rerandomize(seed) &
-            ENCODED_ASSET_ADDR_MASK;
-        _encodedNote.value = bound(_rerandomize(seed), 0, MAX_ASSET_ID);
+        _encodedNote.encodedAssetId = bound(
+            _rerandomize(seed),
+            0,
+            MAX_ASSET_ID
+        );
+        _encodedNote.value = bound(
+            _rerandomize(seed),
+            0,
+            NOCTURNE_MAX_NOTE_VALUE
+        );
     }
 }
