@@ -159,7 +159,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         _ensureZeroedBalances(op);
 
         // Handle all joinsplits
-        _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
+        uint256 numJoinSplitAssets = _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
 
         // If reached this point, assets have been unwrapped and will have refunds to handle
         opResult.assetsUnwrapped = true;
@@ -167,11 +167,13 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         uint256 preExecutionGas = gasleft();
         try this.executeActions{gas: op.executionGasLimit}(op) returns (
             bool[] memory successes,
-            bytes[] memory results
+            bytes[] memory results,
+            uint256 numRefundsToHandle
         ) {
             opResult.opProcessed = true;
             opResult.callSuccesses = successes;
             opResult.callResults = results;
+            opResult.numRefunds = numRefundsToHandle;
         } catch (bytes memory reason) {
             // Indicates revert because of one of the following reasons:
             // 1. `executeActions` attempted to process more refunds than `maxNumRefunds`
@@ -188,6 +190,11 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             } else {
                 opResult.failureReason = revertMsg;
             }
+
+            // In case that action execution reverted, num refunds to handle will be number of 
+            // joinSplit assets. NOTE that this could be higher estimate than actual if joinsplits 
+            // are not organized in contiguous subarrays by user.
+            opResult.numRefunds = numJoinSplitAssets;  
         }
 
         // Set verification and execution gas after getting opResult
@@ -196,7 +203,6 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             op.executionGasLimit,
             preExecutionGas - gasleft()
         );
-        opResult.numRefunds = op.expectedRefunds.length; // TODO: not accurate enough (TOB-15)
 
         // Gather reserved gas asset and process gas payment to bundler
         _gatherReservedGasAssetAndPayBundler(
@@ -226,7 +232,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         whenNotPaused
         onlyThis
         executeActionsGuard
-        returns (bool[] memory successes, bytes[] memory results)
+        returns (bool[] memory successes, bytes[] memory results, uint256 numRefundsToHandle)
     {
         uint256 numActions = op.actions.length;
         successes = new bool[](numActions);
@@ -247,6 +253,11 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
                 }
             }
         }
+
+        // NOTE: if any tokens have < expected refund value, the below call will revert. This causes
+        // executeActions to revert, undoing all state changes in this call context. The user still
+        // ends up compensating the bundler for gas in this case.
+        numRefundsToHandle = _ensureMinExpectedRefunds(op);
     }
 
     /// @notice Makes an external call to execute a single action
