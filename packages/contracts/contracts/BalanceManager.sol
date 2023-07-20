@@ -117,10 +117,10 @@ contract BalanceManager is CommitmentTreeManager {
                 _teller.requestAsset(encodedAsset, valueToGatherForSubarray);
             }
 
-            // NOTE: numJoinSplitAssets can be over-counted if not ordered in contiguous 
-            // subarrays by asset. This increases estimated numRefunds and therefore bundler 
+            // NOTE: numJoinSplitAssets can be over-counted if not ordered in contiguous
+            // subarrays by asset. This increases estimated numRefunds and therefore bundler
             // gas compensation.
-            numJoinSplitAssets++; 
+            numJoinSplitAssets++;
         }
 
         require(gasAssetToReserve == 0, "Too few gas tokens");
@@ -193,33 +193,37 @@ contract BalanceManager is CommitmentTreeManager {
     function _ensureMinExpectedRefunds(
         Operation calldata op
     ) internal view returns (uint256 numRefundsToHandle) {
-        bool refundsAlreadyIncludesGasAsset = false;
+        bool refundsAlreadyIncludeGasAsset = false;
         uint256 numRefunds = op.expectedRefunds.length;
         for (uint256 i = 0; i < numRefunds; i++) {
-            EncodedAsset calldata encodedAsset = op.expectedRefunds[i]
+            EncodedAsset calldata encodedAsset = op
+                .expectedRefunds[i]
                 .encodedAsset;
             uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
 
             (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
             uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
 
-            uint256 returnValue = currentBalance - amountToWithhold;
+            // NOTE: overflow safe, solidity > 0.8
+            uint256 refundValue = currentBalance - amountToWithhold;
             require(
-                returnValue >=
-                   op.expectedRefunds[i].minReturnValue,
+                refundValue >= op.expectedRefunds[i].minReturnValue,
                 "!min return value"
             );
 
-            if (returnValue > 0) {
-                if (AssetUtils.eq(encodedAsset, op.encodedGasAsset)) {
-                    refundsAlreadyIncludesGasAsset = true;
-                }
-
+            if (refundValue > 0) {
                 numRefundsToHandle++;
+                
+                if (
+                    !refundsAlreadyIncludeGasAsset &&
+                    AssetUtils.eq(encodedAsset, op.encodedGasAsset)
+                ) {
+                    refundsAlreadyIncludeGasAsset = true;
+                }
             }
         }
 
-        if (!refundsAlreadyIncludesGasAsset && op.gasPrice > 0) {
+        if (!refundsAlreadyIncludeGasAsset && op.gasPrice > 0) {
             numRefundsToHandle++;
         }
     }
