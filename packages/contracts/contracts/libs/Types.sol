@@ -73,7 +73,7 @@ struct Action {
 struct Operation {
     JoinSplit[] joinSplits;
     CompressedStealthAddress refundAddr;
-    EncodedAsset[] encodedRefundAssets;
+    ExpectedRefund[] expectedRefunds;
     Action[] actions;
     EncodedAsset encodedGasAsset;
     uint256 gasAssetRefundThreshold;
@@ -122,11 +122,5 @@ library OperationLib {
         uint256 perJoinSplitVerifyGas
     ) internal pure returns (uint256) {
         return self.gasPrice * maxGasLimit(self, perJoinSplitVerifyGas);
-    }
-
-    function totalNumRefundsToHandle(
-        Operation calldata self
-    ) internal pure returns (uint256) {
-        return self.joinSplits.length + self.encodedRefundAssets.length;
     }
 }
