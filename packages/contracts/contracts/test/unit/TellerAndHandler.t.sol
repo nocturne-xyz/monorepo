@@ -118,7 +118,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             // Prefill the handler with 1 token
             ERC20s[i].reserveTokens(address(handler), 1);
 
-            handler.setTokenPermission(address(ERC20s[i]), true);
+            handler.setContractPermission(address(ERC20s[i]), true);
             handler.setContractMethodPermission(
                 address(ERC20s[i]),
                 ERC20s[i].approve.selector,
@@ -936,7 +936,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist reentrantCaller for sake of simulation
-        handler.setTokenPermission(address(reentrantCaller), true);
+        handler.setContractPermission(address(reentrantCaller), true);
         handler.setContractMethodPermission(
             address(reentrantCaller),
             reentrantCaller.reentrantProcessBundle.selector,
@@ -1159,7 +1159,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist handler for sake of simulation
-        handler.setTokenPermission(address(handler), true);
+        handler.setContractPermission(address(handler), true);
         handler.setContractMethodPermission(
             address(handler),
             handler.handleOperation.selector,
@@ -1281,7 +1281,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist handler for sake of simulation
-        handler.setTokenPermission(address(handler), true);
+        handler.setContractPermission(address(handler), true);
         handler.setContractMethodPermission(
             address(handler),
             handler.executeActions.selector,
@@ -1661,7 +1661,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setTokenPermission(address(swapper), true);
+        handler.setContractPermission(address(swapper), true);
         handler.setContractMethodPermission(
             address(swapper),
             swapper.swap.selector,
@@ -2041,7 +2041,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setTokenPermission(address(swapper), true);
+        handler.setContractPermission(address(swapper), true);
         handler.setContractMethodPermission(
             address(swapper),
             swapper.swap.selector,
