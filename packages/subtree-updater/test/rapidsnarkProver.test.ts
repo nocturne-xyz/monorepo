@@ -25,7 +25,7 @@ const TMP_PATH = `${ARTIFACTS_DIR}/subtreeupdate/`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
 
 describe("rapidsnark subtree update prover", async () => {
-  const sk = Uint8Array.from(range(32).map((n) => n));
+  const sk = Uint8Array.from(range(32));
   const nocturneSigner = new NocturneSigner(sk);
   const stealthAddr = nocturneSigner.generateRandomStealthAddress();
 
