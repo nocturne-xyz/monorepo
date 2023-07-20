@@ -127,8 +127,8 @@ contract OperationGenerator is InvariantUtils {
             args.joinSplitTokens.length + 1
         );
         {
-        address[] memory joinSplitTokens = args.joinSplitTokens;
-        address swapErc20 = address(args.swapErc20);
+            address[] memory joinSplitTokens = args.joinSplitTokens;
+            address swapErc20 = address(args.swapErc20);
             for (uint256 i = 0; i < args.joinSplitTokens.length; i++) {
                 expectedRefunds[i] = ExpectedRefund({
                     encodedAsset: AssetUtils.encodeAsset(
