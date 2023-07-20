@@ -176,10 +176,10 @@ contract BalanceManager is CommitmentTreeManager {
             subarrayStartIndex = subarrayEndIndex + 1;
         }
 
-        uint256 numRefundAssets = op.encodedRefundAssets.length;
+        uint256 numRefundAssets = op.expectedRefunds.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
             _transferOutstandingAssetToAndReturnAmount(
-                op.encodedRefundAssets[i],
+                op.expectedRefunds[i].encodedAsset,
                 _leftoverTokensHolder
             );
         }
@@ -187,40 +187,17 @@ contract BalanceManager is CommitmentTreeManager {
 
     /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
     ///         to the Teller and inserting new note commitments for the sent back assets.
-    /// @dev Checks for refunds from joinSplits and op.encodedRefundAssets. A refund occurs if any
-    ///      of the checked assets have outstanding balance > 0 in the Handler. If a refund occurs,
-    ///      the Handler will transfer the asset back to the Teller and insert a new note
-    ///      commitment into the commitment tree.
+    /// @dev Checks for refunds op.expectedRefunds. A refund occurs if any of the checked assets
+    ///      have outstanding balance > 0 in the Handler. If a refund occurs, the Handler will
+    ///      transfer the asset back to the Teller and insert a new note commitment into the
+    ///      commitment tree.
     /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
-        uint256 numJoinSplits = op.joinSplits.length;
-        for (
-            uint256 subarrayStartIndex = 0;
-            subarrayStartIndex < numJoinSplits;
-
-        ) {
-            uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
-                op.joinSplits,
-                subarrayStartIndex
-            );
-
-            EncodedAsset calldata encodedAsset = op
-                .joinSplits[subarrayStartIndex]
-                .encodedAsset;
-
-            uint256 refundAmount = _transferOutstandingAssetToAndReturnAmount(
-                encodedAsset,
-                address(_teller)
-            );
-            if (refundAmount > 0) {
-                _handleRefundNote(encodedAsset, op.refundAddr, refundAmount);
-            }
-            subarrayStartIndex = subarrayEndIndex + 1;
-        }
-
-        uint256 numRefundAssets = op.encodedRefundAssets.length;
+        uint256 numRefundAssets = op.expectedRefunds.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
-            EncodedAsset calldata encodedAsset = op.encodedRefundAssets[i];
+            EncodedAsset calldata encodedAsset = op
+                .expectedRefunds[i]
+                .encodedAsset;
 
             uint256 refundAmount = _transferOutstandingAssetToAndReturnAmount(
                 encodedAsset,

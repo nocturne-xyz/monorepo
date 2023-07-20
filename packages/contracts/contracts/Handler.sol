@@ -147,10 +147,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         require(block.timestamp <= op.deadline, "expired deadline");
 
         // Ensure refund assets supported
-        uint256 numRefundAssets = op.encodedRefundAssets.length;
+        uint256 numRefundAssets = op.expectedRefunds.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
             (, address assetAddr, ) = AssetUtils.decodeAsset(
-                op.encodedRefundAssets[i]
+                op.expectedRefunds[i].encodedAsset
             );
             require(_supportedContracts[assetAddr], "!supported refund asset");
         }
@@ -196,7 +196,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             op.executionGasLimit,
             preExecutionGas - gasleft()
         );
-        opResult.numRefunds = op.totalNumRefundsToHandle();
+        opResult.numRefunds = op.expectedRefunds.length; // TODO: not accurate enough (TOB-15)
 
         // Gather reserved gas asset and process gas payment to bundler
         _gatherReservedGasAssetAndPayBundler(
@@ -206,9 +206,6 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             bundler
         );
 
-        // Note: if too many refunds condition reverted in execute actions, the
-        // actions creating the refunds were reverted too, so numRefunds would =
-        // joinsplits.length + encodedRefundAssets.length
         _handleAllRefunds(op);
         return opResult;
     }
@@ -250,12 +247,6 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
                 }
             }
         }
-
-        // Ensure number of refunds didn't exceed max specified in op.
-        // If it did, executeActions is reverts and all action state changes
-        // are rolled back.
-        uint256 numRefundsToHandle = op.totalNumRefundsToHandle();
-        require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
     }
 
     /// @notice Makes an external call to execute a single action
