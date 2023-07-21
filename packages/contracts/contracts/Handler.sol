@@ -170,7 +170,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         _ensureZeroedBalances(op);
 
         // Handle all joinsplits
-        uint256 numJoinSplitAssets = _processJoinSplitsReservingFee(
+        _processJoinSplitsReservingFee(
             op,
             perJoinSplitVerifyGas
         );
@@ -208,7 +208,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             // In case that action execution reverted, num refunds to handle will be number of
             // joinSplit assets. NOTE that this could be higher estimate than actual if joinsplits
             // are not organized in contiguous subarrays by user.
-            opResult.numRefunds = numJoinSplitAssets;
+            opResult.numRefunds = op.trackedJoinSplitAssets.length;
         }
 
         // Set verification and execution gas after getting opResult
@@ -275,7 +275,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         // NOTE: if any tokens have < expected refund value, the below call will revert. This causes
         // executeActions to revert, undoing all state changes in this call context. The user still
         // ends up compensating the bundler for gas in this case.
-        numRefundsToHandle = _ensureMinExpectedRefunds(op);
+        numRefundsToHandle = _ensureMinReturnValues(op);
     }
 
     /// @notice Makes an external call to execute a single action
