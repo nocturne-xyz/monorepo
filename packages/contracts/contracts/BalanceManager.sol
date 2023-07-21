@@ -217,7 +217,7 @@ contract BalanceManager is CommitmentTreeManager {
                 op.trackedRefundAssets[i]
             );
 
-            if (requiresRefund) {
+            if (refundValue > 0) {
                 numRefundsToHandle++;
 
                 if (
