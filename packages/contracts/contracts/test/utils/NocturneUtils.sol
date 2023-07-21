@@ -206,11 +206,6 @@ library NocturneUtils {
             joinSplits[1].nullifierA = joinSplits[0].nullifierB;
         }
 
-        uint256 chainId = block.chainid;
-        if (args.operationFailureType == OperationFailureType.BAD_CHAIN_ID) {
-            chainId = block.chainid + 1;
-        }
-
         uint256 deadline = block.timestamp + DEADLINE_BUFFER;
         if (
             args.operationFailureType == OperationFailureType.EXPIRED_DEADLINE
@@ -232,7 +227,6 @@ library NocturneUtils {
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
             maxNumRefunds: args.maxNumRefunds,
-            chainId: chainId,
             deadline: deadline,
             atomicActions: args.atomicActions
         });

@@ -1,119 +1,88 @@
-import { ethers } from "ethers";
 import {
   BN254_SCALAR_FIELD_MODULUS,
+  BasicOperation,
   PreSignOperation,
-  SignedOperation,
   ProvenOperation,
+  SignedOperation,
 } from "./types";
+import { ethers, TypedDataDomain } from "ethers";
+const { _TypedDataEncoder } = ethers.utils;
+
+export const TELLER_CONTRACT_NAME = "NocturneTeller";
+export const TELLER_CONTRACT_VERSION = "v1";
+
+export const OPERATION_TYPES = {
+  OperationWithoutProofs: [
+    { name: "joinSplits", type: "JoinSplitWithoutProof[]" },
+    { name: "refundAddr", type: "CompressedStealthAddress" },
+    { name: "encodedRefundAssets", type: "EncodedAsset[]" },
+    { name: "actions", type: "Action[]" },
+    { name: "encodedGasAsset", type: "EncodedAsset" },
+    { name: "gasAssetRefundThreshold", type: "uint256" },
+    { name: "executionGasLimit", type: "uint256" },
+    { name: "maxNumRefunds", type: "uint256" },
+    { name: "gasPrice", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+    { name: "atomicActions", type: "bool" },
+  ],
+  Action: [
+    { name: "contractAddress", type: "address" },
+    { name: "encodedFunction", type: "bytes" },
+  ],
+  CompressedStealthAddress: [
+    { name: "h1", type: "uint256" },
+    { name: "h2", type: "uint256" },
+  ],
+  JoinSplitWithoutProof: [
+    { name: "commitmentTreeRoot", type: "uint256" },
+    { name: "nullifierA", type: "uint256" },
+    { name: "nullifierB", type: "uint256" },
+    { name: "newNoteACommitment", type: "uint256" },
+    { name: "newNoteBCommitment", type: "uint256" },
+    { name: "senderCommitment", type: "uint256" },
+    { name: "encodedAsset", type: "EncodedAsset" },
+    { name: "publicSpend", type: "uint256" },
+    { name: "newNoteAEncrypted", type: "EncryptedNote" },
+    { name: "newNoteBEncrypted", type: "EncryptedNote" },
+  ],
+  EncodedAsset: [
+    { name: "encodedAssetAddr", type: "uint256" },
+    { name: "encodedAssetId", type: "uint256" },
+  ],
+  EncryptedNote: [
+    { name: "ciphertextBytes", type: "bytes" },
+    { name: "encapsulatedSecretBytes", type: "bytes" },
+  ],
+};
 
 export function computeOperationDigest(
-  operation: PreSignOperation | SignedOperation | ProvenOperation
+  operation:
+    | BasicOperation
+    | PreSignOperation
+    | SignedOperation
+    | ProvenOperation
 ): bigint {
-  const operationHash = hashOperation(operation);
-  return BigInt(operationHash) % BN254_SCALAR_FIELD_MODULUS;
+  const domain: TypedDataDomain = {
+    name: TELLER_CONTRACT_NAME,
+    version: TELLER_CONTRACT_VERSION,
+    chainId: operation.networkInfo.chainId,
+    verifyingContract: operation.networkInfo.tellerContract,
+  };
+
+  const digest = _TypedDataEncoder.hash(domain, OPERATION_TYPES, operation);
+  return BigInt(digest) % BN254_SCALAR_FIELD_MODULUS;
 }
 
-function hashOperation(
-  op: PreSignOperation | SignedOperation | ProvenOperation
+export function hashOperation(
+  operation:
+    | BasicOperation
+    | PreSignOperation
+    | SignedOperation
+    | ProvenOperation
 ): string {
-  let joinSplitsPayload = [] as any;
-  for (const joinsplit of op.joinSplits) {
-    joinSplitsPayload = ethers.utils.solidityPack(
-      ["bytes", "bytes32"],
-      [
-        joinSplitsPayload,
-        ethers.utils.keccak256(
-          ethers.utils.solidityPack(
-            [
-              "uint256",
-              "uint256",
-              "uint256",
-              "uint256",
-              "uint256",
-              "uint256",
-              "uint256",
-              "uint256",
-            ],
-            [
-              joinsplit.commitmentTreeRoot,
-              joinsplit.nullifierA,
-              joinsplit.nullifierB,
-              joinsplit.newNoteACommitment,
-              joinsplit.newNoteBCommitment,
-              joinsplit.publicSpend,
-              joinsplit.encodedAsset.encodedAssetAddr,
-              joinsplit.encodedAsset.encodedAssetId,
-            ]
-          )
-        ),
-      ]
-    );
-  }
-
-  const refundAddrPayload = ethers.utils.solidityPack(
-    ["uint256", "uint256"],
-    [op.refundAddr.h1, op.refundAddr.h2]
+  return _TypedDataEncoder.hashStruct(
+    "OperationWithoutProofs",
+    OPERATION_TYPES,
+    operation
   );
-
-  let refundAssetsPayload = [] as any;
-  for (const encodedAsset of op.encodedRefundAssets) {
-    refundAssetsPayload = ethers.utils.solidityPack(
-      ["bytes", "uint256", "uint256"],
-      [
-        refundAssetsPayload,
-        encodedAsset.encodedAssetAddr,
-        encodedAsset.encodedAssetId,
-      ]
-    );
-  }
-
-  let actionsPayload = [] as any;
-  for (const action of op.actions) {
-    actionsPayload = ethers.utils.solidityPack(
-      ["bytes", "address", "bytes32"],
-      [
-        actionsPayload,
-        action.contractAddress,
-        ethers.utils.keccak256(action.encodedFunction),
-      ]
-    );
-  }
-
-  const gasAssetPayload = ethers.utils.solidityPack(
-    ["uint256", "uint256"],
-    [op.encodedGasAsset.encodedAssetAddr, op.encodedGasAsset.encodedAssetId]
-  );
-
-  const payload = ethers.utils.solidityPack(
-    [
-      "bytes",
-      "bytes",
-      "bytes",
-      "bytes",
-      "bytes",
-      "uint256",
-      "uint256",
-      "uint256",
-      "uint256",
-      "uint256",
-      "uint256",
-      "bool",
-    ],
-    [
-      joinSplitsPayload,
-      refundAddrPayload,
-      refundAssetsPayload,
-      actionsPayload,
-      gasAssetPayload,
-      op.gasAssetRefundThreshold,
-      op.executionGasLimit,
-      op.maxNumRefunds,
-      op.gasPrice,
-      op.chainId,
-      op.deadline,
-      op.atomicActions,
-    ]
-  );
-
-  return ethers.utils.keccak256(payload);
 }

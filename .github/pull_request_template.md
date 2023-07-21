@@ -33,3 +33,4 @@ tested your solution and it works.
 - [ ] Tested in dev/testnet
 - [ ] Tested site with snap (we haven't automated this yet)
 - [ ] Re-built & tested circuits if any of them changed
+- [ ] Updated contracts storage layout (if contracts were updated)

@@ -127,9 +127,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const signed = nocturneWalletSDKAlice.signOperation(preSign);
     const operation = await proveOperation(joinSplitProver, signed);
 
-    //@ts-ignore
-    console.log(nocturneWalletSDKAlice.merkleProver.root.hash);
-
+    console.log("proven operation:", operation);
     const status = await submitAndProcessOperation(operation);
 
     await contractChecks();
@@ -154,10 +152,13 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     // make an operation with gas price < chain's gas price (1 wei <<< 1 gwei)
     // HH's default gas price seems to be somewhere around 1 gwei experimentally
     // unfortunately it doesn't have a way to set it in the chain itself, only in hre
-    const operationRequest = new OperationRequestBuilder()
+    const chainId = BigInt((await provider.getNetwork()).chainId);
+    const operationRequest = new OperationRequestBuilder({
+      chainId,
+      tellerContract: teller.address,
+    })
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
       .gasPrice(1n)
-      .chainId(BigInt((await provider.getNetwork()).chainId))
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
       )
@@ -193,14 +194,17 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [await bobEoa.getAddress(), ALICE_TO_BOB_PUB_VAL]
       );
 
-    const operationRequest = new OperationRequestBuilder()
+    const chainId = BigInt((await provider.getNetwork()).chainId);
+    const operationRequest = new OperationRequestBuilder({
+      chainId,
+      tellerContract: teller.address,
+    })
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
       .action(erc20.address, encodedFunction)
       .gas({
         executionGasLimit: 1n, // Intentionally too low
         gasPrice: GAS_PRICE,
       })
-      .chainId(BigInt((await provider.getNetwork()).chainId))
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
       )
@@ -234,7 +238,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [await bobEoa.getAddress(), ALICE_TO_BOB_PUB_VAL]
       );
 
-    const operationRequest = new OperationRequestBuilder()
+    const chainId = BigInt((await provider.getNetwork()).chainId);
+    const operationRequest = new OperationRequestBuilder({
+      chainId,
+      tellerContract: teller.address,
+    })
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
       .confidentialPayment(
         erc20Asset,
@@ -243,7 +251,6 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       )
       .action(erc20.address, encodedFunction)
       .gasPrice(GAS_PRICE)
-      .chainId(BigInt((await provider.getNetwork()).chainId))
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
       )

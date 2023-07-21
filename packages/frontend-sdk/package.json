@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/frontend-sdk",
-  "version": "1.0.43-alpha",
+  "version": "1.0.46-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -17,6 +17,7 @@
     "test:unit": ""
   },
   "dependencies": {
+    "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
     "@nocturne-xyz/sdk": "workspace:^",

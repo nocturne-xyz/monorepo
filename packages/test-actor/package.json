@@ -23,10 +23,10 @@
   },
   "dependencies": {
     "@nocturne-xyz/config": "1.0.15-alpha",
-    "@nocturne-xyz/contracts": "1.0.34-alpha",
+    "@nocturne-xyz/contracts": "1.0.35-alpha",
     "@nocturne-xyz/local-prover": "1.0.10-alpha",
     "@nocturne-xyz/offchain-utils": "0.1.10",
-    "@nocturne-xyz/sdk": "1.0.183-alpha",
+    "@nocturne-xyz/sdk": "1.0.188-alpha",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
     "commander": "^10.0.0",

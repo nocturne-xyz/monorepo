@@ -60,6 +60,7 @@ export class TestActor {
   erc20s: Map<string, Erc20Config>;
   logger: Logger;
   metrics: TestActorMetrics;
+  chainId?: bigint;
 
   constructor(
     txSigner: ethers.Wallet,
@@ -144,6 +145,9 @@ export class TestActor {
   }
 
   async run(opts?: TestActorOpts): Promise<void> {
+    // set chainid
+    this.chainId = BigInt(await this.txSigner.getChainId());
+
     const depositIntervalSeconds =
       opts?.depositIntervalSeconds ?? ONE_MINUTE_AS_SECS;
     const opIntervalSeconds = opts?.opIntervalSeconds ?? ONE_MINUTE_AS_SECS;
@@ -379,10 +383,14 @@ export class TestActor {
         [this.txSigner.address, value] // transfer funds back to self
       );
 
-    return new OperationRequestBuilder()
+    const chainId = this.chainId ?? BigInt(await this.txSigner.getChainId());
+
+    return new OperationRequestBuilder({
+      chainId,
+      tellerContract: this.teller.address,
+    })
       .unwrap(asset, value)
       .action(simpleErc20.address, transferData)
-      .chainId(BigInt(await this.txSigner.getChainId()))
       .deadline(
         BigInt((await this.txSigner.provider.getBlock("latest")).timestamp) +
           ONE_DAY_SECONDS

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- instantiate fe-sdk with just `configName`
 - update `proveOperation` with new `JoinSplitInput`s
 - add method to fetch operationstatus from bundler
 - have `anonTransferErc20` format/pass metadata to snap

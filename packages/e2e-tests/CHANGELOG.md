@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- use chainid and teller contract address in op request builder post-eip712 op
 - remove mint 721/1155 test case
 - remove deployment and deposits of erc721/1155s
 - modify sleeps after subtree update to fix flakey sync e2e tests(?)

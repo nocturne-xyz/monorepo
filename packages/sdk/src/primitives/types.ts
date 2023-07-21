@@ -20,7 +20,7 @@ export interface Action {
 }
 
 export interface Bundle {
-  operations: ProvenOperation[];
+  operations: OnchainOperation[];
 }
 
 export interface Deposit {
@@ -54,6 +54,7 @@ export interface BaseJoinSplit {
   nullifierB: bigint;
   newNoteACommitment: bigint;
   newNoteBCommitment: bigint;
+  senderCommitment: bigint;
   encodedAsset: EncodedAsset;
   publicSpend: bigint;
   newNoteAEncrypted: EncryptedNote;
@@ -68,23 +69,26 @@ export interface PreSignJoinSplit extends BaseJoinSplit {
   newNoteB: Note;
   merkleProofA: MerkleProofInput;
   merkleProofB: MerkleProofInput;
-  senderCommitment: bigint;
   refundAddr: CompressedStealthAddress;
 }
 
 export interface PreProofJoinSplit extends BaseJoinSplit {
   opDigest: bigint;
   proofInputs: JoinSplitInputs;
-  senderCommitment: bigint;
   refundAddr: CompressedStealthAddress;
 }
 
 export interface ProvenJoinSplit extends BaseJoinSplit {
   proof: SolidityProof;
-  senderCommitment: bigint;
 }
 
-interface BaseOperation {
+export interface NetworkInfo {
+  chainId: bigint;
+  tellerContract: Address;
+}
+
+export interface BaseOperation {
+  networkInfo: NetworkInfo;
   refundAddr: CompressedStealthAddress;
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
@@ -93,9 +97,12 @@ interface BaseOperation {
   executionGasLimit: bigint;
   maxNumRefunds: bigint;
   gasPrice: bigint;
-  chainId: bigint;
   deadline: bigint;
   atomicActions: boolean;
+}
+
+export interface BasicOperation extends BaseOperation {
+  joinSplits: BaseJoinSplit[];
 }
 
 export interface PreSignOperation extends BaseOperation {
@@ -109,6 +116,8 @@ export interface SignedOperation extends BaseOperation {
 export interface ProvenOperation extends BaseOperation {
   joinSplits: ProvenJoinSplit[];
 }
+
+export type OnchainOperation = Omit<ProvenOperation, "networkInfo">;
 
 export type Operation = PreSignOperation | SignedOperation | ProvenOperation;
 

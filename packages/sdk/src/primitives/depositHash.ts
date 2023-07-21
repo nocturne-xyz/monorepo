@@ -3,6 +3,7 @@ import { DepositRequest } from "./types";
 import { EncodedAsset } from "./asset";
 import { CompressedStealthAddress } from "../crypto";
 
+// TODO: replace with _TypedDataEncoder builtins
 const DEPOSIT_REQUEST_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],
   [
@@ -15,7 +16,7 @@ const ENCODED_ASSET_TYPEHASH = ethers.utils.solidityKeccak256(
   ["EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)"]
 );
 
-const STEALTH_ADDRESS_TYPEHASH = ethers.utils.solidityKeccak256(
+const COMPRESSED_STEALTH_ADDRESS_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],
   ["CompressedStealthAddress(uint256 h1,uint256 h2)"]
 );
@@ -39,7 +40,7 @@ export function hashDepositRequest(req: DepositRequest): string {
           req.spender,
           hashEncodedAsset(req.encodedAsset),
           req.value,
-          hashStealthAddress(req.depositAddr),
+          hashCompressedStealthAddress(req.depositAddr),
           req.nonce,
           req.gasCompensation,
         ]
@@ -64,13 +65,19 @@ function hashEncodedAsset(encodedAsset: EncodedAsset): string {
   );
 }
 
-function hashStealthAddress(stealthAddress: CompressedStealthAddress): string {
+function hashCompressedStealthAddress(
+  stealthAddress: CompressedStealthAddress
+): string {
   return ethers.utils.solidityKeccak256(
     ["bytes"],
     [
       ethers.utils.defaultAbiCoder.encode(
         ["bytes32", "uint256", "uint256"],
-        [STEALTH_ADDRESS_TYPEHASH, stealthAddress.h1, stealthAddress.h2]
+        [
+          COMPRESSED_STEALTH_ADDRESS_TYPEHASH,
+          stealthAddress.h1,
+          stealthAddress.h2,
+        ]
       ),
     ]
   );

@@ -8,19 +8,19 @@ import "forge-std/console.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
 import {JsonDecodings, SignedDepositRequestFixture} from "../utils/JsonDecodings.sol";
-import "../harnesses/TestDepositManagerBase.sol";
+import "../harnesses/TestDepositRequestEIP712.sol";
 
-contract DepositManagerBaseTest is Test, JsonDecodings {
+contract DepositRequestEIP712Test is Test, JsonDecodings {
     string constant SIGNED_DEPOSIT_REQ_FIXTURE_PATH =
         "/fixtures/signedDepositRequest.json";
 
-    TestDepositManagerBase public depositManagerBase;
+    TestDepositRequestEIP712 public depositManagerBase;
 
     function testVerifiesSignedDepositFixture() public {
         SignedDepositRequestFixture memory fixture = JsonDecodings
             .loadSignedDepositRequestFixture(SIGNED_DEPOSIT_REQ_FIXTURE_PATH);
 
-        depositManagerBase = new TestDepositManagerBase();
+        depositManagerBase = new TestDepositRequestEIP712();
         depositManagerBase.initialize(
             fixture.contractName,
             fixture.contractVersion
@@ -40,7 +40,7 @@ contract DepositManagerBaseTest is Test, JsonDecodings {
             keccak256(bytes(fixture.contractVersion))
         );
 
-        address recovered = ITestDepositManagerBase(fixture.contractAddress)
+        address recovered = ITestDepositRequestEIP712(fixture.contractAddress)
             .recoverDepositRequestSigner(
                 fixture.depositRequest,
                 fixture.signature
@@ -53,7 +53,7 @@ contract DepositManagerBaseTest is Test, JsonDecodings {
         SignedDepositRequestFixture memory fixture = JsonDecodings
             .loadSignedDepositRequestFixture(SIGNED_DEPOSIT_REQ_FIXTURE_PATH);
 
-        depositManagerBase = new TestDepositManagerBase();
+        depositManagerBase = new TestDepositRequestEIP712();
         depositManagerBase.initialize(
             fixture.contractName,
             fixture.contractVersion

@@ -20,6 +20,7 @@ export async function proveOperation(
   );
 
   const {
+    networkInfo,
     refundAddr,
     encodedRefundAssets,
     actions,
@@ -28,12 +29,12 @@ export async function proveOperation(
     executionGasLimit,
     gasPrice,
     maxNumRefunds,
-    chainId,
     deadline,
     atomicActions,
   } = op;
 
   return {
+    networkInfo,
     joinSplits,
     refundAddr,
     encodedRefundAssets,
@@ -43,7 +44,6 @@ export async function proveOperation(
     executionGasLimit,
     gasPrice,
     maxNumRefunds,
-    chainId,
     deadline,
     atomicActions,
   };
