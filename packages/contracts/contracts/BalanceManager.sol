@@ -92,7 +92,7 @@ contract BalanceManager is CommitmentTreeManager {
 
             // Get largest possible subarray for current asset and sum of publicSpend
             uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
-                op.joinSplits,
+                op,
                 subarrayStartIndex
             );
             uint256 valueToGatherForSubarray = _sumJoinSplitPublicSpendsInclusive(
@@ -222,14 +222,16 @@ contract BalanceManager is CommitmentTreeManager {
                 op.trackedRefundAssets[i]
             );
 
-            if (refundValue > 0) {
+            if (requiresRefund) {
                 numRefundsToHandle++;
-                
+
                 if (
-                    !refundsAlreadyIncludeGasAsset &&
-                    AssetUtils.eq(encodedAsset, op.encodedGasAsset)
+                    AssetUtils.eq(
+                        op.trackedJoinSplitAssets[i].encodedAsset,
+                        op.encodedGasAsset
+                    )
                 ) {
-                    refundsAlreadyIncludeGasAsset = true;
+                    gasAssetAlreadyInRefunds = true;
                 }
             }
         }
@@ -341,7 +343,7 @@ contract BalanceManager is CommitmentTreeManager {
     /// @param joinSplits Joinsplits
     /// @param startIndex Index to start searching from
     function _getHighestContiguousJoinSplitIndex(
-        JoinSplit[] calldata joinSplits,
+        Operation calldata op,
         uint256 startIndex
     ) private pure returns (uint256) {
         uint256 startAssetIndex = joinSplits[startIndex].assetIndex;

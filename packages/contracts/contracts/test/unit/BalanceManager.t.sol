@@ -244,32 +244,6 @@ contract BalanceManagerTest is Test {
             );
         }
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](3);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token1),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
-        expectedRefunds[1] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token2),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
-        expectedRefunds[2] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token3),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
-
         // Unwrap 150M and setting gas price to 50. 2 joinsplits needed for
         // calculated fee (see below)
         Operation memory op = NocturneUtils.formatOperation(
