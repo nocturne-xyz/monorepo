@@ -70,9 +70,8 @@ export function* iterChunks<T>(
   chunkSize: number,
   exact = false
 ): IterableIterator<T[]> {
-  let chunk = [];
   while (arr.length >= chunkSize) {
-    chunk = arr.slice(0, chunkSize);
+    const chunk = arr.slice(0, chunkSize);
     yield chunk;
     arr = arr.slice(chunkSize);
   }

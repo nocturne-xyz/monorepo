@@ -21,11 +21,11 @@ export async function proveOperation(
 ): Promise<ProvenOperation> {
   const joinSplits: ProvenJoinSplit[] = [];
   for (const batch of iterChunks(op.joinSplits, MAX_PARALLEL_PROVERS)) {
-    joinSplits.push(
-      ...(await Promise.all(
-        batch.map((joinSplit) => proveJoinSplit(prover, joinSplit))
-      ))
+    console.log("batch", batch);
+    const provenBatch = await Promise.all(
+      batch.map((joinSplit) => proveJoinSplit(prover, joinSplit))
     );
+    joinSplits.push(...provenBatch);
   }
 
   const {
