@@ -3,9 +3,9 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "../../libs/Types.sol";
-import {DepositManagerBase} from "../../DepositManagerBase.sol";
+import {DepositRequestEIP712} from "../../DepositRequestEIP712.sol";
 
-interface ITestDepositManagerBase {
+interface ITestDepositRequestEIP712 {
     function recoverDepositRequestSigner(
         DepositRequest calldata req,
         bytes calldata signature
@@ -18,12 +18,15 @@ interface ITestDepositManagerBase {
     function domainSeparatorV4() external view returns (bytes32);
 }
 
-contract TestDepositManagerBase is ITestDepositManagerBase, DepositManagerBase {
+contract TestDepositRequestEIP712 is
+    ITestDepositRequestEIP712,
+    DepositRequestEIP712
+{
     function initialize(
         string memory contractName,
         string memory contractVersion
     ) external initializer {
-        __DepositManagerBase_init(contractName, contractVersion);
+        __DepositRequestEIP712_init(contractName, contractVersion);
     }
 
     function recoverDepositRequestSigner(

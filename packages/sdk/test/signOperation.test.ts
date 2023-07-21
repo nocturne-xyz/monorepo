@@ -38,7 +38,10 @@ describe("signOperation", () => {
     const receiver = receiverSigner.canonicalAddress();
 
     // make operation request and prepare it
-    const builder = new OperationRequestBuilder();
+    const builder = new OperationRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
     const opRequest = builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -49,7 +52,6 @@ describe("signOperation", () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
-      .chainId(1n)
       .deadline(1n)
       .build();
 

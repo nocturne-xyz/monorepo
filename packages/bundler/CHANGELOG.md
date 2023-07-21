@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- modify ajv validation after eip712 operation changes
 - integrate tx manager to fix stuck txs
 - put back redis utils
 - make logging more consistent

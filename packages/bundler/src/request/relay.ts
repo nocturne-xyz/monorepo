@@ -14,6 +14,14 @@ const byteArrayType = {
   },
   minItems: 0,
 };
+const networkInfoType = {
+  type: "object",
+  required: ["chainId", "tellerContract"],
+  properties: {
+    chainId: bigintType,
+    tellerContract: addressType,
+  },
+};
 const solidityProofType = {
   type: "array",
   items: bigintType,
@@ -103,6 +111,7 @@ const joinSplitsType = {
 export const provenOperationType = {
   type: "object",
   required: [
+    "networkInfo",
     "joinSplits",
     "refundAddr",
     "encodedRefundAssets",
@@ -112,11 +121,11 @@ export const provenOperationType = {
     "executionGasLimit",
     "maxNumRefunds",
     "gasPrice",
-    "chainId",
     "deadline",
     "atomicActions",
   ],
   properties: {
+    networkInfo: networkInfoType,
     joinSplits: joinSplitsType,
     refundAddr: stealthAddressType,
     encodedRefundAssets: encodedRefundAssetsType,
@@ -126,7 +135,6 @@ export const provenOperationType = {
     executionGasLimit: bigintType,
     maxNumRefunds: bigintType,
     gasPrice: bigintType,
-    chainId: bigintType,
     deadline: bigintType,
     atomicActions: booleanType,
   },

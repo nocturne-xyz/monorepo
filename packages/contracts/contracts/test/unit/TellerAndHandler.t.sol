@@ -93,7 +93,12 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
-        teller.initialize(address(handler), address(joinSplitVerifier));
+        teller.initialize(
+            "NocturneTeller",
+            "v1",
+            address(handler),
+            address(joinSplitVerifier)
+        );
         handler.initialize(address(subtreeUpdateVerifier), address(0x111));
         handler.setTeller(address(teller));
 
@@ -2236,45 +2241,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         vm.prank(ALICE);
         vm.expectRevert("Only teller");
         handler.handleOperation(op, 0, ALICE);
-    }
-
-    function testHandleOperationBadChainId() public {
-        SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
-
-        // Format op with BAD_CHAIN_ID failure type
-        Operation memory op = NocturneUtils.formatOperation(
-            FormatOperationArgs({
-                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    address(token)
-                ),
-                gasToken: address(token),
-                root: handler.root(),
-                joinSplitsPublicSpends: NocturneUtils
-                    ._publicSpendsArrayOfOnePublicSpendArray(
-                        NocturneUtils.fillJoinSplitPublicSpends(
-                            PER_NOTE_AMOUNT,
-                            1
-                        )
-                    ),
-                encodedRefundAssets: new EncodedAsset[](0),
-                gasAssetRefundThreshold: 0,
-                executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
-                gasPrice: 0,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    address(token),
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
-                atomicActions: false,
-                operationFailureType: OperationFailureType.BAD_CHAIN_ID
-            })
-        );
-
-        vm.prank(address(teller));
-        vm.expectRevert("invalid chainid");
-        handler.handleOperation(op, 0, BUNDLER);
     }
 
     function testHandleOperationExpiredDeadline() public {

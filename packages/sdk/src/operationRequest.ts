@@ -1,7 +1,8 @@
-import { Asset, Address, Action } from "./primitives";
+import { Asset, Address, Action, NetworkInfo } from "./primitives";
 import { CanonAddress, StealthAddress } from "./crypto";
 import { groupByArr } from "./utils";
 import { ethers } from "ethers";
+import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 
 const ONE_DAY_SECONDS = 24 * 60 * 60;
 
@@ -17,6 +18,7 @@ export interface OperationRequest {
   refundAssets: Asset[];
   actions: Action[];
   chainId: bigint;
+  tellerContract: Address;
   deadline: bigint;
   refundAddr?: StealthAddress;
   executionGasLimit?: bigint;
@@ -59,12 +61,24 @@ export class OperationRequestBuilder {
   >;
 
   // constructor takes no parameters. `new NocturneOperationBuilder()`
-  constructor() {
+  constructor(network: string | NetworkInfo) {
+    let chainId: bigint;
+    let tellerContract: Address;
+    if (typeof network === "string") {
+      const config = loadNocturneConfigBuiltin(network);
+      chainId = BigInt(config.contracts.network.chainId);
+      tellerContract = config.tellerAddress();
+    } else {
+      chainId = network.chainId;
+      tellerContract = network.tellerContract;
+    }
+
     this.op = {
+      chainId,
+      tellerContract,
       joinSplitRequests: [],
       refundAssets: [],
       actions: [],
-      chainId: 0n,
       deadline: 0n,
     };
 
@@ -137,12 +151,6 @@ export class OperationRequestBuilder {
   // returns `this` so it's chainable
   refundAddr(addr: StealthAddress): OperationRequestBuilder {
     this.op.refundAddr = addr;
-    return this;
-  }
-
-  // Attach chainId to operation
-  chainId(chainId: bigint): OperationRequestBuilder {
-    this.op.chainId = chainId;
     return this;
   }
 

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Include teller contract name and version in Teller init call
 - deploy and init Handler atomically, then `setTeller` afterwards (prevent front-running)
 - support separate token whitelist
 - revert back to per-method protocol allowlist

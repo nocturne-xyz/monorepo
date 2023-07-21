@@ -18,4 +18,4 @@ export {
   AssetTrait,
 } from "./asset";
 export { hashDepositRequest } from "./depositHash";
-export { computeOperationDigest } from "./operationDigest";
+export { hashOperation, computeOperationDigest } from "./operationDigest";
