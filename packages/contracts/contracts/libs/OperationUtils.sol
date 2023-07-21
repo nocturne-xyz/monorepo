@@ -32,7 +32,7 @@ library OperationUtils {
 
         // Batch verify all the joinsplit proofs
         for (uint256 i = 0; i < numOps; i++) {
-            Operation memory op = ops[i];
+            Operation calldata op = ops[i];
 
             (
                 uint256 refundAddrH1SignBit,
@@ -45,11 +45,12 @@ library OperationUtils {
 
             uint256 numJoinSplitsForOp = op.joinSplits.length;
             for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
+                EncodedAsset calldata encodedAsset = op
+                    .trackedJoinSplitAssets[op.joinSplits[j].assetIndex]
+                    .encodedAsset;
+
                 uint256 encodedAssetAddrWithSignBits = encodeEncodedAssetAddrWithSignBitsPI(
-                        op
-                            .trackedJoinSplitAssets[op.joinSplits[j].assetIndex]
-                            .encodedAsset
-                            .encodedAssetAddr,
+                        encodedAsset.encodedAssetAddr,
                         refundAddrH1SignBit,
                         refundAddrH2SignBit
                     );
@@ -65,10 +66,7 @@ library OperationUtils {
                 allPis[index][6] = op.joinSplits[j].senderCommitment;
                 allPis[index][7] = digests[i];
                 allPis[index][8] = encodedAssetAddrWithSignBits;
-                allPis[index][9] = op
-                    .trackedJoinSplitAssets[op.joinSplits[j].assetIndex]
-                    .encodedAsset
-                    .encodedAssetId;
+                allPis[index][9] = encodedAsset.encodedAssetId;
                 allPis[index][10] = refundAddrH1YCoordinate;
                 allPis[index][11] = refundAddrH2YCoordinate;
                 index++;
