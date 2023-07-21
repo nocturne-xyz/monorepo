@@ -160,7 +160,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         _ensureZeroedBalances(op);
 
         // Handle all joinsplits
-        uint256 numJoinSplitAssets = _processJoinSplitsReservingFee(
+        _processJoinSplitsReservingFee(
             op,
             perJoinSplitVerifyGas
         );
