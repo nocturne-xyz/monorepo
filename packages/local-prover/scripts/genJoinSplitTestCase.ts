@@ -38,12 +38,21 @@ const nocturneSigner = new NocturneSigner(sk);
 const vk = nocturneSigner.vk;
 const spendPk = nocturneSigner.spendPk;
 
+interface JoinSplitValues {
+  oldNoteAValue: bigint;
+  oldNoteBValue: bigint;
+  newNoteAValue: bigint;
+  newNoteBValue: bigint;
+}
+
 function makeTestJoinSplitInputs(
   asset: EncodedAsset,
-  oldNoteAValue: bigint,
-  oldNoteBValue: bigint,
-  newNoteAValue: bigint,
-  newNoteBValue: bigint
+  {
+    oldNoteAValue,
+    oldNoteBValue,
+    newNoteAValue,
+    newNoteBValue,
+  }: JoinSplitValues
 ): JoinSplitInputs {
   const stealthAddrA = nocturneSigner.canonicalStealthAddress();
   const stealthAddrB = nocturneSigner.canonicalStealthAddress();
@@ -223,7 +232,12 @@ function makeGenerateProofFn(
 
   // generate proof with 0 publicSpend
   {
-    const inputs = makeTestJoinSplitInputs(asset, 100n, 200n, 50n, 250n);
+    const inputs = makeTestJoinSplitInputs(asset, {
+      oldNoteAValue: 100n,
+      oldNoteBValue: 200n,
+      newNoteAValue: 50n,
+      newNoteBValue: 250n,
+    });
     const filename = path.join(
       JOINSPLIT_FIXTURE_DIR,
       "joinsplit_0_publicSpend.json"
@@ -233,7 +247,12 @@ function makeGenerateProofFn(
 
   // generate proof with 100 publicSpend
   {
-    const inputs = makeTestJoinSplitInputs(asset, 100n, 200n, 50n, 150n);
+    const inputs = makeTestJoinSplitInputs(asset, {
+      oldNoteAValue: 100n,
+      oldNoteBValue: 200n,
+      newNoteAValue: 50n,
+      newNoteBValue: 150n,
+    });
     const filename = path.join(
       JOINSPLIT_FIXTURE_DIR,
       "joinsplit_100_publicSpend.json"
