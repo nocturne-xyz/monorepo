@@ -69,7 +69,7 @@ contract BalanceManager is CommitmentTreeManager {
     ) internal returns (uint256 numJoinSplitAssets) {
         // process nullifiers and insert new noteCommitments for each joinSplit
         // will throw an error if nullifiers are invalid or tree root invalid
-        _handleJoinSplits(op.joinSplits);
+        _handleJoinSplits(op);
 
         // Get gas asset and amount to reserve
         EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
@@ -82,13 +82,16 @@ contract BalanceManager is CommitmentTreeManager {
             subarrayStartIndex < numJoinSplits;
 
         ) {
-            EncodedAsset calldata encodedAsset = op
+            uint8 joinSplitAssetIndex = op
                 .joinSplits[subarrayStartIndex]
+                .assetIndex;
+            EncodedAsset calldata encodedAsset = op
+                .trackedJoinSplitAssets[joinSplitAssetIndex]
                 .encodedAsset;
 
             // Get largest possible subarray for current asset and sum of publicSpend
             uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
-                op.joinSplits,
+                op,
                 subarrayStartIndex
             );
             uint256 valueToGatherForSubarray = _sumJoinSplitPublicSpendsInclusive(
@@ -163,28 +166,18 @@ contract BalanceManager is CommitmentTreeManager {
     }
 
     function _ensureZeroedBalances(Operation calldata op) internal {
-        uint256 numJoinSplits = op.joinSplits.length;
-        for (
-            uint256 subarrayStartIndex = 0;
-            subarrayStartIndex < numJoinSplits;
-
-        ) {
-            uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
-                op.joinSplits,
-                subarrayStartIndex
-            );
-
+        uint256 numJoinSplitAssets = op.trackedJoinSplitAssets.length;
+        for (uint256 i = 0; i < numJoinSplitAssets; i++) {
             _transferOutstandingAssetToAndReturnAmount(
-                op.joinSplits[subarrayStartIndex].encodedAsset,
+                op.trackedJoinSplitAssets[i].encodedAsset,
                 _leftoverTokensHolder
             );
-            subarrayStartIndex = subarrayEndIndex + 1;
         }
 
-        uint256 numRefundAssets = op.expectedRefunds.length;
+        uint256 numRefundAssets = op.trackedRefundAssets.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
             _transferOutstandingAssetToAndReturnAmount(
-                op.expectedRefunds[i].encodedAsset,
+                op.trackedRefundAssets[i].encodedAsset,
                 _leftoverTokensHolder
             );
         }
@@ -193,38 +186,61 @@ contract BalanceManager is CommitmentTreeManager {
     function _ensureMinExpectedRefunds(
         Operation calldata op
     ) internal view returns (uint256 numRefundsToHandle) {
-        bool refundsAlreadyIncludeGasAsset = false;
-        uint256 numRefunds = op.expectedRefunds.length;
-        for (uint256 i = 0; i < numRefunds; i++) {
-            EncodedAsset calldata encodedAsset = op
-                .expectedRefunds[i]
-                .encodedAsset;
-            uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
-
-            (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
-            uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
-
-            // NOTE: overflow safe, solidity > 0.8
-            uint256 refundValue = currentBalance - amountToWithhold;
-            require(
-                refundValue >= op.expectedRefunds[i].minReturnValue,
-                "!min return value"
+        bool gasAssetAlreadyInRefunds = false;
+        uint256 numTrackedJoinSplitAssets = op.trackedJoinSplitAssets.length;
+        for (uint256 i = 0; i < numTrackedJoinSplitAssets; i++) {
+            bool requiresRefund = _ensureMinExpectedRefundForTrackedAsset(
+                op.trackedJoinSplitAssets[i]
             );
 
-            if (refundValue > 0) {
+            if (requiresRefund) {
                 numRefundsToHandle++;
-                
+
                 if (
-                    !refundsAlreadyIncludeGasAsset &&
-                    AssetUtils.eq(encodedAsset, op.encodedGasAsset)
+                    AssetUtils.eq(
+                        op.trackedJoinSplitAssets[i].encodedAsset,
+                        op.encodedGasAsset
+                    )
                 ) {
-                    refundsAlreadyIncludeGasAsset = true;
+                    gasAssetAlreadyInRefunds = true;
                 }
             }
         }
 
-        if (!refundsAlreadyIncludeGasAsset && op.gasPrice > 0) {
+        uint256 numTrackedRefundAssets = op.trackedRefundAssets.length;
+        for (uint256 i = 0; i < numTrackedRefundAssets; i++) {
+            bool requiresRefund = _ensureMinExpectedRefundForTrackedAsset(
+                op.trackedRefundAssets[i]
+            );
+
+            if (requiresRefund) {
+                numRefundsToHandle++;
+            }
+        }
+
+        if (!gasAssetAlreadyInRefunds && op.gasPrice > 0) {
             numRefundsToHandle++;
+        }
+    }
+
+    function _ensureMinExpectedRefundForTrackedAsset(
+        TrackedAsset calldata trackedAsset
+    ) internal view returns (bool requiresRefund) {
+        EncodedAsset calldata encodedAsset = trackedAsset.encodedAsset;
+        uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
+
+        (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
+        uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
+
+        // NOTE: overflow safe, solidity > 0.8
+        uint256 refundValue = currentBalance - amountToWithhold;
+        require(
+            refundValue >= trackedAsset.minReturnValue,
+            "!min return value"
+        );
+
+        if (refundValue > 0) {
+            requiresRefund = true;
         }
     }
 
@@ -236,12 +252,23 @@ contract BalanceManager is CommitmentTreeManager {
     ///      commitment tree.
     /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
-        uint256 numRefundAssets = op.expectedRefunds.length;
-        for (uint256 i = 0; i < numRefundAssets; i++) {
-            EncodedAsset calldata encodedAsset = op
-                .expectedRefunds[i]
-                .encodedAsset;
+        EncodedAsset calldata encodedAsset;
 
+        uint256 numJoinSplitAssets = op.trackedJoinSplitAssets.length;
+        for (uint256 i = 0; i < numJoinSplitAssets; i++) {
+            encodedAsset = op.trackedJoinSplitAssets[i].encodedAsset;
+            uint256 refundAmount = _transferOutstandingAssetToAndReturnAmount(
+                encodedAsset,
+                address(_teller)
+            );
+            if (refundAmount > 0) {
+                _handleRefundNote(encodedAsset, op.refundAddr, refundAmount);
+            }
+        }
+
+        uint256 numRefundAssets = op.trackedRefundAssets.length;
+        for (uint256 i = 0; i < numRefundAssets; i++) {
+            encodedAsset = op.trackedRefundAssets[i].encodedAsset;
             uint256 refundAmount = _transferOutstandingAssetToAndReturnAmount(
                 encodedAsset,
                 address(_teller)
@@ -289,19 +316,19 @@ contract BalanceManager is CommitmentTreeManager {
     /// @notice Get highest index for contiguous subarray of joinsplits of same encodedAssetType
     /// @dev Used so we can take sum(subarray) make single call teller.requestAsset(asset, sum)
     ///      instead of calling teller.requestAsset multiple times for the same asset
-    /// @param joinSplits op.joinSplits
+    /// @param op Operation
     /// @param startIndex Index to start searching from
     function _getHighestContiguousJoinSplitIndex(
-        JoinSplit[] calldata joinSplits,
+        Operation calldata op,
         uint256 startIndex
     ) private pure returns (uint256) {
-        EncodedAsset calldata startAsset = joinSplits[startIndex].encodedAsset;
-        uint256 numJoinSplits = joinSplits.length;
+        uint256 startAssetIndex = op.joinSplits[startIndex].assetIndex;
 
+        uint256 numJoinSplits = op.joinSplits.length;
         uint256 highestIndex = startIndex;
         while (
             highestIndex + 1 < numJoinSplits &&
-            AssetUtils.eq(startAsset, joinSplits[highestIndex + 1].encodedAsset)
+            startAssetIndex == op.joinSplits[highestIndex + 1].assetIndex
         ) {
             highestIndex++;
         }

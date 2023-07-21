@@ -46,7 +46,10 @@ library OperationUtils {
             uint256 numJoinSplitsForOp = op.joinSplits.length;
             for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
                 uint256 encodedAssetAddrWithSignBits = encodeEncodedAssetAddrWithSignBitsPI(
-                        op.joinSplits[j].encodedAsset.encodedAssetAddr,
+                        op
+                            .trackedJoinSplitAssets[op.joinSplits[j].assetIndex]
+                            .encodedAsset
+                            .encodedAssetAddr,
                         refundAddrH1SignBit,
                         refundAddrH2SignBit
                     );
@@ -62,7 +65,10 @@ library OperationUtils {
                 allPis[index][6] = op.joinSplits[j].senderCommitment;
                 allPis[index][7] = digests[i];
                 allPis[index][8] = encodedAssetAddrWithSignBits;
-                allPis[index][9] = op.joinSplits[j].encodedAsset.encodedAssetId;
+                allPis[index][9] = op
+                    .trackedJoinSplitAssets[op.joinSplits[j].assetIndex]
+                    .encodedAsset
+                    .encodedAssetId;
                 allPis[index][10] = refundAddrH1YCoordinate;
                 allPis[index][11] = refundAddrH2YCoordinate;
                 index++;
