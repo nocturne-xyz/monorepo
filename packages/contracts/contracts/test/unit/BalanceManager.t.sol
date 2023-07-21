@@ -62,7 +62,12 @@ contract BalanceManagerTest is Test {
 
         // NOTE: TestBalanceManager implements IHandler so we can test with
         // teller
-        teller.initialize(address(balanceManager), address(joinSplitVerifier));
+        teller.initialize(
+            "NocturneTeller",
+            "v1",
+            address(balanceManager),
+            address(joinSplitVerifier)
+        );
         teller.setDepositSourcePermission(ALICE, true);
 
         // Instantiate token contracts

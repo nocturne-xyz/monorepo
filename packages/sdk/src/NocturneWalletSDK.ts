@@ -3,9 +3,9 @@ import {
   PreSignOperation,
   AssetWithBalance,
   OptimisticNFRecord,
-  computeOperationDigest,
   OperationMetadata,
   OpDigestWithMetadata,
+  computeOperationDigest,
 } from "./primitives";
 import { NocturneSigner } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";

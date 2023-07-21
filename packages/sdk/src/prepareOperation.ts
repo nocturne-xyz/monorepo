@@ -46,7 +46,8 @@ export async function prepareOperation(
   deps: PrepareOperationDeps,
   opRequest: GasAccountedOperationRequest
 ): Promise<PreSignOperation> {
-  const { refundAssets, joinSplitRequests, chainId, deadline } = opRequest;
+  const { refundAssets, joinSplitRequests, chainId, tellerContract, deadline } =
+    opRequest;
   const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
   const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
 
@@ -86,11 +87,11 @@ export async function prepareOperation(
   // construct op.
   const op: PreSignOperation = {
     ...opRequest,
+    networkInfo: { chainId, tellerContract },
     refundAddr,
     joinSplits,
     encodedRefundAssets,
     encodedGasAsset,
-    chainId,
     deadline,
     atomicActions: true, // always default to atomic until we find reason not to
   };

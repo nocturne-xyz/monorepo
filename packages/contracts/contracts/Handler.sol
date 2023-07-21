@@ -141,7 +141,6 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         handleOperationGuard
         returns (OperationResult memory opResult)
     {
-        require(op.chainId == block.chainid, "invalid chainid");
         require(block.timestamp <= op.deadline, "expired deadline");
 
         // Ensure refund assets supported

@@ -12,6 +12,7 @@ import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/acces
 import {ITeller} from "./interfaces/ITeller.sol";
 import {IHandler} from "./interfaces/IHandler.sol";
 import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
+import {OperationEIP712} from "./OperationEIP712.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
@@ -23,6 +24,7 @@ import "./libs/Types.sol";
 /// @notice Teller stores deposited funds and serves as the entry point contract for operations.
 contract Teller is
     ITeller,
+    OperationEIP712,
     ReentrancyGuardUpgradeable,
     PausableUpgradeable,
     Ownable2StepUpgradeable,
@@ -59,12 +61,15 @@ contract Teller is
     /// @param handler Address of the handler contract
     /// @param joinSplitVerifier Address of the joinsplit verifier contract
     function initialize(
+        string calldata contractName,
+        string calldata contractVersion,
         address handler,
         address joinSplitVerifier
     ) external initializer {
         __Pausable_init();
         __Ownable2Step_init();
         __ReentrancyGuard_init();
+        __OperationEIP712_init(contractName, contractVersion);
         _handler = IHandler(handler);
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
     }
@@ -142,9 +147,10 @@ contract Teller is
         Operation[] calldata ops = bundle.operations;
         require(ops.length > 0, "empty bundle");
 
-        uint256[] memory opDigests = OperationUtils.computeOperationDigests(
-            ops
-        );
+        uint256[] memory opDigests = new uint256[](ops.length);
+        for (uint256 i = 0; i < ops.length; i++) {
+            opDigests[i] = _computeDigest(ops[i]);
+        }
 
         (bool success, uint256 perJoinSplitVerifyGas) = _verifyAllProofsMetered(
             ops,
@@ -165,9 +171,8 @@ contract Teller is
             returns (OperationResult memory result) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
-                // Indicates revert because of invalid chainid, expired
-                // deadline, or error processing joinsplits. Bundler is not
-                // compensated and we do not bubble up further OperationResult
+                // Indicates revert because of expired deadline or error processing joinsplits.
+                // Bundler is not compensated and we do not bubble up further OperationResult
                 // info other than failureReason.
                 string memory revertMsg = OperationUtils.getRevertMsg(reason);
                 if (bytes(revertMsg).length == 0) {

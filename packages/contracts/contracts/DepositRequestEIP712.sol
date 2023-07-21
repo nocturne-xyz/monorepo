@@ -8,10 +8,10 @@ import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/crypt
 // Internal
 import "./libs/Types.sol";
 
-/// @title DepositManagerBase
+/// @title DepositRequestEIP712
 /// @author Nocturne Labs
 /// @notice Base contract for DepositManager containing EIP712 signing logic for deposit requests
-abstract contract DepositManagerBase is EIP712Upgradeable {
+abstract contract DepositRequestEIP712 is EIP712Upgradeable {
     bytes32 public constant DEPOSIT_REQUEST_TYPEHASH =
         keccak256(
             bytes(
@@ -35,7 +35,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
     /// @notice Internal initializer
     /// @param contractName Name of the contract
     /// @param contractVersion Version of the contract
-    function __DepositManagerBase_init(
+    function __DepositRequestEIP712_init(
         string memory contractName,
         string memory contractVersion
     ) internal onlyInitializing {

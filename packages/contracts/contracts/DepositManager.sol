@@ -11,7 +11,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // Internal
 import {ITeller} from "./interfaces/ITeller.sol";
 import {IWeth} from "./interfaces/IWeth.sol";
-import {DepositManagerBase} from "./DepositManagerBase.sol";
+import {DepositRequestEIP712} from "./DepositRequestEIP712.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {Utils} from "./libs/Utils.sol";
 import "./libs/Types.sol";
@@ -21,7 +21,7 @@ import "./libs/Types.sol";
 /// @notice Manages inflow of assets into the Teller. Enforces global rate limits and max deposit
 ///         sizes. Enables an offchain actor to filter out certain deposits.
 contract DepositManager is
-    DepositManagerBase,
+    DepositRequestEIP712,
     ReentrancyGuardUpgradeable,
     Ownable2StepUpgradeable
 {
@@ -117,7 +117,7 @@ contract DepositManager is
         address weth
     ) external initializer {
         __Ownable2Step_init();
-        __DepositManagerBase_init(contractName, contractVersion);
+        __DepositRequestEIP712_init(contractName, contractVersion);
         _teller = ITeller(teller);
         _weth = IWeth(weth);
     }

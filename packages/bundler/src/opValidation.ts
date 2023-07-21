@@ -49,13 +49,13 @@ export async function checkRevertError(
   operation: ProvenOperation
 ): Promise<ErrString | undefined> {
   logger.debug("simulating operation", { operation });
-
   const bundle: Bundle = { operations: [operation] };
-  const data = tellerContract.interface.encodeFunctionData("processBundle", [
-    bundle,
-  ]);
 
   try {
+    const data = tellerContract.interface.encodeFunctionData("processBundle", [
+      bundle,
+    ]);
+
     const est = await provider.estimateGas({
       to: tellerContract.address,
       data,
