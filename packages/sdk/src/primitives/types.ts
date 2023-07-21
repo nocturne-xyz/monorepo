@@ -82,9 +82,19 @@ export interface ProvenJoinSplit extends BaseJoinSplit {
   proof: SolidityProof;
 }
 
+export interface OnChainProvenJoinSplit
+  extends Omit<ProvenJoinSplit, "encodedAsset"> {
+  assetIndex: number;
+}
+
 export interface NetworkInfo {
   chainId: bigint;
   tellerContract: Address;
+}
+
+export interface TrackedAsset {
+  encodedAsset: EncodedAsset;
+  minReturnValue: bigint;
 }
 
 export interface BaseOperation {
@@ -101,10 +111,6 @@ export interface BaseOperation {
   atomicActions: boolean;
 }
 
-export interface BasicOperation extends BaseOperation {
-  joinSplits: BaseJoinSplit[];
-}
-
 export interface PreSignOperation extends BaseOperation {
   joinSplits: PreSignJoinSplit[];
 }
@@ -117,7 +123,17 @@ export interface ProvenOperation extends BaseOperation {
   joinSplits: ProvenJoinSplit[];
 }
 
-export type OnchainOperation = Omit<ProvenOperation, "networkInfo">;
+export interface OnchainOperationWithNetworkInfo
+  extends Omit<BaseOperation, "encodedRefundAssets"> {
+  joinSplits: OnChainProvenJoinSplit[];
+  trackedJoinSplitAssets: TrackedAsset[];
+  trackedRefundAssets: TrackedAsset[];
+}
+
+export type OnchainOperation = Omit<
+  OnchainOperationWithNetworkInfo,
+  "networkInfo"
+>;
 
 export type Operation = PreSignOperation | SignedOperation | ProvenOperation;
 

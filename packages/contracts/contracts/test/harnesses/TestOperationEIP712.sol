@@ -81,6 +81,12 @@ contract TestOperationEIP712 is ITestOperationEIP712, OperationEIP712 {
         return _hashTrackedAssets(trackedAssets);
     }
 
+    function hashTrackedAsset(
+        TrackedAsset calldata trackedAsset
+    ) public pure returns (bytes32) {
+        return _hashTrackedAsset(trackedAsset);
+    }
+
     function hashEncodedAsset(
         EncodedAsset calldata encodedAsset
     ) public pure returns (bytes32) {
