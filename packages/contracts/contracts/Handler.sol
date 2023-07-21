@@ -170,10 +170,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         _ensureZeroedBalances(op);
 
         // Handle all joinsplits
-        _processJoinSplitsReservingFee(
-            op,
-            perJoinSplitVerifyGas
-        );
+        _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
 
         // If reached this point, assets have been unwrapped and will have refunds to handle
         opResult.assetsUnwrapped = true;

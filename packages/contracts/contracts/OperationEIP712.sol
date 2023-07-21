@@ -60,7 +60,6 @@ contract OperationEIP712 is EIP712Upgradeable {
             "TrackedAsset(EncodedAsset encodedAsset,uint256 minReturnValue)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)"
         );
 
-
     /// @notice Internal initializer
     /// @param contractName Name of the contract
     /// @param contractVersion Version of the contract
