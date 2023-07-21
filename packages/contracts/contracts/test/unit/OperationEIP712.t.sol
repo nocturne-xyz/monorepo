@@ -63,7 +63,7 @@ contract OperationEIP712Test is Test {
     //     Operation memory operation = Operation({
     //         joinSplits: joinSplits,
     //         refundAddr: CompressedStealthAddress({h1: 1, h2: 1}),
-    //         expectedRefunds: expectedRefunds,
+    //         trackedRefundAssets: trackedRefundAssets,
     //         actions: actions,
     //         encodedGasAsset: EncodedAsset({
     //             encodedAssetAddr: 1,
