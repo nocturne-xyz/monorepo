@@ -1,6 +1,6 @@
 import {
   BN254_SCALAR_FIELD_MODULUS,
-  BasicOperation,
+  OnchainOperationWithNetworkInfo,
   PreSignOperation,
   ProvenOperation,
   SignedOperation,
@@ -15,7 +15,8 @@ export const OPERATION_TYPES = {
   OperationWithoutProofs: [
     { name: "joinSplits", type: "JoinSplitWithoutProof[]" },
     { name: "refundAddr", type: "CompressedStealthAddress" },
-    { name: "encodedRefundAssets", type: "EncodedAsset[]" },
+    { name: "trackedJoinSplitAssets", type: "TrackedAsset[]" },
+    { name: "trackedRefundAssets", type: "TrackedAsset[]" },
     { name: "actions", type: "Action[]" },
     { name: "encodedGasAsset", type: "EncodedAsset" },
     { name: "gasAssetRefundThreshold", type: "uint256" },
@@ -40,7 +41,7 @@ export const OPERATION_TYPES = {
     { name: "newNoteACommitment", type: "uint256" },
     { name: "newNoteBCommitment", type: "uint256" },
     { name: "senderCommitment", type: "uint256" },
-    { name: "encodedAsset", type: "EncodedAsset" },
+    { name: "assetIndex", type: "uint8" },
     { name: "publicSpend", type: "uint256" },
     { name: "newNoteAEncrypted", type: "EncryptedNote" },
     { name: "newNoteBEncrypted", type: "EncryptedNote" },
@@ -48,6 +49,10 @@ export const OPERATION_TYPES = {
   EncodedAsset: [
     { name: "encodedAssetAddr", type: "uint256" },
     { name: "encodedAssetId", type: "uint256" },
+  ],
+  TrackedAsset: [
+    { name: "encodedAsset", type: "EncodedAsset" },
+    { name: "minReturnValue", type: "uint256" },
   ],
   EncryptedNote: [
     { name: "ciphertextBytes", type: "bytes" },
@@ -57,10 +62,10 @@ export const OPERATION_TYPES = {
 
 export function computeOperationDigest(
   operation:
-    | BasicOperation
     | PreSignOperation
     | SignedOperation
     | ProvenOperation
+    | OnchainOperationWithNetworkInfo
 ): bigint {
   const domain: TypedDataDomain = {
     name: TELLER_CONTRACT_NAME,
@@ -75,10 +80,10 @@ export function computeOperationDigest(
 
 export function hashOperation(
   operation:
-    | BasicOperation
     | PreSignOperation
     | SignedOperation
     | ProvenOperation
+    | OnchainOperationWithNetworkInfo
 ): string {
   return _TypedDataEncoder.hashStruct(
     "OperationWithoutProofs",

@@ -13,114 +13,140 @@ import "../../libs/Types.sol";
 contract OperationEIP712Test is Test {
     TestOperationEIP712 public tellerBase;
 
-    // function testOperationHashMatchesOffchainImpl() public {
-    //     // NOTE: reference sdk/scripts/generateOperationHashTestCase.ts for inputs/expected outputs
-    //     tellerBase = new TestOperationEIP712();
-    //     tellerBase.initialize("NocturneTeller", "v1");
+    function testOperationHashMatchesOffchainImpl() public {
+        // NOTE: reference sdk/scripts/generateOperationHashTestCase.ts for inputs/expected outputs
+        tellerBase = new TestOperationEIP712();
+        tellerBase.initialize("NocturneTeller", "v1");
 
-    //     uint256[8] memory dummyProof;
-    //     JoinSplit[] memory joinSplits = new JoinSplit[](1);
-    //     joinSplits[0] = JoinSplit({
-    //         commitmentTreeRoot: 1,
-    //         nullifierA: 1,
-    //         nullifierB: 1,
-    //         newNoteACommitment: 1,
-    //         newNoteBCommitment: 1,
-    //         senderCommitment: 1,
-    //         encodedAsset: EncodedAsset({
-    //             encodedAssetAddr: 1,
-    //             encodedAssetId: 1
-    //         }),
-    //         proof: dummyProof,
-    //         publicSpend: 1,
-    //         newNoteAEncrypted: EncryptedNote({
-    //             ciphertextBytes: bytes(""),
-    //             encapsulatedSecretBytes: bytes("")
-    //         }),
-    //         newNoteBEncrypted: EncryptedNote({
-    //             ciphertextBytes: bytes(""),
-    //             encapsulatedSecretBytes: bytes("")
-    //         })
-    //     });
+        uint256[8] memory dummyProof;
+        JoinSplit[] memory joinSplits = new JoinSplit[](1);
+        joinSplits[0] = JoinSplit({
+            commitmentTreeRoot: 1,
+            nullifierA: 1,
+            nullifierB: 1,
+            newNoteACommitment: 1,
+            newNoteBCommitment: 1,
+            senderCommitment: 1,
+            assetIndex: 1,
+            proof: dummyProof,
+            publicSpend: 1,
+            newNoteAEncrypted: EncryptedNote({
+                ciphertextBytes: bytes(""),
+                encapsulatedSecretBytes: bytes("")
+            }),
+            newNoteBEncrypted: EncryptedNote({
+                ciphertextBytes: bytes(""),
+                encapsulatedSecretBytes: bytes("")
+            })
+        });
 
-    //     Action[] memory actions = new Action[](1);
-    //     actions[0] = Action({
-    //         contractAddress: address(
-    //             0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990
-    //         ),
-    //         encodedFunction: hex"1234"
-    //     });
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({
+            contractAddress: address(
+                0x690B9A9E9aa1C9dB991C7721a92d351Db4FaC990
+            ),
+            encodedFunction: hex"1234"
+        });
 
-    //     ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-    //     expectedRefunds[0] = ExpectedRefund({
-    //         encodedAsset: EncodedAsset({
-    //             encodedAssetAddr: 1,
-    //             encodedAssetId: 1
-    //         }),
-    //         minReturnValue: 0
-    //     });
+        TrackedAsset[] memory trackedJoinSplitAssets = new TrackedAsset[](1);
+        trackedJoinSplitAssets[0] = TrackedAsset({
+            encodedAsset: EncodedAsset({
+                encodedAssetAddr: 1,
+                encodedAssetId: 1
+            }),
+            minReturnValue: 1
+        });
 
-    //     Operation memory operation = Operation({
-    //         joinSplits: joinSplits,
-    //         refundAddr: CompressedStealthAddress({h1: 1, h2: 1}),
-    //         trackedRefundAssets: trackedRefundAssets,
-    //         actions: actions,
-    //         encodedGasAsset: EncodedAsset({
-    //             encodedAssetAddr: 1,
-    //             encodedAssetId: 1
-    //         }),
-    //         gasAssetRefundThreshold: 1,
-    //         executionGasLimit: 1,
-    //         maxNumRefunds: 1,
-    //         gasPrice: 1,
-    //         deadline: 1,
-    //         atomicActions: true
-    //     });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
+            encodedAsset: EncodedAsset({
+                encodedAssetAddr: 1,
+                encodedAssetId: 1
+            }),
+            minReturnValue: 1
+        });
 
-    //     bytes32 operationHash = tellerBase.hashOperation(operation);
+        Operation memory operation = Operation({
+            joinSplits: joinSplits,
+            refundAddr: CompressedStealthAddress({h1: 1, h2: 1}),
+            trackedJoinSplitAssets: trackedJoinSplitAssets,
+            trackedRefundAssets: trackedRefundAssets,
+            actions: actions,
+            encodedGasAsset: EncodedAsset({
+                encodedAssetAddr: 1,
+                encodedAssetId: 1
+            }),
+            gasAssetRefundThreshold: 1,
+            executionGasLimit: 1,
+            maxNumRefunds: 1,
+            gasPrice: 1,
+            deadline: 1,
+            atomicActions: true
+        });
 
-    //     console.log("operationHash:");
-    //     console.logBytes32(operationHash);
-    //     console.log("");
+        bytes32 operationHash = tellerBase.hashOperation(operation);
 
-    //     // Operation hash generated by running test case gen script in SDK
-    //     assertEq(
-    //         operationHash,
-    //         bytes32(
-    //             0x28521a7bff47545ad661b3d432b33a3e95c261196a19bbfcf47b016283029281
-    //         )
-    //     );
+        console.log("operationHash:");
+        console.logBytes32(operationHash);
+        console.log("");
 
-    //     vm.chainId(1);
-    //     vm.etch(
-    //         address(0x1111111111111111111111111111111111111111),
-    //         address(tellerBase).code
-    //     );
-    //     vm.store(
-    //         address(0x1111111111111111111111111111111111111111),
-    //         bytes32(uint256(1)),
-    //         keccak256(bytes("NocturneTeller"))
-    //     );
-    //     vm.store(
-    //         address(0x1111111111111111111111111111111111111111),
-    //         bytes32(uint256(2)),
-    //         keccak256(bytes("v1"))
-    //     );
+        bytes32 trackedAssetHash = tellerBase.hashTrackedAsset(
+            trackedJoinSplitAssets[0]
+        );
+        console.log("trackedAssetHash:");
+        console.logBytes32(trackedAssetHash);
+        console.log("");
 
-    //     uint256 operationDigest = ITestOperationEIP712(
-    //         address(0x1111111111111111111111111111111111111111)
-    //     ).computeDigest(operation);
+        bytes32 encodedAssetHash = tellerBase.hashEncodedAsset(
+            trackedJoinSplitAssets[0].encodedAsset
+        );
+        console.log("encodedAssetHash:");
+        console.logBytes32(encodedAssetHash);
+        console.log("");
 
-    //     console.log("operationDigest:");
-    //     console.logBytes32(bytes32(operationDigest));
-    //     console.log("");
+        bytes32 joinSplitHash = tellerBase.hashJoinSplit(joinSplits[0]);
+        console.log("joinSplitHash:");
+        console.logBytes32(joinSplitHash);
+        console.log("");
 
-    //     // Operation digest generated by running test case gen script in SDK
-    //     assertEq(
-    //         operationDigest,
-    //         uint256(
-    //             0x1abb68eb6c8208a19c8c10d28205db21bcff9faa91aca28cae650070e338fed
-    //         )
-    //     );
-    // }
+        // Operation hash generated by running test case gen script in SDK
+        assertEq(
+            operationHash,
+            bytes32(
+                0x517a9a13d2c3914c1e76fc38122406f345bb2e6b08ee5f9b4b1cdfa6ba59cc14
+            )
+        );
+
+        vm.chainId(1);
+        vm.etch(
+            address(0x1111111111111111111111111111111111111111),
+            address(tellerBase).code
+        );
+        vm.store(
+            address(0x1111111111111111111111111111111111111111),
+            bytes32(uint256(1)),
+            keccak256(bytes("NocturneTeller"))
+        );
+        vm.store(
+            address(0x1111111111111111111111111111111111111111),
+            bytes32(uint256(2)),
+            keccak256(bytes("v1"))
+        );
+
+        uint256 operationDigest = ITestOperationEIP712(
+            address(0x1111111111111111111111111111111111111111)
+        ).computeDigest(operation);
+
+        console.log("operationDigest:");
+        console.logBytes32(bytes32(operationDigest));
+        console.log("");
+
+        // Operation digest generated by running test case gen script in SDK
+        assertEq(
+            operationDigest,
+            uint256(
+                0x1451ce67a96b9faae788625bf16cdb51389e61e31cacbec2e63610600906a2f5
+            )
+        );
+    }
 }

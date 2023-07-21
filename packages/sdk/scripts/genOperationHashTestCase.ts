@@ -1,23 +1,23 @@
+import { _TypedDataEncoder } from "ethers/lib/utils";
 import {
-  BaseJoinSplit,
-  BasicOperation,
+  OnChainProvenJoinSplit,
+  OnchainOperationWithNetworkInfo,
   computeOperationDigest,
   hashOperation,
 } from "../src";
+import { OPERATION_TYPES } from "../src/primitives/operationDigest";
 
 (async () => {
-  const joinSplit: BaseJoinSplit = {
+  const joinSplit: OnChainProvenJoinSplit = {
     commitmentTreeRoot: 1n,
     nullifierA: 1n,
     nullifierB: 1n,
     newNoteACommitment: 1n,
     newNoteBCommitment: 1n,
-    encodedAsset: {
-      encodedAssetAddr: 1n,
-      encodedAssetId: 1n,
-    },
+    assetIndex: 1,
     publicSpend: 1n,
     senderCommitment: 1n,
+    proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
     newNoteAEncrypted: {
       ciphertextBytes: [],
       encapsulatedSecretBytes: [],
@@ -28,7 +28,7 @@ import {
     },
   };
 
-  const operation: BasicOperation = {
+  const operation: OnchainOperationWithNetworkInfo = {
     networkInfo: {
       chainId: 1n,
       tellerContract: "0x1111111111111111111111111111111111111111",
@@ -38,10 +38,22 @@ import {
       h1: 1n,
       h2: 1n,
     },
-    encodedRefundAssets: [
+    trackedJoinSplitAssets: [
       {
-        encodedAssetAddr: 1n,
-        encodedAssetId: 1n,
+        encodedAsset: {
+          encodedAssetAddr: 1n,
+          encodedAssetId: 1n,
+        },
+        minReturnValue: 1n,
+      },
+    ],
+    trackedRefundAssets: [
+      {
+        encodedAsset: {
+          encodedAssetAddr: 1n,
+          encodedAssetId: 1n,
+        },
+        minReturnValue: 1n,
       },
     ],
     actions: [
@@ -69,4 +81,25 @@ import {
 
   const opDigest = computeOperationDigest(operation);
   console.log("operation digest", "0x" + opDigest.toString(16));
+
+  const hashedTrackedAsset = _TypedDataEncoder.hashStruct(
+    "TrackedAsset",
+    OPERATION_TYPES,
+    operation.trackedJoinSplitAssets[0]
+  );
+  console.log("hashed tracked joinsplit asset", hashedTrackedAsset);
+
+  const hashedAsset = _TypedDataEncoder.hashStruct(
+    "EncodedAsset",
+    OPERATION_TYPES,
+    operation.trackedJoinSplitAssets[0].encodedAsset
+  );
+  console.log("hashed encoded asset", hashedAsset);
+
+  const hashedJoinSplit = _TypedDataEncoder.hashStruct(
+    "JoinSplitWithoutProof",
+    OPERATION_TYPES,
+    joinSplit
+  );
+  console.log("hashed joinsplit", hashedJoinSplit);
 })();
