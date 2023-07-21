@@ -67,14 +67,18 @@ export function partition<T>(
 
 export function* iterChunks<T>(
   arr: T[],
-  chunkSize: number
+  chunkSize: number,
+  exact = false
 ): IterableIterator<T[]> {
   let chunk = [];
-  const i = 0;
-  while (i < arr.length) {
-    chunk = arr.slice(i, i + chunkSize);
+  while (arr.length >= chunkSize) {
+    chunk = arr.slice(0, chunkSize);
     yield chunk;
-    arr = arr.slice(i + chunkSize);
+    arr = arr.slice(chunkSize);
+  }
+
+  if (!exact && arr.length > 0) {
+    yield arr;
   }
 }
 
