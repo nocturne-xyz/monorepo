@@ -34,7 +34,7 @@ struct JoinSplit {
     uint256 newNoteBCommitment;
     uint256 senderCommitment;
     uint256[8] proof;
-    EncodedAsset encodedAsset;
+    uint8 assetIndex; // Index in op.joinSplitAssets
     uint256 publicSpend;
     EncryptedNote newNoteAEncrypted;
     EncryptedNote newNoteBEncrypted;
@@ -70,10 +70,16 @@ struct Action {
     bytes encodedFunction;
 }
 
+struct TrackedAsset {
+    EncodedAsset encodedAsset;
+    uint256 minReturnValue;
+}
+
 struct Operation {
     JoinSplit[] joinSplits;
     CompressedStealthAddress refundAddr;
-    ExpectedRefund[] expectedRefunds;
+    TrackedAsset[] trackedJoinSplitAssets;
+    TrackedAsset[] trackedRefundAssets;
     Action[] actions;
     EncodedAsset encodedGasAsset;
     uint256 gasAssetRefundThreshold;

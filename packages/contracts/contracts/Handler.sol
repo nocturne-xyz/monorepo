@@ -147,10 +147,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         require(block.timestamp <= op.deadline, "expired deadline");
 
         // Ensure refund assets supported
-        uint256 numRefundAssets = op.expectedRefunds.length;
+        uint256 numRefundAssets = op.trackedRefundAssets.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
             (, address assetAddr, ) = AssetUtils.decodeAsset(
-                op.expectedRefunds[i].encodedAsset
+                op.trackedRefundAssets[i].encodedAsset
             );
             require(_supportedContracts[assetAddr], "!supported refund asset");
         }

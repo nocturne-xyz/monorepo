@@ -284,7 +284,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: new ExpectedRefund[](0),
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -341,7 +341,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: new ExpectedRefund[](0),
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -460,15 +460,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create operation to transfer 25M tokens to bob of 50M note
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -486,7 +478,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -541,15 +533,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 3 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create operation to transfer 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -567,7 +551,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             3
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 3,
@@ -622,15 +606,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 6 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create operation to transfer 4 * 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -648,7 +624,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             6
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 6,
@@ -703,15 +679,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create operation with faulty root, will cause revert in
         // handleJoinSplit
@@ -730,7 +698,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -784,15 +752,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create operation with two joinsplits where 1st uses NF included in
         // 2nd joinsplit
@@ -811,7 +771,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             2
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -866,15 +826,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create operation with one of the joinsplits has matching NFs A and B
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -892,7 +844,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             2
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -961,15 +913,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -986,7 +930,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1047,15 +991,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create internal op that is used when handler calls itself
         Operation memory internalOp = NocturneUtils.formatOperation(
@@ -1072,7 +1008,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1114,7 +1050,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1162,15 +1098,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create internal op that is used when teller calls itself
         Operation memory internalOp = NocturneUtils.formatOperation(
@@ -1187,7 +1115,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1229,7 +1157,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1294,15 +1222,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create internal op that is used when handler calls itself
         Operation memory internalOp = NocturneUtils.formatOperation(
@@ -1319,7 +1239,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1361,7 +1281,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1424,15 +1344,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create transaction to send 3 * 50M even though only 2 * 50M is being
         // taken up by teller
@@ -1451,7 +1363,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             2
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 2,
@@ -1518,15 +1430,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create transaction to send 3 * 50M even though only 2 * 50M is being
         // taken up by teller
@@ -1545,7 +1449,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             2
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 2,
@@ -1643,16 +1547,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         });
 
         // Encode erc20In and erc20Out as refund assets
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](2);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(erc20In),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
-        expectedRefunds[1] = ExpectedRefund({
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
             encodedAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
                 address(erc20Out),
@@ -1676,7 +1572,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 4, // 4 refund assets (including joinsplit)
@@ -1746,16 +1642,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         });
 
         // Encode erc20In and erc20Out as refund assets
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](2);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(erc20In),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
-        expectedRefunds[1] = ExpectedRefund({
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
             encodedAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
                 address(erc20Out),
@@ -1778,7 +1666,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 4, // 4 refund assets (including joinsplit)
@@ -1848,15 +1736,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         });
 
         // No refund assets
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(joinSplitToken),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -1873,7 +1753,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             2
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 4,
@@ -1947,16 +1827,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(erc20),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
-
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -1972,7 +1842,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 3,
@@ -2024,16 +1894,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(erc20),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
-
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -2049,7 +1909,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 3,
@@ -2108,16 +1968,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(erc20),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
-
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -2133,7 +1983,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 3,
@@ -2188,16 +2038,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(erc20),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
-
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -2213,7 +2053,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 3,
@@ -2264,8 +2104,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         });
 
         // Encode erc721 as refund asset
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
             encodedAsset: AssetUtils.encodeAsset(
                 AssetType.ERC721,
                 address(erc721),
@@ -2289,7 +2129,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             2
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 4,
@@ -2345,15 +2185,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Reserves + deposit only 50M tokens
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Unwrap 50M, not enough for bundler comp due to there being
         // maxNumRefunds = 20.
@@ -2374,7 +2206,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             3
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 maxNumRefunds: 20,
@@ -2424,15 +2256,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create operation low executionGasLimit (not enough for transfer)
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -2450,7 +2274,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: 100, // not enough gas for transfer
                 maxNumRefunds: 1,
@@ -2494,15 +2318,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -2518,7 +2334,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -2544,15 +2360,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Format op with EXPIRED_DEADLINE failure type
         Operation memory op = NocturneUtils.formatOperation(
@@ -2569,7 +2377,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -2594,15 +2402,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        ExpectedRefund[] memory expectedRefunds = new ExpectedRefund[](1);
-        expectedRefunds[0] = ExpectedRefund({
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                ERC20_ID
-            ),
-            minReturnValue: 0
-        });
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -2618,7 +2418,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                expectedRefunds: expectedRefunds,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,

@@ -40,7 +40,7 @@ contract ReentrantCaller {
                                 6
                             )
                         ),
-                    expectedRefunds: new ExpectedRefund[](0),
+                    trackedRefundAssets: new TrackedAsset[](0),
                     gasAssetRefundThreshold: 0,
                     executionGasLimit: DEFAULT_GAS_LIMIT,
                     maxNumRefunds: 1,
