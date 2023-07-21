@@ -66,16 +66,16 @@
 | _erc20Caps                | mapping(address => struct DepositManager.Erc20Cap) | 258  | 0      | 32    | packages/contracts/contracts/DepositManager.sol:DepositManager |
 | __GAP                     | uint256[50]                                        | 259  | 0      | 1600  | packages/contracts/contracts/DepositManager.sol:DepositManager |
 =======================
- ➡ DepositManagerBase
-| Name           | Type        | Slot | Offset | Bytes | Contract                                                               |
-|----------------|-------------|------|--------|-------|------------------------------------------------------------------------|
-| _initialized   | uint8       | 0    | 0      | 1     | packages/contracts/contracts/DepositManagerBase.sol:DepositManagerBase |
-| _initializing  | bool        | 0    | 1      | 1     | packages/contracts/contracts/DepositManagerBase.sol:DepositManagerBase |
-| _hashedName    | bytes32     | 1    | 0      | 32    | packages/contracts/contracts/DepositManagerBase.sol:DepositManagerBase |
-| _hashedVersion | bytes32     | 2    | 0      | 32    | packages/contracts/contracts/DepositManagerBase.sol:DepositManagerBase |
-| _name          | string      | 3    | 0      | 32    | packages/contracts/contracts/DepositManagerBase.sol:DepositManagerBase |
-| _version       | string      | 4    | 0      | 32    | packages/contracts/contracts/DepositManagerBase.sol:DepositManagerBase |
-| __gap          | uint256[48] | 5    | 0      | 1536  | packages/contracts/contracts/DepositManagerBase.sol:DepositManagerBase |
+ ➡ DepositRequestEIP712
+| Name           | Type        | Slot | Offset | Bytes | Contract                                                                   |
+|----------------|-------------|------|--------|-------|----------------------------------------------------------------------------|
+| _initialized   | uint8       | 0    | 0      | 1     | packages/contracts/contracts/DepositRequestEIP712.sol:DepositRequestEIP712 |
+| _initializing  | bool        | 0    | 1      | 1     | packages/contracts/contracts/DepositRequestEIP712.sol:DepositRequestEIP712 |
+| _hashedName    | bytes32     | 1    | 0      | 32    | packages/contracts/contracts/DepositRequestEIP712.sol:DepositRequestEIP712 |
+| _hashedVersion | bytes32     | 2    | 0      | 32    | packages/contracts/contracts/DepositRequestEIP712.sol:DepositRequestEIP712 |
+| _name          | string      | 3    | 0      | 32    | packages/contracts/contracts/DepositRequestEIP712.sol:DepositRequestEIP712 |
+| _version       | string      | 4    | 0      | 32    | packages/contracts/contracts/DepositRequestEIP712.sol:DepositRequestEIP712 |
+| __gap          | uint256[48] | 5    | 0      | 1536  | packages/contracts/contracts/DepositRequestEIP712.sol:DepositRequestEIP712 |
 =======================
  ➡ Handler
 | Name                      | Type                      | Slot | Offset | Bytes | Contract                                         |
@@ -115,6 +115,17 @@
 | _operationStage | uint256     | 1    | 0      | 32    | packages/contracts/contracts/NocturneReentrancyGuard.sol:NocturneReentrancyGuard |
 | __GAP           | uint256[50] | 2    | 0      | 1600  | packages/contracts/contracts/NocturneReentrancyGuard.sol:NocturneReentrancyGuard |
 =======================
+ ➡ OperationEIP712
+| Name           | Type        | Slot | Offset | Bytes | Contract                                                         |
+|----------------|-------------|------|--------|-------|------------------------------------------------------------------|
+| _initialized   | uint8       | 0    | 0      | 1     | packages/contracts/contracts/OperationEIP712.sol:OperationEIP712 |
+| _initializing  | bool        | 0    | 1      | 1     | packages/contracts/contracts/OperationEIP712.sol:OperationEIP712 |
+| _hashedName    | bytes32     | 1    | 0      | 32    | packages/contracts/contracts/OperationEIP712.sol:OperationEIP712 |
+| _hashedVersion | bytes32     | 2    | 0      | 32    | packages/contracts/contracts/OperationEIP712.sol:OperationEIP712 |
+| _name          | string      | 3    | 0      | 32    | packages/contracts/contracts/OperationEIP712.sol:OperationEIP712 |
+| _version       | string      | 4    | 0      | 32    | packages/contracts/contracts/OperationEIP712.sol:OperationEIP712 |
+| __gap          | uint256[48] | 5    | 0      | 1536  | packages/contracts/contracts/OperationEIP712.sol:OperationEIP712 |
+=======================
  ➡ SubtreeUpdateVerifier
 | Name | Type | Slot | Offset | Bytes | Contract |
 |------|------|------|--------|-------|----------|
@@ -124,27 +135,21 @@
 |--------------------|-----------------------------|------|--------|-------|------------------------------------------------|
 | _initialized       | uint8                       | 0    | 0      | 1     | packages/contracts/contracts/Teller.sol:Teller |
 | _initializing      | bool                        | 0    | 1      | 1     | packages/contracts/contracts/Teller.sol:Teller |
-| _status            | uint256                     | 1    | 0      | 32    | packages/contracts/contracts/Teller.sol:Teller |
-| __gap              | uint256[49]                 | 2    | 0      | 1568  | packages/contracts/contracts/Teller.sol:Teller |
-| __gap              | uint256[50]                 | 51   | 0      | 1600  | packages/contracts/contracts/Teller.sol:Teller |
-| _paused            | bool                        | 101  | 0      | 1     | packages/contracts/contracts/Teller.sol:Teller |
-| __gap              | uint256[49]                 | 102  | 0      | 1568  | packages/contracts/contracts/Teller.sol:Teller |
-| _owner             | address                     | 151  | 0      | 20    | packages/contracts/contracts/Teller.sol:Teller |
-| __gap              | uint256[49]                 | 152  | 0      | 1568  | packages/contracts/contracts/Teller.sol:Teller |
-| _pendingOwner      | address                     | 201  | 0      | 20    | packages/contracts/contracts/Teller.sol:Teller |
-| __gap              | uint256[49]                 | 202  | 0      | 1568  | packages/contracts/contracts/Teller.sol:Teller |
-| _handler           | contract IHandler           | 251  | 0      | 20    | packages/contracts/contracts/Teller.sol:Teller |
-| _joinSplitVerifier | contract IJoinSplitVerifier | 252  | 0      | 20    | packages/contracts/contracts/Teller.sol:Teller |
-| _depositSources    | mapping(address => bool)    | 253  | 0      | 32    | packages/contracts/contracts/Teller.sol:Teller |
-| __GAP              | uint256[50]                 | 254  | 0      | 1600  | packages/contracts/contracts/Teller.sol:Teller |
-=======================
- ➡ TellerBase
-| Name           | Type        | Slot | Offset | Bytes | Contract                                               |
-|----------------|-------------|------|--------|-------|--------------------------------------------------------|
-| _initialized   | uint8       | 0    | 0      | 1     | packages/contracts/contracts/TellerBase.sol:TellerBase |
-| _initializing  | bool        | 0    | 1      | 1     | packages/contracts/contracts/TellerBase.sol:TellerBase |
-| _hashedName    | bytes32     | 1    | 0      | 32    | packages/contracts/contracts/TellerBase.sol:TellerBase |
-| _hashedVersion | bytes32     | 2    | 0      | 32    | packages/contracts/contracts/TellerBase.sol:TellerBase |
-| _name          | string      | 3    | 0      | 32    | packages/contracts/contracts/TellerBase.sol:TellerBase |
-| _version       | string      | 4    | 0      | 32    | packages/contracts/contracts/TellerBase.sol:TellerBase |
-| __gap          | uint256[48] | 5    | 0      | 1536  | packages/contracts/contracts/TellerBase.sol:TellerBase |
+| _hashedName        | bytes32                     | 1    | 0      | 32    | packages/contracts/contracts/Teller.sol:Teller |
+| _hashedVersion     | bytes32                     | 2    | 0      | 32    | packages/contracts/contracts/Teller.sol:Teller |
+| _name              | string                      | 3    | 0      | 32    | packages/contracts/contracts/Teller.sol:Teller |
+| _version           | string                      | 4    | 0      | 32    | packages/contracts/contracts/Teller.sol:Teller |
+| __gap              | uint256[48]                 | 5    | 0      | 1536  | packages/contracts/contracts/Teller.sol:Teller |
+| _status            | uint256                     | 53   | 0      | 32    | packages/contracts/contracts/Teller.sol:Teller |
+| __gap              | uint256[49]                 | 54   | 0      | 1568  | packages/contracts/contracts/Teller.sol:Teller |
+| __gap              | uint256[50]                 | 103  | 0      | 1600  | packages/contracts/contracts/Teller.sol:Teller |
+| _paused            | bool                        | 153  | 0      | 1     | packages/contracts/contracts/Teller.sol:Teller |
+| __gap              | uint256[49]                 | 154  | 0      | 1568  | packages/contracts/contracts/Teller.sol:Teller |
+| _owner             | address                     | 203  | 0      | 20    | packages/contracts/contracts/Teller.sol:Teller |
+| __gap              | uint256[49]                 | 204  | 0      | 1568  | packages/contracts/contracts/Teller.sol:Teller |
+| _pendingOwner      | address                     | 253  | 0      | 20    | packages/contracts/contracts/Teller.sol:Teller |
+| __gap              | uint256[49]                 | 254  | 0      | 1568  | packages/contracts/contracts/Teller.sol:Teller |
+| _handler           | contract IHandler           | 303  | 0      | 20    | packages/contracts/contracts/Teller.sol:Teller |
+| _joinSplitVerifier | contract IJoinSplitVerifier | 304  | 0      | 20    | packages/contracts/contracts/Teller.sol:Teller |
+| _depositSources    | mapping(address => bool)    | 305  | 0      | 32    | packages/contracts/contracts/Teller.sol:Teller |
+| __GAP              | uint256[50]                 | 306  | 0      | 1600  | packages/contracts/contracts/Teller.sol:Teller |
