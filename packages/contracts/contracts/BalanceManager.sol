@@ -76,6 +76,7 @@ contract BalanceManager is CommitmentTreeManager {
         uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         // Loop through joinSplits and gather assets, reserving gas asset as needed
+        EncodedAsset calldata encodedAsset;
         uint256 numJoinSplits = op.joinSplits.length;
         for (
             uint256 subarrayStartIndex = 0;
@@ -85,7 +86,7 @@ contract BalanceManager is CommitmentTreeManager {
             uint8 joinSplitAssetIndex = op
                 .joinSplits[subarrayStartIndex]
                 .assetIndex;
-            EncodedAsset calldata encodedAsset = op
+            encodedAsset = op
                 .trackedJoinSplitAssets[joinSplitAssetIndex]
                 .encodedAsset;
 
@@ -214,6 +215,9 @@ contract BalanceManager is CommitmentTreeManager {
             }
         }
 
+        // NOTE: the only time numRefundsToHandle gets over-counted is when the bundler
+        // takes all reserved gas asset, leaving none for refund. The max over-estimate though
+        // is the cost of one extra refund.
         if (!gasAssetAlreadyInRefunds && op.gasPrice > 0) {
             numRefundsToHandle++;
         }
@@ -228,8 +232,10 @@ contract BalanceManager is CommitmentTreeManager {
         (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
         uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
 
-        // NOTE: overflow safe, solidity > 0.8
-        uint256 refundValue = currentBalance - amountToWithhold;
+        uint256 refundValue = currentBalance > amountToWithhold
+            ? currentBalance - amountToWithhold
+            : 0;
+            
         require(
             refundValue >= trackedAsset.minReturnValue,
             "!min return value"
@@ -299,10 +305,12 @@ contract BalanceManager is CommitmentTreeManager {
         (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
         uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
 
-        if (currentBalance > amountToWithhold) {
-            uint256 difference = currentBalance - amountToWithhold;
-            AssetUtils.transferAssetTo(encodedAsset, address(to), difference);
+        uint256 difference = currentBalance > amountToWithhold
+            ? currentBalance - amountToWithhold
+            : 0;
 
+        if (difference > 0) {
+            AssetUtils.transferAssetTo(encodedAsset, to, difference);
             return difference;
         }
 
