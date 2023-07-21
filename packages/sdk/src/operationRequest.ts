@@ -1,15 +1,10 @@
-import { Asset, Address, Action } from "./primitives";
+import { Asset, Address, Action, NetworkInfo } from "./primitives";
 import { CanonAddress, StealthAddress } from "./crypto";
 import { groupByArr } from "./utils";
 import { ethers } from "ethers";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 
 const ONE_DAY_SECONDS = 24 * 60 * 60;
-
-export interface NetworkInfo {
-  chainId: bigint;
-  tellerContract: Address;
-}
 
 // A joinsplit request is an unwrapRequest plus an optional payment
 export interface JoinSplitRequest {
@@ -72,7 +67,7 @@ export class OperationRequestBuilder {
     if (typeof network === "string") {
       const config = loadNocturneConfigBuiltin(network);
       chainId = BigInt(config.contracts.network.chainId);
-      tellerContract = config.contracts.tellerProxy.proxy;
+      tellerContract = config.tellerAddress();
     } else {
       chainId = network.chainId;
       tellerContract = network.tellerContract;

@@ -204,7 +204,6 @@ export class NocturneFrontendSDK {
     recipientAddress: Address
   ): Promise<BundlerOperationID> {
     const signer = await getWindowSigner();
-    const chainId = BigInt(await signer.getChainId());
     const provider = signer.provider;
 
     if (!provider) {
@@ -225,7 +224,7 @@ export class NocturneFrontendSDK {
     const encodedErc20 = AssetTrait.erc20AddressToAsset(erc20Address);
 
     const operationRequest = new OperationRequestBuilder({
-      chainId,
+      chainId: BigInt(this.config.contracts.network.chainId),
       tellerContract: this.config.tellerAddress(),
     })
       .unwrap(encodedErc20, amount)
