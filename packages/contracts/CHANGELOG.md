@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- add tests for erc20 approve checks in handler
+- add special check for erc20.approve to ensure decoded spender is on whitelist
+- change \_supportedTokens to \_supportedContracts
 - Rename `DepositManagerBase` and `TellerBase` to `DepositRequestEIP712` and `OperationEIP712`
 - Teller contract init function takes contract name and version
 - add `TellerBase.t.sol` for eip712 unit tests
