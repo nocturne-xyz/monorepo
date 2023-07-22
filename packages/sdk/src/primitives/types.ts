@@ -19,10 +19,6 @@ export interface Action {
   encodedFunction: string;
 }
 
-export interface Bundle {
-  operations: SignableOperation[];
-}
-
 export interface Deposit {
   spender: Address;
   asset: Address;
@@ -138,10 +134,9 @@ export interface SubmittableOperationWithNetworkInfo
   joinSplits: SubmittableJoinSplit[];
 }
 
-export type SignableOperation = Omit<
-  SignableOperationWithNetworkInfo,
-  "networkInfo"
->;
+export interface Bundle {
+  operations: SubmittableOperationWithNetworkInfo[];
+}
 
 export type Operation = PreSignOperation | SignedOperation | ProvenOperation;
 
