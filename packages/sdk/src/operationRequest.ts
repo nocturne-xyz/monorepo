@@ -22,18 +22,13 @@ export interface OperationRequest {
   deadline: bigint;
   refundAddr?: StealthAddress;
   executionGasLimit?: bigint;
-  maxNumRefunds?: bigint;
   gasPrice?: bigint;
 }
 
 export interface GasAccountedOperationRequest
-  extends Omit<
-    OperationRequest,
-    "executionGasLimit" | "maxNumRefunds" | "gasPrice"
-  > {
+  extends Omit<OperationRequest, "executionGasLimit" | "gasPrice"> {
   gasAssetRefundThreshold: bigint;
   executionGasLimit: bigint;
-  maxNumRefunds: bigint;
   gasPrice: bigint;
   gasAsset: Asset;
 }
@@ -157,15 +152,6 @@ export class OperationRequestBuilder {
   // Attach deadline to operation
   deadline(deadline: bigint): OperationRequestBuilder {
     this.op.deadline = deadline;
-    return this;
-  }
-
-  // Specify the maximum number of refunds possible for the operation.
-  // if this is not set, the SDK will estimate it very naively.
-  // if you can predict this up-front, setting it may save gas.
-  // returns `this` so it's chainable
-  maxNumRefunds(maxNumRefunds: bigint): OperationRequestBuilder {
-    this.op.maxNumRefunds = maxNumRefunds;
     return this;
   }
 

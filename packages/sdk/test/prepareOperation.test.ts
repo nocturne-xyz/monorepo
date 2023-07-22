@@ -173,7 +173,7 @@ describe("prepareOperation", async () => {
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
-      .maxNumRefunds(1n)
+
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
@@ -228,7 +228,7 @@ describe("prepareOperation", async () => {
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
-      .maxNumRefunds(1n)
+
       .confidentialPayment(shitcoin, 1n, receiver)
       .gas({
         executionGasLimit: 1_000_00n,
@@ -281,14 +281,14 @@ describe("prepareOperation", async () => {
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
-      .maxNumRefunds(1n)
+
       .refundAddr(refundAddr)
       .gas({
         executionGasLimit: 20n,
         gasPrice: 0n,
       })
       .deadline(1n)
-      .maxNumRefunds(1n)
+
       .build();
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
@@ -347,7 +347,7 @@ describe("prepareOperation", async () => {
         gasPrice: 0n,
       })
       .deadline(1n)
-      .maxNumRefunds(1n)
+
       .build();
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
@@ -405,7 +405,6 @@ describe("prepareOperation", async () => {
       .refundAsset(stablescam)
       .refundAsset(plutocracy)
       .refundAddr(refundAddr)
-      .maxNumRefunds(4n)
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
@@ -466,7 +465,6 @@ describe("prepareOperation", async () => {
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 4000n)
       .unwrap(ponzi, 4000n)
-      .maxNumRefunds(3n)
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
@@ -508,7 +506,7 @@ describe("prepareOperation", async () => {
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 1000n)
-      .maxNumRefunds(1n)
+
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,

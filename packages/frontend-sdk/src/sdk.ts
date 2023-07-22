@@ -230,7 +230,6 @@ export class NocturneFrontendSDK {
     })
       .unwrap(encodedErc20, amount)
       .action(erc20Address, encodedFunction)
-      .maxNumRefunds(1n)
       .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
       .build();
 
