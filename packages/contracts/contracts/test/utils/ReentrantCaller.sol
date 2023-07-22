@@ -31,6 +31,7 @@ contract ReentrantCaller {
                 FormatOperationArgs({
                     joinSplitTokens: NocturneUtils
                         ._joinSplitTokensArrayOfOneToken(_token),
+                    joinSplitReturnValues: new uint256[](1),
                     gasToken: _token,
                     root: _handler.root(),
                     joinSplitsPublicSpends: NocturneUtils
