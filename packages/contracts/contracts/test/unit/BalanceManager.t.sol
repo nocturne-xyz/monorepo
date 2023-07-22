@@ -132,6 +132,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -179,6 +180,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -249,6 +251,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: tokens,
+                joinSplitReturnValues: new uint256[](tokens.length),
                 gasToken: address(token1),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: joinSplitsPublicSpends,
@@ -306,6 +309,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -360,6 +364,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -437,6 +442,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -519,6 +525,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -570,6 +577,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -612,6 +620,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -655,6 +664,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -698,6 +708,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -740,6 +751,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -805,6 +817,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(joinSplitToken)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(joinSplitToken),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils

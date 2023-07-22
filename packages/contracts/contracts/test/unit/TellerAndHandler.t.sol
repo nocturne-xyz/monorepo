@@ -275,6 +275,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -332,6 +333,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -469,6 +471,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -542,6 +545,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -615,6 +619,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -689,6 +694,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -762,6 +768,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -835,6 +842,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -921,6 +929,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -999,6 +1008,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1041,6 +1051,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1106,6 +1117,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1148,6 +1160,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1230,6 +1243,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1272,6 +1286,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1354,6 +1369,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1440,6 +1456,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1563,6 +1580,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20In)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(erc20In),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1600,6 +1618,228 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
+    }
+
+    function testProcessBundleFailsNotEnoughRefundReturnTokens() public {
+        SimpleERC20Token erc20In = ERC20s[0];
+        SimpleERC20Token erc20Out = ERC20s[1];
+
+        reserveAndDepositFunds(ALICE, erc20In, PER_NOTE_AMOUNT);
+
+        TokenSwapper swapper = new TokenSwapper();
+        handler.setContractPermission(address(swapper), true);
+        handler.setContractMethodPermission(
+            address(swapper),
+            swapper.swap.selector,
+            true
+        );
+
+        Action[] memory actions = new Action[](2);
+
+        // Approve swapper to transfer tokens
+        actions[0] = Action({
+            contractAddress: address(erc20In),
+            encodedFunction: abi.encodeWithSelector(
+                erc20In.approve.selector,
+                address(swapper),
+                PER_NOTE_AMOUNT
+            )
+        });
+
+        // Call swapper.swap, asking for erc20 tokens back
+        actions[1] = Action({
+            contractAddress: address(swapper),
+            encodedFunction: abi.encodeWithSelector(
+                swapper.swap.selector,
+                SwapRequest({
+                    assetInOwner: address(handler),
+                    encodedAssetIn: AssetUtils.encodeAsset(
+                        AssetType.ERC20,
+                        address(erc20In),
+                        ERC20_ID
+                    ),
+                    assetInAmount: PER_NOTE_AMOUNT,
+                    erc20Out: address(erc20Out),
+                    erc20OutAmount: PER_NOTE_AMOUNT // PER_NOTE_AMOUNT in out tokens
+                })
+            )
+        });
+
+        // Specify refund amount 1 greater than what we get back
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(erc20Out),
+                ERC20_ID
+            ),
+            minReturnValue: PER_NOTE_AMOUNT + 1 // 1 more token than we actually get back
+        });
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(erc20In)
+                ),
+                joinSplitReturnValues: new uint256[](1),
+                gasToken: address(erc20In),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 4, // 4 refund assets (including joinsplit)
+                gasPrice: 10,
+                actions: actions,
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
+        assertEq(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
+        assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
+
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "!min return value",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, processed = false
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+
+        // Bundler was compensated, swapper never received any tokens, nor did teller
+        assertLt(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertGt(erc20In.balanceOf(BUNDLER), 0);
+        assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
+        assertEq(erc20Out.balanceOf(address(teller)), uint256(0));
+    }
+
+    function testProcessBundleFailsNotEnoughJoinSplitReturnTokens() public {
+        SimpleERC20Token erc20In = ERC20s[0];
+        SimpleERC20Token erc20Out = ERC20s[1];
+
+        reserveAndDepositFunds(ALICE, erc20In, PER_NOTE_AMOUNT);
+
+        TokenSwapper swapper = new TokenSwapper();
+        handler.setContractPermission(address(swapper), true);
+        handler.setContractMethodPermission(
+            address(swapper),
+            swapper.swap.selector,
+            true
+        );
+
+        Action[] memory actions = new Action[](2);
+
+        // Approve swapper to transfer tokens
+        actions[0] = Action({
+            contractAddress: address(erc20In),
+            encodedFunction: abi.encodeWithSelector(
+                erc20In.approve.selector,
+                address(swapper),
+                PER_NOTE_AMOUNT
+            )
+        });
+
+        // Call swapper.swap, asking for erc20 tokens back
+        actions[1] = Action({
+            contractAddress: address(swapper),
+            encodedFunction: abi.encodeWithSelector(
+                swapper.swap.selector,
+                SwapRequest({
+                    assetInOwner: address(handler),
+                    encodedAssetIn: AssetUtils.encodeAsset(
+                        AssetType.ERC20,
+                        address(erc20In),
+                        ERC20_ID
+                    ),
+                    assetInAmount: PER_NOTE_AMOUNT / 2, // only give 1/2 of in tokens
+                    erc20Out: address(erc20Out),
+                    erc20OutAmount: PER_NOTE_AMOUNT // give PER_NOTE_AMOUNT back
+                })
+            )
+        });
+
+        // Specify expected refund amount
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(erc20Out),
+                ERC20_ID
+            ),
+            minReturnValue: PER_NOTE_AMOUNT // matches what swapper gives us
+        });
+
+        // Specify more joinsplit tokens to return than we get
+        uint256[] memory joinSplitReturnAmounts = new uint256[](1);
+        joinSplitReturnAmounts[0] = (PER_NOTE_AMOUNT / 2) + 1; // 1 more than we get back
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(erc20In)
+                ),
+                joinSplitReturnValues: joinSplitReturnAmounts,
+                gasToken: address(erc20In),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 4, // 4 refund assets (including joinsplit)
+                gasPrice: 10,
+                actions: actions,
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
+        assertEq(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
+        assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
+
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "!min return value",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, processed = false
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+
+        // Bundler was compensated, swapper never received any tokens, nor did teller
+        assertLt(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertGt(erc20In.balanceOf(BUNDLER), 0);
+        assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
+        assertEq(erc20Out.balanceOf(address(teller)), uint256(0));
     }
 
     function testProcessBundleSuccessfulAllRefunds() public {
@@ -1657,6 +1897,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20In)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(erc20In),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1744,6 +1985,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(joinSplitToken)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(joinSplitToken),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1833,6 +2075,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1900,6 +2143,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1974,6 +2218,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2044,6 +2289,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2120,6 +2366,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(joinSplitToken)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(joinSplitToken),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2197,6 +2444,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2265,6 +2513,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2325,6 +2574,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2368,6 +2618,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2409,6 +2660,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
