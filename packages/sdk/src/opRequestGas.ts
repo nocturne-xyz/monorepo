@@ -8,12 +8,13 @@ import {
 } from "./operationRequest";
 import {
   Operation,
-  ProvenOperation,
   OperationResult,
   Asset,
   PreSignOperation,
   BLOCK_GAS_LIMIT,
   AssetType,
+  TrackedAsset,
+  SignableOperationWithNetworkInfo,
 } from "./primitives";
 import { ERC20_ID } from "./primitives/asset";
 import { SolidityProof } from "./proof";
@@ -352,7 +353,7 @@ async function simulateOperation(
   }
 
   // Fill-in the some fake proof
-  const provenOp = fakeProvenOperation(op);
+  const fakeOp = fakeProvenOperation(op);
 
   // Set gasPrice to 0 so that gas payment does not interfere with amount of
   // assets unwrapped pre gas estimation
@@ -368,7 +369,7 @@ async function simulateOperation(
   const result = await handlerContract.callStatic.handleOperation(
     // TODO: fix after contract changes
     //@ts-ignore
-    provenOp,
+    fakeOp,
     verificationGasForOp,
     bundler,
     {
@@ -396,7 +397,15 @@ async function simulateOperation(
   };
 }
 
-function fakeProvenOperation(op: Operation): ProvenOperation {
+function fakeProvenOperation(op: Operation): SignableOperationWithNetworkInfo {
+  const trackedJoinSplitAssets: Array<TrackedAsset> = Array.from(
+    new Set(
+      op.joinSplits.map((js) => {
+        return { encodedAsset: js.encodedAsset, minReturnValue: 0n };
+      })
+    )
+  );
+
   const provenJoinSplits = op.joinSplits.map((joinSplit) => {
     return {
       commitmentTreeRoot: joinSplit.commitmentTreeRoot,
@@ -404,7 +413,9 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
       nullifierB: joinSplit.nullifierB,
       newNoteACommitment: joinSplit.newNoteACommitment,
       newNoteBCommitment: joinSplit.newNoteBCommitment,
-      encodedAsset: joinSplit.encodedAsset,
+      assetIndex: trackedJoinSplitAssets.findIndex(
+        (a) => a.encodedAsset === joinSplit.encodedAsset
+      ),
       publicSpend: joinSplit.publicSpend,
       newNoteAEncrypted: joinSplit.newNoteAEncrypted,
       newNoteBEncrypted: joinSplit.newNoteBEncrypted,
@@ -418,11 +429,21 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
       ),
     };
   });
+
+  const trackedRefundAssets: Array<TrackedAsset> = Array.from(
+    new Set(
+      op.encodedRefundAssets.map((a) => {
+        return { encodedAsset: a, minReturnValue: 0n };
+      })
+    )
+  );
+
   return {
     networkInfo: op.networkInfo,
     refundAddr: op.refundAddr,
-    encodedRefundAssets: op.encodedRefundAssets,
     actions: op.actions,
+    trackedJoinSplitAssets,
+    trackedRefundAssets,
     encodedGasAsset: op.encodedGasAsset,
     gasAssetRefundThreshold: op.gasAssetRefundThreshold,
     executionGasLimit: op.executionGasLimit,
