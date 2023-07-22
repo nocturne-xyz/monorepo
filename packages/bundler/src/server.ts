@@ -6,11 +6,7 @@ import cors from "cors";
 import { Logger } from "winston";
 import morgan from "morgan";
 import { Queue } from "bullmq";
-import {
-  ProvenOperationJobData,
-  PROVEN_OPERATION_QUEUE,
-  ACTOR_NAME,
-} from "./types";
+import { OperationJobData, PROVEN_OPERATION_QUEUE, ACTOR_NAME } from "./types";
 import { NullifierDB, StatusDB } from "./db";
 import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
 import {
@@ -36,7 +32,7 @@ export interface BundlerServerMetrics {
 
 export class BundlerServer {
   redis: IORedis;
-  queue: Queue<ProvenOperationJobData>;
+  queue: Queue<OperationJobData>;
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   logger: Logger;
