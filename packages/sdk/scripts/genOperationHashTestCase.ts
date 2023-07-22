@@ -5,7 +5,6 @@ import {
   computeOperationDigest,
   hashOperation,
 } from "../src";
-import { OPERATION_TYPES } from "../src/primitives/operation";
 
 (async () => {
   const joinSplit: SignableJoinSplit = {
@@ -79,25 +78,4 @@ import { OPERATION_TYPES } from "../src/primitives/operation";
 
   const opDigest = computeOperationDigest(operation);
   console.log("operation digest", "0x" + opDigest.toString(16));
-
-  const hashedTrackedAsset = _TypedDataEncoder.hashStruct(
-    "TrackedAsset",
-    OPERATION_TYPES,
-    operation.trackedJoinSplitAssets[0]
-  );
-  console.log("hashed tracked joinsplit asset", hashedTrackedAsset);
-
-  const hashedAsset = _TypedDataEncoder.hashStruct(
-    "EncodedAsset",
-    OPERATION_TYPES,
-    operation.trackedJoinSplitAssets[0].encodedAsset
-  );
-  console.log("hashed encoded asset", hashedAsset);
-
-  const hashedJoinSplit = _TypedDataEncoder.hashStruct(
-    "JoinSplitWithoutProof",
-    OPERATION_TYPES,
-    joinSplit
-  );
-  console.log("hashed joinsplit", hashedJoinSplit);
 })();
