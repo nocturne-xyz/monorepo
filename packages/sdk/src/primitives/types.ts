@@ -20,7 +20,7 @@ export interface Action {
 }
 
 export interface Bundle {
-  operations: OnchainOperation[];
+  operations: SignableOperation[];
 }
 
 export interface Deposit {
@@ -82,9 +82,12 @@ export interface ProvenJoinSplit extends BaseJoinSplit {
   proof: SolidityProof;
 }
 
-export interface OnChainProvenJoinSplit
-  extends Omit<ProvenJoinSplit, "encodedAsset"> {
+export interface SignableJoinSplit extends Omit<BaseJoinSplit, "encodedAsset"> {
   assetIndex: number;
+}
+
+export interface SubmittableJoinSplit extends SignableJoinSplit {
+  proof: SolidityProof;
 }
 
 export interface NetworkInfo {
@@ -123,15 +126,20 @@ export interface ProvenOperation extends BaseOperation {
   joinSplits: ProvenJoinSplit[];
 }
 
-export interface OnchainOperationWithNetworkInfo
+export interface SignableOperationWithNetworkInfo
   extends Omit<BaseOperation, "encodedRefundAssets"> {
-  joinSplits: OnChainProvenJoinSplit[];
+  joinSplits: SignableJoinSplit[];
   trackedJoinSplitAssets: TrackedAsset[];
   trackedRefundAssets: TrackedAsset[];
 }
 
-export type OnchainOperation = Omit<
-  OnchainOperationWithNetworkInfo,
+export interface SubmittableOperationWithNetworkInfo
+  extends Omit<SignableOperationWithNetworkInfo, "joinSplits"> {
+  joinSplits: SubmittableJoinSplit[];
+}
+
+export type SignableOperation = Omit<
+  SignableOperationWithNetworkInfo,
   "networkInfo"
 >;
 

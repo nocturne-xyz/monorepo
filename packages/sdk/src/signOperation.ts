@@ -9,12 +9,13 @@ import {
 import { JoinSplitInputs } from "./proof";
 import { NocturneSignature, NocturneSigner } from "./crypto";
 import { encodeEncodedAssetAddrWithSignBitsPI } from "./proof/joinsplit";
+import { toSignableOperation } from "./primitives/operation";
 
 export function signOperation(
   signer: NocturneSigner,
   op: PreSignOperation
 ): SignedOperation {
-  const opDigest = computeOperationDigest(op);
+  const opDigest = computeOperationDigest(toSignableOperation(op));
   const opSig = signer.sign(opDigest);
 
   const joinSplits: PreProofJoinSplit[] = op.joinSplits.map((joinSplit) =>
