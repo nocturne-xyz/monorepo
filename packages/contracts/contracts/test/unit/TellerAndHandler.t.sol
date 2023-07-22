@@ -2160,11 +2160,13 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(erc20.allowance(address(handler), NOT_ALLOWED_CONTRACT), 0);
     }
 
-    function testProcessBundleFailsErc20FunctionSelectorClashWithInvalidSpender() public {
+    function testProcessBundleFailsErc20FunctionSelectorClashWithInvalidSpender()
+        public
+    {
         SimpleERC20Token erc20 = ERC20s[0];
         reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
 
-        // Approve other contract which is meant to be allowed contract that has fn selector clash 
+        // Approve other contract which is meant to be allowed contract that has fn selector clash
         // with erc20.approve
         address CONTRACT_WITH_SELECTOR_CLASH = address(0x4444);
         handler.setContractPermission(CONTRACT_WITH_SELECTOR_CLASH, true);
@@ -2174,7 +2176,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             true
         );
 
-        // Format action that is correct encoded fn selector and length as erc20.approve but field 
+        // Format action that is correct encoded fn selector and length as erc20.approve but field
         // gets abi.decoded into invalid spender
         Action[] memory actions = new Action[](1);
         actions[0] = Action({
@@ -2233,11 +2235,13 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].failureReason, "!approve spender");
     }
 
-    function testProcessBundleFailsErc20FunctionSelectorClashWithInvalidFnDataLength() public {
+    function testProcessBundleFailsErc20FunctionSelectorClashWithInvalidFnDataLength()
+        public
+    {
         SimpleERC20Token erc20 = ERC20s[0];
         reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
 
-        // Approve other contract which is meant to be allowed contract that has fn selector clash 
+        // Approve other contract which is meant to be allowed contract that has fn selector clash
         // with erc20.approve
         address CONTRACT_WITH_SELECTOR_CLASH = address(0x4444);
         handler.setContractPermission(CONTRACT_WITH_SELECTOR_CLASH, true);
@@ -2301,10 +2305,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, true);
-        assertEq(
-            opResults[0].failureReason,
-            "!approve fn length"
-        );
+        assertEq(opResults[0].failureReason, "!approve fn length");
     }
 
     function testProcessBundleUnsupportedRefundTokenNoRefunds() public {
