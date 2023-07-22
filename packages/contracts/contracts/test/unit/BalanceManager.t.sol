@@ -145,7 +145,7 @@ contract BalanceManagerTest is Test {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
+                
                 gasPrice: 0,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -193,7 +193,7 @@ contract BalanceManagerTest is Test {
                 trackedRefundAssets: trackedRefundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasAssetRefundThreshold: 0,
-                maxNumRefunds: 1,
+                
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -258,7 +258,7 @@ contract BalanceManagerTest is Test {
                 trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
+                
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -322,7 +322,7 @@ contract BalanceManagerTest is Test {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
-                maxNumRefunds: 1,
+                
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -377,7 +377,7 @@ contract BalanceManagerTest is Test {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
+                
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -456,7 +456,7 @@ contract BalanceManagerTest is Test {
                 // threshold = sum(publicSpend) means it will always pay bundler whole amount
                 gasAssetRefundThreshold: 2 * PER_NOTE_AMOUNT,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
+                
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -538,7 +538,7 @@ contract BalanceManagerTest is Test {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
-                maxNumRefunds: 1,
+                
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -590,7 +590,7 @@ contract BalanceManagerTest is Test {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
+                
                 gasPrice: 0,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -633,7 +633,7 @@ contract BalanceManagerTest is Test {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
+                
                 gasPrice: 0,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -677,7 +677,7 @@ contract BalanceManagerTest is Test {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
+                
                 gasPrice: 0,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -721,7 +721,7 @@ contract BalanceManagerTest is Test {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
+                
                 gasPrice: 0,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -764,7 +764,7 @@ contract BalanceManagerTest is Test {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
+                
                 gasPrice: 0, // don't reserve any gas, teller takes up all
                 actions: new Action[](0),
                 atomicActions: false,
@@ -830,7 +830,7 @@ contract BalanceManagerTest is Test {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
+                
                 gasPrice: 0,
                 actions: new Action[](0),
                 atomicActions: false,

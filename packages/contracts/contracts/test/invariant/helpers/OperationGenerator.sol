@@ -103,8 +103,7 @@ contract OperationGenerator is InvariantUtils {
         uint256 gasToReserve = _opMaxGasAssetCost(
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
             DEFAULT_EXECUTION_GAS_LIMIT,
-            totalNumJoinSplits,
-            DEFAULT_MAX_NUM_REFUNDS
+            totalNumJoinSplits
         );
 
         bool compensateBundler = false;
@@ -152,7 +151,6 @@ contract OperationGenerator is InvariantUtils {
             trackedRefundAssets: trackedRefundAssets,
             gasAssetRefundThreshold: gasAssetRefundThreshold,
             executionGasLimit: DEFAULT_EXECUTION_GAS_LIMIT,
-            maxNumRefunds: DEFAULT_MAX_NUM_REFUNDS, // TODO: take based on number of swaps
             gasPrice: compensateBundler ? 1 : 0,
             actions: actions,
             atomicActions: true,
@@ -367,13 +365,12 @@ contract OperationGenerator is InvariantUtils {
     function _opMaxGasAssetCost(
         uint256 perJoinSplitVerifyGas,
         uint256 executionGasLimit,
-        uint256 numJoinSplits,
-        uint256 maxNumRefunds
+        uint256 numJoinSplits
     ) internal pure returns (uint256) {
         return
             executionGasLimit +
             ((perJoinSplitVerifyGas + GAS_PER_JOINSPLIT_HANDLE) *
                 numJoinSplits) +
-            ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) * maxNumRefunds);
+            ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) * DEFAULT_MAX_NUM_REFUNDS);
     }
 }
