@@ -70,11 +70,6 @@ struct Action {
     bytes encodedFunction;
 }
 
-// struct ExpectedRefund {
-//     EncodedAsset encodedAsset;
-//     uint256 minReturnValue;
-// }
-
 struct Operation {
     JoinSplit[] joinSplits;
     CompressedStealthAddress refundAddr;

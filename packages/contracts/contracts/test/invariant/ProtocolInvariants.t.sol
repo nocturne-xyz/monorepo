@@ -93,7 +93,6 @@ contract ProtocolInvariants is Test, InvariantsBase {
             depositErc20.decimals()
         );
 
-        // TODO: allow other tokens once we enable transacting with them
         handler.setContractPermission(address(weth), true);
         handler.setContractMethodPermission(
             address(weth),
