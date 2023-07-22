@@ -5,7 +5,7 @@ import {
   computeOperationDigest,
   OperationStatus,
   parseEventsFromContractReceipt,
-  OnchainProvenOperationWithNetworkInfo,
+  SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/sdk";
 import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
@@ -94,7 +94,7 @@ export class BundlerSubmitter {
     const worker = new Worker(
       OPERATION_BATCH_QUEUE,
       async (job: Job<OperationBatchJobData>) => {
-        const operations: OnchainProvenOperationWithNetworkInfo[] = JSON.parse(
+        const operations: SubmittableOperationWithNetworkInfo[] = JSON.parse(
           job.data.operationBatchJson
         );
 
@@ -138,7 +138,7 @@ export class BundlerSubmitter {
 
   async submitBatch(
     logger: Logger,
-    operations: OnchainProvenOperationWithNetworkInfo[]
+    operations: SubmittableOperationWithNetworkInfo[]
   ): Promise<void> {
     // TODO: this job isn't idempotent. If one step fails, bullmq will re-try
     // which may cause issues. Current plan is to mark reverted bundles as
@@ -167,7 +167,7 @@ export class BundlerSubmitter {
 
   async setOpsToInflight(
     logger: Logger,
-    operations: OnchainProvenOperationWithNetworkInfo[]
+    operations: SubmittableOperationWithNetworkInfo[]
   ): Promise<void> {
     // Loop through current batch and set each job status to IN_FLIGHT
     const inflightStatusTransactions = operations.map((op) => {
@@ -193,7 +193,7 @@ export class BundlerSubmitter {
 
   async dispatchBundle(
     logger: Logger,
-    operations: OnchainProvenOperationWithNetworkInfo[]
+    operations: SubmittableOperationWithNetworkInfo[]
   ): Promise<ethers.ContractReceipt | undefined> {
     try {
       // Estimate gas first
@@ -270,7 +270,7 @@ export class BundlerSubmitter {
 
   async performPostSubmissionBookkeeping(
     logger: Logger,
-    operations: OnchainProvenOperationWithNetworkInfo[],
+    operations: SubmittableOperationWithNetworkInfo[],
     receipt: ethers.ContractReceipt
   ): Promise<void> {
     const digestsToOps = new Map(
