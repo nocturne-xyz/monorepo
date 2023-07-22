@@ -84,7 +84,6 @@ struct Operation {
     EncodedAsset encodedGasAsset;
     uint256 gasAssetRefundThreshold;
     uint256 executionGasLimit;
-    uint256 maxNumRefunds;
     uint256 gasPrice;
     uint256 deadline;
     bool atomicActions;
@@ -120,7 +119,8 @@ library OperationLib {
             ((perJoinSplitVerifyGas + GAS_PER_JOINSPLIT_HANDLE) *
                 self.joinSplits.length) +
             ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) *
-                self.maxNumRefunds);
+                (self.trackedJoinSplitAssets.length +
+                    self.trackedRefundAssets.length));
     }
 
     function maxGasAssetCost(

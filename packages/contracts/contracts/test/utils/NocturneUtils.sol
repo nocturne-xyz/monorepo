@@ -25,7 +25,6 @@ struct FormatOperationArgs {
     TrackedAsset[] trackedRefundAssets;
     uint256 gasAssetRefundThreshold;
     uint256 executionGasLimit;
-    uint256 maxNumRefunds;
     uint256 gasPrice;
     Action[] actions;
     bool atomicActions;
@@ -237,7 +236,6 @@ library NocturneUtils {
             gasAssetRefundThreshold: args.gasAssetRefundThreshold,
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
-            maxNumRefunds: args.maxNumRefunds,
             deadline: deadline,
             atomicActions: args.atomicActions
         });
