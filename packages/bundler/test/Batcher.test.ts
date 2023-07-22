@@ -5,7 +5,7 @@ import { RedisMemoryServer } from "redis-memory-server";
 import { Queue } from "bullmq";
 import { BundlerBatcher } from "../src/batcher";
 import {
-  PROVEN_OPERATION_QUEUE,
+  SUBMITTABLE_OPERATION_QUEUE,
   OperationJobData,
   PROVEN_OPERATION_JOB_TAG,
 } from "../src/types";
@@ -70,9 +70,12 @@ describe("BundlerBatcher", async () => {
   }
 
   it("batches 8 inbound jobs as full batch", async () => {
-    const inboundQueue = new Queue<OperationJobData>(PROVEN_OPERATION_QUEUE, {
-      connection: redis,
-    });
+    const inboundQueue = new Queue<OperationJobData>(
+      SUBMITTABLE_OPERATION_QUEUE,
+      {
+        connection: redis,
+      }
+    );
 
     expect(await batcher.outboundQueue.count()).to.equal(0);
     const { promise } = batcher.start();
@@ -107,9 +110,12 @@ describe("BundlerBatcher", async () => {
   });
 
   it("batches 6 inbound jobs after passing wait time", async () => {
-    const inboundQueue = new Queue<OperationJobData>(PROVEN_OPERATION_QUEUE, {
-      connection: redis,
-    });
+    const inboundQueue = new Queue<OperationJobData>(
+      SUBMITTABLE_OPERATION_QUEUE,
+      {
+        connection: redis,
+      }
+    );
 
     expect(await batcher.outboundQueue.count()).to.equal(0);
     const { promise } = batcher.start();

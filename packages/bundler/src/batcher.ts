@@ -11,7 +11,7 @@ import {
   OPERATION_BATCH_QUEUE,
   OPERATION_BATCH_JOB_TAG,
   OperationJobData,
-  PROVEN_OPERATION_QUEUE,
+  SUBMITTABLE_OPERATION_QUEUE,
   ACTOR_NAME,
 } from "./types";
 import * as JSON from "bigint-json-serialization";
@@ -194,7 +194,7 @@ export class BundlerBatcher {
     const logger = this.logger.child({ function: "queuer" });
     logger.info("starting queuer...");
     const queuer = new Worker(
-      PROVEN_OPERATION_QUEUE,
+      SUBMITTABLE_OPERATION_QUEUE,
       async (job: Job<OperationJobData>) => {
         const provenOperation = JSON.parse(
           job.data.operationJson

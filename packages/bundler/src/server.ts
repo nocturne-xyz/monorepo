@@ -6,7 +6,11 @@ import cors from "cors";
 import { Logger } from "winston";
 import morgan from "morgan";
 import { Queue } from "bullmq";
-import { OperationJobData, PROVEN_OPERATION_QUEUE, ACTOR_NAME } from "./types";
+import {
+  OperationJobData,
+  SUBMITTABLE_OPERATION_QUEUE,
+  ACTOR_NAME,
+} from "./types";
 import { NullifierDB, StatusDB } from "./db";
 import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
 import {
@@ -49,7 +53,7 @@ export class BundlerServer {
     ignoreGas?: boolean
   ) {
     this.redis = redis;
-    this.queue = new Queue(PROVEN_OPERATION_QUEUE, { connection: redis });
+    this.queue = new Queue(SUBMITTABLE_OPERATION_QUEUE, { connection: redis });
     this.statusDB = new StatusDB(redis);
     this.nullifierDB = new NullifierDB(redis);
     this.logger = logger;
