@@ -235,7 +235,7 @@ contract BalanceManager is CommitmentTreeManager {
         uint256 refundValue = currentBalance > amountToWithhold
             ? currentBalance - amountToWithhold
             : 0;
-            
+
         require(
             refundValue >= trackedAsset.minReturnValue,
             "!min return value"
