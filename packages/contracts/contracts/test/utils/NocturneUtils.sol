@@ -18,6 +18,7 @@ enum OperationFailureType {
 
 struct FormatOperationArgs {
     address[] joinSplitTokens;
+    uint256[] joinSplitReturnValues;
     uint256[][] joinSplitsPublicSpends;
     address gasToken;
     uint256 root;
@@ -218,7 +219,7 @@ library NocturneUtils {
                     address(args.joinSplitTokens[i]),
                     ERC20_ID
                 ),
-                minReturnValue: 0
+                minReturnValue: args.joinSplitReturnValues[i]
             });
         }
 

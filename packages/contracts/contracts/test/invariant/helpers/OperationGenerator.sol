@@ -145,6 +145,7 @@ contract OperationGenerator is InvariantUtils {
 
         FormatOperationArgs memory opArgs = FormatOperationArgs({
             joinSplitTokens: args.joinSplitTokens,
+            joinSplitReturnValues: new uint256[](numJoinSplitTokens),
             gasToken: args.joinSplitTokens[0], // weth is used as gas token
             root: args.root,
             joinSplitsPublicSpends: joinSplitsPublicSpends,
