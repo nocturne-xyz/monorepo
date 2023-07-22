@@ -279,10 +279,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             "Cannot call non-allowed protocol method"
         );
 
-        // NOTE: if protocol and selector are allowed but there's selector clash with erc20 
-        // approve, then abi.decode will yield whatever data is formatted at bytes 4:23 for spender 
-        // which could be valid if 20 bytes happens to line up as an allowed address, or invalid if 
-        // not (worst case scenario is rejecting contract calls for allowed method due to clash). 
+        // NOTE: if protocol and selector are allowed but there's selector clash with erc20
+        // approve, then abi.decode will yield whatever data is formatted at bytes 4:23 for spender
+        // which could be valid if 20 bytes happens to line up as an allowed address, or invalid if
+        // not (worst case scenario is rejecting contract calls for allowed method due to clash).
         if (selector == ERC20_APPROVE_SELECTOR) {
             require(
                 action.encodedFunction.length == ERC_20_APPROVE_FN_DATA_LENGTH,
