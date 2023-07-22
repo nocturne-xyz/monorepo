@@ -59,7 +59,6 @@ export const VALID_RELAY_REQUEST = {
     },
     gasAssetRefundThreshold: "100n",
     executionGasLimit: "10000000n",
-    maxNumRefunds: "2n",
     gasPrice: "10n",
     deadline: "1000n",
     atomicActions: true,

@@ -40,7 +40,6 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 130n)
       .refundAsset(shitcoin)
-      .maxNumRefunds(1n)
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
