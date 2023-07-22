@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import {
   Bundle,
   computeOperationDigest,
-  ProvenOperation,
+  OnchainOperationWithNetworkInfo,
 } from "@nocturne-xyz/sdk";
 import { Teller } from "@nocturne-xyz/contracts";
 import { NullifierDB } from "./db";
@@ -12,7 +12,7 @@ import { ErrString } from "@nocturne-xyz/offchain-utils";
 export async function checkNullifierConflictError(
   db: NullifierDB,
   logger: Logger,
-  operation: ProvenOperation
+  operation: OnchainOperationWithNetworkInfo
 ): Promise<ErrString | undefined> {
   const opNfSet = new Set<bigint>();
 
@@ -46,7 +46,7 @@ export async function checkRevertError(
   tellerContract: Teller,
   provider: ethers.providers.Provider,
   logger: Logger,
-  operation: ProvenOperation
+  operation: OnchainOperationWithNetworkInfo
 ): Promise<ErrString | undefined> {
   logger.debug("simulating operation", { operation });
   const bundle: Bundle = { operations: [operation] };
@@ -71,7 +71,7 @@ export async function checkRevertError(
 export async function checkNotEnoughGasError(
   provider: ethers.providers.Provider,
   logger: Logger,
-  operation: ProvenOperation
+  operation: OnchainOperationWithNetworkInfo
 ): Promise<ErrString | undefined> {
   logger.debug(
     "checking that operation's gas price >= current chain's gas price"

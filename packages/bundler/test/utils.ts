@@ -13,10 +13,7 @@ export const VALID_RELAY_REQUEST = {
         nullifierB: "0n",
         newNoteACommitment: "0n",
         newNoteBCommitment: "0n",
-        encodedAsset: {
-          encodedAssetAddr: "1n",
-          encodedAssetId: "0n",
-        },
+        assetIndex: 1,
         publicSpend: "0n",
         newNoteAEncrypted: {
           encapsulatedSecretBytes: [1, 2, 3, 4],
@@ -32,10 +29,22 @@ export const VALID_RELAY_REQUEST = {
       h1: "0n",
       h2: "0n",
     },
-    encodedRefundAssets: [
+    trackedJoinSplitAssets: [
       {
-        encodedAssetAddr: "2n",
-        encodedAssetId: "3n",
+        encodedAsset: {
+          encodedAssetAddr: "2n",
+          encodedAssetId: "3n",
+        },
+        minReturnValue: "100n",
+      },
+    ],
+    trackedRefundAssets: [
+      {
+        encodedAsset: {
+          encodedAssetAddr: "2n",
+          encodedAssetId: "3n",
+        },
+        minReturnValue: "100n",
       },
     ],
     actions: [

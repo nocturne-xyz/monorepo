@@ -26,9 +26,9 @@
   },
   "dependencies": {
     "@nocturne-xyz/config": "1.0.15-alpha",
-    "@nocturne-xyz/contracts": "1.0.35-alpha",
+    "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/offchain-utils": "0.1.10",
-    "@nocturne-xyz/sdk": "1.0.188-alpha",
+    "@nocturne-xyz/sdk": "workspace:^",
     "@nocturne-xyz/tx-manager": "1.0.1-alpha",
     "@opentelemetry/api": "^1.4.1",
     "@opentelemetry/exporter-metrics-otlp-http": "^0.40.0",
