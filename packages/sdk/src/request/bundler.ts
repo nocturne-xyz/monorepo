@@ -1,10 +1,10 @@
 import {
   OperationStatus,
-  SignableOperationWithNetworkInfo,
+  SubmittableOperationWithNetworkInfo,
 } from "../primitives";
 
 export interface RelayRequest {
-  operation: SignableOperationWithNetworkInfo;
+  operation: SubmittableOperationWithNetworkInfo;
 }
 
 export interface RelayResponse {
