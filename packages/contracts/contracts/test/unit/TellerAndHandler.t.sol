@@ -2197,6 +2197,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
+                joinSplitReturnValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
