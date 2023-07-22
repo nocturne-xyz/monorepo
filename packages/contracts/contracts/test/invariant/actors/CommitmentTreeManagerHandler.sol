@@ -108,20 +108,6 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             minReturnValue: 0
         });
 
-        /*
-            JoinSplit[] joinSplits;
-            CompressedStealthAddress refundAddr;
-            TrackedAsset[] trackedJoinSplitAssets;
-            TrackedAsset[] trackedRefundAssets;
-            Action[] actions;
-            EncodedAsset encodedGasAsset;
-            uint256 gasAssetRefundThreshold;
-            uint256 executionGasLimit;
-            uint256 maxNumRefunds;
-            uint256 gasPrice;
-            uint256 deadline;
-            bool atomicActions;
-        */
         Operation memory op = Operation({
             joinSplits: joinSplits,
             refundAddr: CompressedStealthAddress({
