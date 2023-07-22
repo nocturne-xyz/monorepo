@@ -31,7 +31,6 @@ export function signOperation(
     gasAssetRefundThreshold,
     executionGasLimit,
     gasPrice,
-    maxNumRefunds,
     deadline,
     atomicActions,
   } = op;
@@ -46,7 +45,6 @@ export function signOperation(
     gasAssetRefundThreshold,
     executionGasLimit,
     gasPrice,
-    maxNumRefunds,
     deadline,
     atomicActions,
   };

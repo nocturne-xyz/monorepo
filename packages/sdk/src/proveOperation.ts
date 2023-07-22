@@ -28,7 +28,6 @@ export async function proveOperation(
     gasAssetRefundThreshold,
     executionGasLimit,
     gasPrice,
-    maxNumRefunds,
     deadline,
     atomicActions,
   } = op;
@@ -43,7 +42,6 @@ export async function proveOperation(
     gasAssetRefundThreshold,
     executionGasLimit,
     gasPrice,
-    maxNumRefunds,
     deadline,
     atomicActions,
   };
