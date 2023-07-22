@@ -78,7 +78,7 @@ contract OperationEIP712Test is Test {
             }),
             gasAssetRefundThreshold: 1,
             executionGasLimit: 1,
-            maxNumRefunds: 1,
+            
             gasPrice: 1,
             deadline: 1,
             atomicActions: true
@@ -113,7 +113,7 @@ contract OperationEIP712Test is Test {
         assertEq(
             operationHash,
             bytes32(
-                0x517a9a13d2c3914c1e76fc38122406f345bb2e6b08ee5f9b4b1cdfa6ba59cc14
+                0xef828ba08b20db66b187cefd1bd202c7e26a692d52b47e68741dbec664b0560d
             )
         );
 
@@ -145,7 +145,7 @@ contract OperationEIP712Test is Test {
         assertEq(
             operationDigest,
             uint256(
-                0x1451ce67a96b9faae788625bf16cdb51389e61e31cacbec2e63610600906a2f5
+                0x835a56eaeb6b678cc1f48d4f4c524e435517445f745c0a1225c328b9b789030
             )
         );
     }

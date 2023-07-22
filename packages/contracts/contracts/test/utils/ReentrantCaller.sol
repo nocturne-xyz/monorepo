@@ -44,7 +44,7 @@ contract ReentrantCaller {
                     trackedRefundAssets: new TrackedAsset[](0),
                     gasAssetRefundThreshold: 0,
                     executionGasLimit: DEFAULT_GAS_LIMIT,
-                    maxNumRefunds: 1,
+                    
                     gasPrice: 50,
                     actions: NocturneUtils.formatSingleTransferActionArray(
                         _token,

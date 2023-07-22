@@ -132,7 +132,6 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             ),
             gasAssetRefundThreshold: 0,
             executionGasLimit: 0,
-            maxNumRefunds: 0,
             gasPrice: 0,
             deadline: 0,
             atomicActions: false
