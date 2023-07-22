@@ -257,9 +257,9 @@ export async function whitelistTokens(
 
   console.log("whitelisting tokens...");
   for (const token of tokens) {
-    if (!(await handler._supportedTokens(token))) {
+    if (!(await handler._supportedContracts(token))) {
       console.log(`whitelisting token: ${token}`);
-      const tx = await handler.setTokenPermission(token, true);
+      const tx = await handler.setContractPermission(token, true);
       await tx.wait(1);
     }
   }
@@ -275,6 +275,11 @@ export async function whitelistProtocols(
   console.log("whitelisting protocols...");
   for (const [name, addressWithMethods] of Array.from(protocolWhitelist)) {
     const contractAddress = addressWithMethods.address;
+
+    console.log(`whitelisting protocol: ${name}. address: ${contractAddress}`);
+    const tx = await handler.setContractPermission(contractAddress, true);
+    await tx.wait(1);
+
     for (const signature of addressWithMethods.functionSignatures) {
       const selector = getSelector(signature);
       const key = protocolWhitelistKey(contractAddress, selector);
