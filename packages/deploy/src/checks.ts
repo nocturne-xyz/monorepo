@@ -188,7 +188,7 @@ async function checkProtocolAllowlist(
   protocolAllowlist: Map<string, ProtocolAddressWithMethods>
 ): Promise<void> {
   for (const [ticker, { address }] of erc20s.entries()) {
-    const tokenSupported = await handler._supportedTokens(address);
+    const tokenSupported = await handler._supportedContracts(address);
     assertOrErr(
       tokenSupported,
       `erc20 ${ticker} is not on the allowlist. Address: ${address}`
