@@ -6,7 +6,7 @@ import { Queue } from "bullmq";
 import { BundlerBatcher } from "../src/batcher";
 import {
   PROVEN_OPERATION_QUEUE,
-  ProvenOperationJobData,
+  OperationJobData,
   PROVEN_OPERATION_JOB_TAG,
 } from "../src/types";
 import { VALID_RELAY_REQUEST } from "./utils";
@@ -23,7 +23,7 @@ describe("BundlerBatcher", async () => {
   let server: RedisMemoryServer;
   let redis: IORedis;
   let statusDB: StatusDB;
-  let batcherDB: BatcherDB<ProvenOperationJobData>;
+  let batcherDB: BatcherDB<OperationJobData>;
   let batcher: BundlerBatcher;
   const logger = makeTestLogger("bundler", "batcher");
 
@@ -49,7 +49,7 @@ describe("BundlerBatcher", async () => {
   });
 
   async function enqueueOperation(
-    queue: Queue<ProvenOperationJobData>
+    queue: Queue<OperationJobData>
   ): Promise<string> {
     let operationObj = VALID_RELAY_REQUEST.operation;
     operationObj.executionGasLimit =
@@ -57,7 +57,7 @@ describe("BundlerBatcher", async () => {
     const operationJson = JSON.stringify(operationObj);
     const operation = JSON.parse(operationJson);
 
-    const jobData: ProvenOperationJobData = {
+    const jobData: OperationJobData = {
       operationJson,
     };
 
@@ -70,12 +70,9 @@ describe("BundlerBatcher", async () => {
   }
 
   it("batches 8 inbound jobs as full batch", async () => {
-    const inboundQueue = new Queue<ProvenOperationJobData>(
-      PROVEN_OPERATION_QUEUE,
-      {
-        connection: redis,
-      }
-    );
+    const inboundQueue = new Queue<OperationJobData>(PROVEN_OPERATION_QUEUE, {
+      connection: redis,
+    });
 
     expect(await batcher.outboundQueue.count()).to.equal(0);
     const { promise } = batcher.start();
@@ -110,12 +107,9 @@ describe("BundlerBatcher", async () => {
   });
 
   it("batches 6 inbound jobs after passing wait time", async () => {
-    const inboundQueue = new Queue<ProvenOperationJobData>(
-      PROVEN_OPERATION_QUEUE,
-      {
-        connection: redis,
-      }
-    );
+    const inboundQueue = new Queue<OperationJobData>(PROVEN_OPERATION_QUEUE, {
+      connection: redis,
+    });
 
     expect(await batcher.outboundQueue.count()).to.equal(0);
     const { promise } = batcher.start();
