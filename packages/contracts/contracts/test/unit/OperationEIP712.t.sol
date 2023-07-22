@@ -95,7 +95,7 @@ contract OperationEIP712Test is Test {
             }),
             gasAssetRefundThreshold: 1,
             executionGasLimit: 1,
-            maxNumRefunds: 1,
+            
             gasPrice: 1,
             deadline: 1,
             atomicActions: true
