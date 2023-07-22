@@ -25,7 +25,6 @@ export const OPERATION_TYPES = {
     { name: "encodedGasAsset", type: "EncodedAsset" },
     { name: "gasAssetRefundThreshold", type: "uint256" },
     { name: "executionGasLimit", type: "uint256" },
-    { name: "maxNumRefunds", type: "uint256" },
     { name: "gasPrice", type: "uint256" },
     { name: "deadline", type: "uint256" },
     { name: "atomicActions", type: "bool" },
