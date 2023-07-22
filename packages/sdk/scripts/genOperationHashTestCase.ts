@@ -1,14 +1,14 @@
 import { _TypedDataEncoder } from "ethers/lib/utils";
 import {
-  OnChainProvenJoinSplit,
-  OnchainOperationWithNetworkInfo,
+  SignableJoinSplit,
+  SignableOperationWithNetworkInfo,
   computeOperationDigest,
   hashOperation,
 } from "../src";
-import { OPERATION_TYPES } from "../src/primitives/operationDigest";
+import { OPERATION_TYPES } from "../src/primitives/operation";
 
 (async () => {
-  const joinSplit: OnChainProvenJoinSplit = {
+  const joinSplit: SignableJoinSplit = {
     commitmentTreeRoot: 1n,
     nullifierA: 1n,
     nullifierB: 1n,
@@ -17,7 +17,6 @@ import { OPERATION_TYPES } from "../src/primitives/operationDigest";
     assetIndex: 1,
     publicSpend: 1n,
     senderCommitment: 1n,
-    proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
     newNoteAEncrypted: {
       ciphertextBytes: [],
       encapsulatedSecretBytes: [],
@@ -28,7 +27,7 @@ import { OPERATION_TYPES } from "../src/primitives/operationDigest";
     },
   };
 
-  const operation: OnchainOperationWithNetworkInfo = {
+  const operation: SignableOperationWithNetworkInfo = {
     networkInfo: {
       chainId: 1n,
       tellerContract: "0x1111111111111111111111111111111111111111",

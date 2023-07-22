@@ -9,7 +9,7 @@ import { Request, RequestHandler, Response } from "express";
 import {
   OperationStatus,
   computeOperationDigest,
-  OnchainOperationWithNetworkInfo,
+  OnchainProvenOperationWithNetworkInfo,
   RelayResponse,
   OperationStatusResponse,
 } from "@nocturne-xyz/sdk";
@@ -209,7 +209,7 @@ async function postJob(
   nullifierDB: NullifierDB,
   redis: IORedis,
   logger: Logger,
-  operation: OnchainOperationWithNetworkInfo
+  operation: OnchainProvenOperationWithNetworkInfo
 ): Promise<string> {
   const jobId = computeOperationDigest(operation).toString();
   const operationJson = JSON.stringify(operation);
