@@ -4,13 +4,13 @@ import { BatcherDB, StatusDB } from "./db";
 import {
   OperationStatus,
   computeOperationDigest,
-  ProvenOperation,
+  OnchainOperationWithNetworkInfo,
 } from "@nocturne-xyz/sdk";
 import {
   OperationBatchJobData,
   OPERATION_BATCH_QUEUE,
   OPERATION_BATCH_JOB_TAG,
-  ProvenOperationJobData,
+  OperationJobData,
   PROVEN_OPERATION_QUEUE,
   ACTOR_NAME,
 } from "./types";
@@ -37,7 +37,7 @@ export interface BundlerBatcherMetrics {
 export class BundlerBatcher {
   redis: IORedis;
   statusDB: StatusDB;
-  batcherDB: BatcherDB<ProvenOperation>;
+  batcherDB: BatcherDB<OnchainOperationWithNetworkInfo>;
   outboundQueue: Queue<OperationBatchJobData>;
   logger: Logger;
   metrics: BundlerBatcherMetrics;
@@ -195,10 +195,10 @@ export class BundlerBatcher {
     logger.info("starting queuer...");
     const queuer = new Worker(
       PROVEN_OPERATION_QUEUE,
-      async (job: Job<ProvenOperationJobData>) => {
+      async (job: Job<OperationJobData>) => {
         const provenOperation = JSON.parse(
           job.data.operationJson
-        ) as ProvenOperation;
+        ) as OnchainOperationWithNetworkInfo;
 
         const batcherAddTransaction =
           this.batcherDB.getAddTransaction(provenOperation);

@@ -5,7 +5,7 @@ export const OPERATION_BATCH_QUEUE = "OperationBatchQueue";
 export const PROVEN_OPERATION_JOB_TAG = "PROVEN_OPERATION";
 export const OPERATION_BATCH_JOB_TAG = "OPERATION_BATCH";
 
-export type ProvenOperationJobData = {
+export type OperationJobData = {
   operationJson: string;
 };
 
