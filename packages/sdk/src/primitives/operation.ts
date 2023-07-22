@@ -117,7 +117,7 @@ export function toSignableOperation(
     gasAssetRefundThreshold,
     executionGasLimit,
     gasPrice,
-    maxNumRefunds,
+
     deadline,
     atomicActions,
   } = op;
@@ -167,7 +167,7 @@ export function toSignableOperation(
     gasAssetRefundThreshold,
     executionGasLimit,
     gasPrice,
-    maxNumRefunds,
+
     deadline,
     atomicActions,
   };
@@ -186,7 +186,7 @@ export function toSubmittableOperation(
     gasAssetRefundThreshold,
     executionGasLimit,
     gasPrice,
-    maxNumRefunds,
+
     deadline,
     atomicActions,
   } = op;
@@ -237,7 +237,7 @@ export function toSubmittableOperation(
     gasAssetRefundThreshold,
     executionGasLimit,
     gasPrice,
-    maxNumRefunds,
+
     deadline,
     atomicActions,
   };

@@ -104,7 +104,6 @@ export interface BaseOperation {
   encodedGasAsset: EncodedAsset;
   gasAssetRefundThreshold: bigint;
   executionGasLimit: bigint;
-  maxNumRefunds: bigint;
   gasPrice: bigint;
   deadline: bigint;
   atomicActions: boolean;

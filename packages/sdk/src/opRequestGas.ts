@@ -18,7 +18,7 @@ import {
 } from "./primitives";
 import { ERC20_ID } from "./primitives/asset";
 import { SolidityProof } from "./proof";
-import { groupByMap, max, partition } from "./utils/functional";
+import { groupByMap, partition } from "./utils/functional";
 import { prepareOperation } from "./prepareOperation";
 import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
@@ -58,12 +58,8 @@ export interface HandleOpRequestGasDeps {
 }
 
 interface GasEstimatedOperationRequest
-  extends Omit<
-    OperationRequest,
-    "executionGasLimit" | "maxNumRefunds" | "gasPrice"
-  > {
+  extends Omit<OperationRequest, "executionGasLimit" | "gasPrice"> {
   executionGasLimit: bigint;
-  maxNumRefunds: bigint;
   gasPrice: bigint;
 }
 
@@ -71,7 +67,6 @@ interface GasParams {
   gasPrice: bigint;
   numJoinSplits: bigint;
   executionGasLimit: bigint;
-  maxNumRefunds: bigint;
 }
 
 // VK corresponding to SK of 1 with minimum valid nonce
@@ -86,13 +81,12 @@ export async function handleGasForOperationRequest(
 ): Promise<GasAccountedOperationRequest> {
   // estimate gas params for opRequest
   console.log("estimating gas for op request");
-  const { gasPrice, numJoinSplits, executionGasLimit, maxNumRefunds } =
+  const { gasPrice, numJoinSplits, executionGasLimit } =
     await estimateGasForOperationRequest(deps, opRequest);
 
   const gasEstimatedOpRequest: GasEstimatedOperationRequest = {
     ...opRequest,
     executionGasLimit,
-    maxNumRefunds,
     gasPrice,
   };
 
@@ -109,10 +103,13 @@ export async function handleGasForOperationRequest(
 
     // compute an estimate of the total amount of gas the op will cost given the gas params
     // we add 1 to `maxNumRefund` because we may add another joinSplitRequest to pay for gas
+    const numRefundsEstimate = BigInt(
+      Number(numJoinSplits) + opRequest.refundAssets.length
+    );
     const totalGasUnitsEstimate =
       executionGasLimit +
       numJoinSplits * PER_JOINSPLIT_GAS +
-      maxNumRefunds * PER_REFUND_GAS;
+      numRefundsEstimate * PER_REFUND_GAS;
 
     console.log(`execution gas limit: ${executionGasLimit}`, {
       executionGasLimit,
@@ -121,9 +118,9 @@ export async function handleGasForOperationRequest(
       numJoinSplits,
       joinSplitsGas: numJoinSplits * PER_JOINSPLIT_GAS,
     });
-    console.log(`refunds gas: ${maxNumRefunds * PER_REFUND_GAS}`, {
-      maxNumRefunds,
-      refundsGas: maxNumRefunds * PER_REFUND_GAS,
+    console.log(`refunds gas: ${numRefundsEstimate * PER_REFUND_GAS}`, {
+      numRefundsEstimate,
+      refundsGas: numRefundsEstimate * PER_REFUND_GAS,
     });
 
     // attempt to update the joinSplitRequests with gas compensation
@@ -140,13 +137,6 @@ export async function handleGasForOperationRequest(
 
     if (!gasAssetAndTicker) {
       throw new Error("not enough owned gas tokens pay for op");
-    }
-
-    // if we've added a new joinSplitRequest to pay for gas, we need to increase maxNumRefunds to reflect that change
-    if (
-      joinSplitRequests.length > gasEstimatedOpRequest.joinSplitRequests.length
-    ) {
-      gasEstimatedOpRequest.maxNumRefunds += 1n;
     }
 
     const gasAssetRefundThreshold = await deps.tokenConverter.weiToTargetErc20(
@@ -273,15 +263,11 @@ async function estimateGasForOperationRequest(
   { handlerContract, ...deps }: HandleOpRequestGasDeps,
   opRequest: OperationRequest
 ): Promise<GasParams> {
-  let { executionGasLimit, maxNumRefunds, gasPrice } = opRequest;
+  let { executionGasLimit, gasPrice } = opRequest;
 
   // Simulate operation to get number of joinSplits
-  const { joinSplitRequests, refundAssets } = opRequest;
   const dummyOpRequest: GasAccountedOperationRequest = {
     ...opRequest,
-    maxNumRefunds:
-      maxNumRefunds ??
-      BigInt(joinSplitRequests.length + refundAssets.length) + 5n, // dummy fill joinsplits length
     gasAssetRefundThreshold: 0n,
     executionGasLimit: BLOCK_GAS_LIMIT,
     refundAddr: DUMMY_REFUND_ADDR,
@@ -295,12 +281,9 @@ async function estimateGasForOperationRequest(
     { viewer: DUMMY_VIEWER, ...deps },
     dummyOpRequest
   );
-  preparedOp.maxNumRefunds = BigInt(
-    preparedOp.joinSplits.length + refundAssets.length + 5
-  ); // set correct maxNumRefunds now that we know number of joinsplits
 
   // simulate the operation
-  if (!executionGasLimit || !maxNumRefunds) {
+  if (!executionGasLimit) {
     console.log("simulating operation");
     const result = await simulateOperation(
       handlerContract,
@@ -311,20 +294,7 @@ async function estimateGasForOperationRequest(
     }
 
     // set executionGasLimit with 20% buffer above the simulation result
-    if (!executionGasLimit) {
-      executionGasLimit = (result.executionGas * 12n) / 10n;
-    }
-
-    // If refunds specified > simulation result, use specified amount
-    // If refunds specified < simulation result, use simulation result
-    if (!maxNumRefunds) {
-      maxNumRefunds = max(
-        result.numRefunds,
-        BigInt(
-          preparedOp.joinSplits.length + preparedOp.encodedRefundAssets.length
-        )
-      );
-    }
+    executionGasLimit = (result.executionGas * 12n) / 10n;
   }
 
   // if gasPrice is not specified, get it from RPC node
@@ -336,7 +306,6 @@ async function estimateGasForOperationRequest(
   return {
     numJoinSplits: BigInt(preparedOp.joinSplits.length),
     executionGasLimit,
-    maxNumRefunds,
     gasPrice,
   };
 }
@@ -447,7 +416,6 @@ function fakeProvenOperation(op: Operation): SignableOperationWithNetworkInfo {
     encodedGasAsset: op.encodedGasAsset,
     gasAssetRefundThreshold: op.gasAssetRefundThreshold,
     executionGasLimit: op.executionGasLimit,
-    maxNumRefunds: op.maxNumRefunds,
     gasPrice: op.gasPrice,
     joinSplits: provenJoinSplits,
     deadline: op.deadline,

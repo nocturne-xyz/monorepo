@@ -66,7 +66,6 @@ import {
     },
     gasAssetRefundThreshold: 1n,
     executionGasLimit: 1n,
-    maxNumRefunds: 1n,
     gasPrice: 1n,
     deadline: 1n,
     atomicActions: true,
