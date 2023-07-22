@@ -4,7 +4,7 @@ import { BatcherDB, StatusDB } from "./db";
 import {
   OperationStatus,
   computeOperationDigest,
-  OnchainProvenOperationWithNetworkInfo,
+  SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/sdk";
 import {
   OperationBatchJobData,
@@ -37,7 +37,7 @@ export interface BundlerBatcherMetrics {
 export class BundlerBatcher {
   redis: IORedis;
   statusDB: StatusDB;
-  batcherDB: BatcherDB<OnchainProvenOperationWithNetworkInfo>;
+  batcherDB: BatcherDB<SubmittableOperationWithNetworkInfo>;
   outboundQueue: Queue<OperationBatchJobData>;
   logger: Logger;
   metrics: BundlerBatcherMetrics;
@@ -198,7 +198,7 @@ export class BundlerBatcher {
       async (job: Job<OperationJobData>) => {
         const provenOperation = JSON.parse(
           job.data.operationJson
-        ) as OnchainProvenOperationWithNetworkInfo;
+        ) as SubmittableOperationWithNetworkInfo;
 
         const batcherAddTransaction =
           this.batcherDB.getAddTransaction(provenOperation);
