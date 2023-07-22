@@ -5,6 +5,7 @@ import {
   ProvenOperation,
   SubtreeUpdateProver,
   computeOperationDigest,
+  toSubmittableOperation,
 } from "@nocturne-xyz/sdk";
 import { spawn } from "child_process";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
@@ -93,8 +94,10 @@ export async function queryDepositStatus(
 }
 
 export async function submitAndProcessOperation(
-  op: ProvenOperation
+  operation: ProvenOperation
 ): Promise<OperationStatus> {
+  const op = toSubmittableOperation(operation);
+
   console.log("submitting operation");
   let res: any;
   try {
