@@ -31,6 +31,7 @@ import {
   proveOperation,
   unpackFromSolidityProof,
   OperationStatusResponse,
+  toSubmittableOperation,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction } from "ethers";
@@ -375,6 +376,7 @@ export class NocturneFrontendSDK {
   async submitProvenOperation(
     operation: ProvenOperation
   ): Promise<BundlerOperationID> {
+    const op = toSubmittableOperation(operation);
     return await retry(
       async () => {
         const res = await fetch(`${this.bundlerEndpoint}/relay`, {
@@ -382,7 +384,7 @@ export class NocturneFrontendSDK {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ operation } as RelayRequest),
+          body: JSON.stringify({ operation: op } as RelayRequest),
         });
 
         const resJSON = await res.json();
