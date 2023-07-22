@@ -5,7 +5,7 @@ import {
   computeOperationDigest,
   hashOperation,
 } from "../src";
-import { OPERATION_TYPES } from "../src/primitives/operationDigest";
+import { OPERATION_TYPES } from "../src/primitives/operation";
 
 (async () => {
   const joinSplit: SignableJoinSplit = {
@@ -17,7 +17,6 @@ import { OPERATION_TYPES } from "../src/primitives/operationDigest";
     assetIndex: 1,
     publicSpend: 1n,
     senderCommitment: 1n,
-    proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
     newNoteAEncrypted: {
       ciphertextBytes: [],
       encapsulatedSecretBytes: [],
