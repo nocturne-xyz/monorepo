@@ -258,9 +258,9 @@ contract BalanceManager is CommitmentTreeManager {
 
     /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
     ///         to the Teller and inserting new note commitments for the sent back assets.
-    /// @dev Checks for refunds op.trackedJoinSplitAssets and op.trackedRefundAssets. A refund 
-    ///      occurs if any of the checked assets have outstanding balance > 0 in the Handler. If a 
-    ///      refund occurs, the Handler will transfer the asset back to the Teller and insert a new 
+    /// @dev Checks for refunds op.trackedJoinSplitAssets and op.trackedRefundAssets. A refund
+    ///      occurs if any of the checked assets have outstanding balance > 0 in the Handler. If a
+    ///      refund occurs, the Handler will transfer the asset back to the Teller and insert a new
     ///      note commitment into the commitment tree.
     /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {

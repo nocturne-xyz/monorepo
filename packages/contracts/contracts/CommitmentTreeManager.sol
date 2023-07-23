@@ -161,7 +161,7 @@ contract CommitmentTreeManager is
     }
 
     /// @notice Process an op's joinSplits, assuming that their proofs have already been verified.
-    ///         Ensures joinSplit commitment tree root is up to date, that nullifiers are not 
+    ///         Ensures joinSplit commitment tree root is up to date, that nullifiers are not
     ///         reused, adds the new NFs to the nullifier set, and inserts the new note NCs.
     /// @dev This function should be re-entry safe. Nullifiers are be marked
     ///      used as soon as they are checked to be valid.
