@@ -288,7 +288,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -346,7 +345,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -484,7 +482,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -705,7 +702,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -779,7 +775,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -853,7 +848,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -940,7 +934,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: false,
@@ -1019,7 +1012,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -1062,7 +1054,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: false,
@@ -1128,7 +1119,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -1171,7 +1161,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: false,
@@ -1254,7 +1243,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -1297,7 +1285,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: false,
@@ -2511,7 +2498,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: 100, // not enough gas for transfer
-                
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -2572,7 +2558,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -2616,7 +2601,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -2658,7 +2642,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),

@@ -133,7 +133,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     ///            the revert happens before _gatherReservedGasAssetAndPayBundler is called.
     ///         2. executeActions: A revert here can be due to unpredictable reasons, mainly if
     ///            there is not enough executionGas for the actions or if the call yields fewer
-    ///            return tokens than specified in the TrackedAsset arrays. The bundler is 
+    ///            return tokens than specified in the TrackedAsset arrays. The bundler is
     ///            compensated when reverts happen here.
     ///         3. _makeExternalCall: A revert here only leads to top level revert if
     ///            op.atomicActions = true (requires all actions to succeed atomically or none at
