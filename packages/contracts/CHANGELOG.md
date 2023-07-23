@@ -2,12 +2,13 @@
 
 ### Unreleased
 
+- check code size of contract called in `_makeExternalCall` (TOB-13)
 - remove `op.maxNumRefunds` now that number of refund assets is statically determined
 - add test cases to ensure min return value functionality works as expected
-- `_ensureMinReturnValues` called after action execution returns accurate num refunds estimate so bundler gas comp estimate is more accurate (TOB-15)
+- `_ensureMinRefundValues` called after action execution returns accurate num refunds estimate so bundler gas comp estimate is more accurate (TOB-15)
 - Handler ensures each joinsplit and refund asset has min return value post-action-execution otherwise revert
 - separate joinSplit assets from joinSplits, split into `op.trackedJoinSplitAssets` and having joinSplits have `assetIndex` field
-- Add `TrackedAsset` type for joinSplits and refunds to support "min return value" feature to address TOB-10
+- Add `TrackedAsset` type for joinSplits and refunds to support "min return value" feature (TOB-10)
 - add tests for erc20 approve checks in handler
 - add special check for erc20.approve to ensure decoded spender is on whitelist
 - change \_supportedTokens to \_supportedContracts
