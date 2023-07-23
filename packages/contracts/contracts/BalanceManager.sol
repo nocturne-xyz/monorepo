@@ -161,6 +161,10 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
+    /// @notice Ensure all joinsplit and refund assets start with empty balances (0 or 1).
+    /// @dev If any asset has a balance > 1, we transfer the excess to the leftover tokens contract
+    ///      and return the amount transferred.
+    /// @param op Operation to ensure zeroed balances for
     function _ensureZeroedBalances(Operation calldata op) internal {
         uint256 numJoinSplitAssets = op.trackedJoinSplitAssets.length;
         for (uint256 i = 0; i < numJoinSplitAssets; i++) {
@@ -179,6 +183,9 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
+    /// @notice Ensure all tracked assets have a balance >= minReturnValue and return number of
+    ///         refunds to handle. If any asset has a balance < minReturnValue, call reverts.
+    /// @param op Operation to ensure min return values for
     function _ensureMinReturnValues(
         Operation calldata op
     ) internal view returns (uint256 numRefundsToHandle) {
@@ -223,6 +230,9 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
+    /// @notice Ensure tracked asset has a balance >= minReturnValue and return true if a refund
+    ///         is required. If asset has a balance < minReturnValue, call reverts.
+    /// @param trackedAsset Tracked asset to ensure min return value for
     function _ensureMinReturnValueForTrackedAsset(
         TrackedAsset calldata trackedAsset
     ) internal view returns (bool requiresRefund) {
@@ -248,10 +258,10 @@ contract BalanceManager is CommitmentTreeManager {
 
     /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
     ///         to the Teller and inserting new note commitments for the sent back assets.
-    /// @dev Checks for refunds op.expectedRefunds. A refund occurs if any of the checked assets
-    ///      have outstanding balance > 0 in the Handler. If a refund occurs, the Handler will
-    ///      transfer the asset back to the Teller and insert a new note commitment into the
-    ///      commitment tree.
+    /// @dev Checks for refunds op.trackedJoinSplitAssets and op.trackedRefundAssets. A refund 
+    ///      occurs if any of the checked assets have outstanding balance > 0 in the Handler. If a 
+    ///      refund occurs, the Handler will transfer the asset back to the Teller and insert a new 
+    ///      note commitment into the commitment tree.
     /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
         EncodedAsset calldata encodedAsset;
