@@ -272,7 +272,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         Action calldata action
     ) internal returns (bool success, bytes memory result) {
         // Ensure contract exists
-        require(action.contractAddress.code.length != 0);
+        require(action.contractAddress.code.length != 0, "!zero code");
 
         // Block re-entrancy from teller calling self
         require(
