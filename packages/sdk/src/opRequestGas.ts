@@ -65,7 +65,7 @@ interface GasEstimatedOperationRequest
 
 interface GasParams {
   gasPrice: bigint;
-  numJoinSplits: bigint;
+  numJoinSplitAssets: bigint;
   executionGasLimit: bigint;
 }
 
@@ -81,7 +81,7 @@ export async function handleGasForOperationRequest(
 ): Promise<GasAccountedOperationRequest> {
   // estimate gas params for opRequest
   console.log("estimating gas for op request");
-  const { gasPrice, numJoinSplits, executionGasLimit } =
+  const { gasPrice, numJoinSplitAssets, executionGasLimit } =
     await estimateGasForOperationRequest(deps, opRequest);
 
   const gasEstimatedOpRequest: GasEstimatedOperationRequest = {
@@ -104,19 +104,19 @@ export async function handleGasForOperationRequest(
     // compute an estimate of the total amount of gas the op will cost given the gas params
     // we add 1 to `maxNumRefund` because we may add another joinSplitRequest to pay for gas
     const numRefundsEstimate = BigInt(
-      Number(numJoinSplits) + opRequest.refundAssets.length
+      Number(numJoinSplitAssets) + opRequest.refundAssets.length
     );
     const totalGasUnitsEstimate =
       executionGasLimit +
-      numJoinSplits * PER_JOINSPLIT_GAS +
+      numJoinSplitAssets * PER_JOINSPLIT_GAS +
       numRefundsEstimate * PER_REFUND_GAS;
 
     console.log(`execution gas limit: ${executionGasLimit}`, {
       executionGasLimit,
     });
-    console.log(`joinSplits gas: ${numJoinSplits * PER_JOINSPLIT_GAS}`, {
-      numJoinSplits,
-      joinSplitsGas: numJoinSplits * PER_JOINSPLIT_GAS,
+    console.log(`joinSplits gas: ${numJoinSplitAssets * PER_JOINSPLIT_GAS}`, {
+      numJoinSplitAssets,
+      joinSplitsGas: numJoinSplitAssets * PER_JOINSPLIT_GAS,
     });
     console.log(`refunds gas: ${numRefundsEstimate * PER_REFUND_GAS}`, {
       numRefundsEstimate,
@@ -303,8 +303,12 @@ async function estimateGasForOperationRequest(
     gasPrice ??
     ((await handlerContract.provider.getGasPrice()).toBigInt() * 12n) / 10n;
 
+  const joinSplitAssets = new Set(
+    preparedOp.joinSplits.map((js) => js.encodedAsset)
+  );
+
   return {
-    numJoinSplits: BigInt(preparedOp.joinSplits.length),
+    numJoinSplitAssets: BigInt(joinSplitAssets.size),
     executionGasLimit,
     gasPrice,
   };
