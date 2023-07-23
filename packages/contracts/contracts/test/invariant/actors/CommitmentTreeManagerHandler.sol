@@ -105,7 +105,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
                 address(uint160(bound(_rerandomize(seed), 0, (1 << 160) - 1))),
                 ERC20_ID
             ),
-            minReturnValue: 0
+            minRefundValue: 0
         });
 
         Operation memory op = Operation({
