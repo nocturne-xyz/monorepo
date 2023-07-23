@@ -35,7 +35,7 @@ export const VALID_RELAY_REQUEST = {
           encodedAssetAddr: "2n",
           encodedAssetId: "3n",
         },
-        minReturnValue: "100n",
+        minRefundValue: "100n",
       },
     ],
     trackedRefundAssets: [
@@ -44,7 +44,7 @@ export const VALID_RELAY_REQUEST = {
           encodedAssetAddr: "2n",
           encodedAssetId: "3n",
         },
-        minReturnValue: "100n",
+        minRefundValue: "100n",
       },
     ],
     actions: [

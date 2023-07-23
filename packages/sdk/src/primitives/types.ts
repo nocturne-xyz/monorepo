@@ -93,7 +93,7 @@ export interface NetworkInfo {
 
 export interface TrackedAsset {
   encodedAsset: EncodedAsset;
-  minReturnValue: bigint;
+  minRefundValue: bigint;
 }
 
 export interface BaseOperation {

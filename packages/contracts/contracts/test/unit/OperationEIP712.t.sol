@@ -54,7 +54,7 @@ contract OperationEIP712Test is Test {
                 encodedAssetAddr: 1,
                 encodedAssetId: 1
             }),
-            minReturnValue: 1
+            minRefundValue: 1
         });
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
@@ -63,7 +63,7 @@ contract OperationEIP712Test is Test {
                 encodedAssetAddr: 1,
                 encodedAssetId: 1
             }),
-            minReturnValue: 1
+            minRefundValue: 1
         });
 
         Operation memory operation = Operation({
@@ -112,7 +112,7 @@ contract OperationEIP712Test is Test {
         assertEq(
             operationHash,
             bytes32(
-                0xef828ba08b20db66b187cefd1bd202c7e26a692d52b47e68741dbec664b0560d
+                0x423766fa67ce615fbf8b8f6cdcc6c326b8f3f551b34db09ae4c79cf7a066cc29
             )
         );
 
@@ -144,7 +144,7 @@ contract OperationEIP712Test is Test {
         assertEq(
             operationDigest,
             uint256(
-                0x835a56eaeb6b678cc1f48d4f4c524e435517445f745c0a1225c328b9b789030
+                0xd1b2419c96c01ce694c6a6103a410284a4dd628e828d92dae73b0e907e186aa
             )
         );
     }
