@@ -196,12 +196,12 @@ export class BundlerBatcher {
     const queuer = new Worker(
       SUBMITTABLE_OPERATION_QUEUE,
       async (job: Job<OperationJobData>) => {
-        const provenOperation = JSON.parse(
+        const operation = JSON.parse(
           job.data.operationJson
         ) as SubmittableOperationWithNetworkInfo;
 
         const batcherAddTransaction =
-          this.batcherDB.getAddTransaction(provenOperation);
+          this.batcherDB.getAddTransaction(operation);
         const setJobStatusTransaction =
           this.statusDB.getSetJobStatusTransaction(
             job.id!,
