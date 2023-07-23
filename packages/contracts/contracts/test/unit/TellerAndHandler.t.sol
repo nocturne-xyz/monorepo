@@ -2171,7 +2171,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         address CONTRACT_WITH_SELECTOR_CLASH = address(0x4444);
         handler.setContractPermission(CONTRACT_WITH_SELECTOR_CLASH, true);
         handler.setContractMethodPermission(
-            address(CONTRACT_WITH_SELECTOR_CLASH),
+            CONTRACT_WITH_SELECTOR_CLASH,
             erc20.approve.selector,
             true
         );
@@ -2180,13 +2180,16 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // gets abi.decoded into invalid spender
         Action[] memory actions = new Action[](1);
         actions[0] = Action({
-            contractAddress: address(CONTRACT_WITH_SELECTOR_CLASH),
+            contractAddress: CONTRACT_WITH_SELECTOR_CLASH,
             encodedFunction: abi.encodePacked(
                 handler.ERC20_APPROVE_SELECTOR(),
                 bytes32(uint256(0x123456789)),
                 bytes32(uint256(0x123456789))
             )
         });
+
+        // Set clashing selector contract code to be non-zero to avoid "!zero code" revert
+        vm.etch(CONTRACT_WITH_SELECTOR_CLASH, bytes("something"));
 
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -2243,7 +2246,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         address CONTRACT_WITH_SELECTOR_CLASH = address(0x4444);
         handler.setContractPermission(CONTRACT_WITH_SELECTOR_CLASH, true);
         handler.setContractMethodPermission(
-            address(CONTRACT_WITH_SELECTOR_CLASH),
+            CONTRACT_WITH_SELECTOR_CLASH,
             erc20.approve.selector,
             true
         );
@@ -2251,12 +2254,15 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Format action with correct encoded fn selector but total length incorrect (not 68 bytes)
         Action[] memory actions = new Action[](1);
         actions[0] = Action({
-            contractAddress: address(CONTRACT_WITH_SELECTOR_CLASH),
+            contractAddress: CONTRACT_WITH_SELECTOR_CLASH,
             encodedFunction: abi.encodePacked(
                 handler.ERC20_APPROVE_SELECTOR(),
                 bytes32(uint256(0x123456789))
             )
         });
+
+        // Set clashing selector contract code to be non-zero to avoid "!zero code" revert
+        vm.etch(CONTRACT_WITH_SELECTOR_CLASH, bytes("something"));
 
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -2658,6 +2664,62 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         vm.prank(ALICE);
         vm.expectRevert("Only this");
         handler.executeActions(op);
+    }
+
+    function testProcessBundleFailsCallingContractWithZeroCode() public {
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
+        address ZERO_CODE_CONTRACT = address(0xabcd);
+        assertEq(ZERO_CODE_CONTRACT.code.length, 0);
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
+                ),
+                joinSplitRefundValues: new uint256[](1),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    address(ZERO_CODE_CONTRACT),
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "!zero code",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, not processed, failure reason zero code
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].failureReason, "!zero code");
     }
 
     // TODO: add testcase for leftover tokens in handler sent to leftover holder
