@@ -83,23 +83,6 @@ contract OperationEIP712Test is Test {
             atomicActions: true
         });
 
-        Operation memory operation = Operation({
-            joinSplits: joinSplits,
-            refundAddr: CompressedStealthAddress({h1: 1, h2: 1}),
-            trackedJoinSplitAssets: trackedJoinSplitAssets,
-            trackedRefundAssets: trackedRefundAssets,
-            actions: actions,
-            encodedGasAsset: EncodedAsset({
-                encodedAssetAddr: 1,
-                encodedAssetId: 1
-            }),
-            gasAssetRefundThreshold: 1,
-            executionGasLimit: 1,
-            gasPrice: 1,
-            deadline: 1,
-            atomicActions: true
-        });
-
         bytes32 operationHash = tellerBase.hashOperation(operation);
 
         bytes32 trackedAssetHash = tellerBase.hashTrackedAsset(
