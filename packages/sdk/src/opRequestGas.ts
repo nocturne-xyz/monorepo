@@ -374,7 +374,7 @@ function fakeProvenOperation(op: Operation): SignableOperationWithNetworkInfo {
   const trackedJoinSplitAssets: Array<TrackedAsset> = Array.from(
     new Set(
       op.joinSplits.map((js) => {
-        return { encodedAsset: js.encodedAsset, minReturnValue: 0n };
+        return { encodedAsset: js.encodedAsset, minRefundValue: 0n };
       })
     )
   );
@@ -406,7 +406,7 @@ function fakeProvenOperation(op: Operation): SignableOperationWithNetworkInfo {
   const trackedRefundAssets: Array<TrackedAsset> = Array.from(
     new Set(
       op.encodedRefundAssets.map((a) => {
-        return { encodedAsset: a, minReturnValue: 0n };
+        return { encodedAsset: a, minRefundValue: 0n };
       })
     )
   );

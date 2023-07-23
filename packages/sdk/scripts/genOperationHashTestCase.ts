@@ -42,7 +42,7 @@ import {
           encodedAssetAddr: 1n,
           encodedAssetId: 1n,
         },
-        minReturnValue: 1n,
+        minRefundValue: 1n,
       },
     ],
     trackedRefundAssets: [
@@ -51,7 +51,7 @@ import {
           encodedAssetAddr: 1n,
           encodedAssetId: 1n,
         },
-        minReturnValue: 1n,
+        minRefundValue: 1n,
       },
     ],
     actions: [

@@ -57,10 +57,10 @@ const encodedAssetType = {
 };
 const trackedAssetType = {
   type: "object",
-  required: ["encodedAsset", "minReturnValue"],
+  required: ["encodedAsset", "minRefundValue"],
   properties: {
     encodedAsset: encodedAssetType,
-    minReturnValue: bigintType,
+    minRefundValue: bigintType,
   },
   additionalProperties: false,
 };

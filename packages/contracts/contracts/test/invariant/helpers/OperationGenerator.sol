@@ -131,7 +131,7 @@ contract OperationGenerator is InvariantUtils {
                     swapErc20,
                     ERC20_ID
                 ),
-                minReturnValue: 0
+                minRefundValue: 0
             });
         }
 
@@ -144,7 +144,7 @@ contract OperationGenerator is InvariantUtils {
 
         FormatOperationArgs memory opArgs = FormatOperationArgs({
             joinSplitTokens: args.joinSplitTokens,
-            joinSplitReturnValues: new uint256[](numJoinSplitTokens),
+            joinSplitRefundValues: new uint256[](numJoinSplitTokens),
             gasToken: args.joinSplitTokens[0], // weth is used as gas token
             root: args.root,
             joinSplitsPublicSpends: joinSplitsPublicSpends,

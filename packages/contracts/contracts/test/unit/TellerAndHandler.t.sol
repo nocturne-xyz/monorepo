@@ -275,7 +275,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -332,7 +332,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -469,7 +469,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -542,7 +542,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -615,7 +615,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -689,7 +689,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -762,7 +762,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -835,7 +835,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -921,7 +921,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -999,7 +999,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1041,7 +1041,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1106,7 +1106,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1148,7 +1148,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1230,7 +1230,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1272,7 +1272,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1354,7 +1354,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1440,7 +1440,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1554,7 +1554,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 address(erc20Out),
                 ERC20_ID
             ),
-            minReturnValue: 0
+            minRefundValue: 0
         });
 
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -1563,7 +1563,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20In)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(erc20In),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1655,7 +1655,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 address(erc20Out),
                 ERC20_ID
             ),
-            minReturnValue: PER_NOTE_AMOUNT + 1 // 1 more token than we actually get back
+            minRefundValue: PER_NOTE_AMOUNT + 1 // 1 more token than we actually get back
         });
 
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -1664,7 +1664,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20In)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(erc20In),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1691,7 +1691,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "!min return value",
+                maybeFailureReason: "!min refund value",
                 assetsUnwrapped: true
             })
         );
@@ -1763,7 +1763,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 address(erc20Out),
                 ERC20_ID
             ),
-            minReturnValue: PER_NOTE_AMOUNT // matches what swapper gives us
+            minRefundValue: PER_NOTE_AMOUNT // matches what swapper gives us
         });
 
         // Specify more joinsplit tokens to return than we get
@@ -1776,7 +1776,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20In)
                 ),
-                joinSplitReturnValues: joinSplitReturnAmounts,
+                joinSplitRefundValues: joinSplitReturnAmounts,
                 gasToken: address(erc20In),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1803,7 +1803,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "!min return value",
+                maybeFailureReason: "!min refund value",
                 assetsUnwrapped: true
             })
         );
@@ -1869,7 +1869,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 address(erc20Out),
                 ERC20_ID
             ),
-            minReturnValue: 0
+            minRefundValue: 0
         });
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -1877,7 +1877,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20In)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(erc20In),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1964,7 +1964,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(joinSplitToken)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(joinSplitToken),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2053,7 +2053,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2120,7 +2120,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2194,7 +2194,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2264,7 +2264,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2331,7 +2331,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 address(erc721),
                 1
             ),
-            minReturnValue: 0
+            minRefundValue: 0
         });
 
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -2340,7 +2340,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(joinSplitToken)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(joinSplitToken),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2417,7 +2417,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2485,7 +2485,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2545,7 +2545,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2588,7 +2588,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2629,7 +2629,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
-                joinSplitReturnValues: new uint256[](1),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2661,5 +2661,4 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     }
 
     // TODO: add testcase for leftover tokens in handler sent to leftover holder
-    // TODO: add testcase for stealing from handler and min return value preventing
 }
