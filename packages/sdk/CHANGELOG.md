@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- update gas estimation logic now that `maxNumRefunds` is removed from op
+- add `SubmittableOperation` types for the separation of asset index and tracked joinsplit assets (have sdk convert to submittable ops during op simulation)
 - op request builder takes `.network(networkName | NetworkInfo)` now that we need chainid and teller contract for opdigest calculation
 - add script to generate op digest test case for solidity unit tests
 - remove custom op digest calculation for builtin ethers typed data hashing implementation

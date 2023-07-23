@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- forward `SubmittableOperation` to bundler now that operation format has changed post min return value changes
 - instantiate fe-sdk with just `configName`
 - update `proveOperation` with new `JoinSplitInput`s
 - add method to fetch operationstatus from bundler
