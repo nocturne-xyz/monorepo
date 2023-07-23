@@ -282,10 +282,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         // NOTE: if protocol and selector are allowed but there's selector clash with erc20
         // approve, then abi.decode will yield whatever data is formatted at bytes 4:23 for spender
         // which could be valid if 20 bytes happens to line up as an allowed address, or invalid if
-        // not. 
-        // NOTE: Only case where a function not intended to be called is callable is if the 
-        // contract is an erc20 that was whitelisted with approve fn AND there is a function 
-        // selector clash AND the 1st argument of the clashing function should be a protocol on the 
+        // not.
+        // NOTE: Only case where a function not intended to be called is callable is if the
+        // contract is an erc20 that was whitelisted with approve fn AND there is a function
+        // selector clash AND the 1st argument of the clashing function should be a protocol on the
         // allowlist.
         if (selector == ERC20_APPROVE_SELECTOR) {
             require(
