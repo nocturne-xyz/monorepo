@@ -2180,7 +2180,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // gets abi.decoded into invalid spender
         Action[] memory actions = new Action[](1);
         actions[0] = Action({
-            contractAddress: address(CONTRACT_WITH_SELECTOR_CLASH),
+            contractAddress: CONTRACT_WITH_SELECTOR_CLASH,
             encodedFunction: abi.encodePacked(
                 handler.ERC20_APPROVE_SELECTOR(),
                 bytes32(uint256(0x123456789)),
@@ -2247,7 +2247,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         address CONTRACT_WITH_SELECTOR_CLASH = address(0x4444);
         handler.setContractPermission(CONTRACT_WITH_SELECTOR_CLASH, true);
         handler.setContractMethodPermission(
-            address(CONTRACT_WITH_SELECTOR_CLASH),
+            CONTRACT_WITH_SELECTOR_CLASH,
             erc20.approve.selector,
             true
         );
