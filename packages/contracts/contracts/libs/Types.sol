@@ -72,7 +72,7 @@ struct Action {
 
 struct TrackedAsset {
     EncodedAsset encodedAsset;
-    uint256 minReturnValue;
+    uint256 minRefundValue;
 }
 
 struct Operation {

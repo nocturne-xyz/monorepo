@@ -55,7 +55,7 @@ export const OPERATION_TYPES = {
   ],
   TrackedAsset: [
     { name: "encodedAsset", type: "EncodedAsset" },
-    { name: "minReturnValue", type: "uint256" },
+    { name: "minRefundValue", type: "uint256" },
   ],
   EncryptedNote: [
     { name: "ciphertextBytes", type: "bytes" },
@@ -125,7 +125,7 @@ export function toSignableOperation(
   const trackedJoinSplitAssets: Array<TrackedAsset> = Array.from(
     new Set(
       joinSplits.map(({ encodedAsset }) => {
-        return { encodedAsset, minReturnValue: 0n };
+        return { encodedAsset, minRefundValue: 0n };
       })
     )
   );
@@ -133,7 +133,7 @@ export function toSignableOperation(
   const trackedRefundAssets: Array<TrackedAsset> = Array.from(
     new Set(
       encodedRefundAssets.map((encodedAsset) => {
-        return { encodedAsset, minReturnValue: 0n };
+        return { encodedAsset, minRefundValue: 0n };
       })
     )
   );
@@ -192,7 +192,7 @@ export function toSubmittableOperation(
   const trackedJoinSplitAssets: Array<TrackedAsset> = Array.from(
     new Set(
       joinSplits.map(({ encodedAsset }) => {
-        return { encodedAsset, minReturnValue: 0n };
+        return { encodedAsset, minRefundValue: 0n };
       })
     )
   );
@@ -200,7 +200,7 @@ export function toSubmittableOperation(
   const trackedRefundAssets: Array<TrackedAsset> = Array.from(
     new Set(
       encodedRefundAssets.map((encodedAsset) => {
-        return { encodedAsset, minReturnValue: 0n };
+        return { encodedAsset, minRefundValue: 0n };
       })
     )
   );

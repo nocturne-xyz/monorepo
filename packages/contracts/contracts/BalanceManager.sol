@@ -183,20 +183,20 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
-    /// @notice Ensure all tracked assets have a balance >= minReturnValue and return number of
-    ///         refunds to handle. If any asset has a balance < minReturnValue, call reverts.
-    /// @param op Operation to ensure min return values for
-    function _ensureMinReturnValues(
+    /// @notice Ensure all tracked assets have a balance >= minRefundValue and return number of
+    ///         refunds to handle. If any asset has a balance < minRefundValue, call reverts.
+    /// @param op Operation to ensure min refund values for
+    function _ensureMinRefundValues(
         Operation calldata op
     ) internal view returns (uint256 numRefundsToHandle) {
         bool gasAssetAlreadyInRefunds = false;
         uint256 numTrackedJoinSplitAssets = op.trackedJoinSplitAssets.length;
         for (uint256 i = 0; i < numTrackedJoinSplitAssets; i++) {
-            bool requiresRefund = _ensureMinReturnValueForTrackedAsset(
+            uint256 refundValue = _ensureMinRefundValueForTrackedAsset(
                 op.trackedJoinSplitAssets[i]
             );
 
-            if (requiresRefund) {
+            if (refundValue > 0) {
                 numRefundsToHandle++;
 
                 if (
@@ -213,11 +213,11 @@ contract BalanceManager is CommitmentTreeManager {
 
         uint256 numTrackedRefundAssets = op.trackedRefundAssets.length;
         for (uint256 i = 0; i < numTrackedRefundAssets; i++) {
-            bool requiresRefund = _ensureMinReturnValueForTrackedAsset(
+            uint256 refundValue = _ensureMinRefundValueForTrackedAsset(
                 op.trackedRefundAssets[i]
             );
 
-            if (requiresRefund) {
+            if (refundValue > 0) {
                 numRefundsToHandle++;
             }
         }
@@ -230,30 +230,26 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
-    /// @notice Ensure tracked asset has a balance >= minReturnValue and return true if a refund
-    ///         is required. If asset has a balance < minReturnValue, call reverts.
-    /// @param trackedAsset Tracked asset to ensure min return value for
-    function _ensureMinReturnValueForTrackedAsset(
+    /// @notice Ensure tracked asset has a balance >= minRefundValue and return true if a refund
+    ///         is required. If asset has a balance < minRefundValue, call reverts.
+    /// @param trackedAsset Tracked asset to ensure min refund value for
+    function _ensureMinRefundValueForTrackedAsset(
         TrackedAsset calldata trackedAsset
-    ) internal view returns (bool requiresRefund) {
+    ) internal view returns (uint256 refundValue) {
         EncodedAsset calldata encodedAsset = trackedAsset.encodedAsset;
         uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
 
         (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
         uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
 
-        uint256 refundValue = currentBalance > amountToWithhold
+        refundValue = currentBalance > amountToWithhold
             ? currentBalance - amountToWithhold
             : 0;
 
         require(
-            refundValue >= trackedAsset.minReturnValue,
-            "!min return value"
+            refundValue >= trackedAsset.minRefundValue,
+            "!min refund value"
         );
-
-        if (refundValue > 0) {
-            requiresRefund = true;
-        }
     }
 
     /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
