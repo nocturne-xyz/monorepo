@@ -118,7 +118,7 @@ const joinSplitsType = {
   items: joinSplitType,
 };
 
-export const provenOperationType = {
+export const submittableOperationType = {
   type: "object",
   required: [
     "networkInfo",
@@ -155,7 +155,7 @@ const relaySchema = {
   type: "object",
   required: ["operation"],
   properties: {
-    operation: provenOperationType,
+    operation: submittableOperationType,
   },
   additionalProperties: false,
 };
