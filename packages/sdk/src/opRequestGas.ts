@@ -330,7 +330,7 @@ async function estimateGasForOperationRequest(
   // NOTE: gasPrice returned in wei
   gasPrice =
     gasPrice ??
-    ((await handlerContract.provider.getGasPrice()).toBigInt() * 12n) / 10n;
+    ((await handlerContract.provider.getGasPrice()).toBigInt() * 14n) / 10n;
 
   return {
     numJoinSplits: BigInt(preparedOp.joinSplits.length),
