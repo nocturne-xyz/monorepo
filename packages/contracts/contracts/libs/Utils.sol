@@ -28,8 +28,8 @@ library Utils {
     }
 
     function validateNote(EncodedNote memory note) internal view {
-        validateCompressedPoint(note.ownerH1);
-        validateCompressedPoint(note.ownerH2);
+        validateCompressedBJJPoint(note.ownerH1);
+        validateCompressedBJJPoint(note.ownerH2);
         require(
             // encodedAssetAddr is a valid field element
             note.encodedAssetAddr < Utils.BN254_SCALAR_FIELD_MODULUS &&
@@ -43,15 +43,12 @@ library Utils {
         );
     }
 
-    function validateCompressedPoint(uint256 p) internal view {
+    function validateCompressedBJJPoint(uint256 p) internal view {
         // Clear X-sign bit. Leaves MSB untouched for the next check.
         uint256 y = p & COMPRESSED_POINT_Y_MASK;
         // Simultaneously check that high-bit is unset, Y is a canonical field element and Y != 0
         // (0, +/- 1/sqrt(A)) is actually on-curve, but is a low-order point and would cause wrap-around below
-        require(
-            y > 0 && y < BN254_SCALAR_FIELD_MODULUS,
-            "Y must be reduced and != 0 or 1"
-        );
+        require(y > 0 && y < BN254_SCALAR_FIELD_MODULUS, "invalid point");
         unchecked {
             // y^2
             uint256 y2 = mulmod(y, y, BN254_SCALAR_FIELD_MODULUS);
