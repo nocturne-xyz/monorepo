@@ -154,15 +154,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
       }
 
       console.log("Operation request: ", operationRequest);
-
-      // fetch gas price from chain and set it in the operation request if it's not already set
-      if (!operationRequest.gasPrice) {
-        const gasPrice = await provider.getGasPrice();
-        operationRequest.gasPrice = gasPrice.toBigInt();
-      }
-
-      console.log("Operation gas price: ", operationRequest.gasPrice);
-
       try {
         const preSignOp = await sdk.prepareOperation(operationRequest);
         const signedOp = await sdk.signOperation(preSignOp);
