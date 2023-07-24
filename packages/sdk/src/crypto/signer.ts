@@ -37,7 +37,7 @@ export class NocturneSigner extends NocturneViewer {
   // TODO: use appendix sig process
   sign(m: bigint): NocturneSignature {
     // derive signing key and nonce entropy
-    const h = ethers.utils.arrayify(ethers.utils.sha256(this.sk));
+    const h = ethers.utils.arrayify(ethers.utils.sha512(this.sk));
     const s = h.slice(0, 32);
 
     // derive nonce
