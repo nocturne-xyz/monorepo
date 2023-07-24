@@ -140,8 +140,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
     console.log("alice pre-op notes:", preOpNotesAlice);
     console.log(
-      "alice pre-op lastCommittedMerkleIndex",
-      await nocturneDBAlice.lastCommittedMerkleIndex()
+      "alice pre-op latestCommittedMerkleIndex",
+      await nocturneDBAlice.latestCommittedMerkleIndex()
     );
 
     console.log("prepare, sign, and prove operation with NocturneWalletSDK");

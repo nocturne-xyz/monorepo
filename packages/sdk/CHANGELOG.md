@@ -61,7 +61,7 @@
 - add `op.gasAssetRefundThreshold` functionality (opRequestGas converts 200k gas \* gasPrice into gas asset and fills gasAssetRefundThreshold field)
 - sort joinsplits by encodeAsset to get gas saving in processJoinSplits
 - move rest of tree constants into `treeConstants.ts`
-- change `nextMerkleIndex` to `lastCommittedMerkleIndex` in NocturneDB
+- change `nextMerkleIndex` to `latestCommittedMerkleIndex` in NocturneDB
 - make `hasEnoughBalanceForOperationRequest` call `getCommittedNotesForAsset` instead of `getNotesForAsset`
 - add `getAllCommittedBalance` to `NocturneWalletSDK`
 - make `gatherNotes` call `getCommittedNotesForAsset` instead of `getNotesForAsset`

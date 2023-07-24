@@ -16,12 +16,18 @@ import {
   WithTotalEntityIndex,
 } from "../../totalEntityIndex";
 
-export type SDKEvent = IncludedNote | IncludedEncryptedNote | Nullifier;
+export type FilledBatchWithZerosEndMerkleIndex = number;
+export type SDKEvent =
+  | IncludedNote
+  | IncludedEncryptedNote
+  | Nullifier
+  | FilledBatchWithZerosEndMerkleIndex;
 
 export interface SDKEventResponse {
   id: string;
   encodedOrEncryptedNote: Omit<EncodedOrEncryptedNoteResponse, "id"> | null;
   nullifier: Omit<NullifierResponse, "id"> | null;
+  filledBatchWithZerosUpToMerkleIndex: string | null;
 }
 
 export interface SDKEventsResponse {
@@ -62,6 +68,7 @@ query fetchSDKEvents($fromIdx: String!) {
     nullifier {
       nullifier
     }
+    filledBatchWithZerosUpToMerkleIndex 
   }
 }
 `;
@@ -83,41 +90,56 @@ export async function fetchSDKEvents(
     return [];
   }
 
-  return res.data.sdkevents.map(({ id, encodedOrEncryptedNote, nullifier }) => {
-    const totalEntityIndex = BigInt(id);
+  return res.data.sdkevents.map(
+    ({
+      id,
+      encodedOrEncryptedNote,
+      nullifier,
+      filledBatchWithZerosUpToMerkleIndex,
+    }) => {
+      const totalEntityIndex = BigInt(id);
 
-    // encrypted note
-    if (encodedOrEncryptedNote && encodedOrEncryptedNote.encryptedNote) {
-      const { encryptedNote, merkleIndex } = encodedOrEncryptedNote;
-      return {
-        inner: encryptedNoteFromEncryptedNoteResponse(
-          encryptedNote,
-          parseInt(merkleIndex)
-        ),
-        totalEntityIndex,
-      };
+      // encrypted note
+      if (encodedOrEncryptedNote && encodedOrEncryptedNote.encryptedNote) {
+        const { encryptedNote, merkleIndex } = encodedOrEncryptedNote;
+        return {
+          inner: encryptedNoteFromEncryptedNoteResponse(
+            encryptedNote,
+            parseInt(merkleIndex)
+          ),
+          totalEntityIndex,
+        };
+      }
+
+      // encoded note
+      if (encodedOrEncryptedNote && encodedOrEncryptedNote.note) {
+        const { note, merkleIndex } = encodedOrEncryptedNote;
+        return {
+          inner: includedNoteFromNoteResponse(note, parseInt(merkleIndex)),
+          totalEntityIndex,
+        };
+      }
+
+      // nullifier
+      if (nullifier) {
+        return {
+          inner: BigInt(nullifier.nullifier),
+          totalEntityIndex,
+        };
+      }
+
+      // filledBatchWithZerosUpToMerkleIndexA
+      if (filledBatchWithZerosUpToMerkleIndex) {
+        return {
+          inner: Number(BigInt(filledBatchWithZerosUpToMerkleIndex)),
+          totalEntityIndex,
+        };
+      }
+
+      // should never happen
+      throw new Error("invalid sdk event");
     }
-
-    // encoded note
-    if (encodedOrEncryptedNote && encodedOrEncryptedNote.note) {
-      const { note, merkleIndex } = encodedOrEncryptedNote;
-      return {
-        inner: includedNoteFromNoteResponse(note, parseInt(merkleIndex)),
-        totalEntityIndex,
-      };
-    }
-
-    // nullifier
-    if (nullifier) {
-      return {
-        inner: BigInt(nullifier.nullifier),
-        totalEntityIndex,
-      };
-    }
-
-    // should never happen
-    throw new Error("invalid sdk event");
-  });
+  );
 }
 
 export interface NoteResponse {
@@ -300,7 +322,7 @@ const subtreeCommitQuery = (params: string, whereClause: string) => `
 `;
 
 // gets last committed merkle index on or before a given totalEntityIndex
-export async function fetchLastCommittedMerkleIndex(
+export async function fetchlatestCommittedMerkleIndex(
   endpoint: string,
   toTotalEntityIndex?: TotalEntityIndex
 ): Promise<number | undefined> {
