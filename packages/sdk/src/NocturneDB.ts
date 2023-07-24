@@ -285,13 +285,14 @@ export class NocturneDB {
     opts?: GetNotesOpts
   ): Promise<IncludedNote[]> {
     if (!opts?.includeUncommitted) {
-      const lastCommittedMerkleIndex = await this.lastCommittedMerkleIndex();
-      if (lastCommittedMerkleIndex === undefined) {
+      const latestCommittedMerkleIndex =
+        await this.latestCommittedMerkleIndex();
+      if (latestCommittedMerkleIndex === undefined) {
         return [];
       }
 
       notes = notes.filter(
-        (note) => note.merkleIndex <= lastCommittedMerkleIndex
+        (note) => note.merkleIndex <= latestCommittedMerkleIndex
       );
     }
 
@@ -336,22 +337,22 @@ export class NocturneDB {
   }
 
   // index of the last note synced (can be ahead of committed)
-  async lastSyncedMerkleIndex(): Promise<number | undefined> {
+  async latestSyncedMerkleIndex(): Promise<number | undefined> {
     return await this.kv.getNumber(LAST_SYNCED_MERKLE_INDEX_KEY);
   }
 
-  // update `lastSyncedMerkleIndex()`
-  async setLastSyncedMerkleIndex(index: number): Promise<void> {
+  // update `latestSyncedMerkleIndex()`
+  async setlatestSyncedMerkleIndex(index: number): Promise<void> {
     await this.kv.putNumber(LAST_SYNCED_MERKLE_INDEX_KEY, index);
   }
 
   // index of the last note (dummy or not) to be committed
-  async lastCommittedMerkleIndex(): Promise<number | undefined> {
+  async latestCommittedMerkleIndex(): Promise<number | undefined> {
     return await this.kv.getNumber(LAST_COMMITTED_MERKLE_INDEX_KEY);
   }
 
-  // update `lastCommittedMerkleIndex()`
-  async setLastCommittedMerkleIndex(index: number): Promise<void> {
+  // update `latestCommittedMerkleIndex()`
+  async setlatestCommittedMerkleIndex(index: number): Promise<void> {
     await this.kv.putNumber(LAST_COMMITTED_MERKLE_INDEX_KEY, index);
   }
 
@@ -361,8 +362,8 @@ export class NocturneDB {
     const {
       notesAndCommitments,
       nullifiers,
-      lastSyncedMerkleIndex,
-      lastCommittedMerkleIndex,
+      latestNewlySyncedMerkleIndex,
+      latestCommittedMerkleIndex,
       totalEntityIndex,
     } = diff;
 
@@ -378,11 +379,11 @@ export class NocturneDB {
 
     const nfIndices = await this.nullifyNotes(nullifiers);
 
-    if (lastSyncedMerkleIndex) {
-      await this.setLastSyncedMerkleIndex(lastSyncedMerkleIndex);
+    if (latestNewlySyncedMerkleIndex) {
+      await this.setlatestSyncedMerkleIndex(latestNewlySyncedMerkleIndex);
     }
-    if (lastCommittedMerkleIndex) {
-      await this.setLastCommittedMerkleIndex(lastCommittedMerkleIndex);
+    if (latestCommittedMerkleIndex) {
+      await this.setlatestCommittedMerkleIndex(latestCommittedMerkleIndex);
     }
 
     await this.setCurrentTotalEntityIndex(totalEntityIndex);

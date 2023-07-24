@@ -19,6 +19,7 @@ import {
 } from "../../utils";
 import {
   fetchJoinSplits,
+  fetchLatestFillBatchEndIndexInRange,
   fetchNotesFromRefunds,
   fetchSubtreeUpdateCommits,
   JoinSplitEvent,
@@ -62,7 +63,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
       //
       // We need to filter because we don't know where the start/end total entity indices will be within a block
       const merkleCount = (await handlerContract.count()).toNumber();
-      let lastCommittedMerkleIndex =
+      let latestCommittedMerkleIndex =
         merkleCount !== 0 ? merkleCount - 1 : undefined;
 
       let from = Number(
@@ -89,16 +90,21 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         await maybeApplyThrottle(to);
 
         // get all events JoinSplit, Refund, and SubtreeUpdate events in the range [`from`, `to`]
-        const [includedNotes, joinSplitEvents, subtreeUpdateCommits] =
-          await Promise.all([
-            fetchNotesFromRefunds(handlerContract, from, to),
-            fetchJoinSplits(handlerContract, from, to),
-            fetchSubtreeUpdateCommits(handlerContract, from, to),
-          ]);
+        const [
+          includedNotes,
+          joinSplitEvents,
+          subtreeUpdateCommits,
+          latestFillBatchEndIndexInRange,
+        ] = await Promise.all([
+          fetchNotesFromRefunds(handlerContract, from, to),
+          fetchJoinSplits(handlerContract, from, to),
+          fetchSubtreeUpdateCommits(handlerContract, from, to),
+          fetchLatestFillBatchEndIndexInRange(handlerContract, from, to),
+        ]);
 
-        // update `lastCommittedMerkleIndex` according to the `SubtreeUpdate` events received
+        // update `latestCommittedMerkleIndex` according to the `SubtreeUpdate` events received
         if (subtreeUpdateCommits.length > 0) {
-          lastCommittedMerkleIndex = maxArray(
+          latestCommittedMerkleIndex = maxArray(
             subtreeUpdateCommits.map(({ inner: { subtreeBatchOffset } }) => {
               return batchOffsetToLatestMerkleIndexInBatch(subtreeBatchOffset);
             })
@@ -132,9 +138,17 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
             (!endTotalEntityIndex || totalEntityIndex <= endTotalEntityIndex)
         );
 
-        const lastSyncedMerkleIndex = maxArray(
-          Array.from(filteredNotes.map((n) => n.inner.merkleIndex))
-        );
+        const latestMerkleIndexFromNotes =
+          filteredNotes.length > 0
+            ? maxArray(
+                Array.from(filteredNotes.map((n) => n.inner.merkleIndex))
+              )
+            : undefined;
+        const latestNewlySyncedMerkleIndex =
+          latestFillBatchEndIndexInRange !== undefined &&
+          latestMerkleIndexFromNotes !== undefined
+            ? max(latestFillBatchEndIndexInRange, latestMerkleIndexFromNotes)
+            : undefined;
 
         currTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
           blockNumber: BigInt(to),
@@ -146,8 +160,8 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
             notes: filteredNotes,
             nullifiers: filteredNullifiers.map((n) => n.inner),
             totalEntityIndex: currTotalEntityIndex,
-            lastCommittedMerkleIndex,
-            lastSyncedMerkleIndex,
+            latestCommittedMerkleIndex,
+            latestNewlySyncedMerkleIndex,
           };
           yield diff;
         }

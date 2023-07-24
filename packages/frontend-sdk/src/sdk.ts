@@ -519,7 +519,7 @@ export class NocturneFrontendSDK {
     return {
       initialProgress: {
         latestMerkleIndexSynced: latestMerkleIndexSynced ?? 0,
-        latestMerkleIndexOnChain
+        latestMerkleIndexOnChain,
       },
       progressIter,
     };

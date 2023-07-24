@@ -63,8 +63,8 @@ export async function syncSDK(
     decryptStateDiff(viewer, diff)
   );
 
-  let lastSyncedMerkleIndex: number | undefined =
-    await db.lastSyncedMerkleIndex();
+  let latestSyncedMerkleIndex: number | undefined =
+    await db.latestSyncedMerkleIndex();
 
   if (opts?.timeoutSeconds) {
     setTimeout(() => diffs.close(), opts.timeoutSeconds * 1000);
@@ -73,22 +73,21 @@ export async function syncSDK(
   for await (const diff of diffs.iter) {
     // update notes in DB
     const nfIndices = await db.applyStateDiff(diff);
+    latestSyncedMerkleIndex = await db.latestSyncedMerkleIndex();
 
     // TODO: deal with case where we have failure between applying state diff to DB and merkle being persisted
 
-    if (diff.lastCommittedMerkleIndex) {
+    if (diff.latestCommittedMerkleIndex) {
       await updateMerkle(
         merkle,
-        diff.lastCommittedMerkleIndex,
+        diff.latestCommittedMerkleIndex,
         diff.notesAndCommitments.map((n) => n.inner),
         nfIndices
       );
     }
-
-    lastSyncedMerkleIndex = diff.lastSyncedMerkleIndex;
   }
 
-  return lastSyncedMerkleIndex;
+  return latestSyncedMerkleIndex;
 }
 
 async function updateMerkle(
@@ -137,8 +136,8 @@ function decryptStateDiff(
   {
     notes,
     nullifiers,
-    lastCommittedMerkleIndex,
-    lastSyncedMerkleIndex,
+    latestCommittedMerkleIndex,
+    latestNewlySyncedMerkleIndex,
     totalEntityIndex,
   }: EncryptedStateDiff
 ): StateDiff {
@@ -204,8 +203,8 @@ function decryptStateDiff(
   return {
     notesAndCommitments,
     nullifiers,
-    lastCommittedMerkleIndex,
-    lastSyncedMerkleIndex,
+    latestCommittedMerkleIndex,
+    latestNewlySyncedMerkleIndex,
     totalEntityIndex,
   };
 }
