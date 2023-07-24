@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- bump gas price est to 40% buffer
 - Fix op digest tracking resulting in digests getting removed too early
   - Snap returns signed op and stores opdigest, site proves and submits op to bundler, snap checks if bundler has digest but bundler hasn't yet received from site, snap incorrectly deletes digest
 - add `filter` to `ClosableAsyncIterator`
