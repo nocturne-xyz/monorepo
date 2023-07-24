@@ -99,7 +99,7 @@
 | __GAP                     | uint256[50]               | 277  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
 | _operationStage           | uint256                   | 327  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
 | __GAP                     | uint256[50]               | 328  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
-| _supportedTokens          | mapping(address => bool)  | 378  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
+| _supportedContracts       | mapping(address => bool)  | 378  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
 | _supportedContractMethods | mapping(uint192 => bool)  | 379  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
 | __GAP                     | uint256[50]               | 380  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
 =======================
