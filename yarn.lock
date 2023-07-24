@@ -2867,7 +2867,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@1.0.14-alpha, @nocturne-xyz/config@^1.0.14-alpha, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
+"@nocturne-xyz/config@1.0.15-testnet, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/config@workspace:packages/config"
   dependencies:
@@ -2891,7 +2891,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@1.0.32-alpha, @nocturne-xyz/contracts@^1.0.32-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/config@npm:1.0.14-alpha, @nocturne-xyz/config@npm:^1.0.14-alpha":
+  version: 1.0.14-alpha
+  resolution: "@nocturne-xyz/config@npm:1.0.14-alpha"
+  dependencies:
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    ethers: ^5.7.2
+  checksum: dee44f6f8da24a836948c62af8eccef5a5df12c3b10965594ab621b58ae97a7ec2cf9638f6f20ffed5b0c8cc47519e0946c9dbd6d67c3d75e2ddb2740ea4ff59
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/contracts@1.0.33-testnet, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -2922,6 +2933,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nocturne-xyz/contracts@npm:1.0.32-alpha, @nocturne-xyz/contracts@npm:^1.0.32-alpha":
+  version: 1.0.32-alpha
+  resolution: "@nocturne-xyz/contracts@npm:1.0.32-alpha"
+  dependencies:
+    "@openzeppelin/contracts": 4.8.2
+    "@openzeppelin/contracts-upgradeable": 4.8.2
+  checksum: 84f6c57f6aa454133b4df044bef0c6a7f69b66513281af80945c010270bfe5e49b971464165f383ac52e7de80aa9c009cefb9d4493a85309c13f04e7ee5a9ee5
+  languageName: node
+  linkType: hard
+
 "@nocturne-xyz/deploy@workspace:^, @nocturne-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deploy@workspace:packages/deploy"
@@ -2950,10 +2971,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
-    "@nocturne-xyz/config": 1.0.14-alpha
-    "@nocturne-xyz/contracts": 1.0.32-alpha
+    "@nocturne-xyz/config": 1.0.15-testnet
+    "@nocturne-xyz/contracts": 1.0.33-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": 1.0.162-alpha
+    "@nocturne-xyz/sdk": 1.0.169-testnet
     "@nocturne-xyz/tx-manager": 1.0.1-alpha
     "@opentelemetry/api": ^1.4.1
     "@opentelemetry/exporter-metrics-otlp-http": ^0.40.0
@@ -3068,7 +3089,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/local-prover@1.0.7-alpha, @nocturne-xyz/local-prover@workspace:^, @nocturne-xyz/local-prover@workspace:packages/local-prover":
+"@nocturne-xyz/local-prover@1.0.7-testnet, @nocturne-xyz/local-prover@workspace:^, @nocturne-xyz/local-prover@workspace:packages/local-prover":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/local-prover@workspace:packages/local-prover"
   dependencies:
@@ -3122,7 +3143,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.168-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.169-testnet, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3183,27 +3204,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nocturne-xyz/sdk@npm:1.0.164-alpha":
-  version: 1.0.164-alpha
-  resolution: "@nocturne-xyz/sdk@npm:1.0.164-alpha"
-  dependencies:
-    "@nocturne-xyz/circuit-utils": ^0.1.12
-    "@nocturne-xyz/config": ^1.0.14-alpha
-    "@nocturne-xyz/contracts": ^1.0.32-alpha
-    "@types/randombytes": ^2.0.0
-    "@zk-kit/incremental-merkle-tree": ^1.0.0
-    async-retry: ^1.3.3
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    ethers: ^5.7.2
-    js-sha256: ^0.9.0
-    randombytes: ^2.1.0
-    sorted-btree: ^1.8.1
-    winston: ^3.9.0
-  checksum: 0acc151565d30c741d1f04a08c7b2f21cdad92ca8ba2ada4603f8371b0816d674e72bd095634bc6a33e6d72f6e4726bb1bcbb5e5426f48c27a830e8dd279f88c
-  languageName: node
-  linkType: hard
-
 "@nocturne-xyz/snap@workspace:packages/snap":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/snap@workspace:packages/snap"
@@ -3246,10 +3246,10 @@ __metadata:
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
     "@nocturne-xyz/circuit-utils": ^0.1.12
-    "@nocturne-xyz/config": 1.0.14-alpha
-    "@nocturne-xyz/contracts": 1.0.32-alpha
+    "@nocturne-xyz/config": 1.0.15-testnet
+    "@nocturne-xyz/contracts": 1.0.33-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": 1.0.164-alpha
+    "@nocturne-xyz/sdk": 1.0.169-testnet
     "@nocturne-xyz/tx-manager": 1.0.1-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
@@ -3286,11 +3286,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/test-actor@workspace:packages/test-actor"
   dependencies:
-    "@nocturne-xyz/config": 1.0.14-alpha
-    "@nocturne-xyz/contracts": 1.0.32-alpha
-    "@nocturne-xyz/local-prover": 1.0.7-alpha
+    "@nocturne-xyz/config": 1.0.15-testnet
+    "@nocturne-xyz/contracts": 1.0.33-testnet
+    "@nocturne-xyz/local-prover": 1.0.7-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": 1.0.168-alpha
+    "@nocturne-xyz/sdk": 1.0.169-testnet
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5

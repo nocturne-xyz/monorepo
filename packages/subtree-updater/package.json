@@ -26,10 +26,10 @@
   },
   "dependencies": {
     "@nocturne-xyz/circuit-utils": "^0.1.12",
-    "@nocturne-xyz/config": "1.0.14-alpha",
-    "@nocturne-xyz/contracts": "1.0.32-alpha",
+    "@nocturne-xyz/config": "1.0.15-testnet",
+    "@nocturne-xyz/contracts": "1.0.33-testnet",
     "@nocturne-xyz/offchain-utils": "0.1.10",
-    "@nocturne-xyz/sdk": "1.0.164-alpha",
+    "@nocturne-xyz/sdk": "1.0.169-testnet",
     "@nocturne-xyz/tx-manager": "1.0.1-alpha",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
