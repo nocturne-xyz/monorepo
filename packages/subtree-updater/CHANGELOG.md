@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- remove duplicated `log.push` call in `syncAndPipe` to fix double insertion bug
 - add metrics
 - use tx manager
 - iterate over `PersistentLog` first, then start pulling from subgraph
