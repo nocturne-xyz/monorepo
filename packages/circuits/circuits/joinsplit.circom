@@ -153,14 +153,12 @@ template JoinSplit(levels) {
 
     signal publicSpendIsZero <== IsZero()(publicSpend);
     // if publicSpend is nonzero, check that encodedAssetAddr matches encodedAssetAddrDecoded
-    (1 - publicSpendIsZero) * (encodedAssetAddr - encodedAssetAddrDecoded) === 0;
     // otherwise, assert that encodedAssetAddrDecoded is also zero
-    publicSpendIsZero * encodedAssetAddrDecoded === 0;
+    encodedAssetAddrDecoded === (1 - publicSpendIsZero) * encodedAssetAddr;
 
     // if publicSpend is nonzero, check that `pubEncodedAssetId` matches `encodedAssetId`
-    (1 - publicSpendIsZero) * (encodedAssetId - pubEncodedAssetId) === 0;
     // otherwise, assert that `pubEncodedAssetId` is also zero
-    publicSpendIsZero * pubEncodedAssetId === 0;
+    pubEncodedAssetId === (1 - publicSpendIsZero) * encodedAssetId;
 
     // oldNoteACommitment
     signal oldNoteACommitment <== NoteCommit()(
