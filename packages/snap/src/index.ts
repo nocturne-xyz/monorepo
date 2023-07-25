@@ -8,6 +8,8 @@ import {
   MockEthToTokenConverter,
   BundlerOpTracker,
   OperationMetadata,
+  SyncOpts,
+  GetNotesOpts,
 } from "@nocturne-xyz/sdk";
 import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
 import { ethers } from "ethers";
@@ -93,9 +95,16 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         await sdk.getAllAssetBalances(request.params as unknown as GetNotesOpts) // yikes typing
       );
     case "nocturne_sync":
+      const maybeSyncOpts = (request.params as any).syncOpts;
+      const syncOpts: SyncOpts | undefined = maybeSyncOpts
+        ? JSON.parse(maybeSyncOpts)
+        : undefined;
+
+      console.log("Syncing", syncOpts);
+      let latestSyncedMerkleIndex: number | undefined;
       try {
         // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
-        await sdk.sync();
+        latestSyncedMerkleIndex = await sdk.sync(syncOpts);
         await sdk.updateOptimisticNullifiers();
         console.log(
           "Synced. state is now: ",
@@ -106,11 +115,13 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         console.log("Error syncing notes: ", e);
         throw e;
       }
-      return;
+      return latestSyncedMerkleIndex;
+    case "nocturne_getLatestSyncedMerkleIndex":
+      return await sdk.getLatestSyncedMerkleIndex();
     case "nocturne_signOperation":
       console.log("Request params: ", request.params);
 
-      await sdk.sync();
+      await sdk.sync(); // NOTE: we should never end up in situation where this is called before normal nocturne_sync, otherwise there will be long delay
       await sdk.updateOptimisticNullifiers();
 
       console.log("done syncing");

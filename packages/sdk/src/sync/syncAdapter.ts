@@ -12,8 +12,11 @@ interface BaseStateDiff {
   // new nullifiers in arbitrary order
   nullifiers: Nullifier[];
 
+  // `latest merkle index of any new leaf to be synced. undefined if no new leaves were synced.
+  latestNewlySyncedMerkleIndex: number | undefined;
+
   // `merkleIndex` of the last leaf to be committed to the commitment tree
-  lastCommittedMerkleIndex: number | undefined;
+  latestCommittedMerkleIndex: number | undefined;
 
   // last `TotalEntityIndex` of the range this StateDiff represents
   totalEntityIndex: TotalEntityIndex;

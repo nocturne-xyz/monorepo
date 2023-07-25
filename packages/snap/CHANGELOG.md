@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- `nocturne_sync` takes and propagates `SyncOpts` as params
 - remove use of winston logger
 - fix bug where snap was parsing op metadata as `.metadata` not `.opMetadata`
 - setup browser logger for SDK to use

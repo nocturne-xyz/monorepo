@@ -8,9 +8,10 @@ import {
   RefundProcessedEvent,
   JoinSplitProcessedEvent,
   SubtreeUpdateEvent,
+  FilledBatchWithZerosEvent,
 } from "@nocturne-xyz/contracts/dist/src/Handler";
 import { Handler } from "@nocturne-xyz/contracts";
-import { queryEvents } from "../../utils";
+import { maxArray, queryEvents } from "../../utils";
 import { StealthAddressTrait } from "../../crypto";
 import {
   TotalEntityIndexTrait,
@@ -108,6 +109,30 @@ export async function fetchSubtreeUpdateCommits(
       subtreeBatchOffset: event.args.subtreeBatchOffset.toNumber(),
     },
   }));
+}
+
+export async function fetchLatestFillBatchEndIndexInRange(
+  contract: Handler,
+  from: number,
+  to: number
+): Promise<number | undefined> {
+  const fillBatchWithZerosFilter = contract.filters.FilledBatchWithZeros();
+  const events: FilledBatchWithZerosEvent[] = await queryEvents(
+    contract,
+    fillBatchWithZerosFilter,
+    from,
+    to
+  );
+
+  // find the event with the biggest endIndex
+  return events.length > 0
+    ? maxArray(
+        events.map(
+          (event) =>
+            event.args.startIndex.toNumber() + event.args.numZeros.toNumber()
+        )
+      )
+    : undefined;
 }
 
 function joinSplitEventFromRaw(
