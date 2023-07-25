@@ -32,7 +32,7 @@ contract OperationEIP712 is EIP712Upgradeable {
             "CompressedStealthAddress(uint256 h1,uint256 h2)"
         );
 
-    bytes32 public constant EIP712_JOINSPLIT_TYPEHASH =
+    bytes32 public constant JOINSPLIT_WITHOUT_PROOF_TYPEHASH =
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
@@ -137,7 +137,7 @@ contract OperationEIP712 is EIP712Upgradeable {
         return
             keccak256(
                 abi.encode(
-                    EIP712_JOINSPLIT_TYPEHASH,
+                    JOINSPLIT_WITHOUT_PROOF_TYPEHASH,
                     joinSplit.commitmentTreeRoot,
                     joinSplit.nullifierA,
                     joinSplit.nullifierB,
