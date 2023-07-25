@@ -492,19 +492,18 @@ export class NocturneFrontendSDK {
     let latestSyncedMerkleIndex =
       (await this.getLatestSyncedMerkleIndex()) ?? 0;
 
+    const NUM_REFETCHES = 5;
+    const refetchEvery = Math.floor(
+      (latestMerkleIndexOnChain - latestSyncedMerkleIndex) / NUM_REFETCHES
+    );
+
     let closed = false;
     const generator = async function* (sdk: NocturneFrontendSDK) {
-      const NUM_TIMES_REFETCH_INDEX_ON_CHAIN = 5;
-      const startIndex = latestSyncedMerkleIndex;
-      const initialEndIndex = latestMerkleIndexOnChain;
-      const refetchIndex = Math.floor(
-        (initialEndIndex - startIndex) / NUM_TIMES_REFETCH_INDEX_ON_CHAIN
-      );
       let count = 0;
       while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
         latestSyncedMerkleIndex = (await sdk.sync(syncOpts)) ?? 0;
 
-        if (count % refetchIndex === 0) {
+        if (count % refetchEvery === 0) {
           latestMerkleIndexOnChain =
             (await sdk.handlerContract.totalCount()).toNumber() - 1;
         }
