@@ -49,12 +49,14 @@ contract BalanceManager is CommitmentTreeManager {
         _teller = ITeller(teller);
     }
 
-    /// @notice For each joinSplit in op.pubJoinSplits, check root and nullifier validity against
+    /// @notice For each public and conf joinSplit, check root and nullifier validity against
     ///         commitment tree manager, then request joinSplit.publicSpend barring tokens for gas
-    ///         payment.
+    ///         payment for pubJoinSplits (conf joinSplits are only handled in CTM, no fund 
+    ///         processing since all publicSpends implicitly 0).
     /// @dev Before looping through pubJoinSplits, we calculate amount of gas to reserve based on
     ///      execution gas, number of pubJoinSplits, and number of refunds. Then we loop through
-    ///      pubJoinSplits, check root and nullifier validity, and attempt to reserve as much gas asset
+    ///      pubJoinSplits, check root and nullifier validity, and attempt to reserve as much gas 
+    ///      asset.
     ///      as possible until we have gotten as the reserve amount we originally calculated. If we
     ///      have not reserved enough gas asset after looping through all pubJoinSplits, we revert.
     /// @dev We attempt to group asset transfers to handler by contiguous subarrays of pubJoinSplits
@@ -69,6 +71,8 @@ contract BalanceManager is CommitmentTreeManager {
     ) internal {
         // process nullifiers and insert new noteCommitments for each joinSplit
         // will throw an error if nullifiers are invalid or tree root invalid
+        // NOTE: we handle both public and conf joinSplits here, all code below though is
+        // only called on public joinSplits
         _handleJoinSplits(op);
 
         // Get gas asset and amount to reserve
