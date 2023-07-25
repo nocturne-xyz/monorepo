@@ -97,6 +97,7 @@ export async function handleGasForOperationRequest(
 
   if (opRequest?.gasPrice == 0n) {
     // If gasPrice = 0, override dummy gas asset and don't further modify opRequest
+    console.log("returning dummy gas asset");
     return {
       ...gasEstimatedOpRequest,
       gasPrice: 0n,
