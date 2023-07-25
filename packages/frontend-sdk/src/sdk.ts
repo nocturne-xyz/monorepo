@@ -45,9 +45,7 @@ import {
   getWindowSigner,
 } from "./utils";
 import retry from "async-retry";
-import {
-  NocturneConfig,
-} from "@nocturne-xyz/config";
+import { NocturneConfig } from "@nocturne-xyz/config";
 
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
@@ -70,7 +68,7 @@ export interface SyncProgress {
 }
 
 export interface SyncWithProgressOutput {
-  latestMerkleIndexOnChain: number
+  latestMerkleIndexOnChain: number;
   progressIter: ClosableAsyncIterator<SyncProgress>;
 }
 
@@ -488,22 +486,27 @@ export class NocturneFrontendSDK {
    * returning newly synced merkle indices as syncing process occurs.
    */
   async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
-    const latestMerkleIndexOnChain = (await this.handlerContract.totalCount()).toNumber();
-    let latestSyncedMerkleIndex = await this.getLatestSyncedMerkleIndex() ?? 0;
+    const latestMerkleIndexOnChain =
+      (await this.handlerContract.totalCount()).toNumber() - 1;
+    let latestSyncedMerkleIndex =
+      (await this.getLatestSyncedMerkleIndex()) ?? 0;
 
     let closed = false;
     const generator = async function* (sdk: NocturneFrontendSDK) {
       while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
-        latestSyncedMerkleIndex = await sdk.sync(syncOpts) ?? 0;
+        latestSyncedMerkleIndex = (await sdk.sync(syncOpts)) ?? 0;
         yield {
           latestSyncedMerkleIndex,
         };
       }
     };
 
-    const progressIter = new ClosableAsyncIterator(generator(this), async () => {
-      closed = true;
-    });
+    const progressIter = new ClosableAsyncIterator(
+      generator(this),
+      async () => {
+        closed = true;
+      }
+    );
 
     return {
       latestMerkleIndexOnChain,
@@ -532,12 +535,15 @@ export class NocturneFrontendSDK {
       ? JSON.parse(latestSyncedMerkleIndexJson)
       : undefined;
 
-    console.log("[sync] FE-SDK latestSyncedMerkleIndex", latestSyncedMerkleIndex);
+    console.log(
+      "[sync] FE-SDK latestSyncedMerkleIndex",
+      latestSyncedMerkleIndex
+    );
     return latestSyncedMerkleIndex;
   }
 
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
-    const latestSyncedMerkleIndexJson = await window.ethereum.request({
+    const latestSyncedMerkleIndexJson = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
@@ -545,13 +551,16 @@ export class NocturneFrontendSDK {
           method: "nocturne_getLatestSyncedMerkleIndex",
         },
       },
-    }) as string;
+    })) as string;
 
     const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
       ? JSON.parse(latestSyncedMerkleIndexJson)
       : undefined;
 
-    console.log("[getLatestSyncedMerkleIndex] FE-SDK latestSyncedMerkleIndex", latestSyncedMerkleIndex);
+    console.log(
+      "[getLatestSyncedMerkleIndex] FE-SDK latestSyncedMerkleIndex",
+      latestSyncedMerkleIndex
+    );
     return latestSyncedMerkleIndex;
   }
 
