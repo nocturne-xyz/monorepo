@@ -164,7 +164,7 @@ library NocturneUtils {
         EncryptedNote memory newNoteAEncrypted = _dummyEncryptedNote();
         EncryptedNote memory newNoteBEncrypted = _dummyEncryptedNote();
 
-        JoinSplit[] memory joinSplits = new JoinSplit[](totalNumJoinSplits);
+        PublicJoinSplit[] memory pubJoinSplits = new PublicJoinSplit[](totalNumJoinSplits);
 
         uint256 currentIndex = 0;
         for (uint256 i = 0; i < args.joinSplitsPublicSpends.length; i++) {
@@ -173,16 +173,18 @@ library NocturneUtils {
                 j < args.joinSplitsPublicSpends[i].length;
                 j++
             ) {
-                joinSplits[currentIndex] = JoinSplit({
-                    commitmentTreeRoot: root,
-                    nullifierA: uint256(2 * currentIndex),
-                    nullifierB: uint256(2 * currentIndex + 1),
-                    newNoteACommitment: uint256(currentIndex),
-                    newNoteAEncrypted: newNoteAEncrypted,
-                    newNoteBCommitment: uint256(currentIndex),
-                    newNoteBEncrypted: newNoteBEncrypted,
-                    senderCommitment: uint256(currentIndex),
-                    proof: dummyProof(),
+                pubJoinSplits[currentIndex] = PublicJoinSplit({
+                    joinSplit: JoinSplit({
+                        commitmentTreeRoot: root,
+                        nullifierA: uint256(2 * currentIndex),
+                        nullifierB: uint256(2 * currentIndex + 1),
+                        newNoteACommitment: uint256(currentIndex),
+                        newNoteAEncrypted: newNoteAEncrypted,
+                        newNoteBCommitment: uint256(currentIndex),
+                        newNoteBEncrypted: newNoteBEncrypted,
+                        senderCommitment: uint256(currentIndex),
+                        proof: dummyProof()
+                    }),
                     assetIndex: uint8(i),
                     publicSpend: args.joinSplitsPublicSpends[i][j]
                 });
@@ -192,13 +194,13 @@ library NocturneUtils {
 
         operationFailure = args.operationFailureType;
         if (operationFailure == OperationFailureType.JOINSPLIT_NFS_SAME) {
-            joinSplits[0].nullifierA = uint256(2 * 0x1234);
-            joinSplits[0].nullifierB = uint256(2 * 0x1234);
+            pubJoinSplits[0].joinSplit.nullifierA = uint256(2 * 0x1234);
+            pubJoinSplits[0].joinSplit.nullifierB = uint256(2 * 0x1234);
         } else if (
             operationFailure == OperationFailureType.JOINSPLIT_NF_ALREADY_IN_SET
         ) {
-            joinSplits[1].nullifierA = joinSplits[0].nullifierA; // Matches last joinsplit's NFs
-            joinSplits[1].nullifierA = joinSplits[0].nullifierB;
+            pubJoinSplits[1].joinSplit.nullifierA = pubJoinSplits[0].joinSplit.nullifierA; // Matches last joinsplit's NFs
+            pubJoinSplits[1].joinSplit.nullifierA = pubJoinSplits[0].joinSplit.nullifierB;
         }
 
         uint256 deadline = block.timestamp + DEADLINE_BUFFER;
@@ -223,7 +225,8 @@ library NocturneUtils {
         }
 
         Operation memory op = Operation({
-            joinSplits: joinSplits,
+            pubJoinSplits: pubJoinSplits,
+            confJoinSplits: new JoinSplit[](0), // TODO: change THIS
             refundAddr: defaultStealthAddress(),
             trackedJoinSplitAssets: trackedJoinSplitAssets,
             trackedRefundAssets: args.trackedRefundAssets,
@@ -254,7 +257,7 @@ library NocturneUtils {
                 callSuccesses: new bool[](0),
                 callResults: new bytes[](0),
                 executionGas: op.executionGasLimit,
-                verificationGas: op.joinSplits.length *
+                verificationGas: op.pubJoinSplits.length *
                     GAS_PER_JOINSPLIT_VERIFY,
                 numRefunds: op.trackedJoinSplitAssets.length +
                     op.trackedRefundAssets.length

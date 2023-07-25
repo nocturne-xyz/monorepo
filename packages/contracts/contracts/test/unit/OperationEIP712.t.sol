@@ -27,9 +27,7 @@ contract OperationEIP712Test is Test {
             newNoteACommitment: 1,
             newNoteBCommitment: 1,
             senderCommitment: 1,
-            assetIndex: 1,
             proof: dummyProof,
-            publicSpend: 1,
             newNoteAEncrypted: EncryptedNote({
                 ciphertextBytes: bytes(""),
                 encapsulatedSecretBytes: bytes("")
@@ -38,6 +36,13 @@ contract OperationEIP712Test is Test {
                 ciphertextBytes: bytes(""),
                 encapsulatedSecretBytes: bytes("")
             })
+        });
+
+        PublicJoinSplit[] memory pubJoinSplits = new PublicJoinSplit[](1);
+        pubJoinSplits[0] = PublicJoinSplit({
+            joinSplit: joinSplits[0],
+            assetIndex: 1,
+            publicSpend: 1
         });
 
         Action[] memory actions = new Action[](1);
@@ -67,7 +72,8 @@ contract OperationEIP712Test is Test {
         });
 
         Operation memory operation = Operation({
-            joinSplits: joinSplits,
+            pubJoinSplits: pubJoinSplits,
+            confJoinSplits: joinSplits,
             refundAddr: CompressedStealthAddress({h1: 1, h2: 1}),
             trackedJoinSplitAssets: trackedJoinSplitAssets,
             trackedRefundAssets: trackedRefundAssets,
