@@ -18,7 +18,8 @@ import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { SnapKvStore } from "./snapdb";
 import * as JSON from "bigint-json-serialization";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
-import { panel, text, heading } from "@metamask/snaps-ui";
+import { makeSignOperationContent } from "./utils/display";
+import { heading, panel, text } from "@metamask/snaps-ui";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Sepolia
@@ -60,10 +61,7 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
  * @throws If the request method is not valid for this snap.
  * @throws If the `snap_dialog` call failed.
  */
-export const onRpcRequest: OnRpcRequestHandler = async ({
-  origin,
-  request,
-}) => {
+export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
   const kvStore = new SnapKvStore();
   const nocturneDB = new NocturneDB(kvStore);
   const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
@@ -130,33 +128,29 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         (request.params as any).operationRequest
       ) as OperationRequest;
 
-      const maybeMetadata = (request.params as any).opMetadata;
-      const opMetadata: OperationMetadata | undefined = maybeMetadata
-        ? JSON.parse(maybeMetadata)
-        : undefined;
+      const opMetadata: OperationMetadata = JSON.parse(
+        (request.params as any).opMetadata
+      );
 
       // Ensure user has minimum balance for request
       if (!(await sdk.hasEnoughBalanceForOperationRequest(operationRequest))) {
         throw new Error("Insufficient balance for operation request");
       }
-
+      const { heading: _heading, text: _text } = makeSignOperationContent(
+        opMetadata,
+        config.erc20s
+      );
       // Confirm spend sig auth
       const res = await snap.request({
         method: "snap_dialog",
         params: {
           type: "confirmation",
-          // TODO: make this UI better
-          content: panel([
-            heading(
-              `${origin} would like to perform an operation via Nocturne`
-            ),
-            text(`operation request: ${JSON.stringify(operationRequest)}`),
-          ]),
+          content: panel([heading(_heading), text(_text)]),
         },
       });
 
       if (!res) {
-        throw new Error("rejected by user");
+        throw new Error("Snap request rejected by user");
       }
 
       console.log("Operation request: ", operationRequest);
