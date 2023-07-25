@@ -2410,7 +2410,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Unwrap 50M, not enough for bundler comp due to there being
         // 20 joinsplits.
         // 20 joinsplits handles (no proof verification) equates to at least below gas tokens:
-        //    gasPrice * (20 * joinSplitGas) = 50 * (20 * 80k) = 80M
+        //    gasPrice * (3 * joinSplitGas) = 300 * (3 * 80k) = 72M
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -2423,14 +2423,14 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
                         NocturneUtils.fillJoinSplitPublicSpends(
-                            PER_NOTE_AMOUNT / 20,
-                            20
+                            PER_NOTE_AMOUNT / 3,
+                            3
                         )
                     ),
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
-                gasPrice: 50,
+                gasPrice: 300, // set unusually high gas price
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
                     BOB,
