@@ -199,7 +199,9 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         }
 
         // Set verification and execution gas after getting opResult
-        opResult.verificationGas = perJoinSplitVerifyGas * op.joinSplits.length;
+        opResult.verificationGas =
+            perJoinSplitVerifyGas *
+            (op.pubJoinSplits.length + op.confJoinSplits.length);
         opResult.executionGas = Utils.min(
             op.executionGasLimit,
             preExecutionGas - gasleft()
