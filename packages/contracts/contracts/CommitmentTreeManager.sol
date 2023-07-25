@@ -173,10 +173,8 @@ contract CommitmentTreeManager is
         uint128 offset = _merkle.getTotalCount();
 
         JoinSplit calldata joinSplit;
-        bool isPublicJoinSplit;
         for (uint256 i = 0; i < totalNumJoinSplits; i++) {
-            isPublicJoinSplit = i < op.pubJoinSplits.length;
-            joinSplit = isPublicJoinSplit
+            joinSplit = i < op.pubJoinSplits.length
                 ? op.pubJoinSplits[i].joinSplit
                 : op.confJoinSplits[i - op.pubJoinSplits.length];
 

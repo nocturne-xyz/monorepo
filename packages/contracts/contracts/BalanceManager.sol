@@ -99,8 +99,7 @@ contract BalanceManager is CommitmentTreeManager {
                 op.pubJoinSplits,
                 subarrayStartIndex
             );
-            // this will be 0 if `encodedAsset` is masked to 0 because the circuit checks that encodedAsset is masked to 0 IFF publicSpend is 0
-            // and proofs have already been verified at this point
+
             uint256 valueToGatherForSubarray = _sumJoinSplitPublicSpendsInclusive(
                     op.pubJoinSplits,
                     subarrayStartIndex,
@@ -111,8 +110,6 @@ contract BalanceManager is CommitmentTreeManager {
                 gasAssetToReserve > 0 &&
                 AssetUtils.eq(encodedGasAsset, encodedAsset)
             ) {
-                // if `encodedAsset` is masked to 0, this will return 0 because `valueToGatherForSubarray` is 0
-                // therefore, this conditional block statement is a no-op if `encodedAsset` is masked to 0
                 uint256 reserveValue = Utils.min(
                     valueToGatherForSubarray,
                     gasAssetToReserve
@@ -125,7 +122,6 @@ contract BalanceManager is CommitmentTreeManager {
             subarrayStartIndex = subarrayEndIndex + 1;
 
             // If value to transfer is 0, skip the transfer
-            // if `encodedAsset` is masked to 0, this if statement will not be entered since `valueToGatherForSubarray` is 0
             if (valueToGatherForSubarray > 0) {
                 _teller.requestAsset(encodedAsset, valueToGatherForSubarray);
             }
