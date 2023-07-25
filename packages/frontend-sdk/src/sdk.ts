@@ -327,7 +327,7 @@ export class NocturneFrontendSDK {
    */
   async signAndProveOperation(
     operationRequest: OperationRequest,
-    opMetadata?: OperationMetadata
+    opMetadata: OperationMetadata
   ): Promise<ProvenOperation> {
     const op = await this.requestSignOperation(operationRequest, opMetadata);
 
@@ -596,7 +596,7 @@ export class NocturneFrontendSDK {
    */
   protected async requestSignOperation(
     operationRequest: OperationRequest,
-    opMetadata?: OperationMetadata
+    opMetadata: OperationMetadata
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", opMetadata);
     const json = (await window.ethereum.request({
@@ -607,7 +607,7 @@ export class NocturneFrontendSDK {
           method: "nocturne_signOperation",
           params: {
             operationRequest: JSON.stringify(operationRequest),
-            opMetadata: opMetadata ? JSON.stringify(opMetadata) : undefined,
+            opMetadata: JSON.stringify(opMetadata),
           },
         },
       },
