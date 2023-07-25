@@ -13,12 +13,10 @@ import {
   TreeConstants,
 } from "@nocturne-xyz/sdk";
 import { WasmSubtreeUpdateProver } from "../src/subtreeUpdate";
-import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
 import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/subtreeupdateProof.json");
-const TMP_DIR = `${ROOT_DIR}/rapidsnark--tmp`;
 
 const sk = BigInt(
   "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
@@ -29,12 +27,8 @@ const ZKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdat
 const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
 const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH, "utf8"));
 
-const RADISNARK_EXECUTABLE_PATH = `${ROOT_DIR}/rapidsnark/build/prover`;
-const WITNESS_GENERATOR_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate`;
-
 console.log("argv", process.argv);
 const writeToFixture = process.argv[2] == "--writeFixture";
-const useRapidsnark = process.argv[3] == "--useRapidsnark";
 
 // Instantiate nocturne keypair and addr
 const nocturneSigner = new NocturneSigner(sk);
@@ -82,20 +76,7 @@ const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
 console.log(inputs);
 
 async function prove() {
-  let prover;
-  if (useRapidsnark) {
-    console.log("using rapidsnark");
-    prover = new RapidsnarkSubtreeUpdateProver(
-      RADISNARK_EXECUTABLE_PATH,
-      WITNESS_GENERATOR_PATH,
-      ZKEY_PATH,
-      VKEY_PATH,
-      TMP_DIR
-    );
-  } else {
-    console.log("using wasm");
-    prover = new WasmSubtreeUpdateProver(WASM_PATH, ZKEY_PATH, VKEY);
-  }
+  const prover = new WasmSubtreeUpdateProver(WASM_PATH, ZKEY_PATH, VKEY);
   const startTime = Date.now();
   const proof = await prover.proveSubtreeUpdate(inputs);
   console.log("Proof generated in: ", Date.now() - startTime, "ms");
