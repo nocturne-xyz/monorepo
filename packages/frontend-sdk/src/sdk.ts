@@ -464,7 +464,7 @@ export class NocturneFrontendSDK {
   }
 
   /**
-   * Given an operation digest, fetcheskand returns the operation status, enum'd as OperationStatus.
+   * Given an operation digest, fetches and returns the operation status, enum'd as OperationStatus.
    */
   async fetchBundlerOperationStatus(
     opDigest: bigint
