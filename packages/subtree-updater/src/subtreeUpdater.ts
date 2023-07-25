@@ -244,7 +244,14 @@ export class SubtreeUpdater {
         };
         await this.submissionQueue.add(
           SUBMISSION_JOB_TAG,
-          JSON.stringify(jobData)
+          JSON.stringify(jobData),
+          {
+            attempts: 3,
+            backoff: {
+              type: "exponential",
+              delay: 4000,
+            },
+          }
         );
 
         this.metrics.submissionJobsEnqueuedCounter.add(1);
