@@ -70,6 +70,7 @@ export interface SyncProgress {
 }
 
 export interface SyncWithProgressOutput {
+  latestSyncedMerkleIndex: number;
   latestMerkleIndexOnChain: number
   progressIter: ClosableAsyncIterator<SyncProgress>;
 }
@@ -488,7 +489,7 @@ export class NocturneFrontendSDK {
    * returning newly synced merkle indices as syncing process occurs.
    */
   async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
-    const latestMerkleIndexOnChain = (await this.handlerContract.totalCount()).toNumber();
+    const latestMerkleIndexOnChain = (await this.handlerContract.totalCount()).toNumber() - 1;
     let latestSyncedMerkleIndex = await this.getLatestSyncedMerkleIndex() ?? 0;
 
     let closed = false;
@@ -506,6 +507,7 @@ export class NocturneFrontendSDK {
     });
 
     return {
+      latestSyncedMerkleIndex,
       latestMerkleIndexOnChain,
       progressIter,
     };
