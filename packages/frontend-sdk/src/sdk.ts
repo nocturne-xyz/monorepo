@@ -69,7 +69,7 @@ export interface SyncProgress {
 
 export interface SyncWithProgressOutput {
   latestSyncedMerkleIndex: number;
-  latestMerkleIndexOnChain: number
+  latestMerkleIndexOnChain: number;
   progressIter: ClosableAsyncIterator<SyncProgress>;
 }
 
@@ -487,15 +487,28 @@ export class NocturneFrontendSDK {
    * returning newly synced merkle indices as syncing process occurs.
    */
   async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
-    const latestMerkleIndexOnChain =
+    let latestMerkleIndexOnChain =
       (await this.handlerContract.totalCount()).toNumber() - 1;
     let latestSyncedMerkleIndex =
       (await this.getLatestSyncedMerkleIndex()) ?? 0;
 
     let closed = false;
     const generator = async function* (sdk: NocturneFrontendSDK) {
+      const NUM_TIMES_REFETCH_INDEX_ON_CHAIN = 5;
+      const startIndex = latestSyncedMerkleIndex;
+      const initialEndIndex = latestMerkleIndexOnChain;
+      const refetchIndex = Math.floor(
+        (initialEndIndex - startIndex) / NUM_TIMES_REFETCH_INDEX_ON_CHAIN
+      );
+      let count = 0;
       while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
         latestSyncedMerkleIndex = (await sdk.sync(syncOpts)) ?? 0;
+
+        if (count % refetchIndex === 0) {
+          latestMerkleIndexOnChain =
+            (await sdk.handlerContract.totalCount()).toNumber() - 1;
+        }
+        count++;
         yield {
           latestSyncedMerkleIndex,
         };
