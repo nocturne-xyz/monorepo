@@ -21,7 +21,8 @@ library OperationUtils {
         // compute number of joinsplits in the bundle
         uint256 numJoinSplits = 0;
         for (uint256 i = 0; i < numOps; i++) {
-            numJoinSplits += ops[i].joinSplits.length;
+            numJoinSplits += (ops[i].pubJoinSplits.length +
+                ops[i].confJoinSplits.length);
         }
 
         proofs = new uint256[8][](numJoinSplits);
@@ -43,11 +44,26 @@ library OperationUtils {
                 uint256 refundAddrH2YCoordinate
             ) = decomposeCompressedPoint(op.refundAddr.h2);
 
-            uint256 numJoinSplitsForOp = op.joinSplits.length;
+            uint256 numJoinSplitsForOp = op.pubJoinSplits.length +
+                op.confJoinSplits.length;
+
+            JoinSplit calldata joinSplit;
+            EncodedAsset memory encodedAsset;
+            uint256 publicSpend;
+            bool isPublicJoinSplit;
             for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
-                EncodedAsset calldata encodedAsset = op
-                    .trackedJoinSplitAssets[op.joinSplits[j].assetIndex]
-                    .encodedAsset;
+                isPublicJoinSplit = j < op.pubJoinSplits.length;
+                joinSplit = isPublicJoinSplit
+                    ? op.pubJoinSplits[j].joinSplit
+                    : op.confJoinSplits[j - op.pubJoinSplits.length];
+                encodedAsset = isPublicJoinSplit
+                    ? op
+                        .trackedJoinSplitAssets[op.pubJoinSplits[j].assetIndex]
+                        .encodedAsset
+                    : EncodedAsset(0, 0);
+                publicSpend = isPublicJoinSplit
+                    ? op.pubJoinSplits[j].publicSpend
+                    : 0;
 
                 uint256 encodedAssetAddrWithSignBits = encodeEncodedAssetAddrWithSignBitsPI(
                         encodedAsset.encodedAssetAddr,
@@ -55,15 +71,15 @@ library OperationUtils {
                         refundAddrH2SignBit
                     );
 
-                proofs[index] = op.joinSplits[j].proof;
+                proofs[index] = joinSplit.proof;
                 allPis[index] = new uint256[](12);
-                allPis[index][0] = op.joinSplits[j].newNoteACommitment;
-                allPis[index][1] = op.joinSplits[j].newNoteBCommitment;
-                allPis[index][2] = op.joinSplits[j].commitmentTreeRoot;
-                allPis[index][3] = op.joinSplits[j].publicSpend;
-                allPis[index][4] = op.joinSplits[j].nullifierA;
-                allPis[index][5] = op.joinSplits[j].nullifierB;
-                allPis[index][6] = op.joinSplits[j].senderCommitment;
+                allPis[index][0] = joinSplit.newNoteACommitment;
+                allPis[index][1] = joinSplit.newNoteBCommitment;
+                allPis[index][2] = joinSplit.commitmentTreeRoot;
+                allPis[index][3] = publicSpend;
+                allPis[index][4] = joinSplit.nullifierA;
+                allPis[index][5] = joinSplit.nullifierB;
+                allPis[index][6] = joinSplit.senderCommitment;
                 allPis[index][7] = digests[i];
                 allPis[index][8] = encodedAssetAddrWithSignBits;
                 allPis[index][9] = encodedAsset.encodedAssetId;
@@ -98,8 +114,8 @@ library OperationUtils {
         Operation calldata op,
         OperationResult memory opResult
     ) internal pure returns (uint256) {
-        uint256 handleJoinSplitGas = op.joinSplits.length *
-            GAS_PER_JOINSPLIT_HANDLE;
+        uint256 handleJoinSplitGas = (op.pubJoinSplits.length +
+            op.confJoinSplits.length) * GAS_PER_JOINSPLIT_HANDLE;
         uint256 refundGas = opResult.numRefunds *
             (GAS_PER_REFUND_HANDLE + GAS_PER_REFUND_TREE);
 
