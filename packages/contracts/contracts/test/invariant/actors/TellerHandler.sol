@@ -265,7 +265,7 @@ contract TellerHandler is OperationGenerator {
         uint256 maxGasAssetCost = _testBalanceManager
             .calculateOpMaxGasAssetCost(
                 op,
-                opResult.verificationGas / op.joinSplits.length
+                opResult.verificationGas / (op.pubJoinSplits.length + op.confJoinSplits.length)
             );
         if (maxGasAssetCost - payout < op.gasAssetRefundThreshold) {
             payout = maxGasAssetCost;
@@ -279,13 +279,13 @@ contract TellerHandler is OperationGenerator {
         uint256 tokenIndex
     ) internal view returns (uint256) {
         uint256 total = 0;
-        for (uint256 i = 0; i < op.joinSplits.length; i++) {
+        for (uint256 i = 0; i < op.pubJoinSplits.length; i++) {
             EncodedAsset memory encodedAsset = op
-                .trackedJoinSplitAssets[op.joinSplits[i].assetIndex]
+                .trackedJoinSplitAssets[op.pubJoinSplits[i].assetIndex]
                 .encodedAsset;
             (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
             if (assetAddr == joinSplitTokens[tokenIndex]) {
-                total += op.joinSplits[i].publicSpend;
+                total += op.pubJoinSplits[i].publicSpend;
             }
         }
 
