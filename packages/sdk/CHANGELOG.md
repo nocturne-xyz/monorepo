@@ -23,6 +23,9 @@
 - replace `encSenderCanonAddr` with `senderCommitment`
 - add contract.ts utils method for concatenating contract address and function selector
 - fix eip712 deposit request typehash ordering
+- `syncSDK` returns latest synced merkle index so fe-sdk can access and return
+- sync adapters return latest synced merkle index
+- `syncSDK` takes `SyncOpts` as params, add `timeoutSeconds` to `SyncOpts`
 - remove all usage of winston logger except for in sync adapters (so we can debug test actor and snap)
 - fix bug where notes with 0 value were being stored in DB
 - refactor OperationMetadata to be structured
@@ -79,7 +82,7 @@
 - add `op.gasAssetRefundThreshold` functionality (opRequestGas converts 200k gas \* gasPrice into gas asset and fills gasAssetRefundThreshold field)
 - sort joinsplits by encodeAsset to get gas saving in processJoinSplits
 - move rest of tree constants into `treeConstants.ts`
-- change `nextMerkleIndex` to `lastCommittedMerkleIndex` in NocturneDB
+- change `nextMerkleIndex` to `latestCommittedMerkleIndex` in NocturneDB
 - make `hasEnoughBalanceForOperationRequest` call `getCommittedNotesForAsset` instead of `getNotesForAsset`
 - add `getAllCommittedBalance` to `NocturneWalletSDK`
 - make `gatherNotes` call `getCommittedNotesForAsset` instead of `getNotesForAsset`

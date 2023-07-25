@@ -1,5 +1,5 @@
 import {
-  fetchLastCommittedMerkleIndex,
+  fetchlatestCommittedMerkleIndex,
   merkleIndexToSubtreeIndex,
   TotalEntityIndexTrait,
   TotalEntityIndex,
@@ -132,10 +132,10 @@ export async function fetchTreeInsertions(
 export async function fetchLatestSubtreeIndex(
   endpoint: string
 ): Promise<number | undefined> {
-  const lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
+  const latestCommittedMerkleIndex = await fetchlatestCommittedMerkleIndex(
     endpoint
   );
-  return lastCommittedMerkleIndex
-    ? merkleIndexToSubtreeIndex(lastCommittedMerkleIndex)
+  return latestCommittedMerkleIndex
+    ? merkleIndexToSubtreeIndex(latestCommittedMerkleIndex)
     : undefined;
 }

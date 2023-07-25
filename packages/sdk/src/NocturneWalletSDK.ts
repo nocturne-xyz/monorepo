@@ -18,7 +18,7 @@ import { signOperation } from "./signOperation";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
 import { SDKSyncAdapter, TotalEntityIndexTrait } from "./sync";
-import { syncSDK } from "./syncSDK";
+import { SyncOpts, syncSDK } from "./syncSDK";
 import { getJoinSplitRequestTotalValue, unzip } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
@@ -80,13 +80,17 @@ export class NocturneWalletSDK {
     this.opTracker = nulliferChecker;
   }
 
-  async sync(): Promise<void> {
-    await syncSDK(
+  // Sync SDK, returning last synced merkle index of last state diff
+  async sync(opts?: SyncOpts): Promise<number | undefined> {
+    const latestSyncedMerkleIndex = await syncSDK(
       { viewer: this.signer },
       this.syncAdapter,
       this.db,
-      this.merkleProver
+      this.merkleProver,
+      opts
     );
+
+    return latestSyncedMerkleIndex;
   }
 
   async prepareOperation(
@@ -125,6 +129,10 @@ export class NocturneWalletSDK {
         numNotes: notes.length,
       };
     });
+  }
+
+  async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
+    return await this.db.latestCommittedMerkleIndex();
   }
 
   async hasEnoughBalanceForOperationRequest(

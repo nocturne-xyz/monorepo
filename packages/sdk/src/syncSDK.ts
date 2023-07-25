@@ -18,19 +18,21 @@ import { consecutiveChunks } from "./utils/functional";
 
 export interface SyncOpts {
   endBlock?: number;
+  timeoutSeconds?: number;
 }
 
 export interface SyncDeps {
   viewer: NocturneViewer;
 }
 
+// Sync SDK, returning last synced merkle index of last state diff
 export async function syncSDK(
   { viewer }: SyncDeps,
   adapter: SDKSyncAdapter,
   db: NocturneDB,
   merkle: SparseMerkleProver,
   opts?: SyncOpts
-): Promise<void> {
+): Promise<number | undefined> {
   const currTotalEntityIndex = await db.currentTotalEntityIndex();
   const startTotalEntityIndex = currTotalEntityIndex
     ? currTotalEntityIndex + 1n
@@ -61,22 +63,35 @@ export async function syncSDK(
     decryptStateDiff(viewer, diff)
   );
 
+  let latestSyncedMerkleIndex: number | undefined =
+    await db.latestSyncedMerkleIndex();
+
+  if (opts?.timeoutSeconds) {
+    setTimeout(() => diffs.close(), opts.timeoutSeconds * 1000);
+  }
   // apply diffs
   for await (const diff of diffs.iter) {
+    console.log(
+      "[syncSDK] diff latestNewlySyncedMerkleIndex",
+      diff.latestNewlySyncedMerkleIndex
+    );
     // update notes in DB
     const nfIndices = await db.applyStateDiff(diff);
+    latestSyncedMerkleIndex = await db.latestSyncedMerkleIndex();
 
     // TODO: deal with case where we have failure between applying state diff to DB and merkle being persisted
 
-    if (diff.lastCommittedMerkleIndex) {
+    if (diff.latestCommittedMerkleIndex) {
       await updateMerkle(
         merkle,
-        diff.lastCommittedMerkleIndex,
+        diff.latestCommittedMerkleIndex,
         diff.notesAndCommitments.map((n) => n.inner),
         nfIndices
       );
     }
   }
+
+  return latestSyncedMerkleIndex;
 }
 
 async function updateMerkle(
@@ -125,7 +140,8 @@ function decryptStateDiff(
   {
     notes,
     nullifiers,
-    lastCommittedMerkleIndex,
+    latestCommittedMerkleIndex,
+    latestNewlySyncedMerkleIndex,
     totalEntityIndex,
   }: EncryptedStateDiff
 ): StateDiff {
@@ -191,7 +207,8 @@ function decryptStateDiff(
   return {
     notesAndCommitments,
     nullifiers,
-    lastCommittedMerkleIndex,
+    latestCommittedMerkleIndex,
+    latestNewlySyncedMerkleIndex,
     totalEntityIndex,
   };
 }

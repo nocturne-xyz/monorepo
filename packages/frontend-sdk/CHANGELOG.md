@@ -7,6 +7,9 @@
 - instantiate fe-sdk with just `configName`
 - update `proveOperation` with new `JoinSplitInput`s
 - add method to fetch operationstatus from bundler
+- `sync` method takes and propogates `SyncOpts` as params to snap/sdk
+- instantiate fe-sdk with `config`
+- add method to fetch operation status from bundler
 - have `anonTransferErc20` format/pass metadata to snap
 - wrap fetch requests in `async-retry` with exponential backoff
 - add method to fetch all inflight op digests and metadata `getInflightOpDigestsAndMetadata`

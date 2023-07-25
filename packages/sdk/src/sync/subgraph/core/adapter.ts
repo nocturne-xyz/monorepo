@@ -4,7 +4,7 @@ import {
   IterSyncOpts,
   SDKSyncAdapter,
 } from "../../syncAdapter";
-import { fetchLastCommittedMerkleIndex, fetchSDKEvents } from "./fetch";
+import { fetchlatestCommittedMerkleIndex, fetchSDKEvents } from "./fetch";
 import {
   TotalEntityIndex,
   TotalEntityIndexTrait,
@@ -39,7 +39,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
     const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
       let from = startTotalEntityIndex;
-      let lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
+      let latestCommittedMerkleIndex = await fetchlatestCommittedMerkleIndex(
         endpoint,
         from
       );
@@ -76,28 +76,56 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         await maybeApplyThrottle(latestIndexedBlock);
 
         // fetch notes and nfs on or after `from`, will return at most 100 of each
-        const notesAndNullifiers = await fetchSDKEvents(endpoint, from);
+        const sdkEvents = await fetchSDKEvents(endpoint, from);
 
         // if we have notes and/or mullifiers, update from and get the last committed merkle index as of the entity index we saw
-        if (notesAndNullifiers.length > 0) {
+        if (sdkEvents.length > 0) {
           const highestTotalEntityIndex = maxArray(
-            notesAndNullifiers.map((n) => n.totalEntityIndex)
+            sdkEvents.map((n) => n.totalEntityIndex)
           );
-          lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
+          latestCommittedMerkleIndex = await fetchlatestCommittedMerkleIndex(
             endpoint
           );
 
-          const notes = notesAndNullifiers.filter(
-            ({ inner }) => typeof inner !== "bigint"
+          const notes = sdkEvents.filter(
+            ({ inner }) => typeof inner === "object"
           ) as WithTotalEntityIndex<IncludedNote | IncludedEncryptedNote>[];
-          const nullifiers = notesAndNullifiers.filter(
+
+          const nullifiers = sdkEvents.filter(
             ({ inner }) => typeof inner === "bigint"
           ) as WithTotalEntityIndex<Nullifier>[];
+
+          const filledBatchEndIndices = sdkEvents
+            .filter(({ inner }) => typeof inner === "number")
+            .map(({ inner }) => inner as number);
+          const latestMerkleIndexFromFiledBatches =
+            filledBatchEndIndices.length > 0
+              ? maxArray(filledBatchEndIndices)
+              : undefined;
+
+          const latestMerkleIndexFromNotes =
+            notes.length > 0
+              ? maxArray(Array.from(notes.map((n) => n.inner.merkleIndex)))
+              : undefined;
+
+          let latestNewlySyncedMerkleIndex: number | undefined;
+          if (latestMerkleIndexFromFiledBatches === undefined) {
+            latestNewlySyncedMerkleIndex = latestMerkleIndexFromNotes;
+          } else if (latestMerkleIndexFromNotes === undefined) {
+            latestNewlySyncedMerkleIndex = latestMerkleIndexFromFiledBatches;
+          } else {
+            // both are defined
+            latestNewlySyncedMerkleIndex = max(
+              latestMerkleIndexFromFiledBatches,
+              latestMerkleIndexFromNotes
+            );
+          }
 
           const stateDiff: EncryptedStateDiff = {
             notes,
             nullifiers: nullifiers.map((n) => n.inner),
-            lastCommittedMerkleIndex,
+            latestNewlySyncedMerkleIndex,
+            latestCommittedMerkleIndex,
             totalEntityIndex: highestTotalEntityIndex,
           };
 
