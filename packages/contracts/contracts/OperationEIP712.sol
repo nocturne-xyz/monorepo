@@ -176,7 +176,7 @@ contract OperationEIP712 is EIP712Upgradeable {
         return
             keccak256(
                 abi.encode(
-                    EIP712_JOINSPLIT_TYPEHASH,
+                    JOINSPLIT_WITHOUT_PROOF_TYPEHASH,
                     joinSplit.commitmentTreeRoot,
                     joinSplit.nullifierA,
                     joinSplit.nullifierB,

@@ -265,7 +265,8 @@ contract TellerHandler is OperationGenerator {
         uint256 maxGasAssetCost = _testBalanceManager
             .calculateOpMaxGasAssetCost(
                 op,
-                opResult.verificationGas / (op.pubJoinSplits.length + op.confJoinSplits.length)
+                opResult.verificationGas /
+                    (op.pubJoinSplits.length + op.confJoinSplits.length)
             );
         if (maxGasAssetCost - payout < op.gasAssetRefundThreshold) {
             payout = maxGasAssetCost;

@@ -93,7 +93,9 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
     ) public trackCall("handleJoinSplits") {
         uint256 numJoinSplits = bound(seed, 1, 10);
 
-        PublicJoinSplit[] memory pubJoinSplits = new PublicJoinSplit[](numJoinSplits);
+        PublicJoinSplit[] memory pubJoinSplits = new PublicJoinSplit[](
+            numJoinSplits
+        );
         for (uint256 i = 0; i < numJoinSplits; i++) {
             pubJoinSplits[i] = _generateJoinSplit(seed);
         }
@@ -217,7 +219,8 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             0,
             Utils.BN254_SCALAR_FIELD_MODULUS - 1
         );
-        _pubJoinSplit.joinSplit.commitmentTreeRoot = commitmentTreeManager.root();
+        _pubJoinSplit.joinSplit.commitmentTreeRoot = commitmentTreeManager
+            .root();
         _pubJoinSplit.joinSplit.nullifierA = _nullifierCounter;
         _pubJoinSplit.joinSplit.nullifierB = _nullifierCounter + 1;
         _nullifierCounter += 2;

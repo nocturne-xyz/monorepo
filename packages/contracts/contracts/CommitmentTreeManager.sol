@@ -60,9 +60,6 @@ contract CommitmentTreeManager is
         uint256 newNoteACommitment,
         uint256 newNoteBCommitment,
         uint256 senderCommitment,
-        // will be (0, 0) if publicSpend is 0
-        EncodedAsset encodedAsset,
-        uint256 publicSpend,
         EncryptedNote newNoteAEncrypted,
         EncryptedNote newNoteBEncrypted
     );
@@ -176,22 +173,12 @@ contract CommitmentTreeManager is
         uint128 offset = _merkle.getTotalCount();
 
         JoinSplit calldata joinSplit;
-        EncodedAsset memory encodedAsset;
-        uint256 publicSpend;
         bool isPublicJoinSplit;
         for (uint256 i = 0; i < totalNumJoinSplits; i++) {
             isPublicJoinSplit = i < op.pubJoinSplits.length;
             joinSplit = isPublicJoinSplit
                 ? op.pubJoinSplits[i].joinSplit
                 : op.confJoinSplits[i - op.pubJoinSplits.length];
-            encodedAsset = isPublicJoinSplit
-                ? op
-                    .trackedJoinSplitAssets[op.pubJoinSplits[i].assetIndex]
-                    .encodedAsset
-                : EncodedAsset(0, 0);
-            publicSpend = isPublicJoinSplit
-                ? op.pubJoinSplits[i].publicSpend
-                : 0;
 
             // Check validity of both nullifiers
             require(
@@ -231,8 +218,6 @@ contract CommitmentTreeManager is
                 joinSplit.newNoteACommitment,
                 joinSplit.newNoteBCommitment,
                 joinSplit.senderCommitment,
-                encodedAsset,
-                publicSpend,
                 joinSplit.newNoteAEncrypted,
                 joinSplit.newNoteBEncrypted
             );

@@ -164,7 +164,9 @@ library NocturneUtils {
         EncryptedNote memory newNoteAEncrypted = _dummyEncryptedNote();
         EncryptedNote memory newNoteBEncrypted = _dummyEncryptedNote();
 
-        PublicJoinSplit[] memory pubJoinSplits = new PublicJoinSplit[](totalNumJoinSplits);
+        PublicJoinSplit[] memory pubJoinSplits = new PublicJoinSplit[](
+            totalNumJoinSplits
+        );
 
         uint256 currentIndex = 0;
         for (uint256 i = 0; i < args.joinSplitsPublicSpends.length; i++) {
@@ -199,8 +201,12 @@ library NocturneUtils {
         } else if (
             operationFailure == OperationFailureType.JOINSPLIT_NF_ALREADY_IN_SET
         ) {
-            pubJoinSplits[1].joinSplit.nullifierA = pubJoinSplits[0].joinSplit.nullifierA; // Matches last joinsplit's NFs
-            pubJoinSplits[1].joinSplit.nullifierA = pubJoinSplits[0].joinSplit.nullifierB;
+            pubJoinSplits[1].joinSplit.nullifierA = pubJoinSplits[0]
+                .joinSplit
+                .nullifierA; // Matches last joinsplit's NFs
+            pubJoinSplits[1].joinSplit.nullifierA = pubJoinSplits[0]
+                .joinSplit
+                .nullifierB;
         }
 
         uint256 deadline = block.timestamp + DEADLINE_BUFFER;

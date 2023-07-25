@@ -16,80 +16,95 @@ library OperationUtils {
         pure
         returns (uint256[8][] memory proofs, uint256[][] memory allPis)
     {
-        uint256 numOps = ops.length;
 
         // compute number of joinsplits in the bundle
-        uint256 numJoinSplits = 0;
+        uint256 totalNumJoinSplits = 0;
+        uint256 numOps = ops.length;
         for (uint256 i = 0; i < numOps; i++) {
-            numJoinSplits += (ops[i].pubJoinSplits.length +
+            totalNumJoinSplits += (ops[i].pubJoinSplits.length +
                 ops[i].confJoinSplits.length);
         }
 
-        proofs = new uint256[8][](numJoinSplits);
-        allPis = new uint256[][](numJoinSplits);
+        proofs = new uint256[8][](totalNumJoinSplits);
+        allPis = new uint256[][](totalNumJoinSplits);
 
         // current index into proofs and pis
-        uint256 index = 0;
+        uint256 totalIndex = 0;
 
         // Batch verify all the joinsplit proofs
-        for (uint256 i = 0; i < numOps; i++) {
-            Operation calldata op = ops[i];
-
+        for (uint256 j = 0; j < numOps; j++) {
             (
-                uint256 refundAddrH1SignBit,
-                uint256 refundAddrH1YCoordinate
-            ) = decomposeCompressedPoint(op.refundAddr.h1);
-            (
-                uint256 refundAddrH2SignBit,
-                uint256 refundAddrH2YCoordinate
-            ) = decomposeCompressedPoint(op.refundAddr.h2);
+                uint256[8][] memory proofsForOp,
+                uint256[][] memory pisForOp
+            ) = extractProofsAndPisFromOperation(ops[j], digests[j]);
 
-            uint256 numJoinSplitsForOp = op.pubJoinSplits.length +
-                op.confJoinSplits.length;
-
-            JoinSplit calldata joinSplit;
-            EncodedAsset memory encodedAsset;
-            uint256 publicSpend;
-            bool isPublicJoinSplit;
-            for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
-                isPublicJoinSplit = j < op.pubJoinSplits.length;
-                joinSplit = isPublicJoinSplit
-                    ? op.pubJoinSplits[j].joinSplit
-                    : op.confJoinSplits[j - op.pubJoinSplits.length];
-                encodedAsset = isPublicJoinSplit
-                    ? op
-                        .trackedJoinSplitAssets[op.pubJoinSplits[j].assetIndex]
-                        .encodedAsset
-                    : EncodedAsset(0, 0);
-                publicSpend = isPublicJoinSplit
-                    ? op.pubJoinSplits[j].publicSpend
-                    : 0;
-
-                uint256 encodedAssetAddrWithSignBits = encodeEncodedAssetAddrWithSignBitsPI(
-                        encodedAsset.encodedAssetAddr,
-                        refundAddrH1SignBit,
-                        refundAddrH2SignBit
-                    );
-
-                proofs[index] = joinSplit.proof;
-                allPis[index] = new uint256[](12);
-                allPis[index][0] = joinSplit.newNoteACommitment;
-                allPis[index][1] = joinSplit.newNoteBCommitment;
-                allPis[index][2] = joinSplit.commitmentTreeRoot;
-                allPis[index][3] = publicSpend;
-                allPis[index][4] = joinSplit.nullifierA;
-                allPis[index][5] = joinSplit.nullifierB;
-                allPis[index][6] = joinSplit.senderCommitment;
-                allPis[index][7] = digests[i];
-                allPis[index][8] = encodedAssetAddrWithSignBits;
-                allPis[index][9] = encodedAsset.encodedAssetId;
-                allPis[index][10] = refundAddrH1YCoordinate;
-                allPis[index][11] = refundAddrH2YCoordinate;
-                index++;
+            for (uint256 i = 0; i < proofsForOp.length; i++) {
+                proofs[totalIndex] = proofsForOp[i];
+                allPis[totalIndex] = pisForOp[i];
+                totalIndex++;
             }
         }
 
         return (proofs, allPis);
+    }
+
+    function extractProofsAndPisFromOperation(
+        Operation calldata op,
+        uint256 opDigest
+    )
+        internal
+        pure
+        returns (uint256[8][] memory proofs, uint256[][] memory allPis)
+    {
+        uint256 numJoinSplitsForOp = op.pubJoinSplits.length +
+            op.confJoinSplits.length;
+        proofs = new uint256[8][](numJoinSplitsForOp);
+        allPis = new uint256[][](numJoinSplitsForOp);
+
+        (
+            uint256 refundAddrH1SignBit,
+            uint256 refundAddrH1YCoordinate
+        ) = decomposeCompressedPoint(op.refundAddr.h1);
+        (
+            uint256 refundAddrH2SignBit,
+            uint256 refundAddrH2YCoordinate
+        ) = decomposeCompressedPoint(op.refundAddr.h2);
+
+        for (uint256 i = 0; i < numJoinSplitsForOp; i++) {
+            bool isPublicJoinSplit = i < op.pubJoinSplits.length;
+            JoinSplit calldata joinSplit = isPublicJoinSplit
+                ? op.pubJoinSplits[i].joinSplit
+                : op.confJoinSplits[i - op.pubJoinSplits.length];
+            EncodedAsset memory encodedAsset = isPublicJoinSplit
+                ? op
+                    .trackedJoinSplitAssets[op.pubJoinSplits[i].assetIndex]
+                    .encodedAsset
+                : EncodedAsset(0, 0);
+            uint256 publicSpend = isPublicJoinSplit
+                ? op.pubJoinSplits[i].publicSpend
+                : 0;
+
+            uint256 encodedAssetAddrWithSignBits = encodeEncodedAssetAddrWithSignBitsPI(
+                    encodedAsset.encodedAssetAddr,
+                    refundAddrH1SignBit,
+                    refundAddrH2SignBit
+                );
+
+            proofs[i] = joinSplit.proof;
+            allPis[i] = new uint256[](12);
+            allPis[i][0] = joinSplit.newNoteACommitment;
+            allPis[i][1] = joinSplit.newNoteBCommitment;
+            allPis[i][2] = joinSplit.commitmentTreeRoot;
+            allPis[i][3] = publicSpend;
+            allPis[i][4] = joinSplit.nullifierA;
+            allPis[i][5] = joinSplit.nullifierB;
+            allPis[i][6] = joinSplit.senderCommitment;
+            allPis[i][7] = opDigest;
+            allPis[i][8] = encodedAssetAddrWithSignBits;
+            allPis[i][9] = encodedAsset.encodedAssetId;
+            allPis[i][10] = refundAddrH1YCoordinate;
+            allPis[i][11] = refundAddrH2YCoordinate;
+        }
     }
 
     // takes a compressed point and extracts the sign bit and y coordinate
