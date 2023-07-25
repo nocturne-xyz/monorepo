@@ -66,12 +66,11 @@ export interface ContractAddresses {
 }
 
 export interface SyncProgress {
-  latestMerkleIndexSynced: number;
-  latestMerkleIndexOnChain: number;
+  latestSyncedMerkleIndex: number;
 }
 
 export interface SyncWithProgressOutput {
-  initialProgress: SyncProgress;
+  latestMerkleIndexOnChain: number
   progressIter: ClosableAsyncIterator<SyncProgress>;
 }
 
@@ -466,7 +465,7 @@ export class NocturneFrontendSDK {
   }
 
   /**
-   * Given an operation digest, fetches and returns the operation status, enum'd as OperationStatus.
+   * Given an operation digest, fetcheskand returns the operation status, enum'd as OperationStatus.
    */
   async fetchBundlerOperationStatus(
     opDigest: bigint
@@ -490,16 +489,15 @@ export class NocturneFrontendSDK {
    */
   async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
     const latestMerkleIndexOnChain = (await this.handlerContract.totalCount()).toNumber();
-    let latestMerkleIndexSynced = await this.sync(syncOpts);
+    let latestSyncedMerkleIndex = await this.getLatestSyncedMerkleIndex() ?? 0;
 
     let closed = false;
     const generator = async function* (sdk: NocturneFrontendSDK) {
-      while (!closed && latestMerkleIndexSynced && latestMerkleIndexSynced < latestMerkleIndexOnChain) {
+      while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
+        latestSyncedMerkleIndex = await sdk.sync(syncOpts) ?? 0;
         yield {
-          latestMerkleIndexSynced: latestMerkleIndexSynced ?? 0,
-          latestMerkleIndexOnChain,
+          latestSyncedMerkleIndex,
         };
-        latestMerkleIndexSynced = await sdk.sync(syncOpts);
       }
     };
 
@@ -508,10 +506,7 @@ export class NocturneFrontendSDK {
     });
 
     return {
-      initialProgress: {
-        latestMerkleIndexSynced: latestMerkleIndexSynced ?? 0,
-        latestMerkleIndexOnChain,
-      },
+      latestMerkleIndexOnChain,
       progressIter,
     };
   }
@@ -537,7 +532,26 @@ export class NocturneFrontendSDK {
       ? JSON.parse(latestSyncedMerkleIndexJson)
       : undefined;
 
-    console.log("FE-SDK latestSyncedMerkleIndex", latestSyncedMerkleIndex);
+    console.log("[sync] FE-SDK latestSyncedMerkleIndex", latestSyncedMerkleIndex);
+    return latestSyncedMerkleIndex;
+  }
+
+  async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
+    const latestSyncedMerkleIndexJson = await window.ethereum.request({
+      method: "wallet_invokeSnap",
+      params: {
+        snapId: SNAP_ID,
+        request: {
+          method: "nocturne_getLatestSyncedMerkleIndex",
+        },
+      },
+    }) as string;
+
+    const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
+      ? JSON.parse(latestSyncedMerkleIndexJson)
+      : undefined;
+
+    console.log("[getLatestSyncedMerkleIndex] FE-SDK latestSyncedMerkleIndex", latestSyncedMerkleIndex);
     return latestSyncedMerkleIndex;
   }
 

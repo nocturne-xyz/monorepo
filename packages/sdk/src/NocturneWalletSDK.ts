@@ -131,6 +131,10 @@ export class NocturneWalletSDK {
     });
   }
 
+  async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
+    return await this.db.latestCommittedMerkleIndex();
+  }
+
   async hasEnoughBalanceForOperationRequest(
     opRequest: OperationRequest
   ): Promise<boolean> {

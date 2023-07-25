@@ -116,6 +116,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         throw e;
       }
       return latestSyncedMerkleIndex;
+    case "nocturne_getLatestSyncedMerkleIndex":
+      return await sdk.getLatestSyncedMerkleIndex();
     case "nocturne_signOperation":
       console.log("Request params: ", request.params);
 
