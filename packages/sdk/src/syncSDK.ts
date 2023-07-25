@@ -76,6 +76,10 @@ export async function syncSDK(
   }
   // apply diffs
   for await (const diff of diffs.iter) {
+    console.log(
+      "[syncSDK] diff latestNewlySyncedMerkleIndex",
+      diff.latestNewlySyncedMerkleIndex
+    );
     // update notes in DB
     const nfIndices = await db.applyStateDiff(diff);
     latestSyncedMerkleIndex = await db.latestSyncedMerkleIndex();

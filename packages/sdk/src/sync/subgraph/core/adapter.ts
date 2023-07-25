@@ -108,14 +108,18 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
               ? maxArray(Array.from(notes.map((n) => n.inner.merkleIndex)))
               : undefined;
 
-          const latestNewlySyncedMerkleIndex =
-            latestMerkleIndexFromFiledBatches !== undefined &&
-            latestMerkleIndexFromNotes !== undefined
-              ? max(
-                  latestMerkleIndexFromFiledBatches,
-                  latestMerkleIndexFromNotes
-                )
-              : undefined;
+          let latestNewlySyncedMerkleIndex: number | undefined;
+          if (latestMerkleIndexFromFiledBatches === undefined) {
+            latestNewlySyncedMerkleIndex = latestMerkleIndexFromNotes;
+          } else if (latestMerkleIndexFromNotes === undefined) {
+            latestNewlySyncedMerkleIndex = latestMerkleIndexFromFiledBatches;
+          } else {
+            // both are defined
+            latestNewlySyncedMerkleIndex = max(
+              latestMerkleIndexFromFiledBatches,
+              latestMerkleIndexFromNotes
+            );
+          }
 
           const stateDiff: EncryptedStateDiff = {
             notes,

@@ -144,11 +144,19 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
                 Array.from(filteredNotes.map((n) => n.inner.merkleIndex))
               )
             : undefined;
-        const latestNewlySyncedMerkleIndex =
-          latestFillBatchEndIndexInRange !== undefined &&
-          latestMerkleIndexFromNotes !== undefined
-            ? max(latestFillBatchEndIndexInRange, latestMerkleIndexFromNotes)
-            : undefined;
+
+        let latestNewlySyncedMerkleIndex: number | undefined;
+        if (latestFillBatchEndIndexInRange === undefined) {
+          latestNewlySyncedMerkleIndex = latestMerkleIndexFromNotes;
+        } else if (latestMerkleIndexFromNotes === undefined) {
+          latestNewlySyncedMerkleIndex = latestFillBatchEndIndexInRange;
+        } else {
+          // both are defined
+          latestNewlySyncedMerkleIndex = max(
+            latestFillBatchEndIndexInRange,
+            latestMerkleIndexFromNotes
+          );
+        }
 
         currTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
           blockNumber: BigInt(to),
