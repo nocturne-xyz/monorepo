@@ -244,6 +244,9 @@ contract BalanceManager is CommitmentTreeManager {
         EncodedAsset calldata encodedAsset = trackedAsset.encodedAsset;
         uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
 
+        // We want to guarantee that the minRefundValue check is exact, so we account for
+        // the token prefills gas optimization that attempts to keep balance of Handler = 1 for 
+        // erc20s
         (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
         uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
 
