@@ -93,8 +93,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
             depositErc20.decimals()
         );
 
-        // TODO: allow other tokens once we enable transacting with them
-        handler.setTokenPermission(address(weth), true);
+        handler.setContractPermission(address(weth), true);
         handler.setContractMethodPermission(
             address(weth),
             weth.approve.selector,
@@ -106,7 +105,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
             true
         );
 
-        handler.setTokenPermission(address(depositErc20), true);
+        handler.setContractPermission(address(depositErc20), true);
         handler.setContractMethodPermission(
             address(depositErc20),
             depositErc20.approve.selector,
@@ -118,7 +117,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
             true
         );
 
-        handler.setTokenPermission(address(swapErc20), true);
+        handler.setContractPermission(address(swapErc20), true);
         handler.setContractMethodPermission(
             address(swapErc20),
             swapErc20.approve.selector,
@@ -130,6 +129,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
             true
         );
 
+        handler.setContractPermission(address(swapper), true);
         handler.setContractMethodPermission(
             address(swapper),
             swapper.swap.selector,

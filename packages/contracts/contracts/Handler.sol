@@ -18,10 +18,18 @@ import "./libs/Types.sol";
 contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     using OperationLib for Operation;
 
-    // Set of supported tokens
-    mapping(address => bool) public _supportedTokens;
+    bytes4 public constant ERC20_APPROVE_SELECTOR = bytes4(0x095ea7b3);
+    uint256 public constant ERC_20_APPROVE_FN_DATA_LENGTH = 4 + 32 + 32;
 
-    // Set of callable protocol methods (includes tokens)
+    // Set of supported contracts
+    mapping(address => bool) public _supportedContracts;
+
+    // Set of callable protocol methods (key = address | selector)
+    // NOTE: If an upgradeable contract with malicious admins is whitelisted, the contract could be
+    // upgraded to add a new method that has a selector clash with an already-whitelisted method.
+    // This would allow a malicious admin to make methods not intended to be called callable. This
+    // scenario would allow for bypassing of deposit limits if new method allows for large inflow
+    // of funds.
     mapping(uint192 => bool) public _supportedContractMethods;
 
     // Gap for upgrade safety
@@ -35,7 +43,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     );
 
     /// @notice Event emitted when a token is given/revoked allowlist permission
-    event TokenPermissionSet(address token, bool permission);
+    event ContractPermissionSet(address token, bool permission);
 
     /// @notice Initialization function
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
@@ -70,12 +78,18 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         _unpause();
     }
 
-    function setTokenPermission(
-        address token,
+    /// @notice Sets allowlist permission of the given contract, only callable by owner
+    /// @param contractAddress Address of the contract to add
+    /// @param permission Whether to enable or revoke permission
+    /// @dev This whitelists the contract but none of its methods. This is used for checks such as
+    ///      checks that a token is supported or when checking that a spender being approved for an
+    ///      erc20 is allowed.
+    function setContractPermission(
+        address contractAddress,
         bool permission
     ) external onlyOwner {
-        _supportedTokens[token] = permission;
-        emit TokenPermissionSet(token, permission);
+        _supportedContracts[contractAddress] = permission;
+        emit ContractPermissionSet(contractAddress, permission);
     }
 
     /// @notice Sets allowlist permission of the given contract, only callable by owner
@@ -103,7 +117,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     ) external override whenNotPaused onlyTeller {
         EncodedAsset memory encodedAsset = deposit.encodedAsset;
         (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
-        require(_supportedTokens[assetAddr], "!supported deposit asset");
+        require(_supportedContracts[assetAddr], "!supported deposit asset");
 
         _handleRefundNote(encodedAsset, deposit.depositAddr, deposit.value);
     }
@@ -149,7 +163,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             (, address assetAddr, ) = AssetUtils.decodeAsset(
                 op.encodedRefundAssets[i]
             );
-            require(_supportedTokens[assetAddr], "!supported refund asset");
+            require(_supportedContracts[assetAddr], "!supported refund asset");
         }
 
         // Ensure all token balances of tokens to be used are zeroed out
@@ -258,6 +272,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     /// @notice Makes an external call to execute a single action
     /// @dev Reverts if caller attempts to call unsupported contract OR if caller tries
     ///      to re-enter by calling the Teller contract.
+    /// @dev There is a special check on methods with the erc20.approve selector that ensures only
+    ///      whitelisted protocols can be approved as `spender` for erc20 tokens. Without this
+    ///      check, users can call erc20.approve(amount, spender) from the Handler contract to
+    ///      approve arbitrary spenders.
     function _makeExternalCall(
         Action calldata action
     ) internal returns (bool success, bytes memory result) {
@@ -266,14 +284,35 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             "Cannot call the Nocturne Teller"
         );
 
+        bytes4 selector = _extractFunctionSelector(action.encodedFunction);
         uint192 addressAndSelector = _addressAndSelector(
             action.contractAddress,
-            _extractFunctionSelector(action.encodedFunction)
+            selector
         );
         require(
             _supportedContractMethods[addressAndSelector],
             "Cannot call non-allowed protocol method"
         );
+
+        // NOTE: If an allowed protocol has a selector clash with erc20.approve, then abi.decode
+        // will yield whatever data is formatted at bytes 4:23 for spender. This will likely revert
+        // and cause the clashing function to not be callable. If 1st argument happens to be a
+        // whitelisted address, then the clashing function will be callable. Selector clashes,
+        // however, are not an issue here, as this check is only meant to ensure the normal case
+        // (erc20s with standard approve fn signature) have protection against arbitrary approvals
+        // and is not intended to have any bearing on other non-erc20 or non-approve cases. Worst
+        // case outcome is that small number of functions with signature clash will not be callable.
+        if (selector == ERC20_APPROVE_SELECTOR) {
+            require(
+                action.encodedFunction.length == ERC_20_APPROVE_FN_DATA_LENGTH,
+                "!approve fn length"
+            );
+            (address spender, ) = abi.decode(
+                action.encodedFunction[4:],
+                (address, uint256)
+            );
+            require(_supportedContracts[spender], "!approve spender");
+        }
 
         (success, result) = action.contractAddress.call(action.encodedFunction);
     }

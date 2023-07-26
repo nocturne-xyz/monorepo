@@ -118,7 +118,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             // Prefill the handler with 1 token
             ERC20s[i].reserveTokens(address(handler), 1);
 
-            handler.setTokenPermission(address(ERC20s[i]), true);
+            handler.setContractPermission(address(ERC20s[i]), true);
             handler.setContractMethodPermission(
                 address(ERC20s[i]),
                 ERC20s[i].approve.selector,
@@ -936,7 +936,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist reentrantCaller for sake of simulation
-        handler.setTokenPermission(address(reentrantCaller), true);
+        handler.setContractPermission(address(reentrantCaller), true);
         handler.setContractMethodPermission(
             address(reentrantCaller),
             reentrantCaller.reentrantProcessBundle.selector,
@@ -1159,7 +1159,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist handler for sake of simulation
-        handler.setTokenPermission(address(handler), true);
+        handler.setContractPermission(address(handler), true);
         handler.setContractMethodPermission(
             address(handler),
             handler.handleOperation.selector,
@@ -1281,7 +1281,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist handler for sake of simulation
-        handler.setTokenPermission(address(handler), true);
+        handler.setContractPermission(address(handler), true);
         handler.setContractMethodPermission(
             address(handler),
             handler.executeActions.selector,
@@ -1661,7 +1661,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setTokenPermission(address(swapper), true);
+        handler.setContractPermission(address(swapper), true);
         handler.setContractMethodPermission(
             address(swapper),
             swapper.swap.selector,
@@ -1856,6 +1856,216 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(erc20.balanceOf(address(ALICE)), PER_NOTE_AMOUNT);
     }
 
+    function testProcessBundleFailsDueToErc20ApproveOnBadSpender() public {
+        SimpleERC20Token erc20 = ERC20s[0];
+        reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
+
+        address NOT_ALLOWED_CONTRACT = address(0x4444);
+
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({
+            contractAddress: address(erc20),
+            encodedFunction: abi.encodeWithSelector(
+                erc20.approve.selector,
+                address(NOT_ALLOWED_CONTRACT),
+                PER_NOTE_AMOUNT
+            )
+        });
+
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(erc20)
+                ),
+                gasToken: address(erc20),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                encodedRefundAssets: encodedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 3,
+                gasPrice: 50,
+                actions: actions,
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Check OperationProcessed event
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "!approve spender",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, not processed, failure reason for approve check failure
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].failureReason, "!approve spender");
+
+        assertEq(erc20.allowance(address(handler), NOT_ALLOWED_CONTRACT), 0);
+    }
+
+    function testProcessBundleFailsErc20FunctionSelectorClashWithInvalidSpender()
+        public
+    {
+        SimpleERC20Token erc20 = ERC20s[0];
+        reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
+
+        // Approve other contract which is meant to be allowed contract that has fn selector clash
+        // with erc20.approve
+        address CONTRACT_WITH_SELECTOR_CLASH = address(0x4444);
+        handler.setContractPermission(CONTRACT_WITH_SELECTOR_CLASH, true);
+        handler.setContractMethodPermission(
+            address(CONTRACT_WITH_SELECTOR_CLASH),
+            erc20.approve.selector,
+            true
+        );
+
+        // Format action that is correct encoded fn selector and length as erc20.approve but field
+        // gets abi.decoded into invalid spender
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({
+            contractAddress: address(CONTRACT_WITH_SELECTOR_CLASH),
+            encodedFunction: abi.encodePacked(
+                handler.ERC20_APPROVE_SELECTOR(),
+                bytes32(uint256(0x123456789)),
+                bytes32(uint256(0x123456789))
+            )
+        });
+
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(erc20)
+                ),
+                gasToken: address(erc20),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                encodedRefundAssets: encodedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 3,
+                gasPrice: 50,
+                actions: actions,
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Check OperationProcessed event
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "!approve spender",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, not processed, failure reason for approve check failure
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].failureReason, "!approve spender");
+    }
+
+    function testProcessBundleFailsErc20FunctionSelectorClashWithInvalidFnDataLength()
+        public
+    {
+        SimpleERC20Token erc20 = ERC20s[0];
+        reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
+
+        // Approve other contract which is meant to be allowed contract that has fn selector clash
+        // with erc20.approve
+        address CONTRACT_WITH_SELECTOR_CLASH = address(0x4444);
+        handler.setContractPermission(CONTRACT_WITH_SELECTOR_CLASH, true);
+        handler.setContractMethodPermission(
+            address(CONTRACT_WITH_SELECTOR_CLASH),
+            erc20.approve.selector,
+            true
+        );
+
+        // Format action with correct encoded fn selector but total length incorrect (not 68 bytes)
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({
+            contractAddress: address(CONTRACT_WITH_SELECTOR_CLASH),
+            encodedFunction: abi.encodePacked(
+                handler.ERC20_APPROVE_SELECTOR(),
+                bytes32(uint256(0x123456789))
+            )
+        });
+
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(erc20)
+                ),
+                gasToken: address(erc20),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                encodedRefundAssets: encodedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 3,
+                gasPrice: 50,
+                actions: actions,
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Check OperationProcessed event
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "!approve fn length",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, not processed, failure reason for approve check failure
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].failureReason, "!approve fn length");
+    }
+
     function testProcessBundleUnsupportedRefundTokenNoRefunds() public {
         SimpleERC20Token joinSplitToken = ERC20s[0];
         reserveAndDepositFunds(ALICE, joinSplitToken, 2 * PER_NOTE_AMOUNT);
@@ -2041,7 +2251,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setTokenPermission(address(swapper), true);
+        handler.setContractPermission(address(swapper), true);
         handler.setContractMethodPermission(
             address(swapper),
             swapper.swap.selector,
