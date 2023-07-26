@@ -25,10 +25,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     mapping(address => bool) public _supportedContracts;
 
     // Set of callable protocol methods (key = address | selector)
-    // NOTE: If an upgradeable contract with malicious admins is whitelisted, the contract could be 
-    // upgraded to add a new method that has a selector clash with an already-whitelisted method. 
-    // This would allow a malicious admin to make methods not intended to be called callable. This 
-    // scenario would allow for bypassing of deposit limits if new method allows for large inflow 
+    // NOTE: If an upgradeable contract with malicious admins is whitelisted, the contract could be
+    // upgraded to add a new method that has a selector clash with an already-whitelisted method.
+    // This would allow a malicious admin to make methods not intended to be called callable. This
+    // scenario would allow for bypassing of deposit limits if new method allows for large inflow
     // of funds.
     mapping(uint192 => bool) public _supportedContractMethods;
 
@@ -266,9 +266,9 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     /// @notice Makes an external call to execute a single action
     /// @dev Reverts if caller attempts to call unsupported contract OR if caller tries
     ///      to re-enter by calling the Teller contract.
-    /// @dev There is a special check on methods with the erc20.approve selector that ensures only 
-    ///      whitelisted protocols can be approved as `spender` for erc20 tokens. Without this 
-    ///      check, users can call erc20.approve(amount, spender) from the Handler contract to 
+    /// @dev There is a special check on methods with the erc20.approve selector that ensures only
+    ///      whitelisted protocols can be approved as `spender` for erc20 tokens. Without this
+    ///      check, users can call erc20.approve(amount, spender) from the Handler contract to
     ///      approve arbitrary spenders.
     function _makeExternalCall(
         Action calldata action
@@ -288,13 +288,13 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             "Cannot call non-allowed protocol method"
         );
 
-        // NOTE: If an allowed protocol has a selector clash with erc20.approve, then abi.decode 
-        // will yield whatever data is formatted at bytes 4:23 for spender. This will likely revert 
-        // and cause the clashing function to not be callable. If 1st argument happens to be a 
-        // whitelisted address, then the clashing function will be callable. Selector clashes, 
-        // however, are not an issue here, as this check is only meant to ensure the normal case 
-        // (erc20s with standard approve fn signature) have protection against arbitrary approvals 
-        // and is not intended to have any bearing on other non-erc20 or non-approve cases. Worst 
+        // NOTE: If an allowed protocol has a selector clash with erc20.approve, then abi.decode
+        // will yield whatever data is formatted at bytes 4:23 for spender. This will likely revert
+        // and cause the clashing function to not be callable. If 1st argument happens to be a
+        // whitelisted address, then the clashing function will be callable. Selector clashes,
+        // however, are not an issue here, as this check is only meant to ensure the normal case
+        // (erc20s with standard approve fn signature) have protection against arbitrary approvals
+        // and is not intended to have any bearing on other non-erc20 or non-approve cases. Worst
         // case outcome is that small number of functions with signature clash will not be callable.
         if (selector == ERC20_APPROVE_SELECTOR) {
             require(
