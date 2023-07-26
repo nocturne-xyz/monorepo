@@ -151,10 +151,7 @@ export function toSignableOperation(
   for (const js of joinSplits) {
     if (js.publicSpend > 0n) {
       const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
-        AssetTrait.isSame(
-          AssetTrait.decode(a.encodedAsset),
-          AssetTrait.decode(js.encodedAsset)
-        )
+        AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
       );
       pubJoinSplits.push({
         joinSplit: {
@@ -239,10 +236,7 @@ export function toSubmittableOperation(
   for (const js of joinSplits) {
     if (js.publicSpend > 0n) {
       const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
-        AssetTrait.isSame(
-          AssetTrait.decode(a.encodedAsset),
-          AssetTrait.decode(js.encodedAsset)
-        )
+        AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
       );
       pubJoinSplits.push({
         joinSplit: {
