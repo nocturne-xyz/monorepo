@@ -29,6 +29,8 @@ import { Mutex } from "async-mutex";
 import { ACTOR_NAME, COMPONENT_NAME } from "./constants";
 
 const { BATCH_SIZE } = TreeConstants;
+const RECOVERY_BATCH_SIZE = BATCH_SIZE * 16;
+const RECOVER_INCLUDE_ARRAY = range(RECOVERY_BATCH_SIZE).map(() => false);
 
 const SUBTREE_INCLUDE_ARRAY = [true, ...range(BATCH_SIZE - 1).map(() => false)];
 
@@ -134,7 +136,7 @@ export class SubtreeUpdater {
     logger.info("recovering tree from fresh state");
     const previousInsertions = ClosableAsyncIterator.flatten(
       this.insertionLog.scan()
-    ).batches(256, true);
+    ).batches(RECOVERY_BATCH_SIZE, true);
     let endTEI = undefined;
     for await (const wrappedInsertions of previousInsertions.iter) {
       endTEI = wrappedInsertions[wrappedInsertions.length - 1].totalEntityIndex;
@@ -142,7 +144,7 @@ export class SubtreeUpdater {
       const { leaves, subtreeBatchOffset } =
         batchInfoFromInsertions(insertions);
 
-      this.tree.insertBatch(subtreeBatchOffset, leaves, SUBTREE_INCLUDE_ARRAY);
+      this.tree.insertBatch(subtreeBatchOffset, leaves, RECOVER_INCLUDE_ARRAY);
     }
 
     return endTEI;
