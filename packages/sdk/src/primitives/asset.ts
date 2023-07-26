@@ -147,11 +147,18 @@ export class AssetTrait {
     return { encodedAssetAddr, encodedAssetId };
   }
 
-  static isSame(a: Asset, b: Asset): boolean {
+  static isSameAsset(a: Asset, b: Asset): boolean {
     return (
       a.assetAddr === b.assetAddr &&
       a.id === b.id &&
       a.assetType === b.assetType
+    );
+  }
+
+  static isSameEncodedAsset(a: EncodedAsset, b: EncodedAsset): boolean {
+    return (
+      a.encodedAssetAddr === b.encodedAssetAddr &&
+      a.encodedAssetId === b.encodedAssetId
     );
   }
 

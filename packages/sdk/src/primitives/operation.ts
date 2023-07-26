@@ -142,10 +142,7 @@ export function toSignableOperation(
 
   const reformattedJoinSplits: SignableJoinSplit[] = joinSplits.map((js) => {
     const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
-      AssetTrait.isSame(
-        AssetTrait.decode(a.encodedAsset),
-        AssetTrait.decode(js.encodedAsset)
-      )
+      AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
     );
     return {
       commitmentTreeRoot: js.commitmentTreeRoot,
@@ -211,8 +208,8 @@ export function toSubmittableOperation(
   );
 
   const reformattedJoinSplits: SubmittableJoinSplit[] = joinSplits.map((js) => {
-    const assetIndex = trackedJoinSplitAssets.findIndex(
-      (a) => a.encodedAsset == js.encodedAsset
+    const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
+      AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
     );
     return {
       commitmentTreeRoot: js.commitmentTreeRoot,
