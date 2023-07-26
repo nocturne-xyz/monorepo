@@ -296,7 +296,7 @@ export class SubtreeUpdater {
       logger.debug(
         `acquiring mutex on handler contract to submit update tx for subtree index ${subtreeIndex}`
       );
-      const receipt = this.handlerMutex.runExclusive(async () => {
+      const receipt = await this.handlerMutex.runExclusive(async () => {
         const nonce = await this.handlerContract.signer.getTransactionCount(); // ensure its replacement
         const contractTx = async (gasPrice: number) => {
           const tx = await this.handlerContract.applySubtreeUpdate(
