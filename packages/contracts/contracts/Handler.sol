@@ -78,6 +78,12 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         _unpause();
     }
 
+    /// @notice Sets allowlist permission of the given contract, only callable by owner
+    /// @param contractAddress Address of the contract to add
+    /// @param permission Whether to enable or revoke permission
+    /// @dev This whitelists the contract but none of its methods. This is used for checks such as
+    ///      checks that a token is supported or when checking that a spender being approved for an
+    ///      erc20 is allowed.
     function setContractPermission(
         address contractAddress,
         bool permission
