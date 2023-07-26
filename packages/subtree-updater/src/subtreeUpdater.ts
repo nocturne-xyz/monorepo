@@ -131,7 +131,10 @@ export class SubtreeUpdater {
     };
   }
 
-  async recoverTree(logger: Logger): Promise<TotalEntityIndex | undefined> {
+  async recoverTree(
+    logger: Logger,
+    latestCommittedSubtreeIndex: number
+  ): Promise<TotalEntityIndex | undefined> {
     if (this.tree.count() > 0) {
       throw new Error("canont recover non-empty tree");
     }
@@ -143,6 +146,12 @@ export class SubtreeUpdater {
 
     let endTEI = undefined;
     for await (const wrappedInsertions of previousInsertions.iter) {
+      if (
+        Math.floor(this.tree.count() / BATCH_SIZE) >=
+        latestCommittedSubtreeIndex
+      ) {
+        break;
+      }
       endTEI = wrappedInsertions[wrappedInsertions.length - 1].totalEntityIndex;
       const insertions = wrappedInsertions.map(({ inner }) => inner);
       const { leaves, subtreeBatchOffset } =
@@ -151,6 +160,7 @@ export class SubtreeUpdater {
       this.tree.insertBatch(subtreeBatchOffset, leaves, RECOVER_INCLUDE_ARRAY);
       logger.debug(`recovered up to merkleIndex ${this.tree.count() - 1}`);
     }
+    await previousInsertions.close();
 
     return endTEI;
   }
@@ -158,10 +168,15 @@ export class SubtreeUpdater {
   async start(queryThrottleMs?: number): Promise<ActorHandle> {
     const logger = this.logger.child({ function: "start" });
 
+    const latestCommittedSubtreeIndexAtStart =
+      await this.adapter.fetchLatestSubtreeIndex();
+
     // recover tree in-memory from insertion log
-    // returns the latest multiple of 256 TEI that was recovered
+    // syncs in multiples of 256 insertions, up to the latest full-committed batch of 256 insertions
+    // returns the latest total entity index of any insertion that was recovered
     const recoveryTEI = await this.recoverTree(
-      this.logger.child({ function: "recoverTree" })
+      this.logger.child({ function: "recoverTree" }),
+      latestCommittedSubtreeIndexAtStart ?? 0
     );
 
     // goal: get an infinite iterator of all proof inputs starting from the point to which we recovered (which must be a multiple of 16)
@@ -212,8 +227,6 @@ export class SubtreeUpdater {
       );
 
     // (4) construct an iterator of proof inputs for uncommitted batches
-    const latestCommittedSubtreeIndexAtStart =
-      await this.adapter.fetchLatestSubtreeIndex();
     const proofInputInfos: ClosableAsyncIterator<ProofInputData> = batches
       // filterout batches that are already committed
       .filter(
