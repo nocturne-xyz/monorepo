@@ -26,7 +26,7 @@
     "@nocturne-xyz/contracts": "1.0.37-alpha",
     "@nocturne-xyz/local-prover": "1.0.10-alpha",
     "@nocturne-xyz/offchain-utils": "0.1.10",
-    "@nocturne-xyz/sdk": "1.0.193-alpha",
+    "@nocturne-xyz/sdk": "1.0.194-alpha",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
     "commander": "^10.0.0",
