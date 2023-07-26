@@ -38,7 +38,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
     uint256 public insertNotesLength;
     uint256 public handleJoinSplitsLength;
     uint256 public handleRefundNotesLength;
-    JoinSplit public lastHandledJoinSplit;
+    JoinSplit public joinSplitFromLastCall;
 
     // ______INTERNAL______
     IncrementalTree _mirrorTree;
@@ -91,13 +91,21 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
     function handleJoinSplits(
         uint256 seed
     ) public trackCall("handleJoinSplits") {
-        uint256 numJoinSplits = bound(seed, 1, 10);
+        uint256 numPubJoinSplits = bound(seed, 1, 10);
+        uint256 numConfJoinSplits = bound(seed, 1, 10);
 
         PublicJoinSplit[] memory pubJoinSplits = new PublicJoinSplit[](
-            numJoinSplits
+            numPubJoinSplits
         );
-        for (uint256 i = 0; i < numJoinSplits; i++) {
-            pubJoinSplits[i] = _generateJoinSplit(seed);
+        for (uint256 i = 0; i < numPubJoinSplits; i++) {
+            pubJoinSplits[i] = _generatePublicJoinSplit(seed);
+        }
+
+        JoinSplit[] memory confJoinSplits = new JoinSplit[](
+            numConfJoinSplits
+        );
+        for (uint256 i = 0; i < numConfJoinSplits; i++) {
+            confJoinSplits[i] = _generateJoinSplit(seed);
         }
 
         TrackedAsset[] memory trackedJoinSplitAssets = new TrackedAsset[](1);
@@ -112,7 +120,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
 
         Operation memory op = Operation({
             pubJoinSplits: pubJoinSplits,
-            confJoinSplits: new JoinSplit[](0),
+            confJoinSplits: confJoinSplits,
             refundAddr: CompressedStealthAddress({
                 h1: bound(
                     _rerandomize(seed),
@@ -140,11 +148,19 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             atomicActions: false
         });
 
+        uint256 totalNumJoinSplits = numPubJoinSplits + numConfJoinSplits;
+
         commitmentTreeManager.handleJoinSplits(op);
-        lastHandledJoinSplit = pubJoinSplits[numJoinSplits - 1].joinSplit;
-        handleJoinSplitsLength = numJoinSplits;
-        _nullifierCounter += 2 * numJoinSplits;
-        ghost_joinSplitLeafCount += 2 * numJoinSplits; // call could not have completed without adding 2 * numJoinSplit leaves
+        handleJoinSplitsLength = totalNumJoinSplits;
+        _nullifierCounter += 2 * totalNumJoinSplits;
+        ghost_joinSplitLeafCount += 2 * totalNumJoinSplits; // call could not have completed without adding 2 * numJoinSplit leaves
+
+        // set joinsplit from last call to be conf or public 50/50
+        if (seed % 2 == 0) {
+            joinSplitFromLastCall = pubJoinSplits[numPubJoinSplits - 1].joinSplit;
+        } else {
+            joinSplitFromLastCall = confJoinSplits[numConfJoinSplits - 1];
+        }
     }
 
     function handleRefundNote(
@@ -208,21 +224,33 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
 
     function _generateJoinSplit(
         uint256 seed
-    ) internal returns (PublicJoinSplit memory _pubJoinSplit) {
-        _pubJoinSplit.joinSplit.newNoteACommitment = bound(
+    ) internal returns (JoinSplit memory _joinSplit) {
+        _joinSplit.newNoteACommitment = bound(
             _rerandomize(seed),
             0,
             Utils.BN254_SCALAR_FIELD_MODULUS - 1
         );
-        _pubJoinSplit.joinSplit.newNoteBCommitment = bound(
+        _joinSplit.newNoteBCommitment = bound(
             _rerandomize(seed),
             0,
             Utils.BN254_SCALAR_FIELD_MODULUS - 1
         );
-        _pubJoinSplit.joinSplit.commitmentTreeRoot = commitmentTreeManager
+        _joinSplit.commitmentTreeRoot = commitmentTreeManager
             .root();
-        _pubJoinSplit.joinSplit.nullifierA = _nullifierCounter;
-        _pubJoinSplit.joinSplit.nullifierB = _nullifierCounter + 1;
+        _joinSplit.nullifierA = _nullifierCounter;
+        _joinSplit.nullifierB = _nullifierCounter + 1;
         _nullifierCounter += 2;
+    }
+
+    function _generatePublicJoinSplit(
+        uint256 seed
+    ) internal returns (PublicJoinSplit memory _publicJoinSplit) {
+        _publicJoinSplit.joinSplit = _generateJoinSplit(seed);
+        _publicJoinSplit.assetIndex = 0;
+        _publicJoinSplit.publicSpend = bound(
+            _rerandomize(seed),
+            0,
+            Utils.BN254_SCALAR_FIELD_MODULUS - 1
+        );
     }
 }
