@@ -182,12 +182,13 @@ library NocturneUtils {
                 ) {
                     uint256 publicSpend = args.joinSplitsPublicSpends[i][j];
                     if (publicSpend > 0) {
-
                         pubJoinSplits[pubIndex] = PublicJoinSplit({
                             joinSplit: JoinSplit({
                                 commitmentTreeRoot: root,
                                 nullifierA: uint256(2 * (pubIndex + confIndex)),
-                                nullifierB: uint256(2 * (pubIndex + confIndex) + 1),
+                                nullifierB: uint256(
+                                    2 * (pubIndex + confIndex) + 1
+                                ),
                                 newNoteACommitment: uint256(pubIndex),
                                 newNoteAEncrypted: newNoteEncrypted,
                                 newNoteBCommitment: uint256(pubIndex),
