@@ -1,6 +1,5 @@
 import {
   Address,
-  AssetTrait,
   IncludedEncryptedNote,
   IncludedNote,
   Nullifier,
@@ -193,16 +192,12 @@ function extractEncryptedNotesFromJoinSplitEvents(
       newNoteBEncrypted,
       newNoteACommitment,
       newNoteBCommitment,
-      encodedAsset,
     } = inner;
-
-    const asset = AssetTrait.decode(encodedAsset);
 
     const noteA = {
       totalEntityIndex: totalEntityIndex + 2n,
       inner: {
         ...newNoteAEncrypted,
-        asset,
         commitment: newNoteACommitment,
         merkleIndex: newNoteAIndex,
       },
@@ -212,7 +207,6 @@ function extractEncryptedNotesFromJoinSplitEvents(
       totalEntityIndex: totalEntityIndex + 3n,
       inner: {
         ...newNoteBEncrypted,
-        asset,
         commitment: newNoteBCommitment,
         merkleIndex: newNoteBIndex,
       },

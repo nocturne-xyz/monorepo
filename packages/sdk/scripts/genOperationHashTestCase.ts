@@ -5,6 +5,7 @@ import {
   computeOperationDigest,
   hashOperation,
 } from "../src";
+import { OPERATION_TYPES } from "../src/primitives/operation";
 
 (async () => {
   const joinSplit: SignableJoinSplit = {
@@ -13,8 +14,6 @@ import {
     nullifierB: 1n,
     newNoteACommitment: 1n,
     newNoteBCommitment: 1n,
-    assetIndex: 1,
-    publicSpend: 1n,
     senderCommitment: 1n,
     newNoteAEncrypted: {
       ciphertextBytes: [],
@@ -26,12 +25,19 @@ import {
     },
   };
 
+  const pubJoinSplit = {
+    joinSplit,
+    assetIndex: 1,
+    publicSpend: 1n,
+  };
+
   const operation: SignableOperationWithNetworkInfo = {
     networkInfo: {
       chainId: 1n,
       tellerContract: "0x1111111111111111111111111111111111111111",
     },
-    joinSplits: [joinSplit],
+    pubJoinSplits: [pubJoinSplit],
+    confJoinSplits: [joinSplit],
     refundAddr: {
       h1: 1n,
       h2: 1n,
@@ -78,4 +84,37 @@ import {
 
   const opDigest = computeOperationDigest(operation);
   console.log("operation digest", "0x" + opDigest.toString(16));
+
+  const joinSplitHash = _TypedDataEncoder.hashStruct(
+    "JoinSplitWithoutProof",
+    OPERATION_TYPES,
+    joinSplit
+  );
+  console.log("joinSplitHash", joinSplitHash);
+
+  const joinSplitsArrayHash = _TypedDataEncoder.hashStruct(
+    "JoinSplitWithoutProof[]",
+    OPERATION_TYPES,
+    operation.confJoinSplits
+  );
+  console.log("joinSplitsArrayHash", joinSplitsArrayHash);
+
+  const pubJoinSplitHash = _TypedDataEncoder.hashStruct(
+    "PublicJoinSplitWithoutProof",
+    OPERATION_TYPES,
+    operation.pubJoinSplits[0]
+  );
+  console.log("pubJoinSplitHash", pubJoinSplitHash);
+
+  const pubJoinSplitsArrayHash = _TypedDataEncoder.hashStruct(
+    "PublicJoinSplitWithoutProof[]",
+    OPERATION_TYPES,
+    operation.pubJoinSplits
+  );
+  console.log("pubJoinSplitsArrayHash", pubJoinSplitsArrayHash);
+
+  const typehash = new _TypedDataEncoder(OPERATION_TYPES)._types[
+    "OperationWithoutProofs"
+  ];
+  console.log("typehash", typehash);
 })();

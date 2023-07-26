@@ -14,7 +14,7 @@ contract OperationEIP712 is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "OperationWithoutProofs(PublicJoinSplitWithoutProof[] pubJoinSplits, JoinSplitWithoutProof[] confJoinSplits,CompressedStealthAddress refundAddr,TrackedAsset[] trackedJoinSplitAssets,TrackedAsset[] trackedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 gasPrice,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)PublicJoinSplitWithoutProof(JoinSplitWithoutProof joinSplit,uint8 assetIndex,uint256 publicSpend)TrackedAsset(EncodedAsset encodedAsset,uint256 minRefundValue)"
+                "OperationWithoutProofs(PublicJoinSplitWithoutProof[] pubJoinSplits,JoinSplitWithoutProof[] confJoinSplits,CompressedStealthAddress refundAddr,TrackedAsset[] trackedJoinSplitAssets,TrackedAsset[] trackedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 gasPrice,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)PublicJoinSplitWithoutProof(JoinSplitWithoutProof joinSplit,uint8 assetIndex,uint256 publicSpend)TrackedAsset(EncodedAsset encodedAsset,uint256 minRefundValue)"
             )
         );
 
@@ -36,7 +36,7 @@ contract OperationEIP712 is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "PublicJoinSplitWithoutProof(JoinSplitWithoutProof joinSplit,uint8 assetIndex,uint256 publicSpend)JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)"
+                "PublicJoinSplitWithoutProof(JoinSplitWithoutProof joinSplit,uint8 assetIndex,uint256 publicSpend)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)"
             )
         );
 

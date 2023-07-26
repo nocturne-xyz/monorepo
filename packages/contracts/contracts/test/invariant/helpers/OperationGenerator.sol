@@ -173,9 +173,6 @@ contract OperationGenerator is InvariantUtils {
             op.pubJoinSplits[i].joinSplit.nullifierB = nullifierCount + 1;
 
             nullifierCount += 2;
-
-            // console.log("NF A", op.joinSplits[i].nullifierA);
-            // console.log("NF B", op.joinSplits[i].nullifierB);
         }
 
         for (uint256 i = 0; i < op.confJoinSplits.length; i++) {
@@ -183,9 +180,6 @@ contract OperationGenerator is InvariantUtils {
             op.confJoinSplits[i].nullifierB = nullifierCount + 1;
 
             nullifierCount += 2;
-
-            // console.log("NF A", op.joinSplits[i].nullifierA);
-            // console.log("NF B", op.joinSplits[i].nullifierB);
         }
 
         return op;

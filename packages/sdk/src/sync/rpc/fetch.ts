@@ -30,8 +30,6 @@ export interface JoinSplitEvent {
   newNoteBIndex: number;
   newNoteACommitment: bigint;
   newNoteBCommitment: bigint;
-  encodedAsset: EncodedAsset;
-  publicSpend: bigint;
   newNoteAEncrypted: EncryptedNote;
   newNoteBEncrypted: EncryptedNote;
 }
@@ -123,10 +121,7 @@ function joinSplitEventFromRaw(
     newNoteAEncrypted,
     newNoteBCommitment,
     newNoteBEncrypted,
-    encodedAsset,
-    publicSpend,
   } = raw.args;
-  const { encodedAssetAddr, encodedAssetId } = encodedAsset;
 
   return {
     totalEntityIndex: TotalEntityIndexTrait.fromTypedEvent(raw),
@@ -137,11 +132,6 @@ function joinSplitEventFromRaw(
       newNoteBIndex: newNoteBIndex.toNumber(),
       newNoteACommitment: newNoteACommitment.toBigInt(),
       newNoteBCommitment: newNoteBCommitment.toBigInt(),
-      encodedAsset: {
-        encodedAssetAddr: encodedAssetAddr.toBigInt(),
-        encodedAssetId: encodedAssetId.toBigInt(),
-      },
-      publicSpend: publicSpend.toBigInt(),
       newNoteAEncrypted: {
         ciphertextBytes: Array.from(
           ethers.utils.arrayify(newNoteAEncrypted.ciphertextBytes)
