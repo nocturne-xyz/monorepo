@@ -88,7 +88,6 @@ describe("InsertionLog", () => {
     await log.push(entries);
 
     const middle = entries[50].totalEntityIndex;
-    console.log(entries.slice(48, 52));
     const result = (await log.scan(middle).collect()).flat();
 
     expect(result.length).to.equal(50);
