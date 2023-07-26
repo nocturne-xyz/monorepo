@@ -1,3 +1,5 @@
+import { dedup } from "../utils/functional";
+import { AssetTrait } from "./asset";
 import {
   BN254_SCALAR_FIELD_MODULUS,
   PreSignOperation,
@@ -122,25 +124,28 @@ export function toSignableOperation(
     atomicActions,
   } = op;
 
+  const joinSplitAssets = dedup(
+    joinSplits.map(({ encodedAsset }) => encodedAsset)
+  );
   const trackedJoinSplitAssets: Array<TrackedAsset> = Array.from(
-    new Set(
-      joinSplits.map(({ encodedAsset }) => {
-        return { encodedAsset, minRefundValue: 0n };
-      })
-    )
+    joinSplitAssets.map((encodedAsset) => {
+      return { encodedAsset, minRefundValue: 0n };
+    })
   );
 
+  const refundAssets = dedup(encodedRefundAssets);
   const trackedRefundAssets: Array<TrackedAsset> = Array.from(
-    new Set(
-      encodedRefundAssets.map((encodedAsset) => {
-        return { encodedAsset, minRefundValue: 0n };
-      })
-    )
+    refundAssets.map((encodedAsset) => {
+      return { encodedAsset, minRefundValue: 0n };
+    })
   );
 
   const reformattedJoinSplits: SignableJoinSplit[] = joinSplits.map((js) => {
-    const assetIndex = trackedJoinSplitAssets.findIndex(
-      (a) => a.encodedAsset == js.encodedAsset
+    const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
+      AssetTrait.isSame(
+        AssetTrait.decode(a.encodedAsset),
+        AssetTrait.decode(js.encodedAsset)
+      )
     );
     return {
       commitmentTreeRoot: js.commitmentTreeRoot,

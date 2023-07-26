@@ -1,4 +1,5 @@
 import { assertOrErr } from "./error";
+import * as JSON from "bigint-json-serialization";
 
 export function zip<T, U>(a: T[], b: U[]): [T, U][] {
   return a.map((x, i) => [x, b[i]]);
@@ -149,5 +150,6 @@ export function consecutiveChunks<T>(
 }
 
 export function dedup<T>(arr: T[]): T[] {
-  return Array.from(new Set(arr));
+  const set = new Set(arr.map((t) => JSON.stringify(t)));
+  return Array.from(set.values()).map((t) => JSON.parse(t) as T);
 }
