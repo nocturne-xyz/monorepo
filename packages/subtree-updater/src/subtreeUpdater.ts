@@ -30,7 +30,10 @@ import { ACTOR_NAME, COMPONENT_NAME } from "./constants";
 
 const { BATCH_SIZE } = TreeConstants;
 const RECOVERY_BATCH_SIZE = BATCH_SIZE * 16;
-const RECOVER_INCLUDE_ARRAY = range(RECOVERY_BATCH_SIZE).map(() => false);
+const RECOVER_INCLUDE_ARRAY = [
+  true,
+  ...range(RECOVERY_BATCH_SIZE - 1).map(() => false),
+];
 
 const SUBTREE_INCLUDE_ARRAY = [true, ...range(BATCH_SIZE - 1).map(() => false)];
 
@@ -137,6 +140,7 @@ export class SubtreeUpdater {
     const previousInsertions = ClosableAsyncIterator.flatten(
       this.insertionLog.scan()
     ).batches(RECOVERY_BATCH_SIZE, true);
+
     let endTEI = undefined;
     for await (const wrappedInsertions of previousInsertions.iter) {
       endTEI = wrappedInsertions[wrappedInsertions.length - 1].totalEntityIndex;
@@ -145,6 +149,7 @@ export class SubtreeUpdater {
         batchInfoFromInsertions(insertions);
 
       this.tree.insertBatch(subtreeBatchOffset, leaves, RECOVER_INCLUDE_ARRAY);
+      logger.debug(`recovered up to merkleIndex ${this.tree.count() - 1}`);
     }
 
     return endTEI;
