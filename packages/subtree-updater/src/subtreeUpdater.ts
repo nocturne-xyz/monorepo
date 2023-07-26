@@ -147,7 +147,7 @@ export class SubtreeUpdater {
     let endTEI = undefined;
     for await (const wrappedInsertions of previousInsertions.iter) {
       if (
-        Math.floor(this.tree.count() / BATCH_SIZE) >=
+        Math.floor((this.tree.count() + RECOVERY_BATCH_SIZE) / BATCH_SIZE) >=
         latestCommittedSubtreeIndex
       ) {
         break;
