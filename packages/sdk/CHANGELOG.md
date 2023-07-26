@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add `filter` to `ClosableAsyncIterator`
 - `syncSDK` returns latest synced merkle index so fe-sdk can access and return
 - sync adapters return latest synced merkle index
 - `syncSDK` takes `SyncOpts` as params, add `timeoutSeconds` to `SyncOpts`
