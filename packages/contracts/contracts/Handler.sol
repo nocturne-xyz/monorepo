@@ -184,7 +184,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             opResult.numRefunds = numRefundsToHandle;
         } catch (bytes memory reason) {
             // Indicates revert because of one of the following reasons:
-            // 1. `executeActions` yielded fewer refund tokens than expected in 
+            // 1. `executeActions` yielded fewer refund tokens than expected in
             //    trackedJoinSplitAssets/trackedRefundAssets
             // 2. `executeActions` exceeded `executionGasLimit`, but in its outer call context
             //    (i.e. while not making an external call)
@@ -229,7 +229,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     /// @dev This function is only callable by the Handler itself when not paused.
     /// @dev This function can revert if any of the below occur (revert not within action itself):
     ///         1. The call runs out of gas in the outer call context (OOG)
-    ///         2. The executed actions result in fewer refunds than expected in 
+    ///         2. The executed actions result in fewer refunds than expected in
     ///            trackedJoinSplitAssets/trackedRefundAssets
     ///         3. An action reverts and atomicActions is set to true
     ///         4. A call to an unsupported protocol is attempted
