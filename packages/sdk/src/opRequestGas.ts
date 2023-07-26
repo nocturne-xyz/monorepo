@@ -8,16 +8,17 @@ import {
 } from "./operationRequest";
 import {
   Operation,
-  ProvenOperation,
   OperationResult,
   Asset,
   PreSignOperation,
   BLOCK_GAS_LIMIT,
   AssetType,
+  TrackedAsset,
+  SignableOperationWithNetworkInfo,
 } from "./primitives";
 import { ERC20_ID } from "./primitives/asset";
 import { SolidityProof } from "./proof";
-import { groupByMap, max, partition } from "./utils/functional";
+import { groupByMap, partition } from "./utils/functional";
 import { prepareOperation } from "./prepareOperation";
 import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
@@ -57,20 +58,15 @@ export interface HandleOpRequestGasDeps {
 }
 
 interface GasEstimatedOperationRequest
-  extends Omit<
-    OperationRequest,
-    "executionGasLimit" | "maxNumRefunds" | "gasPrice"
-  > {
+  extends Omit<OperationRequest, "executionGasLimit" | "gasPrice"> {
   executionGasLimit: bigint;
-  maxNumRefunds: bigint;
   gasPrice: bigint;
 }
 
 interface GasParams {
   gasPrice: bigint;
-  numJoinSplits: bigint;
+  numJoinSplitAssets: bigint;
   executionGasLimit: bigint;
-  maxNumRefunds: bigint;
 }
 
 // VK corresponding to SK of 1 with minimum valid nonce
@@ -85,13 +81,12 @@ export async function handleGasForOperationRequest(
 ): Promise<GasAccountedOperationRequest> {
   // estimate gas params for opRequest
   console.log("estimating gas for op request");
-  const { gasPrice, numJoinSplits, executionGasLimit, maxNumRefunds } =
+  const { gasPrice, numJoinSplitAssets, executionGasLimit } =
     await estimateGasForOperationRequest(deps, opRequest);
 
   const gasEstimatedOpRequest: GasEstimatedOperationRequest = {
     ...opRequest,
     executionGasLimit,
-    maxNumRefunds,
     gasPrice,
   };
 
@@ -108,21 +103,24 @@ export async function handleGasForOperationRequest(
 
     // compute an estimate of the total amount of gas the op will cost given the gas params
     // we add 1 to `maxNumRefund` because we may add another joinSplitRequest to pay for gas
+    const numRefundsEstimate = BigInt(
+      Number(numJoinSplitAssets) + opRequest.refundAssets.length
+    );
     const totalGasUnitsEstimate =
       executionGasLimit +
-      numJoinSplits * PER_JOINSPLIT_GAS +
-      maxNumRefunds * PER_REFUND_GAS;
+      numJoinSplitAssets * PER_JOINSPLIT_GAS +
+      numRefundsEstimate * PER_REFUND_GAS;
 
     console.log(`execution gas limit: ${executionGasLimit}`, {
       executionGasLimit,
     });
-    console.log(`joinSplits gas: ${numJoinSplits * PER_JOINSPLIT_GAS}`, {
-      numJoinSplits,
-      joinSplitsGas: numJoinSplits * PER_JOINSPLIT_GAS,
+    console.log(`joinSplits gas: ${numJoinSplitAssets * PER_JOINSPLIT_GAS}`, {
+      numJoinSplitAssets,
+      joinSplitsGas: numJoinSplitAssets * PER_JOINSPLIT_GAS,
     });
-    console.log(`refunds gas: ${maxNumRefunds * PER_REFUND_GAS}`, {
-      maxNumRefunds,
-      refundsGas: maxNumRefunds * PER_REFUND_GAS,
+    console.log(`refunds gas: ${numRefundsEstimate * PER_REFUND_GAS}`, {
+      numRefundsEstimate,
+      refundsGas: numRefundsEstimate * PER_REFUND_GAS,
     });
 
     // attempt to update the joinSplitRequests with gas compensation
@@ -139,13 +137,6 @@ export async function handleGasForOperationRequest(
 
     if (!gasAssetAndTicker) {
       throw new Error("not enough owned gas tokens pay for op");
-    }
-
-    // if we've added a new joinSplitRequest to pay for gas, we need to increase maxNumRefunds to reflect that change
-    if (
-      joinSplitRequests.length > gasEstimatedOpRequest.joinSplitRequests.length
-    ) {
-      gasEstimatedOpRequest.maxNumRefunds += 1n;
     }
 
     const gasAssetRefundThreshold = await deps.tokenConverter.weiToTargetErc20(
@@ -272,15 +263,11 @@ async function estimateGasForOperationRequest(
   { handlerContract, ...deps }: HandleOpRequestGasDeps,
   opRequest: OperationRequest
 ): Promise<GasParams> {
-  let { executionGasLimit, maxNumRefunds, gasPrice } = opRequest;
+  let { executionGasLimit, gasPrice } = opRequest;
 
   // Simulate operation to get number of joinSplits
-  const { joinSplitRequests, refundAssets } = opRequest;
   const dummyOpRequest: GasAccountedOperationRequest = {
     ...opRequest,
-    maxNumRefunds:
-      maxNumRefunds ??
-      BigInt(joinSplitRequests.length + refundAssets.length) + 5n, // dummy fill joinsplits length
     gasAssetRefundThreshold: 0n,
     executionGasLimit: BLOCK_GAS_LIMIT,
     refundAddr: DUMMY_REFUND_ADDR,
@@ -294,12 +281,9 @@ async function estimateGasForOperationRequest(
     { viewer: DUMMY_VIEWER, ...deps },
     dummyOpRequest
   );
-  preparedOp.maxNumRefunds = BigInt(
-    preparedOp.joinSplits.length + refundAssets.length + 5
-  ); // set correct maxNumRefunds now that we know number of joinsplits
 
   // simulate the operation
-  if (!executionGasLimit || !maxNumRefunds) {
+  if (!executionGasLimit) {
     console.log("simulating operation");
     const result = await simulateOperation(
       handlerContract,
@@ -310,20 +294,7 @@ async function estimateGasForOperationRequest(
     }
 
     // set executionGasLimit with 20% buffer above the simulation result
-    if (!executionGasLimit) {
-      executionGasLimit = (result.executionGas * 12n) / 10n;
-    }
-
-    // If refunds specified > simulation result, use specified amount
-    // If refunds specified < simulation result, use simulation result
-    if (!maxNumRefunds) {
-      maxNumRefunds = max(
-        result.numRefunds,
-        BigInt(
-          preparedOp.joinSplits.length + preparedOp.encodedRefundAssets.length
-        )
-      );
-    }
+    executionGasLimit = (result.executionGas * 12n) / 10n;
   }
 
   // if gasPrice is not specified, get it from RPC node
@@ -332,10 +303,13 @@ async function estimateGasForOperationRequest(
     gasPrice ??
     ((await handlerContract.provider.getGasPrice()).toBigInt() * 12n) / 10n;
 
+  const joinSplitAssets = new Set(
+    preparedOp.joinSplits.map((js) => js.encodedAsset)
+  );
+
   return {
-    numJoinSplits: BigInt(preparedOp.joinSplits.length),
+    numJoinSplitAssets: BigInt(joinSplitAssets.size),
     executionGasLimit,
-    maxNumRefunds,
     gasPrice,
   };
 }
@@ -352,7 +326,7 @@ async function simulateOperation(
   }
 
   // Fill-in the some fake proof
-  const provenOp = fakeProvenOperation(op);
+  const opWithFakeProofs = fakeProvenOperation(op);
 
   // Set gasPrice to 0 so that gas payment does not interfere with amount of
   // assets unwrapped pre gas estimation
@@ -368,7 +342,7 @@ async function simulateOperation(
   const result = await handlerContract.callStatic.handleOperation(
     // TODO: fix after contract changes
     //@ts-ignore
-    provenOp,
+    opWithFakeProofs,
     verificationGasForOp,
     bundler,
     {
@@ -396,7 +370,15 @@ async function simulateOperation(
   };
 }
 
-function fakeProvenOperation(op: Operation): ProvenOperation {
+function fakeProvenOperation(op: Operation): SignableOperationWithNetworkInfo {
+  const trackedJoinSplitAssets: Array<TrackedAsset> = Array.from(
+    new Set(
+      op.joinSplits.map((js) => {
+        return { encodedAsset: js.encodedAsset, minRefundValue: 0n };
+      })
+    )
+  );
+
   const provenJoinSplits = op.joinSplits.map((joinSplit) => {
     return {
       commitmentTreeRoot: joinSplit.commitmentTreeRoot,
@@ -404,7 +386,9 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
       nullifierB: joinSplit.nullifierB,
       newNoteACommitment: joinSplit.newNoteACommitment,
       newNoteBCommitment: joinSplit.newNoteBCommitment,
-      encodedAsset: joinSplit.encodedAsset,
+      assetIndex: trackedJoinSplitAssets.findIndex(
+        (a) => a.encodedAsset === joinSplit.encodedAsset
+      ),
       publicSpend: joinSplit.publicSpend,
       newNoteAEncrypted: joinSplit.newNoteAEncrypted,
       newNoteBEncrypted: joinSplit.newNoteBEncrypted,
@@ -418,15 +402,24 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
       ),
     };
   });
+
+  const trackedRefundAssets: Array<TrackedAsset> = Array.from(
+    new Set(
+      op.encodedRefundAssets.map((a) => {
+        return { encodedAsset: a, minRefundValue: 0n };
+      })
+    )
+  );
+
   return {
     networkInfo: op.networkInfo,
     refundAddr: op.refundAddr,
-    encodedRefundAssets: op.encodedRefundAssets,
     actions: op.actions,
+    trackedJoinSplitAssets,
+    trackedRefundAssets,
     encodedGasAsset: op.encodedGasAsset,
     gasAssetRefundThreshold: op.gasAssetRefundThreshold,
     executionGasLimit: op.executionGasLimit,
-    maxNumRefunds: op.maxNumRefunds,
     gasPrice: op.gasPrice,
     joinSplits: provenJoinSplits,
     deadline: op.deadline,

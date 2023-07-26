@@ -124,12 +124,15 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 100M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Unwrap 100M of token (alice has sufficient balance)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -139,10 +142,9 @@ contract BalanceManagerTest is Test {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -168,6 +170,8 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 100M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Unwrap 100M of token with gas price of 50 (see total
         // fee below)
         Operation memory op = NocturneUtils.formatOperation(
@@ -175,6 +179,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -184,10 +189,9 @@ contract BalanceManagerTest is Test {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasAssetRefundThreshold: 0,
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -245,13 +249,13 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: tokens,
+                joinSplitRefundValues: new uint256[](tokens.length),
                 gasToken: address(token1),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: joinSplitsPublicSpends,
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -293,6 +297,8 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 150M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 3);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Unwrap 150M and setting gas price to 50. 2 joinsplits needed for
         // calculated fee (see below)
         Operation memory op = NocturneUtils.formatOperation(
@@ -300,6 +306,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -309,10 +316,9 @@ contract BalanceManagerTest is Test {
                             3
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -346,12 +352,15 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 100M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Unwrap 100M and set gas price to 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -361,10 +370,9 @@ contract BalanceManagerTest is Test {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -421,12 +429,15 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 100M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Unwrap 100M and set gas price to 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -436,11 +447,10 @@ contract BalanceManagerTest is Test {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 // threshold = sum(publicSpend) means it will always pay bundler whole amount
                 gasAssetRefundThreshold: 2 * PER_NOTE_AMOUNT,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -500,6 +510,8 @@ contract BalanceManagerTest is Test {
         // Reserves + deposit only 50M tokens (we will see gas comp is 62.5M)
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Unwrap 50M, not enough for bundler comp with 3 joinsplits and gas
         // price of 50
         Operation memory op = NocturneUtils.formatOperation(
@@ -507,6 +519,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -516,10 +529,9 @@ contract BalanceManagerTest is Test {
                             3
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -550,12 +562,15 @@ contract BalanceManagerTest is Test {
         // Only reserves + deposits 50M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Attempts to unwrap 100M of token (we only deposited 50M)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -565,10 +580,9 @@ contract BalanceManagerTest is Test {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -590,12 +604,15 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 50M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Operation with bad merkle root fails joinsplit processing
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -605,10 +622,9 @@ contract BalanceManagerTest is Test {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -630,6 +646,8 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 50M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create operation with two joinsplits where 1st uses NF included in
         // 2nd joinsplit
         Operation memory op = NocturneUtils.formatOperation(
@@ -637,6 +655,7 @@ contract BalanceManagerTest is Test {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -646,10 +665,9 @@ contract BalanceManagerTest is Test {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -672,12 +690,15 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 50M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create operation with one of the joinsplits has matching NFs A and B
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -687,10 +708,9 @@ contract BalanceManagerTest is Test {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -712,12 +732,15 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 100M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Unwrap 100M of token
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -727,10 +750,9 @@ contract BalanceManagerTest is Test {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0, // don't reserve any gas, teller takes up all
                 actions: new Action[](0),
                 atomicActions: false,
@@ -767,12 +789,23 @@ contract BalanceManagerTest is Test {
             ERC20_ID
         );
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(refundToken),
+                ERC20_ID
+            ),
+            minRefundValue: 0
+        });
+
         // Dummy operation, we're only interested in refundAssets
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(joinSplitToken)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(joinSplitToken),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -782,10 +815,9 @@ contract BalanceManagerTest is Test {
                             2
                         )
                     ),
-                encodedRefundAssets: refundAssets,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
                 atomicActions: false,

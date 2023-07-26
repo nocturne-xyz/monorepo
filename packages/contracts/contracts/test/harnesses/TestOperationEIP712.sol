@@ -75,10 +75,16 @@ contract TestOperationEIP712 is ITestOperationEIP712, OperationEIP712 {
         return keccak256(encodedFunction);
     }
 
-    function hashEncodedRefundAssets(
-        EncodedAsset[] calldata encodedRefundAssets
+    function hashTrackedAssets(
+        TrackedAsset[] calldata trackedAssets
     ) public pure returns (bytes32) {
-        return _hashEncodedRefundAssets(encodedRefundAssets);
+        return _hashTrackedAssets(trackedAssets);
+    }
+
+    function hashTrackedAsset(
+        TrackedAsset calldata trackedAsset
+    ) public pure returns (bytes32) {
+        return _hashTrackedAsset(trackedAsset);
     }
 
     function hashEncodedAsset(

@@ -103,8 +103,7 @@ contract OperationGenerator is InvariantUtils {
         uint256 gasToReserve = _opMaxGasAssetCost(
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
             DEFAULT_EXECUTION_GAS_LIMIT,
-            totalNumJoinSplits,
-            DEFAULT_MAX_NUM_REFUNDS
+            totalNumJoinSplits
         );
 
         bool compensateBundler = false;
@@ -123,12 +122,18 @@ contract OperationGenerator is InvariantUtils {
             numActions
         );
 
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
-        encodedRefundAssets[0] = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(args.swapErc20),
-            ERC20_ID
-        );
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        {
+            address swapErc20 = address(args.swapErc20);
+            trackedRefundAssets[0] = TrackedAsset({
+                encodedAsset: AssetUtils.encodeAsset(
+                    AssetType.ERC20,
+                    swapErc20,
+                    ERC20_ID
+                ),
+                minRefundValue: 0
+            });
+        }
 
         console.log("getting gas asset refund threshold");
         uint256 gasAssetRefundThreshold = bound(
@@ -139,13 +144,13 @@ contract OperationGenerator is InvariantUtils {
 
         FormatOperationArgs memory opArgs = FormatOperationArgs({
             joinSplitTokens: args.joinSplitTokens,
+            joinSplitRefundValues: new uint256[](numJoinSplitTokens),
             gasToken: args.joinSplitTokens[0], // weth is used as gas token
             root: args.root,
             joinSplitsPublicSpends: joinSplitsPublicSpends,
-            encodedRefundAssets: encodedRefundAssets,
+            trackedRefundAssets: trackedRefundAssets,
             gasAssetRefundThreshold: gasAssetRefundThreshold,
             executionGasLimit: DEFAULT_EXECUTION_GAS_LIMIT,
-            maxNumRefunds: DEFAULT_MAX_NUM_REFUNDS, // TODO: take based on number of swaps
             gasPrice: compensateBundler ? 1 : 0,
             actions: actions,
             atomicActions: true,
@@ -360,13 +365,13 @@ contract OperationGenerator is InvariantUtils {
     function _opMaxGasAssetCost(
         uint256 perJoinSplitVerifyGas,
         uint256 executionGasLimit,
-        uint256 numJoinSplits,
-        uint256 maxNumRefunds
+        uint256 numJoinSplits
     ) internal pure returns (uint256) {
         return
             executionGasLimit +
             ((perJoinSplitVerifyGas + GAS_PER_JOINSPLIT_HANDLE) *
                 numJoinSplits) +
-            ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) * maxNumRefunds);
+            ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) *
+                DEFAULT_MAX_NUM_REFUNDS);
     }
 }

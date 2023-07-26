@@ -132,15 +132,12 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     ///            assets, etc). The bundler is not compensated when reverts happen here because
     ///            the revert happens before _gatherReservedGasAssetAndPayBundler is called.
     ///         2. executeActions: A revert here can be due to unpredictable reasons, mainly if
-    ///            there is not enough executionGas for the actions or if the call produces more
-    ///            refunds than op.maxNumRefunds (neither can be predictably simulated by bundler).
-    ///         3. _makeExternalCall: A revert here only leads to a revert if
-    ///           op.atomicActions = true (requires all actions to succeed atomically or none at
-    ///           all).
-    /// @dev The gas usage of an operation can be given an upper bound estimate as a function of
-    ///      op.joinSplits.length, op.executionGasLimit, and op.maxNumRefunds. Note that the user
-    ///      must specify executionGasLimit and maxNumRefunds to give an upper bound on gas usage
-    ///      because these are "hard to simulate" values that the bundler cannot predict.
+    ///            there is not enough executionGas for the actions or if after executing actions,
+    ///            there are fewer refund tokens than what was specified trackedJoinSplitAssets/
+    ///            trackedRefundAssets minRefundValues.
+    ///         3. _makeExternalCall: A revert here only leads to top level revert if
+    ///            op.atomicActions = true (requires all actions to succeed atomically or none at
+    ///            all).
     /// @param op Operation to handle
     /// @param perJoinSplitVerifyGas Gas usage for verifying a single joinSplit proof
     /// @param bundler Address of the bundler
@@ -158,10 +155,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         require(block.timestamp <= op.deadline, "expired deadline");
 
         // Ensure refund assets supported
-        uint256 numRefundAssets = op.encodedRefundAssets.length;
+        uint256 numRefundAssets = op.trackedRefundAssets.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
             (, address assetAddr, ) = AssetUtils.decodeAsset(
-                op.encodedRefundAssets[i]
+                op.trackedRefundAssets[i].encodedAsset
             );
             require(_supportedContracts[assetAddr], "!supported refund asset");
         }
@@ -178,14 +175,17 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         uint256 preExecutionGas = gasleft();
         try this.executeActions{gas: op.executionGasLimit}(op) returns (
             bool[] memory successes,
-            bytes[] memory results
+            bytes[] memory results,
+            uint256 numRefundsToHandle
         ) {
             opResult.opProcessed = true;
             opResult.callSuccesses = successes;
             opResult.callResults = results;
+            opResult.numRefunds = numRefundsToHandle;
         } catch (bytes memory reason) {
             // Indicates revert because of one of the following reasons:
-            // 1. `executeActions` attempted to process more refunds than `maxNumRefunds`
+            // 1. `executeActions` yielded fewer refund tokens than expected in
+            //    trackedJoinSplitAssets/trackedRefundAssets
             // 2. `executeActions` exceeded `executionGasLimit`, but in its outer call context
             //    (i.e. while not making an external call)
             // 3. There was a revert when executing actions (e.g. atomic actions, unsupported
@@ -199,6 +199,11 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             } else {
                 opResult.failureReason = revertMsg;
             }
+
+            // In case that action execution reverted, num refunds to handle will be number of
+            // joinSplit assets. NOTE that this could be higher estimate than actual if joinsplits
+            // are not organized in contiguous subarrays by user.
+            opResult.numRefunds = op.trackedJoinSplitAssets.length;
         }
 
         // Set verification and execution gas after getting opResult
@@ -207,7 +212,6 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             op.executionGasLimit,
             preExecutionGas - gasleft()
         );
-        opResult.numRefunds = op.totalNumRefundsToHandle();
 
         // Gather reserved gas asset and process gas payment to bundler
         _gatherReservedGasAssetAndPayBundler(
@@ -217,9 +221,6 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             bundler
         );
 
-        // Note: if too many refunds condition reverted in execute actions, the
-        // actions creating the refunds were reverted too, so numRefunds would =
-        // joinsplits.length + encodedRefundAssets.length
         _handleAllRefunds(op);
         return opResult;
     }
@@ -228,7 +229,8 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     /// @dev This function is only callable by the Handler itself when not paused.
     /// @dev This function can revert if any of the below occur (revert not within action itself):
     ///         1. The call runs out of gas in the outer call context (OOG)
-    ///         2. The executed action results in more refunds than maxNumRefunds
+    ///         2. The executed actions result in fewer refunds than expected in
+    ///            trackedJoinSplitAssets/trackedRefundAssets
     ///         3. An action reverts and atomicActions is set to true
     ///         4. A call to an unsupported protocol is attempted
     ///         5. An action attempts to re-enter by calling the Teller contract
@@ -240,7 +242,11 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         whenNotPaused
         onlyThis
         executeActionsGuard
-        returns (bool[] memory successes, bytes[] memory results)
+        returns (
+            bool[] memory successes,
+            bytes[] memory results,
+            uint256 numRefundsToHandle
+        )
     {
         uint256 numActions = op.actions.length;
         successes = new bool[](numActions);
@@ -262,11 +268,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             }
         }
 
-        // Ensure number of refunds didn't exceed max specified in op.
-        // If it did, executeActions is reverts and all action state changes
-        // are rolled back.
-        uint256 numRefundsToHandle = op.totalNumRefundsToHandle();
-        require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
+        // NOTE: if any tokens have < expected refund value, the below call will revert. This causes
+        // executeActions to revert, undoing all state changes in this call context. The user still
+        // ends up compensating the bundler for gas in this case.
+        numRefundsToHandle = _ensureMinRefundValues(op);
     }
 
     /// @notice Makes an external call to execute a single action

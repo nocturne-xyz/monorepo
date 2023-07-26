@@ -19,10 +19,6 @@ export interface Action {
   encodedFunction: string;
 }
 
-export interface Bundle {
-  operations: OnchainOperation[];
-}
-
 export interface Deposit {
   spender: Address;
   asset: Address;
@@ -82,9 +78,22 @@ export interface ProvenJoinSplit extends BaseJoinSplit {
   proof: SolidityProof;
 }
 
+export interface SignableJoinSplit extends Omit<BaseJoinSplit, "encodedAsset"> {
+  assetIndex: number;
+}
+
+export interface SubmittableJoinSplit extends SignableJoinSplit {
+  proof: SolidityProof;
+}
+
 export interface NetworkInfo {
   chainId: bigint;
   tellerContract: Address;
+}
+
+export interface TrackedAsset {
+  encodedAsset: EncodedAsset;
+  minRefundValue: bigint;
 }
 
 export interface BaseOperation {
@@ -95,14 +104,9 @@ export interface BaseOperation {
   encodedGasAsset: EncodedAsset;
   gasAssetRefundThreshold: bigint;
   executionGasLimit: bigint;
-  maxNumRefunds: bigint;
   gasPrice: bigint;
   deadline: bigint;
   atomicActions: boolean;
-}
-
-export interface BasicOperation extends BaseOperation {
-  joinSplits: BaseJoinSplit[];
 }
 
 export interface PreSignOperation extends BaseOperation {
@@ -117,7 +121,21 @@ export interface ProvenOperation extends BaseOperation {
   joinSplits: ProvenJoinSplit[];
 }
 
-export type OnchainOperation = Omit<ProvenOperation, "networkInfo">;
+export interface SignableOperationWithNetworkInfo
+  extends Omit<BaseOperation, "encodedRefundAssets"> {
+  joinSplits: SignableJoinSplit[];
+  trackedJoinSplitAssets: TrackedAsset[];
+  trackedRefundAssets: TrackedAsset[];
+}
+
+export interface SubmittableOperationWithNetworkInfo
+  extends Omit<SignableOperationWithNetworkInfo, "joinSplits"> {
+  joinSplits: SubmittableJoinSplit[];
+}
+
+export interface Bundle {
+  operations: SubmittableOperationWithNetworkInfo[];
+}
 
 export type Operation = PreSignOperation | SignedOperation | ProvenOperation;
 

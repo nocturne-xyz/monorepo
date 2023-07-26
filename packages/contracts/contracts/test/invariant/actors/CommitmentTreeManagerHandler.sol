@@ -14,6 +14,7 @@ import {EventParsing} from "../../utils/EventParsing.sol";
 import {TreeUtils} from "../../../libs/TreeUtils.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {InvariantUtils} from "../helpers/InvariantUtils.sol";
+import "../../utils/NocturneUtils.sol";
 import "../../../libs/Types.sol";
 
 contract CommitmentTreeManagerHandler is InvariantUtils {
@@ -97,7 +98,46 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             joinSplits[i] = _generateJoinSplit(seed);
         }
 
-        commitmentTreeManager.handleJoinSplits(joinSplits);
+        TrackedAsset[] memory trackedJoinSplitAssets = new TrackedAsset[](1);
+        trackedJoinSplitAssets[0] = TrackedAsset({
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(uint160(bound(_rerandomize(seed), 0, (1 << 160) - 1))),
+                ERC20_ID
+            ),
+            minRefundValue: 0
+        });
+
+        Operation memory op = Operation({
+            joinSplits: joinSplits,
+            refundAddr: CompressedStealthAddress({
+                h1: bound(
+                    _rerandomize(seed),
+                    0,
+                    Utils.BN254_SCALAR_FIELD_MODULUS - 1
+                ),
+                h2: bound(
+                    _rerandomize(seed),
+                    0,
+                    Utils.BN254_SCALAR_FIELD_MODULUS - 1
+                )
+            }),
+            trackedJoinSplitAssets: trackedJoinSplitAssets,
+            trackedRefundAssets: new TrackedAsset[](0),
+            actions: new Action[](0),
+            encodedGasAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(uint160(bound(_rerandomize(seed), 0, (1 << 160) - 1))),
+                ERC20_ID
+            ),
+            gasAssetRefundThreshold: 0,
+            executionGasLimit: 0,
+            gasPrice: 0,
+            deadline: 0,
+            atomicActions: false
+        });
+
+        commitmentTreeManager.handleJoinSplits(op);
         lastHandledJoinSplit = joinSplits[numJoinSplits - 1];
         handleJoinSplitsLength = numJoinSplits;
         _nullifierCounter += 2 * numJoinSplits;

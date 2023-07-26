@@ -1,4 +1,7 @@
-import { computeOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
+import {
+  computeOperationDigest,
+  SubmittableOperationWithNetworkInfo,
+} from "@nocturne-xyz/sdk";
 import IORedis from "ioredis";
 import { RedisTransaction } from ".";
 
@@ -15,7 +18,9 @@ export class NullifierDB {
     return NULLIFIER_PREFIX + nullifier.toString();
   }
 
-  async addNullifiers(operation: ProvenOperation): Promise<void> {
+  async addNullifiers(
+    operation: SubmittableOperationWithNetworkInfo
+  ): Promise<void> {
     const addNfTransactions = this.getAddNullifierTransactions(operation);
     await this.redis.multi(addNfTransactions).exec((maybeErr) => {
       if (maybeErr) {
@@ -36,7 +41,9 @@ export class NullifierDB {
     return (await this.redis.get(key)) != undefined;
   }
 
-  getAddNullifierTransactions(operation: ProvenOperation): RedisTransaction[] {
+  getAddNullifierTransactions(
+    operation: SubmittableOperationWithNetworkInfo
+  ): RedisTransaction[] {
     const digest = computeOperationDigest(operation).toString();
     return operation.joinSplits.flatMap(({ nullifierA, nullifierB }) => {
       return [
@@ -47,7 +54,7 @@ export class NullifierDB {
   }
 
   getRemoveNullifierTransactions(
-    operation: ProvenOperation
+    operation: SubmittableOperationWithNetworkInfo
   ): RedisTransaction[] {
     return operation.joinSplits.flatMap(({ nullifierA, nullifierB }) => {
       return [

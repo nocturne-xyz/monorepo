@@ -7,8 +7,8 @@ import { Logger } from "winston";
 import morgan from "morgan";
 import { Queue } from "bullmq";
 import {
-  ProvenOperationJobData,
-  PROVEN_OPERATION_QUEUE,
+  OperationJobData,
+  SUBMITTABLE_OPERATION_QUEUE,
   ACTOR_NAME,
 } from "./types";
 import { NullifierDB, StatusDB } from "./db";
@@ -36,7 +36,7 @@ export interface BundlerServerMetrics {
 
 export class BundlerServer {
   redis: IORedis;
-  queue: Queue<ProvenOperationJobData>;
+  queue: Queue<OperationJobData>;
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   logger: Logger;
@@ -53,7 +53,7 @@ export class BundlerServer {
     ignoreGas?: boolean
   ) {
     this.redis = redis;
-    this.queue = new Queue(PROVEN_OPERATION_QUEUE, { connection: redis });
+    this.queue = new Queue(SUBMITTABLE_OPERATION_QUEUE, { connection: redis });
     this.statusDB = new StatusDB(redis);
     this.nullifierDB = new NullifierDB(redis);
     this.logger = logger;

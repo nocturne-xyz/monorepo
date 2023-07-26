@@ -31,6 +31,7 @@ contract ReentrantCaller {
                 FormatOperationArgs({
                     joinSplitTokens: NocturneUtils
                         ._joinSplitTokensArrayOfOneToken(_token),
+                    joinSplitRefundValues: new uint256[](1),
                     gasToken: _token,
                     root: _handler.root(),
                     joinSplitsPublicSpends: NocturneUtils
@@ -40,10 +41,9 @@ contract ReentrantCaller {
                                 6
                             )
                         ),
-                    encodedRefundAssets: new EncodedAsset[](0),
+                    trackedRefundAssets: new TrackedAsset[](0),
                     gasAssetRefundThreshold: 0,
                     executionGasLimit: DEFAULT_GAS_LIMIT,
-                    maxNumRefunds: 1,
                     gasPrice: 50,
                     actions: NocturneUtils.formatSingleTransferActionArray(
                         _token,

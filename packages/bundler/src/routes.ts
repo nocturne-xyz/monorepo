@@ -1,7 +1,7 @@
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
 import {
-  ProvenOperationJobData,
+  OperationJobData,
   PROVEN_OPERATION_JOB_TAG,
   OpValidationFailure,
 } from "./types";
@@ -9,7 +9,7 @@ import { Request, RequestHandler, Response } from "express";
 import {
   OperationStatus,
   computeOperationDigest,
-  ProvenOperation,
+  SubmittableOperationWithNetworkInfo,
   RelayResponse,
   OperationStatusResponse,
 } from "@nocturne-xyz/sdk";
@@ -27,7 +27,7 @@ import { Logger } from "winston";
 import { BundlerServerMetrics } from "./server";
 
 export interface HandleRelayDeps {
-  queue: Queue<ProvenOperationJobData>;
+  queue: Queue<OperationJobData>;
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   redis: IORedis;
@@ -204,16 +204,16 @@ export function makeCheckNFHandler({
 }
 
 async function postJob(
-  queue: Queue<ProvenOperationJobData>,
+  queue: Queue<OperationJobData>,
   statusDB: StatusDB,
   nullifierDB: NullifierDB,
   redis: IORedis,
   logger: Logger,
-  operation: ProvenOperation
+  operation: SubmittableOperationWithNetworkInfo
 ): Promise<string> {
   const jobId = computeOperationDigest(operation).toString();
   const operationJson = JSON.stringify(operation);
-  const jobData: ProvenOperationJobData = {
+  const jobData: OperationJobData = {
     operationJson,
   };
 

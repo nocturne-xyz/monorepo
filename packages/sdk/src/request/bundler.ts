@@ -1,7 +1,10 @@
-import { OperationStatus, ProvenOperation } from "../primitives";
+import {
+  OperationStatus,
+  SubmittableOperationWithNetworkInfo,
+} from "../primitives";
 
 export interface RelayRequest {
-  operation: ProvenOperation;
+  operation: SubmittableOperationWithNetworkInfo;
 }
 
 export interface RelayResponse {

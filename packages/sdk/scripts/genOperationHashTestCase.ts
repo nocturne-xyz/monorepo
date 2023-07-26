@@ -1,21 +1,19 @@
+import { _TypedDataEncoder } from "ethers/lib/utils";
 import {
-  BaseJoinSplit,
-  BasicOperation,
+  SignableJoinSplit,
+  SignableOperationWithNetworkInfo,
   computeOperationDigest,
   hashOperation,
 } from "../src";
 
 (async () => {
-  const joinSplit: BaseJoinSplit = {
+  const joinSplit: SignableJoinSplit = {
     commitmentTreeRoot: 1n,
     nullifierA: 1n,
     nullifierB: 1n,
     newNoteACommitment: 1n,
     newNoteBCommitment: 1n,
-    encodedAsset: {
-      encodedAssetAddr: 1n,
-      encodedAssetId: 1n,
-    },
+    assetIndex: 1,
     publicSpend: 1n,
     senderCommitment: 1n,
     newNoteAEncrypted: {
@@ -28,7 +26,7 @@ import {
     },
   };
 
-  const operation: BasicOperation = {
+  const operation: SignableOperationWithNetworkInfo = {
     networkInfo: {
       chainId: 1n,
       tellerContract: "0x1111111111111111111111111111111111111111",
@@ -38,10 +36,22 @@ import {
       h1: 1n,
       h2: 1n,
     },
-    encodedRefundAssets: [
+    trackedJoinSplitAssets: [
       {
-        encodedAssetAddr: 1n,
-        encodedAssetId: 1n,
+        encodedAsset: {
+          encodedAssetAddr: 1n,
+          encodedAssetId: 1n,
+        },
+        minRefundValue: 1n,
+      },
+    ],
+    trackedRefundAssets: [
+      {
+        encodedAsset: {
+          encodedAssetAddr: 1n,
+          encodedAssetId: 1n,
+        },
+        minRefundValue: 1n,
       },
     ],
     actions: [
@@ -56,7 +66,6 @@ import {
     },
     gasAssetRefundThreshold: 1n,
     executionGasLimit: 1n,
-    maxNumRefunds: 1n,
     gasPrice: 1n,
     deadline: 1n,
     atomicActions: true,

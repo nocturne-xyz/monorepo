@@ -160,11 +160,14 @@ contract CommitmentTreeManager is
         _merkle.insertNoteCommitments(ncs);
     }
 
-    /// @notice Process several joinsplits, assuming that their proofs have already been verified
+    /// @notice Process an op's joinSplits, assuming that their proofs have already been verified.
+    ///         Ensures joinSplit commitment tree root is up to date, that nullifiers are not
+    ///         reused, adds the new NFs to the nullifier set, and inserts the new note NCs.
     /// @dev This function should be re-entry safe. Nullifiers are be marked
     ///      used as soon as they are checked to be valid.
-    /// @param joinSplits calldata array of Joinsplits to process
-    function _handleJoinSplits(JoinSplit[] calldata joinSplits) internal {
+    /// @param op Operation with joinsplits
+    function _handleJoinSplits(Operation calldata op) internal {
+        JoinSplit[] calldata joinSplits = op.joinSplits;
         uint256 numJoinSplits = joinSplits.length;
         uint256[] memory newNoteCommitments = new uint256[](numJoinSplits * 2);
         uint128 offset = _merkle.getTotalCount();
@@ -200,6 +203,10 @@ contract CommitmentTreeManager is
             newNoteCommitments[i * 2] = joinSplit.newNoteACommitment;
             newNoteCommitments[i * 2 + 1] = joinSplit.newNoteBCommitment;
 
+            EncodedAsset calldata encodedAsset = op
+                .trackedJoinSplitAssets[op.joinSplits[i].assetIndex]
+                .encodedAsset;
+
             emit JoinSplitProcessed(
                 joinSplit.nullifierA,
                 joinSplit.nullifierB,
@@ -208,7 +215,7 @@ contract CommitmentTreeManager is
                 joinSplit.newNoteACommitment,
                 joinSplit.newNoteBCommitment,
                 joinSplit.senderCommitment,
-                joinSplit.encodedAsset,
+                encodedAsset,
                 joinSplit.publicSpend,
                 joinSplit.newNoteAEncrypted,
                 joinSplit.newNoteBEncrypted

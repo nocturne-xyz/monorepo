@@ -117,7 +117,6 @@ describe("OperationRequestBuilder", () => {
       refundAddr,
       executionGasLimit: 20n,
       gasPrice: 30n,
-      maxNumRefunds: 1n,
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
       deadline: 2n,
@@ -136,7 +135,6 @@ describe("OperationRequestBuilder", () => {
         executionGasLimit: 20n,
         gasPrice: 30n,
       })
-      .maxNumRefunds(1n)
       .deadline(2n)
       .build();
 

@@ -18,13 +18,13 @@ enum OperationFailureType {
 
 struct FormatOperationArgs {
     address[] joinSplitTokens;
+    uint256[] joinSplitRefundValues;
     uint256[][] joinSplitsPublicSpends;
     address gasToken;
     uint256 root;
-    EncodedAsset[] encodedRefundAssets;
+    TrackedAsset[] trackedRefundAssets;
     uint256 gasAssetRefundThreshold;
     uint256 executionGasLimit;
-    uint256 maxNumRefunds;
     uint256 gasPrice;
     Action[] actions;
     bool atomicActions;
@@ -168,11 +168,6 @@ library NocturneUtils {
 
         uint256 currentIndex = 0;
         for (uint256 i = 0; i < args.joinSplitsPublicSpends.length; i++) {
-            EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(args.joinSplitTokens[i]),
-                ERC20_ID
-            );
             for (
                 uint256 j = 0;
                 j < args.joinSplitsPublicSpends[i].length;
@@ -188,7 +183,7 @@ library NocturneUtils {
                     newNoteBEncrypted: newNoteBEncrypted,
                     senderCommitment: uint256(currentIndex),
                     proof: dummyProof(),
-                    encodedAsset: encodedAsset,
+                    assetIndex: uint8(i),
                     publicSpend: args.joinSplitsPublicSpends[i][j]
                 });
                 currentIndex++;
@@ -213,10 +208,25 @@ library NocturneUtils {
             deadline = 0;
         }
 
+        TrackedAsset[] memory trackedJoinSplitAssets = new TrackedAsset[](
+            args.joinSplitsPublicSpends.length
+        );
+        for (uint256 i = 0; i < args.joinSplitTokens.length; i++) {
+            trackedJoinSplitAssets[i] = TrackedAsset({
+                encodedAsset: AssetUtils.encodeAsset(
+                    AssetType.ERC20,
+                    address(args.joinSplitTokens[i]),
+                    ERC20_ID
+                ),
+                minRefundValue: args.joinSplitRefundValues[i]
+            });
+        }
+
         Operation memory op = Operation({
             joinSplits: joinSplits,
             refundAddr: defaultStealthAddress(),
-            encodedRefundAssets: args.encodedRefundAssets,
+            trackedJoinSplitAssets: trackedJoinSplitAssets,
+            trackedRefundAssets: args.trackedRefundAssets,
             actions: args.actions,
             encodedGasAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
@@ -226,7 +236,6 @@ library NocturneUtils {
             gasAssetRefundThreshold: args.gasAssetRefundThreshold,
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
-            maxNumRefunds: args.maxNumRefunds,
             deadline: deadline,
             atomicActions: args.atomicActions
         });
@@ -247,7 +256,8 @@ library NocturneUtils {
                 executionGas: op.executionGasLimit,
                 verificationGas: op.joinSplits.length *
                     GAS_PER_JOINSPLIT_VERIFY,
-                numRefunds: op.joinSplits.length + op.encodedRefundAssets.length
+                numRefunds: op.trackedJoinSplitAssets.length +
+                    op.trackedRefundAssets.length
             });
     }
 

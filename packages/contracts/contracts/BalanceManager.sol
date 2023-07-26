@@ -69,21 +69,25 @@ contract BalanceManager is CommitmentTreeManager {
     ) internal {
         // process nullifiers and insert new noteCommitments for each joinSplit
         // will throw an error if nullifiers are invalid or tree root invalid
-        _handleJoinSplits(op.joinSplits);
+        _handleJoinSplits(op);
 
         // Get gas asset and amount to reserve
         EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
         uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         // Loop through joinSplits and gather assets, reserving gas asset as needed
+        EncodedAsset calldata encodedAsset;
         uint256 numJoinSplits = op.joinSplits.length;
         for (
             uint256 subarrayStartIndex = 0;
             subarrayStartIndex < numJoinSplits;
 
         ) {
-            EncodedAsset calldata encodedAsset = op
+            uint8 joinSplitAssetIndex = op
                 .joinSplits[subarrayStartIndex]
+                .assetIndex;
+            encodedAsset = op
+                .trackedJoinSplitAssets[joinSplitAssetIndex]
                 .encodedAsset;
 
             // Get largest possible subarray for current asset and sum of publicSpend
@@ -157,57 +161,120 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
+    /// @notice Ensure all joinsplit and refund assets start with empty balances (0 or 1).
+    /// @dev If any asset has a balance > 1, we transfer the excess to the leftover tokens contract
+    ///      and return the amount transferred.
+    /// @param op Operation to ensure zeroed balances for
     function _ensureZeroedBalances(Operation calldata op) internal {
-        uint256 numJoinSplits = op.joinSplits.length;
-        for (
-            uint256 subarrayStartIndex = 0;
-            subarrayStartIndex < numJoinSplits;
-
-        ) {
-            uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
-                op.joinSplits,
-                subarrayStartIndex
-            );
-
+        uint256 numJoinSplitAssets = op.trackedJoinSplitAssets.length;
+        for (uint256 i = 0; i < numJoinSplitAssets; i++) {
             _transferOutstandingAssetToAndReturnAmount(
-                op.joinSplits[subarrayStartIndex].encodedAsset,
+                op.trackedJoinSplitAssets[i].encodedAsset,
                 _leftoverTokensHolder
             );
-            subarrayStartIndex = subarrayEndIndex + 1;
         }
 
-        uint256 numRefundAssets = op.encodedRefundAssets.length;
+        uint256 numRefundAssets = op.trackedRefundAssets.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
             _transferOutstandingAssetToAndReturnAmount(
-                op.encodedRefundAssets[i],
+                op.trackedRefundAssets[i].encodedAsset,
                 _leftoverTokensHolder
             );
         }
     }
 
-    /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
-    ///         to the Teller and inserting new note commitments for the sent back assets.
-    /// @dev Checks for refunds from joinSplits and op.encodedRefundAssets. A refund occurs if any
-    ///      of the checked assets have outstanding balance > 0 in the Handler. If a refund occurs,
-    ///      the Handler will transfer the asset back to the Teller and insert a new note
-    ///      commitment into the commitment tree.
-    /// @param op Operation to handle refunds for
-    function _handleAllRefunds(Operation calldata op) internal {
-        uint256 numJoinSplits = op.joinSplits.length;
-        for (
-            uint256 subarrayStartIndex = 0;
-            subarrayStartIndex < numJoinSplits;
-
-        ) {
-            uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
-                op.joinSplits,
-                subarrayStartIndex
+    /// @notice Ensure all tracked assets have a balance >= minRefundValue and return number of
+    ///         refunds to handle. If any asset has a balance < minRefundValue, call reverts.
+    /// @param op Operation to ensure min refund values for
+    function _ensureMinRefundValues(
+        Operation calldata op
+    ) internal view returns (uint256 numRefundsToHandle) {
+        bool gasAssetAlreadyInRefunds = false;
+        uint256 numTrackedJoinSplitAssets = op.trackedJoinSplitAssets.length;
+        for (uint256 i = 0; i < numTrackedJoinSplitAssets; i++) {
+            uint256 refundValue = _ensureMinRefundValueForTrackedAsset(
+                op.trackedJoinSplitAssets[i]
             );
 
-            EncodedAsset calldata encodedAsset = op
-                .joinSplits[subarrayStartIndex]
-                .encodedAsset;
+            if (refundValue > 0) {
+                numRefundsToHandle++;
 
+                if (
+                    !gasAssetAlreadyInRefunds &&
+                    AssetUtils.eq(
+                        op.trackedJoinSplitAssets[i].encodedAsset,
+                        op.encodedGasAsset
+                    )
+                ) {
+                    gasAssetAlreadyInRefunds = true;
+                }
+            }
+        }
+
+        uint256 numTrackedRefundAssets = op.trackedRefundAssets.length;
+        for (uint256 i = 0; i < numTrackedRefundAssets; i++) {
+            uint256 refundValue = _ensureMinRefundValueForTrackedAsset(
+                op.trackedRefundAssets[i]
+            );
+
+            if (refundValue > 0) {
+                numRefundsToHandle++;
+            }
+        }
+
+        // If we withheld gas asset and there is no existing refund of the same type as the gas
+        // asset, we add an additional refund to numRefundsToHandle to reflect the potential for
+        // additional refund of gas asset after bundler compensation.
+        // NOTE: the only time numRefundsToHandle gets over-counted is when the bundler
+        // takes all reserved gas asset, leaving none for refund. The max over-estimate though
+        // is the cost of the one extra refund.
+        if (!gasAssetAlreadyInRefunds && op.gasPrice > 0) {
+            numRefundsToHandle++;
+        }
+
+        return numRefundsToHandle;
+    }
+
+    /// @notice Ensure tracked asset has a balance >= minRefundValue and return true if a refund
+    ///         is required. If asset has a balance < minRefundValue, call reverts.
+    /// @param trackedAsset Tracked asset to ensure min refund value for
+    function _ensureMinRefundValueForTrackedAsset(
+        TrackedAsset calldata trackedAsset
+    ) internal view returns (uint256 refundValue) {
+        EncodedAsset calldata encodedAsset = trackedAsset.encodedAsset;
+        uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
+
+        // We want to guarantee that the minRefundValue check is exact, so we account for
+        // the token prefills gas optimization that attempts to keep balance of Handler = 1 for
+        // erc20s
+        (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
+        uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
+
+        refundValue = currentBalance > amountToWithhold
+            ? currentBalance - amountToWithhold
+            : 0;
+
+        require(
+            refundValue >= trackedAsset.minRefundValue,
+            "!min refund value"
+        );
+
+        return refundValue;
+    }
+
+    /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
+    ///         to the Teller and inserting new note commitments for the sent back assets.
+    /// @dev Checks for refunds op.trackedJoinSplitAssets and op.trackedRefundAssets. A refund
+    ///      occurs if any of the checked assets have outstanding balance > 0 in the Handler. If a
+    ///      refund occurs, the Handler will transfer the asset back to the Teller and insert a new
+    ///      note commitment into the commitment tree.
+    /// @param op Operation to handle refunds for
+    function _handleAllRefunds(Operation calldata op) internal {
+        EncodedAsset calldata encodedAsset;
+
+        uint256 numJoinSplitAssets = op.trackedJoinSplitAssets.length;
+        for (uint256 i = 0; i < numJoinSplitAssets; i++) {
+            encodedAsset = op.trackedJoinSplitAssets[i].encodedAsset;
             uint256 refundAmount = _transferOutstandingAssetToAndReturnAmount(
                 encodedAsset,
                 address(_teller)
@@ -215,13 +282,11 @@ contract BalanceManager is CommitmentTreeManager {
             if (refundAmount > 0) {
                 _handleRefundNote(encodedAsset, op.refundAddr, refundAmount);
             }
-            subarrayStartIndex = subarrayEndIndex + 1;
         }
 
-        uint256 numRefundAssets = op.encodedRefundAssets.length;
+        uint256 numRefundAssets = op.trackedRefundAssets.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
-            EncodedAsset calldata encodedAsset = op.encodedRefundAssets[i];
-
+            encodedAsset = op.trackedRefundAssets[i].encodedAsset;
             uint256 refundAmount = _transferOutstandingAssetToAndReturnAmount(
                 encodedAsset,
                 address(_teller)
@@ -256,10 +321,12 @@ contract BalanceManager is CommitmentTreeManager {
         (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
         uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
 
-        if (currentBalance > amountToWithhold) {
-            uint256 difference = currentBalance - amountToWithhold;
-            AssetUtils.transferAssetTo(encodedAsset, address(to), difference);
+        uint256 difference = currentBalance > amountToWithhold
+            ? currentBalance - amountToWithhold
+            : 0;
 
+        if (difference > 0) {
+            AssetUtils.transferAssetTo(encodedAsset, to, difference);
             return difference;
         }
 
@@ -269,19 +336,19 @@ contract BalanceManager is CommitmentTreeManager {
     /// @notice Get highest index for contiguous subarray of joinsplits of same encodedAssetType
     /// @dev Used so we can take sum(subarray) make single call teller.requestAsset(asset, sum)
     ///      instead of calling teller.requestAsset multiple times for the same asset
-    /// @param joinSplits op.joinSplits
+    /// @param joinSplits Joinsplits
     /// @param startIndex Index to start searching from
     function _getHighestContiguousJoinSplitIndex(
         JoinSplit[] calldata joinSplits,
         uint256 startIndex
     ) private pure returns (uint256) {
-        EncodedAsset calldata startAsset = joinSplits[startIndex].encodedAsset;
-        uint256 numJoinSplits = joinSplits.length;
+        uint256 startAssetIndex = joinSplits[startIndex].assetIndex;
 
+        uint256 numJoinSplits = joinSplits.length;
         uint256 highestIndex = startIndex;
         while (
             highestIndex + 1 < numJoinSplits &&
-            AssetUtils.eq(startAsset, joinSplits[highestIndex + 1].encodedAsset)
+            startAssetIndex == joinSplits[highestIndex + 1].assetIndex
         ) {
             highestIndex++;
         }

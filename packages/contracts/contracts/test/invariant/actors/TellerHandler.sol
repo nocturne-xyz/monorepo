@@ -280,7 +280,9 @@ contract TellerHandler is OperationGenerator {
     ) internal view returns (uint256) {
         uint256 total = 0;
         for (uint256 i = 0; i < op.joinSplits.length; i++) {
-            EncodedAsset memory encodedAsset = op.joinSplits[i].encodedAsset;
+            EncodedAsset memory encodedAsset = op
+                .trackedJoinSplitAssets[op.joinSplits[i].assetIndex]
+                .encodedAsset;
             (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
             if (assetAddr == joinSplitTokens[tokenIndex]) {
                 total += op.joinSplits[i].publicSpend;

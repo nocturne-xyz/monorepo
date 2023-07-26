@@ -4,14 +4,14 @@ import { BatcherDB, StatusDB } from "./db";
 import {
   OperationStatus,
   computeOperationDigest,
-  ProvenOperation,
+  SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/sdk";
 import {
   OperationBatchJobData,
   OPERATION_BATCH_QUEUE,
   OPERATION_BATCH_JOB_TAG,
-  ProvenOperationJobData,
-  PROVEN_OPERATION_QUEUE,
+  OperationJobData,
+  SUBMITTABLE_OPERATION_QUEUE,
   ACTOR_NAME,
 } from "./types";
 import * as JSON from "bigint-json-serialization";
@@ -37,7 +37,7 @@ export interface BundlerBatcherMetrics {
 export class BundlerBatcher {
   redis: IORedis;
   statusDB: StatusDB;
-  batcherDB: BatcherDB<ProvenOperation>;
+  batcherDB: BatcherDB<SubmittableOperationWithNetworkInfo>;
   outboundQueue: Queue<OperationBatchJobData>;
   logger: Logger;
   metrics: BundlerBatcherMetrics;
@@ -194,14 +194,14 @@ export class BundlerBatcher {
     const logger = this.logger.child({ function: "queuer" });
     logger.info("starting queuer...");
     const queuer = new Worker(
-      PROVEN_OPERATION_QUEUE,
-      async (job: Job<ProvenOperationJobData>) => {
-        const provenOperation = JSON.parse(
+      SUBMITTABLE_OPERATION_QUEUE,
+      async (job: Job<OperationJobData>) => {
+        const operation = JSON.parse(
           job.data.operationJson
-        ) as ProvenOperation;
+        ) as SubmittableOperationWithNetworkInfo;
 
         const batcherAddTransaction =
-          this.batcherDB.getAddTransaction(provenOperation);
+          this.batcherDB.getAddTransaction(operation);
         const setJobStatusTransaction =
           this.statusDB.getSetJobStatusTransaction(
             job.id!,

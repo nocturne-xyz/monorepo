@@ -275,6 +275,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -284,10 +285,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -332,6 +332,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -341,10 +342,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -460,6 +460,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create operation to transfer 25M tokens to bob of 50M note
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -467,6 +469,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -476,10 +479,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -531,6 +533,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 3 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create operation to transfer 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -538,6 +542,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -547,10 +552,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             3
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 3,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -602,6 +606,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 6 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create operation to transfer 4 * 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -609,6 +615,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -618,10 +625,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             6
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 6,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -673,6 +679,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create operation with faulty root, will cause revert in
         // handleJoinSplit
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -681,6 +689,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -690,10 +699,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -744,6 +752,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create operation with two joinsplits where 1st uses NF included in
         // 2nd joinsplit
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -752,6 +762,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -761,10 +772,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -816,6 +826,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create operation with one of the joinsplits has matching NFs A and B
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -823,6 +835,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -832,10 +845,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -901,12 +913,15 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -916,10 +931,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: false,
@@ -977,12 +991,15 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create internal op that is used when handler calls itself
         Operation memory internalOp = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -992,10 +1009,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -1025,6 +1041,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1034,10 +1051,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: false,
@@ -1082,12 +1098,15 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create internal op that is used when teller calls itself
         Operation memory internalOp = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1097,10 +1116,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -1130,6 +1148,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1139,10 +1158,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: false,
@@ -1204,12 +1222,15 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create internal op that is used when handler calls itself
         Operation memory internalOp = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1219,10 +1240,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -1252,6 +1272,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1261,10 +1282,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: false,
@@ -1324,6 +1344,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create transaction to send 3 * 50M even though only 2 * 50M is being
         // taken up by teller
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -1332,6 +1354,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1341,10 +1364,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 2,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -1408,6 +1430,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create transaction to send 3 * 50M even though only 2 * 50M is being
         // taken up by teller
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -1416,6 +1440,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1425,10 +1450,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             2
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 2,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -1484,8 +1508,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
     // Ensure op fails if it calls non-allowed swapper contract
     function testProcessBundleNonAllowedContract() public {
-        SimpleERC20Token tokenIn = ERC20s[0];
-        reserveAndDepositFunds(ALICE, tokenIn, PER_NOTE_AMOUNT);
+        SimpleERC20Token erc20In = ERC20s[0];
+        reserveAndDepositFunds(ALICE, erc20In, PER_NOTE_AMOUNT);
 
         TokenSwapper swapper = new TokenSwapper();
 
@@ -1493,9 +1517,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Approve swapper to transfer tokens
         actions[0] = Action({
-            contractAddress: address(tokenIn),
+            contractAddress: address(erc20In),
             encodedFunction: abi.encodeWithSelector(
-                tokenIn.approve.selector,
+                erc20In.approve.selector,
                 address(swapper),
                 PER_NOTE_AMOUNT
             )
@@ -1512,7 +1536,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     assetInOwner: address(handler),
                     encodedAssetIn: AssetUtils.encodeAsset(
                         AssetType.ERC20,
-                        address(tokenIn),
+                        address(erc20In),
                         ERC20_ID
                     ),
                     assetInAmount: PER_NOTE_AMOUNT,
@@ -1522,21 +1546,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        // Encode erc20Out as refund asset
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
-        encodedRefundAssets[0] = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(erc20Out),
-            ERC20_ID
-        );
+        // Encode erc20In and erc20Out as refund assets
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(erc20Out),
+                ERC20_ID
+            ),
+            minRefundValue: 0
+        });
 
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    address(tokenIn)
+                    address(erc20In)
                 ),
-                gasToken: address(tokenIn),
+                joinSplitRefundValues: new uint256[](1),
+                gasToken: address(erc20In),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -1545,10 +1573,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: encodedRefundAssets,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 4, // 4 refund assets (including joinsplit)
                 gasPrice: 0,
                 actions: actions,
                 atomicActions: false,
@@ -1557,9 +1584,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
-        assertEq(tokenIn.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertEq(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
-        assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
+        assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
@@ -1575,9 +1602,229 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].opProcessed, false);
     }
 
+    function testProcessBundleFailsNotEnoughRefundReturnTokens() public {
+        SimpleERC20Token erc20In = ERC20s[0];
+        SimpleERC20Token erc20Out = ERC20s[1];
+
+        reserveAndDepositFunds(ALICE, erc20In, PER_NOTE_AMOUNT);
+
+        TokenSwapper swapper = new TokenSwapper();
+        handler.setContractPermission(address(swapper), true);
+        handler.setContractMethodPermission(
+            address(swapper),
+            swapper.swap.selector,
+            true
+        );
+
+        Action[] memory actions = new Action[](2);
+
+        // Approve swapper to transfer tokens
+        actions[0] = Action({
+            contractAddress: address(erc20In),
+            encodedFunction: abi.encodeWithSelector(
+                erc20In.approve.selector,
+                address(swapper),
+                PER_NOTE_AMOUNT
+            )
+        });
+
+        // Call swapper.swap, asking for erc20 tokens back
+        actions[1] = Action({
+            contractAddress: address(swapper),
+            encodedFunction: abi.encodeWithSelector(
+                swapper.swap.selector,
+                SwapRequest({
+                    assetInOwner: address(handler),
+                    encodedAssetIn: AssetUtils.encodeAsset(
+                        AssetType.ERC20,
+                        address(erc20In),
+                        ERC20_ID
+                    ),
+                    assetInAmount: PER_NOTE_AMOUNT,
+                    erc20Out: address(erc20Out),
+                    erc20OutAmount: PER_NOTE_AMOUNT // PER_NOTE_AMOUNT in out tokens
+                })
+            )
+        });
+
+        // Specify refund amount 1 greater than what we get back
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(erc20Out),
+                ERC20_ID
+            ),
+            minRefundValue: PER_NOTE_AMOUNT + 1 // 1 more token than we actually get back
+        });
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(erc20In)
+                ),
+                joinSplitRefundValues: new uint256[](1),
+                gasToken: address(erc20In),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 10,
+                actions: actions,
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
+        assertEq(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
+        assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
+
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "!min refund value",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, processed = false
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+
+        // Bundler was compensated, swapper never received any tokens, nor did teller
+        assertLt(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertGt(erc20In.balanceOf(BUNDLER), 0);
+        assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
+        assertEq(erc20Out.balanceOf(address(teller)), uint256(0));
+    }
+
+    function testProcessBundleFailsNotEnoughJoinSplitReturnTokens() public {
+        SimpleERC20Token erc20In = ERC20s[0];
+        SimpleERC20Token erc20Out = ERC20s[1];
+
+        reserveAndDepositFunds(ALICE, erc20In, PER_NOTE_AMOUNT);
+
+        TokenSwapper swapper = new TokenSwapper();
+        handler.setContractPermission(address(swapper), true);
+        handler.setContractMethodPermission(
+            address(swapper),
+            swapper.swap.selector,
+            true
+        );
+
+        Action[] memory actions = new Action[](2);
+
+        // Approve swapper to transfer tokens
+        actions[0] = Action({
+            contractAddress: address(erc20In),
+            encodedFunction: abi.encodeWithSelector(
+                erc20In.approve.selector,
+                address(swapper),
+                PER_NOTE_AMOUNT
+            )
+        });
+
+        // Call swapper.swap, asking for erc20 tokens back
+        actions[1] = Action({
+            contractAddress: address(swapper),
+            encodedFunction: abi.encodeWithSelector(
+                swapper.swap.selector,
+                SwapRequest({
+                    assetInOwner: address(handler),
+                    encodedAssetIn: AssetUtils.encodeAsset(
+                        AssetType.ERC20,
+                        address(erc20In),
+                        ERC20_ID
+                    ),
+                    assetInAmount: PER_NOTE_AMOUNT / 2, // only give 1/2 of in tokens
+                    erc20Out: address(erc20Out),
+                    erc20OutAmount: PER_NOTE_AMOUNT // give PER_NOTE_AMOUNT back
+                })
+            )
+        });
+
+        // Specify expected refund amount
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(erc20Out),
+                ERC20_ID
+            ),
+            minRefundValue: PER_NOTE_AMOUNT // matches what swapper gives us
+        });
+
+        // Specify more joinsplit tokens to return than we get
+        uint256[] memory joinSplitReturnAmounts = new uint256[](1);
+        joinSplitReturnAmounts[0] = (PER_NOTE_AMOUNT / 2) + 1; // 1 more than we get back
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(erc20In)
+                ),
+                joinSplitRefundValues: joinSplitReturnAmounts,
+                gasToken: address(erc20In),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 10,
+                actions: actions,
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
+        assertEq(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
+        assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
+
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "!min refund value",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, processed = false
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+
+        // Bundler was compensated, swapper never received any tokens, nor did teller
+        assertLt(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertGt(erc20In.balanceOf(BUNDLER), 0);
+        assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
+        assertEq(erc20Out.balanceOf(address(teller)), uint256(0));
+    }
+
     function testProcessBundleSuccessfulAllRefunds() public {
-        SimpleERC20Token tokenIn = ERC20s[0];
-        reserveAndDepositFunds(ALICE, tokenIn, PER_NOTE_AMOUNT);
+        SimpleERC20Token erc20In = ERC20s[0];
+        reserveAndDepositFunds(ALICE, erc20In, PER_NOTE_AMOUNT);
 
         TokenSwapper swapper = new TokenSwapper();
 
@@ -1585,9 +1832,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Approve swapper to transfer tokens
         actions[0] = Action({
-            contractAddress: address(tokenIn),
+            contractAddress: address(erc20In),
             encodedFunction: abi.encodeWithSelector(
-                tokenIn.approve.selector,
+                erc20In.approve.selector,
                 address(swapper),
                 PER_NOTE_AMOUNT
             )
@@ -1604,7 +1851,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     assetInOwner: address(handler),
                     encodedAssetIn: AssetUtils.encodeAsset(
                         AssetType.ERC20,
-                        address(tokenIn),
+                        address(erc20In),
                         ERC20_ID
                     ),
                     assetInAmount: PER_NOTE_AMOUNT,
@@ -1614,21 +1861,24 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        // Encode erc20Out as refund asset
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
-        encodedRefundAssets[0] = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(erc20Out),
-            ERC20_ID
-        );
-
+        // Encode erc20In and erc20Out as refund assets
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(erc20Out),
+                ERC20_ID
+            ),
+            minRefundValue: 0
+        });
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    address(tokenIn)
+                    address(erc20In)
                 ),
-                gasToken: address(tokenIn),
+                joinSplitRefundValues: new uint256[](1),
+                gasToken: address(erc20In),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -1637,10 +1887,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: encodedRefundAssets,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 4, // 4 refund assets (including joinsplit)
                 gasPrice: 0,
                 actions: actions,
                 atomicActions: false,
@@ -1649,9 +1898,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
-        assertEq(tokenIn.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertEq(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1)); // +1 from prefill
-        assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
+        assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
@@ -1680,9 +1929,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Ensure 50M tokensIn in swapper, and all types of refund tokens back
         // in teller
-        assertEq(tokenIn.balanceOf(address(handler)), uint256(1));
+        assertEq(erc20In.balanceOf(address(handler)), uint256(1));
         assertEq(erc20Out.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
-        assertEq(tokenIn.balanceOf(address(swapper)), uint256(PER_NOTE_AMOUNT));
+        assertEq(erc20In.balanceOf(address(swapper)), uint256(PER_NOTE_AMOUNT));
     }
 
     function testProcessBundleUnspecifiedTokensNoRefunds() public {
@@ -1707,7 +1956,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         });
 
         // No refund assets
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -1715,6 +1964,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(joinSplitToken)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(joinSplitToken),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1724,10 +1974,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             2
                         )
                     ),
-                encodedRefundAssets: encodedRefundAssets,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 4,
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: true,
@@ -1798,19 +2047,13 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
-        encodedRefundAssets[0] = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(erc20),
-            ERC20_ID
-        );
-
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1820,10 +2063,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: encodedRefundAssets,
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 3,
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: true,
@@ -1872,14 +2114,13 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
-
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1889,10 +2130,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: encodedRefundAssets,
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 3,
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: true,
@@ -1948,14 +2188,13 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
-
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -1965,10 +2204,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: encodedRefundAssets,
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 3,
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: true,
@@ -2020,14 +2258,13 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
-
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(erc20)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(erc20),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2037,10 +2274,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: encodedRefundAssets,
+                trackedRefundAssets: new TrackedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 3,
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: true,
@@ -2088,12 +2324,15 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         });
 
         // Encode erc721 as refund asset
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
-        encodedRefundAssets[0] = AssetUtils.encodeAsset(
-            AssetType.ERC721,
-            address(erc721),
-            1
-        );
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC721,
+                address(erc721),
+                1
+            ),
+            minRefundValue: 0
+        });
 
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -2101,6 +2340,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(joinSplitToken)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(joinSplitToken),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2110,10 +2350,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             2
                         )
                     ),
-                encodedRefundAssets: encodedRefundAssets,
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 4,
                 gasPrice: 50,
                 actions: actions,
                 atomicActions: true,
@@ -2160,144 +2399,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(erc721.balanceOf(address(handler)), uint256(0));
     }
 
-    function testProcessBundleFailureTooManyRefunds() public {
-        SimpleERC20Token tokenIn = ERC20s[0];
-        reserveAndDepositFunds(ALICE, tokenIn, 2 * PER_NOTE_AMOUNT);
-
-        TokenSwapper swapper = new TokenSwapper();
-
-        Action[] memory actions = new Action[](2);
-
-        // Approve swapper to transfer tokens
-        actions[0] = Action({
-            contractAddress: address(tokenIn),
-            encodedFunction: abi.encodeWithSelector(
-                tokenIn.approve.selector,
-                address(swapper),
-                PER_NOTE_AMOUNT
-            )
-        });
-
-        // Call swapper.swap, asking for erc20 tokens back
-        SimpleERC20Token erc20Out = ERC20s[1];
-
-        actions[1] = Action({
-            contractAddress: address(swapper),
-            encodedFunction: abi.encodeWithSelector(
-                swapper.swap.selector,
-                SwapRequest({
-                    assetInOwner: address(teller),
-                    encodedAssetIn: AssetUtils.encodeAsset(
-                        AssetType.ERC20,
-                        address(tokenIn),
-                        ERC20_ID
-                    ),
-                    assetInAmount: PER_NOTE_AMOUNT,
-                    erc20Out: address(erc20Out),
-                    erc20OutAmount: PER_NOTE_AMOUNT
-                })
-            )
-        });
-
-        // Encode erc20Out as refund asset
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
-        encodedRefundAssets[0] = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(erc20Out),
-            ERC20_ID
-        );
-
-        Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatOperation(
-            FormatOperationArgs({
-                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    address(tokenIn)
-                ),
-                gasToken: address(tokenIn),
-                root: handler.root(),
-                joinSplitsPublicSpends: NocturneUtils
-                    ._publicSpendsArrayOfOnePublicSpendArray(
-                        NocturneUtils.fillJoinSplitPublicSpends(
-                            PER_NOTE_AMOUNT,
-                            2
-                        )
-                    ),
-                encodedRefundAssets: encodedRefundAssets,
-                gasAssetRefundThreshold: 0,
-                executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1, // should be 4 refund assets, 1 too few
-                gasPrice: 50,
-                actions: actions,
-                atomicActions: false,
-                operationFailureType: OperationFailureType.NONE
-            })
-        );
-
-        // Ensure 100M tokensIn in teller and nothing else
-        // Swapper has 0 erc20In tokens
-        assertEq(
-            tokenIn.balanceOf(address(teller)),
-            uint256(2 * PER_NOTE_AMOUNT)
-        );
-        assertEq(erc20Out.balanceOf(address(teller)), uint256(0));
-        assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
-
-        // Check OperationProcessed event emits processed = false
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "Too many refunds",
-                assetsUnwrapped: true
-            })
-        );
-
-        // Whitelist token swapper for sake of simulation
-        handler.setContractPermission(address(swapper), true);
-        handler.setContractMethodPermission(
-            address(swapper),
-            swapper.swap.selector,
-            true
-        );
-
-        vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
-
-        // One op, processed = false, call[0] failed (too many refunds)
-        assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, false);
-        assertEq(opResults[0].assetsUnwrapped, true);
-        assert(
-            ParseUtils.hasSubstring(
-                string(opResults[0].failureReason),
-                "Too many refunds"
-            )
-        );
-
-        // Teller lost some tokenIn to BUNDLER due to bundler gas fee
-        assertLt(
-            tokenIn.balanceOf(address(teller)),
-            uint256(2 * PER_NOTE_AMOUNT)
-        );
-        assertGt(tokenIn.balanceOf(BUNDLER), 0);
-        assertEq(erc20Out.balanceOf(address(teller)), uint256(0));
-        assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
-    }
-
     function testProcessBundleFailureNotEnoughBundlerComp() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposit only 50M tokens
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Unwrap 50M, not enough for bundler comp due to there being
-        // maxNumRefunds = 20.
-        // 20 refunds equates to at least below gas tokens:
-        //    gasPrice * (10 * refundGas) = 50 * (20 * 80k) = 80M
+        // 20 joinsplits.
+        // 20 joinsplits handles (no proof verification) equates to at least below gas tokens:
+        //    gasPrice * (3 * joinSplitGas) = 300 * (3 * 80k) = 72M
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2307,11 +2427,10 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             3
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
-                maxNumRefunds: 20,
-                gasPrice: 50,
+                gasPrice: 300, // set unusually high gas price
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
                     BOB,
@@ -2357,6 +2476,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Create operation low executionGasLimit (not enough for transfer)
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -2364,6 +2485,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2373,10 +2495,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: 100, // not enough gas for transfer
-                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -2417,11 +2538,14 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2431,10 +2555,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -2457,12 +2580,15 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         // Format op with EXPIRED_DEADLINE failure type
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2472,10 +2598,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -2497,11 +2622,14 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
                 ),
+                joinSplitRefundValues: new uint256[](1),
                 gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
@@ -2511,10 +2639,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                             1
                         )
                     ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     address(token),
@@ -2532,4 +2659,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         vm.expectRevert("Only this");
         handler.executeActions(op);
     }
+
+    // TODO: add testcase for leftover tokens in handler sent to leftover holder
 }

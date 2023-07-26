@@ -3,6 +3,7 @@ import Ajv from "ajv";
 const bigintPattern = "^[0-9]+n$";
 const addressPattern = "^0x[a-fA-F0-9]{40}$";
 const booleanType = { type: "boolean" };
+const numberType = { type: "number" };
 const bigintType = { type: "string", pattern: bigintPattern };
 const addressType = { type: "string", pattern: addressPattern };
 const byteArrayType = {
@@ -54,9 +55,18 @@ const encodedAssetType = {
   },
   additionalProperties: false,
 };
-const encodedRefundAssetsType = {
+const trackedAssetType = {
+  type: "object",
+  required: ["encodedAsset", "minRefundValue"],
+  properties: {
+    encodedAsset: encodedAssetType,
+    minRefundValue: bigintType,
+  },
+  additionalProperties: false,
+};
+const trackedAssetsArrayType = {
   type: "array",
-  items: encodedAssetType,
+  items: trackedAssetType,
 };
 const actionType = {
   type: "object",
@@ -83,7 +93,7 @@ const joinSplitType = {
     "nullifierB",
     "newNoteACommitment",
     "newNoteBCommitment",
-    "encodedAsset",
+    "assetIndex",
     "publicSpend",
     "newNoteAEncrypted",
     "newNoteBEncrypted",
@@ -96,7 +106,7 @@ const joinSplitType = {
     nullifierB: bigintType,
     newNoteACommitment: bigintType,
     newNoteBCommitment: bigintType,
-    encodedAsset: encodedAssetType,
+    assetIndex: numberType,
     publicSpend: bigintType,
     newNoteAEncrypted: encryptedNoteType,
     newNoteBEncrypted: encryptedNoteType,
@@ -108,18 +118,18 @@ const joinSplitsType = {
   items: joinSplitType,
 };
 
-export const provenOperationType = {
+export const submittableOperationType = {
   type: "object",
   required: [
     "networkInfo",
     "joinSplits",
     "refundAddr",
-    "encodedRefundAssets",
+    "trackedJoinSplitAssets",
+    "trackedRefundAssets",
     "actions",
     "encodedGasAsset",
     "gasAssetRefundThreshold",
     "executionGasLimit",
-    "maxNumRefunds",
     "gasPrice",
     "deadline",
     "atomicActions",
@@ -128,12 +138,12 @@ export const provenOperationType = {
     networkInfo: networkInfoType,
     joinSplits: joinSplitsType,
     refundAddr: stealthAddressType,
-    encodedRefundAssets: encodedRefundAssetsType,
+    trackedJoinSplitAssets: trackedAssetsArrayType,
+    trackedRefundAssets: trackedAssetsArrayType,
     actions: actionsType,
     encodedGasAsset: encodedAssetType,
     gasAssetRefundThreshold: bigintType,
     executionGasLimit: bigintType,
-    maxNumRefunds: bigintType,
     gasPrice: bigintType,
     deadline: bigintType,
     atomicActions: booleanType,
@@ -145,7 +155,7 @@ const relaySchema = {
   type: "object",
   required: ["operation"],
   properties: {
-    operation: provenOperationType,
+    operation: submittableOperationType,
   },
   additionalProperties: false,
 };

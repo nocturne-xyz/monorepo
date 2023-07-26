@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- use `SubmittableOperation` type everywhere instead of old `ProvenOperation` (now that joinsplits and assets are separated)
 - modify ajv validation after eip712 operation changes
 - integrate tx manager to fix stuck txs
 - put back redis utils

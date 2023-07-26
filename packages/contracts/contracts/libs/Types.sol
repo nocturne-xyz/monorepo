@@ -34,7 +34,7 @@ struct JoinSplit {
     uint256 newNoteBCommitment;
     uint256 senderCommitment;
     uint256[8] proof;
-    EncodedAsset encodedAsset;
+    uint8 assetIndex; // Index in op.joinSplitAssets
     uint256 publicSpend;
     EncryptedNote newNoteAEncrypted;
     EncryptedNote newNoteBEncrypted;
@@ -70,15 +70,20 @@ struct Action {
     bytes encodedFunction;
 }
 
+struct TrackedAsset {
+    EncodedAsset encodedAsset;
+    uint256 minRefundValue;
+}
+
 struct Operation {
     JoinSplit[] joinSplits;
     CompressedStealthAddress refundAddr;
-    EncodedAsset[] encodedRefundAssets;
+    TrackedAsset[] trackedJoinSplitAssets;
+    TrackedAsset[] trackedRefundAssets;
     Action[] actions;
     EncodedAsset encodedGasAsset;
     uint256 gasAssetRefundThreshold;
     uint256 executionGasLimit;
-    uint256 maxNumRefunds;
     uint256 gasPrice;
     uint256 deadline;
     bool atomicActions;
@@ -114,7 +119,8 @@ library OperationLib {
             ((perJoinSplitVerifyGas + GAS_PER_JOINSPLIT_HANDLE) *
                 self.joinSplits.length) +
             ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) *
-                self.maxNumRefunds);
+                (self.trackedJoinSplitAssets.length +
+                    self.trackedRefundAssets.length));
     }
 
     function maxGasAssetCost(
@@ -122,11 +128,5 @@ library OperationLib {
         uint256 perJoinSplitVerifyGas
     ) internal pure returns (uint256) {
         return self.gasPrice * maxGasLimit(self, perJoinSplitVerifyGas);
-    }
-
-    function totalNumRefundsToHandle(
-        Operation calldata self
-    ) internal pure returns (uint256) {
-        return self.joinSplits.length + self.encodedRefundAssets.length;
     }
 }
