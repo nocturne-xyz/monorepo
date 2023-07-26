@@ -4,7 +4,6 @@
     "outDir": "dist",
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
-    "skipLibCheck": true 
   },
   "type": "module",
   "exclude": ["node_modules", "dist", "config"],

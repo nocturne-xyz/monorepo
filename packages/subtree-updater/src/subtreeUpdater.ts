@@ -25,7 +25,6 @@ import * as ot from "@opentelemetry/api";
 import { Insertion } from "./sync/syncAdapter";
 import { PersistentLog } from "./persistentLog";
 import * as txManager from "@nocturne-xyz/tx-manager";
-import Queue from "queue";
 import { Mutex } from "async-mutex";
 import { ACTOR_NAME, COMPONENT_NAME } from "./constants";
 
@@ -67,7 +66,6 @@ export class SubtreeUpdater {
   prover: SubtreeUpdateProver;
 
   insertionLog: PersistentLog<Insertion>;
-  submissionQueue: Queue;
 
   fillBatchTimeout: NodeJS.Timeout | undefined;
   fillBatchLatency: number | undefined;
@@ -90,7 +88,6 @@ export class SubtreeUpdater {
     this.fillBatchTimeout = undefined;
 
     this.handlerMutex = new Mutex();
-    this.submissionQueue = new Queue({ autostart: true, concurrency: 1 });
     this.redis = redis;
 
     // TODO make this a redis KV store
@@ -237,13 +234,6 @@ export class SubtreeUpdater {
 
     // consume the iterator and make proofs
     const run = async () => {
-      // terminate when tx submission throws an error
-      this.submissionQueue.addEventListener("error", (event) => {
-        const err = event.detail.error;
-        logger.error("error in submission queue", { err });
-        throw err;
-      });
-
       for await (const {
         proofInputs,
         newRoot,
@@ -259,14 +249,11 @@ export class SubtreeUpdater {
         const proofWithPis = await this.prover.proveSubtreeUpdate(proofInputs);
         logger.info("successfully generated proof", logMetadata);
 
-        this.submissionQueue.push(
-          async () =>
-            await this.submitSubtreeUpdate(
-              logger.child({ function: "submitSubtreeUpdate" }),
-              proofWithPis.proof,
-              newRoot,
-              subtreeIndex
-            )
+        await this.submitSubtreeUpdate(
+          logger.child({ function: "submitSubtreeUpdate" }),
+          proofWithPis.proof,
+          newRoot,
+          subtreeIndex
         );
       }
     };
@@ -275,7 +262,7 @@ export class SubtreeUpdater {
     const runProm = run();
 
     const teardown = async () => {
-      await this.submissionQueue.end();
+      await proofInputInfos.close();
       await runProm;
       this.logger.debug("teardown completed");
     };

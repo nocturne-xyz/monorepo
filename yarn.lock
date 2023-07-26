@@ -3046,6 +3046,7 @@ __metadata:
     hardhat: ^2.13.1
     mocha: ^10.1.0
     prettier: ^2.8.8
+    ts-node: ^10.9.1
     uuid: ^9.0.0
     winston-humanize-formatter: ^0.1.4
   languageName: unknown
@@ -3131,28 +3132,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@npm:1.0.169-testnet":
-  version: 1.0.169-testnet
-  resolution: "@nocturne-xyz/sdk@npm:1.0.169-testnet"
-  dependencies:
-    "@nocturne-xyz/circuit-utils": ^0.1.12
-    "@nocturne-xyz/config": ^1.0.15-testnet
-    "@nocturne-xyz/contracts": ^1.0.33-testnet
-    "@types/randombytes": ^2.0.0
-    "@zk-kit/incremental-merkle-tree": ^1.0.0
-    async-retry: ^1.3.3
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    ethers: ^5.7.2
-    js-sha256: ^0.9.0
-    randombytes: ^2.1.0
-    sorted-btree: ^1.8.1
-    winston: ^3.9.0
-  checksum: abaad3fd44b85a517a12fa01e74d18fcb879a62172cf2324bb76dafbd38a19a2ad577b1aee1cab047a4fa1f8710fe0bff2944ddfe4b4bfe61839804824a3879c
-  languageName: node
-  linkType: hard
-
-"@nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.172-testnet, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3191,6 +3171,27 @@ __metadata:
     winston: ^3.9.0
   languageName: unknown
   linkType: soft
+
+"@nocturne-xyz/sdk@npm:1.0.169-testnet":
+  version: 1.0.169-testnet
+  resolution: "@nocturne-xyz/sdk@npm:1.0.169-testnet"
+  dependencies:
+    "@nocturne-xyz/circuit-utils": ^0.1.12
+    "@nocturne-xyz/config": ^1.0.15-testnet
+    "@nocturne-xyz/contracts": ^1.0.33-testnet
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    async-retry: ^1.3.3
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    ethers: ^5.7.2
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+    winston: ^3.9.0
+  checksum: abaad3fd44b85a517a12fa01e74d18fcb879a62172cf2324bb76dafbd38a19a2ad577b1aee1cab047a4fa1f8710fe0bff2944ddfe4b4bfe61839804824a3879c
+  languageName: node
+  linkType: hard
 
 "@nocturne-xyz/snap@workspace:packages/snap":
   version: 0.0.0-use.local
@@ -3237,7 +3238,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.15-testnet
     "@nocturne-xyz/contracts": 1.0.33-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/sdk": 1.0.172-testnet
     "@nocturne-xyz/tx-manager": 1.0.1-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
@@ -3259,7 +3260,6 @@ __metadata:
     ioredis: ^5.3.1
     mocha: ^10.1.0
     prettier: ^2.8.8
-    queue: ^7.0.0
     redis-memory-server: ^0.6.0
     snarkjs: ^0.7.0
     ts-node: ^10.9.1
@@ -15840,13 +15840,6 @@ __metadata:
   version: 1.2.3
   resolution: "queue-microtask@npm:1.2.3"
   checksum: b676f8c040cdc5b12723ad2f91414d267605b26419d5c821ff03befa817ddd10e238d22b25d604920340fd73efd8ba795465a0377c4adf45a4a41e4234e42dc4
-  languageName: node
-  linkType: hard
-
-"queue@npm:^7.0.0":
-  version: 7.0.0
-  resolution: "queue@npm:7.0.0"
-  checksum: a1d91621e011000502bcc589e58cc7c44ca613c0cd39a04933977bad733d9eb66303b5ee1bbb359b03db248d9c50df793f6d405ce3139cb79a8d5deb5eb97bcb
   languageName: node
   linkType: hard
 
