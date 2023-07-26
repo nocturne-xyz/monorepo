@@ -222,9 +222,12 @@ contract BalanceManager is CommitmentTreeManager {
             }
         }
 
+        // If we withheld gas asset and there is no existing refund of the same type as the gas 
+        // asset, we add an additional refund to numRefundsToHandle to reflect the potential for 
+        // additional refund of gas asset after bundler compensation.
         // NOTE: the only time numRefundsToHandle gets over-counted is when the bundler
         // takes all reserved gas asset, leaving none for refund. The max over-estimate though
-        // is the cost of one extra refund.
+        // is the cost of the one extra refund.
         if (!gasAssetAlreadyInRefunds && op.gasPrice > 0) {
             numRefundsToHandle++;
         }

@@ -173,7 +173,6 @@ describe("prepareOperation", async () => {
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
-
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
@@ -228,7 +227,6 @@ describe("prepareOperation", async () => {
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
-
       .confidentialPayment(shitcoin, 1n, receiver)
       .gas({
         executionGasLimit: 1_000_00n,
@@ -281,7 +279,6 @@ describe("prepareOperation", async () => {
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
-
       .refundAddr(refundAddr)
       .gas({
         executionGasLimit: 20n,

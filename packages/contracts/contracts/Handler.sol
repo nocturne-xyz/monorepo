@@ -132,16 +132,12 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     ///            assets, etc). The bundler is not compensated when reverts happen here because
     ///            the revert happens before _gatherReservedGasAssetAndPayBundler is called.
     ///         2. executeActions: A revert here can be due to unpredictable reasons, mainly if
-    ///            there is not enough executionGas for the actions or if the call yields fewer
-    ///            return tokens than specified in the TrackedAsset arrays. The bundler is
-    ///            compensated when reverts happen here.
+    ///            there is not enough executionGas for the actions or if after executing actions,
+    ///            there are fewer refund tokens than what was specified trackedJoinSplitAssets/
+    ///            trackedRefundAssets minRefundValues.
     ///         3. _makeExternalCall: A revert here only leads to top level revert if
     ///            op.atomicActions = true (requires all actions to succeed atomically or none at
     ///            all).
-    /// @dev The gas usage of an operation can be given an upper bound estimate as a function of
-    ///      op.joinSplits.length, op.executionGasLimit, and op.maxNumRefunds. Note that the user
-    ///      must specify executionGasLimit and maxNumRefunds to give an upper bound on gas usage
-    ///      because these are "hard to simulate" values that the bundler cannot predict.
     /// @param op Operation to handle
     /// @param perJoinSplitVerifyGas Gas usage for verifying a single joinSplit proof
     /// @param bundler Address of the bundler
@@ -188,7 +184,8 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             opResult.numRefunds = numRefundsToHandle;
         } catch (bytes memory reason) {
             // Indicates revert because of one of the following reasons:
-            // 1. `executeActions` attempted to process more refunds than `maxNumRefunds`
+            // 1. `executeActions` yielded fewer refund tokens than expected in 
+            //    trackedJoinSplitAssets/trackedRefundAssets
             // 2. `executeActions` exceeded `executionGasLimit`, but in its outer call context
             //    (i.e. while not making an external call)
             // 3. There was a revert when executing actions (e.g. atomic actions, unsupported
@@ -232,7 +229,8 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     /// @dev This function is only callable by the Handler itself when not paused.
     /// @dev This function can revert if any of the below occur (revert not within action itself):
     ///         1. The call runs out of gas in the outer call context (OOG)
-    ///         2. The executed action results in more refunds than maxNumRefunds
+    ///         2. The executed actions result in fewer refunds than expected in 
+    ///            trackedJoinSplitAssets/trackedRefundAssets
     ///         3. An action reverts and atomicActions is set to true
     ///         4. A call to an unsupported protocol is attempted
     ///         5. An action attempts to re-enter by calling the Teller contract

@@ -326,7 +326,7 @@ async function simulateOperation(
   }
 
   // Fill-in the some fake proof
-  const fakeOp = fakeProvenOperation(op);
+  const opWithFakeProofs = fakeProvenOperation(op);
 
   // Set gasPrice to 0 so that gas payment does not interfere with amount of
   // assets unwrapped pre gas estimation
@@ -342,7 +342,7 @@ async function simulateOperation(
   const result = await handlerContract.callStatic.handleOperation(
     // TODO: fix after contract changes
     //@ts-ignore
-    fakeOp,
+    opWithFakeProofs,
     verificationGasForOp,
     bundler,
     {
