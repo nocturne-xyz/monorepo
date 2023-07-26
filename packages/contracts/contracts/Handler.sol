@@ -284,11 +284,16 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     function _makeExternalCall(
         Action calldata action
     ) internal returns (bool success, bytes memory result) {
+        // Ensure contract exists
+        require(action.contractAddress.code.length != 0, "!zero code");
+
+        // Block re-entrancy from teller calling self
         require(
             action.contractAddress != address(_teller),
             "Cannot call the Nocturne Teller"
         );
 
+        // Ensure contract and method to call are supported
         bytes4 selector = _extractFunctionSelector(action.encodedFunction);
         uint192 addressAndSelector = _addressAndSelector(
             action.contractAddress,
