@@ -101,9 +101,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             pubJoinSplits[i] = _generatePublicJoinSplit(seed);
         }
 
-        JoinSplit[] memory confJoinSplits = new JoinSplit[](
-            numConfJoinSplits
-        );
+        JoinSplit[] memory confJoinSplits = new JoinSplit[](numConfJoinSplits);
         for (uint256 i = 0; i < numConfJoinSplits; i++) {
             confJoinSplits[i] = _generateJoinSplit(seed);
         }
@@ -157,7 +155,8 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
 
         // set joinsplit from last call to be conf or public 50/50
         if (seed % 2 == 0) {
-            joinSplitFromLastCall = pubJoinSplits[numPubJoinSplits - 1].joinSplit;
+            joinSplitFromLastCall = pubJoinSplits[numPubJoinSplits - 1]
+                .joinSplit;
         } else {
             joinSplitFromLastCall = confJoinSplits[numConfJoinSplits - 1];
         }
@@ -235,8 +234,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             0,
             Utils.BN254_SCALAR_FIELD_MODULUS - 1
         );
-        _joinSplit.commitmentTreeRoot = commitmentTreeManager
-            .root();
+        _joinSplit.commitmentTreeRoot = commitmentTreeManager.root();
         _joinSplit.nullifierA = _nullifierCounter;
         _joinSplit.nullifierB = _nullifierCounter + 1;
         _nullifierCounter += 2;

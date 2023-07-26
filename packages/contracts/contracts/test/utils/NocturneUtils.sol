@@ -161,40 +161,62 @@ library NocturneUtils {
         }
 
         uint256 root = args.root;
-        EncryptedNote memory newNoteAEncrypted = _dummyEncryptedNote();
-        EncryptedNote memory newNoteBEncrypted = _dummyEncryptedNote();
+        EncryptedNote memory newNoteEncrypted = _dummyEncryptedNote();
 
-        PublicJoinSplit[] memory pubJoinSplits = new PublicJoinSplit[](
-            totalNumJoinSplits
+        uint256 numConfJoinSplits = _getNumConfJoinSplitsFromPublicSpendsArray(
+            args.joinSplitsPublicSpends
         );
+        PublicJoinSplit[] memory pubJoinSplits = new PublicJoinSplit[](
+            totalNumJoinSplits - numConfJoinSplits
+        );
+        JoinSplit[] memory confJoinSplits = new JoinSplit[](numConfJoinSplits);
 
-        uint256 currentIndex = 0;
-        for (uint256 i = 0; i < args.joinSplitsPublicSpends.length; i++) {
-            for (
-                uint256 j = 0;
-                j < args.joinSplitsPublicSpends[i].length;
-                j++
-            ) {
-                pubJoinSplits[currentIndex] = PublicJoinSplit({
-                    joinSplit: JoinSplit({
-                        commitmentTreeRoot: root,
-                        nullifierA: uint256(2 * currentIndex),
-                        nullifierB: uint256(2 * currentIndex + 1),
-                        newNoteACommitment: uint256(currentIndex),
-                        newNoteAEncrypted: newNoteAEncrypted,
-                        newNoteBCommitment: uint256(currentIndex),
-                        newNoteBEncrypted: newNoteBEncrypted,
-                        senderCommitment: uint256(currentIndex),
-                        proof: dummyProof()
-                    }),
-                    assetIndex: uint8(i),
-                    publicSpend: args.joinSplitsPublicSpends[i][j]
-                });
-                currentIndex++;
+        {
+            uint256 pubIndex = 0;
+            uint256 confIndex = 0;
+            for (uint256 i = 0; i < args.joinSplitsPublicSpends.length; i++) {
+                for (
+                    uint256 j = 0;
+                    j < args.joinSplitsPublicSpends[i].length;
+                    j++
+                ) {
+                    uint256 publicSpend = args.joinSplitsPublicSpends[i][j];
+                    if (publicSpend > 0) {
+
+                        pubJoinSplits[pubIndex] = PublicJoinSplit({
+                            joinSplit: JoinSplit({
+                                commitmentTreeRoot: root,
+                                nullifierA: uint256(2 * (pubIndex + confIndex)),
+                                nullifierB: uint256(2 * (pubIndex + confIndex) + 1),
+                                newNoteACommitment: uint256(pubIndex),
+                                newNoteAEncrypted: newNoteEncrypted,
+                                newNoteBCommitment: uint256(pubIndex),
+                                newNoteBEncrypted: newNoteEncrypted,
+                                senderCommitment: uint256(pubIndex),
+                                proof: dummyProof()
+                            }),
+                            assetIndex: uint8(i),
+                            publicSpend: publicSpend
+                        });
+                        pubIndex++;
+                    } else {
+                        confJoinSplits[confIndex] = JoinSplit({
+                            commitmentTreeRoot: root,
+                            nullifierA: uint256(2 * (pubIndex + confIndex)),
+                            nullifierB: uint256(2 * (pubIndex + confIndex) + 1),
+                            newNoteACommitment: uint256(confIndex),
+                            newNoteAEncrypted: newNoteEncrypted,
+                            newNoteBCommitment: uint256(confIndex),
+                            newNoteBEncrypted: newNoteEncrypted,
+                            senderCommitment: uint256(confIndex),
+                            proof: dummyProof()
+                        });
+                        confIndex++;
+                    }
+                }
             }
         }
 
-        operationFailure = args.operationFailureType;
         if (operationFailure == OperationFailureType.JOINSPLIT_NFS_SAME) {
             pubJoinSplits[0].joinSplit.nullifierA = uint256(2 * 0x1234);
             pubJoinSplits[0].joinSplit.nullifierB = uint256(2 * 0x1234);
@@ -223,7 +245,7 @@ library NocturneUtils {
             trackedJoinSplitAssets[i] = TrackedAsset({
                 encodedAsset: AssetUtils.encodeAsset(
                     AssetType.ERC20,
-                    address(args.joinSplitTokens[i]),
+                    args.joinSplitTokens[i],
                     ERC20_ID
                 ),
                 minRefundValue: args.joinSplitRefundValues[i]
@@ -232,7 +254,7 @@ library NocturneUtils {
 
         Operation memory op = Operation({
             pubJoinSplits: pubJoinSplits,
-            confJoinSplits: new JoinSplit[](0), // TODO: change THIS
+            confJoinSplits: confJoinSplits,
             refundAddr: defaultStealthAddress(),
             trackedJoinSplitAssets: trackedJoinSplitAssets,
             trackedRefundAssets: args.trackedRefundAssets,
@@ -268,6 +290,20 @@ library NocturneUtils {
                 numRefunds: op.trackedJoinSplitAssets.length +
                     op.trackedRefundAssets.length
             });
+    }
+
+    function _getNumConfJoinSplitsFromPublicSpendsArray(
+        uint256[][] memory joinSplitsPublicSpends
+    ) internal pure returns (uint256) {
+        uint256 numConfJoinSplits = 0;
+        for (uint256 i = 0; i < joinSplitsPublicSpends.length; i++) {
+            for (uint256 j = 0; j < joinSplitsPublicSpends[i].length; j++) {
+                if (joinSplitsPublicSpends[i][j] == 0) {
+                    numConfJoinSplits++;
+                }
+            }
+        }
+        return numConfJoinSplits;
     }
 
     function _totalNumJoinSplitsForArgs(
