@@ -146,23 +146,43 @@ export function toSignableOperation(
     })
   );
 
-  const reformattedJoinSplits: SignableJoinSplit[] = joinSplits.map((js) => {
-    const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
-      AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
-    );
-    return {
-      commitmentTreeRoot: js.commitmentTreeRoot,
-      nullifierA: js.nullifierA,
-      nullifierB: js.nullifierB,
-      newNoteACommitment: js.newNoteACommitment,
-      newNoteBCommitment: js.newNoteBCommitment,
-      senderCommitment: js.senderCommitment,
-      assetIndex,
-      publicSpend: js.publicSpend,
-      newNoteAEncrypted: js.newNoteAEncrypted,
-      newNoteBEncrypted: js.newNoteBEncrypted,
-    };
-  });
+  const pubJoinSplits: SignablePublicJoinSplit[] = [];
+  const confJoinSplits: SignableJoinSplit[] = [];
+  for (const js of joinSplits) {
+    if (js.publicSpend > 0n) {
+      const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
+        AssetTrait.isSame(
+          AssetTrait.decode(a.encodedAsset),
+          AssetTrait.decode(js.encodedAsset)
+        )
+      );
+      pubJoinSplits.push({
+        joinSplit: {
+          commitmentTreeRoot: js.commitmentTreeRoot,
+          nullifierA: js.nullifierA,
+          nullifierB: js.nullifierB,
+          newNoteACommitment: js.newNoteACommitment,
+          newNoteBCommitment: js.newNoteBCommitment,
+          senderCommitment: js.senderCommitment,
+          newNoteAEncrypted: js.newNoteAEncrypted,
+          newNoteBEncrypted: js.newNoteBEncrypted,
+        },
+        assetIndex,
+        publicSpend: js.publicSpend,
+      });
+    } else {
+      confJoinSplits.push({
+        commitmentTreeRoot: js.commitmentTreeRoot,
+        nullifierA: js.nullifierA,
+        nullifierB: js.nullifierB,
+        newNoteACommitment: js.newNoteACommitment,
+        newNoteBCommitment: js.newNoteBCommitment,
+        senderCommitment: js.senderCommitment,
+        newNoteAEncrypted: js.newNoteAEncrypted,
+        newNoteBEncrypted: js.newNoteBEncrypted,
+      });
+    }
+  }
 
   return {
     networkInfo,
@@ -218,8 +238,11 @@ export function toSubmittableOperation(
   const confJoinSplits: SubmittableJoinSplit[] = [];
   for (const js of joinSplits) {
     if (js.publicSpend > 0n) {
-      const assetIndex = trackedJoinSplitAssets.findIndex(
-        (a) => a.encodedAsset == js.encodedAsset
+      const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
+        AssetTrait.isSame(
+          AssetTrait.decode(a.encodedAsset),
+          AssetTrait.decode(js.encodedAsset)
+        )
       );
       pubJoinSplits.push({
         joinSplit: {
