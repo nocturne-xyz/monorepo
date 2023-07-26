@@ -93,8 +93,6 @@ const joinSplitType = {
     "nullifierB",
     "newNoteACommitment",
     "newNoteBCommitment",
-    "assetIndex",
-    "publicSpend",
     "newNoteAEncrypted",
     "newNoteBEncrypted",
   ],
@@ -106,8 +104,6 @@ const joinSplitType = {
     nullifierB: bigintType,
     newNoteACommitment: bigintType,
     newNoteBCommitment: bigintType,
-    assetIndex: numberType,
-    publicSpend: bigintType,
     newNoteAEncrypted: encryptedNoteType,
     newNoteBEncrypted: encryptedNoteType,
   },
@@ -118,11 +114,27 @@ const joinSplitsType = {
   items: joinSplitType,
 };
 
+const publicJoinSplitType = {
+  type: "object",
+  required: ["joinSplit", "assetIndex", "publicSpend"],
+  properties: {
+    joinSplit: joinSplitType,
+    assetIndex: numberType,
+    publicSpend: bigintType,
+  },
+  additionalProperties: false,
+};
+const publicJoinSplitsType = {
+  type: "array",
+  items: publicJoinSplitType,
+};
+
 export const submittableOperationType = {
   type: "object",
   required: [
     "networkInfo",
-    "joinSplits",
+    "pubJoinSplits",
+    "confJoinSplits",
     "refundAddr",
     "trackedJoinSplitAssets",
     "trackedRefundAssets",
@@ -136,7 +148,8 @@ export const submittableOperationType = {
   ],
   properties: {
     networkInfo: networkInfoType,
-    joinSplits: joinSplitsType,
+    pubJoinSplits: publicJoinSplitsType,
+    confJoinSplits: joinSplitsType,
     refundAddr: stealthAddressType,
     trackedJoinSplitAssets: trackedAssetsArrayType,
     trackedRefundAssets: trackedAssetsArrayType,

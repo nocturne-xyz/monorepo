@@ -13,9 +13,9 @@ import {
   PreSignOperation,
   BLOCK_GAS_LIMIT,
   AssetType,
-  SignableOperationWithNetworkInfo,
-  toSignableOperation,
   ProvenJoinSplit,
+  SubmittableOperationWithNetworkInfo,
+  toSubmittableOperation,
 } from "./primitives";
 import { ERC20_ID } from "./primitives/asset";
 import { groupByMap, partition } from "./utils/functional";
@@ -370,7 +370,9 @@ async function simulateOperation(
   };
 }
 
-function fakeProvenOperation(op: Operation): SignableOperationWithNetworkInfo {
+function fakeProvenOperation(
+  op: Operation
+): SubmittableOperationWithNetworkInfo {
   const provenJoinSplits = op.joinSplits.map((js) => {
     return {
       ...js,
@@ -378,7 +380,7 @@ function fakeProvenOperation(op: Operation): SignableOperationWithNetworkInfo {
     };
   }) as ProvenJoinSplit[];
 
-  return toSignableOperation({
+  return toSubmittableOperation({
     networkInfo: op.networkInfo,
     joinSplits: provenJoinSplits,
     refundAddr: op.refundAddr,

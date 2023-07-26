@@ -45,7 +45,13 @@ export class NullifierDB {
     operation: SubmittableOperationWithNetworkInfo
   ): RedisTransaction[] {
     const digest = computeOperationDigest(operation).toString();
-    return operation.joinSplits.flatMap(({ nullifierA, nullifierB }) => {
+
+    const allJoinSplits = [
+      ...operation.confJoinSplits,
+      ...operation.pubJoinSplits.map((pubJoinSplit) => pubJoinSplit.joinSplit),
+    ];
+
+    return allJoinSplits.flatMap(({ nullifierA, nullifierB }) => {
       return [
         this.getAddNullifierTransaction(nullifierA, digest),
         this.getAddNullifierTransaction(nullifierB, digest),
@@ -56,7 +62,12 @@ export class NullifierDB {
   getRemoveNullifierTransactions(
     operation: SubmittableOperationWithNetworkInfo
   ): RedisTransaction[] {
-    return operation.joinSplits.flatMap(({ nullifierA, nullifierB }) => {
+    const allJoinSplits = [
+      ...operation.confJoinSplits,
+      ...operation.pubJoinSplits.map((pubJoinSplit) => pubJoinSplit.joinSplit),
+    ];
+
+    return allJoinSplits.flatMap(({ nullifierA, nullifierB }) => {
       return [
         this.getRemoveNullifierTransaction(nullifierA),
         this.getRemoveNullifierTransaction(nullifierB),

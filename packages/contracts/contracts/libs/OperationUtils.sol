@@ -16,7 +16,6 @@ library OperationUtils {
         pure
         returns (uint256[8][] memory proofs, uint256[][] memory allPis)
     {
-
         // compute number of joinsplits in the bundle
         uint256 totalNumJoinSplits = 0;
         uint256 numOps = ops.length;

@@ -51,11 +51,11 @@ contract BalanceManager is CommitmentTreeManager {
 
     /// @notice For each public and conf joinSplit, check root and nullifier validity against
     ///         commitment tree manager, then request joinSplit.publicSpend barring tokens for gas
-    ///         payment for pubJoinSplits (conf joinSplits are only handled in CTM, no fund 
+    ///         payment for pubJoinSplits (conf joinSplits are only handled in CTM, no fund
     ///         processing since all publicSpends implicitly 0).
     /// @dev Before looping through pubJoinSplits, we calculate amount of gas to reserve based on
     ///      execution gas, number of pubJoinSplits, and number of refunds. Then we loop through
-    ///      pubJoinSplits, check root and nullifier validity, and attempt to reserve as much gas 
+    ///      pubJoinSplits, check root and nullifier validity, and attempt to reserve as much gas
     ///      asset.
     ///      as possible until we have gotten as the reserve amount we originally calculated. If we
     ///      have not reserved enough gas asset after looping through all pubJoinSplits, we revert.

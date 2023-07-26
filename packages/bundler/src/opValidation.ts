@@ -18,7 +18,12 @@ export async function checkNullifierConflictError(
 
   // Ensure no overlap in given operation
   logger.debug("checking in-op conflicts");
-  for (const { nullifierA, nullifierB } of operation.joinSplits) {
+  const allJoinSplits = [
+    ...operation.confJoinSplits,
+    ...operation.pubJoinSplits.map((pubJoinSplit) => pubJoinSplit.joinSplit),
+  ];
+
+  for (const { nullifierA, nullifierB } of allJoinSplits) {
     if (opNfSet.has(nullifierA)) {
       return `conflicting nullifier in operation: ${nullifierA}`;
     }

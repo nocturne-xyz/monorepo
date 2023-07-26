@@ -112,6 +112,7 @@ export function hashOperation(
   );
 }
 
+// TODO: eventually remove translation layer and build in correct op structure into sdk
 export function toSignableOperation(
   op: PreSignOperation | SignedOperation | ProvenOperation
 ): SignableOperationWithNetworkInfo {
