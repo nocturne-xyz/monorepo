@@ -132,7 +132,7 @@ export class NocturneWalletSDK {
   }
 
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
-    return await this.db.latestCommittedMerkleIndex();
+    return await this.db.latestSyncedMerkleIndex();
   }
 
   async hasEnoughBalanceForOperationRequest(
