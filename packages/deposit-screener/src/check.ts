@@ -1,8 +1,9 @@
 import { DepositManager } from "@nocturne-xyz/contracts";
 import { DepositRequest } from "@nocturne-xyz/sdk";
+import { Logger } from "winston";
 import { DepositScreenerDB } from "./db";
 import { ScreeningApi } from "./screening";
-import { Logger } from "winston";
+import { dummySafeDepositCheck } from "./utils";
 
 interface CheckDepositRequestDeps {
   depositManagerContract: DepositManager;
@@ -16,7 +17,6 @@ export interface CheckDepositRequestResult {
 }
 
 // TODO: fill with real implementation
-// returns undefined if deposit is safe, otherwise returns a reason why not
 export async function checkDepositRequest(
   logger: Logger,
   deposit: DepositRequest,
@@ -25,5 +25,5 @@ export async function checkDepositRequest(
   logger;
   deposit;
   deps;
-  return { isSafe: true };
+  return { isSafe: dummySafeDepositCheck(deposit.value) };
 }
