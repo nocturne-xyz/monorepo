@@ -29,7 +29,6 @@
     "snarkjs": "^0.7.0"
   },
   "devDependencies": {
-    "@nocturne-xyz/subtree-updater": "workspace:^",
     "@types/bn.js": "^5.1.1",
     "@types/chai": "^4.3.3",
     "@types/mocha": "^10.0.0",

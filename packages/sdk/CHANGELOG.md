@@ -23,6 +23,7 @@
 - replace `encSenderCanonAddr` with `senderCommitment`
 - add contract.ts utils method for concatenating contract address and function selector
 - fix eip712 deposit request typehash ordering
+- add `filter` to `ClosableAsyncIterator`
 - `syncSDK` returns latest synced merkle index so fe-sdk can access and return
 - sync adapters return latest synced merkle index
 - `syncSDK` takes `SyncOpts` as params, add `timeoutSeconds` to `SyncOpts`

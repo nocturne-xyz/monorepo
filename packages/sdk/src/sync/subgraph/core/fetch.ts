@@ -320,7 +320,13 @@ export async function fetchlatestCommittedMerkleIndex(
     : undefined;
   const res = await query({ toIdx });
 
-  if (!res.data || res.data.subtreeCommits.length === 0) {
+  if (!res.data) {
+    throw new Error(
+      "received empty response from subgraph when fetching lastCommittedMerkleIndex"
+    );
+  }
+
+  if (res.data.subtreeCommits.length === 0) {
     return undefined;
   }
 
