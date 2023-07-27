@@ -6,17 +6,7 @@
 - `syncSDK` returns latest synced merkle index so fe-sdk can access and return
 - sync adapters return latest synced merkle index
 - `syncSDK` takes `SyncOpts` as params, add `timeoutSeconds` to `SyncOpts`
-- set a cap on the maximum number of wasn provers spun-up in parallel
-- op request builder takes `.network(networkName | NetworkInfo)` now that we need chainid and teller contract for opdigest calculation
-- add script to generate op digest test case for solidity unit tests
-- remove custom op digest calculation for builtin ethers typed data hashing implementation
-- remove chainId from operation in place of `networkInfo` used for eip712 domain hash
-- change `EncryptedNote` to be an alias of `HybridCiphertext` and remove all other fields (including owner)
-  - includes (many) cascading changes through sync, op preparation, and witness generation code
-- add `refundAddr` circuit input
-- replace `encSenderCanonAddr` with `senderCommitment`
-- add contract.ts utils method for concatenating contract address and function selector
-- fix eip712 deposit request typehash ordering
+- set a cap on the maximum number of wasm provers spun-up in parallel
 - remove all usage of winston logger except for in sync adapters (so we can debug test actor and snap)
 - fix bug where notes with 0 value were being stored in DB
 - refactor OperationMetadata to be structured
