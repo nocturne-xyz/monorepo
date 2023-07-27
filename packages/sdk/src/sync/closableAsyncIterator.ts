@@ -27,6 +27,20 @@ export class ClosableAsyncIterator<T> {
     return new ClosableAsyncIterator(mapped(), async () => await this.close());
   }
 
+  filter(f: (item: T) => boolean): ClosableAsyncIterator<T> {
+    const thisIter = this.iter;
+    const filtered = async function* () {
+      for await (const item of thisIter) {
+        if (f(item)) yield item;
+      }
+    };
+
+    return new ClosableAsyncIterator(
+      filtered(),
+      async () => await this.close()
+    );
+  }
+
   // iterate over the iterator in batches of size `batchSize`.
   // `exact` defaults to false
   // if `exact` is set to `false`, upon closing, any leftover elements will be emitted

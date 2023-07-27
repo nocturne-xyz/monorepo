@@ -4,7 +4,7 @@ import { program } from "commander";
 import run from "./commands/run";
 import * as dotenv from "dotenv";
 import { setupDefaultInstrumentation } from "@nocturne-xyz/offchain-utils";
-import { ACTOR_NAME } from "../types";
+import { ACTOR_NAME } from "../constants";
 
 export default async function main(): Promise<void> {
   dotenv.config();

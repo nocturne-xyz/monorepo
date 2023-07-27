@@ -13,33 +13,27 @@ import {
   TreeConstants,
   IncludedNote,
   IncludedNoteCommitment,
+  TotalEntityIndex,
+  merkleIndexToSubtreeIndex,
+  BaseProof,
+  SubtreeUpdateInputs,
 } from "@nocturne-xyz/sdk";
-import { Mutex } from "async-mutex";
 import IORedis from "ioredis";
-import { Job, Queue, Worker } from "bullmq";
-import {
-  ACTOR_NAME,
-  ProofJobData,
-  SerializedProofJobData,
-  SerializedSubmissionJobData,
-  SubmissionJobData,
-} from "./types";
 import { Handler } from "@nocturne-xyz/contracts";
-import * as JSON from "bigint-json-serialization";
 import { ActorHandle, makeCreateCounterFn } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import { Insertion } from "./sync/syncAdapter";
 import { PersistentLog } from "./persistentLog";
 import * as txManager from "@nocturne-xyz/tx-manager";
+import { Mutex } from "async-mutex";
+import { ACTOR_NAME, COMPONENT_NAME } from "./constants";
 
 const { BATCH_SIZE } = TreeConstants;
-
-const COMPONENT_NAME = "subtree-updater";
-
-const PROOF_QUEUE_NAME = "PROOF_QUEUE";
-const PROOF_JOB_TAG = "PROOF_JOB";
-const SUBMISSION_QUEUE_NAME = "SUBMISSION_QUEUE";
-const SUBMISSION_JOB_TAG = "SUBMISSION_JOB";
+const RECOVERY_BATCH_SIZE = BATCH_SIZE * 16;
+const RECOVER_INCLUDE_ARRAY = [
+  true,
+  ...range(RECOVERY_BATCH_SIZE - 1).map(() => false),
+];
 
 const SUBTREE_INCLUDE_ARRAY = [true, ...range(BATCH_SIZE - 1).map(() => false)];
 
@@ -54,8 +48,19 @@ interface SubtreeUpdaterMetrics {
   subtreeUpdatesSubmittedCounter: ot.Counter;
 }
 
+interface BatchInfo {
+  leaves: bigint[];
+  batch: (Note | bigint)[];
+  subtreeBatchOffset: number;
+}
+
+export interface ProofInputData {
+  subtreeIndex: number;
+  newRoot: bigint;
+  proofInputs: SubtreeUpdateInputs;
+}
+
 export class SubtreeUpdater {
-  // TODO: have separate keys instead of a mutex
   handlerMutex: Mutex;
   handlerContract: Handler;
   adapter: SubtreeUpdaterSyncAdapter;
@@ -65,8 +70,7 @@ export class SubtreeUpdater {
   tree: SparseMerkleProver;
   prover: SubtreeUpdateProver;
 
-  proofQueue: Queue;
-  submissionQueue: Queue;
+  insertionLog: PersistentLog<Insertion>;
 
   fillBatchTimeout: NodeJS.Timeout | undefined;
   fillBatchLatency: number | undefined;
@@ -80,7 +84,6 @@ export class SubtreeUpdater {
     prover: SubtreeUpdateProver,
     opts?: SubtreeUpdaterOpts
   ) {
-    this.handlerMutex = new Mutex();
     this.handlerContract = handlerContract;
     this.adapter = syncAdapter;
     this.logger = logger;
@@ -89,11 +92,8 @@ export class SubtreeUpdater {
     this.fillBatchLatency = opts?.fillBatchLatency;
     this.fillBatchTimeout = undefined;
 
+    this.handlerMutex = new Mutex();
     this.redis = redis;
-    this.proofQueue = new Queue(PROOF_QUEUE_NAME, { connection: redis });
-    this.submissionQueue = new Queue(SUBMISSION_QUEUE_NAME, {
-      connection: redis,
-    });
 
     // TODO make this a redis KV store
     const kv = new InMemoryKVStore();
@@ -104,6 +104,11 @@ export class SubtreeUpdater {
       meter,
       ACTOR_NAME,
       COMPONENT_NAME
+    );
+
+    this.insertionLog = new PersistentLog<Insertion>(
+      this.redis,
+      logger.child({ function: "PersistentLog" })
     );
 
     this.metrics = {
@@ -126,89 +131,165 @@ export class SubtreeUpdater {
     };
   }
 
+  async recoverTree(
+    logger: Logger,
+    latestCommittedSubtreeIndex: number
+  ): Promise<TotalEntityIndex | undefined> {
+    if (this.tree.count() > 0) {
+      throw new Error("canont recover non-empty tree");
+    }
+
+    logger.info("recovering tree from fresh state");
+    const previousInsertions = ClosableAsyncIterator.flatten(
+      this.insertionLog.scan()
+    ).batches(RECOVERY_BATCH_SIZE, true);
+
+    let endTEI = undefined;
+    for await (const wrappedInsertions of previousInsertions.iter) {
+      if (
+        Math.floor((this.tree.count() + RECOVERY_BATCH_SIZE) / BATCH_SIZE) >=
+        latestCommittedSubtreeIndex
+      ) {
+        break;
+      }
+      endTEI = wrappedInsertions[wrappedInsertions.length - 1].totalEntityIndex;
+      const insertions = wrappedInsertions.map(({ inner }) => inner);
+      const { leaves, subtreeBatchOffset } =
+        batchInfoFromInsertions(insertions);
+
+      this.tree.insertBatch(subtreeBatchOffset, leaves, RECOVER_INCLUDE_ARRAY);
+      logger.debug(`recovered up to merkleIndex ${this.tree.count() - 1}`);
+    }
+    await previousInsertions.close();
+
+    return endTEI;
+  }
+
   async start(queryThrottleMs?: number): Promise<ActorHandle> {
-    const proofJobs = await this.getProofJobIterator(
-      this.logger.child({ function: "iterator" }),
-      queryThrottleMs
+    const logger = this.logger.child({ function: "start" });
+
+    const latestCommittedSubtreeIndexAtStart =
+      await this.adapter.fetchLatestSubtreeIndex();
+
+    // recover tree in-memory from insertion log
+    // syncs in multiples of 256 insertions, up to the latest full-committed batch of 256 insertions
+    // returns the latest total entity index of any insertion that was recovered
+    const recoveryTEI = await this.recoverTree(
+      this.logger.child({ function: "recoverTree" }),
+      latestCommittedSubtreeIndexAtStart ?? 0
     );
 
-    const queuer = async () => {
-      for await (const job of proofJobs.iter) {
-        const latestSubtreeIndex = await this.adapter.fetchLatestSubtreeIndex(); // update latest subtree index
+    // goal: get an infinite iterator of all proof inputs starting from the point to which we recovered (which must be a multiple of 16)
+    // main idea: use two iterators, and chain them together:
+    //   (1) iterator over the remaining insertions in the log that we didn't scan over during recovery. That is, insertions with TEI > `recoveryTEI`
+    //   (2) iterator over new insertions from the sync adapter that aren't yet in the log.
+    //   (3) chain them together and chunk into 16-insertion batches
+    //   (4) filter out batches that are already committed and make proof inputs for the rest
 
-        // Ignore if job is for old subtree index
-        if (latestSubtreeIndex && job.subtreeIndex < latestSubtreeIndex) {
-          continue;
+    // (1) start the first iterator at `startTEI`, defined as `recoveryTEI + 1` or 0 if the log was empty
+    const startTEI = recoveryTEI ? recoveryTEI + 1n : 0n;
+    const newInsertionsFromLog = this.insertionLog.scan(startTEI);
+
+    // (2) get latest total entity index from insertion log and start the sync adapter's iterator at the TEI after this one,
+    // or 0 if it's undefined
+    const latestTEIFromLog =
+      await this.insertionLog.getLatestTotalEntityIndex();
+    const newInsertionsFromAdapter = this.insertionLog.syncAndPipe(
+      this.adapter.iterInsertions(
+        latestTEIFromLog ? latestTEIFromLog + 1n : 0n,
+        {
+          throttleMs: queryThrottleMs,
         }
+      )
+    );
 
-        await this.proofQueue.add(PROOF_JOB_TAG, JSON.stringify(job));
+    // (3) construct iterator of all new 16-insertion batches, and insert them into the tree
+    const batches = ClosableAsyncIterator.flatMap(
+      newInsertionsFromLog.chain(newInsertionsFromAdapter),
+      ({ inner }) => inner
+    )
+      // log + count insertion
+      .tap((insertion) => {
+        logger.debug(`got insertion at merkleIndex ${insertion.merkleIndex}`, {
+          insertion,
+        });
 
-        if (latestSubtreeIndex && job.subtreeIndex > latestSubtreeIndex) {
-          // mark leftmost leaf of subtree as ready for prune now that job has been queued
-          this.tree.markForPruning(job.subtreeIndex * BATCH_SIZE);
-          this.tree.prune();
-        }
+        const noteOrCommitment = NoteTrait.isCommitment(insertion)
+          ? "commitment"
+          : "note";
+        this.metrics.insertionsReceivedCounter.add(1, { noteOrCommitment });
+      })
+      .tap((insertion) => this.maybeScheduleFillBatch(insertion.merkleIndex))
+      .batches(BATCH_SIZE, true)
+      .map(batchInfoFromInsertions)
+      .tap(({ leaves, subtreeBatchOffset }) =>
+        this.tree.insertBatch(subtreeBatchOffset, leaves, SUBTREE_INCLUDE_ARRAY)
+      );
 
-        this.metrics.proofJobsEnqueuedCounter.add(1);
+    // (4) construct an iterator of proof inputs for uncommitted batches
+    const proofInputInfos: ClosableAsyncIterator<ProofInputData> = batches
+      // filterout batches that are already committed
+      .filter(
+        ({ subtreeBatchOffset }) =>
+          !latestCommittedSubtreeIndexAtStart ||
+          merkleIndexToSubtreeIndex(subtreeBatchOffset) >
+            latestCommittedSubtreeIndexAtStart
+      )
+      // make proof inputs
+      .map(({ batch, subtreeBatchOffset }) => {
+        const merkleProof = this.tree.getProof(subtreeBatchOffset);
+        const proofInputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
+
+        // logging only
+        const newRoot = this.tree.getRoot();
+        const subtreeIndex = subtreeBatchOffset / BATCH_SIZE;
+        logger.info(`created proof inputs for subtree index ${subtreeIndex}`, {
+          subtreeIndex,
+          batch,
+          newRoot,
+        });
+
+        return { subtreeIndex, proofInputs, newRoot };
+      });
+
+    // consume the iterator and make proofs
+    const run = async () => {
+      for await (const {
+        proofInputs,
+        newRoot,
+        subtreeIndex,
+      } of proofInputInfos.iter) {
+        const logMetadata = {
+          subtreeIndex,
+          subtreebatchOffest: subtreeIndex * BATCH_SIZE,
+          newRoot,
+        };
+
+        logger.info("generating subtree update proof", logMetadata);
+        const proofWithPis = await this.prover.proveSubtreeUpdate(proofInputs);
+        logger.info("successfully generated proof", logMetadata);
+
+        await this.submitSubtreeUpdate(
+          logger.child({ function: "submitSubtreeUpdate" }),
+          proofWithPis.proof,
+          newRoot,
+          subtreeIndex
+        );
       }
     };
 
-    const prover = this.startProver(this.logger.child({ function: "prover" }));
-    const submitter = this.startSubmitter(
-      this.logger.child({ function: "submitter" })
-    );
-
-    const submitterProm = new Promise<void>((resolve, reject) => {
-      submitter.on("closed", () => {
-        this.logger.info("submitter stopped");
-        resolve();
-      });
-
-      submitter.on("error", (err) => {
-        this.logger.error("submitter error", err);
-        reject(err);
-      });
-
-      submitter.on("failed", () => {
-        this.logger.error("submitter job failed");
-        reject(new Error("submitter job failed"));
-      });
-    });
-
-    const proverProm = new Promise<void>((resolve, reject) => {
-      prover.on("closed", () => {
-        this.logger.info("prover stopped");
-        resolve();
-      });
-
-      prover.on("error", (err) => {
-        this.logger.error("prover error", { err });
-        reject(err);
-      });
-
-      prover.on("failed", () => {
-        this.logger.info("prover failed");
-        reject(new Error("prover failed"));
-      });
-    });
-
-    const queuerProm = queuer();
+    // package up into an ActorHandle
+    const runProm = run();
 
     const teardown = async () => {
-      await Promise.allSettled([
-        proofJobs.close(),
-        prover.close(),
-        submitter.close(),
-      ]);
-
-      await Promise.allSettled([submitterProm, proverProm, queuerProm]);
-
+      await proofInputInfos.close();
+      await runProm;
       this.logger.debug("teardown completed");
     };
 
     const promise = (async () => {
       try {
-        await Promise.all([submitterProm, proverProm, queuerProm]);
+        await runProm;
       } catch (err) {
         this.logger.error(`error in subtree updater`, { err });
         await teardown();
@@ -222,212 +303,79 @@ export class SubtreeUpdater {
     };
   }
 
-  startProver(logger: Logger): Worker<SerializedProofJobData, any, string> {
-    logger.info("starting subtree update prover");
-    return new Worker(
-      PROOF_QUEUE_NAME,
-      async (job: Job<SerializedProofJobData>) => {
-        const { proofInputs, newRoot, subtreeIndex } = JSON.parse(
-          job.data
-        ) as ProofJobData;
-        logger.info("handling subtree update prover job", { job: job.data });
-
-        const proofWithPis = await this.prover.proveSubtreeUpdate(proofInputs);
-        logger.info("successfully generated proof", {
-          job: job.data,
-          proofWithPis,
-        });
-        const jobData: SubmissionJobData = {
-          subtreeIndex,
-          proof: proofWithPis.proof,
-          newRoot,
-        };
-        await this.submissionQueue.add(
-          SUBMISSION_JOB_TAG,
-          JSON.stringify(jobData)
-        );
-
-        this.metrics.submissionJobsEnqueuedCounter.add(1);
-      },
-      {
-        connection: this.redis,
-        autorun: true,
-      }
-    );
-  }
-
-  startSubmitter(
-    logger: Logger
-  ): Worker<SerializedSubmissionJobData, any, string> {
-    logger.info("starting subtree update submitter");
-    return new Worker(
-      SUBMISSION_QUEUE_NAME,
-      async (job: Job<SerializedSubmissionJobData>) => {
-        const { proof, newRoot, subtreeIndex } = JSON.parse(
-          job.data
-        ) as SubmissionJobData;
-
-        const solidityProof = packToSolidityProof(proof);
-        try {
-          logger.debug(
-            `acquiring mutex on handler contract to submit update tx for subtree index ${subtreeIndex}`
-          );
-          const receipt = await this.handlerMutex.runExclusive(async () => {
-            const nonce =
-              await this.handlerContract.signer.getTransactionCount(); // ensure its replacement
-            const contractTx = async (gasPrice: number) => {
-              const tx = await this.handlerContract.applySubtreeUpdate(
-                newRoot,
-                solidityProof,
-                { gasPrice, nonce }
-              );
-
-              logger.info(
-                `attempting tx manager submission. subtreIndex: ${subtreeIndex} txhash: ${tx.hash} gas price: ${gasPrice}`
-              );
-              return tx.wait(1);
-            };
-
-            const startingGasPrice =
-              await this.handlerContract.provider.getGasPrice();
-            logger.info(`starting gas price: ${startingGasPrice}`);
-
-            return await txManager.send({
-              sendTransactionFunction: contractTx,
-              minGasPrice: startingGasPrice.toNumber(),
-              maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
-              gasPriceScalingFunction: txManager.LINEAR(1), // +1 gwei each time
-              delay: 20_000, // Waits 20s between each try
-            });
-          });
-
-          logger.info("subtree update tx receipt:", { receipt, subtreeIndex });
-          logger.info("successfully updated root", { newRoot, subtreeIndex });
-          this.metrics.subtreeUpdatesSubmittedCounter.add(1);
-        } catch (err: any) {
-          // ignore errors that are due to duplicate submissions
-          // this can happen if there are multiple instances of subtree updaters running
-          if (!err.toString().includes("newRoot already a past root")) {
-            logger.error("error submitting proof:", { err });
-            throw err;
-          }
-
-          logger.warn("update already submitted by another agent", {
-            error: err,
-            subtreeIndex,
-          });
-        }
-      },
-      {
-        connection: this.redis,
-        autorun: true,
-      }
-    );
-  }
-
-  private async getProofJobIterator(
+  async submitSubtreeUpdate(
     logger: Logger,
-    queryThrottleMs?: number
-  ): Promise<ClosableAsyncIterator<ProofJobData>> {
-    logger.info(`subtree updater iterator starting`);
-
-    const log = new PersistentLog<Insertion>(
-      this.redis,
-      logger.child({ function: "PersistentLog" })
-    );
-    const logTip = await log.getLatestTotalEntityIndex();
-    logger.info("current tip in redis", { totalEntityIndex: logTip });
-
-    const previousInsertions = log.scan();
-    const newInsertions = log.syncAndPipe(
-      this.adapter.iterInsertions(logTip ? logTip + 1n : 0n, {
-        throttleMs: queryThrottleMs,
-      })
-    );
-
-    const allInsertions = ClosableAsyncIterator.flatMap(
-      previousInsertions.chain(newInsertions),
-      ({ inner }) => inner
-    );
-
-    return allInsertions
-      .tap((insertion) => {
-        logger.debug(`got insertion at merkleIndex ${insertion.merkleIndex}`, {
-          insertion,
-        });
-
-        const noteOrCommitment = NoteTrait.isCommitment(insertion)
-          ? "commitment"
-          : "note";
-        this.metrics.insertionsReceivedCounter.add(1, { noteOrCommitment });
-
-        if (this.fillBatchLatency === undefined) {
-          return;
-        }
-
-        // fillBatch logic
-        // main idea: keep a call to `fillBatch` on a timeout in the event loop
-        // if we get an insertion, reset the timer and kick the call to `fillBatch` down the road
-        // if we organically fill the batch, we don't need to call `fillBatch` anymore, so we clear it
-        // this is logically equivalent to always clearing the timeout, but only re-setting it if we haven't filled a batch organically yet
-
-        clearTimeout(this.fillBatchTimeout);
-
-        // if the insertion we got is not at a batch boundry, re-set the timeout because we haven't organically filled the batch yet
-        if ((insertion.merkleIndex + 1) % BATCH_SIZE !== 0) {
-          this.fillBatchTimeout = setTimeout(
-            () =>
-              this.fillBatchWithZeros(
-                this.logger.child({ function: "fillBatch" })
-              ),
-            this.fillBatchLatency
+    proof: BaseProof,
+    newRoot: bigint,
+    subtreeIndex: number
+  ): Promise<void> {
+    const solidityProof = packToSolidityProof(proof);
+    try {
+      logger.debug(
+        `acquiring mutex on handler contract to submit update tx for subtree index ${subtreeIndex}`
+      );
+      const receipt = await this.handlerMutex.runExclusive(async () => {
+        const nonce = await this.handlerContract.signer.getTransactionCount(); // ensure its replacement
+        const contractTx = async (gasPrice: number) => {
+          const tx = await this.handlerContract.applySubtreeUpdate(
+            newRoot,
+            solidityProof,
+            { gasPrice, nonce }
           );
-        }
-      })
-      .batches(BATCH_SIZE, true)
-      .map((insertions: Insertion[]) => {
-        const subtreeBatchOffset = insertions[0].merkleIndex;
-        const oldRoot = this.tree.getRoot();
-        logger.debug(`got batch with leftmost index ${subtreeBatchOffset}`, {
-          insertions,
+
+          logger.info(
+            `attempting tx manager submission. subtreIndex: ${subtreeIndex} txhash: ${tx.hash} gas price: ${gasPrice}`
+          );
+          return tx.wait(1);
+        };
+
+        const startingGasPrice =
+          await this.handlerContract.provider.getGasPrice();
+        logger.info(`starting gas price: ${startingGasPrice}`);
+
+        return await txManager.send({
+          sendTransactionFunction: contractTx,
+          minGasPrice: startingGasPrice.toNumber(),
+          maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
+          gasPriceScalingFunction: txManager.LINEAR(1), // +1 gwei each time
+          delay: 20_000, // Waits 20s between each try
         });
-
-        const batch: (Note | bigint)[] = insertions.map((noteOrCommitment) =>
-          NoteTrait.isCommitment(noteOrCommitment)
-            ? (noteOrCommitment as IncludedNoteCommitment).noteCommitment
-            : NoteTrait.toNote(noteOrCommitment as IncludedNote)
-        );
-
-        const leaves = batch.map((noteOrCommitment) =>
-          typeof noteOrCommitment === "bigint"
-            ? noteOrCommitment
-            : NoteTrait.toCommitment(noteOrCommitment as Note)
-        );
-
-        logger.debug(
-          `inserting batch into local SMP tree with offset ${subtreeBatchOffset}`,
-          { subtreeBatchOffset, leaves }
-        );
-        this.tree.insertBatch(
-          subtreeBatchOffset,
-          leaves,
-          SUBTREE_INCLUDE_ARRAY
-        );
-
-        const merkleProof = this.tree.getProof(subtreeBatchOffset);
-        const proofInputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
-        const newRoot = this.tree.getRoot();
-        const subtreeIndex = subtreeBatchOffset / BATCH_SIZE;
-
-        logger.info(`created proof inputs for subtree index ${subtreeIndex}`, {
-          subtreeIndex,
-          batch,
-          oldRoot,
-          newRoot,
-        });
-
-        return { subtreeIndex, proofInputs, newRoot };
       });
+
+      logger.info("subtree update tx receipt:", { receipt, subtreeIndex });
+      logger.info("successfully updated root", { newRoot, subtreeIndex });
+      this.metrics.subtreeUpdatesSubmittedCounter.add(1);
+    } catch (err: any) {
+      // ignore errors that are due to duplicate submissions
+      // this can happen if there are multiple instances of subtree updaters running
+      if (!err.toString().includes("newRoot already a past root")) {
+        logger.error("error submitting proof:", { err });
+        throw err;
+      }
+
+      logger.warn("update already submitted by another agent", {
+        error: err,
+        subtreeIndex,
+      });
+    }
+  }
+
+  // update fill batch timer upon reciept of a new insertion at index `newInsertionMerkleIndex`
+  private maybeScheduleFillBatch(newInsertionMerkleIndex: number): void {
+    if (!this.fillBatchLatency) {
+      return;
+    }
+
+    clearTimeout(this.fillBatchTimeout);
+
+    // if the insertion we got is not at a batch boundry, re-set the timeout because we haven't organically filled the batch yet
+    if ((newInsertionMerkleIndex + 1) % BATCH_SIZE !== 0) {
+      this.fillBatchTimeout = setTimeout(
+        () =>
+          this.fillBatchWithZeros(this.logger.child({ function: "fillBatch" })),
+        this.fillBatchLatency
+      );
+    }
   }
 
   private async fillBatchWithZeros(logger: Logger): Promise<void> {
@@ -446,4 +394,26 @@ export class SubtreeUpdater {
       }
     });
   }
+}
+
+function batchInfoFromInsertions(insertions: Insertion[]): BatchInfo {
+  const subtreeBatchOffset = insertions[0].merkleIndex;
+
+  const batch: (Note | bigint)[] = insertions.map((noteOrCommitment) =>
+    NoteTrait.isCommitment(noteOrCommitment)
+      ? (noteOrCommitment as IncludedNoteCommitment).noteCommitment
+      : NoteTrait.toNote(noteOrCommitment as IncludedNote)
+  );
+
+  const leaves = batch.map((noteOrCommitment) =>
+    typeof noteOrCommitment === "bigint"
+      ? noteOrCommitment
+      : NoteTrait.toCommitment(noteOrCommitment as Note)
+  );
+
+  return {
+    leaves,
+    batch,
+    subtreeBatchOffset,
+  };
 }

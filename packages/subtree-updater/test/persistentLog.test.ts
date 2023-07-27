@@ -88,7 +88,25 @@ describe("InsertionLog", () => {
     await log.push(entries);
 
     const middle = entries[50].totalEntityIndex;
+    console.log("middle", middle);
     const result = (await log.scan(middle).collect()).flat();
+
+    console.log(
+      "result start",
+      result.slice(0, 5).map(({ totalEntityIndex }, i) => ({
+        logIdx: i,
+        totalEntityIndex,
+        components: TotalEntityIndexTrait.toComponents(totalEntityIndex),
+      }))
+    );
+    console.log(
+      "result end",
+      result.slice(-5).map(({ totalEntityIndex }, i) => ({
+        logIdx: result.length - 5 + i - 1,
+        totalEntityIndex,
+        components: TotalEntityIndexTrait.toComponents(totalEntityIndex),
+      }))
+    );
 
     expect(result.length).to.equal(50);
     expect(result).to.eql(entries.slice(50));
