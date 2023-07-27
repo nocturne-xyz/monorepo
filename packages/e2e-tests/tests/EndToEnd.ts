@@ -341,4 +341,107 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       OperationStatus.EXECUTED_SUCCESS
     );
   });
+
+  it(`alice deposits one ${PER_NOTE_AMOUNT} token note and confidentially pays Bob ${ALICE_TO_BOB_PRIV_VAL} without revealing asset`, async () => {
+    console.log("deposit funds and commit note commitments");
+    await depositFundsMultiToken(
+      depositManager,
+      [
+        [erc20, [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]],
+        [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
+      ],
+      aliceEoa,
+      nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
+    );
+    await fillSubtreeBatch();
+
+    const PAYMENT_AMOUNT = (PER_NOTE_AMOUNT * 2n * 3n) / 4n; // 3/4 of total deposit amount
+
+    const chainId = BigInt((await provider.getNetwork()).chainId);
+    const operationRequest = new OperationRequestBuilder({
+      chainId,
+      tellerContract: teller.address,
+    })
+      .confidentialPayment(
+        erc20Asset,
+        PAYMENT_AMOUNT, // Spend 3/4 of deposit amount for conf payment
+        nocturneWalletSDKBob.signer.canonicalAddress()
+      )
+      .gasPrice(GAS_PRICE)
+      .deadline(
+        BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
+      )
+      .build();
+
+    const bundlerBalanceBefore = (
+      await gasToken.balanceOf(await bundlerEoa.getAddress())
+    ).toBigInt();
+    console.log("bundler gas asset balance before op:", bundlerBalanceBefore);
+
+    const contractChecks = async () => {
+      console.log("check for OperationProcessed event");
+      const latestBlock = await provider.getBlockNumber();
+      const events: OperationProcessedEvent[] = await queryEvents(
+        teller,
+        teller.filters.OperationProcessed(),
+        0,
+        latestBlock
+      );
+      expect(events.length).to.equal(1);
+      expect(events[0].args.opProcessed).to.equal(true);
+
+      // expect all tokens to remain in Teller (only changed ownership within protocol)
+      expect((await erc20.balanceOf(teller.address)).toBigInt()).to.equal(
+        PER_NOTE_AMOUNT * 2n
+      );
+      expect((await erc20.balanceOf(handler.address)).toBigInt()).to.equal(1n);
+    };
+
+    const offchainChecks = async () => {
+      console.log("alice: Sync SDK post-operation");
+      await nocturneWalletSDKAlice.sync();
+      const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
+        erc20Asset,
+        { includeUncommitted: true }
+      )!;
+      const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
+      // alice should have 1 nonzero note from joinsplit output
+      expect(nonZeroNotesAlice.length).to.equal(1);
+      console.log("alice post-op notes:", nonZeroNotesAlice);
+
+      // alice should have another note with output note from joinsplit that paid 3/4 to bob
+      const foundNotesAlice = nonZeroNotesAlice.filter(
+        (n) => n.value === PER_NOTE_AMOUNT * 2n - PAYMENT_AMOUNT
+      );
+      expect(foundNotesAlice.length).to.equal(1);
+
+      console.log("bob: Sync SDK post-operation");
+      await nocturneWalletSDKBob.sync();
+      const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset, {
+        includeUncommitted: true,
+      })!;
+      const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
+      // bob should have one nonzero note from conf payment
+      expect(nonZeroNotesBob.length).to.equal(1);
+
+      // That one note should contain the tokens sent privately from alice
+      expect(nonZeroNotesBob[0].value).to.equal(PAYMENT_AMOUNT);
+
+      // check that bundler got compensated for gas, at least enough that it breaks even
+      const bundlerBalanceAfter = (
+        await gasToken.balanceOf(await bundlerEoa.getAddress())
+      ).toBigInt();
+
+      console.log("bundler gas asset balance after op:", bundlerBalanceAfter);
+      // for some reason, mocha `.gte` doesn't work here
+      expect(bundlerBalanceAfter > bundlerBalanceBefore).to.be.true;
+    };
+
+    await testE2E(
+      operationRequest,
+      contractChecks,
+      offchainChecks,
+      OperationStatus.EXECUTED_SUCCESS
+    );
+  });
 });
