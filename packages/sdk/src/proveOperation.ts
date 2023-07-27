@@ -10,14 +10,22 @@ import {
   joinSplitPublicSignalsFromArray,
   packToSolidityProof,
 } from "./proof";
+import { iterChunks } from "./utils";
+
+// SDK will fire off at most this many provers in parallel
+const MAX_PARALLEL_PROVERS = 4;
 
 export async function proveOperation(
   prover: JoinSplitProver,
   op: SignedOperation
 ): Promise<ProvenOperation> {
-  const joinSplits: ProvenJoinSplit[] = await Promise.all(
-    op.joinSplits.map((joinSplit) => proveJoinSplit(prover, joinSplit))
-  );
+  const joinSplits: ProvenJoinSplit[] = [];
+  for (const batch of iterChunks(op.joinSplits, MAX_PARALLEL_PROVERS)) {
+    const provenBatch = await Promise.all(
+      batch.map((joinSplit) => proveJoinSplit(prover, joinSplit))
+    );
+    joinSplits.push(...provenBatch);
+  }
 
   const {
     networkInfo,

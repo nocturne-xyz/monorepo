@@ -27,6 +27,7 @@
 - `syncSDK` returns latest synced merkle index so fe-sdk can access and return
 - sync adapters return latest synced merkle index
 - `syncSDK` takes `SyncOpts` as params, add `timeoutSeconds` to `SyncOpts`
+- set a cap on the maximum number of wasm provers spun-up in parallel
 - remove all usage of winston logger except for in sync adapters (so we can debug test actor and snap)
 - fix bug where notes with 0 value were being stored in DB
 - refactor OperationMetadata to be structured
