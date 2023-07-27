@@ -14,7 +14,7 @@ contract OperationEIP712 is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "OperationWithoutProofs(JoinSplitWithoutProof[] joinSplits,CompressedStealthAddress refundAddr,TrackedAsset[] trackedJoinSplitAssets,TrackedAsset[] trackedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 gasPrice,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,uint8 assetIndex,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)TrackedAsset(EncodedAsset encodedAsset,uint256 minRefundValue)"
+                "OperationWithoutProofs(PublicJoinSplitWithoutProof[] pubJoinSplits,JoinSplitWithoutProof[] confJoinSplits,CompressedStealthAddress refundAddr,TrackedAsset[] trackedJoinSplitAssets,TrackedAsset[] trackedRefundAssets,Action[] actions,EncodedAsset encodedGasAsset,uint256 gasAssetRefundThreshold,uint256 executionGasLimit,uint256 gasPrice,uint256 deadline,bool atomicActions)Action(address contractAddress,bytes encodedFunction)CompressedStealthAddress(uint256 h1,uint256 h2)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)PublicJoinSplitWithoutProof(JoinSplitWithoutProof joinSplit,uint8 assetIndex,uint256 publicSpend)TrackedAsset(EncodedAsset encodedAsset,uint256 minRefundValue)"
             )
         );
 
@@ -32,11 +32,19 @@ contract OperationEIP712 is EIP712Upgradeable {
             "CompressedStealthAddress(uint256 h1,uint256 h2)"
         );
 
-    bytes32 public constant EIP712_JOINSPLIT_TYPEHASH =
+    bytes32 public constant PUBLIC_JOINSPLIT_WITHOUT_PROOF_TYPEHASH =
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,uint8 assetIndex,uint256 publicSpend,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)"
+                "PublicJoinSplitWithoutProof(JoinSplitWithoutProof joinSplit,uint8 assetIndex,uint256 publicSpend)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)"
+            )
+        );
+
+    bytes32 public constant JOINSPLIT_WITHOUT_PROOF_TYPEHASH =
+        keccak256(
+            bytes(
+                // solhint-disable-next-line max-line-length
+                "JoinSplitWithoutProof(uint256 commitmentTreeRoot,uint256 nullifierA,uint256 nullifierB,uint256 newNoteACommitment,uint256 newNoteBCommitment,uint256 senderCommitment,EncryptedNote newNoteAEncrypted,EncryptedNote newNoteBEncrypted)EncryptedNote(bytes ciphertextBytes,bytes encapsulatedSecretBytes)"
             )
         );
 
@@ -98,7 +106,8 @@ contract OperationEIP712 is EIP712Upgradeable {
             keccak256(
                 abi.encode(
                     OPERATION_TYPEHASH,
-                    _hashJoinSplits(op.joinSplits),
+                    _hashPublicJoinSplits(op.pubJoinSplits),
+                    _hashJoinSplits(op.confJoinSplits),
                     _hashCompressedStealthAddress(op.refundAddr),
                     _hashTrackedAssets(op.trackedJoinSplitAssets),
                     _hashTrackedAssets(op.trackedRefundAssets),
@@ -109,6 +118,36 @@ contract OperationEIP712 is EIP712Upgradeable {
                     op.gasPrice,
                     op.deadline,
                     uint256(op.atomicActions ? 1 : 0)
+                )
+            );
+    }
+
+    function _hashPublicJoinSplits(
+        PublicJoinSplit[] calldata publicJoinSplits
+    ) internal pure returns (bytes32) {
+        uint256 numPublicJoinSplits = publicJoinSplits.length;
+        bytes32[] memory publicJoinSplitHashes = new bytes32[](
+            numPublicJoinSplits
+        );
+        for (uint256 i = 0; i < numPublicJoinSplits; i++) {
+            publicJoinSplitHashes[i] = _hashPublicJoinSplit(
+                publicJoinSplits[i]
+            );
+        }
+
+        return keccak256(abi.encodePacked(publicJoinSplitHashes));
+    }
+
+    function _hashPublicJoinSplit(
+        PublicJoinSplit calldata publicJoinSplit
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    PUBLIC_JOINSPLIT_WITHOUT_PROOF_TYPEHASH,
+                    _hashJoinSplit(publicJoinSplit.joinSplit),
+                    uint256(publicJoinSplit.assetIndex),
+                    publicJoinSplit.publicSpend
                 )
             );
     }
@@ -137,15 +176,13 @@ contract OperationEIP712 is EIP712Upgradeable {
         return
             keccak256(
                 abi.encode(
-                    EIP712_JOINSPLIT_TYPEHASH,
+                    JOINSPLIT_WITHOUT_PROOF_TYPEHASH,
                     joinSplit.commitmentTreeRoot,
                     joinSplit.nullifierA,
                     joinSplit.nullifierB,
                     joinSplit.newNoteACommitment,
                     joinSplit.newNoteBCommitment,
                     joinSplit.senderCommitment,
-                    uint256(joinSplit.assetIndex),
-                    joinSplit.publicSpend,
                     _hashEncryptedNote(joinSplit.newNoteAEncrypted),
                     _hashEncryptedNote(joinSplit.newNoteBEncrypted)
                 )

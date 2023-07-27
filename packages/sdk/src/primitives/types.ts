@@ -78,12 +78,24 @@ export interface ProvenJoinSplit extends BaseJoinSplit {
   proof: SolidityProof;
 }
 
-export interface SignableJoinSplit extends Omit<BaseJoinSplit, "encodedAsset"> {
+export type SignableJoinSplit = Omit<
+  BaseJoinSplit,
+  "encodedAsset" | "publicSpend"
+>;
+
+export interface SignablePublicJoinSplit {
+  joinSplit: SignableJoinSplit;
   assetIndex: number;
+  publicSpend: bigint;
 }
 
 export interface SubmittableJoinSplit extends SignableJoinSplit {
   proof: SolidityProof;
+}
+
+export interface SubmittablePublicJoinSplit
+  extends Omit<SignablePublicJoinSplit, "joinSplit"> {
+  joinSplit: SubmittableJoinSplit;
 }
 
 export interface NetworkInfo {
@@ -123,14 +135,16 @@ export interface ProvenOperation extends BaseOperation {
 
 export interface SignableOperationWithNetworkInfo
   extends Omit<BaseOperation, "encodedRefundAssets"> {
-  joinSplits: SignableJoinSplit[];
+  pubJoinSplits: SignablePublicJoinSplit[];
+  confJoinSplits: SignableJoinSplit[];
   trackedJoinSplitAssets: TrackedAsset[];
   trackedRefundAssets: TrackedAsset[];
 }
 
 export interface SubmittableOperationWithNetworkInfo
   extends Omit<SignableOperationWithNetworkInfo, "joinSplits"> {
-  joinSplits: SubmittableJoinSplit[];
+  pubJoinSplits: SubmittablePublicJoinSplit[];
+  confJoinSplits: SubmittableJoinSplit[];
 }
 
 export interface Bundle {

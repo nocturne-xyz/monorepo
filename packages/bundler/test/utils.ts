@@ -1,30 +1,35 @@
+const JOINSPLIT = {
+  proof: ["0n", "0n", "0n", "0n", "0n", "0n", "0n", "0n"],
+  senderCommitment: "0n",
+  commitmentTreeRoot: "0n",
+  nullifierA: "0n",
+  nullifierB: "0n",
+  newNoteACommitment: "0n",
+  newNoteBCommitment: "0n",
+  newNoteAEncrypted: {
+    encapsulatedSecretBytes: [1, 2, 3, 4],
+    ciphertextBytes: [1, 2, 3, 4],
+  },
+  newNoteBEncrypted: {
+    encapsulatedSecretBytes: [1, 2, 3, 4],
+    ciphertextBytes: [1, 2, 3, 4],
+  },
+};
+
 export const VALID_RELAY_REQUEST = {
   operation: {
     networkInfo: {
       chainId: "123n",
       tellerContract: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
     },
-    joinSplits: [
+    pubJoinSplits: [
       {
-        proof: ["0n", "0n", "0n", "0n", "0n", "0n", "0n", "0n"],
-        senderCommitment: "0n",
-        commitmentTreeRoot: "0n",
-        nullifierA: "0n",
-        nullifierB: "0n",
-        newNoteACommitment: "0n",
-        newNoteBCommitment: "0n",
+        joinSplit: JOINSPLIT,
         assetIndex: 1,
-        publicSpend: "0n",
-        newNoteAEncrypted: {
-          encapsulatedSecretBytes: [1, 2, 3, 4],
-          ciphertextBytes: [1, 2, 3, 4],
-        },
-        newNoteBEncrypted: {
-          encapsulatedSecretBytes: [1, 2, 3, 4],
-          ciphertextBytes: [1, 2, 3, 4],
-        },
+        publicSpend: "100n",
       },
     ],
+    confJoinSplits: [JOINSPLIT],
     refundAddr: {
       h1: "0n",
       h2: "0n",

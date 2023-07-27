@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- in `joinsplit.circom` separate "public encodedAsset` from `private encodedAsset` and check that;
+  - they're equal when `publicSpend` is nonzero
+  - they "public encodedAsset` is masked to 0 when `publicSpend` is 0
 - force `refundAddr` to be owned by the sender
 - replace ElGamal encryption with `senderCommitment`
 - add `IsOrderGreaterThan8` template and use it to check BJJ points given as input in joinsplit circuit

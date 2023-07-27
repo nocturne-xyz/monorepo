@@ -49,18 +49,20 @@ contract BalanceManager is CommitmentTreeManager {
         _teller = ITeller(teller);
     }
 
-    /// @notice For each joinSplit in op.joinSplits, check root and nullifier validity against
+    /// @notice For each public and conf joinSplit, check root and nullifier validity against
     ///         commitment tree manager, then request joinSplit.publicSpend barring tokens for gas
-    ///         payment.
-    /// @dev Before looping through joinSplits, we calculate amount of gas to reserve based on
-    ///      execution gas, number of joinSplits, and number of refunds. Then we loop through
-    ///      joinSplits, check root and nullifier validity, and attempt to reserve as much gas asset
+    ///         payment for pubJoinSplits (conf joinSplits are only handled in CTM, no fund
+    ///         processing since all publicSpends implicitly 0).
+    /// @dev Before looping through pubJoinSplits, we calculate amount of gas to reserve based on
+    ///      execution gas, number of pubJoinSplits, and number of refunds. Then we loop through
+    ///      pubJoinSplits, check root and nullifier validity, and attempt to reserve as much gas
+    ///      asset.
     ///      as possible until we have gotten as the reserve amount we originally calculated. If we
-    ///      have not reserved enough gas asset after looping through all joinSplits, we revert.
-    /// @dev We attempt to group asset transfers to handler by contiguous subarrays of joinsplits
+    ///      have not reserved enough gas asset after looping through all pubJoinSplits, we revert.
+    /// @dev We attempt to group asset transfers to handler by contiguous subarrays of pubJoinSplits
     ///      for same asset. User can group however they like but contiguous group saves them gas
     ///      by reducing number of teller.requestAsset calls.
-    /// @param op Operation to process joinSplits for
+    /// @param op Operation to process pubJoinSplits for
     /// @param perJoinSplitVerifyGas Gas cost of verifying a single joinSplit proof, calculated by
     ///                              teller during (batch) proof verification
     function _processJoinSplitsReservingFee(
@@ -69,22 +71,24 @@ contract BalanceManager is CommitmentTreeManager {
     ) internal {
         // process nullifiers and insert new noteCommitments for each joinSplit
         // will throw an error if nullifiers are invalid or tree root invalid
+        // NOTE: we handle both public and conf joinSplits here, all code below though is
+        // only called on public joinSplits
         _handleJoinSplits(op);
 
         // Get gas asset and amount to reserve
         EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
         uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
-        // Loop through joinSplits and gather assets, reserving gas asset as needed
+        // Loop through pubJoinSplits and gather assets, reserving gas asset as needed
         EncodedAsset calldata encodedAsset;
-        uint256 numJoinSplits = op.joinSplits.length;
+        uint256 numJoinSplits = op.pubJoinSplits.length;
         for (
             uint256 subarrayStartIndex = 0;
             subarrayStartIndex < numJoinSplits;
 
         ) {
             uint8 joinSplitAssetIndex = op
-                .joinSplits[subarrayStartIndex]
+                .pubJoinSplits[subarrayStartIndex]
                 .assetIndex;
             encodedAsset = op
                 .trackedJoinSplitAssets[joinSplitAssetIndex]
@@ -92,11 +96,12 @@ contract BalanceManager is CommitmentTreeManager {
 
             // Get largest possible subarray for current asset and sum of publicSpend
             uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
-                op.joinSplits,
+                op.pubJoinSplits,
                 subarrayStartIndex
             );
+
             uint256 valueToGatherForSubarray = _sumJoinSplitPublicSpendsInclusive(
-                    op.joinSplits,
+                    op.pubJoinSplits,
                     subarrayStartIndex,
                     subarrayEndIndex
                 );
@@ -336,19 +341,19 @@ contract BalanceManager is CommitmentTreeManager {
     /// @notice Get highest index for contiguous subarray of joinsplits of same encodedAssetType
     /// @dev Used so we can take sum(subarray) make single call teller.requestAsset(asset, sum)
     ///      instead of calling teller.requestAsset multiple times for the same asset
-    /// @param joinSplits Joinsplits
+    /// @param pubJoinSplits Joinsplits
     /// @param startIndex Index to start searching from
     function _getHighestContiguousJoinSplitIndex(
-        JoinSplit[] calldata joinSplits,
+        PublicJoinSplit[] calldata pubJoinSplits,
         uint256 startIndex
     ) private pure returns (uint256) {
-        uint256 startAssetIndex = joinSplits[startIndex].assetIndex;
+        uint256 startAssetIndex = pubJoinSplits[startIndex].assetIndex;
 
-        uint256 numJoinSplits = joinSplits.length;
+        uint256 numJoinSplits = pubJoinSplits.length;
         uint256 highestIndex = startIndex;
         while (
             highestIndex + 1 < numJoinSplits &&
-            startAssetIndex == joinSplits[highestIndex + 1].assetIndex
+            startAssetIndex == pubJoinSplits[highestIndex + 1].assetIndex
         ) {
             highestIndex++;
         }
@@ -357,17 +362,17 @@ contract BalanceManager is CommitmentTreeManager {
     }
 
     /// @notice Get sum of public spends for a contiguous subarray of joinsplits
-    /// @param joinSplits op joinSplits
+    /// @param pubJoinSplits op pubJoinSplits
     /// @param startIndex Index to start summing from
     /// @param endIndex Index to end summing at (inclusive)
     function _sumJoinSplitPublicSpendsInclusive(
-        JoinSplit[] calldata joinSplits,
+        PublicJoinSplit[] calldata pubJoinSplits,
         uint256 startIndex,
         uint256 endIndex
     ) private pure returns (uint256) {
         uint256 sum = 0;
         for (uint256 i = startIndex; i <= endIndex; i++) {
-            sum += joinSplits[i].publicSpend;
+            sum += pubJoinSplits[i].publicSpend;
         }
         return sum;
     }

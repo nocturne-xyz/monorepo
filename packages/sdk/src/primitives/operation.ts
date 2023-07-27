@@ -6,9 +6,11 @@ import {
   ProvenOperation,
   SignableJoinSplit,
   SignableOperationWithNetworkInfo,
+  SignablePublicJoinSplit,
   SignedOperation,
   SubmittableJoinSplit,
   SubmittableOperationWithNetworkInfo,
+  SubmittablePublicJoinSplit,
   TrackedAsset,
 } from "./types";
 import { ethers, TypedDataDomain } from "ethers";
@@ -19,7 +21,8 @@ export const TELLER_CONTRACT_VERSION = "v1";
 
 export const OPERATION_TYPES = {
   OperationWithoutProofs: [
-    { name: "joinSplits", type: "JoinSplitWithoutProof[]" },
+    { name: "pubJoinSplits", type: "PublicJoinSplitWithoutProof[]" },
+    { name: "confJoinSplits", type: "JoinSplitWithoutProof[]" },
     { name: "refundAddr", type: "CompressedStealthAddress" },
     { name: "trackedJoinSplitAssets", type: "TrackedAsset[]" },
     { name: "trackedRefundAssets", type: "TrackedAsset[]" },
@@ -46,10 +49,13 @@ export const OPERATION_TYPES = {
     { name: "newNoteACommitment", type: "uint256" },
     { name: "newNoteBCommitment", type: "uint256" },
     { name: "senderCommitment", type: "uint256" },
-    { name: "assetIndex", type: "uint8" },
-    { name: "publicSpend", type: "uint256" },
     { name: "newNoteAEncrypted", type: "EncryptedNote" },
     { name: "newNoteBEncrypted", type: "EncryptedNote" },
+  ],
+  PublicJoinSplitWithoutProof: [
+    { name: "joinSplit", type: "JoinSplitWithoutProof" },
+    { name: "assetIndex", type: "uint8" },
+    { name: "publicSpend", type: "uint256" },
   ],
   EncodedAsset: [
     { name: "encodedAssetAddr", type: "uint256" },
@@ -106,6 +112,7 @@ export function hashOperation(
   );
 }
 
+// TODO: eventually remove translation layer and build in correct op structure into sdk
 export function toSignableOperation(
   op: PreSignOperation | SignedOperation | ProvenOperation
 ): SignableOperationWithNetworkInfo {
@@ -119,7 +126,6 @@ export function toSignableOperation(
     gasAssetRefundThreshold,
     executionGasLimit,
     gasPrice,
-
     deadline,
     atomicActions,
   } = op;
@@ -140,27 +146,45 @@ export function toSignableOperation(
     })
   );
 
-  const reformattedJoinSplits: SignableJoinSplit[] = joinSplits.map((js) => {
-    const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
-      AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
-    );
-    return {
-      commitmentTreeRoot: js.commitmentTreeRoot,
-      nullifierA: js.nullifierA,
-      nullifierB: js.nullifierB,
-      newNoteACommitment: js.newNoteACommitment,
-      newNoteBCommitment: js.newNoteBCommitment,
-      senderCommitment: js.senderCommitment,
-      assetIndex,
-      publicSpend: js.publicSpend,
-      newNoteAEncrypted: js.newNoteAEncrypted,
-      newNoteBEncrypted: js.newNoteBEncrypted,
-    };
-  });
+  const pubJoinSplits: SignablePublicJoinSplit[] = [];
+  const confJoinSplits: SignableJoinSplit[] = [];
+  for (const js of joinSplits) {
+    if (js.publicSpend > 0n) {
+      const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
+        AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
+      );
+      pubJoinSplits.push({
+        joinSplit: {
+          commitmentTreeRoot: js.commitmentTreeRoot,
+          nullifierA: js.nullifierA,
+          nullifierB: js.nullifierB,
+          newNoteACommitment: js.newNoteACommitment,
+          newNoteBCommitment: js.newNoteBCommitment,
+          senderCommitment: js.senderCommitment,
+          newNoteAEncrypted: js.newNoteAEncrypted,
+          newNoteBEncrypted: js.newNoteBEncrypted,
+        },
+        assetIndex,
+        publicSpend: js.publicSpend,
+      });
+    } else {
+      confJoinSplits.push({
+        commitmentTreeRoot: js.commitmentTreeRoot,
+        nullifierA: js.nullifierA,
+        nullifierB: js.nullifierB,
+        newNoteACommitment: js.newNoteACommitment,
+        newNoteBCommitment: js.newNoteBCommitment,
+        senderCommitment: js.senderCommitment,
+        newNoteAEncrypted: js.newNoteAEncrypted,
+        newNoteBEncrypted: js.newNoteBEncrypted,
+      });
+    }
+  }
 
   return {
     networkInfo,
-    joinSplits: reformattedJoinSplits,
+    pubJoinSplits,
+    confJoinSplits,
     refundAddr,
     trackedJoinSplitAssets,
     trackedRefundAssets,
@@ -207,28 +231,47 @@ export function toSubmittableOperation(
     )
   );
 
-  const reformattedJoinSplits: SubmittableJoinSplit[] = joinSplits.map((js) => {
-    const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
-      AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
-    );
-    return {
-      commitmentTreeRoot: js.commitmentTreeRoot,
-      nullifierA: js.nullifierA,
-      nullifierB: js.nullifierB,
-      newNoteACommitment: js.newNoteACommitment,
-      newNoteBCommitment: js.newNoteBCommitment,
-      senderCommitment: js.senderCommitment,
-      assetIndex,
-      publicSpend: js.publicSpend,
-      newNoteAEncrypted: js.newNoteAEncrypted,
-      newNoteBEncrypted: js.newNoteBEncrypted,
-      proof: js.proof,
-    };
-  });
+  const pubJoinSplits: SubmittablePublicJoinSplit[] = [];
+  const confJoinSplits: SubmittableJoinSplit[] = [];
+  for (const js of joinSplits) {
+    if (js.publicSpend > 0n) {
+      const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
+        AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
+      );
+      pubJoinSplits.push({
+        joinSplit: {
+          commitmentTreeRoot: js.commitmentTreeRoot,
+          nullifierA: js.nullifierA,
+          nullifierB: js.nullifierB,
+          proof: js.proof,
+          newNoteACommitment: js.newNoteACommitment,
+          newNoteBCommitment: js.newNoteBCommitment,
+          senderCommitment: js.senderCommitment,
+          newNoteAEncrypted: js.newNoteAEncrypted,
+          newNoteBEncrypted: js.newNoteBEncrypted,
+        },
+        assetIndex,
+        publicSpend: js.publicSpend,
+      });
+    } else {
+      confJoinSplits.push({
+        commitmentTreeRoot: js.commitmentTreeRoot,
+        nullifierA: js.nullifierA,
+        nullifierB: js.nullifierB,
+        proof: js.proof,
+        newNoteACommitment: js.newNoteACommitment,
+        newNoteBCommitment: js.newNoteBCommitment,
+        senderCommitment: js.senderCommitment,
+        newNoteAEncrypted: js.newNoteAEncrypted,
+        newNoteBEncrypted: js.newNoteBEncrypted,
+      });
+    }
+  }
 
   return {
     networkInfo,
-    joinSplits: reformattedJoinSplits,
+    pubJoinSplits,
+    confJoinSplits,
     refundAddr,
     trackedJoinSplitAssets,
     trackedRefundAssets,

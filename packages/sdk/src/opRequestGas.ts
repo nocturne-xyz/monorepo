@@ -1,5 +1,5 @@
 import { Handler } from "@nocturne-xyz/contracts";
-import { NocturneViewer, StealthAddress, StealthAddressTrait } from "./crypto";
+import { NocturneViewer, StealthAddress } from "./crypto";
 import { NocturneDB } from "./NocturneDB";
 import {
   GasAccountedOperationRequest,
@@ -13,11 +13,11 @@ import {
   PreSignOperation,
   BLOCK_GAS_LIMIT,
   AssetType,
-  TrackedAsset,
-  SignableOperationWithNetworkInfo,
+  ProvenJoinSplit,
+  SubmittableOperationWithNetworkInfo,
+  toSubmittableOperation,
 } from "./primitives";
 import { ERC20_ID } from "./primitives/asset";
-import { SolidityProof } from "./proof";
 import { groupByMap, partition } from "./utils/functional";
 import { prepareOperation } from "./prepareOperation";
 import { getJoinSplitRequestTotalValue } from "./utils";
@@ -370,59 +370,27 @@ async function simulateOperation(
   };
 }
 
-function fakeProvenOperation(op: Operation): SignableOperationWithNetworkInfo {
-  const trackedJoinSplitAssets: Array<TrackedAsset> = Array.from(
-    new Set(
-      op.joinSplits.map((js) => {
-        return { encodedAsset: js.encodedAsset, minRefundValue: 0n };
-      })
-    )
-  );
-
-  const provenJoinSplits = op.joinSplits.map((joinSplit) => {
+function fakeProvenOperation(
+  op: Operation
+): SubmittableOperationWithNetworkInfo {
+  const provenJoinSplits = op.joinSplits.map((js) => {
     return {
-      commitmentTreeRoot: joinSplit.commitmentTreeRoot,
-      nullifierA: joinSplit.nullifierA,
-      nullifierB: joinSplit.nullifierB,
-      newNoteACommitment: joinSplit.newNoteACommitment,
-      newNoteBCommitment: joinSplit.newNoteBCommitment,
-      assetIndex: trackedJoinSplitAssets.findIndex(
-        (a) => a.encodedAsset === joinSplit.encodedAsset
-      ),
-      publicSpend: joinSplit.publicSpend,
-      newNoteAEncrypted: joinSplit.newNoteAEncrypted,
-      newNoteBEncrypted: joinSplit.newNoteBEncrypted,
-      proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n] as SolidityProof,
-      senderCommitment: 0n,
-      refundAddr: StealthAddressTrait.compress(
-        StealthAddressTrait.fromPoints({
-          h1: { x: 0n, y: 1n },
-          h2: { x: 0n, y: 1n },
-        })
-      ),
+      ...js,
+      proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
     };
-  });
+  }) as ProvenJoinSplit[];
 
-  const trackedRefundAssets: Array<TrackedAsset> = Array.from(
-    new Set(
-      op.encodedRefundAssets.map((a) => {
-        return { encodedAsset: a, minRefundValue: 0n };
-      })
-    )
-  );
-
-  return {
+  return toSubmittableOperation({
     networkInfo: op.networkInfo,
+    joinSplits: provenJoinSplits,
     refundAddr: op.refundAddr,
     actions: op.actions,
-    trackedJoinSplitAssets,
-    trackedRefundAssets,
+    encodedRefundAssets: op.encodedRefundAssets,
     encodedGasAsset: op.encodedGasAsset,
     gasAssetRefundThreshold: op.gasAssetRefundThreshold,
     executionGasLimit: op.executionGasLimit,
     gasPrice: op.gasPrice,
-    joinSplits: provenJoinSplits,
     deadline: op.deadline,
     atomicActions: op.atomicActions,
-  };
+  });
 }

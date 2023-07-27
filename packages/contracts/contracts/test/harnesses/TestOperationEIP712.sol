@@ -41,6 +41,18 @@ contract TestOperationEIP712 is ITestOperationEIP712, OperationEIP712 {
         return _hashOperation(op);
     }
 
+    function hashPublicJoinSplits(
+        PublicJoinSplit[] calldata publicJoinSplits
+    ) public pure returns (bytes32) {
+        return _hashPublicJoinSplits(publicJoinSplits);
+    }
+
+    function hashPublicJoinSplit(
+        PublicJoinSplit calldata publicJoinSplit
+    ) public pure returns (bytes32) {
+        return _hashPublicJoinSplit(publicJoinSplit);
+    }
+
     function hashJoinSplits(
         JoinSplit[] calldata joinSplits
     ) public pure returns (bytes32) {

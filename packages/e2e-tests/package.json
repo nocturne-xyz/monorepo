@@ -37,7 +37,7 @@
     "@types/uuid": "^9.0.0",
     "bigint-json-serialization": "^1.0.1",
     "chai": "^4.3.6",
-    "docker-compose": "^0.23.19",
+    "docker-compose": "0.23.19",
     "dockerode": "^3.3.4",
     "dotenv": "^16.0.3",
     "envfile": "^6.18.0",

@@ -26,6 +26,12 @@ struct EncryptedNote {
     bytes encapsulatedSecretBytes;
 }
 
+struct PublicJoinSplit {
+    JoinSplit joinSplit;
+    uint8 assetIndex; // Index in op.joinSplitAssets
+    uint256 publicSpend;
+}
+
 struct JoinSplit {
     uint256 commitmentTreeRoot;
     uint256 nullifierA;
@@ -34,8 +40,6 @@ struct JoinSplit {
     uint256 newNoteBCommitment;
     uint256 senderCommitment;
     uint256[8] proof;
-    uint8 assetIndex; // Index in op.joinSplitAssets
-    uint256 publicSpend;
     EncryptedNote newNoteAEncrypted;
     EncryptedNote newNoteBEncrypted;
 }
@@ -76,7 +80,8 @@ struct TrackedAsset {
 }
 
 struct Operation {
-    JoinSplit[] joinSplits;
+    PublicJoinSplit[] pubJoinSplits;
+    JoinSplit[] confJoinSplits;
     CompressedStealthAddress refundAddr;
     TrackedAsset[] trackedJoinSplitAssets;
     TrackedAsset[] trackedRefundAssets;
@@ -117,7 +122,7 @@ library OperationLib {
         return
             self.executionGasLimit +
             ((perJoinSplitVerifyGas + GAS_PER_JOINSPLIT_HANDLE) *
-                self.joinSplits.length) +
+                (self.pubJoinSplits.length + self.confJoinSplits.length)) +
             ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) *
                 (self.trackedJoinSplitAssets.length +
                     self.trackedRefundAssets.length));

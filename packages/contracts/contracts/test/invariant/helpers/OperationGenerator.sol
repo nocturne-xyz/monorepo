@@ -168,14 +168,18 @@ contract OperationGenerator is InvariantUtils {
     ) internal returns (Operation memory) {
         // Make sure nfs do not conflict. Doing here because doing in NocturneUtils would force us
         // to convert NocturneUtils to be stateful contract
-        for (uint256 i = 0; i < op.joinSplits.length; i++) {
-            op.joinSplits[i].nullifierA = nullifierCount;
-            op.joinSplits[i].nullifierB = nullifierCount + 1;
+        for (uint256 i = 0; i < op.pubJoinSplits.length; i++) {
+            op.pubJoinSplits[i].joinSplit.nullifierA = nullifierCount;
+            op.pubJoinSplits[i].joinSplit.nullifierB = nullifierCount + 1;
 
             nullifierCount += 2;
+        }
 
-            console.log("NF A", op.joinSplits[i].nullifierA);
-            console.log("NF B", op.joinSplits[i].nullifierB);
+        for (uint256 i = 0; i < op.confJoinSplits.length; i++) {
+            op.confJoinSplits[i].nullifierA = nullifierCount;
+            op.confJoinSplits[i].nullifierB = nullifierCount + 1;
+
+            nullifierCount += 2;
         }
 
         return op;

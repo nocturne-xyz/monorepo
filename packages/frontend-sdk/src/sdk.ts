@@ -326,13 +326,13 @@ export class NocturneFrontendSDK {
 
     const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] =
       operation.joinSplits.map((joinSplit) => {
-        const encodedAssetAddrWithSignBits =
+        const pubEncodedAssetAddrWithSignBits =
           encodeEncodedAssetAddrWithSignBitsPI(
-            joinSplit.encodedAsset.encodedAssetAddr,
+            joinSplit.publicSpend === 0n ? 0n : joinSplit.encodedAsset.encodedAssetAddr,
             operation.refundAddr
           );
 
-        const encodedAssetId = joinSplit.encodedAsset.encodedAssetId;
+        const pubEncodedAssetId = joinSplit.publicSpend === 0n ? 0n : joinSplit.encodedAsset.encodedAssetId;
 
         const [, refundAddrH1CompressedY] = decomposeCompressedPoint(
           operation.refundAddr.h1
@@ -349,8 +349,8 @@ export class NocturneFrontendSDK {
           nullifierA: joinSplit.nullifierA,
           nullifierB: joinSplit.nullifierB,
           opDigest,
-          encodedAssetAddrWithSignBits,
-          encodedAssetId,
+          pubEncodedAssetAddrWithSignBits,
+          pubEncodedAssetId,
           refundAddrH1CompressedY,
           refundAddrH2CompressedY,
           senderCommitment: joinSplit.senderCommitment,
