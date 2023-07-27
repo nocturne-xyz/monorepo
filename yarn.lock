@@ -3132,7 +3132,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.172-testnet, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.173-testnet, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3238,7 +3238,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.15-testnet
     "@nocturne-xyz/contracts": 1.0.33-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": 1.0.172-testnet
+    "@nocturne-xyz/sdk": 1.0.173-testnet
     "@nocturne-xyz/tx-manager": 1.0.1-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
