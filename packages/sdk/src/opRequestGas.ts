@@ -97,6 +97,7 @@ export async function handleGasForOperationRequest(
 
   if (opRequest?.gasPrice == 0n) {
     // If gasPrice = 0, override dummy gas asset and don't further modify opRequest
+    console.log("returning dummy gas asset");
     return {
       ...gasEstimatedOpRequest,
       gasPrice: 0n,
@@ -330,7 +331,7 @@ async function estimateGasForOperationRequest(
   // NOTE: gasPrice returned in wei
   gasPrice =
     gasPrice ??
-    ((await handlerContract.provider.getGasPrice()).toBigInt() * 12n) / 10n;
+    ((await handlerContract.provider.getGasPrice()).toBigInt() * 14n) / 10n;
 
   return {
     numJoinSplits: BigInt(preparedOp.joinSplits.length),
