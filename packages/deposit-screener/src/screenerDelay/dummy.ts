@@ -1,9 +1,8 @@
 import { Address } from "@nocturne-xyz/sdk";
+import { MAGIC_LONG_DELAY_VALUE, MAGIC_ZERO_DELAY_VALUE } from "../utils";
 
 export class DummyScreenerDelayCalculator {
   normalDelaySeconds = 0;
-  readonly magicLongDelayValue = 10101000000000000n; // 0.010101 for 18 decimals
-  readonly dummyZeroDelayValue = 20202000000000000n; // 0.020202 for 18 decimals
   readonly longDelaySeconds = 60 * 60 * 3; // default to 3 hours
 
   constructor(delaySeconds?: number) {
@@ -20,11 +19,11 @@ export class DummyScreenerDelayCalculator {
     spender;
     assetAddr;
 
-    if (this.magicLongDelayValue && value === this.magicLongDelayValue) {
+    if (value === MAGIC_LONG_DELAY_VALUE) {
       return this.longDelaySeconds;
     }
 
-    if (this.dummyZeroDelayValue && value === this.dummyZeroDelayValue) {
+    if (value === MAGIC_ZERO_DELAY_VALUE) {
       return 0;
     }
 
