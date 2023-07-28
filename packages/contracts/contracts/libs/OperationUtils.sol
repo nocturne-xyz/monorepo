@@ -7,7 +7,6 @@ import "../libs/Types.sol";
 // Helpers for extracting data / formatting operations
 library OperationUtils {
     uint256 constant COMPRESSED_POINT_SIGN_MASK = 1 << 254;
-    uint256 constant U256_MSB_MASK = 1 << 255;
 
     function extractJoinSplitProofsAndPis(
         Operation[] calldata ops,

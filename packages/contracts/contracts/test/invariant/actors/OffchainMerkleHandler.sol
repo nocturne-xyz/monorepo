@@ -9,6 +9,7 @@ import {console} from "forge-std/console.sol";
 import {IHasherT3} from "../../interfaces/IHasher.sol";
 import {PoseidonHasherT3} from "../../utils/PoseidonHashers.sol";
 import {Utils} from "../../../libs/Utils.sol";
+import {Validation} from "../../../libs/Validation.sol";
 import {TestSubtreeUpdateVerifier} from "../../harnesses/TestSubtreeUpdateVerifier.sol";
 import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../../libs/OffchainMerkleTree.sol";
 import {QueueLib} from "../../../libs/Queue.sol";
@@ -129,12 +130,12 @@ contract OffchainMerkleHandler is InvariantUtils {
         _encodedNote.encodedAssetId = bound(
             _rerandomize(seed),
             0,
-            MAX_ASSET_ID
+            Validation.MAX_ASSET_ID
         );
         _encodedNote.value = bound(
             _rerandomize(seed),
             0,
-            NOCTURNE_MAX_NOTE_VALUE
+            Validation.NOCTURNE_MAX_NOTE_VALUE
         );
     }
 }

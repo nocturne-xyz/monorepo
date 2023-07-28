@@ -13,6 +13,7 @@ import {IncrementalTree, LibIncrementalTree} from "../../utils/IncrementalTree.s
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {TreeUtils} from "../../../libs/TreeUtils.sol";
 import {Utils} from "../../../libs/Utils.sol";
+import {Validation} from "../../../libs/Validation.sol";
 import {InvariantUtils} from "../helpers/InvariantUtils.sol";
 import "../../utils/NocturneUtils.sol";
 import "../../../libs/Types.sol";
@@ -179,7 +180,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
         commitmentTreeManager.handleRefundNote(
             encodedAsset,
             refundAddr,
-            bound(seed, 0, NOCTURNE_MAX_NOTE_VALUE)
+            bound(seed, 0, Validation.NOCTURNE_MAX_NOTE_VALUE)
         );
         ghost_refundNotesLeafCount += 1;
         handleRefundNotesLength = 1;
@@ -255,8 +256,8 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
         note
             .ownerH2 = 49380694508107827227871038662877111842066638251616884143503987031630145436076;
         note.nonce = bound(note.nonce, 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1);
-        note.encodedAssetAddr = note.encodedAssetAddr & ENCODED_ASSET_ADDR_MASK;
-        note.encodedAssetId = bound(note.encodedAssetId, 0, MAX_ASSET_ID);
-        note.value = bound(note.value, 0, NOCTURNE_MAX_NOTE_VALUE);
+        note.encodedAssetAddr = note.encodedAssetAddr & Validation.ENCODED_ASSET_ADDR_MASK;
+        note.encodedAssetId = bound(note.encodedAssetId, 0, Validation.MAX_ASSET_ID);
+        note.value = bound(note.value, 0, Validation.NOCTURNE_MAX_NOTE_VALUE);
     }
 }

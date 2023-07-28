@@ -5,6 +5,10 @@ import "./Types.sol";
 import "./Utils.sol";
 
 library Validation {
+    uint256 constant NOCTURNE_MAX_NOTE_VALUE = (1 << 252) - 1; // value must fit in 2^252 bits
+    uint256 constant ENCODED_ASSET_ADDR_MASK = ((1 << 163) - 1) | (7 << 249);
+    uint256 constant MAX_ASSET_ID = (1 << 253) - 1;
+
     uint256 constant CURVE_A = 168700;
     uint256 constant CURVE_D = 168696;
     uint256 constant COMPRESSED_POINT_Y_MASK = ~uint256(1 << 254);
