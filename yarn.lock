@@ -3153,9 +3153,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nocturne-xyz/sdk@npm:1.0.173-testnet":
-  version: 1.0.173-testnet
-  resolution: "@nocturne-xyz/sdk@npm:1.0.173-testnet"
+"@nocturne-xyz/sdk@npm:1.0.174-testnet":
+  version: 1.0.174-testnet
+  resolution: "@nocturne-xyz/sdk@npm:1.0.174-testnet"
   dependencies:
     "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/config": ^1.0.15-testnet
@@ -3170,7 +3170,7 @@ __metadata:
     randombytes: ^2.1.0
     sorted-btree: ^1.8.1
     winston: ^3.9.0
-  checksum: b7df2f5d8536f8dcf035b0812d42381873bdc0ce3f0cc3506bbb151f20d1a5969f0561df3a3955bab4a1fb74de814c6ec1cab5a29b9ff23093c0aca9f5108345
+  checksum: 4619cad73dfbd65ad5f0b526aacc5d93135aa4cd2dfbc5e09a9f9598f46e7d69dcd4c987a045aa6de74460f777b8ac6ba5231ad9a3538eaf5f936d6965d4a74a
   languageName: node
   linkType: hard
 
@@ -3259,7 +3259,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.15-testnet
     "@nocturne-xyz/contracts": 1.0.33-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": 1.0.173-testnet
+    "@nocturne-xyz/sdk": 1.0.174-testnet
     "@nocturne-xyz/tx-manager": 1.0.1-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
