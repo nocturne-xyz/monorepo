@@ -8,6 +8,7 @@ import {BalanceManager} from "./BalanceManager.sol";
 import {NocturneReentrancyGuard} from "./NocturneReentrancyGuard.sol";
 import {Utils} from "./libs/Utils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
+import {Validation} from "./libs/Validation.sol";
 import {Groth16} from "./libs/Groth16.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/Types.sol";
@@ -119,6 +120,8 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
         require(_supportedContracts[assetAddr], "!supported deposit asset");
 
+        Validation.validateCompressedStealthAddress(deposit.depositAddr);
+
         _handleRefundNote(encodedAsset, deposit.depositAddr, deposit.value);
     }
 
@@ -153,6 +156,8 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         returns (OperationResult memory opResult)
     {
         require(block.timestamp <= op.deadline, "expired deadline");
+
+        Validation.validateCompressedStealthAddress(op.refundAddr);
 
         // Ensure refund assets supported
         uint256 numRefundAssets = op.trackedRefundAssets.length;

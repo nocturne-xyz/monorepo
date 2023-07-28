@@ -7,6 +7,7 @@ import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/
 // Internal
 import {LibOffchainMerkleTree, OffchainMerkleTree} from "./libs/OffchainMerkleTree.sol";
 import {Utils} from "./libs/Utils.sol";
+import {Validation} from "./libs/Validation.sol";
 import {TreeUtils} from "./libs/TreeUtils.sol";
 import "./libs/Types.sol";
 
@@ -149,7 +150,7 @@ contract CommitmentTreeManager is
     /// @param note note to insert
     function _insertNote(EncodedNote memory note) internal {
         // ensure note can be decommitted by subtree update circuit
-        Utils.validateNote(note);
+        Validation.validateNote(note);
         _merkle.insertNote(note);
     }
 
