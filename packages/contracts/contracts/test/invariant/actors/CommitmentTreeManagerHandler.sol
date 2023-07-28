@@ -248,7 +248,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             0,
             Utils.BN254_SCALAR_FIELD_MODULUS - 1
         );
-	}
+    }
 
     function _boundNoteValues(EncodedNote memory note) internal view {
         note
@@ -256,8 +256,14 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
         note
             .ownerH2 = 49380694508107827227871038662877111842066638251616884143503987031630145436076;
         note.nonce = bound(note.nonce, 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1);
-        note.encodedAssetAddr = note.encodedAssetAddr & Validation.ENCODED_ASSET_ADDR_MASK;
-        note.encodedAssetId = bound(note.encodedAssetId, 0, Validation.MAX_ASSET_ID);
+        note.encodedAssetAddr =
+            note.encodedAssetAddr &
+            Validation.ENCODED_ASSET_ADDR_MASK;
+        note.encodedAssetId = bound(
+            note.encodedAssetId,
+            0,
+            Validation.MAX_ASSET_ID
+        );
         note.value = bound(note.value, 0, Validation.NOCTURNE_MAX_NOTE_VALUE);
     }
 }

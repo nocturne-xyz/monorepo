@@ -149,7 +149,7 @@ contract CommitmentTreeManager is
     /// @notice Inserts note into commitment tree
     /// @param note note to insert
     function _insertNote(EncodedNote memory note) internal {
-        // ensure note can be decommitted by subtree update circuit
+        // ensure note can be decommitted by subtree update circuit + addrs are valid
         Validation.validateNote(note);
         _merkle.insertNote(note);
     }

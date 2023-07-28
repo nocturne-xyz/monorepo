@@ -13,10 +13,12 @@ library Validation {
     uint256 constant CURVE_D = 168696;
     uint256 constant COMPRESSED_POINT_Y_MASK = ~uint256(1 << 254);
 
-    function validateNote(EncodedNote memory note) internal pure {
+    function validateNote(EncodedNote memory note) internal view {
         require(
-            // encodedAssetAddr is a valid field element
-            note.encodedAssetAddr < Utils.BN254_SCALAR_FIELD_MODULUS &&
+            // nonce is a valid field element
+            note.nonce < Utils.BN254_SCALAR_FIELD_MODULUS &&
+                // encodedAssetAddr is a valid field element
+                note.encodedAssetAddr < Utils.BN254_SCALAR_FIELD_MODULUS &&
                 // encodedAssetAddr doesn't have any bits set outside bits 0-162 and 250-252
                 note.encodedAssetAddr & (~ENCODED_ASSET_ADDR_MASK) == 0 &&
                 // encodedAssetId is a 253 bit number (and therefore a valid field element)
@@ -25,11 +27,9 @@ library Validation {
                 note.value <= NOCTURNE_MAX_NOTE_VALUE,
             "invalid note"
         );
-    }
 
-    function validateCompressedStealthAddress(CompressedStealthAddress calldata addr) internal view {
-        validateCompressedBJJPoint(addr.h1);
-        validateCompressedBJJPoint(addr.h2);
+        validateCompressedBJJPoint(note.ownerH1);
+        validateCompressedBJJPoint(note.ownerH2);
     }
 
     function validateCompressedBJJPoint(uint256 p) internal view {
@@ -57,7 +57,11 @@ library Validation {
 
             // Computes (y^2 - 1)(dy^2 - A) instead of (y^2 - 1) / (dy^2 - A) to save an inversion
             // The Legendre symbols are the same since (dy^2 - A) is nonzero and Legendre is multiplicative
-            uint256 y2_1dy2_a = mulmod(y2_1, dy2_a, Utils.BN254_SCALAR_FIELD_MODULUS); // (y^2 - 1) * (dy^2 - A)
+            uint256 y2_1dy2_a = mulmod(
+                y2_1,
+                dy2_a,
+                Utils.BN254_SCALAR_FIELD_MODULUS
+            ); // (y^2 - 1) * (dy^2 - A)
 
             // Compute [(y^2 - 1)(dy^2 - A)]^((P - 1)/2) using MODEXP precompile
             // EIP-198 args are <length_of_BASE> <length_of_EXPONENT> <length_of_MODULUS> <BASE> <EXPONENT> <MODULUS>
