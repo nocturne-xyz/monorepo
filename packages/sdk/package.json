@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/sdk",
-  "version": "1.0.173-testnet",
+  "version": "1.0.175-testnet",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,8 +15,8 @@
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test",
-    "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit",
-    "publish": "yarn build; yarn npm publish --access public"
+    "publish": "yarn build; yarn npm publish --access public",
+    "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit"
   },
   "dependencies": {
     "@nocturne-xyz/circuit-utils": "^0.1.12",
