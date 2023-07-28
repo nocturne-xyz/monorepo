@@ -242,6 +242,7 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         uint256[][3] memory path = treeTest.computeInitialPaths(batch);
         uint256 _newRoot = path[0][DEPTH_TO_SUBTREE];
 
+        // generated using disabled "test" in `sdk/test/SparseMerkleProver.test.ts`
         uint256 newRoot = 20081964780122031994222145234909207539202862934118288839297549633004122581351;
 
         assertEq(newRoot, _newRoot);

@@ -24,7 +24,6 @@ import {
   StealthAddressTrait,
   VerifyingKey,
   computeOperationDigest,
-  decomposeCompressedPoint,
   encodeEncodedAssetAddrWithSignBitsPI,
   fetchDepositEvents,
   joinSplitPublicSignalsToArray,
@@ -32,6 +31,7 @@ import {
   unpackFromSolidityProof,
   OperationStatusResponse,
   toSubmittableOperation,
+  decomposeCompressedPoint,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction } from "ethers";
@@ -333,6 +333,13 @@ export class NocturneFrontendSDK {
               : joinSplit.encodedAsset.encodedAssetAddr,
             operation.refundAddr
           );
+
+        const [, refundAddrH1CompressedY] = decomposeCompressedPoint(
+          operation.refundAddr.h1
+        );
+        const [, refundAddrH2CompressedY] = decomposeCompressedPoint(
+          operation.refundAddr.h2
+        );
 
         const pubEncodedAssetId =
           joinSplit.publicSpend === 0n
