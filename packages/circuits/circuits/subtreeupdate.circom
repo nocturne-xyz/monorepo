@@ -237,7 +237,8 @@ template SubtreeUpdate(r, s) {
     signal pathIndices[r] <== BitsToTwoBitLimbs(r)(pathBits);
     oldRoot <== MerkleTreeInclusionProof(r)(emptySubtreeRoot, pathIndices, siblings);
 
-    // Compute accumulator hash for proposed leaves
+    // Compute accumulator hash for proposed leaves and bitmap (which says which leaves are notes 
+    // and which leaves are note commitments)
     component hasher = Sha256(256 * (4**s + 1));
 
     // set accumulatorHash input
