@@ -1938,10 +1938,10 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         TokenSwapper swapper = new TokenSwapper();
 
-		SimpleERC721Token erc721 = new SimpleERC721Token();
-        
+        SimpleERC721Token erc721 = new SimpleERC721Token();
+
         Action[] memory actions = new Action[](1);
-		actions[0] = Action({
+        actions[0] = Action({
             contractAddress: address(swapper),
             encodedFunction: abi.encodeWithSelector(
                 swapper.transferFromErc721.selector,

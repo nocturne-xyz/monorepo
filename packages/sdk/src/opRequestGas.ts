@@ -1,5 +1,5 @@
 import { Handler } from "@nocturne-xyz/contracts";
-import { NocturneViewer, StealthAddress, StealthAddressTrait } from "./crypto";
+import { NocturneViewer, StealthAddress } from "./crypto";
 import { NocturneDB } from "./NocturneDB";
 import {
   GasAccountedOperationRequest,
