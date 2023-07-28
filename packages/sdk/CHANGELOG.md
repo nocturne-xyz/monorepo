@@ -23,6 +23,8 @@
 - replace `encSenderCanonAddr` with `senderCommitment`
 - add contract.ts utils method for concatenating contract address and function selector
 - fix eip712 deposit request typehash ordering
+- Fix op digest tracking resulting in digests getting removed too early
+  - Snap returns signed op and stores opdigest, site proves and submits op to bundler, snap checks if bundler has digest but bundler hasn't yet received from site, snap incorrectly deletes digest
 - add `filter` to `ClosableAsyncIterator`
 - `syncSDK` returns latest synced merkle index so fe-sdk can access and return
 - sync adapters return latest synced merkle index
