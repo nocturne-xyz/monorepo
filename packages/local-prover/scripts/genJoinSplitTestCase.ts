@@ -109,9 +109,6 @@ function makeTestJoinSplitInputs(
   const merkleProofA = tree.createProof(0);
   const merkleProofB = tree.createProof(1);
 
-  // console.log("merkleProofA", merkleProofA);
-  // console.log("merkleProofB", merkleProofB);
-
   console.log("merkle root A: ", merkleProofA.root);
   console.log("merkle root B: ", merkleProofB.root);
 
