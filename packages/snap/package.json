@@ -12,7 +12,7 @@
   "scripts": {
     "build": "mm-snap build",
     "build:clean": "yarn clean && yarn build",
-    "build:local": "./scripts/build-local.sh",
+    "build:local": "./scripts/build_local.sh",
     "build:website": "node ./scripts/build-website.js",
     "clean": "rimraf dist",
     "cp-config": "cp ../config/configs/localhost.json ./src/config.json",

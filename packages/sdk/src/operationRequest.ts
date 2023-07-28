@@ -35,7 +35,7 @@ export interface GasAccountedOperationRequest
 
 export interface OperationGasParams {
   executionGasLimit: bigint;
-  gasPrice: bigint;
+  gasPrice?: bigint;
 }
 
 type JoinSplitsAndPaymentsForAsset = [
