@@ -64,11 +64,12 @@ export function subtreeUpdateInputsFromBatch(
   const encodedAssetIds: bigint[] = [];
   const values: bigint[] = [];
 
+  // noteHashesOrCommitments || bitmap
   const accumulatorPreimage = [];
   const leaves = [];
   const bitmap: bigint[] = [];
 
-  // note fields
+  // notes sha256 hashes or note commitments
   for (const noteOrCommitment of batch) {
     if (typeof noteOrCommitment === "bigint") {
       const nc = noteOrCommitment;
@@ -102,6 +103,14 @@ export function subtreeUpdateInputsFromBatch(
       values.push(note.value);
     }
   }
+
+  // the last element is the bitmap packed into a 256-bit number
+  // the ith bit of the bitmap corresponds to the to bit with value 2^(255-i) in the number
+  const bitmapAsBigint = bitmap.reduce(
+    (acc, bit, i) => acc | (bit << (255n - BigInt(i))),
+    0n
+  );
+  accumulatorPreimage.push(...bigintToBEPadded(bitmapAsBigint, 32));
 
   // accumulatorHash
   const accumulatorHashU256 = BigInt("0x" + sha256.hex(accumulatorPreimage));

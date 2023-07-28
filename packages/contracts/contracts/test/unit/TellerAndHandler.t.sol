@@ -58,7 +58,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     Handler handler;
     TreeTest treeTest;
     SimpleERC20Token[3] ERC20s;
-    IHasherT3 hasherT3;
     IHasherT5 hasherT5;
     IHasherT6 hasherT6;
 
@@ -105,11 +104,10 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         teller.setDepositSourcePermission(DEPOSIT_SOURCE, true);
         handler.setSubtreeBatchFillerPermission(address(this), true);
 
-        hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
         hasherT5 = IHasherT5(new PoseidonHasherT5(poseidonT5));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
 
-        treeTest.initialize(hasherT3, hasherT5, hasherT6);
+        treeTest.initialize(hasherT5, hasherT6);
 
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
@@ -1940,10 +1938,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         TokenSwapper swapper = new TokenSwapper();
 
-        Action[] memory actions = new Action[](1);
-
         SimpleERC721Token erc721 = new SimpleERC721Token();
 
+        Action[] memory actions = new Action[](1);
         actions[0] = Action({
             contractAddress: address(swapper),
             encodedFunction: abi.encodeWithSelector(

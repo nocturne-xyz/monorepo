@@ -237,16 +237,31 @@ template SubtreeUpdate(r, s) {
     signal pathIndices[r] <== BitsToTwoBitLimbs(r)(pathBits);
     oldRoot <== MerkleTreeInclusionProof(r)(emptySubtreeRoot, pathIndices, siblings);
 
-    // Compute accumulator hash for proposed leaves
-    component hasher = Sha256(256 * 4**s);
+    // Compute accumulator hash for proposed leaves and bitmap (which says which leaves are notes 
+    // and which leaves are note commitments)
+    component hasher = Sha256(256 * (4**s + 1));
 
     // set accumulatorHash input
-    // accumulatorHash input is a concatenation of all of the sha256 hashes for the notes as big-endian bitstrings
+    // accumulatorHash input is a concatenation of all of the sha256 hashes for the notes as big-endian bitstrings (accumulatorInnerHashes)
+    // followed by a 256-bit number with the bitmap packed into the upper bits
+    // i.e. the ith bit of the bitmap is the ith bit of the last 256-bits of the input
+    // i.e. the ith bit of the bitmap is the bit of the number with value 2^(255-i)
+
+    // set accumulatorInnerHash part of input
     for (var i = 0; i < 4**s; i++) {
         for (var j = 0; j < 256; j++) {
             hasher.in[i*256 + j] <== accumulatorInnerHashes[i][j];
         }
     }
+    // set bitmap part of input
+    for (var i = 0; i < 4**s; i++) {
+        hasher.in[256 * (4**s) + i] <== bitmap[i];
+    }
+    // pad the rest to 0
+    for (var i = 4**s; i < 256; i++) {
+        hasher.in[256 * (4**s) + i] <== 0;
+    }
+    
 
     // Assert that the accumulatorHash is correct
     signal computedHashBits[253] <== Num2BitsBE(253)(accumulatorHash);

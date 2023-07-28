@@ -17,7 +17,13 @@ struct OffchainMerkleTree {
     // number of leaves in the batch, plus one
     // when this gets to TreeUtils.BATCH_SIZE + 1, we compute accumulatorHash and push te the accumulatorQueue
     // we store batch size + 1 to avoid "clearing" the storage slot and save gas
-    uint128 batchLenPlusOne;
+    uint64 batchLenPlusOne;
+    // a bitmap representing whether or not each leaf in the batch is a note or a note commitment
+    // the bitmap is kept in big-endian order
+    // that is, the bit corresponding to the 0th leaf in the batch is the "leftmost bit" of the bitmap, i.e. the bit with value 2^63
+    // and hte bit corresponding to the ith leaf in the batch is the bit with value 2^(63 - i)
+    // 0 = note commitment, 1 = note
+    uint64 bitmap;
     // root of the merkle tree
     uint256 root;
     // buffer containing uncommitted update hashes
@@ -43,7 +49,9 @@ library LibOffchainMerkleTree {
         // root starts as the root of the empty depth-32 tree.
         self.root = TreeUtils.EMPTY_TREE_ROOT;
         self.count = 0;
+        self.bitmap = 0;
         _setBatchLen(self, 0);
+
         self.subtreeUpdateVerifier = ISubtreeUpdateVerifier(
             subtreeUpdateVerifier
         );
@@ -59,7 +67,7 @@ library LibOffchainMerkleTree {
         EncodedNote memory note
     ) internal {
         uint256 noteHash = TreeUtils.sha256Note(note);
-        _insertUpdate(self, noteHash);
+        _insertUpdate(self, noteHash, true);
     }
 
     function insertNoteCommitments(
@@ -67,7 +75,7 @@ library LibOffchainMerkleTree {
         uint256[] memory ncs
     ) internal {
         for (uint256 i = 0; i < ncs.length; i++) {
-            _insertUpdate(self, ncs[i]);
+            _insertUpdate(self, ncs[i], false);
         }
     }
 
@@ -108,7 +116,7 @@ library LibOffchainMerkleTree {
     ) internal view returns (uint128) {
         return
             self.count +
-            getBatchLen(self) +
+            uint128(getBatchLen(self)) +
             uint128(TreeUtils.BATCH_SIZE) *
             uint128(self.accumulatorQueue.length());
     }
@@ -121,13 +129,13 @@ library LibOffchainMerkleTree {
 
     function getBatchLen(
         OffchainMerkleTree storage self
-    ) internal view returns (uint128) {
+    ) internal view returns (uint64) {
         return self.batchLenPlusOne - 1;
     }
 
     function _setBatchLen(
         OffchainMerkleTree storage self,
-        uint128 batchLen
+        uint64 batchLen
     ) internal {
         self.batchLenPlusOne = batchLen + 1;
     }
@@ -154,19 +162,25 @@ library LibOffchainMerkleTree {
         return pis;
     }
 
+    // H(updates || bitmap)
     function _computeAccumulatorHash(
         OffchainMerkleTree storage self
     ) internal view returns (uint256) {
         uint256 batchLen = getBatchLen(self);
-        uint256[] memory batch = new uint256[](TreeUtils.BATCH_SIZE);
+        uint256[] memory accumulatorInputs = new uint256[](
+            TreeUtils.BATCH_SIZE + 1
+        );
         for (uint256 i = 0; i < batchLen; i++) {
-            batch[i] = self.batch[i];
+            accumulatorInputs[i] = self.batch[i];
         }
         for (uint256 i = batchLen; i < TreeUtils.BATCH_SIZE; i++) {
-            batch[i] = TreeUtils.ZERO_VALUE;
+            accumulatorInputs[i] = TreeUtils.ZERO_VALUE;
         }
 
-        return uint256(TreeUtils.sha256FieldElems(batch));
+        // shift over to pad input out to a multiple of 256 bits
+        accumulatorInputs[TreeUtils.BATCH_SIZE] = uint256(self.bitmap) << 192;
+
+        return uint256(TreeUtils.sha256U256ArrayBE(accumulatorInputs));
     }
 
     function fillBatchWithZeros(OffchainMerkleTree storage self) internal {
@@ -178,18 +192,22 @@ library LibOffchainMerkleTree {
     ) internal {
         uint256 accumulatorHash = _computeAccumulatorHash(self);
         self.accumulatorQueue.enqueue(accumulatorHash);
+        self.bitmap = 0;
         _setBatchLen(self, 0);
     }
 
     function _insertUpdate(
         OffchainMerkleTree storage self,
-        uint256 update
+        uint256 update,
+        bool isNote
     ) internal {
-        uint128 batchLen = getBatchLen(self);
+        uint64 batchLen = getBatchLen(self);
         self.batch[batchLen] = update;
 
-        uint256 newBatchLen = batchLen + 1;
-        _setBatchLen(self, uint128(newBatchLen));
+        self.bitmap |= isNote ? uint64(1) << (63 - batchLen) : uint64(0);
+
+        uint64 newBatchLen = batchLen + 1;
+        _setBatchLen(self, newBatchLen);
 
         if (newBatchLen == TreeUtils.BATCH_SIZE) {
             _accumulateAndResetBatchLen(self);
