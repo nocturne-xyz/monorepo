@@ -6,10 +6,16 @@ include "include/aliascheck.circom";
 include "include/compconstant.circom";
 include "include/bitify.circom";
 include "include/comparators.circom";
+include "scalarMulWitGen.circom"
 
-// Note structure
-// owner, nonce, encodedAsset, encodedAssetId, value
-
+// compute note commitment
+//@requires(1) `ownerHash` is `Poseidon4([ownerH1X, ownerH1Y, ownerH2X, ownerH2Y])
+//@ensures(1) `out` is the correct note commitment of the note with fields:
+//   - owner: (`ownerH1X`, `ownerH1Y`, `ownerH2X`, `ownerH2Y`)
+//   - nonce: `nonce`
+//   - encodedAssetAddr: `encodedAssetAddr`
+//   - encodedAssetId: `encodedAssetId`
+//   - value: `value`
 template NoteCommit() {
     signal input ownerHash;
     signal input nonce;
@@ -19,43 +25,58 @@ template NoteCommit() {
 
     signal output out;
 
+    //@satisfies(1)
+    //@argument true by definition (exactly what this code does) from @requires(1) and definition of Nocturne note commitment
     component noteHash = Poseidon(5);
     noteHash.inputs[0] <== ownerHash;
     noteHash.inputs[1] <== nonce;
     noteHash.inputs[2] <== encodedAssetAddr;
     noteHash.inputs[3] <== encodedAssetId;
     noteHash.inputs[4] <== value;
-
     out <== noteHash.out;
 }
 
-template DeriveNullifier() {
-    signal input vk;
-    signal input noteCommitment;
-
-    signal output nullifier;
-
-    component hash = Poseidon(2);
-    hash.inputs[0] <== vk;
-    hash.inputs[1] <== noteCommitment;
-    nullifier <== hash.out;
-}
-
 //@requires(1) `PX` and `PY` comprise a valid Baby Jubjub point (i.e. it's on-curve)
-//@ensures(1) `PX` and `PY` comprise a high-order Baby Jubjub point
-template IsOrderGreaterThan8() {
+//@ensures(1) `PX` and `PY` comprise a Baby Jubjub point in the prime-order subgroup (i.e. it's a point of order l)
+template IsOrderL() {
     signal input PX;
     signal input PY;
 
-    signal P2X, P2Y, P4X, P4Y, P8X, P8Y;
+    // inverse of 8 mod l, the order of Baby Jubjub's prime-order subgroup
+    // in little-endian bit repr
+    // 2394026564107420727433200628387514462817212225638746351800188703329891451411
+    var inv8[251] = [1,1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1,0,0,0,1,1,0,1,0,0,0,0,0,1,1,1,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1,0,1,1,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,1,0,1,1,0,0,1,1,1,1,1,1,1,0,0,0,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1,0,0,0,1,0,1,0,1,0,1,1,0,1,0,0,1,0,0,0,1,0,1,0,1,0,0,0,1,1,0,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,0,0,0,1,0,1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,1,1,0,1,1,0,1,1,0,1,0,0,0,0,1,0,1,0,0,0,0,1,0,0,1,0,0,1,0,1,0,0,1,0,0,0,1,1,1,1,1,0,1,0,1,0,0,1,0,1,0,1]
 
-    (P2X, P2Y) <== BabyDbl()(PX, PY);
-    (P4X, P4Y) <== BabyDbl()(P2X, P2Y);
-    (P8X, P8Y) <== BabyDbl()(P4X, P4Y);
+    // witness Q = (inv(8) mod l) * P
+    //@lemma(1) Q is a valid curve point because Baby Jubjub is a group and @requires(1) guarantees (PX, PY) is a valid curve point
+    signal Q[2] <-- scalarMul(PX, PY, 251, inv8);
 
-    // check that 8P's X coordinate is not zero
-    signal p8XIsZero <== IsZero()(P8X);
-    p8XIsZero === 0;
+    signal Q2X, Q2Y, Q4X, Q4Y, Q8X, Q8Y;
+
+    (Q2X, Q2Y) <== BabyDbl()(Q[0], Q[1]);
+    (Q4X, Q4Y) <== BabyDbl()(Q2X, Q2Y);
+    (Q8X, Q8Y) <== BabyDbl()(Q4X, Q4Y);
+
+    // check that 8Q = P
+    //@lemma(2) if 8Q == P, then either P has order l or 1
+    //@argument
+    //   1. by @lemma(1) guarantees Q is a valid baby Jubjub point.
+    //   2. by lagrange's theorem, the order of Q must divide 8*l (Baby Jubjub order), so ord(Q) must be 1, 2, 4, 8, l, 2l, 4l, or 8l.
+    //   3. for any group element Q, ord(kQ) = ord(Q) / gcd(ord(Q), k)
+    //   therefore:
+    //   - if ord(Q) is 1, 2, 4, or 8, ord(P) == ord(8Q) == 1 due to the formula above
+    //   - if ord(Q) is l, 2l, 4l, 8l, ord(P) == ord(8Q) == l due to the formula above
+    //   in every case, @lemma(2) is satisfied
+    PX === Q8X;
+    PY === Q8Y;
+
+    // check that PX is not the identity
+    //@satisfies(1)
+    //@argument @lemma(2) guarantees ord(P) is either 1 or l.
+    //  the constraint below is unsatisfiable if the order is 1, because the only element with order 1 is the identity, (0, 1),
+    //  which has X coordinate 0
+    signal Q8XIsZero <== IsZero()(PX);
+    Q8XIsZero === 0;
 }
 
 //@requires(1) `spendPubkey` is a valid, high-order Baby Jubjub point
@@ -88,7 +109,6 @@ template VKDerivation() {
     gtFrOrderMinusOne.in[252] <== 0;
     gtFrOrderMinusOne.in[253] <== 0;
     0 === gtFrOrderMinusOne.out;
-
 }
 
 // checks that a stealth address belongs to a given vk
@@ -124,6 +144,9 @@ template StealthAddrOwnership() {
     GG8Y === 1;
 }
 
+// verify a schnorr signature of `m` under pubkey `pk`
+//@requires(1) `pk` is a valid, high-order Baby Jubjub point
+//@ensures(1) `sig` is a valid schnorr signature of `m` under pubkey `pk`
 template SigVerify() {
     signal input pk[2];
     signal input m;
@@ -192,12 +215,14 @@ template CanonAddr() {
 }
 
 // Forces the input signal to be of value between 0 and 2**n - 1
-//@requires `n < 254`
-//@ensures `out` can be represented as an `n`-bit number, or equivalently that `out < 2^n`
+//@requires(1) `n < 254`
+//@ensures(1) `out` can be represented as an `n`-bit number, or equivalently that `out < 2^n`
 template RangeCheckNBits(n) {
     signal input in;
 
     // Num2Bits does all the work here. All we care is that they're all bits
+    //@satisfies(1)
+    //@argument @requires(1) ensures `n < 2541, so Num2Bits(N) can't overflow, therefore @ensures(1) is satisfied
     signal bits[n] <== Num2Bits(n)(in);
 }
 
@@ -249,6 +274,8 @@ template SliceLastK(n, k) {
 
 // same as `Point2Bits_strict` (https://github.com/iden3/circomlib/blob/cff5ab6288b55ef23602221694a6a38a0239dcc0/circuits/pointbits.circom#L136),
 // but returns the result as y cordinate and x coordinate's sign bit in two field elements instead of as a bit array
+//@requires(1) `in` is a valid Baby Jubjub curve point
+//@ensures(1) `(y, sign)` comprise the correct compression of `in` according to Nocturne's point compression scheme
 template CompressPoint() {
     signal input in[2];
     signal output y;

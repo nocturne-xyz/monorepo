@@ -7,54 +7,55 @@ include "include/comparators.circom";
 include "tree.circom";
 include "lib.circom";
 
+//* define `l` to be the order of Baby Jubjub's prime-order subgroup
+
 //@requires(1.1) `operationDigest is the cryptographic hash of a valid Nocturne operation that this JoinSplit is a part of
 //@requires(1.2) all public inputs correspond to the same JoinSplit, and that JoinSplit is contained in the operation whose digest is `operationDigest`
 //@requires(2) `pubEncodedAssetId` fits in 253 bits
 //@requires(3.1) the encoding of `pubEncodedAssetAddrWithSignBits` from `(assetIDUpper3Bits, refundAddrH1SignX, refundAddrH2SignX, assetType, assetAddress)` is correct
 //@requires(3.2) `pubEncodedAssetId` and `pubEncodedAssetAddrWithSignBits` were encoded solely from the respective values in the JoinSplit, which is contained in the operation whose digest is `operationDigest`, or 0 if `publicSpend` is 0 (except for the sign bits, which still correspond to the refund address)
 //@requires(4) `refundAddrH1CompressedY` and `refundAddrH2CompressedY` are as specified in the op whose digest is `operationDigest`
-//@requires(5) `commitmentTreeRoot` is the root of the commitment tree in the Nocturne Handler contract
-//@requires(6.1) `nullifierA` is the nullifier of `oldNoteA` given in this JoinSplit, whose digest is `operationDigest`
-//@requires(6.2) `nullifierB` is the nullifier of `oldNoteB` given in this JoinSplit, whose digest is `operationDigest`
-//@requires(7) `senderCommitment` is the `senderCommitment` given in the operation whose digest is `operationDigest`
-//@requires(8.1) there does not exist any valid note in the commitment tree whose `oldNoteAValue` is in the range [0, 2**252]
-//@requires(8.2) there does not exist any valid note in the commitment tree whose `oldNoteBValue` is in the range [0, 2**252]
+//@requires(5.1) `nullifierA` is the nullifier of `oldNoteA` given in this JoinSplit, whose digest is `operationDigest`
+//@requires(5.2) `nullifierB` is the nullifier of `oldNoteB` given in this JoinSplit, whose digest is `operationDigest`
+//@requires(6) `senderCommitment` is the `senderCommitment` given in the operation whose digest is `operationDigest`
 //
 //@ensures(1.1) if `publicSpend` is nonzero, `pubEncodedAssetId` matches that found in the `encodedAssetId` field of both old notes and both new notes
 //@ensures(1.2) if `publicSpend` is zero, `pubEncodedAssetId` is 0
 //@ensures(2.1) if `publicSpend` is nonzero, and one were to mask the sign bits to zero, `pubEncodedAssetAddrWithSignBits` would match the `encodedAssetAddr` field in both old notes and both new notes
 //@ensures(2.2) if `publicSpend` is zero, the asset contract address bits, asset type bits, and asset ID bits in `pubEncodedAssetAddrWithSignBits` are all 0
-//*@ensures(3.1) `newNoteACommitment` is the note commitment for the first new note, newNoteA
-//*@ensures(3.2) `newNoteBCommitment` is the note commitment for the second new note, newNoteB
+//@ensures(3.1) `newNoteACommitment` is the correct note commitment for the first new note, newNoteA
+//@ensures(3.2) `newNoteBCommitment` is the correct note commitment for the second new note, newNoteB
+//@ensures(3.3) `oldNoteACommitment` is the correct note commitment for the first old note oldNoteA 
+//@ensures(3.4) `oldNoteBCommitment` is the correct note commitment for the second old note, oldNoteB 
 //@ensures(4.1) the viewing key `vk` used to derive nullifiers and addresses was correctly derived from the spend pubkey `spendPubkey`
 //@ensures(4.2) the viewing key `vk` is an element of the scalar field of Baby Jubjub's prime-order subgroup
-//@ensures(5.1) the spending pubkey `spendPubkey` is a valid, high-order Baby Jubjub point
-//*@ensures(5.2) the operation signature `(c, z)` is a valid Schnorr signature of `operationDigest` under the spend pubkey `spendPubkey`
+//@ensures(5.1) the spending pubkey `spendPubkey` is a valid, order-l Baby Jubjub point
+//@ensures(5.2) the operation signature `(c, z)` is a valid Schnorr signature of `operationDigest` under the spend pubkey `spendPubkey`
 //@ensures(6.1) both points of the owner field of `oldNoteA`, `oldNoteAOwner`, are valid babyjubjub points
 //@ensures(6.2) both points of the owner field of `oldNoteB`, `oldNoteBOwner`, are valid babyjubjub pointi
 //@ensures(6.3) both points of the owner field of `oldNoteA`, `oldNoteAOwner`, are of order greater than 8 (i.e. it clears the cofactor)
 //@ensures(6.4) both points of the owner field of `oldNoteB`, `oldNoteBOwner`, are of order greater than 8 (i.e. it clears the cofactor)
 //@ensures(6.5) the owner field of `oldNoteA, `oldNoteAOwner`, is "owned" by the viewing key `vk` according to the Nocturne Stealth Address scheme
 //@ensures(6.6) the owner field of `oldNoteB, `oldNoteBOwner`, is "owned" by the viewing key `vk` according to the Nocturne Stealth Address scheme
-//*@ensures(7.1) `refundAddrH1CompressedY`, along with its sign bit extracted from `pubEncodedAssetAddrWithSignBits`, represents a valid (on-curve), high-order babyjubjub point according to Nocturne's point compression scheme
-//*@ensures(7.2) `refundAddrH2CompressedY`, along with its sign bit extracted from `pubEncodedAssetAddrWithSignBits`, represents a valid (on-curve), high-order babyjubjub point according to Nocturne's point compression scheme
-//*@ensures(7.3) `refundAddrH1CompressedY` and `refundAddrH2` is "owned" by same viewing key as the old note owners, as defined by the "ownership check" of the Nocturne Stealth Address scheme.
-//*@ensures(7.4) `refundAddrH2CompressedY` is "owned" by same viewing key as the old note owners, as defined by the "ownership check" of the Nocturne Stealth Address scheme.
-//*@ensures(8.1) `newNoteACommitment` is included in the quaternary Poseidon merkle tree whose root is `commitmentTreeRoot`
-//*@ensures(8.2) `newNoteBCommitment` is included in the quaternary Poseidon merkle tree whose root is `commitmentTreeRoot`
-//*@ensures(9.1) `nullifierA` was correctly derived from the note commitment of `oldNoteA` and the viewing key `vk`
-//*@ensures(9.2) `nullifierB` was correctly derived from the note commitment of `oldNoteB` and the viewing key `vk`
+//@ensures(7.1) `refundAddrH1CompressedY`, along with its sign bit extracted from `pubEncodedAssetAddrWithSignBits`, represents a valid (on-curve), order-l babyjubjub point according to Nocturne's point compression scheme
+//@ensures(7.2) `refundAddrH2CompressedY`, along with its sign bit extracted from `pubEncodedAssetAddrWithSignBits`, represents a valid (on-curve), order-l babyjubjub point according to Nocturne's point compression scheme
+//@ensures(7.3) `refundAddr` is "owned" by same viewing key as the old note owners, as defined by the "ownership check" of the Nocturne Stealth Address scheme.
+//@ensures(8.1) `oldNoteACommitment` is included in the quaternary Poseidon merkle tree whose root is `commitmentTreeRoot`
+//@ensures(8.2) `oldNoteBCommitment` is included in the quaternary Poseidon merkle tree whose root is `commitmentTreeRoot` if `oldNoteBValue` is nonzero
+//@ensures(9.1) `nullifierA` was correctly derived from the note commitment of `oldNoteA` and the viewing key `vk`
+//@ensures(9.2) `nullifierB` was correctly derived from the note commitment of `oldNoteB` and the viewing key `vk`
+//@ensures(10.1) `oldNoteAValue` is in the range [0, 2**252)
+//@ensures(10.2) `oldNoteBValue` is in the range [0, 2**252)
 //@ensures(10.3) `newNoteAValue` is in the range [0, 2**252)
 //@ensures(10.4) `newNoteBValue` is in the range [0, 2**252)
 //@ensures(10.5) `oldNoteAValue + oldNoteBValue` is in the range [0, 2**252)
 //@ensures(10.6) `newNoteAValue + newNoteBValue` is in the range [0, 2**252)
 //@ensures(11.1) `oldNoteAValue + oldNoteBValue >= newNoteAValue + newNoteBValue`
-//*@ensures(11.2) `publicSpend == oldNoteAValue + oldNoteBValue - newNoteAValue - newNoteBValue`
-//*@ensures(12.1) the sender's canonical address used in `senderCommitment` is the canonical address derived from `vk`
-//*@ensures(12.2) `senderCommitment` is computed correctly as `Poseidon(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce"))`
-//@ensures(13) the recipient is a valid canonical address (on curve, high-order)
+//@ensures(11.2) `publicSpend == oldNoteAValue + oldNoteBValue - newNoteAValue - newNoteBValue`
+//@ensures(12.1) the sender's canonical address used in `senderCommitment` is the canonical address derived from `vk`
+//@ensures(12.2) `senderCommitment` is computed correctly as `Poseidon(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce"))`
+//@ensures(13) the recipient is a valid canonical address (on curve, order-l)
 template JoinSplit(levels) {
-
     // *** PUBLIC INPUTS ***
     // digest of the operation this JoinSplit is a part of
     // this is used to bind each JoinSplit to an operation and as the message for the signature
@@ -166,12 +167,12 @@ template JoinSplit(levels) {
     var BABYJUB_SCALAR_FIELD_ORDER = 2736030358979909402780800718157159386076813972158567259200215660948447373041;
 
 
-    // check spendPubkey is on-curve and high-order
-    //@satisfies(5.1) spendPubkey is a valid, high-order Baby Jubjub point
+    // check spendPubkey is on-curve and order-l
+    //@satisfies(5.1) spendPubkey is a valid, order-l Baby Jubjub point
     //@argument BabyCheck ensures that spendPubkey is on-curve,
-    // . and `IsOrderGreaterThan8` ensures that it is high-order given that it's on-curve
+    // . and `IsOrderL` ensures that it is order-l given that it's on-curve
     BabyCheck()(spendPubkey[0], spendPubkey[1]);
-    IsOrderGreaterThan8()(spendPubkey[0], spendPubkey[1]);
+    IsOrderL()(spendPubkey[0], spendPubkey[1]);
 
     // check VK derivation
     //@satisfies(4.1)
@@ -207,41 +208,41 @@ template JoinSplit(levels) {
     // check receiver canon addr is a valid babyjubjub point
     //@satisfies(13)
     //@argument BabyCheck ensures that spendPubkey is on-curve,
-    //   and `IsOrderGreaterThan8` ensures that it is high-order given that it's on-curve
+    //   and `IsOrderL` ensures that it is order-l given that it's on-curve
     BabyCheck()(receiverCanonAddr[0], receiverCanonAddr[1]);
-    IsOrderGreaterThan8()(receiverCanonAddr[0], receiverCanonAddr[1]);
+    IsOrderL()(receiverCanonAddr[0], receiverCanonAddr[1]);
 
     // check old note A owner is composed of valid babyjubjub points
     //@satisfies(6.1)
     //@argument BabyCheck ensures that oldNoteAOwnerH1 and oldNoteAOwnerH2 are on-curve,
-    //@lemma(3) oldNoteAOwnerH1 is high-order
-    //@argument (6.1) satisfies IsOrderGreaterThan8.requires(1), and IsOrderGreaterThan8.ensures(1) ensures that H1 is of high order
+    //@lemma(3) oldNoteAOwnerH1 is order-l
+    //@argument (6.1) satisfies IsOrderL.requires(1), and IsOrderL.ensures(1) ensures that H1 is of order-l
     //@satisfies(6.3)
-    //@argument H1 is of high order due to @lemma(3), and H2 is high order due to @lemma(5) below
+    //@argument H1 is of order-l due to @lemma(3), and H2 is order-l due to @lemma(5) below
     BabyCheck()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y);
     BabyCheck()(oldNoteAOwnerH2X, oldNoteAOwnerH2Y);
-    IsOrderGreaterThan8()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y);
+    IsOrderL()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y);
 
     // check old note B owner is composed of valid babyjubjub points
     //@satisfies(6.2)
     //@argument same as (6.1),
-    //@lemma(4) oldNoteBOwnerH2 is high-order
+    //@lemma(4) oldNoteBOwnerH2 is order-l
     //@argument same as @lemma(3)
     //@satisfies(6.4)
     //@argument same as (6.3)
     BabyCheck()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
     BabyCheck()(oldNoteBOwnerH2X, oldNoteBOwnerH2Y);
-    IsOrderGreaterThan8()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
+    IsOrderL()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
 
     // check that old note owner addresses correspond to user's viewing key 
-    //@lemma(5) oldNoteAOwnerH2 is high-order
-    //@argument (6.1) satisfies IsOrderGreaterThan8.requires(1), and IsOrderGreaterThan8.ensures(1) ensures that H1 is of high order
+    //@lemma(5) oldNoteAOwnerH2 is order-l
+    //@argument (6.1) satisfies IsOrderL.requires(1), and IsOrderL.ensures(1) ensures that H1 is of order-l
     //@satisfies(6.5)
     //@argument StealthAddrOwnership.requires(1) is satisfied by (6.1) and @lemma(4), and StealthAddrOwnership.requires(2) is satisfied by (6.1)
     //   therefore, by StealthAddrOwnership.ensures(1), old note A owner is "owned" by the viewing key according to the Nocturne Stealth Address scheme
     StealthAddrOwnership()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, vkBits);
 
-    //@lemma(6) oldNoteBOwnerH2 is high-order
+    //@lemma(6) oldNoteBOwnerH2 is order-l
     //@argument same as @lemma(6)
     //@satisfies(6.6)
     //@argument same as (6.5)
@@ -249,18 +250,23 @@ template JoinSplit(levels) {
 
     // check that the sum of old and new note values are in range [0, 2**252)
     // this can't overflow because all four note values are in range [0, 2**252) and field is 254 bits
-    //@satisfies(10.3)
+    //@satisfies(10.1) 
     //@argument follows from `RangeCheckNBits.ensures(1)`, and `RangeCheckNBits.requires(1)` is satisfied since `n = 252
+    //@satisfies(10.2)
+    //@satisfies(10.3)
+    //@argument same as (10.1)
     //@satisfies(10.4)
-    //@argument same as (10.3)
+    //@argument same as (10.1)
     //@satisfies(10.5)
-    //@argument same as (10.3)
+    //@argument same as (10.1)
     //@satisfies(10.6)
-    //@argument same as (10.3)
+    //@argument same as (10.1)
     signal valInput <== oldNoteAValue + oldNoteBValue;
     signal valOutput <== newNoteAValue + newNoteBValue;
     RangeCheckNBits(252)(newNoteAValue);
     RangeCheckNBits(252)(newNoteBValue);
+    RangeCheckNBits(252)(oldNoteAValue);
+    RangeCheckNBits(252)(oldNoteBValue);
     RangeCheckNBits(252)(valInput);
     RangeCheckNBits(252)(valOutput);
 
@@ -272,8 +278,7 @@ template JoinSplit(levels) {
 
     // compute publicSpend
     //@satisfies(11.2)
-    //@argument (10.3-6) together with @requires(8.1-2) ensures that there's no overflows, therefore this constraint works by defn
-
+    //@argument (10.3-6) together with @requires(8.1-2) ensures that there's no overflows, therefore (11.2) holds by defn
     publicSpend <== valInput - valOutput;
 
     // get sign bits of refund addr out of pubEncodedAssetAddrWithSignBits
@@ -288,7 +293,7 @@ template JoinSplit(levels) {
 
     // get encodedAssetAddr out of pubEncodedAssetAddrWithSignBits
     //@lemma(9) `encodedAssetAddrDecoded` is what one would get if they masked the refund addr sign bits in `pubEncodedAssetAddrWithSignBits` to zero
-    //@argument:
+    //@argument: encoding is correct due to @requires(3.1-2)
     // 1. `pubEncodedAssetAddrWithSignBitsBits` is the correct, unique 253-bit little-endian bit decomposition of `pubEncodedAssetAddrWithSignBits`
     //    Num2Bits(253) guarantees this because a 253-bit decomp cannot overflow the field
     // 2. encodedAssetAddrSubend is defined as the numerical value of the sign bits, i.e. 2**248 * refundAddrH2Sign + 2**249 * refundAddrH1Sign
@@ -317,7 +322,9 @@ template JoinSplit(levels) {
     // since `encodedAssetAddrDecoded` is `pubEncodedAssetAddrWithSignBits` with the sign bits masked to zero, this is equivalent (2.2)
     encodedAssetAddrDecoded === (1 - publicSpendIsZero) * encodedAssetAddr;
 
-    // oldNoteACommitment
+    // compute oldNoteACommitment
+    //@satisfies(3.3)
+    //@argument NoteCommit.requires(1) is satisfied by definition (exactly what code does), and (3.3) follows from NoteCommit.ensures(1)
     signal oldNoteACommitment <== NoteCommit()(
       Poseidon(4)([oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y]),
       oldNoteANonce,
@@ -326,7 +333,9 @@ template JoinSplit(levels) {
       oldNoteAValue
     );
 
-    // oldNoteBCommitment
+    // compute oldNoteBCommitment
+    //@satisfies(3.4)
+    //@argument same as (3.3)
     signal oldNoteBCommitment <== NoteCommit()(
       Poseidon(4)([oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y]),
       oldNoteBNonce,
@@ -335,32 +344,37 @@ template JoinSplit(levels) {
       oldNoteBValue
     );
 
-    // merkle tree inclusion proof for oldNoteACommitment
+    // check merkle tree inclusion proof for oldNoteACommitment
+    //@satisfies(8.1)
+    //@argument MerkleTreeInclusionProof.requires(1) is satisfied by definition (exactly what code does).
+    //  since we set `leaf` to `oldNoteACommitment` and `root` to `commitmentTreeRoot`
+    //  (8.1) follows from MerkleTreeInclusionProof.ensures(1)
     commitmentTreeRoot <== MerkleTreeInclusionProof(levels)(oldNoteACommitment, pathA, siblingsA);
 
-    // merkle tree inclusion proof for oldNoteBCommitment
+    // check merkle tree inclusion proof for oldNoteBCommitment only if oldNoteBValue is nonzero
+    //@satisfies(8.2)
+    //@argument there are two cases:
+    // 1. oldNoteBValue is 0. In this case, (8.2) follows from the fact that the constraint below
+    //   will always be satisfied
+    // 2. oldNoteBValue is nonzero. In this case (8.2) follows from the fact that the constraint below
+    //    will only be satisfied if `commitmentTreeRootB == commitmentTreeRoot`, which can only be the case
+    //    if there exists a valid merkle membership proof for `oldNoteBCommitment` in the tree
     signal commitmentTreeRootB <== MerkleTreeInclusionProof(levels)(oldNoteBCommitment, pathB, siblingsB);
-    // check that either oldNoteBCommitment is a 'dummy' note or it's in the tree
-    // check that one of the following is true:
-    //  1. oldNoteBValue is 0 (dummy note)
-    //  2. commitmentTreeRootB is equal to commitmentTreeRoot
     oldNoteBValue * (commitmentTreeRoot - commitmentTreeRootB) === 0;
 
     // derive nullifier for oldNoteA
+    //@satisfies(9.1)
+    //@argument correct by definition of Nocturne's nullifier derivation
     nullifierA <== Poseidon(2)([oldNoteACommitment, vk]);
 
     // derive nullifier for oldNoteB
+    //@satisfies(9.2)
+    //@argument correct by definition of Nocturne's nullifier derivation
     nullifierB <== Poseidon(2)([oldNoteBCommitment, vk]);
 
-    // check that new note values are in range [0, 2**252)
-    RangeCheckNBits(252)(newNoteAValue);
-    RangeCheckNBits(252)(newNoteBValue);
-
-    // check that old note values are in range [0, 2**252]
-    RangeCheckNBits(252)(oldNoteAValue);
-    RangeCheckNBits(252)(oldNoteBValue);
 
     // check spend signature
+    //@argument SigVerify.requires(1) is satisfied by (5.1), and (5.2) is satisfied by SigVerify.ensures(1)
     SigVerify()(spendPubkey, operationDigest, [c, z]);
 
     // deterministically derive nonce for outgoing notes
@@ -368,6 +382,8 @@ template JoinSplit(levels) {
     signal newNoteBNonce <== Poseidon(2)([vk, nullifierB]);
 
     // newNoteACommitment
+    //@satisfies(3.1)
+    //@argument NoteCommit.requires(1) is satisfied by definition (exactly what code does), and (3.1) follows from NoteCommit.ensures(1)
     newNoteACommitment <== NoteCommit()(
       Poseidon(4)([newNoteAOwnerH1X, newNoteAOwnerH1Y, newNoteAOwnerH2X, newNoteAOwnerH2Y]),
       newNoteANonce,
@@ -377,6 +393,8 @@ template JoinSplit(levels) {
     );
 
     // newNoteBCommitment
+    //@satisfies(3.2)
+    //@argument NoteCommit.requires(1) is satisfied by definition (exactly what code does), and (3.2) follows from NoteCommit.ensures(1)
     newNoteBCommitment <== NoteCommit()(
       Poseidon(4)([newNoteBOwnerH1X, newNoteBOwnerH1Y, newNoteBOwnerH2X, newNoteBOwnerH2Y]),
       newNoteBNonce,
@@ -386,14 +404,20 @@ template JoinSplit(levels) {
     );
 
     // check refund addr is valid and derived from same VK to prevent transfers via refunds
+    //@lemma(10) `(refundAddrH1X, refundAddrH1Y)` is a valid, order-l Baby Jubjub point
+    //@argument BabyCheck ensures it's on-curve, IsOrderL ensures it's order-l
+    //@lemma(11) `(refundAddrH1X, refundAddrH1Y)` is a valid, order-l Baby Jubjub point
+    //@argument same as @lemma(10)
     BabyCheck()(refundAddrH1X, refundAddrH1Y);
     BabyCheck()(refundAddrH2X, refundAddrH2Y);
-    IsOrderGreaterThan8()(refundAddrH1X, refundAddrH1Y);
-    StealthAddrOwnership()(refundAddrH1X, refundAddrH1Y, refundAddrH2X, refundAddrH2Y, vkBits);
+    IsOrderL()(refundAddrH1X, refundAddrH1Y);
 
     // compress the two points of the refund addr.
     // connect the y cordinates to the output signals
     // and assert that the sign bits match what was given in `pubEncodedAssetAddrWithSignBits`
+    //@satisfies(7.1)
+    //@argument CompressPoint.requires(1) is satisfied due to @lemma(10), and together with @lemma(10), 
+    //   CompressPoint.ensures(1) satisfies (7.1)
     component compressors[2];
     compressors[0] = CompressPoint();
     compressors[0].in[0] <== refundAddrH1X;
@@ -401,13 +425,24 @@ template JoinSplit(levels) {
     refundAddrH1CompressedY === compressors[0].y;
     refundAddrH1Sign === compressors[0].sign;
 
+    //@satisfies(7.2)
+    //@argument same as (7.1)
     compressors[1] = CompressPoint();
     compressors[1].in[0] <== refundAddrH2X;
     compressors[1].in[1] <== refundAddrH2Y;
     refundAddrH2CompressedY === compressors[1].y;
     refundAddrH2Sign === compressors[1].sign;
 
+    //@satisfies(7.3)
+    //@argument StealthAddrOwnership.requires(1) and StealthAddrOwnership.requires(2) is satisfied by (7.1) and (7.2),
+    //  and StealthAddrOwnership.ensures(1) satisfies (7.3)
+    StealthAddrOwnership()(refundAddrH1X, refundAddrH1Y, refundAddrH2X, refundAddrH2Y, vkBits);
+
     // hash the sender's canon addr as `Poseidon4(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce)`
+    //@satisfies(12.1)
+    //@argument @lemma(2) ensures `senderCanonAddr` is the correct canonical address derived from vk, and `senderCommitment` uses `senderCanonAddr` below
+    //@satisfies(12.2)
+    //@argument correct by definition (exactly what the code does)
     var SENDER_COMMITMENT_DOMAIN_SEPARATOR = 5680996188676417870015190585682285899130949254168256752199352013418366665222;
     senderCommitment <== Poseidon(4)([SENDER_COMMITMENT_DOMAIN_SEPARATOR, senderCanonAddr[0], senderCanonAddr[1], newNoteBNonce]);
 }

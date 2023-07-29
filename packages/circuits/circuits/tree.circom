@@ -7,7 +7,9 @@ include "include/bitify.circom";
 include "lib.circom";
 
 
-// inclusion proof for a quaternary tree
+// inclusion proof for a quaternary merkle tree instantiated over the Poseidon hash function
+//@requires(1) nLevels > 0
+//@ensures(1) `siblings` and `pathIndices` comprise a valid merkle inclusion proof for `leaf` against `root
 template MerkleTreeInclusionProof(nLevels) {
     signal input leaf;
     signal input pathIndices[nLevels];
