@@ -41,6 +41,8 @@ template DeriveNullifier() {
     nullifier <== hash.out;
 }
 
+//@requires(1) `PX` and `PY` comprise a valid Baby Jubjub point (i.e. it's on-curve)
+//@ensures(1) `PX` and `PY` comprise a high-order Baby Jubjub point
 template IsOrderGreaterThan8() {
     signal input PX;
     signal input PY;
@@ -56,8 +58,45 @@ template IsOrderGreaterThan8() {
     p8XIsZero === 0;
 }
 
+//@requires(1) `spendPubkey` is a valid, high-order Baby Jubjub point
+//@ensures(1) `vkBits` is a 251-bit little-endian representation of `vk`, which entails that every signal in the array is binary
+//@ensures(2) `vk` is an element of the scalar field of Baby Jubjub's prime-order subgroup
+//@ensures(3) `vk` is correctly derived from `spendPubkey` and `vkNonce`
+template VKDerivation() {
+    signal input spendPubkey[2];
+    signal input vkNonce;
+    signal output vk;
+    signal output vkBits[251];
+
+    // derive spending public key and check it matches the one given
+    //@satisfies(3)
+    //@argument correct by definition of Nocturne's key derivation process, provided that `vkNonce` is correct
+    vk <== Poseidon(3)([spendPubkey[0], spendPubkey[1], vkNonce]);
+
+    //@satisfies(1)
+    //@argument this is precisely what `Num2Bits(251)` does. If `vk` is greater than 251-bits, then `Num2Bits(251)` would be unsatisfiable
+    vkBits <== Num2Bits(251)(vk);
+
+    //@satsfies(2)
+    //@argument we know from the previous check that `vk` is a 251-bit number. To ensure it's a member of the scalar field,
+    // we do a 251-bit comparison with the order of the scalar field, which is sufficient to ensure that it's an element of the scalar field
+    component gtFrOrderMinusOne = CompConstant(BABYJUB_SCALAR_FIELD_ORDER - 1);
+    for (var i=0; i<251; i++) {
+      gtFrOrderMinusOne.in[i] <== vkBits[i];
+    }
+    gtFrOrderMinusOne.in[251] <== 0;
+    gtFrOrderMinusOne.in[252] <== 0;
+    gtFrOrderMinusOne.in[253] <== 0;
+    0 === gtFrOrderMinusOne.out;
+
+}
+
 // checks that a stealth address belongs to a given vk
-template VKIntegrity() {
+//@requires(1) `H1X` and `H1Y` comprise a valid, high-order Baby Jubjub point (i.e. it's on-curve)
+//@requires(2) `H2X` and `H2Y` comprise a valid, but not necessarily high-order Baby Jubjub point (i.e. it's on-curve)
+//@ensures(1) `H2X` and `H2Y` comprise a high-order Baby Jubjub point (i.e. it's on-curve)
+//@ensures(2) `H1X`, `H1Y`, `H2X`, and `H2Y` comprise a stealth address "owned" by the viewing key represented by `vkBits` according to the stealth address scheme
+template StealthAddrOwnership() {
     // X and Y coordinates of both
     // components of the stealth address
     signal input H1X;
@@ -132,6 +171,9 @@ template SigVerify() {
     cp === sig[0];
 }
 
+//@requires(1) `vkBits` is a 251-bit little-endian representation of `vk`, which entails that every signal in the array is binary
+//@ensures(1) `addr` is a valid, high-order Baby Jubjub point
+//@ensures(2) `addr` is the correct canonical address corresponding to `vk`
 template CanonAddr() {
     // little-endian bit representation of viewing key
     // we check elsewhere that this viewing key was derived correctly
@@ -150,8 +192,9 @@ template CanonAddr() {
 }
 
 // Forces the input signal to be of value between 0 and 2**n - 1
-// n must be < 254
-template BitRange(n) {
+//@requires `n < 254`
+//@ensures `out` can be represented as an `n`-bit number, or equivalently that `out < 2^n`
+template RangeCheckNBits(n) {
     signal input in;
 
     // Num2Bits does all the work here. All we care is that they're all bits

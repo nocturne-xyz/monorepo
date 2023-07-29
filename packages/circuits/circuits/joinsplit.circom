@@ -17,40 +17,42 @@ include "lib.circom";
 //@requires(6.1) `nullifierA` is the nullifier of `oldNoteA` given in this JoinSplit, whose digest is `operationDigest`
 //@requires(6.2) `nullifierB` is the nullifier of `oldNoteB` given in this JoinSplit, whose digest is `operationDigest`
 //@requires(7) `senderCommitment` is the `senderCommitment` given in the operation whose digest is `operationDigest`
+//@requires(8.1) there does not exist any valid note in the commitment tree whose `oldNoteAValue` is in the range [0, 2**252]
+//@requires(8.2) there does not exist any valid note in the commitment tree whose `oldNoteBValue` is in the range [0, 2**252]
 //
 //@ensures(1.1) if `publicSpend` is nonzero, `pubEncodedAssetId` matches that found in the `encodedAssetId` field of both old notes and both new notes
 //@ensures(1.2) if `publicSpend` is zero, `pubEncodedAssetId` is 0
 //@ensures(2.1) if `publicSpend` is nonzero, and one were to mask the sign bits to zero, `pubEncodedAssetAddrWithSignBits` would match the `encodedAssetAddr` field in both old notes and both new notes
 //@ensures(2.2) if `publicSpend` is zero, the asset contract address bits, asset type bits, and asset ID bits in `pubEncodedAssetAddrWithSignBits` are all 0
-//@ensures(3.1) `newNoteACommitment` is the note commitment for the first new note, newNoteA
-//@ensures(3.2) `newNoteBCommitment` is the note commitment for the second new note, newNoteB
-//@ensures(4) the viewing key `vk` used to derive nullifiers and addresses was correctly derived from the spend pubkey `spendPubkey`
-//@ensures(5) the operation signature `(c, z)` is a valid Schnorr signature of `operationDigest` under the spend pubkey `spendPubkey`
-//@ensures(6.1) the owner field of `oldNoteA`, `oldNoteAOwner`, is a valid babyjubjub point
-//@ensures(6.2) the owner field of `oldNoteB`, `oldNoteBOwner`, is a valid babyjubjub point
-//@ensures(6.3) the owner field of `oldNoteA`, `oldNoteAOwner`, is of order greater than 8 (i.e. it clears the cofactor)
-//@ensures(6.4) the owner field of `oldNoteB`, `oldNoteBOwner`, is of order greater than 8 (i.e. it clears the cofactor)
+//*@ensures(3.1) `newNoteACommitment` is the note commitment for the first new note, newNoteA
+//*@ensures(3.2) `newNoteBCommitment` is the note commitment for the second new note, newNoteB
+//@ensures(4.1) the viewing key `vk` used to derive nullifiers and addresses was correctly derived from the spend pubkey `spendPubkey`
+//@ensures(4.2) the viewing key `vk` is an element of the scalar field of Baby Jubjub's prime-order subgroup
+//@ensures(5.1) the spending pubkey `spendPubkey` is a valid, high-order Baby Jubjub point
+//*@ensures(5.2) the operation signature `(c, z)` is a valid Schnorr signature of `operationDigest` under the spend pubkey `spendPubkey`
+//@ensures(6.1) both points of the owner field of `oldNoteA`, `oldNoteAOwner`, are valid babyjubjub points
+//@ensures(6.2) both points of the owner field of `oldNoteB`, `oldNoteBOwner`, are valid babyjubjub pointi
+//@ensures(6.3) both points of the owner field of `oldNoteA`, `oldNoteAOwner`, are of order greater than 8 (i.e. it clears the cofactor)
+//@ensures(6.4) both points of the owner field of `oldNoteB`, `oldNoteBOwner`, are of order greater than 8 (i.e. it clears the cofactor)
 //@ensures(6.5) the owner field of `oldNoteA, `oldNoteAOwner`, is "owned" by the viewing key `vk` according to the Nocturne Stealth Address scheme
 //@ensures(6.6) the owner field of `oldNoteB, `oldNoteBOwner`, is "owned" by the viewing key `vk` according to the Nocturne Stealth Address scheme
-//@ensures(6.3) the owner fields of the old notes - `oldNoteAOwner` and `oldNoteBOwner` - are "owned" by the viewing key `vk` according to the Nocturne Stealth Address scheme
-//@ensures(7.1) `refundAddrH1CompressedY`, along with its sign bit extracted from `pubEncodedAssetAddrWithSignBits`, represents a valid (on-curve), high-order babyjubjub point according to Nocturne's point compression scheme
-//@ensures(7.2) `refundAddrH2CompressedY`, along with its sign bit extracted from `pubEncodedAssetAddrWithSignBits`, represents a valid (on-curve), high-order babyjubjub point according to Nocturne's point compression scheme
-//@ensures(7.3) `refundAddrH1CompressedY` and `refundAddrH2` is "owned" by same viewing key as the old note owners, as defined by the "ownership check" of the Nocturne Stealth Address scheme.
-//@ensures(7.4) `refundAddrH2CompressedY` is "owned" by same viewing key as the old note owners, as defined by the "ownership check" of the Nocturne Stealth Address scheme.
-//@ensures(8.1) `newNoteACommitment` is included in the quaternary Poseidon merkle tree whose root is `commitmentTreeRoot`
-//@ensures(8.2) `newNoteBCommitment` is included in the quaternary Poseidon merkle tree whose root is `commitmentTreeRoot`
-//@ensures(9.1) `nullifierA` was correctly derived from the note commitment of `oldNoteA` and the viewing key `vk`
-//@ensures(9.2) `nullifierB` was correctly derived from the note commitment of `oldNoteB` and the viewing key `vk`
-//@ensures(10.1) `oldNoteAValue` is in the range [0, 2**252)
-//@ensures(10.2) `oldNoteBValue` is in the range [0, 2**252)
+//*@ensures(7.1) `refundAddrH1CompressedY`, along with its sign bit extracted from `pubEncodedAssetAddrWithSignBits`, represents a valid (on-curve), high-order babyjubjub point according to Nocturne's point compression scheme
+//*@ensures(7.2) `refundAddrH2CompressedY`, along with its sign bit extracted from `pubEncodedAssetAddrWithSignBits`, represents a valid (on-curve), high-order babyjubjub point according to Nocturne's point compression scheme
+//*@ensures(7.3) `refundAddrH1CompressedY` and `refundAddrH2` is "owned" by same viewing key as the old note owners, as defined by the "ownership check" of the Nocturne Stealth Address scheme.
+//*@ensures(7.4) `refundAddrH2CompressedY` is "owned" by same viewing key as the old note owners, as defined by the "ownership check" of the Nocturne Stealth Address scheme.
+//*@ensures(8.1) `newNoteACommitment` is included in the quaternary Poseidon merkle tree whose root is `commitmentTreeRoot`
+//*@ensures(8.2) `newNoteBCommitment` is included in the quaternary Poseidon merkle tree whose root is `commitmentTreeRoot`
+//*@ensures(9.1) `nullifierA` was correctly derived from the note commitment of `oldNoteA` and the viewing key `vk`
+//*@ensures(9.2) `nullifierB` was correctly derived from the note commitment of `oldNoteB` and the viewing key `vk`
 //@ensures(10.3) `newNoteAValue` is in the range [0, 2**252)
 //@ensures(10.4) `newNoteBValue` is in the range [0, 2**252)
 //@ensures(10.5) `oldNoteAValue + oldNoteBValue` is in the range [0, 2**252)
 //@ensures(10.6) `newNoteAValue + newNoteBValue` is in the range [0, 2**252)
 //@ensures(11.1) `oldNoteAValue + oldNoteBValue >= newNoteAValue + newNoteBValue`
-//@ensures(11.2) `publicSpend == oldNoteAValue + oldNoteBValue - newNoteAValue - newNoteBValue`
-//@ensures(12.1) the sender's canonical address used in `senderCommitment` is the canonical address derived from `vk`
-//@ensures(12.2) `senderCommitment` is computed correctly as `Poseidon(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce"))`
+//*@ensures(11.2) `publicSpend == oldNoteAValue + oldNoteBValue - newNoteAValue - newNoteBValue`
+//*@ensures(12.1) the sender's canonical address used in `senderCommitment` is the canonical address derived from `vk`
+//*@ensures(12.2) `senderCommitment` is computed correctly as `Poseidon(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce"))`
+//@ensures(13) the recipient is a valid canonical address (on curve, high-order)
 template JoinSplit(levels) {
 
     // *** PUBLIC INPUTS ***
@@ -99,7 +101,6 @@ template JoinSplit(levels) {
     // blinded commitment to the sender's canonical address so that the recipient can verify the sender.
     // defined as Poseidon(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce"))
     signal output senderCommitment;
-
 
     // *** WITNESS ***
 
@@ -164,19 +165,32 @@ template JoinSplit(levels) {
     ];
     var BABYJUB_SCALAR_FIELD_ORDER = 2736030358979909402780800718157159386076813972158567259200215660948447373041;
 
-    // viewing keys must be elements of baby jubjub's scalar field
-    signal viewKeyBits[251] <== Num2Bits(251)(vk);
-    component gtFrOrderMinusOne = CompConstant(BABYJUB_SCALAR_FIELD_ORDER - 1);
-    for (var i=0; i<251; i++) {
-      gtFrOrderMinusOne.in[i] <== viewKeyBits[i];
-    }
-    gtFrOrderMinusOne.in[251] <== 0;
-    gtFrOrderMinusOne.in[252] <== 0;
-    gtFrOrderMinusOne.in[253] <== 0;
-    0 === gtFrOrderMinusOne.out;
 
-    // sender's canonical address, derived from the viewing key
-    signal senderCanonAddr[2] <== CanonAddr()(viewKeyBits);
+    // check spendPubkey is on-curve and high-order
+    //@satisfies(5.1) spendPubkey is a valid, high-order Baby Jubjub point
+    //@argument BabyCheck ensures that spendPubkey is on-curve,
+    // . and `IsOrderGreaterThan8` ensures that it is high-order given that it's on-curve
+    BabyCheck()(spendPubkey[0], spendPubkey[1]);
+    IsOrderGreaterThan8()(spendPubkey[0], spendPubkey[1]);
+
+    // check VK derivation
+    //@satisfies(4.1)
+    //@argument follows from VKDerivation.ensures(3) since VKDerivation.requires(1) is satisfied by @lemma(1)
+    //@satisfies(4.2)
+    //@argument follows from VKDerivation.ensures(2) since VKDerivation.requires(1) is satisfied by @lemma(1)
+    component vkDerivation = VKDerivation();
+    vkDerivation.spendPubkey <== spendPubkey;
+    vkDerivation.vkNonce <== vkNonce;
+
+    //@lemma(1) `vkBits` is the correct 251-bit little-endian bit decomposition of `vk`
+    //@argument follows from VKDerivation.ensures(1) since VKDerivation.requires(1) is satisfied by (5.1)
+    signal vkBits[251] <== vkDerivation.vkBits;
+    vk === vkDerivation.vk;
+
+    // derive sender's canonical address from the viewing key
+    //@lemma(2) senderCanonAddr is the correct canonical address derived from `vk` 
+    //@argument follows from CanonAddr.ensures(2) since CanonAddr.requires(1) is satisfied by @lemma(1)
+    signal senderCanonAddr[2] <== CanonAddr()(vkBits);
 
     // new note A's owner is sender's canonical address
     signal newNoteAOwnerH1X <== BASE8[0];
@@ -191,50 +205,117 @@ template JoinSplit(levels) {
     signal newNoteBOwnerH2Y <== receiverCanonAddr[1];
 
     // check receiver canon addr is a valid babyjubjub point
+    //@satisfies(13)
+    //@argument BabyCheck ensures that spendPubkey is on-curve,
+    //   and `IsOrderGreaterThan8` ensures that it is high-order given that it's on-curve
     BabyCheck()(receiverCanonAddr[0], receiverCanonAddr[1]);
     IsOrderGreaterThan8()(receiverCanonAddr[0], receiverCanonAddr[1]);
 
-    // check old note owners are composed of valid babyjubjub points
+    // check old note A owner is composed of valid babyjubjub points
+    //@satisfies(6.1)
+    //@argument BabyCheck ensures that oldNoteAOwnerH1 and oldNoteAOwnerH2 are on-curve,
+    //@lemma(3) oldNoteAOwnerH1 is high-order
+    //@argument (6.1) satisfies IsOrderGreaterThan8.requires(1), and IsOrderGreaterThan8.ensures(1) ensures that H1 is of high order
+    //@satisfies(6.3)
+    //@argument H1 is of high order due to @lemma(3), and H2 is high order due to @lemma(5) below
     BabyCheck()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y);
     BabyCheck()(oldNoteAOwnerH2X, oldNoteAOwnerH2Y);
     IsOrderGreaterThan8()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y);
 
+    // check old note B owner is composed of valid babyjubjub points
+    //@satisfies(6.2)
+    //@argument same as (6.1),
+    //@lemma(4) oldNoteBOwnerH2 is high-order
+    //@argument same as @lemma(3)
+    //@satisfies(6.4)
+    //@argument same as (6.3)
     BabyCheck()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
     BabyCheck()(oldNoteBOwnerH2X, oldNoteBOwnerH2Y);
     IsOrderGreaterThan8()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
 
-    // get encodedAssetAddr and sign bits of refund addr out of pubEncodedAssetAddrWithSignBits
+    // check that old note owner addresses correspond to user's viewing key 
+    //@lemma(5) oldNoteAOwnerH2 is high-order
+    //@argument (6.1) satisfies IsOrderGreaterThan8.requires(1), and IsOrderGreaterThan8.ensures(1) ensures that H1 is of high order
+    //@satisfies(6.5)
+    //@argument StealthAddrOwnership.requires(1) is satisfied by (6.1) and @lemma(4), and StealthAddrOwnership.requires(2) is satisfied by (6.1)
+    //   therefore, by StealthAddrOwnership.ensures(1), old note A owner is "owned" by the viewing key according to the Nocturne Stealth Address scheme
+    StealthAddrOwnership()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, vkBits);
+
+    //@lemma(6) oldNoteBOwnerH2 is high-order
+    //@argument same as @lemma(6)
+    //@satisfies(6.6)
+    //@argument same as (6.5)
+    StealthAddrOwnership()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, vkBits);
+
+    // check that the sum of old and new note values are in range [0, 2**252)
+    // this can't overflow because all four note values are in range [0, 2**252) and field is 254 bits
+    //@satisfies(10.3)
+    //@argument follows from `RangeCheckNBits.ensures(1)`, and `RangeCheckNBits.requires(1)` is satisfied since `n = 252
+    //@satisfies(10.4)
+    //@argument same as (10.3)
+    //@satisfies(10.5)
+    //@argument same as (10.3)
+    //@satisfies(10.6)
+    //@argument same as (10.3)
+    signal valInput <== oldNoteAValue + oldNoteBValue;
+    signal valOutput <== newNoteAValue + newNoteBValue;
+    RangeCheckNBits(252)(newNoteAValue);
+    RangeCheckNBits(252)(newNoteBValue);
+    RangeCheckNBits(252)(valInput);
+    RangeCheckNBits(252)(valOutput);
+
+    // check that old note values hold at least as much value as new note values
+    //@satisfies(11.1)
+    //@argument this is what `LessEqThan` does, and we've already RC'd the values to be in range [0, 2**252)
+    signal compOut <== LessEqThan(252)([valOutput, valInput]);
+    compOut === 1;
+
+    // compute publicSpend
+    //@satisfies(11.2)
+    //@argument (10.3-6) together with @requires(8.1-2) ensures that there's no overflows, therefore this constraint works by defn
+
+    publicSpend <== valInput - valOutput;
+
+    // get sign bits of refund addr out of pubEncodedAssetAddrWithSignBits
     // don't need Num2Bits_strict here because it's only 253 bits
+    //@lemma(7) `refundAddrH1Sign` is the sign bit of `refundAddrH1CompressedY` as specified in `pubEncodedAssetAddrWithSignBits`
+    //@argument follows from encoding defn and Num2Bits(253), which can't overflow because it's 253 bits 
+    //@lemma(8) `refundAddrH2Sign` is the sign bit of `refundAddrH2CompressedY` as specified in `pubEncodedAssetAddrWithSignBits`
+    //@argument same as @lemma(7) 
     signal pubEncodedAssetAddrWithSignBitsBits[253] <==  Num2Bits(253)(pubEncodedAssetAddrWithSignBits);
     signal refundAddrH1Sign <== pubEncodedAssetAddrWithSignBitsBits[248];
     signal refundAddrH2Sign <== pubEncodedAssetAddrWithSignBitsBits[249];
 
-    // check that the sum of old and new note values are in range [0, 2**252)
-    // this can't overflow because all four note values are in range [0, 2**252) and field is 254 bits
-    signal valInput <== oldNoteAValue + oldNoteBValue;
-    signal valOutput <== newNoteAValue + newNoteBValue;
-    BitRange(252)(valInput);
-    BitRange(252)(valOutput);
-
-    // check that old note values hold at least as much value as new note values
-    signal compOut <== LessEqThan(252)([valOutput, valInput]);
-    compOut === 1;
-    publicSpend <== valInput - valOutput;
-
-    // instead of doing another bit decomp, subtract 2^248 * refundAddrH1Sign + 2^249 * refundAddrH2Sign 
-    // from pubEncodedAssetAddrWithSignBits
+    // get encodedAssetAddr out of pubEncodedAssetAddrWithSignBits
+    //@lemma(9) `encodedAssetAddrDecoded` is what one would get if they masked the refund addr sign bits in `pubEncodedAssetAddrWithSignBits` to zero
+    //@argument:
+    // 1. `pubEncodedAssetAddrWithSignBitsBits` is the correct, unique 253-bit little-endian bit decomposition of `pubEncodedAssetAddrWithSignBits`
+    //    Num2Bits(253) guarantees this because a 253-bit decomp cannot overflow the field
+    // 2. encodedAssetAddrSubend is defined as the numerical value of the sign bits, i.e. 2**248 * refundAddrH2Sign + 2**249 * refundAddrH1Sign
+    // 3. therefore, encodedAssetAddrDecoded, as written, is the numerical value of `pubEncodedAssetAddrWithSignBits` with the sign bits masked to zero.
+    //    this cannot underflow the field as `encodedAssetAddrSubend` is guaranteed to (numerically) be less than `pubEncodedAssetAddrWithSignBits`
     signal refundAddrH1SignTimes2ToThe248 <== (1 << 248) * refundAddrH1Sign;
     signal encodedAssetAddrSubend <== (1 << 249) * refundAddrH2Sign + refundAddrH1SignTimes2ToThe248;
     signal encodedAssetAddrDecoded <== pubEncodedAssetAddrWithSignBits - encodedAssetAddrSubend;
 
+  
     signal publicSpendIsZero <== IsZero()(publicSpend);
-    // if publicSpend is nonzero, check that encodedAssetAddr matches encodedAssetAddrDecoded
-    // otherwise, assert that encodedAssetAddrDecoded is also zero
-    encodedAssetAddrDecoded === (1 - publicSpendIsZero) * encodedAssetAddr;
-
     // if publicSpend is nonzero, check that `pubEncodedAssetId` matches `encodedAssetId`
     // otherwise, assert that `pubEncodedAssetId` is also zero
+    //@satisfies(1.1)  if publicSpend is nonzero, `1 - publicSpendIsZero == 1`, so this constraint is satisfied IFF `pubEncodedAssetId == encodedAssetId`
+    // (1.1) follows from here by noting that we use `encodedAssetId` when computing the note commitments below
+    //@satisfies(1.2) if publicSpend is zero, `1 - publicSpendIsZero == 0`, so this constraint is satisfied IFF `pubEncodedAssetId == 0`
     pubEncodedAssetId === (1 - publicSpendIsZero) * encodedAssetId;
+
+    // if publicSpend is nonzero, check that encodedAssetAddr matches encodedAssetAddrDecoded
+    // otherwise, assert that encodedAssetAddrDecoded is also zero
+    //@satisfies(2.1)
+    //@argument if publicSpend is nonzero, `1 - publicSpendisZero == 1`, so this constraint is satisfied IFF `encodedAssetAddr == encodedAssetAddrDecoded`
+    // (2.1) follows from here by noting that we use `encodedAssetAddr` when computing the note commitments below
+    //@satisfies (2.2)
+    //@argument if publicSpend is zero, `1 - publicSpendIsZero == 0`, so this constraint is satisfied IFF `encodedAssetAddrDecoded == 0`.
+    // since `encodedAssetAddrDecoded` is `pubEncodedAssetAddrWithSignBits` with the sign bits masked to zero, this is equivalent (2.2)
+    encodedAssetAddrDecoded === (1 - publicSpendIsZero) * encodedAssetAddr;
 
     // oldNoteACommitment
     signal oldNoteACommitment <== NoteCommit()(
@@ -272,20 +353,12 @@ template JoinSplit(levels) {
     nullifierB <== Poseidon(2)([oldNoteBCommitment, vk]);
 
     // check that new note values are in range [0, 2**252)
-    BitRange(252)(newNoteAValue);
-    BitRange(252)(newNoteBValue);
+    RangeCheckNBits(252)(newNoteAValue);
+    RangeCheckNBits(252)(newNoteBValue);
 
     // check that old note values are in range [0, 2**252]
-    BitRange(252)(oldNoteAValue);
-    BitRange(252)(oldNoteBValue);
-
-    // check that old note owner addresses correspond to user's viewing key 
-    VKIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, viewKeyBits);
-    VKIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, viewKeyBits);
-
-    // derive spending public key
-    signal derivedViewKey <== Poseidon(3)([spendPubkey[0], spendPubkey[1], vkNonce]);
-    vk === derivedViewKey;
+    RangeCheckNBits(252)(oldNoteAValue);
+    RangeCheckNBits(252)(oldNoteBValue);
 
     // check spend signature
     SigVerify()(spendPubkey, operationDigest, [c, z]);
@@ -316,7 +389,7 @@ template JoinSplit(levels) {
     BabyCheck()(refundAddrH1X, refundAddrH1Y);
     BabyCheck()(refundAddrH2X, refundAddrH2Y);
     IsOrderGreaterThan8()(refundAddrH1X, refundAddrH1Y);
-    VKIntegrity()(refundAddrH1X, refundAddrH1Y, refundAddrH2X, refundAddrH2Y, viewKeyBits);
+    StealthAddrOwnership()(refundAddrH1X, refundAddrH1Y, refundAddrH2X, refundAddrH2Y, vkBits);
 
     // compress the two points of the refund addr.
     // connect the y cordinates to the output signals
