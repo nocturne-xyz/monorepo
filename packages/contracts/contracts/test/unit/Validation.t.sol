@@ -69,7 +69,7 @@ contract TestValidation is Test {
 
         vm.expectRevert("invalid point");
         Validation.validateCompressedBJJPoint(
-            1 / AlgebraicUtils.sqrt(Validation.CURVE_A)
+            AlgebraicUtils.inv(AlgebraicUtils.sqrt(Validation.CURVE_A))
         ); // (0, 1/sqrt(CURVE_A)) (on curve, low order)
     }
 }
