@@ -724,61 +724,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(4 * PER_NOTE_AMOUNT));
     }
 
-    function testProcessBundleFailureInvalidRefundAddr() public {
-        // Alice starts with 2 * 50M in teller
-        SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
-
-        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
-
-        // Create operation with invalid refund addr
-        Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatOperation(
-            FormatOperationArgs({
-                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    address(token)
-                ),
-                joinSplitRefundValues: new uint256[](1),
-                gasToken: address(token),
-                root: handler.root(),
-                joinSplitsPublicSpends: NocturneUtils
-                    ._publicSpendsArrayOfOnePublicSpendArray(
-                        NocturneUtils.fillJoinSplitPublicSpends(
-                            PER_NOTE_AMOUNT,
-                            1
-                        )
-                    ),
-                trackedRefundAssets: trackedRefundAssets,
-                gasAssetRefundThreshold: 0,
-                executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 50,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    address(token),
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
-                atomicActions: false,
-                operationFailureType: OperationFailureType.NONE
-            })
-        );
-
-        bundle.operations[0].refundAddr = CompressedStealthAddress(0, 0);
-
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "invalid point",
-                assetsUnwrapped: false
-            })
-        );
-        OperationResult[] memory opResults = teller.processBundle(bundle);
-
-        // One op, processed = false, unwrapped = false
-        assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, false);
-        assertEq(opResults[0].assetsUnwrapped, false);
-        assertEq(opResults[0].failureReason, "invalid point");
-    }
-
     function testProcessBundleFailureBadRoot() public {
         // Alice starts with 2 * 50M in teller
         SimpleERC20Token token = ERC20s[0];

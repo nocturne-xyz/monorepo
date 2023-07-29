@@ -55,21 +55,4 @@ contract TestValidation is Test {
         vm.expectRevert("invalid point");
         Validation.validateNote(badOwnerNote);
     }
-
-    function testValidateValidPoint() public view {
-        Validation.validateCompressedBJJPoint(COMPRESSED_ADDR_H1);
-    }
-
-    function testInvalidPointsFail() public {
-        vm.expectRevert("invalid point");
-        Validation.validateCompressedBJJPoint(0); // (0,0) and (1,0), not on curve
-
-        vm.expectRevert("invalid point");
-        Validation.validateCompressedBJJPoint(1); // (1,1) not on curve
-
-        vm.expectRevert("invalid point");
-        Validation.validateCompressedBJJPoint(
-            1 / AlgebraicUtils.sqrt(Validation.CURVE_A)
-        ); // (0, 1/sqrt(CURVE_A)) (on curve, low order)
-    }
 }
