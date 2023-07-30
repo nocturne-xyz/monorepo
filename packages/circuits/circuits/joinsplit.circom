@@ -11,9 +11,9 @@ include "lib.circom";
 
 //@requires(1.1) `operationDigest is the cryptographic hash of a valid Nocturne operation that this JoinSplit is a part of
 //@requires(1.2) all public inputs correspond to the same JoinSplit, and that JoinSplit is contained in the operation whose digest is `operationDigest`
-//@requires(2) `pubEncodedAssetId` fits in 253 bits
-//@requires(3.1) the encoding of `pubEncodedAssetAddrWithSignBits` from `(assetIDUpper3Bits, refundAddrH1SignX, refundAddrH2SignX, assetType, assetAddress)` is correct
-//@requires(3.2) `pubEncodedAssetId` and `pubEncodedAssetAddrWithSignBits` were encoded solely from the respective values in the JoinSplit, which is contained in the operation whose digest is `operationDigest`, or 0 if `publicSpend` is 0 (except for the sign bits, which still correspond to the refund address)
+//@requires(3) `pubEncodedAssetId` and `pubEncodedAssetAddrWithSignBits` were derived solely and correctly from the respective values in the JoinSplit,
+//  which is contained in the operation whose digest is `operationDigest`, or 0 if `publicSpend` is 0
+//  (except for the sign bits, which still correspond to the refund address)
 //@requires(4) `refundAddrH1CompressedY` and `refundAddrH2CompressedY` are as specified in the op whose digest is `operationDigest`
 //@requires(5.1) `nullifierA` is the nullifier of `oldNoteA` given in this JoinSplit, whose digest is `operationDigest`
 //@requires(5.2) `nullifierB` is the nullifier of `oldNoteB` given in this JoinSplit, whose digest is `operationDigest`

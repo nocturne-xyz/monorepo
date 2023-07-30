@@ -90,7 +90,7 @@ template IsOrderL() {
     Q8XIsZero === 0;
 }
 
-//@requires(1) `spendPubkey` is a valid, high-order Baby Jubjub point
+//@requires(1) `spendPubkey` is a valid, order-l Baby Jubjub point
 //@ensures(1) `vkBits` is a 251-bit little-endian representation of `vk`, which entails that every signal in the array is binary
 //@ensures(2) `vk` is an element of the scalar field of Baby Jubjub's prime-order subgroup
 //@ensures(3) `vk` is correctly derived from `spendPubkey` and `vkNonce`
@@ -125,9 +125,9 @@ template VKDerivation() {
 }
 
 // checks that a stealth address belongs to a given vk
-//@requires(1) `H1X` and `H1Y` comprise a valid, high-order Baby Jubjub point (i.e. it's on-curve)
-//@requires(2) `H2X` and `H2Y` comprise a valid, but not necessarily high-order Baby Jubjub point (i.e. it's on-curve)
-//@ensures(1) `H2X` and `H2Y` comprise a high-order Baby Jubjub point (i.e. it's on-curve)
+//@requires(1) `H1X` and `H1Y` comprise a valid, order-l Baby Jubjub point (i.e. it's on-curve)
+//@requires(2) `H2X` and `H2Y` comprise a valid, but not necessarily order-l Baby Jubjub point (i.e. it's on-curve)
+//@ensures(1) `H2X` and `H2Y` comprise a order-l Baby Jubjub point (i.e. it's on-curve)
 //@ensures(2) `H1X`, `H1Y`, `H2X`, and `H2Y` comprise a stealth address "owned" by the viewing key represented by `vkBits` according to the stealth address scheme
 //@ensures(3) the viewing key represented by `vkBits` is the only possible viewing key that can "own" the given stealth address based on the DDH assumption
 template StealthAddrOwnership() {
@@ -160,7 +160,7 @@ template StealthAddrOwnership() {
 }
 
 // verify a schnorr signature of `m` under pubkey `pk`
-//@requires(1) `pk` is a valid, high-order Baby Jubjub point
+//@requires(1) `pk` is a valid, order-l Baby Jubjub point
 //@ensures(1) `sig` is a valid schnorr signature of `m` under pubkey `pk`
 template SigVerify() {
     signal input pk[2];
@@ -210,7 +210,7 @@ template SigVerify() {
 }
 
 //@requires(1) `vkBits` is a 251-bit little-endian representation of `vk`, which entails that every signal in the array is binary
-//@ensures(1) `addr` is a valid, high-order Baby Jubjub point
+//@ensures(1) `addr` is a valid, order-l Baby Jubjub point
 //@ensures(2) `addr` is the correct canonical address corresponding to `vk`
 template CanonAddr() {
     // little-endian bit representation of viewing key
