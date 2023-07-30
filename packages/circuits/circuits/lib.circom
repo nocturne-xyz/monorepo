@@ -129,6 +129,7 @@ template VKDerivation() {
 //@requires(2) `H2X` and `H2Y` comprise a valid, but not necessarily high-order Baby Jubjub point (i.e. it's on-curve)
 //@ensures(1) `H2X` and `H2Y` comprise a high-order Baby Jubjub point (i.e. it's on-curve)
 //@ensures(2) `H1X`, `H1Y`, `H2X`, and `H2Y` comprise a stealth address "owned" by the viewing key represented by `vkBits` according to the stealth address scheme
+//@ensures(3) the viewing key represented by `vkBits` is the only possible viewing key that can "own" the given stealth address based on the DDH assumption
 template StealthAddrOwnership() {
     // X and Y coordinates of both
     // components of the stealth address
@@ -147,6 +148,7 @@ template StealthAddrOwnership() {
     signal GX, GY, GGX, GGY, GG2X, GG2Y, GG4X, GG4Y, GG8X, GG8Y;
     signal G[2];
     G <== EscalarMulAny(251)(vkBits, [H1X, H1Y]);
+
     // GG = vk * H1 - H2
     (GGX, GGY) <== BabyAdd()(G[0], G[1], -H2X, H2Y);
     (GG2X, GG2Y) <== BabyDbl()(GGX, GGY);

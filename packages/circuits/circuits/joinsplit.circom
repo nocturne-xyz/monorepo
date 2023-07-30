@@ -44,6 +44,8 @@ include "lib.circom";
 //@ensures(8.2) `oldNoteBCommitment` is included in the quaternary Poseidon merkle tree whose root is `commitmentTreeRoot` if `oldNoteBValue` is nonzero
 //@ensures(9.1) `nullifierA` was correctly derived from the note commitment of `oldNoteA` and the viewing key `vk`
 //@ensures(9.2) `nullifierB` was correctly derived from the note commitment of `oldNoteB` and the viewing key `vk`
+//@ensures(9.3) `nullifierA` is the only possible nullifier that can be derived for `oldNoteA`
+//@ensures(9.4) `nullifierB` is the only possible nullifier that can be derived for `oldNoteB`
 //@ensures(10.1) `oldNoteAValue` is in the range [0, 2**252)
 //@ensures(10.2) `oldNoteBValue` is in the range [0, 2**252)
 //@ensures(10.3) `newNoteAValue` is in the range [0, 2**252)
@@ -364,11 +366,18 @@ template JoinSplit(levels) {
     // derive nullifier for oldNoteA
     //@satisfies(9.1)
     //@argument correct by definition of Nocturne's nullifier derivation
+    //@satisfies(9.3)
+    //@argument due to StealthAddrOwnership.ensures(3) on the check made above on oldNoteAOwner and (3.3),
+    // `vk` is the only possible viewing key that can be used to derive `nullifierA`.
+    // therefore, by (9.3) and Poseidon collision resistance, `nullifierA` is the only possible nullifier that can be
+    // derived for this note
     nullifierA <== Poseidon(2)([oldNoteACommitment, vk]);
 
     // derive nullifier for oldNoteB
     //@satisfies(9.2)
     //@argument correct by definition of Nocturne's nullifier derivation
+    //@satsifes(9.4)
+    //@argument same as (9.3)
     nullifierB <== Poseidon(2)([oldNoteBCommitment, vk]);
 
 
