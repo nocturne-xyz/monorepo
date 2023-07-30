@@ -45,7 +45,7 @@ export class NocturneSigner extends NocturneViewer {
     const v = randomBytes(32);
     const r = Fr.fromEntropy(
       ethers.utils.arrayify(
-        ethers.utils.sha256(ethers.utils.concat([x, v, Fr.toBytes(m)]))
+        ethers.utils.sha512(ethers.utils.concat([x, v, Fr.toBytes(m)]))
       )
     );
 

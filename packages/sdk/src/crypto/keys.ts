@@ -17,7 +17,7 @@ export function generateRandomSpendingKey(): SpendingKey {
 }
 
 export function deriveSpendPK(sk: SpendingKey): SpendPk {
-  const h = ethers.utils.arrayify(ethers.utils.sha256(sk));
+  const h = ethers.utils.arrayify(ethers.utils.sha512(sk));
   const s = Fr.fromEntropy(h.slice(0, 32));
   return BabyJubJub.scalarMul(BabyJubJub.BasePoint, s);
 }
