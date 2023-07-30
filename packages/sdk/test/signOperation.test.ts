@@ -33,8 +33,8 @@ describe("signOperation", () => {
       handlerContract,
     };
 
-    const receiverSk = generateRandomSpendingKey();
-    const receiverSigner = new NocturneSigner(receiverSk);
+    const receiverRk = generateRandomSpendingKey();
+    const receiverSigner = new NocturneSigner(receiverRk);
     const receiver = receiverSigner.canonicalAddress();
 
     // make operation request and prepare it

@@ -108,7 +108,7 @@ export const run = new Command("run")
     if (!nocturneSKStr) {
       throw new Error("missing NOCTURNE_SPENDING_KEY");
     }
-    const nocturneSK = BigInt(nocturneSKStr);
+    const nocturneSK = Uint8Array.from(ethers.utils.arrayify(nocturneSKStr));
 
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     const signingProvider = new ethers.Wallet(privateKey, provider);

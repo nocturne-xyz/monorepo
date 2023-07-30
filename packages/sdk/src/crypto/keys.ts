@@ -3,20 +3,23 @@ import {
   BabyJubJub,
   poseidonBN,
 } from "@nocturne-xyz/crypto-utils";
-import { randomFr } from "./utils";
+import * as ethers from "ethers";
+import { randomBytes } from "crypto";
 
 const Fr = BabyJubJub.ScalarField;
 
+export type SpendingKey = Uint8Array;
 export type SpendPk = AffinePoint<bigint>;
-export type SpendingKey = bigint;
 export type ViewingKey = bigint;
 
-export function generateRandomSpendingKey(): bigint {
-  return randomFr();
+export function generateRandomSpendingKey(): SpendingKey {
+  return randomBytes(32);
 }
 
-export function spendPkFromFromSk(sk: SpendingKey): SpendPk {
-  return BabyJubJub.scalarMul(BabyJubJub.BasePoint, sk);
+export function deriveSpendPK(sk: SpendingKey): SpendPk {
+  const h = ethers.utils.arrayify(ethers.utils.sha512(sk));
+  const s = Fr.fromEntropy(h.slice(0, 32));
+  return BabyJubJub.scalarMul(BabyJubJub.BasePoint, s);
 }
 
 // returns [vk, vkNonce]

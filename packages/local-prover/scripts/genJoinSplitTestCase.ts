@@ -15,6 +15,7 @@ import {
   TreeConstants,
   EncodedAsset,
   JoinSplitProver,
+  range,
 } from "@nocturne-xyz/sdk";
 
 const { ZERO_VALUE, ARITY, DEPTH } = TreeConstants;
@@ -29,9 +30,7 @@ const JOINSPLIT_FIXTURE_DIR = path.join(ROOT_DIR, "fixtures");
 
 const writeToFixture = process.argv[2] == "--writeFixture";
 
-const sk = BigInt(
-  "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
-);
+const sk = Uint8Array.from(range(32));
 
 // Instantiate nocturne keypair and addr
 const nocturneSigner = new NocturneSigner(sk);

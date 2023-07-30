@@ -10,7 +10,7 @@ export { NocturneSigner, NocturneSignature } from "./signer";
 export { NocturneViewer } from "./viewer";
 export {
   generateRandomSpendingKey,
-  spendPkFromFromSk,
+  deriveSpendPK,
   vkFromSpendPk,
   SpendPk,
   SpendingKey,

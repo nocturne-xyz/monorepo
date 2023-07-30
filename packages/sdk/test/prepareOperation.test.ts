@@ -215,8 +215,8 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const receiverSk = generateRandomSpendingKey();
-    const receiverSigner = new NocturneSigner(receiverSk);
+    const receiverRk = generateRandomSpendingKey();
+    const receiverSigner = new NocturneSigner(receiverRk);
     const receiver = receiverSigner.canonicalAddress();
 
     const builder = new OperationRequestBuilder({

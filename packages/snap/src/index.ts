@@ -9,7 +9,6 @@ import {
   BundlerOpTracker,
   OperationMetadata,
 } from "@nocturne-xyz/sdk";
-import { BabyJubJub } from "@nocturne-xyz/crypto-utils";
 import { ethers } from "ethers";
 import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
 import { OnRpcRequestHandler } from "@metamask/snaps-types";
@@ -27,8 +26,6 @@ const SUBGRAPH_API_URL =
   "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.18-alpha/gn";
 const config = loadNocturneConfigBuiltin("sepolia");
 
-const Fr = BabyJubJub.ScalarField;
-
 const NOCTURNE_BIP44_COINTYPE = 6789;
 
 async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
@@ -42,8 +39,8 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
     nocturneNode as any
   );
   const keyNode = await addressKeyDeriver(0);
-  const sk = Fr.reduce(BigInt(keyNode.privateKey as string));
-  const nocturnePrivKey = new NocturneSigner(sk);
+  const sk = ethers.utils.keccak256(ethers.utils.arrayify(keyNode.privateKey!));
+  const nocturnePrivKey = new NocturneSigner(ethers.utils.arrayify(sk));
   return nocturnePrivKey;
 }
 
