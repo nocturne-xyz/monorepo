@@ -6,7 +6,7 @@ include "include/aliascheck.circom";
 include "include/compconstant.circom";
 include "include/bitify.circom";
 include "include/comparators.circom";
-include "scalarMulWitGen.circom"
+include "scalarMulWitGen.circom";
 
 // compute note commitment
 //@requires(1) `ownerHash` is `Poseidon4([ownerH1X, ownerH1Y, ownerH2X, ownerH2Y])
@@ -45,7 +45,18 @@ template IsOrderL() {
     // inverse of 8 mod l, the order of Baby Jubjub's prime-order subgroup
     // in little-endian bit repr
     // 2394026564107420727433200628387514462817212225638746351800188703329891451411
-    var inv8[251] = [1,1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,1,0,1,1,1,1,1,1,1,0,0,0,1,1,0,1,0,0,0,0,0,1,1,1,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1,0,1,1,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,1,0,1,1,0,0,1,1,1,1,1,1,1,0,0,0,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1,0,0,0,1,0,1,0,1,0,1,1,0,1,0,0,1,0,0,0,1,0,1,0,1,0,0,0,1,1,0,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,0,0,0,1,0,1,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,1,1,0,1,1,0,1,1,0,1,0,0,0,0,1,0,1,0,0,0,0,1,0,0,1,0,0,1,0,1,0,0,1,0,0,0,1,1,1,1,1,0,1,0,1,0,0,1,0,1,0,1]
+    var inv8[251] = [1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1,
+        1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1,
+        0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+        0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0,
+        0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1,
+        1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0,
+        0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+        1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+        1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0,
+        1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1,
+        1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1
+    ];
 
     // witness Q = (inv(8) mod l) * P
     //@lemma(1) Q is a valid curve point because Baby Jubjub is a group and @requires(1) guarantees (PX, PY) is a valid curve point
@@ -88,6 +99,8 @@ template VKDerivation() {
     signal input vkNonce;
     signal output vk;
     signal output vkBits[251];
+
+    var BABYJUB_SCALAR_FIELD_ORDER = 2736030358979909402780800718157159386076813972158567259200215660948447373041;
 
     // derive spending public key and check it matches the one given
     //@satisfies(3)

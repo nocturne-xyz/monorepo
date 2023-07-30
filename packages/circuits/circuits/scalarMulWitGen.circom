@@ -1,12 +1,17 @@
 // constant-time witness-generation-only scalar mul
 
+pragma circom 2.1.0;
+
+// double-always-add method
 function scalarMul(px, py, n, scalar) {
     var res[2];
     res[0] = 0;
-    res[1] = 0;
+    res[1] = 1;
 
     for (var i = 0; i < n; i++) {
-        // double and add
+        var r1[2];
+        var r2[2];
+
         r1 = pointDouble(res[0], res[1]);
         r2 = pointAdd(r1[0], r1[1], px, py);
 
