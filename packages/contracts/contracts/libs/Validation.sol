@@ -13,6 +13,7 @@ library Validation {
     uint256 constant CURVE_D = 168696;
     uint256 constant COMPRESSED_POINT_Y_MASK = ~uint256(1 << 254);
 
+    // Ensure note fields are also valid as circuit inputs
     function validateNote(EncodedNote memory note) internal pure {
         require(
             // nonce is a valid field element
