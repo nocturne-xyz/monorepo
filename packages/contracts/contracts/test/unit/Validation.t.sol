@@ -35,9 +35,7 @@ contract TestValidation is Test {
             1
         );
         vm.expectRevert("invalid note");
-        Validation.validateNote(
-            note
-        );
+        Validation.validateNote(note);
     }
 
     function testInvalidOwnerFails() public {
@@ -50,9 +48,7 @@ contract TestValidation is Test {
             1
         );
         vm.expectRevert("invalid point");
-        Validation.validateNote(
-            note
-        );
+        Validation.validateNote(note);
     }
 
     function testInvalidAssetAddrFails() public {
@@ -65,9 +61,7 @@ contract TestValidation is Test {
             1
         );
         vm.expectRevert("invalid note");
-        Validation.validateNote(
-            note
-        );
+        Validation.validateNote(note);
     }
 
     function testInvalidAssetIdFails() public {
@@ -80,9 +74,7 @@ contract TestValidation is Test {
             1
         );
         vm.expectRevert("invalid note");
-        Validation.validateNote(
-            note
-        );
+        Validation.validateNote(note);
     }
 
     function testInvalidValueFails() public {
@@ -95,8 +87,6 @@ contract TestValidation is Test {
             Validation.NOCTURNE_MAX_NOTE_VALUE + 1
         );
         vm.expectRevert("invalid note");
-        Validation.validateNote(
-            note
-        );
+        Validation.validateNote(note);
     }
 }
