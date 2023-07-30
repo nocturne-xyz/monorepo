@@ -28,8 +28,8 @@ const TEST_ETH_ADDRS = [
 const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   // luke
   {
-    x: 10142086077893486181754172705121012824519743084895847195556991208649326069031n,
-    y: 8193080910598498103381811317346023892678961233898095959711997273954450549100n,
+    x: 7056522606660870361325034466370949321239193852276800892054991303627972226230n,
+    y: 15747131498820334204707818332899890862008805243250008841770517476290170306576n,
   },
   // sebastien
   {
@@ -111,7 +111,11 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
       );
       const tx = await depositManager
         .connect(deployerEoa)
-        .instantiateErc20MultiDeposit(token.address, [amount], StealthAddressTrait.compress(addr));
+        .instantiateErc20MultiDeposit(
+          token.address,
+          [amount],
+          StealthAddressTrait.compress(addr)
+        );
       await tx.wait(1);
     }
   }
