@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add `validateNote` and `validateCompressedPoint` to new `Validation` lib
+- validate refund notes before they are queued for insertion into the commitment tree
 - add test lib `AlgebraicUtils` that implements BN254 field arithmetic and point decrompression
 - append `bitmap` to preimage of `accumulatorHash` to prevent prover from lying about insertion type (TOB-4)
 - check code size of contract called in `_makeExternalCall` (TOB-13)

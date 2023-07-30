@@ -15,24 +15,16 @@ library AlgebraicUtils {
 
     uint256 public constant COMPRESSED_POINT_SIGN_MASK = 1 << 254;
 
-    function reduce(uint256 a) internal pure returns (uint256) {
-        return ((a % MODULUS) + MODULUS) % MODULUS;
-    }
-
     function neg(uint256 a) internal pure returns (uint256) {
-        return reduce(MODULUS - a);
+        return MODULUS - a;
     }
 
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
-        return reduce(a + b);
+        return addmod(a, b, MODULUS);
     }
 
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        if (a >= b) {
-            return reduce(a - b);
-        } else {
-            return reduce(MODULUS - b + a);
-        }
+        return addmod(a, MODULUS - b, MODULUS);
     }
 
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -49,7 +41,7 @@ library AlgebraicUtils {
     }
 
     function eq(uint256 a, uint256 b) internal pure returns (bool) {
-        return reduce(a) == reduce(b);
+        return a == b;
     }
 
     function invOrZero(uint256 a) internal pure returns (uint256) {
@@ -73,31 +65,34 @@ library AlgebraicUtils {
             t += int256(MODULUS);
         }
 
-        return reduce(uint256(t));
+        return uint256(t);
     }
 
     function square(uint256 a) internal pure returns (uint256) {
         return mul(a, a);
     }
 
-    function pow(uint256 base, uint256 exp) internal pure returns (uint256) {
-        uint256 res = 1;
-        for (uint256 i = 0; i < 256; i++) {
-            res = square(res);
-            if (exp & (1 << 255) != 0) {
-                res = mul(res, base);
-            }
-            exp <<= 1;
-        }
-        return res;
+    function pow(uint256 base, uint256 exp) internal view returns (uint256) {
+        // EIP-198 args are <length_of_BASE> <length_of_EXPONENT> <length_of_MODULUS> <BASE> <EXPONENT> <MODULUS>
+        bytes memory args = abi.encodePacked(
+            uint256(32),
+            uint256(32),
+            uint256(32),
+            base,
+            exp,
+            MODULUS
+        );
+        (bool success, bytes memory response) = address(0x05).staticcall(args);
+        require(success, "EIP-198 precompile call failed");
+        return uint256(bytes32(response));
     }
 
-    function legendreSymbol(uint256 lhs) internal pure returns (uint256) {
+    function legendreSymbol(uint256 lhs) internal view returns (uint256) {
         return pow(lhs, (MODULUS - 1) / 2);
     }
 
     // reverts if sqrt DNE
-    function sqrt(uint256 a) internal pure returns (uint256) {
+    function sqrt(uint256 a) internal view returns (uint256) {
         uint256 legendre = legendreSymbol(a);
         require(legendre != MODULUS - 1, "sqrt DNE");
         if (legendre == 0) {
@@ -141,7 +136,7 @@ library AlgebraicUtils {
     // reverts if c is not a valid compressed point
     function decompressPoint(
         uint256 c
-    ) internal pure returns (uint256 x, uint256 y) {
+    ) internal view returns (uint256 x, uint256 y) {
         require(
             c <= (MODULUS - 1) | COMPRESSED_POINT_SIGN_MASK,
             "invalid compressed point"

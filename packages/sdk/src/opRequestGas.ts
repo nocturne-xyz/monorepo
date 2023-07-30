@@ -27,13 +27,6 @@ import { EthToTokenConverter } from "./conversion";
 // refunds < 200k gas * gasPrice converted to gasAsset not worth refunding
 const DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS = 200_000n;
 
-const DUMMY_REFUND_ADDR: StealthAddress = {
-  h1X: 0n,
-  h1Y: 0n,
-  h2X: 0n,
-  h2Y: 0n,
-};
-
 const DUMMY_GAS_ASSET: Asset = {
   assetType: AssetType.ERC20,
   assetAddr: "0x0000000000000000000000000000000000000000",
@@ -74,6 +67,9 @@ const DUMMY_VIEWER = new NocturneViewer(
   655374300543486358510310527362452574140738137308572239595396943710924175576n,
   3n
 );
+
+const DUMMY_REFUND_ADDR: StealthAddress =
+  DUMMY_VIEWER.generateRandomStealthAddress();
 
 export async function handleGasForOperationRequest(
   deps: HandleOpRequestGasDeps,

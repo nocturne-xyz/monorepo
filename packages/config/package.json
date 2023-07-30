@@ -9,7 +9,7 @@
     "src/**/*"
   ],
   "scripts": {
-    "build": "tsc --build",
+    "build": "yarn clean; tsc --build",
     "check": "yarn clean && tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",

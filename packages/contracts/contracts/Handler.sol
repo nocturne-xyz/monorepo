@@ -115,6 +115,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     function handleDeposit(
         Deposit calldata deposit
     ) external override whenNotPaused onlyTeller {
+        // Ensure deposit asset is supported
         EncodedAsset memory encodedAsset = deposit.encodedAsset;
         (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
         require(_supportedContracts[assetAddr], "!supported deposit asset");

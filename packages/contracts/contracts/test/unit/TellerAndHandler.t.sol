@@ -31,6 +31,7 @@ import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Utils} from "../../libs/Utils.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
+import {Validation} from "../../libs/Validation.sol";
 import "../../libs/Types.sol";
 
 contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
@@ -451,6 +452,57 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         vm.prank(ALICE);
         vm.expectRevert("!supported deposit asset");
         teller.depositFunds(deposit);
+    }
+
+    function testCompleteDepositFailsInvalidFields() public {
+        // Allow ALICE to direct deposit to teller
+        teller.setDepositSourcePermission(ALICE, true);
+
+        // Deploy and dep manager whitelist new token but not in handler
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(
+            ALICE,
+            Validation.NOCTURNE_MAX_NOTE_VALUE + PER_NOTE_AMOUNT
+        );
+
+        // Approve 50M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(
+            address(teller),
+            Validation.NOCTURNE_MAX_NOTE_VALUE + PER_NOTE_AMOUNT
+        );
+
+        // Valid deposit works
+        Deposit memory deposit = NocturneUtils.formatDeposit(
+            ALICE,
+            address(token),
+            PER_NOTE_AMOUNT,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress()
+        );
+        vm.prank(ALICE);
+        teller.depositFunds(deposit);
+
+        // value > 2^252
+        Deposit memory badValueDeposit = deposit;
+        badValueDeposit.value = Validation.NOCTURNE_MAX_NOTE_VALUE + 1;
+        vm.prank(ALICE);
+        vm.expectRevert("invalid note");
+        teller.depositFunds(badValueDeposit);
+
+        // asset id > field modulus
+        Deposit memory badAssetIdDeposit = deposit;
+        badAssetIdDeposit.encodedAsset.encodedAssetId = type(uint256).max;
+        vm.prank(ALICE);
+        vm.expectRevert("invalid note");
+        teller.depositFunds(badAssetIdDeposit);
+
+        // asset addr > field modulus
+        Deposit memory badAssetAddrDeposit = deposit;
+        badAssetAddrDeposit.encodedAsset.encodedAssetAddr = type(uint256).max;
+        vm.prank(ALICE);
+        vm.expectRevert("Invalid encodedAssetAddr");
+        teller.depositFunds(badAssetAddrDeposit);
     }
 
     function testProcessBundleTransferSingleJoinSplitWithBundlerComp() public {
