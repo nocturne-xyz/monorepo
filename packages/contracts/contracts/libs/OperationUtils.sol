@@ -70,6 +70,16 @@ library OperationUtils {
 
         for (uint256 i = 0; i < numJoinSplitsForOp; i++) {
             bool isPublicJoinSplit = i < op.pubJoinSplits.length;
+            if (isPublicJoinSplit) {
+                // Ensure public spend > 0 for public joinsplit. Ensures handler only deals 
+                // with assets that are actually unwrappable. If asset has > 0 public spend, then 
+                // circuit guarantees that the _revealed_ asset is included in the tree and 
+                // unwrappable. If asset has public spend = 0, circuit guarantees that the _masked_ 
+                // asset is included in the tree and unwrappable, but the revealed asset for public 
+                // spend = 0 is (0,0) and not unwrappable.
+                require(op.pubJoinSplits[i].publicSpend > 0, "0 public spend");
+            }
+            
             JoinSplit calldata joinSplit = isPublicJoinSplit
                 ? op.pubJoinSplits[i].joinSplit
                 : op.confJoinSplits[i - op.pubJoinSplits.length];
