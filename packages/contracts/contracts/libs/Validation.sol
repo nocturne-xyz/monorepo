@@ -5,7 +5,7 @@ import "./Types.sol";
 import "./Utils.sol";
 
 library Validation {
-    uint256 constant NOCTURNE_MAX_NOTE_VALUE = (1 << 252) - 1; // value must fit in 2^252 bits
+    uint256 constant MAX_NOTE_VALUE = (1 << 252) - 1; // value must fit in 2^252 bits
     uint256 constant ENCODED_ASSET_ADDR_MASK = ((1 << 163) - 1) | (7 << 249);
     uint256 constant MAX_ASSET_ID = (1 << 253) - 1;
 
@@ -25,7 +25,7 @@ library Validation {
                 // encodedAssetId is a 253 bit number (and therefore a valid field element)
                 note.encodedAssetId <= MAX_ASSET_ID &&
                 // value is < the 2^252 limit (and therefore a valid field element)
-                note.value <= NOCTURNE_MAX_NOTE_VALUE,
+                note.value <= MAX_NOTE_VALUE,
             "invalid note"
         );
 

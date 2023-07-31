@@ -180,7 +180,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
         commitmentTreeManager.handleRefundNote(
             encodedAsset,
             refundAddr,
-            bound(seed, 0, Validation.NOCTURNE_MAX_NOTE_VALUE)
+            bound(seed, 0, Validation.MAX_NOTE_VALUE)
         );
         ghost_refundNotesLeafCount += 1;
         handleRefundNotesLength = 1;
@@ -264,6 +264,6 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             0,
             Validation.MAX_ASSET_ID
         );
-        note.value = bound(note.value, 0, Validation.NOCTURNE_MAX_NOTE_VALUE);
+        note.value = bound(note.value, 0, Validation.MAX_NOTE_VALUE);
     }
 }

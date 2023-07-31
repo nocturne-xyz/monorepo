@@ -84,7 +84,7 @@ contract TestValidation is Test {
             1,
             1,
             1,
-            Validation.NOCTURNE_MAX_NOTE_VALUE + 1
+            Validation.MAX_NOTE_VALUE + 1
         );
         vm.expectRevert("invalid note");
         Validation.validateNote(note);

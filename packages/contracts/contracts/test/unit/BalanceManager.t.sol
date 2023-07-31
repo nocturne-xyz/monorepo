@@ -719,7 +719,7 @@ contract BalanceManagerTest is Test {
         );
 
         // Expect revert for processing joinsplits
-        vm.expectRevert("2 nfs should !equal");
+        vm.expectRevert("Nullifier B already used");
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS

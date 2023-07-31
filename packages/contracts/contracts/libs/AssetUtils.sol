@@ -90,7 +90,7 @@ library AssetUtils {
     ) internal view returns (uint256) {
         (AssetType assetType, address assetAddr, uint256 id) = AssetUtils
             .decodeAsset(encodedAsset);
-        uint256 value;
+        uint256 value = 0;
         if (assetType == AssetType.ERC20) {
             value = IERC20(assetAddr).balanceOf(address(this));
         } else if (assetType == AssetType.ERC721) {

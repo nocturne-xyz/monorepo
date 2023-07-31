@@ -43,7 +43,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     );
 
     /// @notice Event emitted when a token is given/revoked allowlist permission
-    event ContractPermissionSet(address token, bool permission);
+    event ContractPermissionSet(address contractAddress, bool permission);
 
     /// @notice Initialization function
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract

@@ -125,7 +125,7 @@ library OperationLib {
                 (self.pubJoinSplits.length + self.confJoinSplits.length)) +
             ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) *
                 (self.trackedJoinSplitAssets.length +
-                    self.trackedRefundAssets.length));
+                    self.trackedRefundAssets.length)); // TODO: add convenience method op.numJoinSplits for pub + conf JSs
     }
 
     function maxGasAssetCost(
