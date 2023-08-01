@@ -28,7 +28,10 @@ library Validation {
         // Ensure timestamp for op has not already expired
         require(block.timestamp <= op.deadline, "expired deadline");
 
-        // TODO: make gas asset erc20 only
+        // Ensure gas asset is erc20 to ensure transfers to bundler retain control flow (no 
+        // callbacks)
+        (AssetType assetType, , ) = AssetUtils.decodeAsset(op.encodedGasAsset);
+        require(assetType == AssetType.ERC20, "!gas erc20");
     }
 
     // Ensure note fields are also valid as circuit inputs
