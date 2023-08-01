@@ -54,8 +54,7 @@ library OperationUtils {
         pure
         returns (uint256[8][] memory proofs, uint256[][] memory allPis)
     {
-        uint256 numJoinSplitsForOp = op.pubJoinSplits.length +
-            op.confJoinSplits.length;
+        uint256 numJoinSplitsForOp = OperationLib.totalNumJoinSplits(op);
         proofs = new uint256[8][](numJoinSplitsForOp);
         allPis = new uint256[][](numJoinSplitsForOp);
 
@@ -70,16 +69,6 @@ library OperationUtils {
 
         for (uint256 i = 0; i < numJoinSplitsForOp; i++) {
             bool isPublicJoinSplit = i < op.pubJoinSplits.length;
-            if (isPublicJoinSplit) {
-                // Ensure public spend > 0 for public joinsplit. Ensures handler only deals 
-                // with assets that are actually unwrappable. If asset has > 0 public spend, then 
-                // circuit guarantees that the _revealed_ asset is included in the tree and 
-                // unwrappable. If asset has public spend = 0, circuit guarantees that the _masked_ 
-                // asset is included in the tree and unwrappable, but the revealed asset for public 
-                // spend = 0 is (0,0) and not unwrappable.
-                require(op.pubJoinSplits[i].publicSpend > 0, "0 public spend");
-            }
-            
             JoinSplit calldata joinSplit = isPublicJoinSplit
                 ? op.pubJoinSplits[i].joinSplit
                 : op.confJoinSplits[i - op.pubJoinSplits.length];
@@ -137,8 +126,8 @@ library OperationUtils {
         Operation calldata op,
         OperationResult memory opResult
     ) internal pure returns (uint256) {
-        uint256 handleJoinSplitGas = (op.pubJoinSplits.length +
-            op.confJoinSplits.length) * GAS_PER_JOINSPLIT_HANDLE;
+        uint256 handleJoinSplitGas = OperationLib.totalNumJoinSplits(op) *
+            GAS_PER_JOINSPLIT_HANDLE;
         uint256 refundGas = opResult.numRefunds *
             (GAS_PER_REFUND_HANDLE + GAS_PER_REFUND_TREE);
 

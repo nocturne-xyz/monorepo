@@ -21,6 +21,7 @@ contract CommitmentTreeManager is
     PausableUpgradeable
 {
     using LibOffchainMerkleTree for OffchainMerkleTree;
+    using OperationLib for Operation;
 
     // Set of past roots of the merkle tree
     mapping(uint256 => bool) public _pastRoots;
@@ -176,8 +177,7 @@ contract CommitmentTreeManager is
     // @ensures(3) If function completes, every joinsplit's nullifierA and nullifierB are added to _nullifierSet
     // @ensures(4) If function completes, every joinsplit's newNoteCommitmentA and newNoteCommitmentB are inserted into the commitment tree
     function _handleJoinSplits(Operation calldata op) internal {
-        uint256 totalNumJoinSplits = op.pubJoinSplits.length +
-            op.confJoinSplits.length;
+        uint256 totalNumJoinSplits = op.totalNumJoinSplits();
         uint256[] memory newNoteCommitments = new uint256[](
             totalNumJoinSplits * 2
         );

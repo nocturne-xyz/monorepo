@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import "./Types.sol";
 import "./Utils.sol";
+import {AssetUtils} from "./AssetUtils.sol";
 
 library Validation {
     uint256 constant MAX_NOTE_VALUE = (1 << 252) - 1; // value must fit in 2^252 bits
@@ -12,6 +13,23 @@ library Validation {
     uint256 constant CURVE_A = 168700;
     uint256 constant CURVE_D = 168696;
     uint256 constant COMPRESSED_POINT_Y_MASK = ~uint256(1 << 254);
+
+    function validateOperation(Operation calldata op) internal view {
+        // Ensure public spend > 0 for public joinsplit. Ensures handler only deals
+        // with assets that are actually unwrappable. If asset has > 0 public spend, then
+        // circuit guarantees that the _revealed_ asset is included in the tree and
+        // unwrappable. If asset has public spend = 0, circuit guarantees that the _masked_
+        // asset is included in the tree and unwrappable, but the revealed asset for public
+        // spend = 0 is (0,0) and not unwrappable.
+        for (uint256 i = 0; i < op.pubJoinSplits.length; i++) {
+            require(op.pubJoinSplits[i].publicSpend > 0, "0 public spend");
+        }
+
+        // Ensure timestamp for op has not already expired
+        require(block.timestamp <= op.deadline, "expired deadline");
+
+        // TODO: make gas asset erc20 only
+    }
 
     // Ensure note fields are also valid as circuit inputs
     function validateNote(EncodedNote memory note) internal pure {

@@ -460,10 +460,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Deploy and dep manager whitelist new token but not in handler
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(
-            ALICE,
-            Validation.MAX_NOTE_VALUE + PER_NOTE_AMOUNT
-        );
+        token.reserveTokens(ALICE, Validation.MAX_NOTE_VALUE + PER_NOTE_AMOUNT);
 
         // Approve 50M tokens for deposit
         vm.prank(ALICE);
@@ -2638,7 +2635,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Format op with EXPIRED_DEADLINE failure type
-        Operation memory op = NocturneUtils.formatOperation(
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
@@ -2667,9 +2665,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        vm.prank(address(teller));
+        vm.prank(BUNDLER);
         vm.expectRevert("expired deadline");
-        handler.handleOperation(op, 0, BUNDLER);
+        teller.processBundle(bundle);
     }
 
     // TODO: move to Handler.t.sol

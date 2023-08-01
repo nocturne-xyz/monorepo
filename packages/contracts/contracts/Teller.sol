@@ -14,6 +14,7 @@ import {IHandler} from "./interfaces/IHandler.sol";
 import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 import {OperationEIP712} from "./OperationEIP712.sol";
 import {Utils} from "./libs/Utils.sol";
+import {Validation} from "./libs/Validation.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
 import {Groth16} from "./libs/OperationUtils.sol";
@@ -162,6 +163,7 @@ contract Teller is
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
+            Validation.validateOperation(ops[i]);
             try
                 _handler.handleOperation(
                     ops[i],

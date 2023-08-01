@@ -27,6 +27,7 @@ import "../../../libs/Types.sol";
 
 contract TellerHandler is OperationGenerator {
     using LibTokenIdSet for TokenIdSet;
+    using OperationLib for Operation;
 
     // ______PUBLIC______
     Teller public teller;

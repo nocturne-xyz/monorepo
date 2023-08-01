@@ -326,7 +326,10 @@ contract OperationGenerator is InvariantUtils {
         uint256 swapErc20OutAmount = bound(
             _rerandomize(args.seed),
             0,
-            Utils.min(type(uint256).max - args.swapErc20.totalSupply(), Validation.MAX_NOTE_VALUE)
+            Utils.min(
+                type(uint256).max - args.swapErc20.totalSupply(),
+                Validation.MAX_NOTE_VALUE
+            )
         );
         SwapRequest memory swapRequest = SwapRequest({
             assetInOwner: address(args.handler),
