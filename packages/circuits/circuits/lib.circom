@@ -235,9 +235,7 @@ template CanonAddr() {
 template RangeCheckNBits(n) {
     signal input in;
 
-    // Num2Bits does all the work here. All we care is that they're all bits
-    //@satisfies(1)
-    //@argument @requires(1) ensures `n < 2541, so Num2Bits(N) can't overflow, therefore @ensures(1) is satisfied
+    // Num2Bits does all the work here as long as n < 254. All we care is that they're all bits
     signal bits[n] <== Num2Bits(n)(in);
 }
 

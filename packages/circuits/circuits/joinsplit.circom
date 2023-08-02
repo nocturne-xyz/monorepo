@@ -367,7 +367,7 @@ template JoinSplit(levels) {
     //@satisfies(9.1)
     //@argument correct by definition of Nocturne's nullifier derivation
     //@satisfies(9.3)
-    //@argument due to StealthAddrOwnership.ensures(3) on the check made above on oldNoteAOwner and (3.3),
+    //@argument due to StealthAddrOwnership.ensures(3) in the check made above on oldNoteAOwner and (3.3),
     // `vk` is the only possible viewing key that can be used to derive `nullifierA`.
     // therefore, by (9.3) and Poseidon collision resistance, `nullifierA` is the only possible nullifier that can be
     // derived for this note
