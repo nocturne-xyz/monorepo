@@ -19,14 +19,14 @@ export interface JoinSplitProofWithPublicSignals {
   publicSignals: [
     bigint, // newNoteACommitment
     bigint, // newNoteBCommitment
-    bigint, // anchor
+    bigint, // commitmentTreeRoot
     bigint, // publicSpend
     bigint, // nullifierA
     bigint, // nullifierB
     bigint, // ssenderCommitment
     bigint, // operationDigest
-    bigint, // pubEncodedAssetAddrWithSignBits
     bigint, // pubEncodedAssetId
+    bigint, // pubEncodedAssetAddrWithSignBits
     bigint, // refundAddrH1CompressedY
     bigint // refundAddrH2CompressedY
   ];
@@ -77,8 +77,8 @@ export function joinSplitPublicSignalsFromArray(
     nullifierB: publicSignals[5],
     senderCommitment: publicSignals[6],
     opDigest: publicSignals[7],
-    pubEncodedAssetAddrWithSignBits: publicSignals[8],
-    pubEncodedAssetId: publicSignals[9],
+    pubEncodedAssetId: publicSignals[8],
+    pubEncodedAssetAddrWithSignBits: publicSignals[9],
     refundAddrH1CompressedY: publicSignals[10],
     refundAddrH2CompressedY: publicSignals[11],
   };

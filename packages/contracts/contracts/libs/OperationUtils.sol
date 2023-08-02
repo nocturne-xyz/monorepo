@@ -95,8 +95,8 @@ library OperationUtils {
             allPis[i][5] = joinSplit.nullifierB;
             allPis[i][6] = joinSplit.senderCommitment;
             allPis[i][7] = opDigest;
-            allPis[i][8] = encodedAssetAddrWithSignBits;
-            allPis[i][9] = encodedAsset.encodedAssetId;
+            allPis[i][8] = encodedAsset.encodedAssetId;
+            allPis[i][9] = encodedAssetAddrWithSignBits;
             allPis[i][10] = refundAddrH1YCoordinate;
             allPis[i][11] = refundAddrH2YCoordinate;
         }
