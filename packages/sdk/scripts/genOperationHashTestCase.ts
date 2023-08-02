@@ -42,16 +42,7 @@ import { OPERATION_TYPES } from "../src/primitives/operation";
       h1: 1n,
       h2: 1n,
     },
-    trackedJoinSplitAssets: [
-      {
-        encodedAsset: {
-          encodedAssetAddr: 1n,
-          encodedAssetId: 1n,
-        },
-        minRefundValue: 1n,
-      },
-    ],
-    trackedRefundAssets: [
+    trackedAssets: [
       {
         encodedAsset: {
           encodedAssetAddr: 1n,

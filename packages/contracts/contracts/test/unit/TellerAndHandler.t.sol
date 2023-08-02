@@ -1637,7 +1637,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "!supported refund asset",
+                maybeFailureReason: "!supported asset",
                 assetsUnwrapped: true
             })
         );
@@ -2422,7 +2422,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Check OperationProcessed event
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "!supported refund asset",
+                maybeFailureReason: "!supported asset",
                 assetsUnwrapped: false
             })
         );
@@ -2441,7 +2441,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, false);
-        assertEq(opResults[0].failureReason, "!supported refund asset");
+        assertEq(opResults[0].failureReason, "!supported asset");
 
         // Bundler not compensated because it should have checked refund token was supported
         assertEq(joinSplitToken.balanceOf(BUNDLER), 0);

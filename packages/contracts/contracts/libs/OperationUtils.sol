@@ -73,9 +73,7 @@ library OperationUtils {
                 ? op.pubJoinSplits[i].joinSplit
                 : op.confJoinSplits[i - op.pubJoinSplits.length];
             EncodedAsset memory encodedAsset = isPublicJoinSplit
-                ? op
-                    .trackedJoinSplitAssets[op.pubJoinSplits[i].assetIndex]
-                    .encodedAsset
+                ? op.trackedAssets[op.pubJoinSplits[i].assetIndex].encodedAsset
                 : EncodedAsset(0, 0);
             uint256 publicSpend = isPublicJoinSplit
                 ? op.pubJoinSplits[i].publicSpend

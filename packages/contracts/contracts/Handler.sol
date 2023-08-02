@@ -134,8 +134,8 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     ///            the revert happens before _gatherReservedGasAssetAndPayBundler is called.
     ///         2. executeActions: A revert here can be due to unpredictable reasons, mainly if
     ///            there is not enough executionGas for the actions or if after executing actions,
-    ///            there are fewer refund tokens than what was specified trackedJoinSplitAssets/
-    ///            trackedRefundAssets minRefundValues.
+    ///            there are fewer refund tokens than what was specified in trackedAssets
+    ///            minRefundValues.
     ///         3. _makeExternalCall: A revert here only leads to top level revert if
     ///            op.atomicActions = true (requires all actions to succeed atomically or none at
     ///            all).
@@ -153,29 +153,23 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         handleOperationGuard
         returns (OperationResult memory opResult)
     {
-        // Ensure joinsplit assets are supported
-        uint256 numJoinSplitAssets = op.trackedJoinSplitAssets.length;
-        for (uint256 i = 0; i < numJoinSplitAssets; i++) {
+        // Ensure all assets supported
+        uint256 numTrackedAssets = op.trackedAssets.length;
+        for (uint256 i = 0; i < numTrackedAssets; i++) {
             (, address assetAddr, ) = AssetUtils.decodeAsset(
-                op.trackedJoinSplitAssets[i].encodedAsset
+                op.trackedAssets[i].encodedAsset
             );
-            require(_supportedContracts[assetAddr], "!supported joinsplit asset");
-        }
-
-        // Ensure refund assets supported
-        uint256 numRefundAssets = op.trackedRefundAssets.length;
-        for (uint256 i = 0; i < numRefundAssets; i++) {
-            (, address assetAddr, ) = AssetUtils.decodeAsset(
-                op.trackedRefundAssets[i].encodedAsset
-            );
-            require(_supportedContracts[assetAddr], "!supported refund asset");
+            require(_supportedContracts[assetAddr], "!supported asset");
         }
 
         // Ensure all token balances of tokens to be used are zeroed out
         _ensureZeroedBalances(op);
 
         // Handle all joinsplits
-        _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
+        uint256 numJoinSplitAssets = _processJoinSplitsReservingFee(
+            op,
+            perJoinSplitVerifyGas
+        );
 
         // If reached this point, assets have been unwrapped and will have refunds to handle
         opResult.assetsUnwrapped = true;
@@ -193,7 +187,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         } catch (bytes memory reason) {
             // Indicates revert because of one of the following reasons:
             // 1. `executeActions` yielded fewer refund tokens than expected in
-            //    trackedJoinSplitAssets/trackedRefundAssets
+            //    trackedAssets
             // 2. `executeActions` exceeded `executionGasLimit`, but in its outer call context
             //    (i.e. while not making an external call)
             // 3. There was a revert when executing actions (e.g. atomic actions, unsupported
@@ -211,7 +205,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             // In case that action execution reverted, num refunds to handle will be number of
             // joinSplit assets. NOTE that this could be higher estimate than actual if joinsplits
             // are not organized in contiguous subarrays by user.
-            opResult.numRefunds = op.trackedJoinSplitAssets.length;
+            opResult.numRefunds = numJoinSplitAssets;
         }
 
         // Set verification and execution gas after getting opResult
@@ -240,7 +234,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     /// @dev This function can revert if any of the below occur (revert not within action itself):
     ///         1. The call runs out of gas in the outer call context (OOG)
     ///         2. The executed actions result in fewer refunds than expected in
-    ///            trackedJoinSplitAssets/trackedRefundAssets
+    ///            trackedAssets
     ///         3. An action reverts and atomicActions is set to true
     ///         4. A call to an unsupported protocol is attempted
     ///         5. An action attempts to re-enter by calling the Teller contract

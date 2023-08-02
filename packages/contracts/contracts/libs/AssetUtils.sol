@@ -105,7 +105,7 @@ library AssetUtils {
         } else {
             revert("Invalid asset");
         }
-        
+
         return value;
     }
 
@@ -117,9 +117,7 @@ library AssetUtils {
         address receiver,
         uint256 value
     ) internal {
-        (AssetType assetType, address assetAddr,) = decodeAsset(
-            encodedAsset
-        );
+        (AssetType assetType, address assetAddr, ) = decodeAsset(encodedAsset);
         if (assetType == AssetType.ERC20) {
             IERC20(assetAddr).safeTransfer(receiver, value);
         } else if (assetType == AssetType.ERC721) {
@@ -139,9 +137,7 @@ library AssetUtils {
         address spender,
         uint256 value
     ) internal {
-        (AssetType assetType, address assetAddr,) = decodeAsset(
-            encodedAsset
-        );
+        (AssetType assetType, address assetAddr, ) = decodeAsset(encodedAsset);
         if (assetType == AssetType.ERC20) {
             IERC20(assetAddr).safeTransferFrom(spender, address(this), value);
         } else if (assetType == AssetType.ERC721) {
@@ -161,9 +157,7 @@ library AssetUtils {
         address spender,
         uint256 value
     ) internal {
-        (AssetType assetType, address assetAddr,) = decodeAsset(
-            encodedAsset
-        );
+        (AssetType assetType, address assetAddr, ) = decodeAsset(encodedAsset);
 
         if (assetType == AssetType.ERC20) {
             // TODO: next OZ release will add SafeERC20.forceApprove

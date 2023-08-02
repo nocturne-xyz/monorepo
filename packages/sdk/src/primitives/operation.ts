@@ -24,8 +24,7 @@ export const OPERATION_TYPES = {
     { name: "pubJoinSplits", type: "PublicJoinSplitWithoutProof[]" },
     { name: "confJoinSplits", type: "JoinSplitWithoutProof[]" },
     { name: "refundAddr", type: "CompressedStealthAddress" },
-    { name: "trackedJoinSplitAssets", type: "TrackedAsset[]" },
-    { name: "trackedRefundAssets", type: "TrackedAsset[]" },
+    { name: "trackedAssets", type: "TrackedAsset[]" },
     { name: "actions", type: "Action[]" },
     { name: "encodedGasAsset", type: "EncodedAsset" },
     { name: "gasAssetRefundThreshold", type: "uint256" },
@@ -79,7 +78,7 @@ export function computeOperationDigest(
     | SignableOperationWithNetworkInfo
     | SubmittableOperationWithNetworkInfo
 ): bigint {
-  if (!("trackedJoinSplitAssets" in operation)) {
+  if (!("trackedAssets" in operation)) {
     operation = toSignableOperation(operation);
   }
 
@@ -101,7 +100,7 @@ export function hashOperation(
     | ProvenOperation
     | SignableOperationWithNetworkInfo
 ): string {
-  if (!("trackedJoinSplitAssets" in operation)) {
+  if (!("trackedAssets" in operation)) {
     operation = toSignableOperation(operation);
   }
 
@@ -146,6 +145,8 @@ export function toSignableOperation(
     })
   );
 
+  const trackedAssets = trackedJoinSplitAssets.concat(trackedRefundAssets);
+
   const pubJoinSplits: SignablePublicJoinSplit[] = [];
   const confJoinSplits: SignableJoinSplit[] = [];
   for (const js of joinSplits) {
@@ -186,8 +187,7 @@ export function toSignableOperation(
     pubJoinSplits,
     confJoinSplits,
     refundAddr,
-    trackedJoinSplitAssets,
-    trackedRefundAssets,
+    trackedAssets,
     actions,
     encodedGasAsset,
     gasAssetRefundThreshold,
@@ -231,6 +231,8 @@ export function toSubmittableOperation(
     )
   );
 
+  const trackedAssets = trackedJoinSplitAssets.concat(trackedRefundAssets);
+
   const pubJoinSplits: SubmittablePublicJoinSplit[] = [];
   const confJoinSplits: SubmittableJoinSplit[] = [];
   for (const js of joinSplits) {
@@ -273,8 +275,7 @@ export function toSubmittableOperation(
     pubJoinSplits,
     confJoinSplits,
     refundAddr,
-    trackedJoinSplitAssets,
-    trackedRefundAssets,
+    trackedAssets,
     actions,
     encodedGasAsset,
     gasAssetRefundThreshold,

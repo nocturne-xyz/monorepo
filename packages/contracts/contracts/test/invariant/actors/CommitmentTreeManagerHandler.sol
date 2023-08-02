@@ -107,8 +107,8 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             confJoinSplits[i] = _generateJoinSplit(seed);
         }
 
-        TrackedAsset[] memory trackedJoinSplitAssets = new TrackedAsset[](1);
-        trackedJoinSplitAssets[0] = TrackedAsset({
+        TrackedAsset[] memory trackedAssets = new TrackedAsset[](1);
+        trackedAssets[0] = TrackedAsset({
             encodedAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
                 address(uint160(bound(_rerandomize(seed), 0, (1 << 160) - 1))),
@@ -132,8 +132,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
                     Utils.BN254_SCALAR_FIELD_MODULUS - 1
                 )
             }),
-            trackedJoinSplitAssets: trackedJoinSplitAssets,
-            trackedRefundAssets: new TrackedAsset[](0),
+            trackedAssets: trackedAssets,
             actions: new Action[](0),
             encodedGasAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
