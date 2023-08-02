@@ -225,15 +225,17 @@ export class BundlerSubmitter {
         return receipt;
       };
 
-      const startingGasPrice = await this.tellerContract.provider.getGasPrice();
+      const startingGasPrice =
+        ((await this.tellerContract.provider.getGasPrice()).toNumber() * 12) /
+        10; // 20% over original
       logger.info(`starting gas price: ${startingGasPrice}`);
 
       logger.info(`submitting bundle with ${operations.length} operations`);
       return await txManager.send({
         sendTransactionFunction: contractTx,
-        minGasPrice: startingGasPrice.toNumber(),
-        maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
-        gasPriceScalingFunction: txManager.LINEAR(1), // +1 gwei each time
+        minGasPrice: startingGasPrice,
+        maxGasPrice: startingGasPrice * 20, // up to 20x starting gas price
+        gasPriceScalingFunction: txManager.LINEAR(2), // + 2x original each time
         delay: 20_000, // Waits 20s between each try
       });
     } catch (err) {

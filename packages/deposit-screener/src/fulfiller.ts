@@ -276,6 +276,9 @@ export class DepositScreenerFulfiller {
           logger.info("submitting completeDeposit tx...");
 
           contractTx = async (gasPrice: number) => {
+            logger.info(
+              `pre-dispatch attempting tx manager submission. gas price: ${gasPrice}`
+            );
             const tx = await this.depositManagerContract.completeErc20Deposit(
               depositRequest,
               signature,
@@ -286,7 +289,7 @@ export class DepositScreenerFulfiller {
             );
 
             logger.info(
-              `attempting tx manager submission. txhash: ${tx.hash} gas price: ${gasPrice}`
+              `post-dispatch attempting tx manager submission. txhash: ${tx.hash} gas price: ${gasPrice}`
             );
 
             return tx.wait(1);
@@ -296,15 +299,16 @@ export class DepositScreenerFulfiller {
           throw new Error("currently only supporting erc20 deposits");
       }
 
-      const startingGasPrice = await this.txSigner.getGasPrice();
+      const startingGasPrice =
+        ((await this.txSigner.getGasPrice()).toNumber() * 12) / 10; // 20% over original
       logger.info(`starting gas price: ${startingGasPrice}`);
 
       logger.info(`completing deposit...`);
       return await txManager.send({
         sendTransactionFunction: contractTx,
-        minGasPrice: startingGasPrice.toNumber(),
-        maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
-        gasPriceScalingFunction: txManager.LINEAR(1), // +1 gwei each time
+        minGasPrice: startingGasPrice,
+        maxGasPrice: startingGasPrice * 20, // up to 20x starting gas price
+        gasPriceScalingFunction: txManager.LINEAR(2), // + 2x original each time
         delay: 20_000, // Waits 20s between each try
       });
     });
