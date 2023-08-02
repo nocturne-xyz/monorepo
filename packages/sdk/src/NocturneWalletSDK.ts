@@ -6,6 +6,7 @@ import {
   computeOperationDigest,
   OperationMetadata,
   OpDigestWithMetadata,
+  TreeFrontier,
 } from "./primitives";
 import { NocturneSigner } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
@@ -17,7 +18,11 @@ import { ethers } from "ethers";
 import { signOperation } from "./signOperation";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
-import { SDKSyncAdapter, TotalEntityIndexTrait } from "./sync";
+import {
+  SDKSyncAdapter,
+  TotalEntityIndexTrait,
+  fetchlatestCommittedMerkleIndex,
+} from "./sync";
 import { SyncOpts, syncSDK } from "./syncSDK";
 import { getJoinSplitRequestTotalValue, unzip } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
@@ -78,6 +83,31 @@ export class NocturneWalletSDK {
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
     this.opTracker = nulliferChecker;
+  }
+
+  // "initialize" the SDK to an empty state and set the tree to the current "tree frontier"
+  // this should only be used when you're 100% sure the user has no notes in the system
+  // only available when using subgraph
+  // WARNING: this method overwrites the tree - you must ensure that the SDK state is empty before calling this method
+  // any existing notes in the DB will become unspendable and the SDK will likely end up in an inconsistent state
+  async _initFromTreeFrontier(
+    subgraphEndpoint: string,
+    treeFrontier: TreeFrontier
+  ): Promise<void> {
+    const { latestTotalEntityIndex, merkleIndex } = treeFrontier;
+
+    const lastCommittedMerkleIndex = await fetchlatestCommittedMerkleIndex(
+      subgraphEndpoint
+    );
+
+    this.merkleProver._setToFrontier(treeFrontier);
+
+    await Promise.all([
+      this.db.setCurrentTotalEntityIndex(latestTotalEntityIndex),
+      this.db.setlatestSyncedMerkleIndex(merkleIndex),
+      this.db.setlatestCommittedMerkleIndex(lastCommittedMerkleIndex ?? 0),
+      this.merkleProver.persist(),
+    ]);
   }
 
   // Sync SDK, returning last synced merkle index of last state diff

@@ -10,6 +10,7 @@ import {
   range,
 } from "./utils/functional";
 import { ZERO_VALUE, DEPTH, ARITY } from "./primitives/treeConstants";
+import { TreeFrontier } from "./primitives";
 
 // high level idea:
 // want to sync a local replica of the tree such that
@@ -96,6 +97,45 @@ export class SparseMerkleProver {
     this.uncommittedLeaves = [];
     this._count = 0;
     this.kv = kv;
+  }
+
+  // clears the tree and sets it to the tree frontier
+  // all existing leaves, committed or not, will be pruned
+  // do not call this method unless you know what you're doing
+  _setToFrontier(frontier: TreeFrontier): void {
+    const { merkleIndex, root, rightmostPath } = frontier;
+
+    let levelNodes = rightmostPath[0].map((hash) => ({
+      hash,
+      children: [...NO_CHILDREN],
+    }));
+    let rootNode: TreeNode | undefined;
+    let mask = merkleIndex;
+    for (const levelHashes of rightmostPath.slice(1)) {
+      const pathIndex = mask & 0b11;
+      mask >>= 2;
+
+      rootNode = {
+        children: levelNodes,
+        hash: levelHashes[pathIndex],
+      };
+
+      levelNodes = levelHashes.map((hash) => ({
+        hash,
+        children: [...NO_CHILDREN],
+      }));
+      levelNodes[pathIndex] = rootNode;
+    }
+
+    rootNode = {
+      children: levelNodes,
+      hash: root,
+    };
+
+    this.root = rootNode;
+    this.leaves = new Map();
+    this.uncommittedLeaves = [];
+    this._count = merkleIndex + 1;
   }
 
   getRoot(): bigint {

@@ -176,3 +176,12 @@ export interface OpDigestWithMetadata {
   opDigest: bigint;
   metadata?: OperationMetadata;
 }
+
+export interface TreeFrontier {
+  merkleIndex: number;
+  root: bigint;
+  latestTotalEntityIndex: bigint;
+
+  // rightmostPath is a 2D array of node hashes, where the outer dimension is the level, and the inner dimension is the path index
+  rightmostPath: bigint[][];
+}
