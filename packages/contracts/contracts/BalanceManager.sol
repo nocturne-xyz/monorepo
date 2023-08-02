@@ -331,6 +331,7 @@ contract BalanceManager is CommitmentTreeManager {
             : 0;
 
         if (difference > 0) {
+            // Token callback safe since we know leftoverTokensHandler and Teller have no receiver hooks currently
             AssetUtils.transferAssetTo(encodedAsset, to, difference);
             return difference;
         }

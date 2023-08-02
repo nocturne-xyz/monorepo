@@ -150,6 +150,7 @@ contract Teller is
 
         uint256[] memory opDigests = new uint256[](ops.length);
         for (uint256 i = 0; i < ops.length; i++) {
+            Validation.validateOperation(ops[i]);
             opDigests[i] = _computeDigest(ops[i]);
         }
 
@@ -163,7 +164,6 @@ contract Teller is
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            Validation.validateOperation(ops[i]);
             try
                 _handler.handleOperation(
                     ops[i],

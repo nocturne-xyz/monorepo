@@ -153,6 +153,15 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         handleOperationGuard
         returns (OperationResult memory opResult)
     {
+        // Ensure joinsplit assets are supported
+        uint256 numJoinSplitAssets = op.trackedJoinSplitAssets.length;
+        for (uint256 i = 0; i < numJoinSplitAssets; i++) {
+            (, address assetAddr, ) = AssetUtils.decodeAsset(
+                op.trackedJoinSplitAssets[i].encodedAsset
+            );
+            require(_supportedContracts[assetAddr], "!supported joinsplit asset");
+        }
+
         // Ensure refund assets supported
         uint256 numRefundAssets = op.trackedRefundAssets.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
@@ -215,7 +224,6 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         );
 
         // Gather reserved gas asset and process gas payment to bundler
-        // TODO: fix vuln where bundler can steal tokens after min refunds
         _gatherReservedGasAssetAndPayBundler(
             op,
             opResult,

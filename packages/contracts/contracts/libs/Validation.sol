@@ -29,7 +29,7 @@ library Validation {
         require(block.timestamp <= op.deadline, "expired deadline");
 
         // Ensure gas asset is erc20 to ensure transfers to bundler retain control flow (no 
-        // callbacks)
+        // callbacks/receiver hooks)
         (AssetType assetType, , ) = AssetUtils.decodeAsset(op.encodedGasAsset);
         require(assetType == AssetType.ERC20, "!gas erc20");
     }

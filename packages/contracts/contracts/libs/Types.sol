@@ -83,6 +83,7 @@ struct Operation {
     PublicJoinSplit[] pubJoinSplits;
     JoinSplit[] confJoinSplits;
     CompressedStealthAddress refundAddr;
+    // TODO: collapse joinsplit and refund assets into single array
     TrackedAsset[] trackedJoinSplitAssets;
     TrackedAsset[] trackedRefundAssets;
     Action[] actions;
