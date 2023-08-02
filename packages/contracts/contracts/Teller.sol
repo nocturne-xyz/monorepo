@@ -204,40 +204,21 @@ contract Teller is
     /// @return success Whether or not all proofs were successfully verified
     /// @return perJoinSplitVerifyGas Gas cost of verifying a single joinSplit proof (total batch
     ///         verification cost divided by number of proofs)
-    //@requires(1) ops.length == opDigests.length
-    //@requires(2) ops.length > 0
-    //@requires(3) for i in 0..ops.length: opDigests[i] is the correct opDigest for ops[i]
-    //@ensures(1) if success == true, for every `op` in `ops`, all JoinSplit.ensures() are true for every joinSplit in `op`
-    //@ensures(2) `perJoinSplitVerifyGas` is the total gas cost incurred by this method divided by the number of JoinSplits in `ops`
     function _verifyAllProofsMetered(
         Operation[] calldata ops,
         uint256[] memory opDigests
     ) internal view returns (bool success, uint256 perJoinSplitVerifyGas) {
         uint256 preVerificationGasLeft = gasleft();
 
-        //@lemma(1) for all i in 0..ops.length: allPis[i] satisfies every JoinSplit.requires(...) clause WRT (proofs[i], ops[i])
-        //@argument OperationUtils.extractJoinSplitProofsAndPis.requires(...) is satisfied by @requires(1,2),
-        // and from OperationUtils.extractJoinSplitProofsAndPis.ensures(...), we can conclude that,
-        // for every (proof, allPis) pair in proofs.zip(allPis), all JoinSpli.requires(...) are satisfied for that (proof, op) pair
         (uint256[8][] memory proofs, uint256[][] memory allPis) = OperationUtils
             .extractJoinSplitProofsAndPis(ops, opDigests);
 
-        // if there is only one proof, use the single proof verification
-        //@satisfes(1)
-        //@argument @lemma(1) guarantees JoinSplit.requires(...) clauses are satisfied for every (proof, allPis) pair.
-        // this satisfies _joinsplitVerifier.verifyProof.requires(...), and
-        // _joinsplitVerifier.batchVerifyProofs.requires(...) is satisfied as well because @requires(1) satisfies
-        // _joinsplitVerifier.batchVerifyProofs.requires(1).
-        // (1) then follows from _joinsplitVerifier.batchVerifyProofs.ensures(...) and _joinsplitVerifier.verifyProof.ensures(...)
         if (proofs.length == 1) {
             success = _joinSplitVerifier.verifyProof(proofs[0], allPis[0]);
         } else {
             success = _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
         }
 
-        //@satisfies(2)
-        //@argument `preVerificationGasLeft` is the amount of gas left in the transaction at the beginning of the method,
-        // so (2) is true by defn (exactly what the code does)
         perJoinSplitVerifyGas =
             (preVerificationGasLeft - gasleft()) /
             proofs.length;

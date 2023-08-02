@@ -103,25 +103,18 @@ contract JoinSplitVerifier is IJoinSplitVerifier {
     }
 
     /// @return r  bool true if proof is valid
-    //@requires(...) all JoinSplit.requires() in joinsplit.circom
-    //@ensures(...) all JoinSplit.ensures() in joinsplit.circom
     function verifyProof(
         uint256[8] memory proof,
         uint256[] memory pi
     ) public view override returns (bool r) {
-        //@satisies(1, 2) because we implicitly assume the verifying key and solidity verifier impl is correct
         return Groth16.verifyProof(verifyingKey(), proof, pi);
     }
 
     /// @return r bool true if proofs are valid
-    //@requires(1) proofs.length == allPis.length
-    //@requires(2...) all JoinSplit.requires() from joinsplit.circom are satisfied for every (proof, pi) pair
-    //@ensures(...) if r == true, then JoinSplit.ensures(...) from joinsplit.circom is satisfied for every (proof, pi) pair
     function batchVerifyProofs(
         uint256[8][] memory proofs,
         uint256[][] memory allPis
     ) public view override returns (bool r) {
-        //@satisies(1, 2) because we implicitly assume the verifying key and solidity verifier impl is correct
         return Groth16.batchVerifyProofs(verifyingKey(), proofs, allPis);
     }
 }
