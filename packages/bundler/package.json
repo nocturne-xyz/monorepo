@@ -29,7 +29,7 @@
     "@nocturne-xyz/contracts": "1.0.32-alpha",
     "@nocturne-xyz/offchain-utils": "0.1.10",
     "@nocturne-xyz/sdk": "1.0.169-testnet",
-    "@openzeppelin/defender-relay-client": "^1.47.1",
+    "@openzeppelin/defender-relay-client": "1.47.1",
     "@types/commander": "^2.12.2",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.14",

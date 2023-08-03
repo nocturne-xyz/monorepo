@@ -2848,7 +2848,7 @@ __metadata:
     "@nocturne-xyz/contracts": 1.0.32-alpha
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.169-testnet
-    "@openzeppelin/defender-relay-client": ^1.47.1
+    "@openzeppelin/defender-relay-client": 1.47.1
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
@@ -3005,13 +3005,13 @@ __metadata:
     "@nocturne-xyz/contracts": 1.0.33-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.169-testnet
-    "@nocturne-xyz/tx-manager": 1.0.1-alpha
     "@opentelemetry/api": ^1.4.1
     "@opentelemetry/exporter-metrics-otlp-http": ^0.40.0
     "@opentelemetry/instrumentation": ^0.40.0
     "@opentelemetry/resources": ^1.14.0
     "@opentelemetry/sdk-metrics": ^1.14.0
     "@opentelemetry/semantic-conventions": ^1.14.0
+    "@openzeppelin/defender-relay-client": 1.47.1
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -3301,7 +3301,7 @@ __metadata:
     "@nocturne-xyz/contracts": 1.0.33-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.174-testnet
-    "@nocturne-xyz/tx-manager": 1.0.1-alpha
+    "@openzeppelin/defender-relay-client": 1.47.1
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
     "@types/commander": ^2.12.2
@@ -3342,6 +3342,7 @@ __metadata:
     "@nocturne-xyz/local-prover": 1.0.7-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.169-testnet
+    "@openzeppelin/defender-relay-client": 1.47.1
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -3377,7 +3378,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/tx-manager@1.0.1-alpha, @nocturne-xyz/tx-manager@workspace:packages/tx-manager":
+"@nocturne-xyz/tx-manager@workspace:packages/tx-manager":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/tx-manager@workspace:packages/tx-manager"
   dependencies:
@@ -4111,7 +4112,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/defender-relay-client@npm:^1.47.1":
+"@openzeppelin/defender-relay-client@npm:1.47.1":
   version: 1.47.1
   resolution: "@openzeppelin/defender-relay-client@npm:1.47.1"
   dependencies:
