@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/tx-manager",
-  "version": "1.0.1-alpha",
+  "version": "1.0.2-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,7 +19,6 @@
     "publish": "yarn build; yarn npm publish --access public"
   },
   "dependencies": {
-    "@types/bluebird": "^3.5.38",
     "ethers": "^5.7.2"
   },
   "devDependencies": {

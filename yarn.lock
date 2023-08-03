@@ -2964,7 +2964,7 @@ __metadata:
     "@nocturne-xyz/contracts": 1.0.33-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.169-testnet
-    "@nocturne-xyz/tx-manager": 1.0.1-alpha
+    "@nocturne-xyz/tx-manager": 1.0.2-alpha
     "@opentelemetry/api": ^1.4.1
     "@opentelemetry/exporter-metrics-otlp-http": ^0.40.0
     "@opentelemetry/instrumentation": ^0.40.0
@@ -3260,7 +3260,7 @@ __metadata:
     "@nocturne-xyz/contracts": 1.0.33-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.174-testnet
-    "@nocturne-xyz/tx-manager": 1.0.1-alpha
+    "@nocturne-xyz/tx-manager": 1.0.2-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
     "@types/commander": ^2.12.2
@@ -3336,11 +3336,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/tx-manager@1.0.1-alpha, @nocturne-xyz/tx-manager@workspace:packages/tx-manager":
+"@nocturne-xyz/tx-manager@1.0.2-alpha, @nocturne-xyz/tx-manager@workspace:packages/tx-manager":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/tx-manager@workspace:packages/tx-manager"
   dependencies:
-    "@types/bluebird": ^3.5.38
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
     "@types/mocha": ^10.0.0
@@ -3349,7 +3348,6 @@ __metadata:
     "@types/sinon-chai": ^3.2.9
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
-    bluebird: ^3.7.2
     chai: ^4.3.6
     chai-as-promised: ^7.1.1
     eslint: ^7.32.0
@@ -3363,6 +3361,17 @@ __metadata:
     typescript: ^4.8.4
   languageName: unknown
   linkType: soft
+
+"@nocturne-xyz/tx-manager@npm:1.0.1-alpha":
+  version: 1.0.1-alpha
+  resolution: "@nocturne-xyz/tx-manager@npm:1.0.1-alpha"
+  dependencies:
+    "@types/bluebird": ^3.5.38
+    bluebird: ^3.7.2
+    ethers: ^5.7.2
+  checksum: 3572c42ab0ee8cd6c8cea06b5c4b8c0c55eb6e4554fea0937ddb250804af11b70c2c4525f9e53ddaff495eb427df39b8abd665b8c027bcf1e32d73c9e4623ee6
+  languageName: node
+  linkType: hard
 
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
@@ -9664,7 +9673,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
