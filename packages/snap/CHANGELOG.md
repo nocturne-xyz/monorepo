@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add `lastSyncedMerkleIndex` usage if sync already is taking place
 - remove custom gas est call in snap and let sdk handle
 - `nocturne_sync` takes and propagates `SyncOpts` as params
 - remove use of winston logger
