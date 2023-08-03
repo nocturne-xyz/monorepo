@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add positive security annotations to subtreeupdate circuit
 - add positive security annotations to `joinsplit.circom`
 - add on-curve and order check to `spendPubkey`
 - change `IsOrderGreaterThan8` to `IsOrderL`, which is a stricter condition that leaves less room for error
