@@ -1,5 +1,4 @@
 // forked from https://github.com/kendricktan/ynatm
-import Bluebird from "bluebird";
 import { ethers } from "ethers";
 
 // GWEI = 1e9
@@ -130,7 +129,7 @@ const send = async ({
     gasPriceScalingFunction,
   });
 
-  return new Bluebird((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const timeoutIds: NodeJS.Timeout[] = [];
     const failedTxs: any[] = [];
 

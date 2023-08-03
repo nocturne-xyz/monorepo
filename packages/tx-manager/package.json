@@ -20,7 +20,6 @@
   },
   "dependencies": {
     "@types/bluebird": "^3.5.38",
-    "bluebird": "^3.7.2",
     "ethers": "^5.7.2"
   },
   "devDependencies": {
