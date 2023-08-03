@@ -4,7 +4,6 @@ import { BundlerSubmitter } from "../../../submitter";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { getRedis } from "./utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
-import { RelayClient } from "@openzeppelin/defender-relay-client";
 import {
   DefenderRelayProvider,
   DefenderRelaySigner,
@@ -32,53 +31,19 @@ const runSubmitter = new Command("submitter")
     const { configNameOrPath, logDir, stdoutLogLevel } = options;
     const config = loadNocturneConfig(configNameOrPath);
 
-    const ozApiKey = process.env.OZ_API_KEY;
-    const ozApiSecret = process.env.OZ_API_SECRET;
-    const ozRelayerAddress = process.env.OZ_RELAYER_ADDRESS;
+    const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
+    const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
 
     const privateKey = process.env.TX_SIGNER_KEY;
     const rpcUrl = process.env.RPC_URL;
 
     let signer: ethers.Signer;
-    if (ozApiKey && ozApiSecret) {
+    if (relayerApiKey && relayerApiSecret) {
       const credentials = {
-        apiKey: ozApiKey,
-        apiSecret: ozApiSecret,
-      };
-      const relayClient = new RelayClient(credentials);
-      const relayerResponse = (await relayClient.list()).items.find(
-        (r) => r.address === ozRelayerAddress
-      );
-
-      if (!relayerResponse) {
-        throw new Error("No relayer with address " + ozRelayerAddress);
-      }
-
-      let relayerApiKey: string;
-      let relayerSecretKey: string;
-
-      const keys = await relayClient.listKeys(relayerResponse.relayerId);
-      if (keys.length > 0 && keys[0].secretKey) {
-        relayerApiKey = keys[0].apiKey;
-        relayerSecretKey = keys[0].secretKey;
-      } else {
-        const relayerKeyResponse = await relayClient.createKey(
-          relayerResponse.relayerId
-        );
-        if (!relayerKeyResponse.secretKey) {
-          throw new Error(
-            `No secret key returned for relayer with id: ${relayerResponse.relayerId}}`
-          );
-        }
-
-        relayerApiKey = relayerKeyResponse.apiKey;
-        relayerSecretKey = relayerKeyResponse.secretKey;
-      }
-
-      const provider = new DefenderRelayProvider({
         apiKey: relayerApiKey,
-        apiSecret: relayerSecretKey,
-      });
+        apiSecret: relayerApiSecret,
+      };
+      const provider = new DefenderRelayProvider(credentials);
       signer = new DefenderRelaySigner(credentials, provider, {
         speed: "average",
       });
@@ -87,7 +52,7 @@ const runSubmitter = new Command("submitter")
       signer = new ethers.Wallet(privateKey, provider);
     } else {
       throw new Error(
-        "missing RPC_URL/PRIVATE_KEY or OZ_API_KEY/OZ_API_SECRET"
+        "missing RPC_URL/PRIVATE_KEY or OZ_RELAYER_API_KEY/OZ_RELAYER_API_SECRET"
       );
     }
 
