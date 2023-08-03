@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add positive security annotations to `joinsplit.circom`
 - change `IsOrderGreaterThan8` to `IsOrderL`, which is a stricter condition that leaves less room for error
 - add witness-gen only BJJ scalar mul
 - in `subtreeupdate.circom`, append `bitmap` to preimage of the batch accumulator hash to prevent malicious prover from lying about insertion type (TOB-4)

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- rename/reorder some joinsplit circuit fields
 - collapse tracked assets into single array and have sdk simply concat joinsplit and refund assets during translation step
 - add hybrid randomization step to schnorr signing procedure to protect against fault injection attacks
 - decouple spending key from schnorr signing key with sha512-based key derivation step
