@@ -255,6 +255,8 @@ template Encrypt(n) {
 
 // takes `2n` bits and outputs n 2-bit limbs
 // interpreted in little-endian order
+//@requires(1) n < 127
+//@ensures(1) for all i in 0..n: limbs[i] == bits[i*2] + 2*bits[i*2 + 1]
 template BitsToTwoBitLimbs(n) {
     signal input bits[2*n];
     signal output limbs[n];
@@ -266,6 +268,8 @@ template BitsToTwoBitLimbs(n) {
 
 // slices first k elements out of an array of n elements
 // why doesn't circom support this????
+//@requires(1) k <= n
+//@ensures(1) forall i in 0..k: slice[i] == arr[i]
 template SliceFirstK(n, k) {
     signal input arr[n];
     signal output slice[k];
@@ -275,6 +279,9 @@ template SliceFirstK(n, k) {
     }
 }
 
+//@requires(1) k <= n
+//@ensures(1) slice.length == k
+//@ensures(1) forall i in 0..k: slice[i] == arr[n - k + i]
 template SliceLastK(n, k) {
     signal input arr[n];
     signal output slice[k];
