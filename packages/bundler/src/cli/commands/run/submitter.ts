@@ -4,6 +4,7 @@ import { BundlerSubmitter } from "../../../submitter";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { getRedis } from "./utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { RelayClient } from "@openzeppelin/defender-relay-client";
 import {
   DefenderRelayProvider,
   DefenderRelaySigner,
@@ -33,6 +34,7 @@ const runSubmitter = new Command("submitter")
 
     const ozApiKey = process.env.OZ_API_KEY;
     const ozApiSecret = process.env.OZ_API_SECRET;
+    const ozRelayerAddress = process.env.OZ_RELAYER_ADDRESS;
 
     const privateKey = process.env.TX_SIGNER_KEY;
     const rpcUrl = process.env.RPC_URL;
@@ -43,7 +45,40 @@ const runSubmitter = new Command("submitter")
         apiKey: ozApiKey,
         apiSecret: ozApiSecret,
       };
-      const provider = new DefenderRelayProvider(credentials);
+      const relayClient = new RelayClient(credentials);
+      const relayerResponse = (await relayClient.list()).items.find(
+        (r) => r.address === ozRelayerAddress
+      );
+
+      if (!relayerResponse) {
+        throw new Error("No relayer with address " + ozRelayerAddress);
+      }
+
+      let relayerApiKey: string;
+      let relayerSecretKey: string;
+
+      const keys = await relayClient.listKeys(relayerResponse.relayerId);
+      if (keys.length > 0 && keys[0].secretKey) {
+        relayerApiKey = keys[0].apiKey;
+        relayerSecretKey = keys[0].secretKey;
+      } else {
+        const relayerKeyResponse = await relayClient.createKey(
+          relayerResponse.relayerId
+        );
+        if (!relayerKeyResponse.secretKey) {
+          throw new Error(
+            `No secret key returned for relayer with id: ${relayerResponse.relayerId}}`
+          );
+        }
+
+        relayerApiKey = relayerKeyResponse.apiKey;
+        relayerSecretKey = relayerKeyResponse.secretKey;
+      }
+
+      const provider = new DefenderRelayProvider({
+        apiKey: relayerApiKey,
+        apiSecret: relayerSecretKey,
+      });
       signer = new DefenderRelaySigner(credentials, provider, {
         speed: "average",
       });
