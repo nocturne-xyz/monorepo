@@ -3,6 +3,7 @@
 ### Unreleased
 
 - change spend key derivation to `keccak256(bip44Node.privateKey)`
+- Add `lastSyncedMerkleIndex` usage if sync already is taking place
 - remove custom gas est call in snap and let sdk handle
 - `nocturne_sync` takes and propagates `SyncOpts` as params
 - remove use of winston logger

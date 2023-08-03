@@ -30,6 +30,8 @@ const SUBGRAPH_API_URL =
 const config = loadNocturneConfigBuiltin("sepolia");
 
 const NOCTURNE_BIP44_COINTYPE = 6789;
+let snapIsSyncing = false;
+let lastSyncedMerkleIndex: number | undefined;
 
 async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
   const nocturneNode = await snap.request({
@@ -62,7 +64,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
   const kvStore = new SnapKvStore();
   const nocturneDB = new NocturneDB(kvStore);
   const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
-
   const signer = await getNocturneSignerFromBIP44();
   console.log("Snap Nocturne Canonical Address: ", signer.canonicalAddress());
 
@@ -90,12 +91,20 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
         await sdk.getAllAssetBalances(request.params as unknown as GetNotesOpts) // yikes typing
       );
     case "nocturne_sync":
+      if (snapIsSyncing) {
+        console.log(
+          "Snap is already syncing, returning last synced index, ",
+          lastSyncedMerkleIndex
+        );
+        return lastSyncedMerkleIndex;
+      }
       const maybeSyncOpts = (request.params as any).syncOpts;
       const syncOpts: SyncOpts | undefined = maybeSyncOpts
         ? JSON.parse(maybeSyncOpts)
         : undefined;
 
       console.log("Syncing", syncOpts);
+      snapIsSyncing = true;
       let latestSyncedMerkleIndex: number | undefined;
       try {
         // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
@@ -109,7 +118,11 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
       } catch (e) {
         console.log("Error syncing notes: ", e);
         throw e;
+      } finally {
+        snapIsSyncing = false;
       }
+      console.log("latestSyncedMerkleIndex, ", latestSyncedMerkleIndex);
+      lastSyncedMerkleIndex = latestSyncedMerkleIndex ?? lastSyncedMerkleIndex;
       return latestSyncedMerkleIndex;
     case "nocturne_getLatestSyncedMerkleIndex":
       return await sdk.getLatestSyncedMerkleIndex();
