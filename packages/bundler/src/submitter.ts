@@ -208,14 +208,20 @@ export class BundlerSubmitter {
       const nonce = await this.signingProvider.getTransactionCount(); // ensure its replacement tx
 
       const contractTx = async (gasPrice: number) => {
-        const tx = await this.tellerContract.processBundle(
-          { operations },
-          {
-            gasLimit: gasEst.toBigInt() + 200_000n, // buffer
-            gasPrice,
-            nonce,
-          }
-        );
+        logger.info("attempting to dispatch tx with gas price:", { gasPrice });
+        const tx = await this.tellerContract
+          .processBundle(
+            { operations },
+            {
+              gasLimit: gasEst.toBigInt() + 200_000n, // buffer
+              gasPrice,
+              nonce,
+            }
+          )
+          .catch((err) => {
+            logger.error("failed to dispatch bundle:", err);
+            throw err;
+          });
 
         logger.info(
           `attempting tx manager submission. txhash: ${tx.hash} gas price: ${gasPrice}`
