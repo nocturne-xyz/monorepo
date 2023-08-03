@@ -3378,34 +3378,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/tx-manager@workspace:packages/tx-manager":
-  version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/tx-manager@workspace:packages/tx-manager"
-  dependencies:
-    "@types/bluebird": ^3.5.38
-    "@types/chai": ^4.3.3
-    "@types/chai-as-promised": ^7.1.5
-    "@types/mocha": ^10.0.0
-    "@types/node": ^18.8.0
-    "@types/sinon": ^10.0.13
-    "@types/sinon-chai": ^3.2.9
-    "@typescript-eslint/eslint-plugin": ^5.20.0
-    "@typescript-eslint/parser": ^5.20.0
-    bluebird: ^3.7.2
-    chai: ^4.3.6
-    chai-as-promised: ^7.1.1
-    eslint: ^7.32.0
-    eslint-config-prettier: ^8.8.0
-    ethers: ^5.7.2
-    mocha: ^10.1.0
-    prettier: ^2.8.8
-    sinon: ^15.0.1
-    sinon-chai: ^3.7.0
-    ts-node: ^10.9.1
-    typescript: ^4.8.4
-  languageName: unknown
-  linkType: soft
-
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -4554,13 +4526,6 @@ __metadata:
   dependencies:
     "@types/retry": "*"
   checksum: 39413b8bf4bb1bb7dbbd9a7415cc1d0fa8a10b9308afb4578dbdcaabc7e58a980a7c5a2cf7905912b722716e5d5aeb12f76ecf54b402932b863a80bc79108ae1
-  languageName: node
-  linkType: hard
-
-"@types/bluebird@npm:^3.5.38":
-  version: 3.5.38
-  resolution: "@types/bluebird@npm:3.5.38"
-  checksum: 8d1b04261e8e58816ec84ffa616c9e641c9416d0ab10c915ddb9cd8a0e7070af16df4f2eec243a3809cbed8ecee2fb3f45600ae43b3ab0ceea563aa18ceb6ab1
   languageName: node
   linkType: hard
 
@@ -6782,7 +6747,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bluebird@npm:^3.5.0, bluebird@npm:^3.5.2, bluebird@npm:^3.5.5, bluebird@npm:^3.7.2":
+"bluebird@npm:^3.5.0, bluebird@npm:^3.5.2, bluebird@npm:^3.5.5":
   version: 3.7.2
   resolution: "bluebird@npm:3.7.2"
   checksum: 869417503c722e7dc54ca46715f70e15f4d9c602a423a02c825570862d12935be59ed9c7ba34a9b31f186c017c23cac6b54e35446f8353059c101da73eac22ef
