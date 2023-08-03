@@ -273,13 +273,17 @@ export class DepositScreenerFulfiller {
     const receipt = await this.signerMutex.runExclusive(async () => {
       switch (asset.assetType) {
         case AssetType.ERC20:
-          logger.info("pre-dispatch attempting tx submission");
+          logger.info(
+            `pre-dispatch attempting tx submission. nonce ${depositRequest.nonce}`
+          );
           const tx = await this.depositManagerContract.completeErc20Deposit(
             depositRequest,
             signature
           );
 
-          logger.info(`post-dispatch awaiting tx receipt. txhash: ${tx.hash}`);
+          logger.info(
+            `post-dispatch awaiting tx receipt. nonce: ${depositRequest.nonce}. txhash: ${tx.hash}`
+          );
           const receipt = await tx.wait(1);
           return receipt;
         default:
