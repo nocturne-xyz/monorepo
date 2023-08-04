@@ -21,6 +21,7 @@ contract CommitmentTreeManager is
     PausableUpgradeable
 {
     using LibOffchainMerkleTree for OffchainMerkleTree;
+    using OperationLib for Operation;
 
     // Set of past roots of the merkle tree
     mapping(uint256 => bool) public _pastRoots;
@@ -168,8 +169,7 @@ contract CommitmentTreeManager is
     ///      used as soon as they are checked to be valid.
     /// @param op Operation with joinsplits
     function _handleJoinSplits(Operation calldata op) internal {
-        uint256 totalNumJoinSplits = op.pubJoinSplits.length +
-            op.confJoinSplits.length;
+        uint256 totalNumJoinSplits = op.totalNumJoinSplits();
         uint256[] memory newNoteCommitments = new uint256[](
             totalNumJoinSplits * 2
         );
@@ -181,11 +181,13 @@ contract CommitmentTreeManager is
                 ? op.pubJoinSplits[i].joinSplit
                 : op.confJoinSplits[i - op.pubJoinSplits.length];
 
-            // Check validity of both nullifiers
+            // Check commitment tree root is valid
             require(
                 _pastRoots[joinSplit.commitmentTreeRoot],
                 "Tree root not past root"
             );
+
+            // Check both NFs are not already used and don't match
             require(
                 !_nullifierSet[joinSplit.nullifierA],
                 "Nullifier A already used"
@@ -199,7 +201,7 @@ contract CommitmentTreeManager is
                 "2 nfs should !equal"
             );
 
-            // Mark nullifiers as used
+            // Mark NFs used
             _nullifierSet[joinSplit.nullifierA] = true;
             _nullifierSet[joinSplit.nullifierB] = true;
 

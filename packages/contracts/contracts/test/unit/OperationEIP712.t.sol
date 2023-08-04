@@ -53,17 +53,8 @@ contract OperationEIP712Test is Test {
             encodedFunction: hex"1234"
         });
 
-        TrackedAsset[] memory trackedJoinSplitAssets = new TrackedAsset[](1);
-        trackedJoinSplitAssets[0] = TrackedAsset({
-            encodedAsset: EncodedAsset({
-                encodedAssetAddr: 1,
-                encodedAssetId: 1
-            }),
-            minRefundValue: 1
-        });
-
-        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
-        trackedRefundAssets[0] = TrackedAsset({
+        TrackedAsset[] memory trackedAssets = new TrackedAsset[](1);
+        trackedAssets[0] = TrackedAsset({
             encodedAsset: EncodedAsset({
                 encodedAssetAddr: 1,
                 encodedAssetId: 1
@@ -75,8 +66,7 @@ contract OperationEIP712Test is Test {
             pubJoinSplits: pubJoinSplits,
             confJoinSplits: joinSplits,
             refundAddr: CompressedStealthAddress({h1: 1, h2: 1}),
-            trackedJoinSplitAssets: trackedJoinSplitAssets,
-            trackedRefundAssets: trackedRefundAssets,
+            trackedAssets: trackedAssets,
             actions: actions,
             encodedGasAsset: EncodedAsset({
                 encodedAssetAddr: 1,
@@ -90,14 +80,14 @@ contract OperationEIP712Test is Test {
         });
 
         bytes32 trackedAssetHash = tellerBase.hashTrackedAsset(
-            trackedJoinSplitAssets[0]
+            trackedAssets[0]
         );
         console.log("trackedAssetHash:");
         console.logBytes32(trackedAssetHash);
         console.log("");
 
         bytes32 encodedAssetHash = tellerBase.hashEncodedAsset(
-            trackedJoinSplitAssets[0].encodedAsset
+            trackedAssets[0].encodedAsset
         );
         console.log("encodedAssetHash:");
         console.logBytes32(encodedAssetHash);
@@ -151,7 +141,7 @@ contract OperationEIP712Test is Test {
         assertEq(
             operationHash,
             bytes32(
-                0x227283b954c9c1b6a55739251bfc8b30078b66027600d4a41a999444ce07ca18
+                0xd48b43d3583d7d4afecb8fdd8ffa70e5f0280927c627afb91d5f313b4120d86d
             )
         );
 
@@ -183,7 +173,7 @@ contract OperationEIP712Test is Test {
         assertEq(
             operationDigest,
             uint256(
-                0x24522ed9322b4c4ec5a1788eedda6039ad7944c64c2f46c00620a5619b66e9c4
+                0x5542656472b4c63f2699db47e8f8f2779645b1764d92c69281ad06641ef866a
             )
         );
     }

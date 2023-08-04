@@ -83,8 +83,7 @@ struct Operation {
     PublicJoinSplit[] pubJoinSplits;
     JoinSplit[] confJoinSplits;
     CompressedStealthAddress refundAddr;
-    TrackedAsset[] trackedJoinSplitAssets;
-    TrackedAsset[] trackedRefundAssets;
+    TrackedAsset[] trackedAssets;
     Action[] actions;
     EncodedAsset encodedGasAsset;
     uint256 gasAssetRefundThreshold;
@@ -124,8 +123,7 @@ library OperationLib {
             ((perJoinSplitVerifyGas + GAS_PER_JOINSPLIT_HANDLE) *
                 (self.pubJoinSplits.length + self.confJoinSplits.length)) +
             ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) *
-                (self.trackedJoinSplitAssets.length +
-                    self.trackedRefundAssets.length));
+                self.trackedAssets.length);
     }
 
     function maxGasAssetCost(
@@ -133,5 +131,11 @@ library OperationLib {
         uint256 perJoinSplitVerifyGas
     ) internal pure returns (uint256) {
         return self.gasPrice * maxGasLimit(self, perJoinSplitVerifyGas);
+    }
+
+    function totalNumJoinSplits(
+        Operation calldata self
+    ) internal pure returns (uint256) {
+        return self.pubJoinSplits.length + self.confJoinSplits.length;
     }
 }

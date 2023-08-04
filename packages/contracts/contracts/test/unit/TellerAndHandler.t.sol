@@ -460,16 +460,13 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Deploy and dep manager whitelist new token but not in handler
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(
-            ALICE,
-            Validation.NOCTURNE_MAX_NOTE_VALUE + PER_NOTE_AMOUNT
-        );
+        token.reserveTokens(ALICE, Validation.MAX_NOTE_VALUE + PER_NOTE_AMOUNT);
 
         // Approve 50M tokens for deposit
         vm.prank(ALICE);
         token.approve(
             address(teller),
-            Validation.NOCTURNE_MAX_NOTE_VALUE + PER_NOTE_AMOUNT
+            Validation.MAX_NOTE_VALUE + PER_NOTE_AMOUNT
         );
 
         // Valid deposit works
@@ -485,7 +482,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // value > 2^252
         Deposit memory badValueDeposit = deposit;
-        badValueDeposit.value = Validation.NOCTURNE_MAX_NOTE_VALUE + 1;
+        badValueDeposit.value = Validation.MAX_NOTE_VALUE + 1;
         vm.prank(ALICE);
         vm.expectRevert("invalid note");
         teller.depositFunds(badValueDeposit);
@@ -1640,7 +1637,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "!supported refund asset",
+                maybeFailureReason: "!supported asset",
                 assetsUnwrapped: true
             })
         );
@@ -2425,7 +2422,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Check OperationProcessed event
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "!supported refund asset",
+                maybeFailureReason: "!supported asset",
                 assetsUnwrapped: false
             })
         );
@@ -2444,7 +2441,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, false);
-        assertEq(opResults[0].failureReason, "!supported refund asset");
+        assertEq(opResults[0].failureReason, "!supported asset");
 
         // Bundler not compensated because it should have checked refund token was supported
         assertEq(joinSplitToken.balanceOf(BUNDLER), 0);
@@ -2638,7 +2635,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Format op with EXPIRED_DEADLINE failure type
-        Operation memory op = NocturneUtils.formatOperation(
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
                     address(token)
@@ -2667,9 +2665,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        vm.prank(address(teller));
+        vm.prank(BUNDLER);
         vm.expectRevert("expired deadline");
-        handler.handleOperation(op, 0, BUNDLER);
+        teller.processBundle(bundle);
     }
 
     // TODO: move to Handler.t.sol

@@ -90,7 +90,7 @@ library AssetUtils {
     ) internal view returns (uint256) {
         (AssetType assetType, address assetAddr, uint256 id) = AssetUtils
             .decodeAsset(encodedAsset);
-        uint256 value;
+        uint256 value = 0;
         if (assetType == AssetType.ERC20) {
             value = IERC20(assetAddr).balanceOf(address(this));
         } else if (assetType == AssetType.ERC721) {
@@ -102,7 +102,10 @@ library AssetUtils {
             } catch {}
         } else if (assetType == AssetType.ERC1155) {
             value = IERC1155(assetAddr).balanceOf(address(this), id);
+        } else {
+            revert("Invalid asset");
         }
+
         return value;
     }
 
@@ -114,26 +117,13 @@ library AssetUtils {
         address receiver,
         uint256 value
     ) internal {
-        (AssetType assetType, address assetAddr, uint256 id) = decodeAsset(
-            encodedAsset
-        );
+        (AssetType assetType, address assetAddr, ) = decodeAsset(encodedAsset);
         if (assetType == AssetType.ERC20) {
             IERC20(assetAddr).safeTransfer(receiver, value);
         } else if (assetType == AssetType.ERC721) {
-            require(value == 1, "ERC721 value != 1");
-
-            // uncaught revert will be propagated
-            // we use safeTransferFrom because receiver is unknown
-            IERC721(assetAddr).safeTransferFrom(address(this), receiver, id);
+            revert("!supported");
         } else if (assetType == AssetType.ERC1155) {
-            // uncaught revert will be propagated
-            IERC1155(assetAddr).safeTransferFrom(
-                address(this),
-                receiver,
-                id,
-                value,
-                ""
-            );
+            revert("!supported");
         } else {
             revert("Invalid asset");
         }
@@ -147,27 +137,13 @@ library AssetUtils {
         address spender,
         uint256 value
     ) internal {
-        (AssetType assetType, address assetAddr, uint256 id) = decodeAsset(
-            encodedAsset
-        );
+        (AssetType assetType, address assetAddr, ) = decodeAsset(encodedAsset);
         if (assetType == AssetType.ERC20) {
             IERC20(assetAddr).safeTransferFrom(spender, address(this), value);
         } else if (assetType == AssetType.ERC721) {
-            require(value == 1, "ERC721 value != 1");
-
-            // uncaught revert will be propagated
-            // we use transferFrom because receiver is always this contract which we know
-            // implements onERC721Received
-            IERC721(assetAddr).transferFrom(spender, address(this), id);
+            revert("!supported");
         } else if (assetType == AssetType.ERC1155) {
-            // uncaught revert will be propagated
-            IERC1155(assetAddr).safeTransferFrom(
-                spender,
-                address(this),
-                id,
-                value,
-                ""
-            );
+            revert("!supported");
         } else {
             revert("Invalid asset");
         }
@@ -181,22 +157,16 @@ library AssetUtils {
         address spender,
         uint256 value
     ) internal {
-        (AssetType assetType, address assetAddr, uint256 id) = decodeAsset(
-            encodedAsset
-        );
+        (AssetType assetType, address assetAddr, ) = decodeAsset(encodedAsset);
 
         if (assetType == AssetType.ERC20) {
             // TODO: next OZ release will add SafeERC20.forceApprove
             IERC20(assetAddr).approve(spender, 0);
             IERC20(assetAddr).approve(spender, value);
         } else if (assetType == AssetType.ERC721) {
-            require(value == 1, "ERC721 value != 1");
-
-            // uncaught revert will be propagated
-            IERC721(assetAddr).approve(spender, id);
+            revert("!supported");
         } else if (assetType == AssetType.ERC1155) {
-            // uncaught revert will be propagated
-            IERC1155(assetAddr).setApprovalForAll(spender, true);
+            revert("!supported");
         } else {
             revert("Invalid asset");
         }

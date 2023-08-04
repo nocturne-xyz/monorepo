@@ -137,8 +137,7 @@ export interface SignableOperationWithNetworkInfo
   extends Omit<BaseOperation, "encodedRefundAssets"> {
   pubJoinSplits: SignablePublicJoinSplit[];
   confJoinSplits: SignableJoinSplit[];
-  trackedJoinSplitAssets: TrackedAsset[];
-  trackedRefundAssets: TrackedAsset[];
+  trackedAssets: TrackedAsset[];
 }
 
 export interface SubmittableOperationWithNetworkInfo

@@ -107,8 +107,8 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             confJoinSplits[i] = _generateJoinSplit(seed);
         }
 
-        TrackedAsset[] memory trackedJoinSplitAssets = new TrackedAsset[](1);
-        trackedJoinSplitAssets[0] = TrackedAsset({
+        TrackedAsset[] memory trackedAssets = new TrackedAsset[](1);
+        trackedAssets[0] = TrackedAsset({
             encodedAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
                 address(uint160(bound(_rerandomize(seed), 0, (1 << 160) - 1))),
@@ -132,8 +132,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
                     Utils.BN254_SCALAR_FIELD_MODULUS - 1
                 )
             }),
-            trackedJoinSplitAssets: trackedJoinSplitAssets,
-            trackedRefundAssets: new TrackedAsset[](0),
+            trackedAssets: trackedAssets,
             actions: new Action[](0),
             encodedGasAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
@@ -180,7 +179,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
         commitmentTreeManager.handleRefundNote(
             encodedAsset,
             refundAddr,
-            bound(seed, 0, Validation.NOCTURNE_MAX_NOTE_VALUE)
+            bound(seed, 0, Validation.MAX_NOTE_VALUE)
         );
         ghost_refundNotesLeafCount += 1;
         handleRefundNotesLength = 1;
@@ -264,6 +263,6 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             0,
             Validation.MAX_ASSET_ID
         );
-        note.value = bound(note.value, 0, Validation.NOCTURNE_MAX_NOTE_VALUE);
+        note.value = bound(note.value, 0, Validation.MAX_NOTE_VALUE);
     }
 }

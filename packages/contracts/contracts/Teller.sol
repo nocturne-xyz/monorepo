@@ -14,6 +14,7 @@ import {IHandler} from "./interfaces/IHandler.sol";
 import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 import {OperationEIP712} from "./OperationEIP712.sol";
 import {Utils} from "./libs/Utils.sol";
+import {Validation} from "./libs/Validation.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
 import {Groth16} from "./libs/OperationUtils.sol";
@@ -149,6 +150,7 @@ contract Teller is
 
         uint256[] memory opDigests = new uint256[](ops.length);
         for (uint256 i = 0; i < ops.length; i++) {
+            Validation.validateOperation(ops[i]);
             opDigests[i] = _computeDigest(ops[i]);
         }
 

@@ -54,8 +54,7 @@ library OperationUtils {
         pure
         returns (uint256[8][] memory proofs, uint256[][] memory allPis)
     {
-        uint256 numJoinSplitsForOp = op.pubJoinSplits.length +
-            op.confJoinSplits.length;
+        uint256 numJoinSplitsForOp = OperationLib.totalNumJoinSplits(op);
         proofs = new uint256[8][](numJoinSplitsForOp);
         allPis = new uint256[][](numJoinSplitsForOp);
 
@@ -74,9 +73,7 @@ library OperationUtils {
                 ? op.pubJoinSplits[i].joinSplit
                 : op.confJoinSplits[i - op.pubJoinSplits.length];
             EncodedAsset memory encodedAsset = isPublicJoinSplit
-                ? op
-                    .trackedJoinSplitAssets[op.pubJoinSplits[i].assetIndex]
-                    .encodedAsset
+                ? op.trackedAssets[op.pubJoinSplits[i].assetIndex].encodedAsset
                 : EncodedAsset(0, 0);
             uint256 publicSpend = isPublicJoinSplit
                 ? op.pubJoinSplits[i].publicSpend
@@ -127,8 +124,8 @@ library OperationUtils {
         Operation calldata op,
         OperationResult memory opResult
     ) internal pure returns (uint256) {
-        uint256 handleJoinSplitGas = (op.pubJoinSplits.length +
-            op.confJoinSplits.length) * GAS_PER_JOINSPLIT_HANDLE;
+        uint256 handleJoinSplitGas = OperationLib.totalNumJoinSplits(op) *
+            GAS_PER_JOINSPLIT_HANDLE;
         uint256 refundGas = opResult.numRefunds *
             (GAS_PER_REFUND_HANDLE + GAS_PER_REFUND_TREE);
 

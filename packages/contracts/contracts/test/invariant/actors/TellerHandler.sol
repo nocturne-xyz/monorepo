@@ -27,6 +27,7 @@ import "../../../libs/Types.sol";
 
 contract TellerHandler is OperationGenerator {
     using LibTokenIdSet for TokenIdSet;
+    using OperationLib for Operation;
 
     // ______PUBLIC______
     Teller public teller;
@@ -282,7 +283,7 @@ contract TellerHandler is OperationGenerator {
         uint256 total = 0;
         for (uint256 i = 0; i < op.pubJoinSplits.length; i++) {
             EncodedAsset memory encodedAsset = op
-                .trackedJoinSplitAssets[op.pubJoinSplits[i].assetIndex]
+                .trackedAssets[op.pubJoinSplits[i].assetIndex]
                 .encodedAsset;
             (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
             if (assetAddr == joinSplitTokens[tokenIndex]) {

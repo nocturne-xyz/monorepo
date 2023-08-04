@@ -135,7 +135,7 @@ contract OffchainMerkleHandler is InvariantUtils {
         _encodedNote.value = bound(
             _rerandomize(seed),
             0,
-            Validation.NOCTURNE_MAX_NOTE_VALUE
+            Validation.MAX_NOTE_VALUE
         );
     }
 }

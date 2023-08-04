@@ -243,11 +243,11 @@ library NocturneUtils {
             deadline = 0;
         }
 
-        TrackedAsset[] memory trackedJoinSplitAssets = new TrackedAsset[](
-            args.joinSplitsPublicSpends.length
+        TrackedAsset[] memory trackedAssets = new TrackedAsset[](
+            args.joinSplitsPublicSpends.length + args.trackedRefundAssets.length
         );
         for (uint256 i = 0; i < args.joinSplitTokens.length; i++) {
-            trackedJoinSplitAssets[i] = TrackedAsset({
+            trackedAssets[i] = TrackedAsset({
                 encodedAsset: AssetUtils.encodeAsset(
                     AssetType.ERC20,
                     args.joinSplitTokens[i],
@@ -256,13 +256,16 @@ library NocturneUtils {
                 minRefundValue: args.joinSplitRefundValues[i]
             });
         }
+        for (uint256 i = 0; i < args.trackedRefundAssets.length; i++) {
+            trackedAssets[i + args.joinSplitTokens.length] = args
+                .trackedRefundAssets[i];
+        }
 
         Operation memory op = Operation({
             pubJoinSplits: pubJoinSplits,
             confJoinSplits: confJoinSplits,
             refundAddr: defaultStealthAddress(),
-            trackedJoinSplitAssets: trackedJoinSplitAssets,
-            trackedRefundAssets: args.trackedRefundAssets,
+            trackedAssets: trackedAssets,
             actions: args.actions,
             encodedGasAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
@@ -292,8 +295,7 @@ library NocturneUtils {
                 executionGas: op.executionGasLimit,
                 verificationGas: op.pubJoinSplits.length *
                     GAS_PER_JOINSPLIT_VERIFY,
-                numRefunds: op.trackedJoinSplitAssets.length +
-                    op.trackedRefundAssets.length
+                numRefunds: op.trackedAssets.length
             });
     }
 

@@ -34,16 +34,7 @@ export const VALID_RELAY_REQUEST = {
       h1: "0n",
       h2: "0n",
     },
-    trackedJoinSplitAssets: [
-      {
-        encodedAsset: {
-          encodedAssetAddr: "2n",
-          encodedAssetId: "3n",
-        },
-        minRefundValue: "100n",
-      },
-    ],
-    trackedRefundAssets: [
+    trackedAssets: [
       {
         encodedAsset: {
           encodedAssetAddr: "2n",

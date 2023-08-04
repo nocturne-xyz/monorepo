@@ -68,7 +68,7 @@ contract BalanceManager is CommitmentTreeManager {
     function _processJoinSplitsReservingFee(
         Operation calldata op,
         uint256 perJoinSplitVerifyGas
-    ) internal {
+    ) internal returns (uint256 numJoinSplitAssets) {
         // process nullifiers and insert new noteCommitments for each joinSplit
         // will throw an error if nullifiers are invalid or tree root invalid
         // NOTE: we handle both public and conf joinSplits here, all code below though is
@@ -90,9 +90,7 @@ contract BalanceManager is CommitmentTreeManager {
             uint8 joinSplitAssetIndex = op
                 .pubJoinSplits[subarrayStartIndex]
                 .assetIndex;
-            encodedAsset = op
-                .trackedJoinSplitAssets[joinSplitAssetIndex]
-                .encodedAsset;
+            encodedAsset = op.trackedAssets[joinSplitAssetIndex].encodedAsset;
 
             // Get largest possible subarray for current asset and sum of publicSpend
             uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
@@ -120,6 +118,7 @@ contract BalanceManager is CommitmentTreeManager {
             }
 
             subarrayStartIndex = subarrayEndIndex + 1;
+            numJoinSplitAssets++; // NOTE: if joinsplits not sorted contiguously by asset, this number will be higher than the actual number of joinsplits
 
             // If value to transfer is 0, skip the transfer
             if (valueToGatherForSubarray > 0) {
@@ -171,18 +170,10 @@ contract BalanceManager is CommitmentTreeManager {
     ///      and return the amount transferred.
     /// @param op Operation to ensure zeroed balances for
     function _ensureZeroedBalances(Operation calldata op) internal {
-        uint256 numJoinSplitAssets = op.trackedJoinSplitAssets.length;
-        for (uint256 i = 0; i < numJoinSplitAssets; i++) {
+        uint256 numTrackedAssets = op.trackedAssets.length;
+        for (uint256 i = 0; i < numTrackedAssets; i++) {
             _transferOutstandingAssetToAndReturnAmount(
-                op.trackedJoinSplitAssets[i].encodedAsset,
-                _leftoverTokensHolder
-            );
-        }
-
-        uint256 numRefundAssets = op.trackedRefundAssets.length;
-        for (uint256 i = 0; i < numRefundAssets; i++) {
-            _transferOutstandingAssetToAndReturnAmount(
-                op.trackedRefundAssets[i].encodedAsset,
+                op.trackedAssets[i].encodedAsset,
                 _leftoverTokensHolder
             );
         }
@@ -195,10 +186,10 @@ contract BalanceManager is CommitmentTreeManager {
         Operation calldata op
     ) internal view returns (uint256 numRefundsToHandle) {
         bool gasAssetAlreadyInRefunds = false;
-        uint256 numTrackedJoinSplitAssets = op.trackedJoinSplitAssets.length;
-        for (uint256 i = 0; i < numTrackedJoinSplitAssets; i++) {
+        uint256 numTrackedAssets = op.trackedAssets.length;
+        for (uint256 i = 0; i < numTrackedAssets; i++) {
             uint256 refundValue = _ensureMinRefundValueForTrackedAsset(
-                op.trackedJoinSplitAssets[i]
+                op.trackedAssets[i]
             );
 
             if (refundValue > 0) {
@@ -207,23 +198,12 @@ contract BalanceManager is CommitmentTreeManager {
                 if (
                     !gasAssetAlreadyInRefunds &&
                     AssetUtils.eq(
-                        op.trackedJoinSplitAssets[i].encodedAsset,
+                        op.trackedAssets[i].encodedAsset,
                         op.encodedGasAsset
                     )
                 ) {
                     gasAssetAlreadyInRefunds = true;
                 }
-            }
-        }
-
-        uint256 numTrackedRefundAssets = op.trackedRefundAssets.length;
-        for (uint256 i = 0; i < numTrackedRefundAssets; i++) {
-            uint256 refundValue = _ensureMinRefundValueForTrackedAsset(
-                op.trackedRefundAssets[i]
-            );
-
-            if (refundValue > 0) {
-                numRefundsToHandle++;
             }
         }
 
@@ -269,29 +249,17 @@ contract BalanceManager is CommitmentTreeManager {
 
     /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
     ///         to the Teller and inserting new note commitments for the sent back assets.
-    /// @dev Checks for refunds op.trackedJoinSplitAssets and op.trackedRefundAssets. A refund
-    ///      occurs if any of the checked assets have outstanding balance > 0 in the Handler. If a
-    ///      refund occurs, the Handler will transfer the asset back to the Teller and insert a new
+    /// @dev Checks for refunds in op.trackedAssets. A refund occurs if any of the checked assets
+    ///      have outstanding balance > 0 in the Handler. If a refund occurs, the Handler will
+    ///      transfer the asset back to the Teller and insert a new
     ///      note commitment into the commitment tree.
     /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
         EncodedAsset calldata encodedAsset;
 
-        uint256 numJoinSplitAssets = op.trackedJoinSplitAssets.length;
-        for (uint256 i = 0; i < numJoinSplitAssets; i++) {
-            encodedAsset = op.trackedJoinSplitAssets[i].encodedAsset;
-            uint256 refundAmount = _transferOutstandingAssetToAndReturnAmount(
-                encodedAsset,
-                address(_teller)
-            );
-            if (refundAmount > 0) {
-                _handleRefundNote(encodedAsset, op.refundAddr, refundAmount);
-            }
-        }
-
-        uint256 numRefundAssets = op.trackedRefundAssets.length;
-        for (uint256 i = 0; i < numRefundAssets; i++) {
-            encodedAsset = op.trackedRefundAssets[i].encodedAsset;
+        uint256 numTrackedAssets = op.trackedAssets.length;
+        for (uint256 i = 0; i < numTrackedAssets; i++) {
+            encodedAsset = op.trackedAssets[i].encodedAsset;
             uint256 refundAmount = _transferOutstandingAssetToAndReturnAmount(
                 encodedAsset,
                 address(_teller)
@@ -331,6 +299,7 @@ contract BalanceManager is CommitmentTreeManager {
             : 0;
 
         if (difference > 0) {
+            // Token callback safe since we know leftoverTokensHandler and Teller have no receiver hooks currently
             AssetUtils.transferAssetTo(encodedAsset, to, difference);
             return difference;
         }

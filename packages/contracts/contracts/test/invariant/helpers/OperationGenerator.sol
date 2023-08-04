@@ -21,6 +21,7 @@ import {ActorSumSet, LibActorSumSet} from "../helpers/ActorSumSet.sol";
 import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
+import {Validation} from "../../../libs/Validation.sol";
 import {InvariantUtils} from "../helpers/InvariantUtils.sol";
 import "../../../libs/Types.sol";
 
@@ -325,7 +326,10 @@ contract OperationGenerator is InvariantUtils {
         uint256 swapErc20OutAmount = bound(
             _rerandomize(args.seed),
             0,
-            type(uint256).max - args.swapErc20.totalSupply()
+            Utils.min(
+                type(uint256).max - args.swapErc20.totalSupply(),
+                Validation.MAX_NOTE_VALUE
+            )
         );
         SwapRequest memory swapRequest = SwapRequest({
             assetInOwner: address(args.handler),
