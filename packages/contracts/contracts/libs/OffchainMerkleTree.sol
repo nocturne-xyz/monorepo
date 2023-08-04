@@ -163,6 +163,12 @@ library LibOffchainMerkleTree {
     }
 
     // H(updates || bitmap)
+    // claim: it's impossible to have a collision between two different sets of updates
+    // argument: order matters because of hash function. The only way two different sequences of note commitments
+    // could result in the same accumulatorHash would be if the inner hashes - either note commitments or note sha256 hashes -
+    // were the same, but the insertion kinds were mismatched. That is, there's a sha256 hash "masquerading" as a note commitment
+    // in the batch. But this is impossible because we also include the bitmap in the hash - which this library ensures is consistent with the
+    // order and kind of insertinos in the batch.
     function _computeAccumulatorHash(
         OffchainMerkleTree storage self
     ) internal view returns (uint256) {
