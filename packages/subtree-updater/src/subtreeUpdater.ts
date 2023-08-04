@@ -24,7 +24,6 @@ import { ActorHandle, makeCreateCounterFn } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import { Insertion } from "./sync/syncAdapter";
 import { PersistentLog } from "./persistentLog";
-import * as txManager from "@nocturne-xyz/tx-manager";
 import { Mutex } from "async-mutex";
 import { ACTOR_NAME, COMPONENT_NAME } from "./constants";
 
@@ -315,31 +314,19 @@ export class SubtreeUpdater {
         `acquiring mutex on handler contract to submit update tx for subtree index ${subtreeIndex}`
       );
       const receipt = await this.handlerMutex.runExclusive(async () => {
-        const nonce = await this.handlerContract.signer.getTransactionCount(); // ensure its replacement
-        const contractTx = async (gasPrice: number) => {
-          const tx = await this.handlerContract.applySubtreeUpdate(
-            newRoot,
-            solidityProof,
-            { gasPrice, nonce }
-          );
+        logger.info(
+          `pre-dispatch attempting tx submission. subtreeIndex: ${subtreeIndex}`
+        );
+        const tx = await this.handlerContract.applySubtreeUpdate(
+          newRoot,
+          solidityProof
+        );
 
-          logger.info(
-            `attempting tx manager submission. subtreIndex: ${subtreeIndex} txhash: ${tx.hash} gas price: ${gasPrice}`
-          );
-          return tx.wait(1);
-        };
-
-        const startingGasPrice =
-          await this.handlerContract.provider.getGasPrice();
-        logger.info(`starting gas price: ${startingGasPrice}`);
-
-        return await txManager.send({
-          sendTransactionFunction: contractTx,
-          minGasPrice: startingGasPrice.toNumber(),
-          maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
-          gasPriceScalingFunction: txManager.LINEAR(1), // +1 gwei each time
-          delay: 20_000, // Waits 20s between each try
-        });
+        logger.info(
+          `post-dispatch awaiting tx receipt. subtreeIndex: ${subtreeIndex}. txhash: ${tx.hash}`
+        );
+        const receipt = await tx.wait(1);
+        return receipt;
       });
 
       logger.info("subtree update tx receipt:", { receipt, subtreeIndex });

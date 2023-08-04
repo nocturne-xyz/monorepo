@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- replace tx manager with OZ relay
 - integrate tx manager to fix stuck txs
 - put back redis utils
 - make logging more consistent

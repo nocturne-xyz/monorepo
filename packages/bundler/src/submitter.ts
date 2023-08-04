@@ -24,7 +24,6 @@ import {
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
-import * as txManager from "@nocturne-xyz/tx-manager";
 
 const COMPONENT_NAME = "submitter";
 
@@ -36,8 +35,8 @@ interface BundlerSubmitterMetrics {
 
 export class BundlerSubmitter {
   redis: IORedis;
-  signingProvider: ethers.Wallet;
-  tellerContract: Teller; // TODO: replace with tx manager
+  signingProvider: ethers.Signer;
+  tellerContract: Teller;
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   logger: Logger;
@@ -48,7 +47,7 @@ export class BundlerSubmitter {
 
   constructor(
     tellerAddress: Address,
-    signingProvider: ethers.Wallet,
+    signingProvider: ethers.Signer,
     redis: IORedis,
     logger: Logger
   ) {
@@ -205,37 +204,16 @@ export class BundlerSubmitter {
         to: this.tellerContract.address,
         data,
       });
-      const nonce = await this.signingProvider.getTransactionCount(); // ensure its replacement tx
 
-      const contractTx = async (gasPrice: number) => {
-        const tx = await this.tellerContract.processBundle(
-          { operations },
-          {
-            gasLimit: gasEst.toBigInt() + 200_000n, // buffer
-            gasPrice,
-            nonce,
-          }
-        );
+      logger.info("pre-dispatch attempting tx submission");
+      const tx = await this.tellerContract.processBundle(
+        { operations },
+        { gasLimit: gasEst.toBigInt() + 200_000n }
+      );
 
-        logger.info(
-          `attempting tx manager submission. txhash: ${tx.hash} gas price: ${gasPrice}`
-        );
-
-        const receipt = await tx.wait(1);
-        return receipt;
-      };
-
-      const startingGasPrice = await this.tellerContract.provider.getGasPrice();
-      logger.info(`starting gas price: ${startingGasPrice}`);
-
-      logger.info(`submitting bundle with ${operations.length} operations`);
-      return await txManager.send({
-        sendTransactionFunction: contractTx,
-        minGasPrice: startingGasPrice.toNumber(),
-        maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
-        gasPriceScalingFunction: txManager.LINEAR(1), // +1 gwei each time
-        delay: 20_000, // Waits 20s between each try
-      });
+      logger.info(`post-dispatch awaiting tx receipt. txhash: ${tx.hash}`);
+      const receipt = await tx.wait(1);
+      return receipt;
     } catch (err) {
       logger.error("failed to process bundle:", err);
       const redisTxs = operations.flatMap((op) => {

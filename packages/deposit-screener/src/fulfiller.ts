@@ -39,7 +39,6 @@ import {
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import { millisToSeconds } from "./utils";
-import * as txManager from "@nocturne-xyz/tx-manager";
 
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 const COMPONENT_NAME = "fulfiller";
@@ -55,8 +54,8 @@ export class DepositScreenerFulfiller {
   supportedAssets: Set<Address>;
   signerMutex: Mutex;
   depositManagerContract: DepositManager;
+  txSigner: ethers.Signer;
   attestationSigner: ethers.Wallet;
-  txSigner: ethers.Wallet;
   redis: IORedis;
   db: DepositScreenerDB;
   metrics: DepositScreenerFulfillerMetrics;
@@ -64,7 +63,7 @@ export class DepositScreenerFulfiller {
   constructor(
     logger: Logger,
     depositManagerAddress: Address,
-    txSigner: ethers.Wallet,
+    txSigner: ethers.Signer,
     attestationSigner: ethers.Wallet,
     redis: IORedis,
     supportedAssets: Set<Address>
@@ -73,7 +72,11 @@ export class DepositScreenerFulfiller {
     this.redis = redis;
     this.db = new DepositScreenerDB(redis);
 
+    if (!txSigner.provider) {
+      throw new Error("txSigner must have a provider");
+    }
     this.txSigner = txSigner;
+
     this.attestationSigner = attestationSigner;
     this.signerMutex = new Mutex();
 
@@ -201,7 +204,7 @@ export class DepositScreenerFulfiller {
                 attributes
               );
 
-              const block = await this.txSigner.provider.getBlock(
+              const block = await this.txSigner.provider!.getBlock(
                 receipt.blockNumber
               );
               const timestamp = block.timestamp;
@@ -268,45 +271,24 @@ export class DepositScreenerFulfiller {
 
     const asset = AssetTrait.decode(depositRequest.encodedAsset);
     const receipt = await this.signerMutex.runExclusive(async () => {
-      const nonce = await this.txSigner.getTransactionCount(); // ensure tx manager replaces txs
-
-      let contractTx: (gasPrice: number) => Promise<ethers.ContractReceipt>;
       switch (asset.assetType) {
         case AssetType.ERC20:
-          logger.info("submitting completeDeposit tx...");
+          logger.info(
+            `pre-dispatch attempting tx submission. nonce ${depositRequest.nonce}`
+          );
+          const tx = await this.depositManagerContract.completeErc20Deposit(
+            depositRequest,
+            signature
+          );
 
-          contractTx = async (gasPrice: number) => {
-            const tx = await this.depositManagerContract.completeErc20Deposit(
-              depositRequest,
-              signature,
-              {
-                gasPrice,
-                nonce,
-              }
-            );
-
-            logger.info(
-              `attempting tx manager submission. txhash: ${tx.hash} gas price: ${gasPrice}`
-            );
-
-            return tx.wait(1);
-          };
-          break;
+          logger.info(
+            `post-dispatch awaiting tx receipt. nonce: ${depositRequest.nonce}. txhash: ${tx.hash}`
+          );
+          const receipt = await tx.wait(1);
+          return receipt;
         default:
           throw new Error("currently only supporting erc20 deposits");
       }
-
-      const startingGasPrice = await this.txSigner.getGasPrice();
-      logger.info(`starting gas price: ${startingGasPrice}`);
-
-      logger.info(`completing deposit...`);
-      return await txManager.send({
-        sendTransactionFunction: contractTx,
-        minGasPrice: startingGasPrice.toNumber(),
-        maxGasPrice: startingGasPrice.toNumber() * 20, // up to 20x starting gas price
-        gasPriceScalingFunction: txManager.LINEAR(1), // +1 gwei each time
-        delay: 20_000, // Waits 20s between each try
-      });
     });
 
     logger.info("completeDeposit receipt:", { receipt });

@@ -12,6 +12,10 @@ import {
   assertOrErr,
 } from "@nocturne-xyz/sdk";
 import { RapidsnarkSubtreeUpdateProver } from "../../../rapidsnarkProver";
+import {
+  DefenderRelayProvider,
+  DefenderRelaySigner,
+} from "@openzeppelin/defender-relay-client/lib/ethers";
 
 export const runSubtreeUpdater = new Command("subtree-updater")
   .summary("run subtree updater service")
@@ -90,19 +94,34 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       logger.child({ function: "SubgraphSubtreeUpdaterSyncAdapter" })
     );
 
+    const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
+    const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
+
+    const privateKey = process.env.TX_SIGNER_KEY;
     const rpcUrl = process.env.RPC_URL;
-    if (!rpcUrl) {
-      throw new Error("missing RPC_URL");
+
+    let signer: ethers.Signer;
+    if (relayerApiKey && relayerApiSecret) {
+      const credentials = {
+        apiKey: relayerApiKey,
+        apiSecret: relayerApiSecret,
+      };
+      const provider = new DefenderRelayProvider(credentials);
+      signer = new DefenderRelaySigner(credentials, provider, {
+        speed: "average",
+      });
+    } else if (rpcUrl && privateKey) {
+      const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+      signer = new ethers.Wallet(privateKey, provider);
+    } else {
+      throw new Error(
+        "missing RPC_URL/PRIVATE_KEY or OZ_RELAYER_API_KEY/OZ_RELAYER_API_SECRET"
+      );
     }
-    const txSignerKey = process.env.TX_SIGNER_KEY;
-    if (!txSignerKey) {
-      throw new Error("missing TX_SIGNER_KEY");
-    }
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-    const txSigner = new ethers.Wallet(txSignerKey, provider);
+
     const handlerContract = Handler__factory.connect(
       config.handlerAddress(),
-      txSigner
+      signer
     );
 
     const fillBatchLatency = fillBatchLatencyMs
