@@ -59,8 +59,8 @@ template IsOrderL() {
     ];
 
     // witness Q = (inv(8) mod l) * P
-    //@lemma(1) Q is a valid curve point because Baby Jubjub is a group and @requires(1) guarantees (PX, PY) is a valid curve point
     signal Q[2] <-- scalarMul(PX, PY, 251, inv8);
+    BabyCheck()(Q[0], Q[1]);
 
     signal Q2X, Q2Y, Q4X, Q4Y, Q8X, Q8Y;
 
@@ -71,7 +71,7 @@ template IsOrderL() {
     // check that 8Q = P
     //@lemma(2) if 8Q == P, then either P has order l or 1
     //@argument
-    //   1. by @lemma(1) guarantees Q is a valid baby Jubjub point.
+    //   1. BabyCheck above guarantees Q is a valid baby Jubjub point.
     //   2. by lagrange's theorem, the order of Q must divide 8*l (Baby Jubjub order), so ord(Q) must be 1, 2, 4, 8, l, 2l, 4l, or 8l.
     //   3. for any group element Q, ord(kQ) = ord(Q) / gcd(ord(Q), k)
     //   therefore:
