@@ -158,7 +158,6 @@ contract CommitmentTreeManager is
     /// @notice Inserts several note commitments into the tree
     /// @param ncs Note commitments to insert
     function _insertNoteCommitments(uint256[] memory ncs) internal {
-        // TODO: this guaranteed to be < BN254 modulus because of poseidon hash required by circuit?
         _merkle.insertNoteCommitments(ncs);
     }
 
