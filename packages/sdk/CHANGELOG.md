@@ -2,9 +2,10 @@
 
 ### Unreleased
 
+- collapse tracked assets into single array and have sdk simply concat joinsplit and refund assets during translation step
 - add hybrid randomization step to schnorr signing procedure to protect against fault injection attacks
 - decouple spending key from schnorr signing key with sha512-based key derivation step
- - this changed the type of `SpendingKey` from `bigint` to `Uint8Array`
+- this changed the type of `SpendingKey` from `bigint` to `Uint8Array`
 - update test case that generates `calculatePublicInputs` test vector
 - append `bitmap` to preimage of `accumulatorHash` to match contracts
 - in `JoinSplitInputs` generation code, mask `encodedAsset` PIs to zero when `publicSpend` is 0.

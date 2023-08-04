@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- add `validateOperation` function to `ValidationLib` which ensures that:
+  - the operation has only > 0 public spends for pubJoinSplits (between circuits and this check, we know for sure that all pub joinsplits are spending non-masked assets and all conf joinsplits are spending masked assets)
+  - the encoded gas asset is an erc20
+- have AssetUtil transferFrom, transferTo, and approve revert in the erc721/1155 case to make sure the Teller/Handler cannot transact with non erc20 tokens at all
+- collapse tracked assets into single array to save gas/code
 - add `validateNote` and `validateCompressedPoint` to new `Validation` lib
 - validate refund notes before they are queued for insertion into the commitment tree
 - add test lib `AlgebraicUtils` that implements BN254 field arithmetic and point decrompression
