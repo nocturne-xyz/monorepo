@@ -86,6 +86,14 @@ library LibOffchainMerkleTree {
     ) internal {
         uint256[] memory pis = _calculatePublicInputs(self, newRoot);
 
+        // 1) this library computes accumulatorHash on its own,
+        // the definition of accumulatorHash prevents collisions (different batch with same hash),
+        // and the subtree update circuit guarantees `accumulatorHash` is re-computed correctly,
+        // so if the circuit accepts, the only possible batch the updater could be inserting is precisely
+        // the batch we've enqueued here on-chain
+        // 2) the subtree update circuit guarantees that the new root is computed correctly,
+        //    so due to (1), the only possible newRoot is the newRoot that results from inserting
+        //    the batch we've enqueued here on-chain
         require(
             self.subtreeUpdateVerifier.verifyProof(proof, pis),
             "subtree update proof invalid"
