@@ -177,9 +177,9 @@ template JoinSplit(levels) {
 
     // check VK derivation
     //@satisfies(4.1)
-    //@argument follows from VKDerivation.ensures(3) since VKDerivation.requires(1) is satisfied by @lemma(1)
+    //@argument follows from VKDerivation.ensures(1) since VKDerivation.requires(1) is satisfied by (5.1)
     //@satisfies(4.2)
-    //@argument follows from VKDerivation.ensures(2) since VKDerivation.requires(1) is satisfied by @lemma(1)
+    //@argument follows from VKDerivation.ensures(3) since VKDerivation.requires(1) is satisfied by (5.1)
     component vkDerivation = VKDerivation();
     vkDerivation.spendPubkey <== spendPubkey;
     vkDerivation.vkNonce <== vkNonce;
@@ -230,23 +230,23 @@ template JoinSplit(levels) {
     //@lemma(4) oldNoteBOwnerH2 is order-l
     //@argument same as @lemma(3)
     //@satisfies(6.4)
-    //@argument same as (6.3)
+    //@argument same as (6.3), but with @lemma(4) and @lemma(6) instead of @lemma(3) and @lemma(5)
     BabyCheck()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
     BabyCheck()(oldNoteBOwnerH2X, oldNoteBOwnerH2Y);
     IsOrderL()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
 
     // check that old note owner addresses correspond to user's viewing key 
     //@lemma(5) oldNoteAOwnerH2 is order-l
-    //@argument (6.1) satisfies IsOrderL.requires(1), and IsOrderL.ensures(1) ensures that H1 is of order-l
+    //@argument (6.1) satisfies StealthAddrOwnership.requires(1), and StealthAddrOwnership.ensures(1) ensures that H2 is of order-l
     //@satisfies(6.5)
     //@argument StealthAddrOwnership.requires(1) is satisfied by (6.1) and @lemma(4), and StealthAddrOwnership.requires(2) is satisfied by (6.1)
     //   therefore, by StealthAddrOwnership.ensures(1), old note A owner is "owned" by the viewing key according to the Nocturne Stealth Address scheme
     StealthAddrOwnership()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, vkBits);
 
     //@lemma(6) oldNoteBOwnerH2 is order-l
-    //@argument same as @lemma(6)
+    //@argument same as @lemma(5)
     //@satisfies(6.6)
-    //@argument same as (6.5)
+    //@argument same as (6.5), but with @lemma(6) instead of @lemma(5)
     StealthAddrOwnership()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, vkBits);
 
     // check that the sum of old and new note values are in range [0, 2**252)
@@ -279,7 +279,7 @@ template JoinSplit(levels) {
 
     // compute publicSpend
     //@satisfies(11.2)
-    //@argument (10.3-6) together with @requires(8.1-2) ensures that there's no overflows, therefore (11.2) holds by defn
+    //@argument (10.3-6) together with (11.1) ensures that there's no over/underflow, therefore (11.2) holds
     publicSpend <== valInput - valOutput;
 
     // get sign bits of refund addr out of pubEncodedAssetAddrWithSignBits
@@ -294,12 +294,12 @@ template JoinSplit(levels) {
 
     // get encodedAssetAddr out of pubEncodedAssetAddrWithSignBits
     //@lemma(9) `encodedAssetAddrDecoded` is what one would get if they masked the refund addr sign bits in `pubEncodedAssetAddrWithSignBits` to zero
-    //@argument: encoding is correct due to @requires(3.1-2)
+    //@argument: encoding is correct due to @requires(3)
     // 1. `pubEncodedAssetAddrWithSignBitsBits` is the correct, unique 253-bit little-endian bit decomposition of `pubEncodedAssetAddrWithSignBits`
     //    Num2Bits(253) guarantees this because a 253-bit decomp cannot overflow the field
     // 2. encodedAssetAddrSubend is defined as the numerical value of the sign bits, i.e. 2**248 * refundAddrH2Sign + 2**249 * refundAddrH1Sign
     // 3. therefore, encodedAssetAddrDecoded, as written, is the numerical value of `pubEncodedAssetAddrWithSignBits` with the sign bits masked to zero.
-    //    this cannot underflow the field as `encodedAssetAddrSubend` is guaranteed to (numerically) be less than `pubEncodedAssetAddrWithSignBits`
+    //    this cannot underflow the field as `encodedAssetAddrSubend` is guaranteed to (numerically) be <= `pubEncodedAssetAddrWithSignBits`
     signal refundAddrH1SignTimes2ToThe248 <== (1 << 248) * refundAddrH1Sign;
     signal encodedAssetAddrSubend <== (1 << 249) * refundAddrH2Sign + refundAddrH1SignTimes2ToThe248;
     signal encodedAssetAddrDecoded <== pubEncodedAssetAddrWithSignBits - encodedAssetAddrSubend;
@@ -320,7 +320,7 @@ template JoinSplit(levels) {
     // (2.1) follows from here by noting that we use `encodedAssetAddr` when computing the note commitments below
     //@satisfies (2.2)
     //@argument if publicSpend is zero, `1 - publicSpendIsZero == 0`, so this constraint is satisfied IFF `encodedAssetAddrDecoded == 0`.
-    // since `encodedAssetAddrDecoded` is `pubEncodedAssetAddrWithSignBits` with the sign bits masked to zero, this is equivalent (2.2)
+    // since `encodedAssetAddrDecoded` is `pubEncodedAssetAddrWithSignBits` with the sign bits masked to zero. this is equivalent (2.2)
     encodedAssetAddrDecoded === (1 - publicSpendIsZero) * encodedAssetAddr;
 
     // compute oldNoteACommitment

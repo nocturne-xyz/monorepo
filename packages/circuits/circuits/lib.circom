@@ -83,7 +83,7 @@ template IsOrderL() {
 
     // check that PX is not the identity
     //@satisfies(1)
-    //@argument @lemma(2) guarantees ord(P) is either 1 or l.
+    //@argument @lemma(2) guarantees ord(P) is either 1 or l because otherwise the constraints above (P == 8Q) would be unsatisfiable
     //  the constraint below is unsatisfiable if the order is 1, because the only element with order 1 is the identity, (0, 1),
     //  which has X coordinate 0
     signal Q8XIsZero <== IsZero()(PX);
@@ -93,7 +93,7 @@ template IsOrderL() {
 //@requires(1) `spendPubkey` is a valid, order-l Baby Jubjub point
 //@ensures(1) `vkBits` is a 251-bit little-endian representation of `vk`, which entails that every signal in the array is binary
 //@ensures(2) `vk` is an element of the scalar field of Baby Jubjub's prime-order subgroup
-//@ensures(3) `vk` is correctly derived from `spendPubkey` and `vkNonce`
+//@ensures(3) `vk` is correctly derived from given `spendPubkey` and `vkNonce`
 template VKDerivation() {
     signal input spendPubkey[2];
     signal input vkNonce;
@@ -104,7 +104,7 @@ template VKDerivation() {
 
     // derive spending public key and check it matches the one given
     //@satisfies(3)
-    //@argument correct by definition of Nocturne's key derivation process, provided that `vkNonce` is correct
+    //@argument correct by definition of Nocturne's key derivation process
     vk <== Poseidon(3)([spendPubkey[0], spendPubkey[1], vkNonce]);
 
     //@satisfies(1)
