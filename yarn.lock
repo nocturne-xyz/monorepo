@@ -2804,9 +2804,9 @@ __metadata:
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
     "@nocturne-xyz/config": 1.0.15-alpha
-    "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/contracts": 1.0.40-alpha
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/sdk": 1.0.197-alpha
     "@nocturne-xyz/tx-manager": 1.0.1-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -2884,7 +2884,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/contracts@1.0.40-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -2964,9 +2964,9 @@ __metadata:
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
     "@nocturne-xyz/config": 1.0.15-alpha
-    "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/contracts": 1.0.40-alpha
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/sdk": 1.0.197-alpha
     "@nocturne-xyz/tx-manager": 1.0.1-alpha
     "@opentelemetry/api": ^1.4.1
     "@opentelemetry/exporter-metrics-otlp-http": ^0.40.0
@@ -3136,7 +3136,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.197-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3218,10 +3218,10 @@ __metadata:
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
     "@nocturne-xyz/config": 1.0.15-alpha
-    "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/contracts": 1.0.40-alpha
     "@nocturne-xyz/crypto-utils": 0.1.6
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/sdk": 1.0.197-alpha
     "@nocturne-xyz/tx-manager": 1.0.1-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
@@ -3259,10 +3259,10 @@ __metadata:
   resolution: "@nocturne-xyz/test-actor@workspace:packages/test-actor"
   dependencies:
     "@nocturne-xyz/config": 1.0.15-alpha
-    "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/contracts": 1.0.40-alpha
     "@nocturne-xyz/local-prover": 1.0.13-alpha
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/sdk": 1.0.197-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
