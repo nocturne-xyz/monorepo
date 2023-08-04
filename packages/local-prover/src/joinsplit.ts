@@ -47,10 +47,9 @@ export class WasmJoinSplitProver implements JoinSplitProver {
     const decompressedRefundAddr = StealthAddressTrait.decompress(refundAddr);
 
     const signals = {
-      userViewKey: vk,
-
-      spendPubKey: spendPk,
-      userViewKeyNonce: vkNonce,
+      vk,
+      spendPubkey: spendPk,
+      vkNonce,
 
       operationDigest,
 
@@ -60,8 +59,8 @@ export class WasmJoinSplitProver implements JoinSplitProver {
       pubEncodedAssetAddrWithSignBits,
       pubEncodedAssetId,
 
-      encodedAssetAddr: newNoteA.encodedAssetAddr,
       encodedAssetId: newNoteA.encodedAssetId,
+      encodedAssetAddr: newNoteA.encodedAssetAddr,
 
       refundAddrH1CompressedY,
       refundAddrH2CompressedY,

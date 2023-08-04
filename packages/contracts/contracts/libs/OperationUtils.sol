@@ -95,8 +95,8 @@ library OperationUtils {
             allPis[i][5] = joinSplit.nullifierB;
             allPis[i][6] = joinSplit.senderCommitment;
             allPis[i][7] = opDigest;
-            allPis[i][8] = encodedAssetAddrWithSignBits;
-            allPis[i][9] = encodedAsset.encodedAssetId;
+            allPis[i][8] = encodedAsset.encodedAssetId;
+            allPis[i][9] = encodedAssetAddrWithSignBits;
             allPis[i][10] = refundAddrH1YCoordinate;
             allPis[i][11] = refundAddrH2YCoordinate;
         }
@@ -114,10 +114,10 @@ library OperationUtils {
 
     function encodeEncodedAssetAddrWithSignBitsPI(
         uint256 encodedAssetAddr,
-        uint256 c1SignBit,
-        uint256 c2SignBit
+        uint256 h1SignBit,
+        uint256 h2SignBit
     ) internal pure returns (uint256) {
-        return encodedAssetAddr | (c1SignBit << 248) | (c2SignBit << 249);
+        return encodedAssetAddr | (h1SignBit << 248) | (h2SignBit << 249);
     }
 
     function calculateBundlerGasAssetPayout(

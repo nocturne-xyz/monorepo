@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- add positive security annotations to `joinsplit.circom`
+- add on-curve and order check to `spendPubkey`
+- change `IsOrderGreaterThan8` to `IsOrderL`, which is a stricter condition that leaves less room for error
+- add witness-gen only BJJ scalar mul
 - in `subtreeupdate.circom`, append `bitmap` to preimage of the batch accumulator hash to prevent malicious prover from lying about insertion type (TOB-4)
 - in `joinsplit.circom` separate "public encodedAsset` from `private encodedAsset` and check that;
   - they're equal when `publicSpend` is nonzero

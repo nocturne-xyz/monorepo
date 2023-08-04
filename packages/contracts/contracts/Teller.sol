@@ -213,7 +213,6 @@ contract Teller is
         (uint256[8][] memory proofs, uint256[][] memory allPis) = OperationUtils
             .extractJoinSplitProofsAndPis(ops, opDigests);
 
-        // if there is only one proof, use the single proof verification
         if (proofs.length == 1) {
             success = _joinSplitVerifier.verifyProof(proofs[0], allPis[0]);
         } else {
