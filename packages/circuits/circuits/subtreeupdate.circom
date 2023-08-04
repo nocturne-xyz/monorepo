@@ -13,8 +13,9 @@ include "tree.circom";
 //   and the last 3 bits are the high bits of the accumulator hash
 //@requires(2) `accumulatorHash` is the low-253 bits of the batch `accumulatorHash` from the commitment tree in `OffchainMerkleTree.sol`
 //@requires(3) `2*r + 3` is less than 254 and `r > 0`
-//@requires(3) `oldRoot` is the current commitment tree root
-//@ensures(1) `newRoot` is the commitment tree root that results from inserting the batch with accumulator hash `accumulatorHash` (+ 3 hi-bits form `encodedPathAndHash`) into the commitment tree with root `oldRoot`
+//@requires(4) `oldRoot` is the current commitment tree root
+//@ensures(1) `accumulatorHash` is the correct accumulator hash over the batch of notes to be inserted
+//@ensures(2) `newRoot` is the commitment tree root that results from inserting the batch with accumulator hash `accumulatorHash` (+ 3 hi-bits form `encodedPathAndHash`) into the commitment tree with root `oldRoot`
 template SubtreeUpdate4(r) {
     var s = 2;
     // public inputs
@@ -42,10 +43,10 @@ template SubtreeUpdate4(r) {
     signal input encodedAssetIds[4**s];
     signal input values[4**s];
 
-    //@satisfies(1)
-    //@argument Subtreeupdate.requires(1, 2, 3) are satisfied by @requires(...),
+    //@satisfies(1, 2)
+    //@argument SubtreeUpdate.requires(1, 2, 3) are satisfied by @requires(...),
     //   SubtreeUpdate.requires(4) is satisfied by the assignment below,
-    //   and SubtreeUpdate.ensures(1) is identical to (1)
+    //   and SubtreeUpdate.ensures(1, 2) is identical to (1, 2)
     component inner = SubtreeUpdate(r, s);
 
     // root of the depth-2 subtree filled with `ZERO_VALUE = KECCAK256("nocturne") % p`
@@ -192,8 +193,9 @@ template NoteCommitmentHash() {
 //@requires(2) `accumulatorHash` is the low-253 bits of the batch `accumulatorHash` from the commitment tree in `OffchainMerkleTree.sol`
 //@requires(3) `2*r + 3` is less than 254 and `r > 0`
 //@requires(4) `emptySubtreeRoot` is the correct root of a depth-s subtree full of "zeros", where the "zero value" is up to the caller
-//@requires(3) `oldRoot` is the current commitment tree root
-//@ensures(1) `newRoot` is the commitment tree root that results from inserting the batch with accumulator hash `accumulatorHash` (+ 3 hi-bits form `encodedPathAndHash`) into the commitment tree with root `oldRoot`
+//@requires(5) `oldRoot` is the current commitment tree root
+//@ensures(1) `accumulatorHash` is the correct accumulator hash over the batch of notes to be inserted
+//@ensures(2) `newRoot` is the commitment tree root that results from inserting the batch with accumulator hash `accumulatorHash` (+ 3 hi-bits form `encodedPathAndHash`) into the commitment tree with root `oldRoot`
 template SubtreeUpdate(r, s) {
 
     // Public signals
@@ -308,7 +310,7 @@ template SubtreeUpdate(r, s) {
     // followed by a 256-bit number with the bitmap packed into the upper bits
     // i.e. the ith bit of the bitmap is the ith bit of the last 256-bits of the input
     // i.e. the ith bit of the bitmap is the bit of the number with value 2^(255-i)
-    //@lemma(3) `hasher.out` is the unique, correct accumulator hash for the batch of notes.
+    //@satisifies(1) `hasher.out` is the correct accumulator hash for the batch of notes.
     //@argument `accumulatorhash` is defined as sha256(...innerHashes || bitmap) where each element of `innerHashes` is a 256-bit word
     // and `bitmap` is encoded as big-endian number with the ith bit of the bitmap being the ith bit of the number with value 2^(255-i)
     // (i.e. it's padded out to 256 bits, shifted all the way to the most-significant position) 
@@ -342,8 +344,8 @@ template SubtreeUpdate(r, s) {
         }
     }
 
-    //@satisfies(1)
-    //@argument due to lemma(3), `hasher.out` is the unique, correct accumulator hash, and due to @requires(2), they will match
+    //@satisfies(2)
+    //@argument due to (1), `hasher.out` is the correct accumulator hash, and due to @requires(2), it will match the `accumulatorHash` PI
     //   (checks above) IFF the batch supplied as witness in this circuit matches the batch queued for insertion on-chain
     //   => that the circuit is satisfiable IFF `newRoot` is the correct root that results from inserting `leaves` into the tree.
     //   due to @lemma(0), `leaves[i]` is the "correct" sequence of leaves to be inserted into the tree, so the circuit is satisfiable
