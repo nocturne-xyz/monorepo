@@ -916,7 +916,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "Nullifier B already used",
+                maybeFailureReason: "2 nfs should !equal",
                 assetsUnwrapped: false
             })
         );
@@ -927,7 +927,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, false);
-        assertEq(opResults[0].failureReason, "Nullifier B already used");
+        assertEq(opResults[0].failureReason, "2 nfs should !equal");
 
         // No tokens are lost from teller because handleJoinSplit revert stops
         // bundler comp. Bundler expected to handle proof-related checks.

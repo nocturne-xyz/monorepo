@@ -169,14 +169,6 @@ contract CommitmentTreeManager is
     /// @dev This function should be re-entry safe. Nullifiers are be marked
     ///      used as soon as they are checked to be valid.
     /// @param op Operation with joinsplits
-
-    // @requires(1) ...
-    //
-    // @ensures(1) If function completes, every joinsplit in op.pubJoinSplits and op.confJoinSplits had a commitmentTreeRoot that exists in _pastRoots
-    // @ensures(2) If function completes, every joinsplit in op.pubJoinSplits and op.confJoinSplits had unique nullifiers that were not previously in _nullifierSet OR in any previous joinsplit in this op
-    // @ensures(3) If function completes, every joinsplit's nullifierA and nullifierB are added to _nullifierSet
-    // @ensures(4) If function completes, every joinsplit's newNoteCommitmentA and newNoteCommitmentB are inserted into the commitment tree
-    // @ensures(5) All joinsplit new note commitments A & B are inserted into the tree
     function _handleJoinSplits(Operation calldata op) internal {
         uint256 totalNumJoinSplits = op.totalNumJoinSplits();
         uint256[] memory newNoteCommitments = new uint256[](
@@ -196,17 +188,22 @@ contract CommitmentTreeManager is
                 "Tree root not past root"
             );
 
-            // Check both NFs are not already used
+            // Check both NFs are not already used and don't match
             require(
                 !_nullifierSet[joinSplit.nullifierA],
                 "Nullifier A already used"
             );
-            _nullifierSet[joinSplit.nullifierA] = true;
-
             require(
                 !_nullifierSet[joinSplit.nullifierB],
                 "Nullifier B already used"
             );
+            require(
+                joinSplit.nullifierA != joinSplit.nullifierB,
+                "2 nfs should !equal"
+            );
+
+            // Mark NFs used
+            _nullifierSet[joinSplit.nullifierA] = true;
             _nullifierSet[joinSplit.nullifierB] = true;
 
             // Compute newNote indices in the merkle tree
