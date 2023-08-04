@@ -221,20 +221,6 @@ export class DepositScreenerScreener {
           ...event,
         };
 
-        const assetAddr = AssetTrait.decode(
-          depositRequest.encodedAsset
-        ).assetAddr;
-
-        const attributes = {
-          spender: depositRequest.spender,
-          assetAddr: assetAddr,
-        };
-        this.metrics.depositInstantiatedEventsCounter.add(1, attributes);
-        this.metrics.depositInstantiatedValueCounter.add(
-          Number(depositRequest.value),
-          attributes
-        );
-
         logger.info(`received deposit event, storing in DB`, { event });
         await this.db.storeDepositRequest(depositRequest);
 
@@ -252,6 +238,19 @@ export class DepositScreenerScreener {
           childLogger.warn(`deposit already retrieved or completed`);
           continue; // Already retrieved or completed
         }
+
+        const assetAddr = AssetTrait.decode(
+          depositRequest.encodedAsset
+        ).assetAddr;
+        const attributes = {
+          spender: depositRequest.spender,
+          assetAddr: assetAddr,
+        };
+        this.metrics.depositInstantiatedEventsCounter.add(1, attributes);
+        this.metrics.depositInstantiatedValueCounter.add(
+          Number(depositRequest.value),
+          attributes
+        );
 
         childLogger.debug(`checking deposit request`);
         const { isSafe, reason } = await checkDepositRequest(
