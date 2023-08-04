@@ -3,6 +3,7 @@
 ### Unreleased
 
 - use .network instead of .chainid for op request building
+- replace tx manager with OZ relay
 - add CLI option to perform 8 ops in rapid succession to fill a bundle every K ops
 - allow setting separate intervals for deposits and ops in CLI
 - run deposits and ops concurrently

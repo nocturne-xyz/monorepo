@@ -69,9 +69,6 @@
     },
     {
       "path": "./packages/offchain-utils"
-    },
-    {
-      "path": "./packages/tx-manager"
     }
   ]
 }
