@@ -25,11 +25,12 @@ contract TestBalanceManager is IHandler, BalanceManager {
     // Stub to make testing between Teller<>BalanceManager easier
     function handleDeposit(
         Deposit calldata deposit
-    ) external override onlyTeller {
-        _handleRefundNote(
+    ) external override onlyTeller returns (uint128 merkleIndex) {
+        return _handleRefundNote(
             deposit.encodedAsset,
             deposit.depositAddr,
-            deposit.value
+            deposit.value,
+            RefundType.Deposit
         );
     }
 

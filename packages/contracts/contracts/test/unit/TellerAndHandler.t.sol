@@ -68,11 +68,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
     event RefundProcessed(
         CompressedStealthAddress refundAddr,
-        uint256 nonce,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
         uint256 value,
-        uint128 merkleIndex
+        uint128 merkleIndex,
+        RefundType refundType
     );
 
     event JoinSplitProcessed(
@@ -177,11 +177,11 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             vm.expectEmit(true, true, true, true);
             emit RefundProcessed(
                 addr,
-                i,
                 uint256(uint160(address(token))),
                 ERC20_ID,
                 PER_NOTE_AMOUNT,
-                uint128(i)
+                uint128(i),
+                RefundType.Deposit
             );
 
             if (i == depositIterations - 1 && remainder != 0) {

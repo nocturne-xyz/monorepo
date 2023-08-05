@@ -114,13 +114,13 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     /// @param deposit Deposit to handle
     function handleDeposit(
         Deposit calldata deposit
-    ) external override whenNotPaused onlyTeller {
+    ) external override whenNotPaused onlyTeller returns (uint128 merkleIndex) {
         // Ensure deposit asset is supported
         EncodedAsset memory encodedAsset = deposit.encodedAsset;
         (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
         require(_supportedContracts[assetAddr], "!supported deposit asset");
 
-        _handleRefundNote(encodedAsset, deposit.depositAddr, deposit.value);
+        merkleIndex = _handleRefundNote(encodedAsset, deposit.depositAddr, deposit.value, RefundType.Deposit);
     }
 
     /// @notice Handles an operation after proofs have been verified by the Teller. Checks

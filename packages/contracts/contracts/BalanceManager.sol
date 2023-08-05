@@ -265,7 +265,7 @@ contract BalanceManager is CommitmentTreeManager {
                 address(_teller)
             );
             if (refundAmount > 0) {
-                _handleRefundNote(encodedAsset, op.refundAddr, refundAmount);
+                _handleRefundNote(encodedAsset, op.refundAddr, refundAmount, RefundType.Refund);
             }
         }
     }

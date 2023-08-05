@@ -19,9 +19,10 @@ contract TestCommitmentTreeManager is CommitmentTreeManager {
     function handleRefundNote(
         EncodedAsset memory encodedAsset,
         CompressedStealthAddress calldata refundAddr,
-        uint256 value
+        uint256 value,
+        RefundType refundType
     ) external {
-        _handleRefundNote(encodedAsset, refundAddr, value);
+        _handleRefundNote(encodedAsset, refundAddr, value, refundType);
     }
 
     function insertNoteCommitments(uint256[] memory ncs) external {

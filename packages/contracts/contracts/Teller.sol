@@ -113,8 +113,8 @@ contract Teller is
     /// @param deposit Deposit
     function depositFunds(
         Deposit calldata deposit
-    ) external override whenNotPaused onlyDepositSource {
-        _handler.handleDeposit(deposit);
+    ) external override whenNotPaused onlyDepositSource returns (uint128 merkleIndex) {
+        merkleIndex = _handler.handleDeposit(deposit);
         AssetUtils.transferAssetFrom(
             deposit.encodedAsset,
             msg.sender,

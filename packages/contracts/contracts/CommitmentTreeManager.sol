@@ -46,11 +46,11 @@ contract CommitmentTreeManager is
     ///      or a new deposit
     event RefundProcessed(
         CompressedStealthAddress refundAddr,
-        uint256 nonce,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
         uint256 value,
-        uint128 merkleIndex
+        uint128 merkleIndex,
+        RefundType refundType
     );
 
     /// @notice Event emitted when a joinsplit is processed
@@ -143,7 +143,7 @@ contract CommitmentTreeManager is
 
     /// @notice Returns the count of the merkle tree including leaves that have not yet been
     ///         included in a subtree update
-    function totalCount() public view returns (uint256) {
+    function totalCount() public view returns (uint128) {
         return _merkle.getTotalCount();
     }
 
@@ -236,13 +236,14 @@ contract CommitmentTreeManager is
     function _handleRefundNote(
         EncodedAsset memory encodedAsset,
         CompressedStealthAddress calldata refundAddr,
-        uint256 value
-    ) internal {
-        uint128 index = _merkle.getTotalCount();
+        uint256 value,
+        RefundType refundType
+    ) internal returns (uint128 merkleIndex) {
+        merkleIndex = _merkle.getTotalCount();
         EncodedNote memory note = EncodedNote({
             ownerH1: refundAddr.h1,
             ownerH2: refundAddr.h2,
-            nonce: index,
+            nonce: uint256(merkleIndex),
             encodedAssetAddr: encodedAsset.encodedAssetAddr,
             encodedAssetId: encodedAsset.encodedAssetId,
             value: value
@@ -252,11 +253,11 @@ contract CommitmentTreeManager is
 
         emit RefundProcessed(
             refundAddr,
-            index,
             encodedAsset.encodedAssetAddr,
             encodedAsset.encodedAssetId,
             value,
-            index
+            merkleIndex,
+            refundType
         );
     }
 }

@@ -10,6 +10,8 @@ import {Utils} from "./Utils.sol";
 import {TreeUtils} from "./TreeUtils.sol";
 import {QueueLib} from "./Queue.sol";
 
+// TODO: use enum for isNote
+
 struct OffchainMerkleTree {
     // number of non-zero leaves in the tree
     // INVARIANT: bottom `LOG2_BATCH_SIZE` bits of `count` should all be zero
