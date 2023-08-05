@@ -9,7 +9,9 @@ interface ITeller {
         Bundle calldata bundle
     ) external returns (OperationResult[] memory opResults);
 
-    function depositFunds(Deposit calldata deposit) external returns (uint128 merkleIndex);
+    function depositFunds(
+        Deposit calldata deposit
+    ) external returns (uint128 merkleIndex);
 
     function requestAsset(
         EncodedAsset calldata encodedAsset,

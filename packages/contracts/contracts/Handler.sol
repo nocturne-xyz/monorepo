@@ -120,7 +120,12 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
         require(_supportedContracts[assetAddr], "!supported deposit asset");
 
-        merkleIndex = _handleRefundNote(encodedAsset, deposit.depositAddr, deposit.value, RefundType.Deposit);
+        merkleIndex = _handleRefundNote(
+            encodedAsset,
+            deposit.depositAddr,
+            deposit.value,
+            RefundType.Deposit
+        );
     }
 
     /// @notice Handles an operation after proofs have been verified by the Teller. Checks

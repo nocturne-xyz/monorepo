@@ -26,12 +26,13 @@ contract TestBalanceManager is IHandler, BalanceManager {
     function handleDeposit(
         Deposit calldata deposit
     ) external override onlyTeller returns (uint128 merkleIndex) {
-        return _handleRefundNote(
-            deposit.encodedAsset,
-            deposit.depositAddr,
-            deposit.value,
-            RefundType.Deposit
-        );
+        return
+            _handleRefundNote(
+                deposit.encodedAsset,
+                deposit.depositAddr,
+                deposit.value,
+                RefundType.Deposit
+            );
     }
 
     function handleOperation(
