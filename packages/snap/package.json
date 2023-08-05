@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/snap",
-  "version": "1.0.9-alpha",
+  "version": "1.0.13-testnet",
   "description": "Nocturne Snap",
   "license": "(MIT-0 OR Apache-2.0)",
   "main": "src/index.ts",
@@ -12,7 +12,7 @@
   "scripts": {
     "build": "mm-snap build",
     "build:clean": "yarn clean && yarn build",
-    "build:local": "./scripts/build-local.sh",
+    "build:local": "./scripts/build_local.sh",
     "build:website": "node ./scripts/build-website.js",
     "clean": "rimraf dist",
     "cp-config": "cp ../config/configs/localhost.json ./src/config.json",

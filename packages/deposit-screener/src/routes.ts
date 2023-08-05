@@ -33,6 +33,7 @@ export function makeDepositStatusHandler({
   rateLimits,
 }: DepositStatusHandlerDeps): RequestHandler {
   return async (req: Request, res: Response) => {
+    console.log("Entered makeDepositStatusHandler", req.params);
     const depositHash = req.params.depositHash;
     const status = await db.getDepositRequestStatus(depositHash);
 
@@ -45,22 +46,20 @@ export function makeDepositStatusHandler({
       return;
     }
 
-    let delay: number;
+    let estimatedWaitSeconds: number | undefined;
     try {
-      delay = await estimateSecondsUntilDepositCompletion(
+      estimatedWaitSeconds = await estimateSecondsUntilDepositCompletion(
         { db, screenerQueue, fulfillerQueues, rateLimits },
-        depositHash
+        depositHash,
+        status
       );
     } catch (err) {
       logger.warn({ err });
-      res.statusMessage = "Internal Server Error";
-      res.status(500).json({ err });
-      return;
     }
 
     const response: DepositStatusResponse = {
       status,
-      estimatedWaitSeconds: delay,
+      estimatedWaitSeconds,
     };
     res.json(response);
   };
@@ -84,6 +83,7 @@ export function makeQuoteHandler({
   rateLimits,
 }: QuoteHandlerDeps): RequestHandler {
   return async (req: Request, res: Response) => {
+    console.log("Entered makeQuoteHandler", req.body);
     const errorOrQuoteRequest = tryParseQuoteRequest(req.body);
     if (typeof errorOrQuoteRequest == "string") {
       logger.warn("request validation failed", errorOrQuoteRequest);
@@ -117,9 +117,10 @@ export function makeQuoteHandler({
         quoteRequest.value
       );
     } catch (err) {
-      logger.warn(err);
-      res.statusMessage = "Internal Server Error";
-      res.status(500);
+      if (err instanceof Error) logger.warn(err.message);
+      else logger.warn(err);
+
+      res.status(500).json({ message: "Internal Server Error" });
       return;
     }
 

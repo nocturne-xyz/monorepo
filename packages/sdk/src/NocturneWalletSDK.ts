@@ -26,8 +26,8 @@ import { getMerkleIndicesAndNfsFromOp } from "./utils/misc";
 import { OpTracker } from "./OpTracker";
 import { getTotalEntityIndexOfNewestNoteInOp } from "./totalEntityIndexOfNewestNoteInOp";
 
-// 10 minutes
-const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000;
+const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000; // 10 minutes
+const BUNDLER_RECEIVED_OP_BUFFER: number = 45 * 1000; // 45 seconds (buffer in case proof gen takes a while)
 
 export class NocturneWalletSDK {
   protected provider: ethers.providers.Provider;
@@ -132,7 +132,7 @@ export class NocturneWalletSDK {
   }
 
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
-    return await this.db.latestCommittedMerkleIndex();
+    return await this.db.latestSyncedMerkleIndex();
   }
 
   async hasEnoughBalanceForOperationRequest(
@@ -219,15 +219,24 @@ export class NocturneWalletSDK {
     // get all of merkle indices of records we want to remove
     const opDigestsToRemove = new Set<bigint>();
     for (const [opDigest, record] of optimisticOpDigestRecords.entries()) {
+      const now = Date.now();
+
       // if it's expired, remove it
-      if (Date.now() > record.expirationDate) {
+      if (now > record.expirationDate) {
         opDigestsToRemove.add(opDigest);
         continue;
       }
 
-      // if bundler doesn't have the nullifier in its DB, remove its
-      // OptimisticNFRecord
-      if (!(await this.opTracker.operationIsInFlight(opDigest))) {
+      // if we're sure bundler received op and bundler doesn't have the nullifier in its DB, remove
+      // its OptimisticNFRecord
+      const bufferMillisAfterOpSubmitted =
+        record.expirationDate -
+        OPTIMISTIC_RECORD_TTL +
+        BUNDLER_RECEIVED_OP_BUFFER;
+      if (
+        now > bufferMillisAfterOpSubmitted &&
+        !(await this.opTracker.operationIsInFlight(opDigest))
+      ) {
         opDigestsToRemove.add(opDigest);
       }
     }

@@ -3046,6 +3046,7 @@ __metadata:
     hardhat: ^2.13.1
     mocha: ^10.1.0
     prettier: ^2.8.8
+    ts-node: ^10.9.1
     uuid: ^9.0.0
     winston-humanize-formatter: ^0.1.4
   languageName: unknown
@@ -3084,7 +3085,6 @@ __metadata:
   dependencies:
     "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/sdk": "workspace:^"
-    "@nocturne-xyz/subtree-updater": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/mocha": ^10.0.0
@@ -3150,6 +3150,27 @@ __metadata:
     sorted-btree: ^1.8.1
     winston: ^3.9.0
   checksum: abaad3fd44b85a517a12fa01e74d18fcb879a62172cf2324bb76dafbd38a19a2ad577b1aee1cab047a4fa1f8710fe0bff2944ddfe4b4bfe61839804824a3879c
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/sdk@npm:1.0.174-testnet":
+  version: 1.0.174-testnet
+  resolution: "@nocturne-xyz/sdk@npm:1.0.174-testnet"
+  dependencies:
+    "@nocturne-xyz/circuit-utils": ^0.1.12
+    "@nocturne-xyz/config": ^1.0.15-testnet
+    "@nocturne-xyz/contracts": ^1.0.33-testnet
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    async-retry: ^1.3.3
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    ethers: ^5.7.2
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+    winston: ^3.9.0
+  checksum: 4619cad73dfbd65ad5f0b526aacc5d93135aa4cd2dfbc5e09a9f9598f46e7d69dcd4c987a045aa6de74460f777b8ac6ba5231ad9a3538eaf5f936d6965d4a74a
   languageName: node
   linkType: hard
 
@@ -3238,7 +3259,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.15-testnet
     "@nocturne-xyz/contracts": 1.0.33-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
-    "@nocturne-xyz/sdk": 1.0.169-testnet
+    "@nocturne-xyz/sdk": 1.0.174-testnet
     "@nocturne-xyz/tx-manager": 1.0.1-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
@@ -3248,8 +3269,8 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.45.0
     "@typescript-eslint/parser": ^5.44.0
     async-mutex: ^0.4.0
+    async-retry: ^1.3.3
     bigint-json-serialization: ^1.0.1
-    bullmq: ^3.10.1
     chai: ^4.3.7
     commander: ^9.4.1
     dotenv: ^16.0.3
@@ -9643,7 +9664,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
+  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
   languageName: node
   linkType: hard
 

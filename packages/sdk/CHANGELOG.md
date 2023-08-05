@@ -2,9 +2,14 @@
 
 ### Unreleased
 
+- bump gas price est to 40% buffer
+- Fix op digest tracking resulting in digests getting removed too early
+  - Snap returns signed op and stores opdigest, site proves and submits op to bundler, snap checks if bundler has digest but bundler hasn't yet received from site, snap incorrectly deletes digest
+- add `filter` to `ClosableAsyncIterator`
 - `syncSDK` returns latest synced merkle index so fe-sdk can access and return
 - sync adapters return latest synced merkle index
 - `syncSDK` takes `SyncOpts` as params, add `timeoutSeconds` to `SyncOpts`
+- set a cap on the maximum number of wasm provers spun-up in parallel
 - remove all usage of winston logger except for in sync adapters (so we can debug test actor and snap)
 - fix bug where notes with 0 value were being stored in DB
 - refactor OperationMetadata to be structured

@@ -1,3 +1,4 @@
+import { NocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager,
   DepositManager__factory,
@@ -46,7 +47,6 @@ import {
   getTokenContract,
   getWindowSigner,
 } from "./utils";
-import { NocturneConfig } from "@nocturne-xyz/config";
 
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
@@ -250,7 +250,7 @@ export class NocturneFrontendSDK {
       .unwrap(encodedErc20, amount)
       .action(erc20Address, encodedFunction)
       .maxNumRefunds(1n)
-      .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
+      .gas({ executionGasLimit: 500_000n })
       .build();
 
     const action: ActionMetadata = {
@@ -340,7 +340,7 @@ export class NocturneFrontendSDK {
    */
   async signAndProveOperation(
     operationRequest: OperationRequest,
-    opMetadata?: OperationMetadata
+    opMetadata: OperationMetadata
   ): Promise<ProvenOperation> {
     const op = await this.requestSignOperation(operationRequest, opMetadata);
 
@@ -609,7 +609,7 @@ export class NocturneFrontendSDK {
    */
   protected async requestSignOperation(
     operationRequest: OperationRequest,
-    opMetadata?: OperationMetadata
+    opMetadata: OperationMetadata
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", opMetadata);
     const json = (await window.ethereum.request({
@@ -620,7 +620,7 @@ export class NocturneFrontendSDK {
           method: "nocturne_signOperation",
           params: {
             operationRequest: JSON.stringify(operationRequest),
-            opMetadata: opMetadata ? JSON.stringify(opMetadata) : undefined,
+            opMetadata: JSON.stringify(opMetadata),
           },
         },
       },
