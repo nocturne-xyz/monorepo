@@ -84,7 +84,8 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
             sdkEvents.map((n) => n.totalEntityIndex)
           );
           latestCommittedMerkleIndex = await fetchlatestCommittedMerkleIndex(
-            endpoint
+            endpoint,
+            highestTotalEntityIndex
           );
 
           const notes = sdkEvents.filter(
@@ -140,14 +141,40 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
 
           from = highestTotalEntityIndex + 1n;
         } else {
-          // otherwise, we've caught up and there's nothing more to fetch.
-          // set `from` to the entity index corresponding to the latest indexed block
-          // if it's greater than the current `from`.
+          // otherwise, there's no more SDK events to fetch. That means either...
+          // 1) we're fully caught up and there's nothing to emit
+          // 2) a subtree update may have occurred and we need to update the latest committed merkle index
 
+          // in either case, we set `from` to the entity index corresponding to the latest indexed block
+          // if it's greater than the current `from`.
           // this is to prevent an busy loops in the case where the subgraph has indexed a block corresponding
           // to a totalEntityIndex > `endTotalEntityIndex` but we haven't found any insertions in that block
           const currentBlockTotalEntityIndex =
             TotalEntityIndexTrait.fromBlockNumber(latestIndexedBlock);
+
+          // fetch latest merkle committed merkle index, and if it changed, then emit an empty diff with the new
+          // latest committed merkle index
+          const newLatestCommittedMerkleIndex =
+            await fetchlatestCommittedMerkleIndex(
+              endpoint,
+              currentBlockTotalEntityIndex
+            );
+
+          if (
+            newLatestCommittedMerkleIndex &&
+            latestCommittedMerkleIndex &&
+            newLatestCommittedMerkleIndex > latestCommittedMerkleIndex
+          ) {
+            latestCommittedMerkleIndex = newLatestCommittedMerkleIndex;
+            yield {
+              notes: [],
+              nullifiers: [],
+              latestNewlySyncedMerkleIndex: undefined,
+              latestCommittedMerkleIndex,
+              totalEntityIndex: currentBlockTotalEntityIndex,
+            };
+          }
+
           if (currentBlockTotalEntityIndex > from) {
             from = currentBlockTotalEntityIndex;
           }
