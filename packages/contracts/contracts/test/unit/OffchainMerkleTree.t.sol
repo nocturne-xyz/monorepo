@@ -92,9 +92,15 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         assertEq(uint256(merkle.getTotalCount()), 1);
         assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
 
+        // bitmap should be 1000_0000_0000_0000 = 0x8000  because we inserted one note
+        assertEq(merkle.bitmap, uint64(0x8000 << 48));
+
         // apply subtree update
         // before applying update, offchain service needs to insert a bunch of stuff
         merkle.fillBatchWithZeros();
+
+        // bitmap should be 0 bc it should be reset after the batch was filled
+        assertEq(merkle.bitmap, 0);
 
         assertEq(uint256(merkle.getCount()), 0);
         assertEq(uint256(merkle.getTotalCount()), 16);
@@ -119,6 +125,9 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         }
 
         merkle.insertNoteCommitments(ncs);
+        // bitmap should be 0 bc we're only inserting NCs
+        assertEq(merkle.bitmap, 0);
+
         assertEq(uint256(merkle.getCount()), 0);
         assertEq(uint256(merkle.getTotalCount()), 8);
         assertEq(uint256(merkle.getBatchLen()), 8);
@@ -129,6 +138,10 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         }
 
         merkle.insertNoteCommitments(ncs);
+
+        // bitmap should be 0 bc it should be reset after the batch was filled
+        assertEq(merkle.bitmap, 0);
+
         assertEq(uint256(merkle.getCount()), 0);
         assertEq(uint256(merkle.getTotalCount()), 16);
         assertEq(uint256(merkle.getBatchLen()), 0);
@@ -158,6 +171,9 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         for (uint256 i = 0; i < 8; i++) {
             merkle.insertNote(encodedNotes[i]);
         }
+        // bitmap should be 1111_1111_0000_0000 = 0xff00
+        assertEq(merkle.bitmap, uint64(0xff00 << 48));
+
         assertEq(uint256(merkle.getCount()), 0);
         assertEq(uint256(merkle.getTotalCount()), 8);
         assertEq(uint256(merkle.getBatchLen()), 8);
@@ -170,6 +186,10 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         for (uint256 i = 0; i < 8; i++) {
             merkle.insertNote(encodedNotes[i]);
         }
+
+        // bitmap should be 0 bc it should be reset after the batch was filled
+        assertEq(merkle.bitmap, 0);
+
         assertEq(uint256(merkle.getCount()), 0);
         assertEq(uint256(merkle.getTotalCount()), 16);
         assertEq(uint256(merkle.getBatchLen()), 0);
@@ -190,6 +210,10 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         }
 
         merkle.insertNoteCommitments(ncs);
+
+        // bitmap should be 0 bc we're only inserting NCs
+        assertEq(merkle.bitmap, 0);
+
         assertEq(uint256(merkle.getCount()), 0);
         assertEq(uint256(merkle.getTotalCount()), 8);
         assertEq(uint256(merkle.getBatchLen()), 8);
@@ -197,6 +221,10 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         assertEq(merkle.accumulatorQueue.length(), 0);
 
         merkle.fillBatchWithZeros();
+
+        // bitmap should be 0 bc it should be reset after the batch was filled
+        assertEq(merkle.bitmap, 0);
+
         assertEq(uint256(merkle.getCount()), 0);
         assertEq(uint256(merkle.getTotalCount()), 16);
         assertEq(uint256(merkle.getBatchLen()), 0);
