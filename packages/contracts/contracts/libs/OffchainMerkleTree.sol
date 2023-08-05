@@ -86,6 +86,14 @@ library LibOffchainMerkleTree {
     ) internal {
         uint256[] memory pis = _calculatePublicInputs(self, newRoot);
 
+        // 1) this library computes accumulatorHash on its own,
+        // the definition of accumulatorHash prevents collisions (different batch with same hash),
+        // and the subtree update circuit guarantees `accumulatorHash` is re-computed correctly,
+        // so if the circuit accepts, the only possible batch the updater could be inserting is precisely
+        // the batch we've enqueued here on-chain
+        // 2) the subtree update circuit guarantees that the new root is computed correctly,
+        //    so due to (1), the only possible newRoot is the newRoot that results from inserting
+        //    the batch we've enqueued here on-chain
         require(
             self.subtreeUpdateVerifier.verifyProof(proof, pis),
             "subtree update proof invalid"
@@ -163,6 +171,12 @@ library LibOffchainMerkleTree {
     }
 
     // H(updates || bitmap)
+    // claim: it's impossible to have a collision between two different sets of updates
+    // argument: order matters because of hash function. The only way two different sequences of note commitments
+    // could result in the same accumulatorHash would be if the inner hashes - either note commitments or note sha256 hashes -
+    // were the same, but the insertion kinds were mismatched. That is, there's a sha256 hash "masquerading" as a note commitment
+    // in the batch. But this is impossible because we also include the bitmap in the hash - which this library ensures is consistent with the
+    // order and kind of insertinos in the batch.
     function _computeAccumulatorHash(
         OffchainMerkleTree storage self
     ) internal view returns (uint256) {
