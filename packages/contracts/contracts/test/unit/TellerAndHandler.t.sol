@@ -20,7 +20,6 @@ import {ReentrantCaller} from "../utils/ReentrantCaller.sol";
 import {TokenSwapper, SwapRequest, Erc721TransferFromRequest, Erc721And1155SafeTransferFromRequest} from "../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../utils/TreeTest.sol";
 import "../utils/NocturneUtils.sol";
-import "../utils/ForgeUtils.sol";
 import {Teller} from "../../Teller.sol";
 import {Handler} from "../../Handler.sol";
 import {CommitmentTreeManager} from "../../CommitmentTreeManager.sol";
@@ -34,7 +33,7 @@ import {AssetUtils} from "../../libs/AssetUtils.sol";
 import {Validation} from "../../libs/Validation.sol";
 import "../../libs/Types.sol";
 
-contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
+contract TellerAndHandlerTest is Test, PoseidonDeployer {
     using LibOffchainMerkleTree for OffchainMerkleTree;
     uint256 public constant BN254_SCALAR_FIELD_MODULUS =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
@@ -507,6 +506,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
+        uint128 preOpMerkleCount = handler.totalCount();
+
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         // Create operation to transfer 25M tokens to bob of 50M note
@@ -545,22 +546,18 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "",
-                assetsUnwrapped: true
-            })
-        );
-
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
         // Expect BOB to have the 25M sent by alice
         // Expect teller to have alice's remaining 25M - gasComp
@@ -579,6 +576,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Alice starts with 3 * 50M in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 3 * PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
@@ -621,21 +620,17 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "",
-                assetsUnwrapped: true
-            })
-        );
-
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 7);
 
         // Expect BOB to have the 50M sent by alice
         // Expect teller to have alice's remaining 100M
@@ -652,6 +647,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Alice starts with 6 * 50M in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 6 * PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
@@ -694,21 +691,17 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "",
-                assetsUnwrapped: true
-            })
-        );
-
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 13);
 
         // Expect BOB to have the 200M sent by alice
         // Expect teller to have alice's remaining 100M
@@ -768,20 +761,16 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "Tree root not past root",
-                assetsUnwrapped: false
-            })
-        );
-
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, false);
+        assertEq(opResults[0].assetsUnwrapped, false);
         assertEq(opResults[0].failureReason, "Tree root not past root");
+        assertEq(opResults[0].preOpMerkleCount, 0);
+        assertEq(opResults[0].postOpMerkleCount, 0);
 
         // No tokens are lost from teller because handleJoinSplit revert stops
         // bundler comp. Bundler expected to handle proof-related checks.
@@ -842,13 +831,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "Nullifier A already used",
-                assetsUnwrapped: false
-            })
-        );
-
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -856,6 +838,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, false);
         assertEq(opResults[0].failureReason, "Nullifier A already used");
+        assertEq(opResults[0].preOpMerkleCount, 0);
+        assertEq(opResults[0].postOpMerkleCount, 0);
 
         // No tokens are lost from teller because handleJoinSplit revert stops
         // bundler comp. Bundler expected to handle proof-related checks.
@@ -914,20 +898,16 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "2 nfs should !equal",
-                assetsUnwrapped: false
-            })
-        );
-
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, false);
+        assertEq(opResults[0].assetsUnwrapped, false);
         assertEq(opResults[0].failureReason, "2 nfs should !equal");
+        assertEq(opResults[0].preOpMerkleCount, 0);
+        assertEq(opResults[0].postOpMerkleCount, 0);
 
         // No tokens are lost from teller because handleJoinSplit revert stops
         // bundler comp. Bundler expected to handle proof-related checks.
@@ -944,6 +924,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Alice starts with 2 * 50M tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         ReentrantCaller reentrantCaller = new ReentrantCaller(
             teller,
@@ -988,14 +970,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // op processed = true, as internal revert happened in action
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "",
-                assetsUnwrapped: true
-            })
-        );
-
         // Whitelist reentrantCaller for sake of simulation
         handler.setContractPermission(address(reentrantCaller), true);
         handler.setContractMethodPermission(
@@ -1015,6 +989,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
+
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].callResults[0]),
@@ -1037,6 +1014,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Alice starts with 2 * 50M tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
@@ -1108,14 +1087,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // op processed = true, as internal revert happened in action
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "Cannot call the Nocturne Teller",
-                assetsUnwrapped: true
-            })
-        );
-
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
@@ -1125,6 +1096,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].failureReason, "Cannot call the Nocturne Teller");
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
         // Alice lost some private balance due to bundler comp. Bundler has a
         // little bit of tokens
@@ -1144,6 +1117,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Alice starts with 2 * 50M tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
@@ -1215,14 +1190,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // op processed = false, as reentrancy revert happened before making the call
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "",
-                assetsUnwrapped: true
-            })
-        );
-
         // Whitelist handler for sake of simulation
         handler.setContractPermission(address(handler), true);
         handler.setContractMethodPermission(
@@ -1243,6 +1210,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].callResults[0]),
@@ -1268,6 +1237,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Alice starts with 2 * 50M tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
@@ -1339,14 +1310,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // op processed = true, as internal revert happened in action
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "",
-                assetsUnwrapped: true
-            })
-        );
-
         // Whitelist handler for sake of simulation
         handler.setContractPermission(address(handler), true);
         handler.setContractMethodPermission(
@@ -1366,6 +1329,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].callResults[0]),
@@ -1390,6 +1355,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
@@ -1433,14 +1400,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        // op processed = true, as internal revert happened in action
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "",
-                assetsUnwrapped: true
-            })
-        );
-
         // Use Bob as bundler for this call
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
@@ -1452,6 +1411,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 5);
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].callResults[0]),
@@ -1476,6 +1437,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
@@ -1519,13 +1482,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "ERC20: transfer amount exceeds balance",
-                assetsUnwrapped: true
-            })
-        );
-
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
@@ -1535,6 +1491,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].callSuccesses.length, uint256(0));
         assertEq(opResults[0].callResults.length, uint256(0));
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 5);
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].failureReason),
@@ -1635,13 +1593,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "!supported asset",
-                assetsUnwrapped: true
-            })
-        );
-
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -1649,11 +1600,13 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].opProcessed, false);
     }
 
-    function testProcessBundleFailsNotEnoughRefundReturnTokens() public {
+    function testProcessBundleFailsNotEnoughRefundTokens() public {
         SimpleERC20Token erc20In = ERC20s[0];
         SimpleERC20Token erc20Out = ERC20s[1];
 
         reserveAndDepositFunds(ALICE, erc20In, PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         TokenSwapper swapper = new TokenSwapper();
         handler.setContractPermission(address(swapper), true);
@@ -1736,19 +1689,16 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "!min refund value",
-                assetsUnwrapped: true
-            })
-        );
-
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].failureReason, "!min refund value");
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
         // Bundler was compensated, swapper never received any tokens, nor did teller
         assertLt(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
@@ -1762,6 +1712,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token erc20Out = ERC20s[1];
 
         reserveAndDepositFunds(ALICE, erc20In, PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         TokenSwapper swapper = new TokenSwapper();
         handler.setContractPermission(address(swapper), true);
@@ -1848,19 +1800,16 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "!min refund value",
-                assetsUnwrapped: true
-            })
-        );
-
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].failureReason, "!min refund value");
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
         // Bundler was compensated, swapper never received any tokens, nor did teller
         assertLt(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
@@ -1872,6 +1821,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     function testProcessBundleSuccessfulAllRefunds() public {
         SimpleERC20Token erc20In = ERC20s[0];
         reserveAndDepositFunds(ALICE, erc20In, PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         TokenSwapper swapper = new TokenSwapper();
 
@@ -1949,13 +1900,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1)); // +1 from prefill
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "",
-                assetsUnwrapped: true
-            })
-        );
-
         // Whitelist token swapper for sake of simulation
         handler.setContractPermission(address(swapper), true);
         handler.setContractMethodPermission(
@@ -1973,6 +1917,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callSuccesses[1], true);
         assertEq(opResults[0].callResults.length, uint256(2));
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
         // Ensure 50M tokensIn in swapper, and all types of refund tokens back
         // in teller
@@ -1984,6 +1930,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     function testProcessBundleUnspecifiedTokensNoRefunds() public {
         SimpleERC20Token joinSplitToken = ERC20s[0];
         reserveAndDepositFunds(ALICE, joinSplitToken, 2 * PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         TokenSwapper swapper = new TokenSwapper();
 
@@ -2037,14 +1985,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
         assertEq(erc721.balanceOf(address(handler)), uint256(0));
 
-        // Check OperationProcessed event
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "",
-                assetsUnwrapped: true
-            })
-        );
-
         // Whitelist token swapper for sake of simulation
         handler.setContractMethodPermission(
             address(swapper),
@@ -2062,6 +2002,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 5);
 
         // Teller lost some joinSplitToken to BUNDLER due to bundler gas fee
         assertLt(
@@ -2078,6 +2020,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     function testProcessBundleRejectsActionsWithUnsupportedMethods() public {
         SimpleERC20Token erc20 = ERC20s[0];
         reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         erc20.reserveTokens(ALICE, PER_NOTE_AMOUNT);
         vm.prank(ALICE);
@@ -2119,14 +2063,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Check OperationProcessed event
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "Cannot call non-allowed protocol method",
-                assetsUnwrapped: true
-            })
-        );
-
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
@@ -2138,6 +2074,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             opResults[0].failureReason,
             "Cannot call non-allowed protocol method"
         );
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
         assertGt(erc20.balanceOf(BUNDLER), 0);
         assertLt(erc20.balanceOf(address(teller)), PER_NOTE_AMOUNT);
@@ -2147,6 +2085,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     function testProcessBundleFailsDueToErc20ApproveOnBadSpender() public {
         SimpleERC20Token erc20 = ERC20s[0];
         reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         address NOT_ALLOWED_CONTRACT = address(0x4444);
 
@@ -2186,14 +2126,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Check OperationProcessed event
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "!approve spender",
-                assetsUnwrapped: true
-            })
-        );
-
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
@@ -2202,6 +2134,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].failureReason, "!approve spender");
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
         assertEq(erc20.allowance(address(handler), NOT_ALLOWED_CONTRACT), 0);
     }
@@ -2211,6 +2145,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     {
         SimpleERC20Token erc20 = ERC20s[0];
         reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         // Approve other contract which is meant to be allowed contract that has fn selector clash
         // with erc20.approve
@@ -2263,14 +2199,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Check OperationProcessed event
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "!approve spender",
-                assetsUnwrapped: true
-            })
-        );
-
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
@@ -2279,6 +2207,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].failureReason, "!approve spender");
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
     }
 
     function testProcessBundleFailsErc20FunctionSelectorClashWithInvalidFnDataLength()
@@ -2286,6 +2216,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     {
         SimpleERC20Token erc20 = ERC20s[0];
         reserveAndDepositFunds(ALICE, erc20, PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         // Approve other contract which is meant to be allowed contract that has fn selector clash
         // with erc20.approve
@@ -2336,14 +2268,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Check OperationProcessed event
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "!approve fn length",
-                assetsUnwrapped: true
-            })
-        );
-
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
@@ -2352,6 +2276,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].failureReason, "!approve fn length");
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
     }
 
     function testProcessBundleUnsupportedRefundTokenNoRefunds() public {
@@ -2419,14 +2345,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
         assertEq(erc721.balanceOf(address(handler)), uint256(0));
 
-        // Check OperationProcessed event
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "!supported asset",
-                assetsUnwrapped: false
-            })
-        );
-
         // Whitelist token swapper for sake of simulation
         handler.setContractMethodPermission(
             address(swapper),
@@ -2442,6 +2360,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, false);
         assertEq(opResults[0].failureReason, "!supported asset");
+        assertEq(opResults[0].preOpMerkleCount, 0);
+        assertEq(opResults[0].postOpMerkleCount, 0);
 
         // Bundler not compensated because it should have checked refund token was supported
         assertEq(joinSplitToken.balanceOf(BUNDLER), 0);
@@ -2496,14 +2416,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(teller)), PER_NOTE_AMOUNT);
         assertEq(token.balanceOf(address(BOB)), 0);
 
-        // Check OperationProcessed event emits processed = false
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "Too few gas tokens",
-                assetsUnwrapped: false
-            })
-        );
-
         vm.prank(BOB);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
@@ -2511,6 +2423,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, false);
+        assertEq(opResults[0].preOpMerkleCount, 0);
+        assertEq(opResults[0].postOpMerkleCount, 0);
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].failureReason),
@@ -2527,6 +2441,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Alice starts with 2 * 50M tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
@@ -2564,14 +2480,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(teller)), 2 * PER_NOTE_AMOUNT);
         assertEq(token.balanceOf(address(BOB)), 0);
 
-        // Check OperationProcessed event emits processed = false
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "exceeded `executionGasLimit`",
-                assetsUnwrapped: true
-            })
-        );
-
         vm.prank(ALICE);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
@@ -2579,13 +2487,14 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].failureReason, "exceeded `executionGasLimit`");
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
         // ALICE (bundler) was still paid
         assertLt(token.balanceOf(address(teller)), 2 * PER_NOTE_AMOUNT);
         assertGt(token.balanceOf(address(ALICE)), 0);
     }
 
-    // TODO: move to Handler.t.sol
     function testHandleOperationNotTellerCaller() public {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
@@ -2717,6 +2626,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
+        uint128 preOpMerkleCount = handler.totalCount();
+
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
         address ZERO_CODE_CONTRACT = address(0xabcd);
@@ -2752,13 +2663,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({
-                maybeFailureReason: "!zero code",
-                assetsUnwrapped: true
-            })
-        );
-
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
@@ -2767,6 +2671,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].failureReason, "!zero code");
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
     }
 
     // TODO: add testcase for leftover tokens in handler sent to leftover holder

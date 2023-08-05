@@ -170,6 +170,9 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         // Ensure all token balances of tokens to be used are zeroed out
         _ensureZeroedBalances(op);
 
+        // Mark merkle count pre operation
+        opResult.preOpMerkleCount = totalCount();
+
         // Handle all joinsplits
         uint256 numJoinSplitAssets = _processJoinSplitsReservingFee(
             op,
@@ -231,6 +234,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         );
 
         _handleAllRefunds(op);
+
+        // Mark new merkle count post operation
+        opResult.postOpMerkleCount = totalCount();
+
         return opResult;
     }
 

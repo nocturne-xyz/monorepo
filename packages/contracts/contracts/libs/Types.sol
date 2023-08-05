@@ -112,6 +112,8 @@ struct OperationResult {
     uint256 verificationGas;
     uint256 executionGas;
     uint256 numRefunds;
+    uint128 preOpMerkleCount;
+    uint128 postOpMerkleCount;
 }
 
 struct Bundle {

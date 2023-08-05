@@ -55,7 +55,9 @@ contract Teller is
         bool assetsUnwrapped,
         string failureReason,
         bool[] callSuccesses,
-        bytes[] callResults
+        bytes[] callResults,
+        uint128 preOpMerkleCount,
+        uint128 postOpMerkleCount
     );
 
     /// @notice Initializer function
@@ -196,7 +198,9 @@ contract Teller is
                 opResults[i].assetsUnwrapped,
                 opResults[i].failureReason,
                 opResults[i].callSuccesses,
-                opResults[i].callResults
+                opResults[i].callResults,
+                opResults[i].preOpMerkleCount,
+                opResults[i].postOpMerkleCount
             );
         }
         return opResults;
