@@ -124,7 +124,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             encodedAsset,
             deposit.depositAddr,
             deposit.value,
-            RefundType.Deposit
+            NoteSource.Deposit
         );
     }
 

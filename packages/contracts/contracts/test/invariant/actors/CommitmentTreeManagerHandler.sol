@@ -176,15 +176,15 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             h2: 49380694508107827227871038662877111842066638251616884143503987031630145436076
         });
 
-        RefundType refundType = bound(seed, 0, 1) == 0
-            ? RefundType.Deposit
-            : RefundType.Refund;
+        NoteSource noteSource = bound(seed, 0, 1) == 0
+            ? NoteSource.Deposit
+            : NoteSource.Refund;
 
         commitmentTreeManager.handleRefundNote(
             encodedAsset,
             refundAddr,
             bound(seed, 0, Validation.MAX_NOTE_VALUE),
-            refundType
+            noteSource
         );
         ghost_refundNotesLeafCount += 1;
         handleRefundNotesLength = 1;

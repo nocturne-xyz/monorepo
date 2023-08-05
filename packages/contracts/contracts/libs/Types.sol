@@ -11,7 +11,7 @@ enum AssetType {
     ERC1155
 }
 
-enum RefundType {
+enum NoteSource {
     Deposit,
     Refund
 }

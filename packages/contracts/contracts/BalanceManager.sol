@@ -269,7 +269,7 @@ contract BalanceManager is CommitmentTreeManager {
                     encodedAsset,
                     op.refundAddr,
                     refundAmount,
-                    RefundType.Refund
+                    NoteSource.Refund
                 );
             }
         }

@@ -119,10 +119,10 @@ export async function fetchSDKEvents(
 export interface NoteResponse {
   ownerH1: string;
   ownerH2: string;
-  nonce: string;
   encodedAssetAddr: string;
   encodedAssetId: string;
   value: string;
+  noteSource: string;
 }
 
 export interface EncryptedNoteResponse {
@@ -226,16 +226,17 @@ export function includedNoteFromNoteResponse(
   const encodedAssetId = BigInt(noteResponse.encodedAssetId);
   const asset = AssetTrait.decode({ encodedAssetAddr, encodedAssetId });
 
-  const nonce = BigInt(noteResponse.nonce);
   const value = BigInt(noteResponse.value);
+
+  const noteSource = Number(noteResponse.noteSource);
 
   return {
     owner,
     asset,
-    nonce,
     value,
-
+    nonce: BigInt(merkleIndex),
     merkleIndex,
+    noteSource,
   };
 }
 

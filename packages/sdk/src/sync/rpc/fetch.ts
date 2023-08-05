@@ -157,11 +157,11 @@ function refundNoteFromEvent(
 ): WithTotalEntityIndex<IncludedNote> {
   const {
     refundAddr,
-    nonce,
     encodedAssetAddr,
     encodedAssetId,
     value,
     merkleIndex,
+    noteSource,
   } = event.args;
 
   const { h1, h2 } = refundAddr;
@@ -179,10 +179,11 @@ function refundNoteFromEvent(
     totalEntityIndex: TotalEntityIndexTrait.fromTypedEvent(event),
     inner: {
       owner,
-      nonce: nonce.toBigInt(),
       asset: AssetTrait.decode(encodedAsset),
       value: value.toBigInt(),
+      nonce: merkleIndex.toBigInt(),
       merkleIndex: merkleIndex.toNumber(),
+      noteSource: noteSource, // NOTE: guaranteed to be 0 or 1 (deposit or refund)
     },
   };
 }

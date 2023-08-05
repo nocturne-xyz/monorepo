@@ -31,7 +31,7 @@ contract TestBalanceManager is IHandler, BalanceManager {
                 deposit.encodedAsset,
                 deposit.depositAddr,
                 deposit.value,
-                RefundType.Deposit
+                NoteSource.Deposit
             );
     }
 

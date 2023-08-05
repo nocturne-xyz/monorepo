@@ -12,9 +12,11 @@ import {
   IncludedNoteWithNullifier,
   WithTotalEntityIndex,
   range,
+  IncludedNote,
 } from "../src";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import randomBytes from "randombytes";
+import { NoteSource } from "../src/primitives/note";
 
 export const DUMMY_ROOT_KEY = Uint8Array.from(range(32));
 
@@ -99,13 +101,16 @@ export async function setup(
   const nocturneDB = new NocturneDB(kv);
   const merkleProver = new SparseMerkleProver(kv);
 
-  const notes = zip(noteAmounts, assets).map(([amount, asset], i) => ({
-    owner: signer.generateRandomStealthAddress(),
-    nonce: BigInt(i),
-    asset: asset,
-    value: amount,
-    merkleIndex: i,
-  }));
+  const notes: IncludedNote[] = zip(noteAmounts, assets).map(
+    ([amount, asset], i) => ({
+      owner: signer.generateRandomStealthAddress(),
+      nonce: BigInt(i),
+      asset: asset,
+      value: amount,
+      merkleIndex: i,
+      noteSource: NoteSource.JoinSplit,
+    })
+  );
 
   const nullifiers = notes.map((n) => signer.createNullifier(n));
   const notesWithNullfiers = zip(notes, nullifiers).map(([n, nf]) =>

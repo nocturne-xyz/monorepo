@@ -50,7 +50,7 @@ contract CommitmentTreeManager is
         uint256 encodedAssetId,
         uint256 value,
         uint128 merkleIndex,
-        RefundType refundType
+        uint8 noteSource
     );
 
     /// @notice Event emitted when a joinsplit is processed
@@ -237,7 +237,7 @@ contract CommitmentTreeManager is
         EncodedAsset memory encodedAsset,
         CompressedStealthAddress calldata refundAddr,
         uint256 value,
-        RefundType refundType
+        NoteSource noteSource
     ) internal returns (uint128 merkleIndex) {
         merkleIndex = _merkle.getTotalCount();
         EncodedNote memory note = EncodedNote({
@@ -257,7 +257,7 @@ contract CommitmentTreeManager is
             encodedAsset.encodedAssetId,
             value,
             merkleIndex,
-            refundType
+            uint8(noteSource)
         );
     }
 }

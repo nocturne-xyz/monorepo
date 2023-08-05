@@ -1,7 +1,7 @@
 import { CanonAddress, StealthAddress, StealthAddressTrait } from "./address";
 import { ViewingKey } from "./keys";
 import { BabyJubJub, poseidonBN } from "@nocturne-xyz/crypto-utils";
-import { IncludedNote, Note, NoteTrait } from "../primitives/note";
+import { IncludedNote, Note, NoteSource, NoteTrait } from "../primitives/note";
 import { EncryptedNote } from "../primitives/types";
 import { decryptNote } from "./noteEncryption";
 import { randomFr } from "./utils";
@@ -75,6 +75,7 @@ export class NocturneViewer {
     return [
       {
         ...note,
+        noteSource: NoteSource.JoinSplit,
         merkleIndex,
       },
       sender,

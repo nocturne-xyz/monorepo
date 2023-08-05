@@ -6,6 +6,12 @@ import { bigintToBEPadded } from "../utils";
 import { EncryptedNote } from "./types";
 import { bigintFromBEBytes } from "../utils/bits";
 
+export enum NoteSource {
+  Deposit = 0,
+  Refund = 1,
+  JoinSplit = 2,
+}
+
 export interface Note {
   owner: StealthAddress;
   nonce: bigint;
@@ -14,6 +20,7 @@ export interface Note {
 }
 
 export interface IncludedNote extends Note {
+  noteSource: NoteSource;
   merkleIndex: number;
 }
 
@@ -134,16 +141,17 @@ export class NoteTrait {
 
   static toIncludedNote<N extends Note>(
     { owner, nonce, asset, value }: N,
+    noteSource: NoteSource,
     merkleIndex: number
   ): IncludedNote {
-    return { owner, nonce, asset, value, merkleIndex };
+    return { owner, nonce, asset, value, merkleIndex, noteSource };
   }
 
   static toIncludedNoteWithNullifier<N extends IncludedNote>(
-    { owner, nonce, asset, value, merkleIndex }: N,
+    { owner, nonce, asset, value, merkleIndex, noteSource }: N,
     nullifier: bigint
   ): IncludedNoteWithNullifier {
-    return { owner, nonce, asset, value, merkleIndex, nullifier };
+    return { owner, nonce, asset, value, merkleIndex, nullifier, noteSource };
   }
 
   static toNote<N extends Note>({ owner, nonce, asset, value }: N): Note {

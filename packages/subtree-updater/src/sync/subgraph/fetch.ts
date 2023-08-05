@@ -52,7 +52,6 @@ query fetchTreeInsertionEvents($fromIdx: String!) {
       note {
         ownerH1
         ownerH2
-        nonce
         encodedAssetAddr
         encodedAssetId
         value
