@@ -44,6 +44,7 @@ query fetchSDKEvents($fromIdx: String!) {
       note {
         ownerH1
         ownerH2
+        nonce
         encodedAssetAddr
         encodedAssetId
         value
@@ -118,6 +119,7 @@ export async function fetchSDKEvents(
 export interface NoteResponse {
   ownerH1: string;
   ownerH2: string;
+  nonce: string;
   encodedAssetAddr: string;
   encodedAssetId: string;
   value: string;
@@ -217,6 +219,7 @@ export function includedNoteFromNoteResponse(
   const encodedAssetAddr = BigInt(noteResponse.encodedAssetAddr);
   const encodedAssetId = BigInt(noteResponse.encodedAssetId);
   const asset = AssetTrait.decode({ encodedAssetAddr, encodedAssetId });
+  const nonce = BigInt(noteResponse.nonce);
 
   const value = BigInt(noteResponse.value);
 
@@ -224,7 +227,7 @@ export function includedNoteFromNoteResponse(
     owner,
     asset,
     value,
-    nonce: BigInt(merkleIndex), // encoded notes on chain always use merkle index as nonce (public)
+    nonce,
     merkleIndex,
   };
 }

@@ -155,8 +155,14 @@ function joinSplitEventFromRaw(
 function refundNoteFromEvent(
   event: RefundProcessedEvent
 ): WithTotalEntityIndex<IncludedNote> {
-  const { refundAddr, encodedAssetAddr, encodedAssetId, value, merkleIndex } =
-    event.args;
+  const {
+    refundAddr,
+    encodedAssetAddr,
+    encodedAssetId,
+    value,
+    merkleIndex,
+    nonce,
+  } = event.args;
 
   const { h1, h2 } = refundAddr;
   const encodedAsset: EncodedAsset = {
@@ -173,9 +179,9 @@ function refundNoteFromEvent(
     totalEntityIndex: TotalEntityIndexTrait.fromTypedEvent(event),
     inner: {
       owner,
+      nonce: nonce.toBigInt(),
       asset: AssetTrait.decode(encodedAsset),
       value: value.toBigInt(),
-      nonce: merkleIndex.toBigInt(),
       merkleIndex: merkleIndex.toNumber(),
     },
   };
