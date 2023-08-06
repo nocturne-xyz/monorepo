@@ -16,7 +16,6 @@ import {
 } from "../src";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import randomBytes from "randombytes";
-import { NoteSource } from "../src/primitives/note";
 
 export const DUMMY_ROOT_KEY = Uint8Array.from(range(32));
 
@@ -108,7 +107,6 @@ export async function setup(
       asset: asset,
       value: amount,
       merkleIndex: i,
-      noteSource: NoteSource.JoinSplit,
     })
   );
 

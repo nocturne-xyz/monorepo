@@ -70,8 +70,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
         uint256 value,
-        uint128 merkleIndex,
-        NoteSource noteSource
+        uint128 merkleIndex
     );
 
     event JoinSplitProcessed(
@@ -179,8 +178,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
                 uint256(uint160(address(token))),
                 ERC20_ID,
                 PER_NOTE_AMOUNT,
-                uint128(i),
-                NoteSource.Deposit
+                uint128(i)
             );
 
             if (i == depositIterations - 1 && remainder != 0) {

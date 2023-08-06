@@ -31,7 +31,6 @@ import {
 } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { poseidonBN } from "@nocturne-xyz/crypto-utils";
-import { NoteSource } from "./primitives/note";
 
 export const __private = {
   gatherNotes,
@@ -221,7 +220,6 @@ async function getJoinSplitsFromNotes(
       asset: notes[0].asset,
       value: 0n,
       merkleIndex: 0,
-      noteSource: NoteSource.Refund, // dummy, doesn't matter what it is
     });
   }
 

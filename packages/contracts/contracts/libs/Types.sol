@@ -11,11 +11,6 @@ enum AssetType {
     ERC1155
 }
 
-enum NoteSource {
-    Deposit,
-    Refund
-}
-
 struct EncodedAsset {
     uint256 encodedAssetAddr;
     uint256 encodedAssetId;

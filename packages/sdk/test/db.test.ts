@@ -16,7 +16,6 @@ import {
   NocturneSigner,
 } from "../src";
 import { DUMMY_ROOT_KEY, ponzi, shitcoin, stablescam } from "./utils";
-import { NoteSource } from "../src/primitives/note";
 
 describe("InMemoryKVStore", async () => {
   const kv = new InMemoryKVStore();
@@ -205,7 +204,6 @@ describe("NocturneDB", async () => {
         asset,
         value: 100n,
         merkleIndex: i + offset,
-        noteSource: NoteSource.JoinSplit,
       }));
       const allNfs = allNotes.map((n) => viewer.createNullifier(n));
       const notesWithNFs = zip(allNotes, allNfs).map(([n, nf]) =>

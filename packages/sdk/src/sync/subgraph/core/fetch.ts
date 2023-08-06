@@ -122,7 +122,6 @@ export interface NoteResponse {
   encodedAssetAddr: string;
   encodedAssetId: string;
   value: string;
-  noteSource: string;
 }
 
 export interface EncryptedNoteResponse {
@@ -228,15 +227,12 @@ export function includedNoteFromNoteResponse(
 
   const value = BigInt(noteResponse.value);
 
-  const noteSource = Number(noteResponse.noteSource);
-
   return {
     owner,
     asset,
     value,
-    nonce: BigInt(merkleIndex),
+    nonce: BigInt(merkleIndex), // encoded notes on chain always use merkle index as nonce (public)
     merkleIndex,
-    noteSource,
   };
 }
 

@@ -123,8 +123,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         merkleIndex = _handleRefundNote(
             encodedAsset,
             deposit.depositAddr,
-            deposit.value,
-            NoteSource.Deposit
+            deposit.value
         );
     }
 
