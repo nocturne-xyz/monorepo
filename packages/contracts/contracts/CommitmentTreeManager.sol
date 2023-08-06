@@ -136,7 +136,7 @@ contract CommitmentTreeManager is
     }
 
     /// @notice Returns count of the merkle tree under the current root
-    function count() public view returns (uint256) {
+    function count() public view returns (uint128) {
         return _merkle.getCount();
     }
 
