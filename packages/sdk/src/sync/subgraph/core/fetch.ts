@@ -44,7 +44,6 @@ query fetchSDKEvents($fromIdx: String!) {
       note {
         ownerH1
         ownerH2
-        nonce
         encodedAssetAddr
         encodedAssetId
         value
@@ -155,19 +154,13 @@ query fetchNotes($fromIdx: String!) {
     note {
       ownerH1
       ownerH2
-      nonce
       encodedAssetAddr
       encodedAssetId
       value
     }
     encryptedNote {
-      ownerH1
-      ownerH2
-      encappedKey
-      encryptedNonce
-      encryptedValue
-      encodedAssetAddr
-      encodedAssetId
+      ciphertextBytes
+      encapsulatedSecretBytes
       commitment
     }
   }
