@@ -46,6 +46,7 @@ contract CommitmentTreeManager is
     ///      or a new deposit
     event RefundProcessed(
         CompressedStealthAddress refundAddr,
+        uint256 nonce,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
         uint256 value,
@@ -251,6 +252,7 @@ contract CommitmentTreeManager is
 
         emit RefundProcessed(
             refundAddr,
+            note.nonce,
             encodedAsset.encodedAssetAddr,
             encodedAsset.encodedAssetId,
             value,
