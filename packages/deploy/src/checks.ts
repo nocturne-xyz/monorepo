@@ -136,19 +136,19 @@ async function checkNocturneContracts(
   const tellerOwner = await tellerContract.owner();
   assertOrErr(
     tellerOwner == deployment.owners.tellerOwner,
-    "on-chain teller owner doesn't match config teller owner"
+    `on-chain teller owner doesn't match config teller owner. onchain: ${tellerOwner}. config: ${deployment.owners.tellerOwner}.`
   );
 
   const handlerOwner = await handlerContract.owner();
   assertOrErr(
     handlerOwner == deployment.owners.handlerOwner,
-    "on-chain handler owner doesn't match config handler owner"
+    `on-chain handler owner doesn't match config handler owner. onchain: ${handlerOwner}. config: ${deployment.owners.handlerOwner}.`
   );
 
   const depositManagerOwner = await depositManagerContract.owner();
   assertOrErr(
     depositManagerOwner == deployment.owners.depositManagerOwner,
-    "on-chain deposit manager owner doesn't match config deposit manager owner"
+    `on-chain deposit manager owner doesn't match config deposit manager owner. onchain: ${depositManagerOwner}. config: ${deployment.owners.depositManagerOwner}.`
   );
 
   // TODO: is there a way to check subtree update verifier?
