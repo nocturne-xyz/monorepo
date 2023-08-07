@@ -67,6 +67,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
     event RefundProcessed(
         CompressedStealthAddress refundAddr,
+        uint256 nonce,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
         uint256 value,
@@ -175,6 +176,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             vm.expectEmit(true, true, true, true);
             emit RefundProcessed(
                 addr,
+                uint128(i),
                 uint256(uint160(address(token))),
                 ERC20_ID,
                 PER_NOTE_AMOUNT,
