@@ -55,7 +55,9 @@ contract Teller is
         bool assetsUnwrapped,
         string failureReason,
         bool[] callSuccesses,
-        bytes[] callResults
+        bytes[] callResults,
+        uint128 preOpMerkleCount,
+        uint128 postOpMerkleCount
     );
 
     /// @notice Initializer function
@@ -113,8 +115,14 @@ contract Teller is
     /// @param deposit Deposit
     function depositFunds(
         Deposit calldata deposit
-    ) external override whenNotPaused onlyDepositSource {
-        _handler.handleDeposit(deposit);
+    )
+        external
+        override
+        whenNotPaused
+        onlyDepositSource
+        returns (uint128 merkleIndex)
+    {
+        merkleIndex = _handler.handleDeposit(deposit);
         AssetUtils.transferAssetFrom(
             deposit.encodedAsset,
             msg.sender,
@@ -190,7 +198,9 @@ contract Teller is
                 opResults[i].assetsUnwrapped,
                 opResults[i].failureReason,
                 opResults[i].callSuccesses,
-                opResults[i].callResults
+                opResults[i].callResults,
+                opResults[i].preOpMerkleCount,
+                opResults[i].postOpMerkleCount
             );
         }
         return opResults;

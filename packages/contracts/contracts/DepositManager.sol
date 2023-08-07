@@ -102,7 +102,8 @@ contract DepositManager is
         uint256 value,
         CompressedStealthAddress depositAddr,
         uint256 nonce,
-        uint256 gasCompensation
+        uint256 gasCompensation,
+        uint128 merkleIndex
     );
 
     /// @notice Initializer function
@@ -423,7 +424,7 @@ contract DepositManager is
 
         // Approve teller for assets and deposit funds
         AssetUtils.approveAsset(req.encodedAsset, address(_teller), req.value);
-        _teller.depositFunds(
+        uint128 merkleIndex = _teller.depositFunds(
             Deposit({
                 spender: req.spender,
                 encodedAsset: req.encodedAsset,
@@ -465,7 +466,8 @@ contract DepositManager is
             req.value,
             req.depositAddr,
             req.nonce,
-            actualGasComp
+            actualGasComp,
+            merkleIndex
         );
     }
 }

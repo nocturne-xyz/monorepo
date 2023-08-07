@@ -114,13 +114,19 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     /// @param deposit Deposit to handle
     function handleDeposit(
         Deposit calldata deposit
-    ) external override whenNotPaused onlyTeller {
+    ) external override whenNotPaused onlyTeller returns (uint128 merkleIndex) {
         // Ensure deposit asset is supported
         EncodedAsset memory encodedAsset = deposit.encodedAsset;
         (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
         require(_supportedContracts[assetAddr], "!supported deposit asset");
 
-        _handleRefundNote(encodedAsset, deposit.depositAddr, deposit.value);
+        merkleIndex = _handleRefundNote(
+            encodedAsset,
+            deposit.depositAddr,
+            deposit.value
+        );
+
+        return merkleIndex;
     }
 
     /// @notice Handles an operation after proofs have been verified by the Teller. Checks
@@ -164,6 +170,9 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
 
         // Ensure all token balances of tokens to be used are zeroed out
         _ensureZeroedBalances(op);
+
+        // Mark merkle count pre operation
+        opResult.preOpMerkleCount = totalCount();
 
         // Handle all joinsplits
         uint256 numJoinSplitAssets = _processJoinSplitsReservingFee(
@@ -226,6 +235,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         );
 
         _handleAllRefunds(op);
+
+        // Mark new merkle count post operation
+        opResult.postOpMerkleCount = totalCount();
+
         return opResult;
     }
 

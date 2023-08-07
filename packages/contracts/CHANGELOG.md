@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- track pre/post op merkle count and attach to `OperationResult` and `OperationProcessed` event
+- propagate which merkle index a deposit is for and add `merkleIndex` to `DepositCompleted` event
 - rename/reorder some joinsplit circuit fields
 - add `validateOperation` function to `ValidationLib` which ensures that:
   - the operation has only > 0 public spends for pubJoinSplits (between circuits and this check, we know for sure that all pub joinsplits are spending non-masked assets and all conf joinsplits are spending masked assets)

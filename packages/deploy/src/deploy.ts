@@ -319,19 +319,25 @@ export async function relinquishContractOwnership(
     connectedSigner
   );
 
-  console.log("\nrelinquishing control of teller...");
+  console.log(
+    `\nrelinquishing control of teller. new owner: ${config.proxyAdminOwner}.`
+  );
   const tellerTransferOwnershipTx = await teller.transferOwnership(
     config.proxyAdminOwner
   );
   await tellerTransferOwnershipTx.wait(opts?.confirmations);
 
-  console.log("relinquishing control of handler...");
+  console.log(
+    `relinquishing control of handler. new owner: ${config.proxyAdminOwner}.`
+  );
   const handlerTransferOwnershipTx = await handler.transferOwnership(
     config.proxyAdminOwner
   );
   await handlerTransferOwnershipTx.wait(opts?.confirmations);
 
-  console.log("relinquishing control of deposit manager...");
+  console.log(
+    `relinquishing control of deposit manager. new owner: ${config.proxyAdminOwner}.`
+  );
   const depositManagerTransferOwnershipTx =
     await depositManager.transferOwnership(config.proxyAdminOwner);
   await depositManagerTransferOwnershipTx.wait(opts?.confirmations);

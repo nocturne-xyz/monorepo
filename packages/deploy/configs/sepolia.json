@@ -37,6 +37,7 @@
   "protocolAllowlist": [],
   "leftoverTokenHolder": "0x0000000000000000000000000000000000000123",
   "opts": {
-    "useMockSubtreeUpdateVerifier": false
+    "useMockSubtreeUpdateVerifier": false,
+    "confirmations": 1
   }
 }

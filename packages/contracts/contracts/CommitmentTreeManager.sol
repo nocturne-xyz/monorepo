@@ -137,13 +137,13 @@ contract CommitmentTreeManager is
     }
 
     /// @notice Returns count of the merkle tree under the current root
-    function count() public view returns (uint256) {
+    function count() public view returns (uint128) {
         return _merkle.getCount();
     }
 
     /// @notice Returns the count of the merkle tree including leaves that have not yet been
     ///         included in a subtree update
-    function totalCount() public view returns (uint256) {
+    function totalCount() public view returns (uint128) {
         return _merkle.getTotalCount();
     }
 
@@ -237,12 +237,12 @@ contract CommitmentTreeManager is
         EncodedAsset memory encodedAsset,
         CompressedStealthAddress calldata refundAddr,
         uint256 value
-    ) internal {
-        uint128 index = _merkle.getTotalCount();
+    ) internal returns (uint128 merkleIndex) {
+        merkleIndex = _merkle.getTotalCount();
         EncodedNote memory note = EncodedNote({
             ownerH1: refundAddr.h1,
             ownerH2: refundAddr.h2,
-            nonce: index,
+            nonce: uint256(merkleIndex),
             encodedAssetAddr: encodedAsset.encodedAssetAddr,
             encodedAssetId: encodedAsset.encodedAssetId,
             value: value
@@ -252,11 +252,13 @@ contract CommitmentTreeManager is
 
         emit RefundProcessed(
             refundAddr,
-            index,
+            note.nonce,
             encodedAsset.encodedAssetAddr,
             encodedAsset.encodedAssetId,
             value,
-            index
+            merkleIndex
         );
+
+        return merkleIndex;
     }
 }

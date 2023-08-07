@@ -10,6 +10,11 @@ import {Utils} from "./Utils.sol";
 import {TreeUtils} from "./TreeUtils.sol";
 import {QueueLib} from "./Queue.sol";
 
+enum InsertionType {
+    Note,
+    Commitment
+}
+
 struct OffchainMerkleTree {
     // number of non-zero leaves in the tree
     // INVARIANT: bottom `LOG2_BATCH_SIZE` bits of `count` should all be zero
@@ -67,7 +72,7 @@ library LibOffchainMerkleTree {
         EncodedNote memory note
     ) internal {
         uint256 noteHash = TreeUtils.sha256Note(note);
-        _insertUpdate(self, noteHash, true);
+        _insertUpdate(self, noteHash, InsertionType.Note);
     }
 
     function insertNoteCommitments(
@@ -75,7 +80,7 @@ library LibOffchainMerkleTree {
         uint256[] memory ncs
     ) internal {
         for (uint256 i = 0; i < ncs.length; i++) {
-            _insertUpdate(self, ncs[i], false);
+            _insertUpdate(self, ncs[i], InsertionType.Commitment);
         }
     }
 
@@ -213,12 +218,14 @@ library LibOffchainMerkleTree {
     function _insertUpdate(
         OffchainMerkleTree storage self,
         uint256 update,
-        bool isNote
+        InsertionType insertionType
     ) internal {
         uint64 batchLen = getBatchLen(self);
         self.batch[batchLen] = update;
 
-        self.bitmap |= isNote ? uint64(1) << (63 - batchLen) : uint64(0);
+        self.bitmap |= insertionType == InsertionType.Note
+            ? uint64(1) << (63 - batchLen)
+            : uint64(0);
 
         uint64 newBatchLen = batchLen + 1;
         _setBatchLen(self, newBatchLen);

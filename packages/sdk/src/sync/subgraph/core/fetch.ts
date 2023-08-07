@@ -156,19 +156,13 @@ query fetchNotes($fromIdx: String!) {
     note {
       ownerH1
       ownerH2
-      nonce
       encodedAssetAddr
       encodedAssetId
       value
     }
     encryptedNote {
-      ownerH1
-      ownerH2
-      encappedKey
-      encryptedNonce
-      encryptedValue
-      encodedAssetAddr
-      encodedAssetId
+      ciphertextBytes
+      encapsulatedSecretBytes
       commitment
     }
   }
@@ -225,16 +219,15 @@ export function includedNoteFromNoteResponse(
   const encodedAssetAddr = BigInt(noteResponse.encodedAssetAddr);
   const encodedAssetId = BigInt(noteResponse.encodedAssetId);
   const asset = AssetTrait.decode({ encodedAssetAddr, encodedAssetId });
-
   const nonce = BigInt(noteResponse.nonce);
+
   const value = BigInt(noteResponse.value);
 
   return {
     owner,
     asset,
-    nonce,
     value,
-
+    nonce,
     merkleIndex,
   };
 }

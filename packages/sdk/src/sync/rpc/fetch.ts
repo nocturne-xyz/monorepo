@@ -157,11 +157,11 @@ function refundNoteFromEvent(
 ): WithTotalEntityIndex<IncludedNote> {
   const {
     refundAddr,
-    nonce,
     encodedAssetAddr,
     encodedAssetId,
     value,
     merkleIndex,
+    nonce,
   } = event.args;
 
   const { h1, h2 } = refundAddr;

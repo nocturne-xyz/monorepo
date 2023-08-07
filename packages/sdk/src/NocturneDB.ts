@@ -4,7 +4,6 @@ import {
   IncludedNote,
   NoteTrait,
   IncludedNoteWithNullifier,
-  Note,
   OptimisticNFRecord,
   OptimisticOpDigestRecord,
 } from "./primitives";
@@ -414,11 +413,11 @@ export class NocturneDB {
     return allNotes;
   }
 
-  private static makeNoteKV<N extends Note>(merkleIndex: number, note: N): KV {
-    return [
-      NocturneDB.formatIndexKey(merkleIndex),
-      JSON.stringify(NoteTrait.toNote(note)),
-    ];
+  private static makeNoteKV<N extends IncludedNote>(
+    merkleIndex: number,
+    note: N
+  ): KV {
+    return [NocturneDB.formatIndexKey(merkleIndex), JSON.stringify(note)];
   }
 
   private static makeNullifierKV(merkleIndex: number, nullifier: bigint): KV {
@@ -512,10 +511,8 @@ export class NocturneDB {
   ): Promise<IncludedNote[]> {
     const idxKeys = indices.map((index) => NocturneDB.formatIndexKey(index));
     const kvs = await this.kv.getMany(idxKeys);
-    return kvs.map(([key, value]) => {
-      const merkleIndex = NocturneDB.parseIndexKey(key);
-      const note = JSON.parse(value) as Note;
-      return NoteTrait.toIncludedNote(note, merkleIndex);
+    return kvs.map(([_, value]) => {
+      return JSON.parse(value) as IncludedNote;
     });
   }
 }

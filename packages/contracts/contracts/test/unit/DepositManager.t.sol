@@ -65,7 +65,8 @@ contract DepositManagerTest is Test {
         uint256 value,
         CompressedStealthAddress depositAddr,
         uint256 nonce,
-        uint256 gasCompensation
+        uint256 gasCompensation,
+        uint128 merkleIndex
     );
 
     function setUp() public virtual {
@@ -522,6 +523,8 @@ contract DepositManagerTest is Test {
             v
         );
 
+        uint128 merkleIndex = handler.totalCount();
+
         vm.expectEmit(true, true, true, false);
         emit DepositCompleted(
             deposit.spender,
@@ -529,7 +532,8 @@ contract DepositManagerTest is Test {
             deposit.value,
             deposit.depositAddr,
             deposit.nonce,
-            deposit.gasCompensation
+            deposit.gasCompensation,
+            merkleIndex
         );
 
         vm.prank(SCREENER);
@@ -618,6 +622,8 @@ contract DepositManagerTest is Test {
         }
 
         for (uint256 i = 0; i < numDeposits; i++) {
+            uint128 merkleIndex = handler.totalCount();
+
             vm.expectEmit(true, true, true, false);
             emit DepositCompleted(
                 deposits[i].spender,
@@ -625,7 +631,8 @@ contract DepositManagerTest is Test {
                 deposits[i].value,
                 deposits[i].depositAddr,
                 deposits[i].nonce,
-                deposits[i].gasCompensation
+                deposits[i].gasCompensation,
+                merkleIndex
             );
 
             vm.prank(SCREENER);

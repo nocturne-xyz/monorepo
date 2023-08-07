@@ -295,7 +295,9 @@ library NocturneUtils {
                 executionGas: op.executionGasLimit,
                 verificationGas: op.pubJoinSplits.length *
                     GAS_PER_JOINSPLIT_VERIFY,
-                numRefunds: op.trackedAssets.length
+                numRefunds: op.trackedAssets.length,
+                preOpMerkleCount: 0,
+                postOpMerkleCount: 0
             });
     }
 
