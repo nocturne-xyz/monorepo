@@ -19,7 +19,6 @@ import {
   convertAssetTotalToDelaySeconds,
 } from "./time";
 import * as JSON from "bigint-json-serialization";
-import { dummySafeDepositCheck } from "../utils";
 
 export interface EstimateExistingWaitDeps {
   db: DepositScreenerDB;
@@ -135,10 +134,6 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
     value
   );
   if (!passesScreen) {
-    if (dummySafeDepositCheck(value)) {
-      return 0;
-    }
-
     throw new Error(
       `Prospective deposit request failed screening. spender: ${spender}. assetAddr: ${assetAddr}, value: ${value}`
     );
