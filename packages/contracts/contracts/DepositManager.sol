@@ -354,13 +354,13 @@ contract DepositManager is
         _weth.deposit{value: totalDepositAmount}();
     }
 
-    /// @notice Retrieves an ETH deposit either prematurely because user cancelled or because 
+    /// @notice Retrieves an ETH deposit either prematurely because user cancelled or because
     ///         screener didn't complete. Unwraps weth back to eth and send to user.
     /// @dev We accept race condition where user could technically retrieve their deposit before
     ///      the screener completes it. This would grief the screener but would incur a greater
     ///      cost to the user to continually instantiate + prematurely retrieve.
-    /// @dev Same code as normal retrieveDeposit except deposit is checked to be weth and weth is 
-    //       unwrapped to eth. The call to send gas compensation eth back to user also sends back 
+    /// @dev Same code as normal retrieveDeposit except deposit is checked to be weth and weth is
+    //       unwrapped to eth. The call to send gas compensation eth back to user also sends back
     ///      deposit.value eth.
     /// @param req Deposit request corresponding to ETH deposit to retrieve
     function retrieveETHDeposit(

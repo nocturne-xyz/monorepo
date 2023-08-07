@@ -147,7 +147,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
             depositErc20
         );
 
-        bytes4[] memory depositManagerHandlerSelectors = new bytes4[](4);
+        bytes4[] memory depositManagerHandlerSelectors = new bytes4[](5);
         depositManagerHandlerSelectors[0] = depositManagerHandler
             .instantiateDepositETH
             .selector;
@@ -155,9 +155,12 @@ contract ProtocolInvariants is Test, InvariantsBase {
             .instantiateDepositErc20
             .selector;
         depositManagerHandlerSelectors[2] = depositManagerHandler
-            .retrieveDepositErc20
+            .retrieveDepositETH
             .selector;
         depositManagerHandlerSelectors[3] = depositManagerHandler
+            .retrieveDepositErc20
+            .selector;
+        depositManagerHandlerSelectors[4] = depositManagerHandler
             .completeDepositErc20
             .selector;
 
