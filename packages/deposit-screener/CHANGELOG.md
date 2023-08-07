@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- replace tx manager with OZ relay
 - switch on screening/delay components in server/processor CLI
 - delete all dummy magic values and hardcode into dummy impls
 - add ENVIRONMENT env var to make sure we don't use dev values in production
