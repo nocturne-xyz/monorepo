@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- modify invariant tests to accomodate `retrieveETHDeposit`
+- add `retrieveETHDeposit` to DepositManager + fallback fn for receiving ETH when calling `weth.withdraw`
 - track pre/post op merkle count and attach to `OperationResult` and `OperationProcessed` event
 - propagate which merkle index a deposit is for and add `merkleIndex` to `DepositCompleted` event
 - rename/reorder some joinsplit circuit fields
