@@ -422,6 +422,64 @@ contract DepositManagerTest is Test {
         assertEq(ALICE.balance, GAS_COMP_AMOUNT);
     }
 
+    function testRetrieveETHDepositSuccess() public {
+        uint256 depositAmount = GAS_COMP_AMOUNT;
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(weth),
+            depositAmount,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonce(),
+            GAS_COMP_AMOUNT // 10M gas comp
+        );
+
+        // Deposit hash not yet marked true and ETH balance empty
+        bytes32 depositHash = depositManager.hashDepositRequest(deposit);
+        assertFalse(depositManager._outstandingDepositHashes(depositHash));
+        assertEq(address(depositManager).balance, 0);
+
+        // Set ALICE balance to enough for deposit and gas comp
+        vm.deal(ALICE, GAS_COMP_AMOUNT + depositAmount);
+        vm.prank(ALICE);
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = depositAmount;
+        depositManager.instantiateETHMultiDeposit{
+            value: GAS_COMP_AMOUNT + depositAmount
+        }(depositAmounts, NocturneUtils.defaultStealthAddress());
+
+        // Deposit hash marked true
+        assertTrue(depositManager._outstandingDepositHashes(depositHash));
+
+        // ETH escrowed by manager contract
+        assertEq(weth.balanceOf(address(depositManager)), deposit.value);
+
+        // Eth received
+        assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
+        assertEq(ALICE.balance, 0);
+
+        // Call retrieveDeposit
+        vm.expectEmit(true, true, true, true);
+        emit DepositRetrieved(
+            deposit.spender,
+            deposit.encodedAsset,
+            deposit.value,
+            deposit.depositAddr,
+            deposit.nonce,
+            deposit.gasCompensation
+        );
+        vm.prank(ALICE);
+        depositManager.retrieveETHDeposit(deposit);
+
+        // Deposit hash marked false again
+        assertFalse(depositManager._outstandingDepositHashes(depositHash));
+
+        // All eth sent back to user
+        assertEq(weth.balanceOf(address(depositManager)), 0);
+        assertEq(ALICE.balance, GAS_COMP_AMOUNT + deposit.value);
+    }
+
     function testRetrieveDepositFailureNotSpender() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
