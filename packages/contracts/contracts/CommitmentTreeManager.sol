@@ -258,5 +258,7 @@ contract CommitmentTreeManager is
             value,
             merkleIndex
         );
+
+        return merkleIndex;
     }
 }

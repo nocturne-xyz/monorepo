@@ -125,6 +125,8 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             deposit.depositAddr,
             deposit.value
         );
+
+        return merkleIndex;
     }
 
     /// @notice Handles an operation after proofs have been verified by the Teller. Checks
