@@ -69,7 +69,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
 
   constructor(
     provider: ethers.providers.Provider,
-    networkName: SupportedNetwork = "mainnet", //! todo confirm using network name for default config is what's intended
+    networkName: SupportedNetwork = "mainnet", // ! todo confirm using network name for default config is what's intended
     config?: NocturneSdkConfig
   ) {
     const _config = config || getNocturneSdkConfig(networkName);
@@ -77,13 +77,13 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     const depositManagerAddress = _config.config.depositManagerAddress();
     const depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
-      provider //! TODO is it fine that it's provider not signer? double check
+      provider // ! TODO is it fine that it's provider not signer? double check
     );
 
     const handlerAddress = _config.config.handlerAddress();
-    const handlerContract = Handler__factory.connect(handlerAddress, provider); //! TODO is it fine that it's provider not signer? double check
+    const handlerContract = Handler__factory.connect(handlerAddress, provider); // ! TODO is it fine that it's provider not signer? double check
 
-    const vkey: VerifyingKey = JSON.parse(await(await fetch(VKEY_PATH)).text()); //! TODO async requirement
+    const vkey: VerifyingKey = JSON.parse(await(await fetch(VKEY_PATH)).text()); // ! TODO async requirement
     this.joinSplitProver = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, vkey);
     this.depositManagerContract = depositManagerContract;
     this.handlerContract = handlerContract;
