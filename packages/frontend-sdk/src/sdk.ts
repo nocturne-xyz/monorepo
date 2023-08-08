@@ -41,9 +41,10 @@ import * as JSON from "bigint-json-serialization";
 import { ContractTransaction, ethers } from "ethers";
 import { NocturneSdkApi } from "./api";
 import {
-  SupportedNetwork,
-  NocturneSdkConfig,
   BundlerOperationID,
+  NocturneSdkConfig,
+  OperationRequestWithMetadata,
+  SupportedNetwork,
   SyncWithProgressOutput,
 } from "./types";
 import {
@@ -59,6 +60,7 @@ const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
 const VKEY_PATH = "/joinsplit/joinsplitVkey.json";
 
 export class NocturneFrontendSDK implements NocturneSdkApi {
+  // TODO verify all methods are implemented, rn error doesnt display for class if a method isn't impl'd. They may show only once the current method errs are resolved
   protected joinSplitProver: WasmJoinSplitProver;
   protected depositManagerContract: DepositManager;
   protected handlerContract: Handler;
@@ -528,6 +530,23 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   }
 
   /**
+   * Retrieve a freshly randomized address from the snap.
+   */
+  async getRandomStealthAddress(): Promise<StealthAddress> {
+    const json = (await window.ethereum.request({
+      method: "wallet_invokeSnap",
+      params: {
+        snapId: SNAP_ID,
+        request: {
+          method: "nocturne_getRandomizedAddr",
+        },
+      },
+    })) as string;
+
+    return JSON.parse(json) as StealthAddress;
+  }
+
+  /**
    * Query subgraph for all spender's deposits
    */
   async fetchAllDeposits(): Promise<DepositEvent[]> {
@@ -544,10 +563,9 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
    * @param operationRequest Operation request
    */
   protected async requestSignOperation(
-    operationRequest: OperationRequest,
-    opMetadata: OperationMetadata
+    operationRequest: OperationRequestWithMetadata
   ): Promise<SignedOperation> {
-    console.log("[fe-sdk] metadata:", opMetadata);
+    console.log("[fe-sdk] metadata:", operationRequest.meta);
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
@@ -555,30 +573,13 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
         request: {
           method: "nocturne_signOperation",
           params: {
-            operationRequest: JSON.stringify(operationRequest),
-            opMetadata: JSON.stringify(opMetadata),
+            operationRequest: JSON.stringify(operationRequest.request),
+            opMetadata: JSON.stringify(operationRequest.meta),
           },
         },
       },
     })) as string;
 
     return JSON.parse(json) as SignedOperation;
-  }
-
-  /**
-   * Retrieve a freshly randomized address from the snap.
-   */
-  protected async getRandomizedAddr(): Promise<StealthAddress> {
-    const json = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
-      params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_getRandomizedAddr",
-        },
-      },
-    })) as string;
-
-    return JSON.parse(json) as StealthAddress;
   }
 }

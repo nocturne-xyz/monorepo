@@ -14,6 +14,7 @@ import {
   DepositHandle,
   InitiateDepositResult,
   OperationHandle,
+  OperationRequestWithMetadata,
   SyncWithProgressOutput,
 } from "./types";
 
@@ -23,7 +24,7 @@ export interface NocturneSdkApi {
   getErc20DepositQuote(
     erc20Address: Address,
     totalValue: bigint
-  ): Promise<DepositQuote>;
+  ): Promise<DepositQuote>; // ! TODO DepositQuote not in API design changes, verify its signature
 
   /**
    * @param values Asset amounts
@@ -103,7 +104,6 @@ export interface NocturneSdkApi {
   // *** HELPERS *** //
 
   requestSignOperation(
-    operationRequest: OperationRequest,
-    opMetadata: OperationMetadata
+    operationRequest: OperationRequestWithMetadata
   ): Promise<SignedOperation>;
 }
