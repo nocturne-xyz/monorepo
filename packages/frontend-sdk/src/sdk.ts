@@ -45,6 +45,7 @@ import { ContractTransaction, ethers } from "ethers";
 import { NocturneSdkApi } from "./api";
 import {
   BundlerOperationID,
+  DepositHandle,
   GetBalanceOpts,
   InitiateDepositResult,
   NocturneSdkConfig,
@@ -141,6 +142,11 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       "0x00", // ! TODO need proper asset addr, also confirm that the resulting Asset Type should be WETH
       gasCompRequired
     );
+  }
+
+  async getAllDeposits(): Promise<DepositHandle[]> {
+    // TODO unless there's some other way, will entail adding gql consumer to fe-sdk
+    throw new Error("Not yet implemented!");
   }
 
   async initiateErc20Deposits(

@@ -10,6 +10,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import {
   BundlerOperationID,
+  DepositHandle,
   GetBalanceOpts,
   InitiateDepositResult,
   OperationHandle,
@@ -45,7 +46,7 @@ export interface NocturneSdkApi {
     gasCompensationPerDeposit: bigint
   ): Promise<InitiateDepositResult>;
 
-  //   getAllDeposits(): Promise<DepositHandle[]>; TODO unless there's some other way, will entail adding gql consumer to fe-sdk
+  getAllDeposits(): Promise<DepositHandle[]>;
 
   // *** OPERATION METHODS *** //
 
