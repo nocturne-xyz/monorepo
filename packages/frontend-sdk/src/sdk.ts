@@ -1,4 +1,3 @@
-import { NocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager,
   DepositManager__factory,
@@ -43,6 +42,7 @@ import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction, ethers } from "ethers";
 import { NocturneSdkApi } from "./api";
+import vkey from "./joinsplit/joinsplitVkey.json";
 import {
   BundlerOperationID,
   DepositHandle,
@@ -61,7 +61,6 @@ import {
   getTokenContract,
   getWindowSigner,
 } from "./utils";
-import vkey from "./joinsplit/joinsplitVkey.json";
 
 const WASM_PATH = "/joinsplit/joinsplit.wasm"; // ! TODO this pathing style might be outdated, no longer work
 const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
@@ -72,7 +71,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   protected handlerContract: Handler;
   protected bundlerEndpoint: string;
   protected screenerEndpoint: string;
-
+  protected config: NocturneSdkConfig;
   constructor(
     provider: ethers.providers.Provider,
     networkName: SupportedNetwork = "mainnet", // ! todo confirm using network name for default config is what's intended
@@ -98,6 +97,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     this.handlerContract = handlerContract;
     this.bundlerEndpoint = _config.endpoints.bundlerEndpoint;
     this.screenerEndpoint = _config.endpoints.screenerEndpoint;
+    this.config = _config;
   }
 
   /**
@@ -133,13 +133,21 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       depositAddr,
       { value: totalValue }
     );
-
+    const erc20s = this.config.config.erc20s; // TODO holy hack, need to refactor config for better consumption
+    const wethAddress = (
+      erc20s.get("weth") ??
+      erc20s.get("WETH") ??
+      erc20s.get("Weth")
+    )?.address;
+    if (!wethAddress) {
+      throw new Error("WETH address not found in Nocturne config");
+    }
     return this.formInitiateDepositResult(
       await signer.getAddress(),
       tx,
       ethToWrap, // ! TODO confirm value should be ethToWrap, not totalValue
       depositAddr,
-      "0x00", // ! TODO need proper asset addr, also confirm that the resulting Asset Type should be WETH
+      wethAddress, // ! TODO confirm that the resulting Asset Type should be WETH
       gasCompRequired
     );
   }
