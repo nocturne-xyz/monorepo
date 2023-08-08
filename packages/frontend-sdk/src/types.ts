@@ -3,7 +3,7 @@ import { NocturneConfig } from "@nocturne-xyz/config";
 import {
   ClosableAsyncIterator,
   DepositRequest,
-  DepositRequestStatus,
+  DepositStatusResponse,
   OperationMetadata,
   OperationRequest,
   OperationStatus,
@@ -50,9 +50,9 @@ export interface InitiateDepositResult {
 }
 
 export interface DepositHandle {
-  hash: string;
+  depositRequestHash: string;
   request: DepositRequest;
-  getStatus: () => Promise<DepositRequestStatus>;
+  getStatus: () => Promise<DepositStatusResponse>;
 }
 
 export interface OperationHandle {

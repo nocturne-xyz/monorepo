@@ -12,8 +12,10 @@ import {
   AssetType,
   AssetWithBalance,
   ClosableAsyncIterator,
+  CompressedStealthAddress,
   DepositEvent,
   DepositQuoteResponse,
+  DepositRequest,
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
   OpDigestWithMetadata,
@@ -32,6 +34,7 @@ import {
   decomposeCompressedPoint,
   encodeEncodedAssetAddrWithSignBitsPI,
   fetchDepositEvents,
+  hashDepositRequest,
   joinSplitPublicSignalsToArray,
   proveOperation,
   unpackFromSolidityProof,
@@ -42,6 +45,7 @@ import { ContractTransaction, ethers } from "ethers";
 import { NocturneSdkApi } from "./api";
 import {
   BundlerOperationID,
+  InitiateDepositResult,
   NocturneSdkConfig,
   OperationRequestWithMetadata,
   SupportedNetwork,
@@ -102,7 +106,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     // TODO make API response conform to new change
     values: bigint[],
     gasCompensationPerDeposit: bigint
-  ): Promise<ContractTransaction> {
+  ): Promise<InitiateDepositResult> {
     const signer = await getWindowSigner();
 
     const ethToWrap = values.reduce((acc, val) => acc + val, 0n);
@@ -117,21 +121,29 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     }
 
     const depositAddr = StealthAddressTrait.compress(
-      await this.getRandomizedAddr()
+      await this.getRandomStealthAddress()
     );
-    return this.depositManagerContract.instantiateETHMultiDeposit(
+    const tx = await this.depositManagerContract.instantiateETHMultiDeposit(
       values,
       depositAddr,
       { value: totalValue }
     );
+
+    return this.formInitiateDepositResult(
+      await signer.getAddress(),
+      tx,
+      ethToWrap, // ! TODO confirm value should be ethToWrap, not totalValue
+      depositAddr,
+      "0x00", // ! TODO need proper asset addr, also confirm that the resulting Asset Type should be WETH
+      gasCompRequired
+    );
   }
 
   async initiateErc20Deposits(
-    // TODO make API response conform to new change
     erc20Address: Address,
     values: bigint[],
     gasCompensationPerDeposit: bigint
-  ): Promise<ContractTransaction> {
+  ): Promise<InitiateDepositResult> {
     const signer = await getWindowSigner();
     const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
 
@@ -142,7 +154,8 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       );
     }
 
-    const totalValue = values.reduce((acc, val) => acc + val, 0n);
+    const depositAmount = values.reduce((acc, val) => acc + val, 0n);
+    const totalValue = depositAmount + gasCompRequired;
 
     const erc20Contract = getTokenContract(
       AssetType.ERC20,
@@ -155,12 +168,20 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     );
 
     const depositAddr = StealthAddressTrait.compress(
-      await this.getRandomizedAddr()
+      await this.getRandomStealthAddress()
     );
-    return this.depositManagerContract.instantiateErc20MultiDeposit(
+    const tx = await this.depositManagerContract.instantiateErc20MultiDeposit(
       erc20Address,
       values,
       depositAddr
+    );
+    return this.formInitiateDepositResult(
+      await signer.getAddress(),
+      tx,
+      depositAmount, // ! TODO confirm value should be depositAmount, not totalValue
+      depositAddr,
+      erc20Address,
+      gasCompRequired
     );
   }
 
@@ -581,5 +602,41 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     })) as string;
 
     return JSON.parse(json) as SignedOperation;
+  }
+
+  private formInitiateDepositResult(
+    spender: string,
+    tx: ContractTransaction,
+    value: bigint,
+    depositAddr: CompressedStealthAddress,
+    assetAddr: string,
+    gasCompensation: bigint
+  ): InitiateDepositResult {
+    const depositRequest: DepositRequest = {
+      spender,
+      encodedAsset: AssetTrait.encode({
+        assetType: AssetType.ERC20,
+        assetAddr: assetAddr,
+        id: 0n, // TODO what is id?
+      }),
+      value,
+      depositAddr,
+      nonce: BigInt(tx.nonce), // ! TODO confirm the nonce should be from tx
+      gasCompensation,
+    };
+    const depositRequestHash = hashDepositRequest(depositRequest);
+    const getStatus = async () =>
+      this.fetchDepositRequestStatus(depositRequestHash);
+
+    const handle = {
+      depositRequestHash,
+      request: depositRequest,
+      getStatus,
+    };
+
+    return {
+      tx,
+      handle,
+    };
   }
 }
