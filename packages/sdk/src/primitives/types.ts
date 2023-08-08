@@ -161,6 +161,14 @@ export interface OptimisticOpDigestRecord {
   metadata?: OperationMetadata;
 }
 
+export interface OperationMetadata {
+  items: OperationMetadataItem[];
+}
+
+export type OperationMetadataItem =
+  | ConfidentialPaymentMetadata
+  | ActionMetadata;
+
 export type ActionMetadata = {
   type: "Transfer";
   recipientAddress: Address;
@@ -168,8 +176,10 @@ export type ActionMetadata = {
   amount: bigint;
 };
 
-export interface OperationMetadata {
-  action: ActionMetadata;
+export interface ConfidentialPaymentMetadata {
+  recipient: CanonAddress;
+  asset: Asset;
+  amount: bigint;
 }
 
 export interface OpDigestWithMetadata {
