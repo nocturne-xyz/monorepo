@@ -1,20 +1,20 @@
 import {
-    Address,
-    Asset,
-    AssetWithBalance,
-    DepositQuoteResponse,
-    ProvenOperation,
-    SignedOperation,
-    StealthAddress,
-    SyncOpts,
+  Address,
+  Asset,
+  AssetWithBalance,
+  DepositQuoteResponse,
+  ProvenOperation,
+  SignedOperation,
+  StealthAddress,
+  SyncOpts,
 } from "@nocturne-xyz/sdk";
 import {
-    BundlerOperationID,
-    GetBalanceOpts,
-    InitiateDepositResult,
-    OperationHandle,
-    OperationRequestWithMetadata,
-    SyncWithProgressOutput
+  BundlerOperationID,
+  GetBalanceOpts,
+  InitiateDepositResult,
+  OperationHandle,
+  OperationRequestWithMetadata,
+  SyncWithProgressOutput,
 } from "./types";
 
 export interface NocturneSdkApi {
@@ -61,7 +61,7 @@ export interface NocturneSdkApi {
     recipientAddress: Address
   ): Promise<BundlerOperationID>;
 
-  submitOperation(operation: ProvenOperation): Promise<BundlerOperationID>; // ! TODO remove this comment, I kept signature as BundlerOperationID because I'm not sure if we want to fetch info immediately on submission
+  submitOperation(operation: ProvenOperation): Promise<BundlerOperationID>; // ! I kept signature as BundlerOperationID because I'm not sure if we want to fetch info immediately on submission, TODO remove this after resolve
 
   signAndProveOperation(
     operationRequest: OperationRequestWithMetadata

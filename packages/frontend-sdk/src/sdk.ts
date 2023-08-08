@@ -59,13 +59,12 @@ import {
   getTokenContract,
   getWindowSigner,
 } from "./utils";
+import vkey from "./joinsplit/joinsplitVkey.json";
 
 const WASM_PATH = "/joinsplit/joinsplit.wasm"; // ! TODO this pathing style might be outdated, no longer work
 const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
-const VKEY_PATH = "/joinsplit/joinsplitVkey.json";
 
 export class NocturneFrontendSDK implements NocturneSdkApi {
-  //missing the following properties from type 'NocturneSdkApi': getAllDeposits
   protected joinSplitProver: WasmJoinSplitProver;
   protected depositManagerContract: DepositManager;
   protected handlerContract: Handler;
@@ -88,8 +87,11 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     const handlerAddress = _config.config.handlerAddress();
     const handlerContract = Handler__factory.connect(handlerAddress, provider); // ! TODO is it fine that it's provider not signer? double check
 
-    const vkey: VerifyingKey = JSON.parse(await(await fetch(VKEY_PATH)).text()); // ! TODO async requirement
-    this.joinSplitProver = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, vkey);
+    this.joinSplitProver = new WasmJoinSplitProver(
+      WASM_PATH,
+      ZKEY_PATH,
+      vkey as VerifyingKey
+    );
     this.depositManagerContract = depositManagerContract;
     this.handlerContract = handlerContract;
     this.bundlerEndpoint = _config.endpoints.bundlerEndpoint;
