@@ -438,8 +438,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       method: "nocturne_getInFlightOperations",
     });
     const operationHandles = (JSON.parse(json) as OpDigestWithMetadata[]).map(
-      (dwm) => {
-        const { opDigest: digest, metadata } = dwm;
+      ({ opDigest: digest, metadata }) => {
         return {
           digest,
           metadata,
