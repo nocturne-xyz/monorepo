@@ -34,6 +34,7 @@ import {
   decomposeCompressedPoint,
   encodeEncodedAssetAddrWithSignBitsPI,
   fetchDepositEvents,
+  hashDepositRequest,
   joinSplitPublicSignalsToArray,
   proveOperation,
   unpackFromSolidityProof,
@@ -275,6 +276,13 @@ export class NocturneFrontendSDK {
     const signer = await (await getWindowSigner()).getAddress();
     if (signer.toLowerCase() !== req.spender.toLowerCase()) {
       throw new Error("Spender and signer addresses do not match");
+    }
+    const isOutstandingDeposit =
+      await this.depositManagerContract._outstandingDepositHashes(
+        hashDepositRequest(req)
+      );
+    if (!isOutstandingDeposit) {
+      throw new Error("Deposit request does not exist");
     }
     return this.depositManagerContract.retrieveDeposit(req);
   }
