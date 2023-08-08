@@ -229,9 +229,9 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       erc20Address,
       amount,
     };
-
-    const provenOperation = await this.signAndProveOperation(operationRequest, {
-      action,
+    const provenOperation = await this.signAndProveOperation({
+      request: operationRequest,
+      meta: { action },
     });
     return this.submitProvenOperation(provenOperation);
   }
@@ -297,11 +297,9 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
    * @param operationRequest Operation request
    */
   async signAndProveOperation(
-    // TODO add OperationRequestWithMetadata, make param signature conform accordingly
-    operationRequest: OperationRequest,
-    opMetadata: OperationMetadata
+    operationRequest: OperationRequestWithMetadata
   ): Promise<ProvenOperation> {
-    const op = await this.requestSignOperation(operationRequest, opMetadata);
+    const op = await this.requestSignOperation(operationRequest);
 
     console.log("SignedOperation:", op);
     return await this.proveOperation(op);
