@@ -119,20 +119,25 @@ contract InvariantsBase is Test {
     function assert_deposit_depositManagerBalanceEqualsInMinusOutErc20s()
         internal
     {
+        uint256 totalETHRetrieved = depositManagerHandler
+            .ghost_retrieveDepositSumETH();
+
         for (uint256 i = 0; i < depositErc20s.length; i++) {
+            uint256 expectedErc20Balance = depositManagerHandler
+                .ghost_instantiateDepositSumErc20ForToken(i) -
+                depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(i) -
+                depositManagerHandler.ghost_completeDepositSumErc20ForToken(i);
+
+            // WETH case
+            if (i == 0) {
+                expectedErc20Balance -= totalETHRetrieved;
+            }
+
             assertEq(
                 IERC20(depositErc20s[i]).balanceOf(
                     address(depositManagerHandler.depositManager())
                 ),
-                depositManagerHandler.ghost_instantiateDepositSumErc20ForToken(
-                    i
-                ) -
-                    depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(
-                        i
-                    ) -
-                    depositManagerHandler.ghost_completeDepositSumErc20ForToken(
-                        i
-                    )
+                expectedErc20Balance
             );
         }
     }
@@ -207,10 +212,16 @@ contract InvariantsBase is Test {
         for (uint256 i = 0; i < allActors.length; i++) {
             uint256 actorBalance = allActors[i].balance;
             console.logUint(actorBalance);
-            uint256 actorBalanceCap = depositManagerHandler
+            uint256 actorBalanceETHRetrieved = depositManagerHandler
+                .ghost_retrieveDepositSumETHForActor(allActors[i]);
+            uint256 actorMaxGasCompRetrieved = depositManagerHandler
                 .ghost_totalSuppliedGasCompensationForActor(allActors[i]);
 
-            assertLe(actorBalance, actorBalanceCap);
+            assertGe(actorBalance, actorBalanceETHRetrieved);
+            assertLe(
+                actorBalance,
+                actorBalanceETHRetrieved + actorMaxGasCompRetrieved
+            );
         }
     }
 

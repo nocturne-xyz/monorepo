@@ -106,6 +106,8 @@ contract DepositManager is
         uint128 merkleIndex
     );
 
+    receive() external payable {}
+
     /// @notice Initializer function
     /// @param contractName Name of the contract
     /// @param contractVersion Version of the contract
@@ -350,6 +352,57 @@ contract DepositManager is
         _nonce += numValues;
 
         _weth.deposit{value: totalDepositAmount}();
+    }
+
+    /// @notice Retrieves an ETH deposit either prematurely because user cancelled or because
+    ///         screener didn't complete. Unwraps weth back to eth and send to user.
+    /// @dev We accept race condition where user could technically retrieve their deposit before
+    ///      the screener completes it. This would grief the screener but would incur a greater
+    ///      cost to the user to continually instantiate + prematurely retrieve.
+    /// @dev Same code as normal retrieveDeposit except deposit is checked to be weth and weth is
+    //       unwrapped to eth. The call to send gas compensation eth back to user also sends back
+    ///      deposit.value eth.
+    /// @param req Deposit request corresponding to ETH deposit to retrieve
+    function retrieveETHDeposit(
+        DepositRequest calldata req
+    ) external nonReentrant {
+        require(msg.sender == req.spender, "Only spender can retrieve deposit");
+
+        // Ensure the deposit was ETH
+        (AssetType assetType, address assetAddr, uint256 id) = AssetUtils
+            .decodeAsset(req.encodedAsset);
+        require(
+            assetType == AssetType.ERC20 &&
+                assetAddr == address(_weth) &&
+                id == ERC20_ID,
+            "!weth"
+        );
+
+        // If _outstandingDepositHashes has request, implies all checks (e.g.
+        // chainId, nonce, etc) already passed upon instantiation
+        bytes32 depositHash = _hashDepositRequest(req);
+        require(_outstandingDepositHashes[depositHash], "deposit !exists");
+
+        // Clear deposit hash
+        _outstandingDepositHashes[depositHash] = false;
+
+        // Unwrap WETH to ETH
+        _weth.withdraw(req.value);
+
+        // Send back eth gas compensation + deposit ETH, revert propagated
+        AddressUpgradeable.sendValue(
+            payable(msg.sender),
+            req.gasCompensation + req.value
+        );
+
+        emit DepositRetrieved(
+            req.spender,
+            req.encodedAsset,
+            req.value,
+            req.depositAddr,
+            req.nonce,
+            req.gasCompensation
+        );
     }
 
     /// @notice Retrieves a deposit either prematurely because user cancelled or because screener
