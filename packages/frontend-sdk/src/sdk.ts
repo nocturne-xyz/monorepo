@@ -1,3 +1,4 @@
+import { NocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager,
   DepositManager__factory,
@@ -239,6 +240,25 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     return this.submitOperation(provenOperation);
   }
 
+  /**
+   * Initiates a deposit retrieval from the deposit manager contract.
+   */
+  async retrievePendingDeposit(
+    req: DepositRequest
+  ): Promise<ContractTransaction> {
+    const signer = await (await getWindowSigner()).getAddress();
+    if (signer.toLowerCase() !== req.spender.toLowerCase()) {
+      throw new Error("Spender and signer addresses do not match");
+    }
+    const isOutstandingDeposit =
+      await this.depositManagerContract._outstandingDepositHashes(
+        hashDepositRequest(req)
+      );
+    if (!isOutstandingDeposit) {
+      throw new Error("Deposit request does not exist");
+    }
+    return this.depositManagerContract.retrieveDeposit(req);
+  }
   /**
    * Fetch status of existing deposit request given its hash.
    *
