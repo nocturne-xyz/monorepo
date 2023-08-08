@@ -1,3 +1,4 @@
+import { NocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager,
   DepositManager__factory,
@@ -11,23 +12,28 @@ import {
   AssetTrait,
   AssetType,
   AssetWithBalance,
+  ClosableAsyncIterator,
   DepositEvent,
   DepositQuoteResponse,
+  DepositRequest,
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
   OpDigestWithMetadata,
   OperationMetadata,
   OperationRequest,
   OperationRequestBuilder,
+  OperationStatusResponse,
   ProvenOperation,
   RelayRequest,
   SignedOperation,
   StealthAddress,
   StealthAddressTrait,
+  SyncOpts,
   VerifyingKey,
   computeOperationDigest,
   encodeEncodedAssetAddrWithSignBitsPI,
   fetchDepositEvents,
+  hashDepositRequest,
   joinSplitPublicSignalsToArray,
   proveOperation,
   unpackFromSolidityProof,
@@ -37,6 +43,7 @@ import {
   ClosableAsyncIterator,
   SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/sdk";
+import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction } from "ethers";
 import {
@@ -45,7 +52,6 @@ import {
   getTokenContract,
   getWindowSigner,
 } from "./utils";
-import retry from "async-retry";
 import {
   NocturneConfig,
   loadNocturneConfigBuiltin,
@@ -272,6 +278,25 @@ export class NocturneFrontendSDK {
     return this.submitProvenOperation(provenOperation);
   }
 
+  /**
+   * Initiates a deposit retrieval from the deposit manager contract.
+   */
+  async retrievePendingDeposit(
+    req: DepositRequest
+  ): Promise<ContractTransaction> {
+    const signer = await (await getWindowSigner()).getAddress();
+    if (signer.toLowerCase() !== req.spender.toLowerCase()) {
+      throw new Error("Spender and signer addresses do not match");
+    }
+    const isOutstandingDeposit =
+      await this.depositManagerContract._outstandingDepositHashes(
+        hashDepositRequest(req)
+      );
+    if (!isOutstandingDeposit) {
+      throw new Error("Deposit request does not exist");
+    }
+    return this.depositManagerContract.retrieveDeposit(req);
+  }
   /**
    * Fetch status of existing deposit request given its hash.
    *
@@ -607,7 +632,7 @@ export class NocturneFrontendSDK {
     return withEntityIndices.map((e) => e.inner);
   }
   /**
-   * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
+   * Fetches a `SignedOperation` from the snap given an `OperationRequest`.
    * This includes all joinsplit tx inputs.
    *
    * @param operationRequest Operation request
@@ -635,7 +660,7 @@ export class NocturneFrontendSDK {
   }
 
   /**
-   * Retrieve a freshly randomized address from the snap.
+   * Fetches a freshly randomized address from the snap.
    */
   protected async getRandomizedAddr(): Promise<StealthAddress> {
     const json = (await window.ethereum.request({
