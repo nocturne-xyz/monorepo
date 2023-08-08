@@ -87,7 +87,10 @@ export interface NocturneSdkApi {
   //   assetAddr: Address;
   //   id: bigint;
   // }
-  getBalanceForAsset(asset: Asset, opts?: GetBalanceOpts): Promise<AssetWithBalance>; // TODO new surface area method
+  getBalanceForAsset(
+    asset: Asset,
+    opts?: GetBalanceOpts
+  ): Promise<AssetWithBalance>; // TODO new surface area method
 
   // *** SYNCING METHODS *** //
 
@@ -113,10 +116,4 @@ export interface NocturneSdkApi {
   getLatestSyncedMerkleIndex(): Promise<number | undefined>;
 
   getRandomStealthAddress(): Promise<StealthAddress>;
-
-  // *** HELPERS *** //
-
-  requestSignOperation(
-    operationRequest: OperationRequestWithMetadata
-  ): Promise<SignedOperation>;
 }

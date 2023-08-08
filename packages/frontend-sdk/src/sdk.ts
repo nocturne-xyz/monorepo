@@ -20,8 +20,6 @@ import {
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
   OpDigestWithMetadata,
-  OperationMetadata,
-  OperationRequest,
   OperationRequestBuilder,
   OperationStatusResponse,
   ProvenOperation,
@@ -67,7 +65,7 @@ const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
 const VKEY_PATH = "/joinsplit/joinsplitVkey.json";
 
 export class NocturneFrontendSDK implements NocturneSdkApi {
-  //missing the following properties from type 'NocturneSdkApi': getErc20DepositQuote, getAllDeposits, signOperationRequest
+  //missing the following properties from type 'NocturneSdkApi': getErc20DepositQuote, getAllDeposits
   protected joinSplitProver: WasmJoinSplitProver;
   protected depositManagerContract: DepositManager;
   protected handlerContract: Handler;
@@ -236,7 +234,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       request: operationRequest,
       meta: { action },
     });
-    return this.submitProvenOperation(provenOperation);
+    return this.submitOperation(provenOperation);
   }
 
   /**
@@ -295,17 +293,25 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   }
 
   /**
-   * Generate `ProvenOperation` given an `operationRequest`.
+   * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
+   * This includes all joinsplit tx inputs.
    *
    * @param operationRequest Operation request
    */
-  async signAndProveOperation(
+  async signOperationRequest(
     operationRequest: OperationRequestWithMetadata
-  ): Promise<ProvenOperation> {
-    const op = await this.requestSignOperation(operationRequest);
-
+  ): Promise<SignedOperation> {
+    console.log("[fe-sdk] metadata:", operationRequest.meta);
+    const json = await this.invokeSnap({
+      method: "nocturne_signOperation",
+      params: {
+        operationRequest: JSON.stringify(operationRequest.request),
+        opMetadata: JSON.stringify(operationRequest.meta),
+      },
+    });
+    const op = JSON.parse(json) as SignedOperation;
     console.log("SignedOperation:", op);
-    return await this.proveOperation(op);
+    return op;
   }
 
   async proveOperation(op: SignedOperation): Promise<ProvenOperation> {
@@ -564,25 +570,13 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
 
     return withEntityIndices.map((e) => e.inner);
   }
-  /**
-   * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
-   * This includes all joinsplit tx inputs.
-   *
-   * @param operationRequest Operation request
-   */
-  protected async requestSignOperation(
-    operationRequest: OperationRequestWithMetadata
-  ): Promise<SignedOperation> {
-    console.log("[fe-sdk] metadata:", operationRequest.meta);
-    const json = await this.invokeSnap({
-      method: "nocturne_signOperation",
-      params: {
-        operationRequest: JSON.stringify(operationRequest.request),
-        opMetadata: JSON.stringify(operationRequest.meta),
-      },
-    });
 
-    return JSON.parse(json) as SignedOperation;
+  protected async signAndProveOperation(
+    operationRequest: OperationRequestWithMetadata
+  ): Promise<ProvenOperation> {
+    const op = await this.signOperationRequest(operationRequest);
+
+    return await this.proveOperation(op);
   }
 
   private async invokeSnap(request: {
