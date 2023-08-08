@@ -11,6 +11,7 @@ import {
   AssetTrait,
   AssetType,
   AssetWithBalance,
+  ClosableAsyncIterator,
   DepositEvent,
   DepositQuoteResponse,
   DepositStatusResponse,
@@ -19,11 +20,13 @@ import {
   OperationMetadata,
   OperationRequest,
   OperationRequestBuilder,
+  OperationStatusResponse,
   ProvenOperation,
   RelayRequest,
   SignedOperation,
   StealthAddress,
   StealthAddressTrait,
+  SyncOpts,
   VerifyingKey,
   computeOperationDigest,
   decomposeCompressedPoint,
@@ -32,107 +35,58 @@ import {
   joinSplitPublicSignalsToArray,
   proveOperation,
   unpackFromSolidityProof,
-  OperationStatusResponse,
-  SyncOpts,
-  ClosableAsyncIterator,
 } from "@nocturne-xyz/sdk";
+import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
-import { ContractTransaction } from "ethers";
+import { ContractTransaction, ethers } from "ethers";
+import { NocturneSdkApi } from "./api";
+import {
+  SupportedNetwork,
+  NocturneSdkConfig,
+  BundlerOperationID,
+  SyncWithProgressOutput,
+} from "./types";
 import {
   SNAP_ID,
   SUBGRAPH_URL,
+  getNocturneSdkConfig,
   getTokenContract,
   getWindowSigner,
 } from "./utils";
-import retry from "async-retry";
-import { NocturneConfig } from "@nocturne-xyz/config";
 
-const WASM_PATH = "/joinsplit.wasm";
-const ZKEY_PATH = "/joinsplit.zkey";
-const VKEY_PATH = "/joinSplitVkey.json";
+const WASM_PATH = "/joinsplit/joinsplit.wasm"; // ! TODO this pathing style might be outdated, no longer work
+const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
+const VKEY_PATH = "/joinsplit/joinsplitVkey.json";
 
-export type BundlerOperationID = string;
+export class NocturneFrontendSDK implements NocturneSdkApi {
+  protected joinSplitProver: WasmJoinSplitProver;
+  protected depositManagerContract: DepositManager;
+  protected handlerContract: Handler;
+  protected bundlerEndpoint: string;
+  protected screenerEndpoint: string;
 
-export interface Endpoints {
-  screenerEndpoint: string;
-  bundlerEndpoint: string;
-}
-
-export interface ContractAddresses {
-  depositManagerAddress: string;
-  handlerAddress: string;
-}
-
-export interface SyncProgress {
-  latestSyncedMerkleIndex: number;
-}
-
-export interface SyncWithProgressOutput {
-  latestSyncedMerkleIndex: number;
-  latestMerkleIndexOnChain: number;
-  progressIter: ClosableAsyncIterator<SyncProgress>;
-}
-
-export class NocturneFrontendSDK {
-  joinSplitProver: WasmJoinSplitProver;
-  depositManagerContract: DepositManager;
-  handlerContract: Handler;
-  bundlerEndpoint: string;
-  screenerEndpoint: string;
-
-  private constructor(
-    depositManagerContract: DepositManager,
-    handlerContract: Handler,
-    endpoints: Endpoints,
-    wasmPath: string,
-    zkeyPath: string,
-    vkey: VerifyingKey
+  constructor(
+    provider: ethers.providers.Provider,
+    networkName: SupportedNetwork = "mainnet", //! todo confirm using network name for default config is what's intended
+    config?: NocturneSdkConfig
   ) {
-    this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
-    this.depositManagerContract = depositManagerContract;
-    this.depositManagerContract = depositManagerContract;
-    this.handlerContract = handlerContract;
-    this.screenerEndpoint = endpoints.screenerEndpoint;
-    this.bundlerEndpoint = endpoints.bundlerEndpoint;
-    this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
-  }
+    const _config = config || getNocturneSdkConfig(networkName);
 
-  /**
-   * Instantiate new `NocturneFrontendSDK` instance.
-   *
-   * @param depositManagerContractAddress Teller contract address
-   * @param screenerEndpoint Screener endpoint
-   * @param bundlerEndpoint Bundler endpoint
-   * @param wasPath Joinsplit wasm path
-   * @param zkeyPath Joinsplit zkey path
-   * @param vkey Vkey object
-   */
-  static async instantiate(
-    config: NocturneConfig,
-    endpoints: Endpoints,
-    wasmPath: string,
-    zkeyPath: string,
-    vkey: any
-  ): Promise<NocturneFrontendSDK> {
-    const signer = await getWindowSigner();
-
-    const depositManagerAddress = config.depositManagerAddress();
+    const depositManagerAddress = _config.config.depositManagerAddress();
     const depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
-      signer
+      provider //! TODO is it fine that it's provider not signer? double check
     );
 
-    const handlerAddress = config.handlerAddress();
-    const handlerContract = Handler__factory.connect(handlerAddress, signer);
+    const handlerAddress = _config.config.handlerAddress();
+    const handlerContract = Handler__factory.connect(handlerAddress, provider); //! TODO is it fine that it's provider not signer? double check
 
-    return new NocturneFrontendSDK(
-      depositManagerContract,
-      handlerContract,
-      endpoints,
-      wasmPath,
-      zkeyPath,
-      vkey
-    );
+    const vkey: VerifyingKey = JSON.parse(await(await fetch(VKEY_PATH)).text()); //! TODO async requirement
+    this.joinSplitProver = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, vkey);
+    this.depositManagerContract = depositManagerContract;
+    this.handlerContract = handlerContract;
+    this.bundlerEndpoint = _config.endpoints.bundlerEndpoint;
+    this.screenerEndpoint = _config.endpoints.screenerEndpoint;
   }
 
   /**
@@ -142,7 +96,8 @@ export class NocturneFrontendSDK {
    * @param values Asset amounts
    * @param gasCompensationPerDeposit Gas compensation per deposit
    */
-  async instantiateETHDeposits(
+  async initiateEthDeposits(
+    // TODO make API response conform to new change
     values: bigint[],
     gasCompensationPerDeposit: bigint
   ): Promise<ContractTransaction> {
@@ -169,15 +124,8 @@ export class NocturneFrontendSDK {
     );
   }
 
-  /**
-   * Call `depositManager.instantiateErc20MultiDeposit` given the provided
-   * `erc20Address`, `valuse`, and `gasCompPerDeposit`.
-   *
-   * @param erc20Address Asset address
-   * @param values Asset amounts
-   * @param gasCompensationPerDeposit Gas compensation per deposit
-   */
-  async instantiateErc20Deposits(
+  async initiateErc20Deposits(
+    // TODO make API response conform to new change
     erc20Address: Address,
     values: bigint[],
     gasCompensationPerDeposit: bigint
@@ -326,6 +274,7 @@ export class NocturneFrontendSDK {
    * @param operationRequest Operation request
    */
   async signAndProveOperation(
+    // TODO add OperationRequestWithMetadata, make param signature conform accordingly
     operationRequest: OperationRequest,
     opMetadata: OperationMetadata
   ): Promise<ProvenOperation> {
@@ -632,34 +581,4 @@ export class NocturneFrontendSDK {
 
     return JSON.parse(json) as StealthAddress;
   }
-}
-
-/**
- * Load a `NocturneFrontendSDK` instance, provided a teller contract
- * address and paths to local prover's wasm, zkey, and
- * vkey. Circuit file paths default to caller's current directory (joinsplit.
- * wasm, joinsplit.zkey, joinSplitVkey.json).
- *
- * @param depositManagerAddress Teller contract address
- * @param screenerEndpoint Screener endpoint
- * @param bundlerEndpoint Bundler endpoint
- * @param wasmPath Wasm path
- * @param zkeyPath Zkey path
- * @param vkeyPath Vkey path
- */
-export async function loadNocturneFrontendSDK(
-  config: NocturneConfig,
-  endpoints: Endpoints,
-  wasmPath: string = WASM_PATH,
-  zkeyPath: string = ZKEY_PATH,
-  vkeyPath: string = VKEY_PATH
-): Promise<NocturneFrontendSDK> {
-  const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
-  return await NocturneFrontendSDK.instantiate(
-    config,
-    endpoints,
-    wasmPath,
-    zkeyPath,
-    vkey as VerifyingKey
-  );
 }

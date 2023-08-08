@@ -18,10 +18,10 @@ import {
 const { ZERO_VALUE, ARITY, DEPTH } = TreeConstants;
 
 const ROOT_DIR = findWorkspaceRoot()!;
-const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
-const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
-const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
-const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
+const FRONTEND_SDK_DIR = path.join(ROOT_DIR, "packages", "frontend-sdk"); // TODO this will change to sdk, after frontend-sdk -> sdk
+const WASM_PATH = `${FRONTEND_SDK_DIR}/joinsplit/joinsplit.wasm`;
+const ZKEY_PATH = `${FRONTEND_SDK_DIR}/joinsplit/joinsplit.zkey`;
+const VKEY_PATH = `${FRONTEND_SDK_DIR}/joinsplit/joinsplitVkey.json`;
 const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 const JOINSPLIT_FIXTURE_PATH = path.join(
   ROOT_DIR,
