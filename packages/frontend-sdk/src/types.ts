@@ -6,7 +6,7 @@ import {
   DepositStatusResponse,
   OperationMetadata,
   OperationRequest,
-  OperationStatus,
+  OperationStatusResponse,
 } from "@nocturne-xyz/sdk";
 import { ContractTransaction } from "ethers";
 
@@ -57,8 +57,8 @@ export interface DepositHandle {
 
 export interface OperationHandle {
   digest: bigint;
-  metadata: OperationMetadata;
-  getStatus: () => Promise<OperationStatus>;
+  getStatus: () => Promise<OperationStatusResponse>;
+  metadata?: OperationMetadata;
 }
 
 export interface OperationRequestWithMetadata {

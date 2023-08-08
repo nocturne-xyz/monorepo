@@ -181,7 +181,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
         console.log("Error getting pre-proof operation:", err);
         throw err;
       }
-    case "nocturne_getInflightOpDigestsWithMetadata":
+    case "nocturne_getInFlightOperations":
       const opDigestsAndMetadata =
         await sdk.getAllOptimisticOpDigestsWithMetadata();
       return JSON.stringify(opDigestsAndMetadata);

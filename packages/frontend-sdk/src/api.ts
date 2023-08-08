@@ -2,8 +2,6 @@ import {
   Address,
   Asset,
   AssetWithBalance,
-  OperationMetadata,
-  OperationRequest,
   ProvenOperation,
   SignedOperation,
   StealthAddress,
@@ -62,7 +60,7 @@ export interface NocturneSdkApi {
     recipientAddress: Address
   ): Promise<BundlerOperationID>;
 
-  submitOperation(operation: ProvenOperation): Promise<OperationHandle>;
+  submitOperation(operation: ProvenOperation): Promise<BundlerOperationID>; // ! TODO remove this comment, I kept signature as BundlerOperationID because I'm not sure if we want to fetch info immediately on submission
 
   signAndProveOperation(
     operationRequest: OperationRequestWithMetadata
@@ -70,6 +68,7 @@ export interface NocturneSdkApi {
 
   getInFlightOperations(): Promise<OperationHandle[]>;
 
+  // ! TODO was fetchBundlerOperationStatus() intentionally left out?
   // *** BALANCE METHODS *** //
 
   getAllBalances(opts: GetBalancesOpts): Promise<AssetWithBalance[]>; // ! TODO make GetBalancesOpts, I assume the object signature is the same?

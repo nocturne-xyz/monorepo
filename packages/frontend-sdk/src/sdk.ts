@@ -47,6 +47,7 @@ import {
   BundlerOperationID,
   InitiateDepositResult,
   NocturneSdkConfig,
+  OperationHandle,
   OperationRequestWithMetadata,
   SupportedNetwork,
   SyncWithProgressOutput,
@@ -64,7 +65,8 @@ const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
 const VKEY_PATH = "/joinsplit/joinsplitVkey.json";
 
 export class NocturneFrontendSDK implements NocturneSdkApi {
-  // TODO verify all methods are implemented, rn error doesnt display for class if a method isn't impl'd. They may show only once the current method errs are resolved
+  // Class 'NocturneFrontendSDK' incorrectly implements interface 'NocturneSdkApi'.
+  // Type 'NocturneFrontendSDK' is missing the following properties from type 'NocturneSdkApi': getErc20DepositQuote, getAllDeposits, submitOperation, getInFlightOperations, and 2 more.
   protected joinSplitProver: WasmJoinSplitProver;
   protected depositManagerContract: DepositManager;
   protected handlerContract: Handler;
@@ -357,7 +359,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
 
   // Submit a proven operation to the bundler server
   // returns the bundler's ID for the submitted operation, which can be used to check the status of the operation
-  async submitProvenOperation(
+  async submitOperation(
     operation: ProvenOperation
   ): Promise<BundlerOperationID> {
     return await retry(
@@ -415,22 +417,27 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
 
     return JSON.parse(json) as AssetWithBalance[];
   }
-
-  /**
-   * Return list of all inflight operation digests and metadata about each operation.
-   */
-  async getInflightOpDigestsWithMetadata(): Promise<OpDigestWithMetadata[]> {
+  async getInFlightOperations(): Promise<OperationHandle[]> {
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
-          method: "nocturne_getInflightOpDigestsWithMetadata",
+          method: "nocturne_getInFlightOperations",
         },
       },
     })) as string;
-
-    return JSON.parse(json) as OpDigestWithMetadata[];
+    const operationHandles = (JSON.parse(json) as OpDigestWithMetadata[]).map(
+      (dwm) => {
+        const { opDigest: digest, metadata } = dwm;
+        return {
+          digest,
+          metadata,
+          getStatus: () => this.fetchBundlerOperationStatus(digest),
+        };
+      }
+    );
+    return operationHandles;
   }
 
   /**
@@ -447,7 +454,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
         return (await res.json()) as OperationStatusResponse;
       },
       {
-        retries: 5,
+        retries: 5, // TODO later scope: this should probably be configurable by the caller
       }
     );
   }
