@@ -50,7 +50,6 @@ import {
   InitiateDepositResult,
   NocturneSdkConfig,
   OperationHandle,
-  OperationRequestWithMetadata,
   SupportedNetwork,
   SyncWithProgressOutput,
 } from "./types";
@@ -236,20 +235,12 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
 
     const operationRequest = new OperationRequestBuilder()
       .unwrap(encodedErc20, amount)
-      .action(erc20Address, encodedFunction)
+      .action(erc20Address, encodedFunction, { recipientAddress, amount })
       .maxNumRefunds(1n)
       .gas({ executionGasLimit: 500_000n })
       .build();
-
-    const action: ActionMetadata = {
-      type: "Transfer",
-      recipientAddress,
-      erc20Address,
-      amount,
-    };
     const provenOperation = await this.signAndProveOperation({
-      request: operationRequest,
-      meta: { action },
+      operationRequest,
     });
     return this.submitOperation(provenOperation);
   }

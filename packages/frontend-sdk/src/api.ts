@@ -14,7 +14,6 @@ import {
   GetBalanceOpts,
   InitiateDepositResult,
   OperationHandle,
-  OperationRequestWithMetadata,
   SyncWithProgressOutput,
 } from "./types";
 
@@ -65,7 +64,7 @@ export interface NocturneSdkApi {
   submitOperation(operation: ProvenOperation): Promise<BundlerOperationID>; // ! I kept signature as BundlerOperationID because I'm not sure if we want to fetch info immediately on submission, TODO remove this after resolve
 
   signAndProveOperation(
-    operationRequest: OperationRequestWithMetadata
+    operationRequest: OperationRequestWithMetadata // TODO need to grab this from wallet-sdk, once we republish
   ): Promise<ProvenOperation>;
 
   getInFlightOperations(): Promise<OperationHandle[]>;
