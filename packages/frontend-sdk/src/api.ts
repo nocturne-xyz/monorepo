@@ -14,6 +14,7 @@ import {
   OperationHandle,
   OperationRequestWithMetadata,
   SyncWithProgressOutput,
+  GetBalanceOpts,
 } from "./types";
 
 export interface NocturneSdkApi {
@@ -71,9 +72,22 @@ export interface NocturneSdkApi {
   // ! TODO was fetchBundlerOperationStatus() intentionally left out?
   // *** BALANCE METHODS *** //
 
-  getAllBalances(opts: GetBalancesOpts): Promise<AssetWithBalance[]>; // ! TODO make GetBalancesOpts, I assume the object signature is the same?
+  /**
+   * Return a list of snap's assets (address & id) along with its given balance.
+   * if includeUncommitted is defined and true, then the method include notes that are not yet committed to the commitment tree
+   * if ignoreOptimisticNFs is defined and true, then the method will include notes that have been used by the SDK, but may not have been nullified on-chain yet
+   * if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
+   */
+  getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]>;
 
-  getBalanceForAsset(asset: Asset, opts: GetBalancesOpts): Promise<bigint>; // TODO new surface area method
+  // ! TODO
+  //  Do we want to force the consumer to gain context on what id should be? (I don't even know what it's supposed to be)
+  //  Asset {
+  //   assetType: AssetType;
+  //   assetAddr: Address;
+  //   id: bigint;
+  // }
+  getBalanceForAsset(asset: Asset, opts?: GetBalanceOpts): Promise<AssetWithBalance>; // TODO new surface area method
 
   // *** SYNCING METHODS *** //
 

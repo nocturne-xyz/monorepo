@@ -8,6 +8,7 @@ import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
   ActionMetadata,
   Address,
+  Asset,
   AssetTrait,
   AssetType,
   AssetWithBalance,
@@ -45,6 +46,7 @@ import { ContractTransaction, ethers } from "ethers";
 import { NocturneSdkApi } from "./api";
 import {
   BundlerOperationID,
+  GetBalanceOpts,
   InitiateDepositResult,
   NocturneSdkConfig,
   OperationHandle,
@@ -65,8 +67,7 @@ const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
 const VKEY_PATH = "/joinsplit/joinsplitVkey.json";
 
 export class NocturneFrontendSDK implements NocturneSdkApi {
-  // Class 'NocturneFrontendSDK' incorrectly implements interface 'NocturneSdkApi'.
-  // Type 'NocturneFrontendSDK' is missing the following properties from type 'NocturneSdkApi': getErc20DepositQuote, getAllDeposits, submitOperation, getInFlightOperations, and 2 more.
+  //missing the following properties from type 'NocturneSdkApi': getErc20DepositQuote, getAllDeposits, signOperationRequest
   protected joinSplitProver: WasmJoinSplitProver;
   protected depositManagerContract: DepositManager;
   protected handlerContract: Handler;
@@ -395,38 +396,37 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
    * if ignoreOptimisticNFs is defined and true, then the method will include notes that have been used by the SDK, but may not have been nullified on-chain yet
    * if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
    */
-  async getAllBalances({
-    includeUncommitted = false,
-    ignoreOptimisticNFs = false,
-  } = {}): Promise<AssetWithBalance[]> {
-    const params = {
-      includeUncommitted,
-      ignoreOptimisticNFs,
-    };
-    console.log("[fe-sdk] getAllBalances with params:", params);
-    const json = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
-      params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_getAllBalances",
-          params,
-        },
-      },
-    })) as string;
+  async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
+    console.log("[fe-sdk] getAllBalances with params:", opts);
+    const json = await this.invokeSnap({
+      method: "nocturne_getAllBalances",
+      params: opts,
+    });
 
     return JSON.parse(json) as AssetWithBalance[];
   }
-  async getInFlightOperations(): Promise<OperationHandle[]> {
-    const json = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
+
+  async getBalanceForAsset(
+    asset: Asset,
+    opts?: GetBalanceOpts
+  ): Promise<AssetWithBalance> {
+    const json = await this.invokeSnap({
+      method: "nocturne_getBalanceForAsset",
       params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_getInFlightOperations",
-        },
+        asset,
+        opts,
       },
-    })) as string;
+    });
+    if (json === undefined) {
+      throw new Error("Balance for asset does not exist");
+    }
+    return JSON.parse(json) as AssetWithBalance;
+  }
+
+  async getInFlightOperations(): Promise<OperationHandle[]> {
+    const json = await this.invokeSnap({
+      method: "nocturne_getInFlightOperations",
+    });
     const operationHandles = (JSON.parse(json) as OpDigestWithMetadata[]).map(
       (dwm) => {
         const { opDigest: digest, metadata } = dwm;
@@ -509,18 +509,12 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
    * Invoke snap `syncNotes` method, returning latest synced merkle index.
    */
   async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
-    const latestSyncedMerkleIndexJson = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
+    const latestSyncedMerkleIndexJson = await this.invokeSnap({
+      method: "nocturne_sync",
       params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_sync",
-          params: {
-            syncOpts: syncOpts ? JSON.stringify(syncOpts) : undefined,
-          },
-        },
+        syncOpts: syncOpts ?? JSON.stringify(syncOpts),
       },
-    })) as string;
+    });
 
     const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
       ? JSON.parse(latestSyncedMerkleIndexJson)
@@ -534,15 +528,9 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   }
 
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
-    const latestSyncedMerkleIndexJson = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
-      params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_getLatestSyncedMerkleIndex",
-        },
-      },
-    })) as string;
+    const latestSyncedMerkleIndexJson = await this.invokeSnap({
+      method: "nocturne_getLatestSyncedMerkleIndex",
+    });
 
     const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
       ? JSON.parse(latestSyncedMerkleIndexJson)
@@ -559,15 +547,9 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
    * Retrieve a freshly randomized address from the snap.
    */
   async getRandomStealthAddress(): Promise<StealthAddress> {
-    const json = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
-      params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_getRandomizedAddr",
-        },
-      },
-    })) as string;
+    const json = await this.invokeSnap({
+      method: "nocturne_getRandomizedAddr",
+    });
 
     return JSON.parse(json) as StealthAddress;
   }
@@ -592,23 +574,29 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     operationRequest: OperationRequestWithMetadata
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", operationRequest.meta);
-    const json = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
+    const json = await this.invokeSnap({
+      method: "nocturne_signOperation",
       params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_signOperation",
-          params: {
-            operationRequest: JSON.stringify(operationRequest.request),
-            opMetadata: JSON.stringify(operationRequest.meta),
-          },
-        },
+        operationRequest: JSON.stringify(operationRequest.request),
+        opMetadata: JSON.stringify(operationRequest.meta),
       },
-    })) as string;
+    });
 
     return JSON.parse(json) as SignedOperation;
   }
 
+  private async invokeSnap(request: {
+    method: string;
+    params?: object;
+  }): Promise<string> {
+    return (await window.ethereum.request({
+      method: "wallet_invokeSnap",
+      params: {
+        snapId: SNAP_ID,
+        request,
+      },
+    })) as string;
+  }
   private formInitiateDepositResult(
     spender: string,
     tx: ContractTransaction,

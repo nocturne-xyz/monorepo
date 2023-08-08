@@ -131,6 +131,15 @@ export class NocturneWalletSDK {
     });
   }
 
+  async getBalanceForAsset(
+    asset: Asset,
+    opts?: GetNotesOpts
+  ): Promise<AssetWithBalance | undefined> {
+    return (await this.getAllAssetBalances(opts)).find(
+      (awb) => asset.id === awb.asset.id
+    ); // TODO check if ids are proper identifier, also brute impl
+  }
+
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
     return await this.db.latestSyncedMerkleIndex();
   }
