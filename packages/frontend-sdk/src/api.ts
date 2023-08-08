@@ -1,20 +1,20 @@
 import {
-  Address,
-  Asset,
-  AssetWithBalance,
-  ProvenOperation,
-  SignedOperation,
-  StealthAddress,
-  SyncOpts,
+    Address,
+    Asset,
+    AssetWithBalance,
+    DepositQuoteResponse,
+    ProvenOperation,
+    SignedOperation,
+    StealthAddress,
+    SyncOpts,
 } from "@nocturne-xyz/sdk";
 import {
-  BundlerOperationID,
-  DepositHandle,
-  InitiateDepositResult,
-  OperationHandle,
-  OperationRequestWithMetadata,
-  SyncWithProgressOutput,
-  GetBalanceOpts,
+    BundlerOperationID,
+    GetBalanceOpts,
+    InitiateDepositResult,
+    OperationHandle,
+    OperationRequestWithMetadata,
+    SyncWithProgressOutput
 } from "./types";
 
 export interface NocturneSdkApi {
@@ -23,7 +23,7 @@ export interface NocturneSdkApi {
   getErc20DepositQuote(
     erc20Address: Address,
     totalValue: bigint
-  ): Promise<DepositQuote>; // ! TODO DepositQuote not in API design changes, verify its signature
+  ): Promise<DepositQuoteResponse>;
 
   /**
    * @param values Asset amounts
@@ -45,7 +45,7 @@ export interface NocturneSdkApi {
     gasCompensationPerDeposit: bigint
   ): Promise<InitiateDepositResult>;
 
-  getAllDeposits(): Promise<DepositHandle[]>;
+  //   getAllDeposits(): Promise<DepositHandle[]>; TODO unless there's some other way, will entail adding gql consumer to fe-sdk
 
   // *** OPERATION METHODS *** //
 

@@ -65,7 +65,7 @@ const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
 const VKEY_PATH = "/joinsplit/joinsplitVkey.json";
 
 export class NocturneFrontendSDK implements NocturneSdkApi {
-  //missing the following properties from type 'NocturneSdkApi': getErc20DepositQuote, getAllDeposits
+  //missing the following properties from type 'NocturneSdkApi': getAllDeposits
   protected joinSplitProver: WasmJoinSplitProver;
   protected depositManagerContract: DepositManager;
   protected handlerContract: Handler;
@@ -258,13 +258,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     );
   }
 
-  /**
-   * Fetch quote of wait time in seconds given spender, assetAddr, and value.
-   *
-   * @param erc20Address Asset address
-   * @param totalValue Asset amount
-   */
-  async fetchDepositQuote(
+  async getErc20DepositQuote(
     erc20Address: Address,
     totalValue: bigint
   ): Promise<DepositQuoteResponse> {
@@ -394,6 +388,14 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
         retries: 5,
       }
     );
+  }
+
+  async signAndProveOperation(
+    operationRequest: OperationRequestWithMetadata
+  ): Promise<ProvenOperation> {
+    const op = await this.signOperationRequest(operationRequest);
+
+    return await this.proveOperation(op);
   }
 
   /**
@@ -569,14 +571,6 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     });
 
     return withEntityIndices.map((e) => e.inner);
-  }
-
-  protected async signAndProveOperation(
-    operationRequest: OperationRequestWithMetadata
-  ): Promise<ProvenOperation> {
-    const op = await this.signOperationRequest(operationRequest);
-
-    return await this.proveOperation(op);
   }
 
   private async invokeSnap(request: {
