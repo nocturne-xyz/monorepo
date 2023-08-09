@@ -33,7 +33,7 @@ export interface SyncWithProgressOutput {
 }
 
 export interface NocturneSdkConfig {
-  config: NocturneConfig;
+  network: NocturneConfig;
   endpoints: Endpoints;
 }
 

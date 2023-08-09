@@ -32,40 +32,32 @@
     "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
     "depositSources": ["0x75C01A4359C98df2cB602313bb989fdf4aC45e5e"]
   },
-  "erc20s": [
-    [
-      "TEST-TOKEN",
-      {
-        "address": "0x4F8988F365a8C73d02e119076Bec71a1265D80Cd",
-        "globalCapWholeTokens": "1000000n",
-        "maxDepositSizeWholeTokens": "1000n",
-        "precision": "18n",
-        "isGasAsset": true
-      }
-    ],
-    [
-      "weth",
-      {
-        "address": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
-        "globalCapWholeTokens": "1000n",
-        "maxDepositSizeWholeTokens": "100n",
-        "precision": "18n",
-        "isGasAsset": true
-      }
-    ],
-    [
-      "dai",
-      {
-        "address": "0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6",
-        "globalCapWholeTokens": "1000000n",
-        "maxDepositSizeWholeTokens": "100000n",
-        "precision": "18n"
-      }
-    ]
-  ],
-  "protocolAllowlist": [
-    ["TEST-TOKEN", "0x4F8988F365a8C73d02e119076Bec71a1265D80Cd"],
-    ["weth", "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9"],
-    ["dai", "0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6"]
-  ]
+  "erc20s": {
+    "TEST-TOKEN": {
+      "address": "0x4F8988F365a8C73d02e119076Bec71a1265D80Cd",
+      "globalCapWholeTokens": "1000000n",
+      "maxDepositSizeWholeTokens": "1000n",
+      "precision": "18n",
+      "isGasAsset": true
+    },
+    "weth": {
+      "address": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+      "globalCapWholeTokens": "1000n",
+      "maxDepositSizeWholeTokens": "100n",
+      "precision": "18n",
+      "isGasAsset": true
+    },
+    "dai": {
+      "address": "0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6",
+      "globalCapWholeTokens": "1000000n",
+      "maxDepositSizeWholeTokens": "100000n",
+      "precision": "18n",
+      "isGasAsset": true
+    }
+  },
+  "protocolAllowlist": {
+    "TEST-TOKEN": "0x4F8988F365a8C73d02e119076Bec71a1265D80Cd",
+    "weth": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+    "dai": "0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6"
+  }
 }

@@ -29,28 +29,24 @@
     "depositSources": ["0x51401dc811bb5740090279Ba06cfA8fcF6113778"],
     "screeners": ["0x1111beB3B2C4f22Ee086B2b38C1476A3cE7f78E8"]
   },
-  "erc20s": [
-    [
-      "weth",
-      {
-        "address": "0xb16f35c0ae2912430dac15764477e179d9b9ebea",
-        "globalCap": "250000000000000000000n",
-        "maxDepositSize": "25000000000000000000n",
-        "isGasAsset": true
-      }
-    ],
-    [
-      "dai",
-      {
-        "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-        "globalCap": "500000000000000000000000n",
-        "maxDepositSize": "50000000000000000000000n",
-        "isGasAsset": true
-      }
-    ]
-  ],
-  "protocolAllowlist": [
-    ["weth", "0xb16f35c0ae2912430dac15764477e179d9b9ebea"],
-    ["dai", "0x6B175474E89094C44Da98b954EedeAC495271d0F"]
-  ]
+  "erc20s": {
+    "weth": {
+      "address": "0xb16f35c0ae2912430dac15764477e179d9b9ebea",
+      "globalCapWholeTokens": "250000000000000000000n",
+      "maxDepositSizeWholeTokens": "25000000000000000000n",
+      "precision": "18n",
+      "isGasAsset": true
+    },
+    "dai": {
+      "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+      "globalCapWholeTokens": "500000000000000000000000n",
+      "maxDepositSizeWholeTokens": "50000000000000000000000n",
+      "precision": "18n",
+      "isGasAsset": true
+    }
+  },
+  "protocolAllowlist": {
+    "weth": "0xb16f35c0ae2912430dac15764477e179d9b9ebea",
+    "dai": "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+  }
 }

@@ -79,13 +79,13 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   ) {
     const _config = config || getNocturneSdkConfig(networkName);
 
-    const depositManagerAddress = _config.config.depositManagerAddress();
+    const depositManagerAddress = _config.network.depositManagerAddress();
     const depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
       provider // ! TODO is it fine that it's provider not signer? double check
     );
 
-    const handlerAddress = _config.config.handlerAddress();
+    const handlerAddress = _config.network.handlerAddress();
     const handlerContract = Handler__factory.connect(handlerAddress, provider); // ! TODO is it fine that it's provider not signer? double check
 
     this.joinSplitProver = new WasmJoinSplitProver(
@@ -133,7 +133,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       depositAddr,
       { value: totalValue }
     );
-    const erc20s = this.config.config.erc20s; // TODO holy hack, need to refactor config for better consumption
+    const erc20s = this.config.network.erc20s; // TODO holy hack, need to refactor config for better consumption
     const wethAddress = (
       erc20s.get("weth") ??
       erc20s.get("WETH") ??
@@ -142,6 +142,9 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     if (!wethAddress) {
       throw new Error("WETH address not found in Nocturne config");
     }
+    // compare that to:
+    // this.config.network.erc20s.weth.address;
+
     return this.formInitiateDepositResult(
       await signer.getAddress(),
       tx,
