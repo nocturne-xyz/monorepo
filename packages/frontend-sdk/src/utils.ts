@@ -32,13 +32,12 @@ export const SUBGRAPH_URL =
 console.log("SNAP_ID: ", SNAP_ID);
 console.log("SUBGRAPH_URL: ", SUBGRAPH_URL);
 
-export function getProvider(): ethers.providers.Web3Provider {
+export type ValidProvider =
+  | ethers.providers.JsonRpcProvider
+  | ethers.providers.Web3Provider;
+
+export function getProvider(): ValidProvider {
   return new ethers.providers.Web3Provider(window.ethereum as any);
-}
-export async function getWindowSigner(): Promise<ethers.Signer> {
-  const provider = getProvider();
-  await provider.send("eth_requestAccounts", []);
-  return provider.getSigner();
 }
 
 export function getTokenContract(

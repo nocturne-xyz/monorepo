@@ -56,10 +56,10 @@ import {
 import {
   SNAP_ID,
   SUBGRAPH_URL,
+  ValidProvider,
   getNocturneSdkConfig,
   getProvider,
   getTokenContract,
-  getWindowSigner,
 } from "./utils";
 
 const WASM_PATH = "/joinsplit/joinsplit.wasm"; // ! TODO this pathing style might be outdated, no longer work
@@ -70,9 +70,12 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   protected bundlerEndpoint: string;
   protected screenerEndpoint: string;
   protected config: NocturneSdkConfig;
-  protected provider: ethers.providers.Provider;
+  protected provider: ValidProvider;
 
-  constructor(networkName: SupportedNetwork = "mainnet") {
+  constructor(
+    networkName: SupportedNetwork = "mainnet",
+    provider?: ValidProvider
+  ) {
     const config = getNocturneSdkConfig(networkName);
     this.joinSplitProver = new WasmJoinSplitProver(
       WASM_PATH,
@@ -82,11 +85,11 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     this.bundlerEndpoint = config.endpoints.bundlerEndpoint;
     this.screenerEndpoint = config.endpoints.screenerEndpoint;
     this.config = config;
-    this.provider = getProvider();
+    this.provider = provider || getProvider();
   }
 
   protected depositManagerContract(
-    signerOrProvider: ethers.Signer | ethers.providers.Provider
+    signerOrProvider: ethers.Signer | ValidProvider
   ): DepositManager {
     return DepositManager__factory.connect(
       this.config.network.depositManagerAddress(),
@@ -94,7 +97,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     );
   }
   protected handlerContract(
-    signerOrProvider: ethers.Signer | ethers.providers.Provider
+    signerOrProvider: ethers.Signer | ValidProvider
   ): Handler {
     return Handler__factory.connect(
       this.config.network.depositManagerAddress(),
@@ -114,7 +117,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     values: bigint[],
     gasCompensationPerDeposit: bigint
   ): Promise<InitiateDepositResult> {
-    const signer = await getWindowSigner();
+    const signer = await this.getWindowSigner();
 
     const ethToWrap = values.reduce((acc, val) => acc + val, 0n);
     const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
@@ -162,7 +165,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     values: bigint[],
     gasCompensationPerDeposit: bigint
   ): Promise<InitiateDepositResult> {
-    const signer = await getWindowSigner();
+    const signer = await this.getWindowSigner();
     const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
 
     const signerBalance = (await signer.getBalance()).toBigInt();
@@ -212,7 +215,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     amount: bigint,
     recipientAddress: Address
   ): Promise<BundlerOperationID> {
-    const signer = await getWindowSigner();
+    const signer = await this.getWindowSigner();
     const provider = signer.provider;
 
     if (!provider) {
@@ -258,7 +261,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   async retrievePendingDeposit(
     req: DepositRequest
   ): Promise<ContractTransaction> {
-    const signer = await getWindowSigner();
+    const signer = await this.getWindowSigner();
     const signerAddress = await signer.getAddress();
     if (signerAddress.toLowerCase() !== req.spender.toLowerCase()) {
       throw new Error("Spender and signer addresses do not match");
@@ -296,7 +299,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     erc20Address: Address,
     totalValue: bigint
   ): Promise<DepositQuoteResponse> {
-    const signer = await getWindowSigner();
+    const signer = await this.getWindowSigner();
     const spender = await signer.getAddress();
 
     return await retry(
@@ -602,7 +605,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
    */
   async fetchAllDeposits(): Promise<DepositEvent[]> {
     const withEntityIndices = await fetchDepositEvents(SUBGRAPH_URL, {
-      spender: await (await getWindowSigner()).getAddress(),
+      spender: await (await this.getWindowSigner()).getAddress(),
     });
 
     return withEntityIndices.map((e) => e.inner);
@@ -654,5 +657,10 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       tx,
       handle,
     };
+  }
+
+  private async getWindowSigner(): Promise<ethers.Signer> {
+    await this.provider.send("eth_requestAccounts", []);
+    return this.provider.getSigner();
   }
 }
