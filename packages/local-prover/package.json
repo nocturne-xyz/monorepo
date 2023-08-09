@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/local-prover",
-  "version": "1.0.14-alpha",
+  "version": "1.0.8-testnet",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,7 +19,7 @@
     "prettier:check": "prettier --check ./src ./scripts",
     "prettier:write": "prettier --write ./src ./scripts",
     "test:unit": "",
-    "publish": "yarn build; yarn npm publish --access public"
+    "publish": "yarn clean; yarn build; yarn npm publish --access public"
   },
   "dependencies": {
     "@nocturne-xyz/crypto-utils": "^0.1.7",
