@@ -8,7 +8,6 @@ import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
   ActionMetadata,
   Address,
-  Asset,
   AssetTrait,
   AssetType,
   AssetWithBalance,
@@ -58,6 +57,7 @@ import {
   SNAP_ID,
   SUBGRAPH_URL,
   getNocturneSdkConfig,
+  getProvider,
   getTokenContract,
   getWindowSigner,
 } from "./utils";
@@ -67,37 +67,39 @@ const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
 
 export class NocturneFrontendSDK implements NocturneSdkApi {
   protected joinSplitProver: WasmJoinSplitProver;
-  protected depositManagerContract: DepositManager;
-  protected handlerContract: Handler;
   protected bundlerEndpoint: string;
   protected screenerEndpoint: string;
   protected config: NocturneSdkConfig;
-  constructor(
-    provider: ethers.providers.Provider,
-    networkName: SupportedNetwork = "mainnet", // ! todo confirm using network name for default config is what's intended
-    config?: NocturneSdkConfig
-  ) {
-    const _config = config || getNocturneSdkConfig(networkName);
+  protected provider: ethers.providers.Provider;
 
-    const depositManagerAddress = _config.config.depositManagerAddress();
-    const depositManagerContract = DepositManager__factory.connect(
-      depositManagerAddress,
-      provider // ! TODO is it fine that it's provider not signer? double check
-    );
-
-    const handlerAddress = _config.config.handlerAddress();
-    const handlerContract = Handler__factory.connect(handlerAddress, provider); // ! TODO is it fine that it's provider not signer? double check
-
+  constructor(networkName: SupportedNetwork = "mainnet") {
+    const config = getNocturneSdkConfig(networkName);
     this.joinSplitProver = new WasmJoinSplitProver(
       WASM_PATH,
       ZKEY_PATH,
       vkey as VerifyingKey
     );
-    this.depositManagerContract = depositManagerContract;
-    this.handlerContract = handlerContract;
-    this.bundlerEndpoint = _config.endpoints.bundlerEndpoint;
-    this.screenerEndpoint = _config.endpoints.screenerEndpoint;
-    this.config = _config;
+    this.bundlerEndpoint = config.endpoints.bundlerEndpoint;
+    this.screenerEndpoint = config.endpoints.screenerEndpoint;
+    this.config = config;
+    this.provider = getProvider();
+  }
+
+  protected depositManagerContract(
+    signerOrProvider: ethers.Signer | ethers.providers.Provider
+  ): DepositManager {
+    return DepositManager__factory.connect(
+      this.config.network.depositManagerAddress(),
+      signerOrProvider
+    );
+  }
+  protected handlerContract(
+    signerOrProvider: ethers.Signer | ethers.providers.Provider
+  ): Handler {
+    return Handler__factory.connect(
+      this.config.network.depositManagerAddress(),
+      signerOrProvider
+    );
   }
 
   /**
@@ -128,12 +130,10 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     const depositAddr = StealthAddressTrait.compress(
       await this.getRandomStealthAddress()
     );
-    const tx = await this.depositManagerContract.instantiateETHMultiDeposit(
-      values,
-      depositAddr,
-      { value: totalValue }
-    );
-    const erc20s = this.config.config.erc20s; // TODO holy hack, need to refactor config for better consumption
+    const tx = await this.depositManagerContract(
+      signer
+    ).instantiateETHMultiDeposit(values, depositAddr, { value: totalValue });
+    const erc20s = this.config.network.erc20s; // TODO holy hack, need to refactor config for better consumption
     const wethAddress = (
       erc20s.get("weth") ??
       erc20s.get("WETH") ??
@@ -181,18 +181,16 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       signer
     );
     await erc20Contract.approve(
-      this.depositManagerContract.address,
+      this.depositManagerContract(signer).address,
       totalValue
     );
 
     const depositAddr = StealthAddressTrait.compress(
       await this.getRandomStealthAddress()
     );
-    const tx = await this.depositManagerContract.instantiateErc20MultiDeposit(
-      erc20Address,
-      values,
-      depositAddr
-    );
+    const tx = await this.depositManagerContract(
+      signer
+    ).instantiateErc20MultiDeposit(erc20Address, values, depositAddr);
     return this.formInitiateDepositResult(
       await signer.getAddress(),
       tx,
@@ -249,7 +247,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     };
     const provenOperation = await this.signAndProveOperation({
       request: operationRequest,
-      meta: { action },
+      metadata: { action },
     });
     return this.submitOperation(provenOperation);
   }
@@ -260,18 +258,18 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   async retrievePendingDeposit(
     req: DepositRequest
   ): Promise<ContractTransaction> {
-    const signer = await (await getWindowSigner()).getAddress();
-    if (signer.toLowerCase() !== req.spender.toLowerCase()) {
+    const signer = await getWindowSigner();
+    const signerAddress = await signer.getAddress();
+    if (signerAddress.toLowerCase() !== req.spender.toLowerCase()) {
       throw new Error("Spender and signer addresses do not match");
     }
-    const isOutstandingDeposit =
-      await this.depositManagerContract._outstandingDepositHashes(
-        hashDepositRequest(req)
-      );
+    const isOutstandingDeposit = await this.depositManagerContract(
+      signer
+    )._outstandingDepositHashes(hashDepositRequest(req));
     if (!isOutstandingDeposit) {
       throw new Error("Deposit request does not exist");
     }
-    return this.depositManagerContract.retrieveDeposit(req);
+    return this.depositManagerContract(signer).retrieveDeposit(req);
   }
   /**
    * Fetch status of existing deposit request given its hash.
@@ -331,12 +329,12 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   async signOperationRequest(
     operationRequest: OperationRequestWithMetadata
   ): Promise<SignedOperation> {
-    console.log("[fe-sdk] metadata:", operationRequest.meta);
+    console.log("[fe-sdk] metadata:", operationRequest.metadata);
     const json = await this.invokeSnap({
       method: "nocturne_signOperation",
       params: {
         operationRequest: JSON.stringify(operationRequest.request),
-        opMetadata: JSON.stringify(operationRequest.meta),
+        opMetadata: JSON.stringify(operationRequest.metadata),
       },
     });
     const op = JSON.parse(json) as SignedOperation;
@@ -451,9 +449,10 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   }
 
   async getBalanceForAsset(
-    asset: Asset,
+    erc20Address: Address,
     opts?: GetBalanceOpts
   ): Promise<AssetWithBalance> {
+    const asset = AssetTrait.erc20AddressToAsset(erc20Address);
     const json = await this.invokeSnap({
       method: "nocturne_getBalanceForAsset",
       params: {
@@ -507,8 +506,9 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
    * returning newly synced merkle indices as syncing process occurs.
    */
   async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
+    const provider = this.provider;
     let latestMerkleIndexOnChain =
-      (await this.handlerContract.totalCount()).toNumber() - 1;
+      (await this.handlerContract(provider).totalCount()).toNumber() - 1;
     let latestSyncedMerkleIndex =
       (await this.getLatestSyncedMerkleIndex()) ?? 0;
 
@@ -525,7 +525,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
 
         if (count % refetchEvery === 0) {
           latestMerkleIndexOnChain =
-            (await sdk.handlerContract.totalCount()).toNumber() - 1;
+            (await sdk.handlerContract(provider).totalCount()).toNumber() - 1;
         }
         count++;
         yield {
@@ -623,7 +623,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   private formInitiateDepositResult(
     spender: string,
     tx: ContractTransaction,
-    value: bigint,
+    depositValue: bigint,
     depositAddr: CompressedStealthAddress,
     assetAddr: string,
     gasCompensation: bigint
@@ -635,7 +635,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
         assetAddr: assetAddr,
         id: 0n, // TODO what is id?
       }),
-      value,
+      value: depositValue,
       depositAddr,
       nonce: BigInt(tx.nonce), // ! TODO confirm the nonce should be from tx
       gasCompensation,

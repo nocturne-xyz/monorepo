@@ -32,8 +32,11 @@ export const SUBGRAPH_URL =
 console.log("SNAP_ID: ", SNAP_ID);
 console.log("SUBGRAPH_URL: ", SUBGRAPH_URL);
 
+export function getProvider(): ethers.providers.Web3Provider {
+  return new ethers.providers.Web3Provider(window.ethereum as any);
+}
 export async function getWindowSigner(): Promise<ethers.Signer> {
-  const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+  const provider = getProvider();
   await provider.send("eth_requestAccounts", []);
   return provider.getSigner();
 }
@@ -122,7 +125,7 @@ export const getNocturneSdkConfig = (
   const config = loadNocturneConfigBuiltin(networkName);
   const endpoints = getEndpoints(networkName);
   return {
-    config,
+    network: config,
     endpoints,
   };
 };

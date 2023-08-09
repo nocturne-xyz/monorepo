@@ -33,7 +33,7 @@ export interface SyncWithProgressOutput {
 }
 
 export interface NocturneSdkConfig {
-  config: NocturneConfig;
+  network: NocturneConfig;
   endpoints: Endpoints;
 }
 
@@ -63,5 +63,5 @@ export interface OperationHandle {
 
 export interface OperationRequestWithMetadata {
   request: OperationRequest;
-  meta: OperationMetadata;
+  metadata: OperationMetadata;
 }

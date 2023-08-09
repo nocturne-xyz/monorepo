@@ -1,6 +1,5 @@
 import {
   Address,
-  Asset,
   AssetWithBalance,
   DepositQuoteResponse,
   ProvenOperation,
@@ -70,7 +69,6 @@ export interface NocturneSdkApi {
 
   getInFlightOperations(): Promise<OperationHandle[]>;
 
-  // ! TODO was fetchBundlerOperationStatus() intentionally left out?
   // *** BALANCE METHODS *** //
 
   /**
@@ -81,17 +79,10 @@ export interface NocturneSdkApi {
    */
   getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]>;
 
-  // ! TODO
-  //  Do we want to force the consumer to gain context on what id should be? (I don't even know what it's supposed to be)
-  //  Asset {
-  //   assetType: AssetType;
-  //   assetAddr: Address;
-  //   id: bigint;
-  // }
   getBalanceForAsset(
-    asset: Asset,
+    erc20Address: Address,
     opts?: GetBalanceOpts
-  ): Promise<AssetWithBalance>; // TODO new surface area method
+  ): Promise<AssetWithBalance>;
 
   // *** SYNCING METHODS *** //
 
