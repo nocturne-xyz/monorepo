@@ -104,11 +104,15 @@ export const run = new Command("run")
       throw new Error("missing TX_SIGNER_KEY");
     }
 
+    // hex string
     const nocturneSKStr = process.env.NOCTURNE_SPENDING_KEY;
     if (!nocturneSKStr) {
       throw new Error("missing NOCTURNE_SPENDING_KEY");
     }
-    const nocturneSK = Uint8Array.from(ethers.utils.arrayify(nocturneSKStr));
+    const skBytes = ethers.utils.arrayify(nocturneSKStr);
+    if (skBytes.length !== 32) {
+      throw new Error("NOCTURNE_SPENDING_KEY must be 32 bytes");
+    }
 
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     const signingProvider = new ethers.Wallet(privateKey, provider);
@@ -122,7 +126,7 @@ export const run = new Command("run")
       signingProvider
     );
 
-    const nocturneSigner = new NocturneSigner(nocturneSK);
+    const nocturneSigner = new NocturneSigner(skBytes);
     const kv = new LMDBKVStore({ path: dbPath });
     const merkleProver = await SparseMerkleProver.loadFromKV(kv);
     const db = new NocturneDB(kv);
