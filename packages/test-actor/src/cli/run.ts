@@ -77,7 +77,12 @@ export const run = new Command("run")
       stdoutLogLevel,
     } = options;
 
-    const logger = makeLogger(logDir, "test-actor", "actor", stdoutLogLevel);
+    const logger = makeLogger(
+      logDir,
+      "testnet2-test-actor",
+      "actor",
+      stdoutLogLevel
+    );
 
     const config = loadNocturneConfig(configNameOrPath);
 

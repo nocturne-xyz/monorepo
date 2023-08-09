@@ -25,7 +25,7 @@ const runBatcher = new Command("batcher")
 
     const logger = makeLogger(
       logDir,
-      "testne2-bundler",
+      "testnet2-bundler",
       "batcher",
       stdoutLogLevel
     );
