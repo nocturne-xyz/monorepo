@@ -67,7 +67,7 @@ const runServer = new Command("server")
     console.log("making logger");
     const logger = makeLogger(
       logDir,
-      "deposit-screener",
+      "testnet2-deposit-screener",
       "server",
       stdoutLogLevel
     );

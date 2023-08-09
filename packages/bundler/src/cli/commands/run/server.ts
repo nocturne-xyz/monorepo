@@ -34,7 +34,12 @@ const runServer = new Command("server")
     }
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
-    const logger = makeLogger(logDir, "bundler", "server", stdoutLogLevel);
+    const logger = makeLogger(
+      logDir,
+      "testnet2-bundler",
+      "server",
+      stdoutLogLevel
+    );
     const server = new BundlerServer(
       config.tellerAddress(),
       provider,

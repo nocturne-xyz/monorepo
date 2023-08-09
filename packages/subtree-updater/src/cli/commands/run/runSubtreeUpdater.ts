@@ -72,7 +72,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
     } = options;
     const logger = makeLogger(
       logDir,
-      "subtree-updater",
+      "testnet2-subtree-updater",
       "subtree-updater",
       stdoutLogLevel
     );

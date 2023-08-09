@@ -39,7 +39,12 @@ const runSubmitter = new Command("submitter")
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     const signingProvider = new ethers.Wallet(privateKey, provider);
 
-    const logger = makeLogger(logDir, "bundler", "submitter", stdoutLogLevel);
+    const logger = makeLogger(
+      logDir,
+      "testnet2-bundler",
+      "submitter",
+      stdoutLogLevel
+    );
     const submitter = new BundlerSubmitter(
       config.tellerAddress(),
       signingProvider,

@@ -52,7 +52,7 @@ const runProcess = new Command("processor")
 
     const logger = makeLogger(
       logDir,
-      "deposit-screener",
+      "testnet2-deposit-screener",
       "processor",
       stdoutLogLevel
     );

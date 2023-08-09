@@ -23,7 +23,12 @@ const runBatcher = new Command("batcher")
   .action(async (options) => {
     const { maxLatency, batchSize, logDir, stdoutLogLevel } = options;
 
-    const logger = makeLogger(logDir, "bundler", "batcher", stdoutLogLevel);
+    const logger = makeLogger(
+      logDir,
+      "testne2-bundler",
+      "batcher",
+      stdoutLogLevel
+    );
     const batcher = new BundlerBatcher(
       getRedis(),
       logger,
