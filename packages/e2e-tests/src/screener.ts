@@ -10,7 +10,7 @@ import {
 } from "@nocturne-xyz/deposit-screener";
 import { Erc20Config } from "@nocturne-xyz/config";
 import IORedis from "ioredis";
-import { Address } from "@nocturne-xyz/sdk";
+import { Address } from "@nocturne-xyz/wallet-sdk";
 import { DummyScreenerDelayCalculator } from "@nocturne-xyz/deposit-screener/dist/src/screenerDelay";
 
 export interface DepositScreenerConfig {

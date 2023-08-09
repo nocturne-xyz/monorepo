@@ -4,7 +4,7 @@ import {
   checkInputError,
 } from "@nocturne-xyz/offchain-utils";
 import validateQuote from "./quote";
-import { DepositQuoteRequest } from "@nocturne-xyz/sdk";
+import { DepositQuoteRequest } from "@nocturne-xyz/wallet-sdk";
 
 export function tryParseQuoteRequest(
   body: any

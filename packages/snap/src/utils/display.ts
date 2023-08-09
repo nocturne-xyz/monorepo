@@ -1,5 +1,5 @@
 import { Erc20Config } from "@nocturne-xyz/config";
-import { OperationMetadata } from "@nocturne-xyz/sdk";
+import { OperationMetadata } from "@nocturne-xyz/wallet-sdk";
 import { formatUnits } from "ethers/lib/utils";
 
 const lookupTickerByAddress = (

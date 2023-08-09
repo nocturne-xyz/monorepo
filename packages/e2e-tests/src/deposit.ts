@@ -9,7 +9,7 @@ import {
   StealthAddressTrait,
   hashDepositRequest,
   zip,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 import { ContractTransaction, ethers } from "ethers";
 import { queryDepositStatus, sleep } from "./utils";
 

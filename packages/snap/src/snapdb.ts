@@ -1,4 +1,10 @@
-import { InMemoryKVStore, KV, KVStore, thunk, Thunk } from "@nocturne-xyz/sdk";
+import {
+  InMemoryKVStore,
+  KV,
+  KVStore,
+  thunk,
+  Thunk,
+} from "@nocturne-xyz/wallet-sdk";
 
 const loadKVfromDump = async () => {
   const kv = new InMemoryKVStore();

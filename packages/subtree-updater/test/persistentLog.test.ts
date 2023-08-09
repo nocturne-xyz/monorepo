@@ -9,7 +9,7 @@ import {
   WithTotalEntityIndex,
   min,
   range,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 
 function randomBigIntBounded(max: bigint): bigint {
   return BigInt(Math.floor(Math.random() * Number(max)));

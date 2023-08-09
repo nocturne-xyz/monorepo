@@ -5,7 +5,7 @@ import {
   IterSyncOpts,
   TotalEntityIndex,
   WithTotalEntityIndex,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 
 export type Insertion = IncludedNote | IncludedNoteCommitment;
 

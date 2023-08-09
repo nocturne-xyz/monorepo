@@ -5,7 +5,7 @@ import {
   TotalEntityIndexTrait,
   assertOrErr,
   WithTotalEntityIndex,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 import * as JSON from "bigint-json-serialization";
 import { Logger } from "winston";
 

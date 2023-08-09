@@ -12,7 +12,7 @@ import {
   OperationRequestBuilder,
   NoteTrait,
   unzip,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 import {
   SyncAdapterOption,
   setupTestDeployment,

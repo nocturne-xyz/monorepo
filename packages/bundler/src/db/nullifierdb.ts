@@ -1,4 +1,7 @@
-import { computeOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
+import {
+  computeOperationDigest,
+  ProvenOperation,
+} from "@nocturne-xyz/wallet-sdk";
 import IORedis from "ioredis";
 import { RedisTransaction } from ".";
 

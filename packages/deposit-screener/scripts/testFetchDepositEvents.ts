@@ -1,4 +1,4 @@
-import { fetchDepositEvents, DepositEventType } from "@nocturne-xyz/sdk";
+import { fetchDepositEvents, DepositEventType } from "@nocturne-xyz/wallet-sdk";
 (async () => {
   const res = await fetchDepositEvents(
     "http://localhost:8000/subgraphs/name/nocturne-test",

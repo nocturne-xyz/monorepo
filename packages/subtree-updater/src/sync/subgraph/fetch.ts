@@ -9,8 +9,8 @@ import {
   EncodedOrEncryptedNoteResponse,
   encryptedNoteFromEncryptedNoteResponse,
   includedNoteFromNoteResponse,
-} from "@nocturne-xyz/sdk";
-import { makeSubgraphQuery } from "@nocturne-xyz/sdk/dist/src/sync/subgraph/utils";
+} from "@nocturne-xyz/wallet-sdk";
+import { makeSubgraphQuery } from "@nocturne-xyz/wallet-sdk/dist/src/sync/subgraph/utils";
 
 export type TreeInsertion =
   | FilledBatchWithZerosEvent

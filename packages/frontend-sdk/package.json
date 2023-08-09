@@ -19,7 +19,7 @@
   "dependencies": {
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
-    "@nocturne-xyz/sdk": "workspace:^",
+    "@nocturne-xyz/wallet-sdk": "workspace:^",
     "async-retry": "^1.3.3",
     "bigint-json-serialization": "^1.0.1",
     "ethers": "^5.7.2",

@@ -26,7 +26,7 @@
     "@nocturne-xyz/contracts": "1.0.33-testnet",
     "@nocturne-xyz/local-prover": "1.0.7-testnet",
     "@nocturne-xyz/offchain-utils": "0.1.10",
-    "@nocturne-xyz/sdk": "1.0.169-testnet",
+    "@nocturne-xyz/wallet-sdk": "workspace:^",
     "@openzeppelin/defender-relay-client": "1.47.1",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",

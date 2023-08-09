@@ -6,7 +6,7 @@ import {
   ProvenOperation,
   OperationStatus,
   parseEventsFromContractReceipt,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
 import { ethers } from "ethers";

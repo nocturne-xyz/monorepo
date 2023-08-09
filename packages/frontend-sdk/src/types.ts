@@ -7,7 +7,7 @@ import {
   OperationMetadata,
   OperationRequest,
   OperationStatusResponse,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 import { ContractTransaction } from "ethers";
 
 export type BundlerOperationID = string;

@@ -1,4 +1,4 @@
-import { Address } from "@nocturne-xyz/sdk";
+import { Address } from "@nocturne-xyz/wallet-sdk";
 
 export interface ScreeningApi {
   isSafeDepositRequest(

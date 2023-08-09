@@ -3,7 +3,7 @@ import {
   DepositRequestStatus,
   TotalEntityIndex,
   hashDepositRequest,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 import IORedis from "ioredis";
 import * as JSON from "bigint-json-serialization";
 

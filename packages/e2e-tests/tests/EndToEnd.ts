@@ -23,7 +23,7 @@ import {
   JoinSplitProver,
   proveOperation,
   OperationStatus,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 import {
   GAS_FAUCET_DEFAULT_AMOUNT,
   GAS_PRICE,

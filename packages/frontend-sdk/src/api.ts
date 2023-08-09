@@ -6,7 +6,7 @@ import {
   SignedOperation,
   StealthAddress,
   SyncOpts,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 import {
   BundlerOperationID,
   DepositHandle,

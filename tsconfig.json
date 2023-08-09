@@ -50,7 +50,7 @@
       "path": "./packages/deposit-screener"
     },
     {
-      "path": "./packages/frontend-sdk"
+      "path": "./packages/sdk"
     },
     {
       "path": "./packages/local-prover"

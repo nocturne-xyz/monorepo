@@ -3,13 +3,10 @@ import {
   AssetType,
   DepositRequest,
   hashDepositRequest,
-} from "@nocturne-xyz/sdk";
-import { ERC20_ID } from "@nocturne-xyz/sdk/dist/src/primitives/asset";
+} from "@nocturne-xyz/wallet-sdk";
+import { ERC20_ID } from "@nocturne-xyz/wallet-sdk/dist/src/primitives/asset";
 import { ethers, Wallet } from "ethers";
-import {
-  EIP712Domain,
-  signDepositRequest,
-} from "../src";
+import { EIP712Domain, signDepositRequest } from "../src";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
@@ -67,11 +64,7 @@ function toObject(obj: any) {
     gasCompensation: 50n,
   };
 
-  const signature = await signDepositRequest(
-    signer,
-    domain,
-    depositRequest
-  );
+  const signature = await signDepositRequest(signer, domain, depositRequest);
   const hash = hashDepositRequest(depositRequest);
 
   console.log("sig", signature);

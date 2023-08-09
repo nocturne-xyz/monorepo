@@ -36,7 +36,7 @@ import {
   joinSplitPublicSignalsToArray,
   proveOperation,
   unpackFromSolidityProof,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction, ethers } from "ethers";
@@ -65,7 +65,7 @@ import {
 const WASM_PATH = "/joinsplit/joinsplit.wasm"; // ! TODO this pathing style might be outdated, no longer work
 const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
 
-export class NocturneFrontendSDK implements NocturneSdkApi {
+export class NocturneSdk implements NocturneSdkApi {
   protected joinSplitProver: WasmJoinSplitProver;
   protected bundlerEndpoint: string;
   protected screenerEndpoint: string;
@@ -521,7 +521,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     );
 
     let closed = false;
-    const generator = async function* (sdk: NocturneFrontendSDK) {
+    const generator = async function* (sdk: NocturneSdk) {
       let count = 0;
       while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
         latestSyncedMerkleIndex = (await sdk.sync(syncOpts)) ?? 0;

@@ -3,7 +3,7 @@ import {
   SubtreeUpdateInputs,
   SubtreeUpdateProofWithPublicSignals,
   BaseProof,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 
 //@ts-ignore
 import * as snarkjs from "snarkjs";

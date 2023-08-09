@@ -13,7 +13,7 @@ import {
   max,
   WithTotalEntityIndex,
   range,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/wallet-sdk";
 import { Insertion, SubtreeUpdaterSyncAdapter } from "../syncAdapter";
 import { fetchTreeInsertions, fetchLatestSubtreeIndex } from "./fetch";
 import { Logger } from "winston";
