@@ -14,7 +14,6 @@ import {
   TreeConstants,
 } from "@nocturne-xyz/sdk";
 import { WasmSubtreeUpdateProver } from "../src/subtreeUpdate";
-import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
 import { poseidonBN } from "@nocturne-xyz/crypto-utils";
 
 const ROOT_DIR = findWorkspaceRoot()!;

@@ -3059,6 +3059,7 @@ __metadata:
     hardhat: ^2.13.1
     mocha: ^10.1.0
     prettier: ^2.8.8
+    ts-node: ^10.9.1
     uuid: ^9.0.0
     winston-humanize-formatter: ^0.1.4
   languageName: unknown
@@ -3098,7 +3099,6 @@ __metadata:
   dependencies:
     "@nocturne-xyz/crypto-utils": ^0.1.7
     "@nocturne-xyz/sdk": "workspace:^"
-    "@nocturne-xyz/subtree-updater": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/mocha": ^10.0.0
@@ -3241,8 +3241,8 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.45.0
     "@typescript-eslint/parser": ^5.44.0
     async-mutex: ^0.4.0
+    async-retry: ^1.3.3
     bigint-json-serialization: ^1.0.1
-    bullmq: ^3.10.1
     chai: ^4.3.7
     commander: ^9.4.1
     dotenv: ^16.0.3
