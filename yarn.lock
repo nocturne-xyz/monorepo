@@ -3083,7 +3083,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/local-prover@1.0.14-alpha, @nocturne-xyz/local-prover@workspace:^, @nocturne-xyz/local-prover@workspace:packages/local-prover":
+"@nocturne-xyz/local-prover@workspace:^, @nocturne-xyz/local-prover@workspace:packages/local-prover":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/local-prover@workspace:packages/local-prover"
   dependencies:
@@ -3260,7 +3260,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": 1.0.16-alpha
     "@nocturne-xyz/contracts": "workspace:^"
-    "@nocturne-xyz/local-prover": 1.0.14-alpha
+    "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": "workspace:^"
     "@types/bn.js": ^5.1.1
