@@ -50,7 +50,7 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
     // we expect the op to use the first 3 notes only
     const gasAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
     const op = await prepareOperation(deps, gasAccountedOpRequest);
 

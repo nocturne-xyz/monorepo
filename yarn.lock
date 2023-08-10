@@ -2908,7 +2908,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@npm:1.0.15-testnet":
+"@nocturne-xyz/config@npm:1.0.15-testnet, @nocturne-xyz/config@npm:^1.0.15-testnet":
   version: 1.0.15-testnet
   resolution: "@nocturne-xyz/config@npm:1.0.15-testnet"
   dependencies:
@@ -2943,7 +2943,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@1.0.33-testnet, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/contracts@1.0.33-testnet, @nocturne-xyz/contracts@^1.0.33-testnet, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -3308,7 +3308,28 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/wallet-sdk@0.1.0, @nocturne-xyz/wallet-sdk@workspace:^, @nocturne-xyz/wallet-sdk@workspace:packages/wallet-sdk":
+"@nocturne-xyz/wallet-sdk@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@nocturne-xyz/wallet-sdk@npm:0.1.0"
+  dependencies:
+    "@nocturne-xyz/circuit-utils": ^0.1.12
+    "@nocturne-xyz/config": ^1.0.15-testnet
+    "@nocturne-xyz/contracts": ^1.0.33-testnet
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    async-retry: ^1.3.3
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    ethers: ^5.7.2
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+    winston: ^3.9.0
+  checksum: 38c2c185db06adcbd71f4c89fbe994eabe34d202e03e4c7ffa08637988aff13ba6c89e6d432d56ce93ed0d72364c4f26e2d212f09439165fa0ad3eeb349fe865
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/wallet-sdk@workspace:^, @nocturne-xyz/wallet-sdk@workspace:packages/wallet-sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/wallet-sdk@workspace:packages/wallet-sdk"
   dependencies:

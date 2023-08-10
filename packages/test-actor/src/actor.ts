@@ -1,33 +1,34 @@
+import { Erc20Config } from "@nocturne-xyz/config";
 import {
   DepositManager,
   SimpleERC20Token__factory,
   Teller,
 } from "@nocturne-xyz/contracts";
-import {
-  NocturneWalletSDK,
-  OperationRequest,
-  sleep,
-  JoinSplitProver,
-  proveOperation,
-  parseEventsFromContractReceipt,
-  Asset,
-  randomBigInt,
-  OperationRequestBuilder,
-  computeOperationDigest,
-  StealthAddressTrait,
-  min,
-  Address,
-} from "@nocturne-xyz/wallet-sdk";
-import * as JSON from "bigint-json-serialization";
-import { Erc20Config } from "@nocturne-xyz/config";
-import { ethers } from "ethers";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
-import { Logger } from "winston";
-import * as ot from "@opentelemetry/api";
 import {
   makeCreateCounterFn,
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
+import {
+  Address,
+  Asset,
+  JoinSplitProver,
+  NocturneWalletSDK,
+  OperationRequest,
+  OperationRequestBuilder,
+  OperationRequestWithMetadata,
+  StealthAddressTrait,
+  computeOperationDigest,
+  min,
+  parseEventsFromContractReceipt,
+  proveOperation,
+  randomBigInt,
+  sleep,
+} from "@nocturne-xyz/wallet-sdk";
+import * as ot from "@opentelemetry/api";
+import * as JSON from "bigint-json-serialization";
+import { ethers } from "ethers";
+import { Logger } from "winston";
 
 export const ACTOR_NAME = "test-actor";
 const COMPONENT_NAME = "main";
@@ -302,7 +303,7 @@ export class TestActor {
 
     let opRequest: OperationRequest;
     if (true) {
-      opRequest = await this.erc20TransferOpRequest(asset, value);
+      opRequest = (await this.erc20TransferOpRequest(asset, value)).request;
     } else {
       // TODO: add swapper call case and replace if(true) with flipcoin
     }
@@ -376,7 +377,7 @@ export class TestActor {
   private async erc20TransferOpRequest(
     asset: Asset,
     value: bigint
-  ): Promise<OperationRequest> {
+  ): Promise<OperationRequestWithMetadata> {
     const simpleErc20 = SimpleERC20Token__factory.connect(
       asset.assetAddr,
       this.txSigner

@@ -1,13 +1,7 @@
-import {
-  Asset,
-  Address,
-  Action,
-  OperationMetadata,
-  ActionMetadata,
-} from "./primitives";
-import { CanonAddress, StealthAddress } from "./crypto";
-import { groupByArr } from "./utils";
 import { ethers } from "ethers";
+import { CanonAddress, StealthAddress } from "./crypto";
+import { Action, Address, Asset, OperationMetadata } from "./primitives";
+import { groupByArr } from "./utils";
 
 const ONE_DAY_SECONDS = 24 * 60 * 60;
 
@@ -89,26 +83,13 @@ export class OperationRequestBuilder {
   // returns `this` so it's chainable
   action(
     contractAddress: Address,
-    encodedFunction: string,
-    meta: {
-      recipientAddress: Address;
-      amount: bigint;
-    } // ! TODO need to enforce on all callers
+    encodedFunction: string
   ): OperationRequestBuilder {
     const action: Action = {
       contractAddress: ethers.utils.getAddress(contractAddress),
       encodedFunction,
     };
     this.op.actions.push(action);
-
-    const { recipientAddress, amount } = meta;
-    const metadata: ActionMetadata = {
-      type: "Transfer",
-      recipientAddress,
-      erc20Address: contractAddress,
-      amount,
-    };
-    this.metadata.items.push(metadata);
     return this;
   }
 

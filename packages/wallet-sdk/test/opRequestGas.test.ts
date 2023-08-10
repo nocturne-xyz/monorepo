@@ -55,7 +55,7 @@ describe("handleGasForOperationRequest", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
 
     expect(gasCompAccountedOpRequest.gasPrice).to.eql(0n);
@@ -92,7 +92,7 @@ describe("handleGasForOperationRequest", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
 
     expect(gasCompAccountedOpRequest.joinSplitRequests.length).to.eql(1);
@@ -136,7 +136,7 @@ describe("handleGasForOperationRequest", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
 
     const expectedJoinSplitRequestUnwrap: JoinSplitRequest = {
@@ -190,7 +190,7 @@ describe("handleGasForOperationRequest", async () => {
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
 
     expect(gasCompAccountedOperationRequest.gasPrice).to.eql(1n);

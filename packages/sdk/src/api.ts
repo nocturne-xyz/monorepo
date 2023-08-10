@@ -6,6 +6,7 @@ import {
   SignedOperation,
   StealthAddress,
   SyncOpts,
+  OperationRequestWithMetadata,
 } from "@nocturne-xyz/wallet-sdk";
 import { GetSnapsResponse, Snap } from "./metamask/types";
 import {
