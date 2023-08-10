@@ -62,8 +62,8 @@ export class TestActor {
   erc20s: Map<string, Erc20Config>;
   logger: Logger;
   metrics: TestActorMetrics;
-  chainId?: bigint;
 
+  _chainId?: bigint;
   _address?: Address;
 
   constructor(
@@ -152,7 +152,7 @@ export class TestActor {
 
   async run(opts?: TestActorOpts): Promise<void> {
     // set chainid
-    this.chainId = BigInt(await this.txSigner.getChainId());
+    this._chainId = BigInt(await this.txSigner.getChainId());
     this._address = await this.txSigner.getAddress();
 
     const depositIntervalSeconds =
@@ -390,7 +390,7 @@ export class TestActor {
         [this._address!, value] // transfer funds back to self
       );
 
-    const chainId = this.chainId ?? BigInt(await this.txSigner.getChainId());
+    const chainId = this._chainId ?? BigInt(await this.txSigner.getChainId());
 
     return new OperationRequestBuilder({
       chainId,

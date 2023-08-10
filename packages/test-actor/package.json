@@ -22,7 +22,7 @@
     "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit"
   },
   "dependencies": {
-    "@nocturne-xyz/config": "1.0.16-alpha",
+    "@nocturne-xyz/config": "1.0.17-testnet",
     "@nocturne-xyz/contracts": "1.0.34-testnet",
     "@nocturne-xyz/local-prover": "1.0.8-testnet",
     "@nocturne-xyz/offchain-utils": "0.1.10",

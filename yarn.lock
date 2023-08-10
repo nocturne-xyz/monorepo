@@ -2844,7 +2844,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
-    "@nocturne-xyz/config": 1.0.16-alpha
+    "@nocturne-xyz/config": 1.0.17-testnet
     "@nocturne-xyz/contracts": 1.0.34-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.179-testnet
@@ -2901,18 +2901,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@npm:1.0.16-alpha":
-  version: 1.0.16-alpha
-  resolution: "@nocturne-xyz/config@npm:1.0.16-alpha"
-  dependencies:
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    ethers: ^5.7.2
-  checksum: 7c43151e16bc5934cb3145c120f921d34f7ad49df8865be804a2c70e525772978e4d151945bc045ec891e1ed494856a19c729f263def99cdb07ab7567a57352e
-  languageName: node
-  linkType: hard
-
-"@nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
+"@nocturne-xyz/config@1.0.17-testnet, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/config@workspace:packages/config"
   dependencies:
@@ -3015,7 +3004,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
-    "@nocturne-xyz/config": 1.0.16-alpha
+    "@nocturne-xyz/config": 1.0.17-testnet
     "@nocturne-xyz/contracts": 1.0.34-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.179-testnet
@@ -3269,7 +3258,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
-    "@nocturne-xyz/config": 1.0.16-alpha
+    "@nocturne-xyz/config": 1.0.17-testnet
     "@nocturne-xyz/contracts": 1.0.34-testnet
     "@nocturne-xyz/crypto-utils": 0.1.6
     "@nocturne-xyz/offchain-utils": 0.1.10
@@ -3310,7 +3299,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/test-actor@workspace:packages/test-actor"
   dependencies:
-    "@nocturne-xyz/config": 1.0.16-alpha
+    "@nocturne-xyz/config": 1.0.17-testnet
     "@nocturne-xyz/contracts": 1.0.34-testnet
     "@nocturne-xyz/local-prover": 1.0.8-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
