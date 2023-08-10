@@ -15,7 +15,7 @@ const ENDPOINTS = {
     screenerEndpoint: "https://screener.nocturnelabs.xyz",
     bundlerEndpoint: "https://bundler.nocturnelabs.xyz",
   },
-  localnet: {
+  localhost: {
     screenerEndpoint: "http://localhost:3001",
     bundlerEndpoint: "http://localhost:3000",
   },
@@ -111,8 +111,8 @@ const getEndpoints = (networkName: SupportedNetwork) => {
   switch (networkName) {
     case "sepolia":
       return ENDPOINTS.sepolia;
-    case "localnet":
-      return ENDPOINTS.localnet;
+    case "localhost":
+      return ENDPOINTS.localhost;
     default:
       throw new Error(`Network not supported: ${networkName}`);
   }
@@ -128,3 +128,17 @@ export const getNocturneSdkConfig = (
     endpoints,
   };
 };
+
+type MapperFn<A, B> = (input: A) => B;
+
+export class Chain<A> {
+  constructor(private _value: A) {}
+
+  map<B>(fn: MapperFn<A, B>): Chain<B> {
+    return new Chain(fn(this._value));
+  }
+
+  get value(): A {
+    return this._value;
+  }
+}

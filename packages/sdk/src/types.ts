@@ -10,8 +10,6 @@ import {
 } from "@nocturne-xyz/wallet-sdk";
 import { ContractTransaction } from "ethers";
 
-export type BundlerOperationID = string;
-
 export interface Endpoints {
   screenerEndpoint: string;
   bundlerEndpoint: string;
@@ -37,7 +35,7 @@ export interface NocturneSdkConfig {
   endpoints: Endpoints;
 }
 
-export type SupportedNetwork = "sepolia" | "mainnet" | "localnet";
+export type SupportedNetwork = "sepolia" | "mainnet" | "localhost";
 
 export interface GetBalanceOpts {
   includeUncommitted?: boolean;

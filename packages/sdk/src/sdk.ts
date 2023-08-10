@@ -41,9 +41,8 @@ import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction, ethers } from "ethers";
 import { NocturneSdkApi } from "./api";
-import vkey from "./joinsplit/joinsplitVkey.json";
+import vkey from "../circuit-artifacts/joinsplit/joinsplitVkey.json";
 import {
-  BundlerOperationID,
   DepositHandle,
   GetBalanceOpts,
   InitiateDepositResult,
@@ -54,6 +53,7 @@ import {
   SyncWithProgressOutput,
 } from "./types";
 import {
+  Chain,
   SNAP_ID,
   SUBGRAPH_URL,
   ValidProvider,
@@ -62,8 +62,8 @@ import {
   getTokenContract,
 } from "./utils";
 
-const WASM_PATH = "/joinsplit/joinsplit.wasm"; // ! TODO this pathing style might be outdated, no longer work
-const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
+const WASM_PATH = "../circuit-artifacts/joinsplit/joinsplit.wasm";
+const ZKEY_PATH = "../circuit-artifacts/joinsplit/joinsplit.zkey";
 
 export class NocturneSdk implements NocturneSdkApi {
   protected joinSplitProver: WasmJoinSplitProver;
@@ -128,7 +128,6 @@ export class NocturneSdk implements NocturneSdkApi {
    * @param gasCompensationPerDeposit Gas compensation per deposit
    */
   async initiateEthDeposits(
-    // TODO make API response conform to new change
     values: bigint[],
     gasCompensationPerDeposit: bigint
   ): Promise<InitiateDepositResult> {
@@ -151,12 +150,12 @@ export class NocturneSdk implements NocturneSdkApi {
     const tx = await this.depositManagerContract(
       signer
     ).instantiateETHMultiDeposit(values, depositAddr, { value: totalValue });
-    const erc20s = this.config.network.erc20s; // TODO holy hack, need to refactor config for better consumption
+    const erc20s = this.config.network.erc20s;
     const wethAddress = (
       erc20s.get("weth") ??
       erc20s.get("WETH") ??
       erc20s.get("Weth")
-    )?.address;
+    )?.address; // TODO holy hack, need to refactor config for better consumption
     if (!wethAddress) {
       throw new Error("WETH address not found in Nocturne config");
     }
@@ -171,7 +170,7 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   async getAllDeposits(): Promise<DepositHandle[]> {
-    // TODO unless there's some other way, will entail adding gql consumer to fe-sdk
+    // TODO
     throw new Error("Not yet implemented!");
   }
 
@@ -229,7 +228,7 @@ export class NocturneSdk implements NocturneSdkApi {
     erc20Address: Address,
     amount: bigint,
     recipientAddress: Address
-  ): Promise<BundlerOperationID> {
+  ): Promise<OperationHandle> {
     const signer = await this.getWindowSigner();
     const provider = signer.provider;
 
@@ -267,7 +266,11 @@ export class NocturneSdk implements NocturneSdkApi {
       request: operationRequest,
       metadata: { action },
     });
-    return this.submitOperation(provenOperation);
+    const opHandleWithoutMetadata = this.submitOperation(provenOperation);
+    return {
+      ...opHandleWithoutMetadata,
+      metadata: { action },
+    };
   }
 
   /**
@@ -410,12 +413,8 @@ export class NocturneSdk implements NocturneSdkApi {
     return results.every((result) => result);
   }
 
-  // Submit a proven operation to the bundler server
-  // returns the bundler's ID for the submitted operation, which can be used to check the status of the operation
-  async submitOperation(
-    operation: ProvenOperation
-  ): Promise<BundlerOperationID> {
-    return await retry(
+  async submitOperation(operation: ProvenOperation): Promise<OperationHandle> {
+    const opDigest = (await retry(
       async () => {
         const res = await fetch(`${this.bundlerEndpoint}/relay`, {
           method: "POST",
@@ -439,7 +438,13 @@ export class NocturneSdk implements NocturneSdkApi {
       {
         retries: 5,
       }
-    );
+    )) as string;
+    const digest = BigInt(opDigest);
+    return {
+      digest,
+      getStatus: () => this.fetchBundlerOperationStatus(digest),
+      metadata: undefined,
+    };
   }
 
   async signAndProveOperation(
@@ -648,11 +653,9 @@ export class NocturneSdk implements NocturneSdkApi {
   ): InitiateDepositResult {
     const depositRequest: DepositRequest = {
       spender,
-      encodedAsset: AssetTrait.encode({
-        assetType: AssetType.ERC20,
-        assetAddr: assetAddr,
-        id: 0n, // TODO what is id?
-      }),
+      encodedAsset: new Chain(assetAddr)
+        .map(AssetTrait.erc20AddressToAsset)
+        .map(AssetTrait.encode).value,
       value: depositValue,
       depositAddr,
       nonce: BigInt(tx.nonce), // ! TODO confirm the nonce should be from tx

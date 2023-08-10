@@ -99,7 +99,7 @@ export function loadNocturneConfigBuiltin(name: string): NocturneConfig {
   switch (name) {
     case "sepolia":
       return NocturneConfig.fromObject(sepolia as any);
-    case "localnet":
+    case "localhost":
       return NocturneConfig.fromObject(localhost as any);
     case "example-network":
       return NocturneConfig.fromObject(exampleNetwork as any);
