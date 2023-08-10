@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/snap",
-  "version": "1.0.15-testnet",
+  "version": "1.0.17-testnet",
   "description": "Nocturne Snap",
   "license": "(MIT-0 OR Apache-2.0)",
   "main": "src/index.ts",
@@ -23,7 +23,7 @@
     "manifest:fix": "mm-snap manifest --fix",
     "prettier:check": "prettier --check ./src",
     "prettier:write": "prettier --write ./src",
-    "publish": "yarn build && yarn npm publish --access public",
+    "publish": "yarn build:clean && yarn npm publish --access public",
     "serve": "mm-snap serve",
     "start": "mm-snap watch",
     "test:unit": ""
