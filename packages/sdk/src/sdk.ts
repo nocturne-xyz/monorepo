@@ -40,7 +40,7 @@ import {
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction, ethers } from "ethers";
-import { NocturneSdkApi } from "./api";
+import { NocturneSdkApi, SnapStateApi } from "./api";
 import vkey from "../circuit-artifacts/joinsplit/joinsplitVkey.json";
 import {
   DepositHandle,
@@ -61,6 +61,7 @@ import {
   getProvider,
   getTokenContract,
 } from "./utils";
+import { SnapStateSdk } from "./metamask";
 
 const WASM_PATH = "../circuit-artifacts/joinsplit/joinsplit.wasm";
 const ZKEY_PATH = "../circuit-artifacts/joinsplit/joinsplit.zkey";
@@ -71,6 +72,7 @@ export class NocturneSdk implements NocturneSdkApi {
   protected screenerEndpoint: string;
   protected config: NocturneSdkConfig;
   protected _provider: ValidProvider | undefined;
+  protected _snap: SnapStateApi;
 
   // Caller MUST conform to EIP-1193 spec (window.ethereum) https://eips.ethereum.org/EIPS/eip-1193
   constructor(
@@ -87,7 +89,13 @@ export class NocturneSdk implements NocturneSdkApi {
     this.screenerEndpoint = config.endpoints.screenerEndpoint;
     this.config = config;
     this._provider = provider;
+    this._snap = new SnapStateSdk();
   }
+
+  get snap(): SnapStateApi {
+    return this._snap;
+  }
+
   protected get provider(): ValidProvider {
     // we cannot directly assign provider from constructor, as window is not defined at compile-time, so would fail for callers
     if (typeof window === "undefined") {

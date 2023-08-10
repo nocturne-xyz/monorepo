@@ -15,6 +15,7 @@ import {
   OperationRequestWithMetadata,
   SyncWithProgressOutput,
 } from "./types";
+import { GetSnapOptions, GetSnapsResponse, Snap } from "./metamask/types";
 
 export interface NocturneSdkApi {
   // *** DEPOSIT METHODS *** //
@@ -107,4 +108,41 @@ export interface NocturneSdkApi {
   getLatestSyncedMerkleIndex(): Promise<number | undefined>;
 
   getRandomStealthAddress(): Promise<StealthAddress>;
+}
+
+// *** SNAP STATE METHODS *** //
+export interface SnapStateApi {
+  /**
+   * Detect if the wallet injecting the ethereum object is Flask.
+   *
+   * @returns true if the MetaMask version is Flask, false otherwise.
+   */
+  isFlask(): Promise<boolean>;
+
+  /**
+   * Connect a snap to MetaMask.
+   * https://docs.metamask.io/snaps/reference/rpc-api/#wallet_requestsnaps
+   *
+   * @param options - The optional request object to connect the snap.
+   * @returns The snaps installed in MetaMask.
+   */
+  connect(options?: GetSnapOptions): Promise<GetSnapsResponse>;
+
+  /**
+   * Get the snap from MetaMask.
+   *
+   * @param options - The optional request object to connect the snap.
+   * @returns The snap object returned by the extension.
+   */
+  getSnap(options?: GetSnapOptions): Promise<Snap | undefined>;
+
+  /**
+   * Clear the Snap DB, upon local dev restart or odd behavior in testnet.
+   *
+   * @param env - The environment to clear the DB in. Should only be cleared in "development" or "testnet"
+   */
+  clearDb(
+    env: "development" | "testnet" | string,
+    snapId?: string
+  ): Promise<void>;
 }
