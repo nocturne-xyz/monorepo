@@ -13,7 +13,6 @@ import {
   GetBalanceOpts,
   InitiateDepositResult,
   OperationHandle,
-  OperationRequestWithMetadata,
   SyncWithProgressOutput,
 } from "./types";
 
@@ -64,7 +63,7 @@ export interface NocturneSdkApi {
   submitOperation(operation: ProvenOperation): Promise<OperationHandle>;
 
   signAndProveOperation(
-    operationRequest: OperationRequestWithMetadata
+    operationRequest: OperationRequestWithMetadata // TODO need to grab this from wallet-sdk, once we republish
   ): Promise<ProvenOperation>;
 
   getInFlightOperations(): Promise<OperationHandle[]>;

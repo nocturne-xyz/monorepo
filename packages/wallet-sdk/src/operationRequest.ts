@@ -1,4 +1,10 @@
-import { Asset, Address, Action } from "./primitives";
+import {
+  Asset,
+  Address,
+  Action,
+  OperationMetadata,
+  ActionMetadata,
+} from "./primitives";
 import { CanonAddress, StealthAddress } from "./crypto";
 import { groupByArr } from "./utils";
 import { ethers } from "ethers";
@@ -22,6 +28,11 @@ export interface OperationRequest {
   executionGasLimit?: bigint;
   maxNumRefunds?: bigint;
   gasPrice?: bigint;
+}
+
+export interface OperationRequestWithMetadata {
+  request: OperationRequest;
+  meta: OperationMetadata;
 }
 
 export interface GasAccountedOperationRequest
@@ -53,12 +64,12 @@ interface ConfidentialPayment {
 
 export class OperationRequestBuilder {
   private op: OperationRequest;
+  private metadata: OperationMetadata;
   private joinSplitsAndPaymentsByAsset: Map<
     Asset,
     JoinSplitsAndPaymentsForAsset
   >;
 
-  // constructor takes no parameters. `new NocturneOperationBuilder()`
   constructor() {
     this.op = {
       joinSplitRequests: [],
@@ -68,6 +79,9 @@ export class OperationRequestBuilder {
       deadline: 0n,
     };
 
+    this.metadata = {
+      items: [],
+    };
     this.joinSplitsAndPaymentsByAsset = new Map();
   }
 
@@ -75,14 +89,26 @@ export class OperationRequestBuilder {
   // returns `this` so it's chainable
   action(
     contractAddress: Address,
-    encodedFunction: string
+    encodedFunction: string,
+    meta: {
+      recipientAddress: Address;
+      amount: bigint;
+    } // ! TODO need to enforce on all callers
   ): OperationRequestBuilder {
     const action: Action = {
       contractAddress: ethers.utils.getAddress(contractAddress),
       encodedFunction,
     };
-
     this.op.actions.push(action);
+
+    const { recipientAddress, amount } = meta;
+    const metadata: ActionMetadata = {
+      type: "Transfer",
+      recipientAddress,
+      erc20Address: contractAddress,
+      amount,
+    };
+    this.metadata.items.push(metadata);
     return this;
   }
 
@@ -123,6 +149,11 @@ export class OperationRequestBuilder {
     payments.push(payment);
     this.joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
 
+    this.metadata.items.push({
+      recipient: receiver,
+      asset,
+      amount: amountUnits,
+    });
     return this;
   }
 
@@ -183,7 +214,7 @@ export class OperationRequestBuilder {
   // if `refundAddr` was not called, the refund address will not be set.
   // In the output, unwraps, actions, and refunds are guaranteed
   // to appear in the order their corresponding methods were invoked
-  build(): OperationRequest {
+  build(): OperationRequestWithMetadata {
     const joinSplitRequests = [];
 
     // consolidate joinSplits and payments for each asset
@@ -241,7 +272,7 @@ export class OperationRequestBuilder {
       throw new Error("No joinSplits or payments specified");
     }
 
-    return this.op;
+    return { request: this.op, meta: this.metadata };
   }
 }
 
