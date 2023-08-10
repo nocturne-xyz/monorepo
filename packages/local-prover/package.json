@@ -9,7 +9,7 @@
     "src/**/*"
   ],
   "scripts": {
-    "build": "tsc --build",
+    "build": "yarn clean; tsc --build",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "gen-test-cases": "yarn gen-test-cases:joinsplit && yarn gen-test-cases:subtreeupdate",
@@ -19,7 +19,7 @@
     "prettier:check": "prettier --check ./src ./scripts",
     "prettier:write": "prettier --write ./src ./scripts",
     "test:unit": "",
-    "publish": "yarn clean; yarn build; yarn npm publish --access public"
+    "publish": "yarn build; yarn npm publish --access public"
   },
   "dependencies": {
     "@nocturne-xyz/crypto-utils": "^0.1.7",

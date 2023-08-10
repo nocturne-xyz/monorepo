@@ -24,9 +24,9 @@ import { heading, panel, text } from "@metamask/snaps-ui";
 // Sepolia
 const RPC_URL =
   "https://eth-sepolia.g.alchemy.com/v2/0xjMuoUbPaLxWwD9EqOUFoJTuRh7qh0t";
-const BUNDLER_URL = "https://bundler.nocturnelabs.xyz";
+const BUNDLER_URL = "https://bundler.testnet.nocturnelabs.xyz";
 const SUBGRAPH_API_URL =
-  "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.19-testnet/gn";
+  "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.21-testnet/gn";
 const config = loadNocturneConfigBuiltin("sepolia");
 
 const NOCTURNE_BIP44_COINTYPE = 6789;
