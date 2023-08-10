@@ -64,7 +64,7 @@ export interface NocturneSdkApi {
   submitOperation(operation: ProvenOperation): Promise<OperationHandle>;
 
   signAndProveOperation(
-    operationRequest: OperationRequestWithMetadata // TODO need to grab this from wallet-sdk, once we republish
+    operationRequest: OperationRequestWithMetadata
   ): Promise<ProvenOperation>;
 
   getInFlightOperations(): Promise<OperationHandle[]>;
