@@ -1,42 +1,39 @@
 {
   "contracts": {
-    "network": {
-      "name": "sepolia",
-      "chainId": 11155111
-    },
-    "startBlock": 3678402,
+    "network": { "name": "sepolia", "chainId": 11155111 },
+    "startBlock": 4058710,
     "owners": {
       "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "tellerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "handlerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "depositManagerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4"
     },
-    "proxyAdmin": "0x5edCc5B9fB405F6d856223F33d515d6D2135c410",
+    "proxyAdmin": "0xC23a1525F71Bb58d6161C54Db54714148BeD4d8b",
     "depositManagerProxy": {
       "kind": "Transparent",
-      "proxy": "0x75C01A4359C98df2cB602313bb989fdf4aC45e5e",
-      "implementation": "0x3b119d6d94C3f021b4F72AD87754D86B73b873be"
+      "proxy": "0x2163E111fbD849C6c2F735a64981f13162BB672E",
+      "implementation": "0x72Ad2Ef391e870A94C3A849727f1A5C27E426195"
     },
     "tellerProxy": {
       "kind": "Transparent",
-      "proxy": "0xFB43BC11cbeBF5A3EFa795a117356E6dFc013DA3",
-      "implementation": "0x5bbA31ABfCA2A78a8ef09c8368D1b96D7870cc6E"
+      "proxy": "0xf967e5ba8de7131B52d47C2c0b1a7b4681a9f12a",
+      "implementation": "0x55315794F0F10897B00dC69C6aab626FcE2a910a"
     },
     "handlerProxy": {
       "kind": "Transparent",
-      "proxy": "0x86356407e7412721B582517F06e1793eC82Fb748",
-      "implementation": "0xcb7c6EbEa031A693D91876470CB2c21a5562c00d"
+      "proxy": "0x102DbB232998C4441a0614AB757aa5100244f146",
+      "implementation": "0x7A3cB4F3f30B5b0829A0b5aCEBf7ee00529a2d35"
     },
-    "joinSplitVerifierAddress": "0x10FfDc059A723d84baB4B16CEe2c178fEA55853B",
-    "subtreeUpdateVerifierAddress": "0xE6C53026B9b489F9435Df30baf476dBB96ACe07b",
+    "joinSplitVerifierAddress": "0xB1a82cCD0DA693E479cA0EEaaC28333676fF89d2",
+    "subtreeUpdateVerifierAddress": "0x03061749176cBBD98bE278EF9Aa1EE846155E25F",
     "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
-    "depositSources": ["0x75C01A4359C98df2cB602313bb989fdf4aC45e5e"]
+    "depositSources": ["0x2163E111fbD849C6c2F735a64981f13162BB672E"]
   },
   "erc20s": [
     [
       "TEST-TOKEN",
       {
-        "address": "0x4F8988F365a8C73d02e119076Bec71a1265D80Cd",
+        "address": "0x8bDF03a7ED22C49eCc7F91F4C22d7Ca46d6e59DF",
         "globalCapWholeTokens": "1000000n",
         "maxDepositSizeWholeTokens": "1000n",
         "precision": "18n",
@@ -64,8 +61,35 @@
     ]
   ],
   "protocolAllowlist": [
-    ["TEST-TOKEN", "0x4F8988F365a8C73d02e119076Bec71a1265D80Cd"],
-    ["weth", "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9"],
-    ["dai", "0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6"]
+    [
+      "TEST-TOKEN",
+      {
+        "address": "0x8bDF03a7ED22C49eCc7F91F4C22d7Ca46d6e59DF",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "weth",
+      {
+        "address": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "dai",
+      {
+        "address": "0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ]
   ]
 }
