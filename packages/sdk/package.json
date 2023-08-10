@@ -9,14 +9,14 @@
     "src/**/*"
   ],
   "scripts": {
-    "build": "tsc --build",
+    "build": "yarn clean; tsc --build",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test",
     "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit",
-    "publish": "yarn clean; yarn build; yarn npm publish --access public",
+    "publish": "yarn build; yarn npm publish --access public",
     "gen-test-cases:operationhash": "npx ts-node ./scripts/genOperationHashTestCase.ts"
   },
   "dependencies": {
