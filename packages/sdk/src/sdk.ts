@@ -53,7 +53,7 @@ import {
   SyncWithProgressOutput,
 } from "./types";
 import {
-  Chain,
+  FnChain,
   SNAP_ID,
   SUBGRAPH_URL,
   ValidProvider,
@@ -653,7 +653,7 @@ export class NocturneSdk implements NocturneSdkApi {
   ): InitiateDepositResult {
     const depositRequest: DepositRequest = {
       spender,
-      encodedAsset: new Chain(assetAddr)
+      encodedAsset: new FnChain(assetAddr)
         .map(AssetTrait.erc20AddressToAsset)
         .map(AssetTrait.encode).value,
       value: depositValue,

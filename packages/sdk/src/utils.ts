@@ -131,11 +131,11 @@ export const getNocturneSdkConfig = (
 
 type MapperFn<A, B> = (input: A) => B;
 
-export class Chain<A> {
+export class FnChain<A> {
   constructor(private _value: A) {}
 
-  map<B>(fn: MapperFn<A, B>): Chain<B> {
-    return new Chain(fn(this._value));
+  map<B>(fn: MapperFn<A, B>): FnChain<B> {
+    return new FnChain(fn(this._value));
   }
 
   get value(): A {
