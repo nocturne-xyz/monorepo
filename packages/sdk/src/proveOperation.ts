@@ -4,6 +4,8 @@ import {
   SignedOperation,
   ProvenJoinSplit,
   ProvenOperation,
+  toSubmittableOperation,
+  SubmittableOperationWithNetworkInfo,
 } from "./primitives";
 import {
   JoinSplitProver,
@@ -18,7 +20,7 @@ const MAX_PARALLEL_PROVERS = 4;
 export async function proveOperation(
   prover: JoinSplitProver,
   op: SignedOperation
-): Promise<ProvenOperation> {
+): Promise<SubmittableOperationWithNetworkInfo> {
   const joinSplits: ProvenJoinSplit[] = [];
   for (const batch of iterChunks(op.joinSplits, MAX_PARALLEL_PROVERS)) {
     const provenBatch = await Promise.all(
@@ -27,32 +29,12 @@ export async function proveOperation(
     joinSplits.push(...provenBatch);
   }
 
-  const {
-    networkInfo,
-    refundAddr,
-    encodedRefundAssets,
-    actions,
-    encodedGasAsset,
-    gasAssetRefundThreshold,
-    executionGasLimit,
-    gasPrice,
-    deadline,
-    atomicActions,
-  } = op;
-
-  return {
-    networkInfo,
+  const operation: ProvenOperation = {
+    ...op,
     joinSplits,
-    refundAddr,
-    encodedRefundAssets,
-    actions,
-    encodedGasAsset,
-    gasAssetRefundThreshold,
-    executionGasLimit,
-    gasPrice,
-    deadline,
-    atomicActions,
   };
+
+  return toSubmittableOperation(operation);
 }
 
 async function proveJoinSplit(

@@ -32,10 +32,10 @@ import {
   proveOperation,
   unpackFromSolidityProof,
   OperationStatusResponse,
-  toSubmittableOperation,
   decomposeCompressedPoint,
   SyncOpts,
   ClosableAsyncIterator,
+  SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction } from "ethers";
@@ -335,14 +335,16 @@ export class NocturneFrontendSDK {
   async signAndProveOperation(
     operationRequest: OperationRequest,
     opMetadata: OperationMetadata
-  ): Promise<ProvenOperation> {
+  ): Promise<SubmittableOperationWithNetworkInfo> {
     const op = await this.requestSignOperation(operationRequest, opMetadata);
 
     console.log("SignedOperation:", op);
     return await this.proveOperation(op);
   }
 
-  async proveOperation(op: SignedOperation): Promise<ProvenOperation> {
+  async proveOperation(
+    op: SignedOperation
+  ): Promise<SubmittableOperationWithNetworkInfo> {
     return await proveOperation(this.joinSplitProver, op);
   }
 
@@ -404,9 +406,8 @@ export class NocturneFrontendSDK {
   // Submit a proven operation to the bundler server
   // returns the bundler's ID for the submitted operation, which can be used to check the status of the operation
   async submitProvenOperation(
-    operation: ProvenOperation
+    operation: SubmittableOperationWithNetworkInfo
   ): Promise<BundlerOperationID> {
-    const op = toSubmittableOperation(operation);
     return await retry(
       async () => {
         const res = await fetch(`${this.bundlerEndpoint}/relay`, {
@@ -414,7 +415,7 @@ export class NocturneFrontendSDK {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ operation: op } as RelayRequest),
+          body: JSON.stringify({ operation } as RelayRequest),
         });
 
         const resJSON = await res.json();
