@@ -40,8 +40,10 @@ import {
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction, ethers } from "ethers";
-import { NocturneSdkApi, SnapStateApi } from "./api";
 import vkey from "../circuit-artifacts/joinsplit/joinsplitVkey.json";
+import { NocturneSdkApi, SnapStateApi } from "./api";
+import { SnapStateSdk } from "./metamask";
+import { GetSnapOptions } from "./metamask/types";
 import {
   DepositHandle,
   GetBalanceOpts,
@@ -61,7 +63,6 @@ import {
   getProvider,
   getTokenContract,
 } from "./utils";
-import { SnapStateSdk } from "./metamask";
 
 const WASM_PATH = "../circuit-artifacts/joinsplit/joinsplit.wasm";
 const ZKEY_PATH = "../circuit-artifacts/joinsplit/joinsplit.zkey";
@@ -75,10 +76,15 @@ export class NocturneSdk implements NocturneSdkApi {
   protected _snap: SnapStateApi;
 
   // Caller MUST conform to EIP-1193 spec (window.ethereum) https://eips.ethereum.org/EIPS/eip-1193
-  constructor(
-    networkName: SupportedNetwork = "mainnet",
-    provider?: ValidProvider
-  ) {
+  constructor({
+    networkName = "mainnet",
+    provider,
+    snap,
+  }: {
+    networkName?: SupportedNetwork;
+    provider?: ValidProvider;
+    snap?: GetSnapOptions;
+  } = {}) {
     const config = getNocturneSdkConfig(networkName);
     this.joinSplitProver = new WasmJoinSplitProver(
       WASM_PATH,
@@ -89,7 +95,7 @@ export class NocturneSdk implements NocturneSdkApi {
     this.screenerEndpoint = config.endpoints.screenerEndpoint;
     this.config = config;
     this._provider = provider;
-    this._snap = new SnapStateSdk();
+    this._snap = new SnapStateSdk(snap?.version, snap?.snapId, networkName);
   }
 
   get snap(): SnapStateApi {

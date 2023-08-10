@@ -1,9 +1,16 @@
-import { GetSnapOptions, GetSnapsResponse, Snap } from "./types";
 import { SnapStateApi } from "../api";
+import { SupportedNetwork } from "../types";
+import { GetSnapsResponse, Snap } from "./types";
 
 const NOCTURNE_SNAP_ORIGIN = "npm:@nocturne-xyz/snap";
 
 export class SnapStateSdk implements SnapStateApi {
+  constructor(
+    private version?: string,
+    private snapId: string = NOCTURNE_SNAP_ORIGIN,
+    private env: SupportedNetwork = "mainnet"
+  ) {}
+
   isFlask = async (): Promise<boolean> => {
     const provider = window.ethereum;
 
@@ -20,29 +27,25 @@ export class SnapStateSdk implements SnapStateApi {
     }
   };
 
-  connect = async ({
-    version,
-    snapId = NOCTURNE_SNAP_ORIGIN,
-  }: GetSnapOptions): Promise<GetSnapsResponse> => {
+  connect = async (): Promise<GetSnapsResponse> => {
     return (await window.ethereum.request({
       method: "wallet_requestSnaps",
       params: {
-        [snapId]: {
-          version,
+        [this.snapId]: {
+          version: this.version,
         },
       },
     })) as unknown as GetSnapsResponse;
   };
 
-  getSnap = async ({
-    version,
-    snapId = NOCTURNE_SNAP_ORIGIN,
-  }: GetSnapOptions): Promise<Snap | undefined> => {
+  get = async (): Promise<Snap | undefined> => {
     try {
       const snaps = await this.getSnaps();
 
       return Object.values(snaps).find(
-        (snap) => snap.id === snapId && (!version || snap.version === version)
+        (snap) =>
+          snap.id === this.snapId &&
+          (!this.version || snap.version === this.version)
       );
     } catch (e) {
       console.log("Failed to obtain installed snap", e);
@@ -50,15 +53,13 @@ export class SnapStateSdk implements SnapStateApi {
     }
   };
 
-  clearDb = async (
-    env: "development" | "testnet" | string,
-    snapId = NOCTURNE_SNAP_ORIGIN
-  ): Promise<void> => {
-    if (env !== "development" && env !== "testnet") {
+  clearDb = async (): Promise<void> => {
+    if (this.env !== "localhost" && this.env !== "sepolia") {
       throw new Error(
-        "Method clearDb is only available in development and testnet"
+        "Method clearDb is only available in localhost and sepolia"
       );
     }
+    const snapId = this.snapId;
     await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
