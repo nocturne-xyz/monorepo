@@ -1,4 +1,3 @@
-import { NocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager,
   DepositManager__factory,
@@ -37,10 +36,7 @@ import {
   joinSplitPublicSignalsToArray,
   proveOperation,
   unpackFromSolidityProof,
-  OperationStatusResponse,
   decomposeCompressedPoint,
-  SyncOpts,
-  ClosableAsyncIterator,
   SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/sdk";
 import retry from "async-retry";

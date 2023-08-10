@@ -103,11 +103,6 @@ export const run = new Command("run")
       throw new Error("missing SUBGRAPH_URL");
     }
 
-    const privateKey = process.env.TX_SIGNER_KEY;
-    if (!privateKey) {
-      throw new Error("missing TX_SIGNER_KEY");
-    }
-
     // hex string
     const nocturneSKStr = process.env.NOCTURNE_SPENDING_KEY;
     if (!nocturneSKStr) {
