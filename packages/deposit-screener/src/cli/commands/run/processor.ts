@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { DepositScreenerScreener } from "../../../screener";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
-import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
 import { DummyScreeningApi, ScreeningApi } from "../../../screening";
 import {
@@ -54,9 +54,10 @@ const runProcess = new Command("processor")
 
     const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
 
+    const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
       logDir,
-      "testnet2-deposit-screener",
+      `${configName}-deposit-screener`,
       "processor",
       stdoutLogLevel
     );

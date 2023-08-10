@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { DepositScreenerServer } from "../../../server";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { getRedis } from "./utils";
-import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import { DummyScreeningApi, ScreeningApi } from "../../../screening";
 import {
   DummyScreenerDelayCalculator,
@@ -65,9 +65,10 @@ const runServer = new Command("server")
     }
 
     console.log("making logger");
+    const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
       logDir,
-      "testnet2-deposit-screener",
+      `${configName}-deposit-screener`,
       "server",
       stdoutLogLevel
     );

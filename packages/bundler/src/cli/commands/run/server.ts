@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { BundlerServer } from "../../../server";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { getRedis } from "./utils";
-import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 
 const runServer = new Command("server")
   .summary("run bundler server")
@@ -34,9 +34,10 @@ const runServer = new Command("server")
     }
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
+    const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
       logDir,
-      "testnet2-bundler",
+      `${configName}-bundler`,
       "server",
       stdoutLogLevel
     );

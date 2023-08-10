@@ -64,11 +64,6 @@ export interface Endpoints {
   bundlerEndpoint: string;
 }
 
-export interface ContractAddresses {
-  depositManagerAddress: string;
-  handlerAddress: string;
-}
-
 export interface SyncProgress {
   latestSyncedMerkleIndex: number;
 }

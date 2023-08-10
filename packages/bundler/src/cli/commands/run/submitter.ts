@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { BundlerSubmitter } from "../../../submitter";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { getRedis } from "./utils";
-import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import {
   DefenderRelayProvider,
   DefenderRelaySigner,
@@ -56,9 +56,10 @@ const runSubmitter = new Command("submitter")
       );
     }
 
+    const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
       logDir,
-      "testnet2-bundler",
+      `${configName}-bundler`,
       "submitter",
       stdoutLogLevel
     );

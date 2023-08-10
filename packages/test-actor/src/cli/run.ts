@@ -1,4 +1,4 @@
-import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager__factory,
   Teller__factory,
@@ -81,9 +81,10 @@ export const run = new Command("run")
       stdoutLogLevel,
     } = options;
 
+    const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
       logDir,
-      "testnet2-test-actor",
+      `${configName}-test-actor`,
       "actor",
       stdoutLogLevel
     );

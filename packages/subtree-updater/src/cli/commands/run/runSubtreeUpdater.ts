@@ -4,7 +4,7 @@ import { SubtreeUpdater } from "../../../subtreeUpdater";
 import { SubgraphSubtreeUpdaterSyncAdapter } from "../../../sync/subgraph/adapter";
 import { getRedis } from "../utils";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
-import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import { Handler__factory } from "@nocturne-xyz/contracts";
 import {
   MockSubtreeUpdateProver,
@@ -74,9 +74,11 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       vkeyPath,
       stdoutLogLevel,
     } = options;
+
+    const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
       logDir,
-      "testnet2-subtree-updater",
+      `${configName}-subtree-updater`,
       "subtree-updater",
       stdoutLogLevel
     );
