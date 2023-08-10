@@ -40,8 +40,8 @@ export interface NocturneSdkConfig {
 export type SupportedNetwork = "sepolia" | "mainnet" | "localnet";
 
 export interface GetBalanceOpts {
-  includeUncommitted: boolean;
-  ignoreOptimisticNFs: boolean;
+  includeUncommitted?: boolean;
+  ignoreOptimisticNFs?: boolean;
 }
 
 export interface InitiateDepositResult {

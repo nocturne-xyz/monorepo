@@ -70,8 +70,9 @@ export class NocturneSdk implements NocturneSdkApi {
   protected bundlerEndpoint: string;
   protected screenerEndpoint: string;
   protected config: NocturneSdkConfig;
-  protected provider: ValidProvider;
+  protected _provider: ValidProvider | undefined;
 
+  // Caller MUST conform to EIP-1193 spec (window.ethereum) https://eips.ethereum.org/EIPS/eip-1193
   constructor(
     networkName: SupportedNetwork = "mainnet",
     provider?: ValidProvider
@@ -85,7 +86,16 @@ export class NocturneSdk implements NocturneSdkApi {
     this.bundlerEndpoint = config.endpoints.bundlerEndpoint;
     this.screenerEndpoint = config.endpoints.screenerEndpoint;
     this.config = config;
-    this.provider = provider || getProvider();
+    this._provider = provider;
+  }
+  protected get provider(): ValidProvider {
+    // we cannot directly assign provider from constructor, as window is not defined at compile-time, so would fail for callers
+    if (typeof window === "undefined") {
+      throw new Error(
+        "NocturneSdk must be instantiated in a browser environment"
+      );
+    }
+    return this._provider ?? getProvider();
   }
 
   protected depositManagerContract(
@@ -100,9 +110,14 @@ export class NocturneSdk implements NocturneSdkApi {
     signerOrProvider: ethers.Signer | ValidProvider
   ): Handler {
     return Handler__factory.connect(
-      this.config.network.depositManagerAddress(),
+      this.config.network.handlerAddress(),
       signerOrProvider
     );
+  }
+
+  protected async getWindowSigner(): Promise<ethers.Signer> {
+    await this.provider.send("eth_requestAccounts", []);
+    return this.provider.getSigner();
   }
 
   /**
@@ -486,25 +501,6 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   /**
-   * Given an operation digest, fetches and returns the operation status, enum'd as OperationStatus.
-   */
-  async fetchBundlerOperationStatus(
-    opDigest: bigint
-  ): Promise<OperationStatusResponse> {
-    return await retry(
-      async () => {
-        const res = await fetch(
-          `${this.bundlerEndpoint}/operations/${opDigest}`
-        );
-        return (await res.json()) as OperationStatusResponse;
-      },
-      {
-        retries: 5, // TODO later scope: this should probably be configurable by the caller
-      }
-    );
-  }
-
-  /**
    * Start syncing process, returning current merkle index at tip of chain and iterator
    * returning newly synced merkle indices as syncing process occurs.
    */
@@ -558,7 +554,7 @@ export class NocturneSdk implements NocturneSdkApi {
     const latestSyncedMerkleIndexJson = await this.invokeSnap({
       method: "nocturne_sync",
       params: {
-        syncOpts: syncOpts ?? JSON.stringify(syncOpts),
+        syncOpts: syncOpts ? JSON.stringify(syncOpts) : undefined,
       },
     });
 
@@ -611,6 +607,25 @@ export class NocturneSdk implements NocturneSdkApi {
     return withEntityIndices.map((e) => e.inner);
   }
 
+  /**
+   * Given an operation digest, fetches and returns the operation status, enum'd as OperationStatus.
+   */
+  protected async fetchBundlerOperationStatus(
+    opDigest: bigint
+  ): Promise<OperationStatusResponse> {
+    return await retry(
+      async () => {
+        const res = await fetch(
+          `${this.bundlerEndpoint}/operations/${opDigest}`
+        );
+        return (await res.json()) as OperationStatusResponse;
+      },
+      {
+        retries: 5, // TODO later scope: this should probably be configurable by the caller
+      }
+    );
+  }
+
   private async invokeSnap(request: {
     method: string;
     params?: object;
@@ -657,10 +672,5 @@ export class NocturneSdk implements NocturneSdkApi {
       tx,
       handle,
     };
-  }
-
-  private async getWindowSigner(): Promise<ethers.Signer> {
-    await this.provider.send("eth_requestAccounts", []);
-    return this.provider.getSigner();
   }
 }

@@ -16,8 +16,8 @@ const ENDPOINTS = {
     bundlerEndpoint: "https://bundler.nocturnelabs.xyz",
   },
   localnet: {
-    screenerEndpoint: "http://localhost:8000",
-    bundlerEndpoint: "http://localhost:8000",
+    screenerEndpoint: "http://localhost:3001",
+    bundlerEndpoint: "http://localhost:3000",
   },
 };
 
@@ -37,7 +37,7 @@ export type ValidProvider =
   | ethers.providers.Web3Provider;
 
 export function getProvider(): ValidProvider {
-  return new ethers.providers.Web3Provider(window.ethereum as any);
+  return new ethers.providers.Web3Provider(window?.ethereum as any);
 }
 
 export function getTokenContract(

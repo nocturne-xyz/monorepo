@@ -2908,7 +2908,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@1.0.15-testnet, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
+"@nocturne-xyz/config@npm:1.0.15-testnet":
+  version: 1.0.15-testnet
+  resolution: "@nocturne-xyz/config@npm:1.0.15-testnet"
+  dependencies:
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    ethers: ^5.7.2
+  checksum: 2e601061e270070463d1898147d744aadaf94e2dec92d20cb5d892cebf802124e72c7463262f047f4c6185fa0a2f9d1d8159999cdde31a6a591fcaa26ab2dedc
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/config@workspace:packages/config"
   dependencies:
@@ -3150,6 +3161,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
+    "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/wallet-sdk": "workspace:^"

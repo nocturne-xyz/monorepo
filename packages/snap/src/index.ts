@@ -98,7 +98,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
       console.log("Syncing...");
       await sdk.sync();
       return JSON.stringify(
-        await sdk.getBalanceForAsset(request.params as unknown as GetNotesOpts) // yikes typing
+        await sdk.getBalanceForAsset(request.params as unknown as any) // yikes typing
       );
     case "nocturne_sync":
       if (snapIsSyncing) {
