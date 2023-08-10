@@ -2,8 +2,8 @@
 
 ### Unreleased
 
-- revert back to ethers eip712 signer after fixing typehash ordering
 - replace tx manager with OZ relay
+- revert back to ethers eip712 signer after fixing typehash ordering
 - switch on screening/delay components in server/processor CLI
 - delete all dummy magic values and hardcode into dummy impls
 - add ENVIRONMENT env var to make sure we don't use dev values in production
