@@ -34,6 +34,7 @@ import {
   fetchDepositEvents,
   hashDepositRequest,
   joinSplitPublicSignalsToArray,
+  parseEventsFromContractReceipt,
   proveOperation,
   unpackFromSolidityProof,
 } from "@nocturne-xyz/core";
@@ -61,6 +62,7 @@ import {
   getProvider,
   getTokenContract,
 } from "./utils";
+import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 
 const WASM_PATH = "../circuit-artifacts/joinsplit/joinsplit.wasm";
 const ZKEY_PATH = "../circuit-artifacts/joinsplit/joinsplit.zkey";
@@ -155,14 +157,7 @@ export class NocturneSdk implements NocturneSdkApi {
     if (!wethAddress) {
       throw new Error("WETH address not found in Nocturne config");
     }
-    return this.formInitiateDepositResult(
-      await signer.getAddress(),
-      tx,
-      ethToWrap, // ! TODO confirm value should be ethToWrap, not totalValue
-      depositAddr,
-      wethAddress, // ! TODO confirm that the resulting Asset Type should be WETH
-      gasCompRequired
-    );
+    return this.formInitiateDepositResult(tx);
   }
 
   async getAllDeposits(): Promise<DepositHandle[]> {
@@ -204,14 +199,7 @@ export class NocturneSdk implements NocturneSdkApi {
     const tx = await this.depositManagerContract(
       signer
     ).instantiateErc20MultiDeposit(erc20Address, values, depositAddr);
-    return this.formInitiateDepositResult(
-      await signer.getAddress(),
-      tx,
-      depositAmount, // ! TODO confirm value should be depositAmount, not totalValue
-      depositAddr,
-      erc20Address,
-      gasCompRequired
-    );
+    return this.formInitiateDepositResult(tx);
   }
 
   /**
@@ -639,24 +627,37 @@ export class NocturneSdk implements NocturneSdkApi {
       },
     })) as string;
   }
-  private formInitiateDepositResult(
-    spender: string,
-    tx: ContractTransaction,
-    depositValue: bigint,
-    depositAddr: CompressedStealthAddress,
-    assetAddr: string,
-    gasCompensation: bigint
-  ): InitiateDepositResult {
+  private async formInitiateDepositResult(
+    tx: ContractTransaction
+  ): Promise<InitiateDepositResult> {
+    const signer = await this.getWindowSigner();
+    const event = parseEventsFromContractReceipt(
+      await tx.wait(),
+      this.depositManagerContract(signer).interface.getEvent(
+        "DepositInstantiated"
+      )
+    ).at(0) as DepositInstantiatedEvent | undefined;
+    if (!event) {
+      throw new Error("Deposit failed - no event found");
+    }
+    const { encodedAsset, value, nonce, depositAddr, gasCompensation } =
+      event.args;
+
     const depositRequest: DepositRequest = {
-      spender,
-      encodedAsset: new FnChain(assetAddr)
-        .map(AssetTrait.erc20AddressToAsset)
-        .map(AssetTrait.encode).value,
-      value: depositValue,
-      depositAddr,
-      nonce: BigInt(tx.nonce), // ! TODO confirm the nonce should be from tx
-      gasCompensation,
+      spender: await signer.getAddress(),
+      encodedAsset: {
+        encodedAssetAddr: encodedAsset.encodedAssetAddr.toBigInt(),
+        encodedAssetId: encodedAsset.encodedAssetId.toBigInt(),
+      },
+      value: value.toBigInt(),
+      depositAddr: {
+        h1: depositAddr.h1.toBigInt(),
+        h2: depositAddr.h2.toBigInt(),
+      },
+      nonce: nonce.toBigInt(),
+      gasCompensation: gasCompensation.toBigInt(),
     };
+
     const depositRequestHash = hashDepositRequest(depositRequest);
     const getStatus = async () =>
       this.fetchDepositRequestStatus(depositRequestHash);
