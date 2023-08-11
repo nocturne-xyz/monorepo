@@ -1,5 +1,6 @@
 {
   "name": "monorepo",
+  "private": true,
   "workspaces": [
     "packages/*",
     "actors/*",
