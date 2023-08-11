@@ -2,7 +2,8 @@
   "name": "monorepo",
   "workspaces": [
     "packages/*",
-    "actors/*"
+    "actors/*",
+    "apps/*"
   ],
   "scripts": {
     "build": "yarn turbo run --no-daemon build",
