@@ -1,11 +1,13 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
     "allowSyntheticDefaultImports": true,
-    "allowJs": true
+    "allowJs": true,
+    "preserveWatchOutput": true,
+    "skipLibCheck": true,
+    "noEmit": true,
   },
   "type": "module",
-  "exclude": ["node_modules", "dist", "config"],
+  "exclude": ["node_modules"],
   "include": ["index.ts", "src", "src/**/*.ts", "scripts/*.ts", "package.json"]
 }
