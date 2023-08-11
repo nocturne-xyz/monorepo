@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- replace tx manager with OZ relay
 - update relay schema after collapsing tracked assets into single array
 - use `SubmittableOperation` type everywhere instead of old `ProvenOperation` (now that joinsplits and assets are separated)
 - modify ajv validation after eip712 operation changes

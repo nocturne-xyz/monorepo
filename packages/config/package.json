@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/config",
-  "version": "1.0.15-alpha",
+  "version": "1.0.19-testnet",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

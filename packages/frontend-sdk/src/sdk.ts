@@ -1,6 +1,8 @@
 import {
   DepositManager,
   DepositManager__factory,
+  Handler,
+  Handler__factory,
 } from "@nocturne-xyz/contracts";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
@@ -9,30 +11,35 @@ import {
   AssetTrait,
   AssetType,
   AssetWithBalance,
+  ClosableAsyncIterator,
   DepositEvent,
   DepositQuoteResponse,
+  DepositRequest,
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
   OpDigestWithMetadata,
   OperationMetadata,
   OperationRequest,
   OperationRequestBuilder,
+  OperationStatusResponse,
   ProvenOperation,
   RelayRequest,
   SignedOperation,
   StealthAddress,
   StealthAddressTrait,
+  SyncOpts,
   VerifyingKey,
   computeOperationDigest,
   encodeEncodedAssetAddrWithSignBitsPI,
   fetchDepositEvents,
+  hashDepositRequest,
   joinSplitPublicSignalsToArray,
   proveOperation,
   unpackFromSolidityProof,
-  OperationStatusResponse,
-  toSubmittableOperation,
   decomposeCompressedPoint,
+  SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/sdk";
+import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction } from "ethers";
 import {
@@ -41,7 +48,6 @@ import {
   getTokenContract,
   getWindowSigner,
 } from "./utils";
-import retry from "async-retry";
 import {
   NocturneConfig,
   loadNocturneConfigBuiltin,
@@ -58,16 +64,28 @@ export interface Endpoints {
   bundlerEndpoint: string;
 }
 
+export interface SyncProgress {
+  latestSyncedMerkleIndex: number;
+}
+
+export interface SyncWithProgressOutput {
+  latestSyncedMerkleIndex: number;
+  latestMerkleIndexOnChain: number;
+  progressIter: ClosableAsyncIterator<SyncProgress>;
+}
+
 export class NocturneFrontendSDK {
   joinSplitProver: WasmJoinSplitProver;
   config: NocturneConfig;
   depositManagerContract: DepositManager;
+  handlerContract: Handler;
   bundlerEndpoint: string;
   screenerEndpoint: string;
 
   private constructor(
     config: NocturneConfig,
     depositManagerContract: DepositManager,
+    handlerContract: Handler,
     endpoints: Endpoints,
     wasmPath: string,
     zkeyPath: string,
@@ -75,9 +93,10 @@ export class NocturneFrontendSDK {
   ) {
     this.config = config;
     this.depositManagerContract = depositManagerContract;
-    this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
+    this.handlerContract = handlerContract;
     this.screenerEndpoint = endpoints.screenerEndpoint;
     this.bundlerEndpoint = endpoints.bundlerEndpoint;
+    this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
   }
 
   /**
@@ -104,9 +123,13 @@ export class NocturneFrontendSDK {
       signer
     );
 
+    const handlerAddress = config.handlerAddress();
+    const handlerContract = Handler__factory.connect(handlerAddress, signer);
+
     return new NocturneFrontendSDK(
       config,
       depositManagerContract,
+      handlerContract,
       endpoints,
       wasmPath,
       zkeyPath,
@@ -230,7 +253,7 @@ export class NocturneFrontendSDK {
     })
       .unwrap(encodedErc20, amount)
       .action(erc20Address, encodedFunction)
-      .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
+      .gas({ executionGasLimit: 500_000n })
       .build();
 
     const action: ActionMetadata = {
@@ -246,6 +269,25 @@ export class NocturneFrontendSDK {
     return this.submitProvenOperation(provenOperation);
   }
 
+  /**
+   * Initiates a deposit retrieval from the deposit manager contract.
+   */
+  async retrievePendingDeposit(
+    req: DepositRequest
+  ): Promise<ContractTransaction> {
+    const signer = await (await getWindowSigner()).getAddress();
+    if (signer.toLowerCase() !== req.spender.toLowerCase()) {
+      throw new Error("Spender and signer addresses do not match");
+    }
+    const isOutstandingDeposit =
+      await this.depositManagerContract._outstandingDepositHashes(
+        hashDepositRequest(req)
+      );
+    if (!isOutstandingDeposit) {
+      throw new Error("Deposit request does not exist");
+    }
+    return this.depositManagerContract.retrieveDeposit(req);
+  }
   /**
    * Fetch status of existing deposit request given its hash.
    *
@@ -308,15 +350,17 @@ export class NocturneFrontendSDK {
    */
   async signAndProveOperation(
     operationRequest: OperationRequest,
-    opMetadata?: OperationMetadata
-  ): Promise<ProvenOperation> {
+    opMetadata: OperationMetadata
+  ): Promise<SubmittableOperationWithNetworkInfo> {
     const op = await this.requestSignOperation(operationRequest, opMetadata);
 
     console.log("SignedOperation:", op);
     return await this.proveOperation(op);
   }
 
-  async proveOperation(op: SignedOperation): Promise<ProvenOperation> {
+  async proveOperation(
+    op: SignedOperation
+  ): Promise<SubmittableOperationWithNetworkInfo> {
     return await proveOperation(this.joinSplitProver, op);
   }
 
@@ -378,9 +422,8 @@ export class NocturneFrontendSDK {
   // Submit a proven operation to the bundler server
   // returns the bundler's ID for the submitted operation, which can be used to check the status of the operation
   async submitProvenOperation(
-    operation: ProvenOperation
+    operation: SubmittableOperationWithNetworkInfo
   ): Promise<BundlerOperationID> {
-    const op = toSubmittableOperation(operation);
     return await retry(
       async () => {
         const res = await fetch(`${this.bundlerEndpoint}/relay`, {
@@ -388,7 +431,7 @@ export class NocturneFrontendSDK {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ operation: op } as RelayRequest),
+          body: JSON.stringify({ operation } as RelayRequest),
         });
 
         const resJSON = await res.json();
@@ -474,18 +517,99 @@ export class NocturneFrontendSDK {
   }
 
   /**
-   * Invoke snap `syncNotes` method.
+   * Start syncing process, returning current merkle index at tip of chain and iterator
+   * returning newly synced merkle indices as syncing process occurs.
    */
-  async sync(): Promise<void> {
-    await window.ethereum.request({
+  async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
+    let latestMerkleIndexOnChain =
+      (await this.handlerContract.totalCount()).toNumber() - 1;
+    let latestSyncedMerkleIndex =
+      (await this.getLatestSyncedMerkleIndex()) ?? 0;
+
+    const NUM_REFETCHES = 5;
+    const refetchEvery = Math.floor(
+      (latestMerkleIndexOnChain - latestSyncedMerkleIndex) / NUM_REFETCHES
+    );
+
+    let closed = false;
+    const generator = async function* (sdk: NocturneFrontendSDK) {
+      let count = 0;
+      while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
+        latestSyncedMerkleIndex = (await sdk.sync(syncOpts)) ?? 0;
+
+        if (count % refetchEvery === 0) {
+          latestMerkleIndexOnChain =
+            (await sdk.handlerContract.totalCount()).toNumber() - 1;
+        }
+        count++;
+        yield {
+          latestSyncedMerkleIndex,
+        };
+      }
+    };
+
+    const progressIter = new ClosableAsyncIterator(
+      generator(this),
+      async () => {
+        closed = true;
+      }
+    );
+
+    return {
+      latestSyncedMerkleIndex,
+      latestMerkleIndexOnChain,
+      progressIter,
+    };
+  }
+
+  /**
+   * Invoke snap `syncNotes` method, returning latest synced merkle index.
+   */
+  async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
+    const latestSyncedMerkleIndexJson = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
           method: "nocturne_sync",
+          params: {
+            syncOpts: syncOpts ? JSON.stringify(syncOpts) : undefined,
+          },
         },
       },
-    });
+    })) as string;
+
+    const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
+      ? JSON.parse(latestSyncedMerkleIndexJson)
+      : undefined;
+
+    console.log(
+      "[sync] FE-SDK latestSyncedMerkleIndex",
+      latestSyncedMerkleIndex
+    );
+    return latestSyncedMerkleIndex;
+  }
+
+  async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
+    const latestSyncedMerkleIndexJson = (await window.ethereum.request({
+      method: "wallet_invokeSnap",
+      params: {
+        snapId: SNAP_ID,
+        request: {
+          method: "nocturne_getLatestSyncedMerkleIndex",
+        },
+      },
+    })) as string;
+
+    const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
+      ? JSON.parse(latestSyncedMerkleIndexJson)
+      : undefined;
+
+    console.log(
+      "[getLatestSyncedMerkleIndex] FE-SDK latestSyncedMerkleIndex",
+      latestSyncedMerkleIndex
+    );
+    return latestSyncedMerkleIndex;
   }
 
   /**
@@ -499,14 +623,14 @@ export class NocturneFrontendSDK {
     return withEntityIndices.map((e) => e.inner);
   }
   /**
-   * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
+   * Fetches a `SignedOperation` from the snap given an `OperationRequest`.
    * This includes all joinsplit tx inputs.
    *
    * @param operationRequest Operation request
    */
   protected async requestSignOperation(
     operationRequest: OperationRequest,
-    opMetadata?: OperationMetadata
+    opMetadata: OperationMetadata
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", opMetadata);
     const json = (await window.ethereum.request({
@@ -517,7 +641,7 @@ export class NocturneFrontendSDK {
           method: "nocturne_signOperation",
           params: {
             operationRequest: JSON.stringify(operationRequest),
-            opMetadata: opMetadata ? JSON.stringify(opMetadata) : undefined,
+            opMetadata: JSON.stringify(opMetadata),
           },
         },
       },
@@ -527,7 +651,7 @@ export class NocturneFrontendSDK {
   }
 
   /**
-   * Retrieve a freshly randomized address from the snap.
+   * Fetches a freshly randomized address from the snap.
    */
   protected async getRandomizedAddr(): Promise<StealthAddress> {
     const json = (await window.ethereum.request({

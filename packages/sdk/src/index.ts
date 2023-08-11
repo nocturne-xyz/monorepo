@@ -14,6 +14,8 @@ export {
   OperationRequestBuilder,
 } from "./operationRequest";
 export { NocturneWalletSDK } from "./NocturneWalletSDK";
+export { GetNotesOpts } from "./NocturneDB";
+export { SyncOpts } from "./syncSDK";
 export { proveOperation } from "./proveOperation";
 export { NocturneDB } from "./NocturneDB";
 export { SparseMerkleProver } from "./SparseMerkleProver";

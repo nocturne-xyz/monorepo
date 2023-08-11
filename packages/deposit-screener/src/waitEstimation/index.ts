@@ -30,10 +30,11 @@ export interface EstimateExistingWaitDeps {
 // NOTE: This function can throw errors
 export async function estimateSecondsUntilDepositCompletion(
   { db, screenerQueue, fulfillerQueues, rateLimits }: EstimateExistingWaitDeps,
-  depositHash: string
+  depositHash: string,
+  status: DepositRequestStatus
 ): Promise<number> {
   // get deposit request status
-  const status = await db.getDepositRequestStatus(depositHash);
+  console.log("Entered estimateSecondsUntilDepositCompletion", depositHash);
   if (status === DepositRequestStatus.DoesNotExist) {
     throw new Error(`No status found for deposit hash ${depositHash}`);
   }
@@ -53,6 +54,7 @@ export async function estimateSecondsUntilDepositCompletion(
   /// Get asset value ahead of deposit
   let valueAhead: bigint;
   let job: Job<DepositRequestJobData>;
+  console.log("estimateSecondsUntilDepositCompletion status", status);
   if (status == DepositRequestStatus.Completed) {
     return 0;
   } else if (status == DepositRequestStatus.PassedFirstScreen) {
@@ -92,10 +94,14 @@ export async function estimateSecondsUntilDepositCompletion(
   // get existing job delay
   const secondsLeftInJobDelay = calculateSecondsLeftInJobDelay(job);
 
-  return (
-    secondsLeftInJobDelay +
-    convertAssetTotalToDelaySeconds(assetAddr, valueAhead, rateLimits)
+  const delaySeconds = convertAssetTotalToDelaySeconds(
+    assetAddr,
+    valueAhead,
+    rateLimits
   );
+  console.log("secondsLeftInJobDelay", secondsLeftInJobDelay);
+  console.log("delaySeconds", delaySeconds);
+  return secondsLeftInJobDelay + delaySeconds;
 }
 
 export interface EstimateProspectiveWaitDeps {
@@ -120,6 +126,8 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
   value: bigint
 ): Promise<number> {
   // ensure passes screen
+  console.log("in estimateSecondsUntilCompletionForProspectiveDeposit");
+
   const passesScreen = await screeningApi.isSafeDepositRequest(
     spender,
     assetAddr,
@@ -149,6 +157,7 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
     assetAddr,
     screenerDelay
   );
+  console.log("closestJob", closestJob);
 
   // calculate value ahead of closest job
   let valueAhead: bigint;
@@ -161,12 +170,24 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
       fulfillerQueue
     );
     valueAhead = valueAheadInScreenerQueue + valueInFulfillerQueue;
+    console.log(
+      "valueAheadInScreenerQueue",
+      "valueInFulfillerQueue",
+      "valueAhead",
+      valueAheadInScreenerQueue,
+      valueInFulfillerQueue,
+      valueAhead
+    );
   }
-
-  return (
-    screenerDelay +
-    convertAssetTotalToDelaySeconds(assetAddr, valueAhead, rateLimits)
+  const delaySeconds = convertAssetTotalToDelaySeconds(
+    assetAddr,
+    valueAhead,
+    rateLimits
   );
+
+  console.log("screenerDelay", screenerDelay);
+  console.log("delaySeconds", delaySeconds);
+  return screenerDelay + delaySeconds;
 }
 
 async function findScreenerQueueJobClosestInDelay(

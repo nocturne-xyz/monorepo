@@ -2,10 +2,9 @@ import {
   DepositStatusResponse,
   MockSubtreeUpdateProver,
   OperationStatus,
-  ProvenOperation,
+  SubmittableOperationWithNetworkInfo,
   SubtreeUpdateProver,
   computeOperationDigest,
-  toSubmittableOperation,
 } from "@nocturne-xyz/sdk";
 import { spawn } from "child_process";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
@@ -94,10 +93,8 @@ export async function queryDepositStatus(
 }
 
 export async function submitAndProcessOperation(
-  operation: ProvenOperation
+  operation: SubmittableOperationWithNetworkInfo
 ): Promise<OperationStatus> {
-  const op = toSubmittableOperation(operation);
-
   console.log("submitting operation");
   let res: any;
   try {
@@ -106,7 +103,7 @@ export async function submitAndProcessOperation(
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ operation: op }),
+      body: JSON.stringify({ operation }),
     });
     const resJson = await res.json();
     console.log("bundler server response: ", resJson);
@@ -122,7 +119,7 @@ export async function submitAndProcessOperation(
   console.log("waiting for bundler to receive the operation");
   await sleep(5_000);
 
-  const operationDigest = computeOperationDigest(op);
+  const operationDigest = computeOperationDigest(operation);
 
   let count = 0;
   while (count < 10) {

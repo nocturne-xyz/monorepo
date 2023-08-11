@@ -1,9 +1,9 @@
 import { Address } from "@nocturne-xyz/sdk";
 import { ScreeningApi } from ".";
 
-export class DummyScreeningApi implements ScreeningApi {
-  magicRejectionValue = 30303000000000000n; // 0.030303 for 18 decimals
+export const MAGIC_REJECTION_VALUE = 30303000000000000n; // 0.030303
 
+export class DummyScreeningApi implements ScreeningApi {
   async isSafeDepositRequest(
     spender: Address,
     assetAddr: Address,
@@ -12,10 +12,8 @@ export class DummyScreeningApi implements ScreeningApi {
     spender;
     assetAddr;
 
-    if (this.magicRejectionValue && value === this.magicRejectionValue) {
-      return false;
-    }
-
-    return true;
+    const env = process.env.ENVIRONMENT;
+    if (env === "production") return false;
+    return value !== MAGIC_REJECTION_VALUE;
   }
 }

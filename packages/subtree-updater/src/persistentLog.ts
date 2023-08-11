@@ -73,7 +73,6 @@ export class PersistentLog<T> {
     };
 
     return new ClosableAsyncIterator(generator(), async () => {
-      await log.push(buf);
       await iterator.close();
     });
   }

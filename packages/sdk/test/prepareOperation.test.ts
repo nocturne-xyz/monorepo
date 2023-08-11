@@ -102,7 +102,7 @@ describe("gatherNotes", () => {
       [5n, 15n, 10n, 30n],
       range(4).map((_) => stablescam),
       {
-        lastCommittedMerkleIndex: 2,
+        latestCommittedMerkleIndex: 2,
       }
     );
 

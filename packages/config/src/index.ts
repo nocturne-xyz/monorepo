@@ -7,4 +7,5 @@ export {
   ProtocolAddressWithMethods,
 } from "./config";
 export { NocturneContractDeployment } from "./deployment";
+export * from "./utils";
 export * from "./proxy";

@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/local-prover",
-  "version": "1.0.13-alpha",
+  "version": "1.0.8-testnet",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,7 +9,7 @@
     "src/**/*"
   ],
   "scripts": {
-    "build": "tsc --build",
+    "build": "yarn clean; tsc --build",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "gen-test-cases": "yarn gen-test-cases:joinsplit && yarn gen-test-cases:subtreeupdate",
@@ -29,7 +29,6 @@
     "snarkjs": "^0.7.0"
   },
   "devDependencies": {
-    "@nocturne-xyz/subtree-updater": "workspace:^",
     "@types/bn.js": "^5.1.1",
     "@types/chai": "^4.3.3",
     "@types/mocha": "^10.0.0",

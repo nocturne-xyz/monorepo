@@ -46,6 +46,14 @@ cleanup() {
     echo "SIGINT signal caught, cleaning up..."
     docker stop $(docker ps -aq)
     docker rm $(docker ps -aq)
+    
+    pid=$(lsof -t -i:8545)
+    if [ -n "$pid" ]; then
+        echo "Lurking zombie process on 8545, killing process"
+        kill $pid
+        echo "Killed process $pid ✅. Headshot! 🧟‍♂️"
+    fi
+    
     echo "——————————————————————————————"
     echo "Done 🧹🧹🧹"
     exit
@@ -192,6 +200,7 @@ ENVIRONMENT=$ENVIRONMENT
 REDIS_URL=$SCREENER_REDIS_URL
 REDIS_PASSWORD=$REDIS_PASSWORD
 
+DUMMY_SCREENING_DELAY=10
 CONFIG_NAME_OR_PATH=$CONFIG_PATH_IN_DOCKER
 SUBGRAPH_URL=$SUBGRAPH_URL
 RPC_URL=$RPC_URL

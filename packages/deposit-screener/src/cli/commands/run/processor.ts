@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { DepositScreenerScreener } from "../../../screener";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
-import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
 import { DummyScreeningApi, ScreeningApi } from "../../../screening";
 import {
@@ -11,6 +11,10 @@ import {
   ScreenerDelayCalculator,
 } from "../../../screenerDelay";
 import { getRedis } from "./utils";
+import {
+  DefenderRelayProvider,
+  DefenderRelaySigner,
+} from "@openzeppelin/defender-relay-client/lib/ethers";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
@@ -50,9 +54,10 @@ const runProcess = new Command("processor")
 
     const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
 
+    const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
       logDir,
-      "deposit-screener",
+      `${configName}-deposit-screener`,
       "processor",
       stdoutLogLevel
     );
@@ -70,17 +75,31 @@ const runProcess = new Command("processor")
       logger.child({ function: "SubgraphScreenerSyncAdapter" })
     );
 
-    const rpcUrl = process.env.RPC_URL;
-    if (!rpcUrl) {
-      throw new Error("missing RPC_URL");
-    }
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+    const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
+    const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
 
-    const txSignerKey = process.env.TX_SIGNER_KEY;
-    if (!txSignerKey) {
-      throw new Error("missing TX_SIGNER_KEY");
+    const privateKey = process.env.TX_SIGNER_KEY;
+    const rpcUrl = process.env.RPC_URL;
+
+    let provider: ethers.providers.Provider;
+    let signer: ethers.Signer;
+    if (relayerApiKey && relayerApiSecret) {
+      const credentials = {
+        apiKey: relayerApiKey,
+        apiSecret: relayerApiSecret,
+      };
+      provider = new DefenderRelayProvider(credentials);
+      signer = new DefenderRelaySigner(credentials, provider, {
+        speed: "average",
+      });
+    } else if (rpcUrl && privateKey) {
+      provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+      signer = new ethers.Wallet(privateKey, provider);
+    } else {
+      throw new Error(
+        "missing RPC_URL/PRIVATE_KEY or OZ_RELAYER_API_KEY/OZ_RELAYER_API_SECRET"
+      );
     }
-    const txSigner = new ethers.Wallet(txSignerKey, provider);
 
     const attestationSignerKey = process.env.ATTESTATION_SIGNER_KEY;
     if (!attestationSignerKey) {
@@ -120,7 +139,7 @@ const runProcess = new Command("processor")
     const fulfiller = new DepositScreenerFulfiller(
       logger,
       config.depositManagerAddress(),
-      txSigner,
+      signer,
       attestationSigner,
       getRedis(),
       supportedAssets

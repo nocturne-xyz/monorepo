@@ -4,7 +4,7 @@ export {
   EncryptedNoteResponse,
   NoteResponse,
   fetchNotes,
-  fetchLastCommittedMerkleIndex,
+  fetchlatestCommittedMerkleIndex,
   includedNoteFromNoteResponse,
   encryptedNoteFromEncryptedNoteResponse,
 } from "./core";

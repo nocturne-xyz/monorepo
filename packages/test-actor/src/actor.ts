@@ -15,6 +15,7 @@ import {
   computeOperationDigest,
   StealthAddressTrait,
   min,
+  Address,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { Erc20Config } from "@nocturne-xyz/config";
@@ -51,7 +52,8 @@ export interface TestActorMetrics {
 }
 
 export class TestActor {
-  txSigner: ethers.Wallet;
+  provider: ethers.providers.Provider;
+  txSigner: ethers.Signer;
   teller: Teller;
   depositManager: DepositManager;
   sdk: NocturneWalletSDK;
@@ -60,10 +62,13 @@ export class TestActor {
   erc20s: Map<string, Erc20Config>;
   logger: Logger;
   metrics: TestActorMetrics;
-  chainId?: bigint;
+
+  _chainId?: bigint;
+  _address?: Address;
 
   constructor(
-    txSigner: ethers.Wallet,
+    provider: ethers.providers.Provider,
+    txSigner: ethers.Signer,
     teller: Teller,
     depositManager: DepositManager,
     sdk: NocturneWalletSDK,
@@ -72,6 +77,7 @@ export class TestActor {
     erc20s: Map<string, Erc20Config>,
     logger: Logger
   ) {
+    this.provider = provider;
     this.txSigner = txSigner;
     this.teller = teller;
     this.depositManager = depositManager;
@@ -146,7 +152,8 @@ export class TestActor {
 
   async run(opts?: TestActorOpts): Promise<void> {
     // set chainid
-    this.chainId = BigInt(await this.txSigner.getChainId());
+    this._chainId = BigInt(await this.txSigner.getChainId());
+    this._address = await this.txSigner.getAddress();
 
     const depositIntervalSeconds =
       opts?.depositIntervalSeconds ?? ONE_MINUTE_AS_SECS;
@@ -219,7 +226,7 @@ export class TestActor {
       this.txSigner
     );
     const reserveTx = await erc20Token.reserveTokens(
-      this.txSigner.address,
+      this._address!,
       randomValue
     );
     await reserveTx.wait(1);
@@ -268,7 +275,7 @@ export class TestActor {
     });
 
     const labels = {
-      spender: this.txSigner.address,
+      spender: this._address!,
       assetAddr: erc20Token.address,
     };
     this.metrics.instantiatedDepositsCounter.add(1, labels);
@@ -346,7 +353,7 @@ export class TestActor {
       );
 
       const labels = {
-        spender: this.txSigner.address,
+        spender: this._address!,
         assetAddr: asset.assetAddr,
       };
       this.metrics.dispatchedOperationsCounter.add(1, labels);
@@ -380,10 +387,10 @@ export class TestActor {
     const transferData =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        [this.txSigner.address, value] // transfer funds back to self
+        [this._address!, value] // transfer funds back to self
       );
 
-    const chainId = this.chainId ?? BigInt(await this.txSigner.getChainId());
+    const chainId = this._chainId ?? BigInt(await this.txSigner.getChainId());
 
     return new OperationRequestBuilder({
       chainId,
@@ -392,12 +399,10 @@ export class TestActor {
       .unwrap(asset, value)
       .action(simpleErc20.address, transferData)
       .deadline(
-        BigInt((await this.txSigner.provider.getBlock("latest")).timestamp) +
+        BigInt((await this.provider.getBlock("latest")).timestamp) +
           ONE_DAY_SECONDS
       )
-      .gasPrice(
-        ((await this.txSigner.provider.getGasPrice()).toBigInt() * 14n) / 10n
-      )
+      .gasPrice(((await this.provider.getGasPrice()).toBigInt() * 14n) / 10n)
       .build();
   }
 }

@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- replace tx manager with OZ relay
+- rewrite `SubtreeUpdater` class to not use bullmq. instead it's just one big `ClosableAsyncIterator`
+- remove duplicated `log.push` call in `syncAndPipe` to fix double insertion bug
 - add metrics
 - use tx manager
 - iterate over `PersistentLog` first, then start pulling from subgraph

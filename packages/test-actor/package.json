@@ -22,11 +22,12 @@
     "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit"
   },
   "dependencies": {
-    "@nocturne-xyz/config": "1.0.15-alpha",
-    "@nocturne-xyz/contracts": "1.0.42-alpha",
-    "@nocturne-xyz/local-prover": "1.0.13-alpha",
+    "@nocturne-xyz/config": "1.0.19-testnet",
+    "@nocturne-xyz/contracts": "1.0.34-testnet",
+    "@nocturne-xyz/local-prover": "1.0.8-testnet",
     "@nocturne-xyz/offchain-utils": "0.1.10",
-    "@nocturne-xyz/sdk": "1.0.200-alpha",
+    "@nocturne-xyz/sdk": "1.0.179-testnet",
+    "@openzeppelin/defender-relay-client": "1.47.1",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
     "commander": "^10.0.0",

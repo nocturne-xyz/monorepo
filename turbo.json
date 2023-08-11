@@ -7,9 +7,6 @@
       "outputs": ["dist/**"]
     },
     "@nocturne-xyz/contracts#build": {},
-    "@nocturne-xyz/tx-manager#build": {
-      "dependsOn": []
-    },
     "@nocturne-xyz/config#build": {
       "dependsOn": ["@nocturne-xyz/contracts#build"]
     },
@@ -31,8 +28,7 @@
         "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/sdk#build",
         "@nocturne-xyz/config#build",
-        "@nocturne-xyz/offchain-utils#build",
-        "@nocturne-xyz/tx-manager#build"
+        "@nocturne-xyz/offchain-utils#build"
       ]
     },
     "@nocturne-xyz/snap#build": {
@@ -47,8 +43,7 @@
         "@nocturne-xyz/sdk#build",
         "@nocturne-xyz/config#build",
         "@nocturne-xyz/local-prover#build",
-        "@nocturne-xyz/offchain-utils#build",
-        "@nocturne-xyz/tx-manager#build"
+        "@nocturne-xyz/offchain-utils#build"
       ]
     },
     "@nocturne-xyz/deposit-screener#build": {
@@ -56,8 +51,7 @@
         "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/sdk#build",
         "@nocturne-xyz/config#build",
-        "@nocturne-xyz/offchain-utils#build",
-        "@nocturne-xyz/tx-manager#build"
+        "@nocturne-xyz/offchain-utils#build"
       ]
     },
     "@nocturne-xyz/frontend-sdk#build": {
@@ -92,8 +86,7 @@
         "@nocturne-xyz/local-prover#build",
         "@nocturne-xyz/circuits#build",
         "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/offchain-utils#build",
-        "@nocturne-xyz/tx-manager#build"
+        "@nocturne-xyz/offchain-utils#build"
       ]
     },
     "test": {
@@ -106,10 +99,6 @@
     "@nocturne-xyz/subtree-updater#test:unit": {
       "dependsOn": ["build", "@nocturne-xyz/sdk#test:unit"],
       "env": ["USE_RAPIDSNARK"]
-    },
-    "test:ci": {
-      "dependsOn": ["build"],
-      "outputs": []
     },
     "test:e2e": {
       "dependsOn": ["build"],

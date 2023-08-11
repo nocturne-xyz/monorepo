@@ -16,11 +16,12 @@ services:
       context: ../..
       dockerfile: packages/deposit-screener/Dockerfile
     restart: always
-    command: "run server --config-name-or-path ${CONFIG_NAME_OR_PATH} --port 3001 --log-dir /logs/deposit-screener-server --stdout-log-level info"
+    command: "run server --config-name-or-path ${CONFIG_NAME_OR_PATH} --port 3001 --log-dir /logs/deposit-screener-server --stdout-log-level info --dummy-screening-delay ${DUMMY_SCREENING_DELAY}"
     environment:
       - REDIS_URL=${REDIS_URL}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - CONFIG_NAME_OR_PATH=${CONFIG_NAME_OR_PATH}
+      - DUMMY_SCREENING_DELAY=${DUMMY_SCREENING_DELAY}
     ports:
       - "3001:3001"
     extra_hosts:
@@ -33,11 +34,12 @@ services:
       context: ../..
       dockerfile: packages/deposit-screener/Dockerfile
     restart: always
-    command: "run processor --config-name-or-path ${CONFIG_NAME_OR_PATH} --log-dir /logs/deposit-screener-processor"
+    command: "run processor --config-name-or-path ${CONFIG_NAME_OR_PATH} --log-dir /logs/deposit-screener-processor --stdout-log-level info --dummy-screening-delay ${DUMMY_SCREENING_DELAY}"
     environment:
       - REDIS_URL=${REDIS_URL}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - CONFIG_NAME_OR_PATH=${CONFIG_NAME_OR_PATH}
+      - DUMMY_SCREENING_DELAY=${DUMMY_SCREENING_DELAY}
       - SUBGRAPH_URL=${SUBGRAPH_URL}
       - RPC_URL=${RPC_URL}
       - TX_SIGNER_KEY=${TX_SIGNER_KEY}

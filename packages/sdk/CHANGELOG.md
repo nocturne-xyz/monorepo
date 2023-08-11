@@ -2,6 +2,14 @@
 
 ### Unreleased
 
+- bump gas price est to 40% buffer
+- Fix op digest tracking resulting in digests getting removed too early
+  - Snap returns signed op and stores opdigest, site proves and submits op to bundler, snap checks if bundler has digest but bundler hasn't yet received from site, snap incorrectly deletes digest
+- add `filter` to `ClosableAsyncIterator`
+- `syncSDK` returns latest synced merkle index so fe-sdk can access and return
+- sync adapters return latest synced merkle index
+- `syncSDK` takes `SyncOpts` as params, add `timeoutSeconds` to `SyncOpts`
+- set a cap on the maximum number of wasm provers spun-up in parallel
 - rename/reorder some joinsplit circuit fields
 - collapse tracked assets into single array and have sdk simply concat joinsplit and refund assets during translation step
 - add hybrid randomization step to schnorr signing procedure to protect against fault injection attacks
@@ -79,7 +87,7 @@
 - add `op.gasAssetRefundThreshold` functionality (opRequestGas converts 200k gas \* gasPrice into gas asset and fills gasAssetRefundThreshold field)
 - sort joinsplits by encodeAsset to get gas saving in processJoinSplits
 - move rest of tree constants into `treeConstants.ts`
-- change `nextMerkleIndex` to `lastCommittedMerkleIndex` in NocturneDB
+- change `nextMerkleIndex` to `latestCommittedMerkleIndex` in NocturneDB
 - make `hasEnoughBalanceForOperationRequest` call `getCommittedNotesForAsset` instead of `getNotesForAsset`
 - add `getAllCommittedBalance` to `NocturneWalletSDK`
 - make `gatherNotes` call `getCommittedNotesForAsset` instead of `getNotesForAsset`

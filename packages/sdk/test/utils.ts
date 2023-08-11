@@ -85,7 +85,7 @@ export function getDummyHex(bump: number): string {
 }
 
 export interface TestSetupOpts {
-  lastCommittedMerkleIndex?: number;
+  latestCommittedMerkleIndex?: number;
   totalEntityIndices?: bigint[];
 }
 
@@ -130,8 +130,8 @@ export async function setup(
   }
 
   await nocturneDB.storeNotes(withTotalEntityIndices);
-  await nocturneDB.setLastCommittedMerkleIndex(
-    opts?.lastCommittedMerkleIndex ?? notes.length - 1
+  await nocturneDB.setlatestCommittedMerkleIndex(
+    opts?.latestCommittedMerkleIndex ?? notes.length - 1
   );
 
   const leaves = notes.map((note) => NoteTrait.toCommitment(note));

@@ -8,6 +8,8 @@ import {
   MockEthToTokenConverter,
   BundlerOpTracker,
   OperationMetadata,
+  SyncOpts,
+  GetNotesOpts,
 } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
 import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
@@ -15,18 +17,21 @@ import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { SnapKvStore } from "./snapdb";
 import * as JSON from "bigint-json-serialization";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
-import { panel, text, heading } from "@metamask/snaps-ui";
+import { makeSignOperationContent } from "./utils/display";
+import { heading, panel, text } from "@metamask/snaps-ui";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Sepolia
 const RPC_URL =
   "https://eth-sepolia.g.alchemy.com/v2/0xjMuoUbPaLxWwD9EqOUFoJTuRh7qh0t";
-const BUNDLER_URL = "https://bundler.nocturnelabs.xyz";
+const BUNDLER_URL = "https://bundler.testnet.nocturnelabs.xyz";
 const SUBGRAPH_API_URL =
-  "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.18-alpha/gn";
+  "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.21-testnet/gn";
 const config = loadNocturneConfigBuiltin("sepolia");
 
 const NOCTURNE_BIP44_COINTYPE = 6789;
+let snapIsSyncing = false;
+let lastSyncedMerkleIndex: number | undefined;
 
 async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
   const nocturneNode = await snap.request({
@@ -55,14 +60,10 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
  * @throws If the request method is not valid for this snap.
  * @throws If the `snap_dialog` call failed.
  */
-export const onRpcRequest: OnRpcRequestHandler = async ({
-  origin,
-  request,
-}) => {
+export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
   const kvStore = new SnapKvStore();
   const nocturneDB = new NocturneDB(kvStore);
   const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
-
   const signer = await getNocturneSignerFromBIP44();
   console.log("Snap Nocturne Canonical Address: ", signer.canonicalAddress());
 
@@ -90,9 +91,24 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         await sdk.getAllAssetBalances(request.params as unknown as GetNotesOpts) // yikes typing
       );
     case "nocturne_sync":
+      if (snapIsSyncing) {
+        console.log(
+          "Snap is already syncing, returning last synced index, ",
+          lastSyncedMerkleIndex
+        );
+        return lastSyncedMerkleIndex;
+      }
+      const maybeSyncOpts = (request.params as any).syncOpts;
+      const syncOpts: SyncOpts | undefined = maybeSyncOpts
+        ? JSON.parse(maybeSyncOpts)
+        : undefined;
+
+      console.log("Syncing", syncOpts);
+      snapIsSyncing = true;
+      let latestSyncedMerkleIndex: number | undefined;
       try {
         // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
-        await sdk.sync();
+        latestSyncedMerkleIndex = await sdk.sync(syncOpts);
         await sdk.updateOptimisticNullifiers();
         console.log(
           "Synced. state is now: ",
@@ -102,12 +118,18 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       } catch (e) {
         console.log("Error syncing notes: ", e);
         throw e;
+      } finally {
+        snapIsSyncing = false;
       }
-      return;
+      console.log("latestSyncedMerkleIndex, ", latestSyncedMerkleIndex);
+      lastSyncedMerkleIndex = latestSyncedMerkleIndex ?? lastSyncedMerkleIndex;
+      return latestSyncedMerkleIndex;
+    case "nocturne_getLatestSyncedMerkleIndex":
+      return await sdk.getLatestSyncedMerkleIndex();
     case "nocturne_signOperation":
       console.log("Request params: ", request.params);
 
-      await sdk.sync();
+      await sdk.sync(); // NOTE: we should never end up in situation where this is called before normal nocturne_sync, otherwise there will be long delay
       await sdk.updateOptimisticNullifiers();
 
       console.log("done syncing");
@@ -116,45 +138,32 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         (request.params as any).operationRequest
       ) as OperationRequest;
 
-      const maybeMetadata = (request.params as any).opMetadata;
-      const opMetadata: OperationMetadata | undefined = maybeMetadata
-        ? JSON.parse(maybeMetadata)
-        : undefined;
+      const opMetadata: OperationMetadata = JSON.parse(
+        (request.params as any).opMetadata
+      );
 
       // Ensure user has minimum balance for request
       if (!(await sdk.hasEnoughBalanceForOperationRequest(operationRequest))) {
         throw new Error("Insufficient balance for operation request");
       }
-
+      const { heading: _heading, text: _text } = makeSignOperationContent(
+        opMetadata,
+        config.erc20s
+      );
       // Confirm spend sig auth
       const res = await snap.request({
         method: "snap_dialog",
         params: {
           type: "confirmation",
-          // TODO: make this UI better
-          content: panel([
-            heading(
-              `${origin} would like to perform an operation via Nocturne`
-            ),
-            text(`operation request: ${JSON.stringify(operationRequest)}`),
-          ]),
+          content: panel([heading(_heading), text(_text)]),
         },
       });
 
       if (!res) {
-        throw new Error("rejected by user");
+        throw new Error("Snap request rejected by user");
       }
 
       console.log("Operation request: ", operationRequest);
-
-      // fetch gas price from chain and set it in the operation request if it's not already set
-      if (!operationRequest.gasPrice) {
-        const gasPrice = await provider.getGasPrice();
-        operationRequest.gasPrice = gasPrice.toBigInt();
-      }
-
-      console.log("Operation gas price: ", operationRequest.gasPrice);
-
       try {
         const preSignOp = await sdk.prepareOperation(operationRequest);
         const signedOp = await sdk.signOperation(preSignOp);

@@ -1,4 +1,4 @@
-import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager__factory,
   Teller__factory,
@@ -19,6 +19,10 @@ import { TestActor } from "../actor";
 import * as fs from "fs";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { LMDBKVStore } from "../lmdb";
+import {
+  DefenderRelayProvider,
+  DefenderRelaySigner,
+} from "@openzeppelin/defender-relay-client/lib/ethers";
 
 export const run = new Command("run")
   .summary("run test actor")
@@ -77,16 +81,17 @@ export const run = new Command("run")
       stdoutLogLevel,
     } = options;
 
-    const logger = makeLogger(logDir, "test-actor", "actor", stdoutLogLevel);
+    const configName = extractConfigName(configNameOrPath);
+    const logger = makeLogger(
+      logDir,
+      `${configName}-test-actor`,
+      "actor",
+      stdoutLogLevel
+    );
 
     const config = loadNocturneConfig(configNameOrPath);
 
     logger.info("config", { config });
-
-    const rpcUrl = process.env.RPC_URL;
-    if (!rpcUrl) {
-      throw new Error("missing RPC_URL");
-    }
 
     const bundlerEndpoint = process.env.BUNDLER_URL;
     if (!bundlerEndpoint) {
@@ -99,30 +104,49 @@ export const run = new Command("run")
       throw new Error("missing SUBGRAPH_URL");
     }
 
-    const privateKey = process.env.TX_SIGNER_KEY;
-    if (!privateKey) {
-      throw new Error("missing TX_SIGNER_KEY");
-    }
-
+    // hex string
     const nocturneSKStr = process.env.NOCTURNE_SPENDING_KEY;
     if (!nocturneSKStr) {
       throw new Error("missing NOCTURNE_SPENDING_KEY");
     }
-    const nocturneSK = Uint8Array.from(ethers.utils.arrayify(nocturneSKStr));
+    const skBytes = ethers.utils.arrayify(nocturneSKStr);
+    if (skBytes.length !== 32) {
+      throw new Error("NOCTURNE_SPENDING_KEY must be 32 bytes");
+    }
 
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-    const signingProvider = new ethers.Wallet(privateKey, provider);
+    const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
+    const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
 
-    const teller = Teller__factory.connect(
-      config.tellerAddress(),
-      signingProvider
-    );
+    const privateKey = process.env.TX_SIGNER_KEY;
+    const rpcUrl = process.env.RPC_URL;
+
+    let provider: ethers.providers.Provider;
+    let signer: ethers.Signer;
+    if (relayerApiKey && relayerApiSecret) {
+      const credentials = {
+        apiKey: relayerApiKey,
+        apiSecret: relayerApiSecret,
+      };
+      provider = new DefenderRelayProvider(credentials);
+      signer = new DefenderRelaySigner(credentials, provider, {
+        speed: "average",
+      });
+    } else if (rpcUrl && privateKey) {
+      provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+      signer = new ethers.Wallet(privateKey, provider);
+    } else {
+      throw new Error(
+        "missing RPC_URL/PRIVATE_KEY or OZ_RELAYER_API_KEY/OZ_RELAYER_API_SECRET"
+      );
+    }
+
+    const teller = Teller__factory.connect(config.tellerAddress(), signer);
     const depositManager = DepositManager__factory.connect(
       config.depositManagerAddress(),
-      signingProvider
+      signer
     );
 
-    const nocturneSigner = new NocturneSigner(nocturneSK);
+    const nocturneSigner = new NocturneSigner(skBytes);
     const kv = new LMDBKVStore({ path: dbPath });
     const merkleProver = await SparseMerkleProver.loadFromKV(kv);
     const db = new NocturneDB(kv);
@@ -149,7 +173,8 @@ export const run = new Command("run")
     );
 
     const actor = new TestActor(
-      signingProvider,
+      provider,
+      signer,
       teller,
       depositManager,
       sdk,

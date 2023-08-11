@@ -14,7 +14,6 @@ import {
 } from "@nocturne-xyz/sdk";
 import { Job, Queue, Worker } from "bullmq";
 import { ethers } from "ethers";
-import { checkDepositRequest } from "./check";
 import { DepositScreenerDB } from "./db";
 import { ScreeningApi } from "./screening";
 import { DepositEventsBatch, ScreenerSyncAdapter } from "./sync/syncAdapter";
@@ -254,12 +253,10 @@ export class DepositScreenerScreener {
         }
 
         childLogger.debug(`checking deposit request`);
-        const { isSafe, reason } = await checkDepositRequest(
-          childLogger,
-          depositRequest,
-          {
-            ...this,
-          }
+        const isSafe = await this.screeningApi.isSafeDepositRequest(
+          depositRequest.spender,
+          assetAddr,
+          depositRequest.value
         );
 
         if (isSafe) {
@@ -279,8 +276,7 @@ export class DepositScreenerScreener {
           );
         } else {
           childLogger.warn(
-            `deposit failed first screening stage with reason ${reason}`,
-            { reason }
+            `deposit failed first screening stage with reason <TODO>`
           );
           await this.db.setDepositRequestStatus(
             depositRequest,
