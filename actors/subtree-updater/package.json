@@ -13,8 +13,6 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "build:docker": "./build_docker.sh",
-    "build:mock:docker": "./build_mock_docker.sh",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",

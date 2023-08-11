@@ -13,8 +13,6 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "build:docker": "docker build -f ./Dockerfile ../../ -t nocturnelabs/deposit-screener:dev",
-    "build:docker-compose": "docker compose build",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "gen-test-cases:depositrequest": "npx ts-node ./scripts/genSignedDepositRequestTestCase.ts",
