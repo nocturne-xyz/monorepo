@@ -128,3 +128,17 @@ export const getNocturneSdkConfig = (
     endpoints,
   };
 };
+
+type MapperFn<A, B> = (input: A) => B;
+
+export class FnChain<A> {
+  constructor(private _value: A) {}
+
+  map<B>(fn: MapperFn<A, B>): FnChain<B> {
+    return new FnChain(fn(this._value));
+  }
+
+  get value(): A {
+    return this._value;
+  }
+}
