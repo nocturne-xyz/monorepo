@@ -11,7 +11,7 @@ export class SnapStateSdk implements SnapStateApi {
     private env: SupportedNetwork = "mainnet"
   ) {}
 
-  isFlask = async (): Promise<boolean> => {
+  async isFlask(): Promise<boolean> {
     const provider = window.ethereum;
 
     try {
@@ -25,9 +25,9 @@ export class SnapStateSdk implements SnapStateApi {
     } catch {
       return false;
     }
-  };
+  }
 
-  connect = async (): Promise<GetSnapsResponse> => {
+  async connect(): Promise<GetSnapsResponse> {
     return (await window.ethereum.request({
       method: "wallet_requestSnaps",
       params: {
@@ -36,9 +36,9 @@ export class SnapStateSdk implements SnapStateApi {
         },
       },
     })) as unknown as GetSnapsResponse;
-  };
+  }
 
-  get = async (): Promise<Snap | undefined> => {
+  async get(): Promise<Snap | undefined> {
     try {
       const snaps = await this.getSnaps();
 
@@ -51,9 +51,9 @@ export class SnapStateSdk implements SnapStateApi {
       console.log("Failed to obtain installed snap", e);
       return undefined;
     }
-  };
+  }
 
-  clearDb = async (): Promise<void> => {
+  async clearDb(): Promise<void> {
     if (this.env !== "localhost" && this.env !== "sepolia") {
       throw new Error(
         "Method clearDb is only available in localhost and sepolia"
@@ -69,7 +69,7 @@ export class SnapStateSdk implements SnapStateApi {
         },
       },
     });
-  };
+  }
 
   /**
    * Get the installed snaps in MetaMask.
@@ -77,9 +77,9 @@ export class SnapStateSdk implements SnapStateApi {
    *
    * @returns The snaps installed in MetaMask.
    */
-  protected getSnaps = async (): Promise<GetSnapsResponse> => {
+  protected async getSnaps(): Promise<GetSnapsResponse> {
     return (await window.ethereum.request({
       method: "wallet_getSnaps",
     })) as unknown as GetSnapsResponse;
-  };
+  }
 }
