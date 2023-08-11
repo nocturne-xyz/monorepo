@@ -151,11 +151,7 @@ export class NocturneSdk implements NocturneSdkApi {
       signer
     ).instantiateETHMultiDeposit(values, depositAddr, { value: totalValue });
     const erc20s = this.config.network.erc20s;
-    const wethAddress = (
-      erc20s.get("weth") ??
-      erc20s.get("WETH") ??
-      erc20s.get("Weth")
-    )?.address; // TODO holy hack, need to refactor config for better consumption
+    const wethAddress = erc20s.get("weth")?.address;
     if (!wethAddress) {
       throw new Error("WETH address not found in Nocturne config");
     }
