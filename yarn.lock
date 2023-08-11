@@ -2844,7 +2844,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
-    "@nocturne-xyz/config": "workspace:^"
+    "@nocturne-xyz/config": 1.0.19-testnet
     "@nocturne-xyz/contracts": 1.0.34-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.179-testnet
@@ -2901,7 +2901,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
+"@nocturne-xyz/config@1.0.19-testnet, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/config@workspace:packages/config"
   dependencies:
@@ -3004,7 +3004,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
-    "@nocturne-xyz/config": "workspace:^"
+    "@nocturne-xyz/config": 1.0.19-testnet
     "@nocturne-xyz/contracts": 1.0.34-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@nocturne-xyz/sdk": 1.0.179-testnet
@@ -3258,7 +3258,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
-    "@nocturne-xyz/config": "workspace:^"
+    "@nocturne-xyz/config": 1.0.19-testnet
     "@nocturne-xyz/contracts": 1.0.34-testnet
     "@nocturne-xyz/crypto-utils": 0.1.6
     "@nocturne-xyz/offchain-utils": 0.1.10
@@ -3299,7 +3299,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/test-actor@workspace:packages/test-actor"
   dependencies:
-    "@nocturne-xyz/config": "workspace:^"
+    "@nocturne-xyz/config": 1.0.19-testnet
     "@nocturne-xyz/contracts": 1.0.34-testnet
     "@nocturne-xyz/local-prover": 1.0.8-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
