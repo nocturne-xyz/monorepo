@@ -21,7 +21,7 @@
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
-    "@nocturne-xyz/wallet-sdk": "workspace:^",
+    "@nocturne-xyz/core": "workspace:^",
     "dotenv": "^16.0.3"
   },
   "devDependencies": {

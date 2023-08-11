@@ -11,7 +11,7 @@ import {
   getFulfillmentQueueName,
 } from "./types";
 import { DepositScreenerDB } from "./db";
-import { Address } from "@nocturne-xyz/wallet-sdk";
+import { Address } from "@nocturne-xyz/core";
 import { makeDepositStatusHandler, makeQuoteHandler } from "./routes";
 import { ScreenerDelayCalculator } from "./screenerDelay";
 import { ScreeningApi } from "./screening";

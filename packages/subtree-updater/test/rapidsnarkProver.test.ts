@@ -9,7 +9,7 @@ import {
   NoteTrait,
   AssetType,
   subtreeUpdateInputsFromBatch,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import { RapidsnarkSubtreeUpdateProver } from "../src/rapidsnarkProver";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 

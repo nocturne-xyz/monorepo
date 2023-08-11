@@ -1,4 +1,4 @@
-import { Address, AssetType } from "@nocturne-xyz/wallet-sdk";
+import { Address, AssetType } from "@nocturne-xyz/core";
 import { ethers } from "ethers";
 import ERC20 from "./abis/ERC20.json";
 import ERC721 from "./abis/ERC721.json";

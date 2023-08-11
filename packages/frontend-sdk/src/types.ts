@@ -7,7 +7,7 @@ import {
   OperationMetadata,
   OperationRequest,
   OperationStatusResponse,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import { ContractTransaction } from "ethers";
 
 export interface Endpoints {

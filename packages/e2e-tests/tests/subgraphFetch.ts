@@ -6,7 +6,7 @@ import {
   StealthAddressTrait,
   fetchDepositEvents,
   sleep,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import { ethers } from "ethers";
 import {
   SUBGRAPH_URL,

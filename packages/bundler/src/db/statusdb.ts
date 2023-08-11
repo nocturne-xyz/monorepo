@@ -1,6 +1,6 @@
 import IORedis from "ioredis";
 import { RedisTransaction } from ".";
-import { OperationStatus } from "@nocturne-xyz/wallet-sdk";
+import { OperationStatus } from "@nocturne-xyz/core";
 
 const JOB_STATUS_PREFIX = "JOB_STATUS_";
 

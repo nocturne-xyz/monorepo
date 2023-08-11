@@ -10,7 +10,7 @@
     "@nocturne-xyz/config#build": {
       "dependsOn": ["@nocturne-xyz/contracts#build"]
     },
-    "@nocturne-xyz/wallet-sdk#build": {
+    "@nocturne-xyz/core#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/config#build"
@@ -20,27 +20,27 @@
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/config#build",
-        "@nocturne-xyz/wallet-sdk#build"
+        "@nocturne-xyz/core#build"
       ]
     },
     "@nocturne-xyz/bundler#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/wallet-sdk#build",
+        "@nocturne-xyz/core#build",
         "@nocturne-xyz/config#build",
         "@nocturne-xyz/offchain-utils#build"
       ]
     },
     "@nocturne-xyz/snap#build": {
-      "dependsOn": ["@nocturne-xyz/wallet-sdk#build"]
+      "dependsOn": ["@nocturne-xyz/core#build"]
     },
     "@nocturne-xyz/local-prover#build": {
-      "dependsOn": ["@nocturne-xyz/wallet-sdk#build"]
+      "dependsOn": ["@nocturne-xyz/core#build"]
     },
     "@nocturne-xyz/test-actor#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/wallet-sdk#build",
+        "@nocturne-xyz/core#build",
         "@nocturne-xyz/config#build",
         "@nocturne-xyz/local-prover#build",
         "@nocturne-xyz/offchain-utils#build"
@@ -49,7 +49,7 @@
     "@nocturne-xyz/deposit-screener#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/wallet-sdk#build",
+        "@nocturne-xyz/core#build",
         "@nocturne-xyz/config#build",
         "@nocturne-xyz/offchain-utils#build"
       ]
@@ -58,12 +58,12 @@
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/local-prover#build",
-        "@nocturne-xyz/wallet-sdk#build"
+        "@nocturne-xyz/core#build"
       ]
     },
     "@nocturne-xyz/site#build": {
       "dependsOn": [
-        "@nocturne-xyz/wallet-sdk#build",
+        "@nocturne-xyz/core#build",
         "@nocturne-xyz/local-prover#build",
         "@nocturne-xyz/frontend-sdk#build"
       ]
@@ -71,7 +71,7 @@
     "@nocturne-xyz/e2e-tests#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/wallet-sdk#build",
+        "@nocturne-xyz/core#build",
         "@nocturne-xyz/deploy#build",
         "@nocturne-xyz/subtree-updater#build",
         "@nocturne-xyz/local-prover#build",
@@ -82,7 +82,7 @@
     },
     "@nocturne-xyz/subtree-updater#build": {
       "dependsOn": [
-        "@nocturne-xyz/wallet-sdk#build",
+        "@nocturne-xyz/core#build",
         "@nocturne-xyz/local-prover#build",
         "@nocturne-xyz/circuits#build",
         "@nocturne-xyz/contracts#build",
@@ -97,7 +97,7 @@
       "dependsOn": ["build"]
     },
     "@nocturne-xyz/subtree-updater#test:unit": {
-      "dependsOn": ["build", "@nocturne-xyz/wallet-sdk#test:unit"],
+      "dependsOn": ["build", "@nocturne-xyz/core#test:unit"],
       "env": ["USE_RAPIDSNARK"]
     },
     "test:ci": {

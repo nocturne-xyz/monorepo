@@ -5,7 +5,7 @@ import {
   OperationStatus,
   computeOperationDigest,
   ProvenOperation,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import {
   OperationBatchJobData,
   OPERATION_BATCH_QUEUE,

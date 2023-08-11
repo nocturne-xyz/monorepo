@@ -2,7 +2,7 @@ import {
   CompressedStealthAddress,
   DepositRequest,
   EncodedAsset,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import { ethers } from "ethers";
 
 export interface EIP712Domain {

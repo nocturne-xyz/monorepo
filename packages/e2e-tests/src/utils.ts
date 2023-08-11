@@ -5,7 +5,7 @@ import {
   ProvenOperation,
   SubtreeUpdateProver,
   computeOperationDigest,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import { spawn } from "child_process";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -15,7 +15,7 @@ import * as JSON from "bigint-json-serialization";
 import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
-import { thunk } from "@nocturne-xyz/wallet-sdk";
+import { thunk } from "@nocturne-xyz/core";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;

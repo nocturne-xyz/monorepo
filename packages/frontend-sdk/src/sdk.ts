@@ -36,7 +36,7 @@ import {
   joinSplitPublicSignalsToArray,
   proveOperation,
   unpackFromSolidityProof,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction, ethers } from "ethers";

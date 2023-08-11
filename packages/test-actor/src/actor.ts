@@ -17,7 +17,7 @@ import {
   StealthAddressTrait,
   min,
   Address,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 import { Erc20Config } from "@nocturne-xyz/config";
 import { ethers } from "ethers";

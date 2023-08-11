@@ -11,7 +11,7 @@ import {
   DepositStatusResponse,
   DepositQuoteResponse,
   DepositRequestStatus,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import { ScreeningApi } from "./screening";
 import { DepositScreenerDB } from "./db";
 import { Queue } from "bullmq";
