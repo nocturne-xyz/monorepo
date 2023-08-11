@@ -1,5 +1,7 @@
 import { Address } from "@nocturne-xyz/sdk";
-import { MAGIC_LONG_DELAY_VALUE, MAGIC_ZERO_DELAY_VALUE } from "../utils";
+
+export const MAGIC_LONG_DELAY_VALUE = 10101000000000000n; // 0.010101
+export const MAGIC_ZERO_DELAY_VALUE = 20202000000000000n; // 0.020202
 
 export class DummyScreenerDelayCalculator {
   normalDelaySeconds = 0;
