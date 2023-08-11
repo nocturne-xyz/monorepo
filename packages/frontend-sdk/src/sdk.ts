@@ -4,6 +4,7 @@ import {
   Handler,
   Handler__factory,
 } from "@nocturne-xyz/contracts";
+import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
   ActionMetadata,
@@ -12,7 +13,6 @@ import {
   AssetType,
   AssetWithBalance,
   ClosableAsyncIterator,
-  CompressedStealthAddress,
   DepositEvent,
   DepositQuoteResponse,
   DepositRequest,
@@ -62,7 +62,6 @@ import {
   getProvider,
   getTokenContract,
 } from "./utils";
-import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 
 const WASM_PATH = "/joinsplit/joinsplit.wasm"; // ! TODO this pathing style might be outdated, no longer work
 const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
