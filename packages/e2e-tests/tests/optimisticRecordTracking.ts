@@ -181,10 +181,12 @@ describe("Optimistic nullifier tracking", () => {
 
     // ensure it removes all records when it polls op digest from bundler (mock date to bypass
     // update op digest buffer)
+    const dateNow = Date.now;
     Date.now = () => {
-      return Date.now() + 60 * 1000;
+      return dateNow() + 60 * 1000;
     };
     await sdk.updateOptimisticNullifiers();
+    Date.now = dateNow;
 
     // DB should have no more optimistic records
     const nfRecordsAfter = await db.getAllOptimisticNFRecords();
