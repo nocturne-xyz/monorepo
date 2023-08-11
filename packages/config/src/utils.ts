@@ -35,6 +35,7 @@ export function extractConfigName(configNameOrPath: string): string {
 
   // If configNameOrPath contains a slash, split by slashes and get the last part
   // to retrieve the file name with extension
+  // eslint-disable-next-line no-useless-escape
   const parts = configNameOrPath.split(/[\/\\]/);
   const fileNameWithExtension = parts[parts.length - 1];
 
