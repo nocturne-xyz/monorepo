@@ -17,7 +17,6 @@
     "prettier:write": "yarn workspaces foreach run prettier:write",
     "rebuild-circuits-and-test-cases": "yarn circuits:build && yarn local-prover:gen-test-cases",
     "test": "yarn turbo run --no-daemon test --filter=!@nocturne-xyz/circuits...",
-    "test:ci": "yarn turbo run --no-daemon test:ci --filter=!@nocturne-xyz/circuits... --filter=!@nocturne-xyz/site...",
     "test:e2e": "yarn turbo run --no-daemon test:e2e --filter=@nocturne-xyz/e2e-tests",
     "test:unit": "yarn turbo run --no-daemon test:unit"
   },

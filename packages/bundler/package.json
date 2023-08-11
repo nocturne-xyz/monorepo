@@ -21,7 +21,6 @@
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test",
-    "test:ci": "mocha --require ts-node/register test/**.ci.ts --timeout 500000 --exit",
     "test:unit": "mocha --require ts-node/register test/**.test.ts --timeout 500000 --exit"
   },
   "dependencies": {
