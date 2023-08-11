@@ -1,20 +1,23 @@
 FROM node:18.12.1
 
+
 WORKDIR /app
+RUN corepack enable
 
-COPY package.json .
-COPY tsconfig.json .
-COPY yarn.lock .
-COPY .yarn .yarn
-COPY .yarnrc.yml .
-COPY packages/deposit-screener packages/deposit-screener
+# install foundry
+RUN curl -L https://foundry.paradigm.xyz | bash
+ENV PATH="$PATH:/root/.foundry/bin"
+RUN foundryup
 
+# copy over entire monorepo
+COPY . .
+
+# install deps & build
 RUN yarn install
+RUN yarn turbo run build --filter="@nocturne-xyz/deposit-screener..."
 
-WORKDIR /app/packages/deposit-screener
-RUN yarn build
-RUN npm i -g
+# setup CLI
+WORKDIR /app/actors/deposit-screener
+RUN npm i -g 
 
-COPY packages/config/configs /app/configs
-
-ENTRYPOINT ["screener-cli"]
+ENTRYPOINT ["deposit-screener-cli"]

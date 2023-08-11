@@ -6,31 +6,31 @@ COPY --from=rapidsnark /rapidsnark /rapidsnark
 
 WORKDIR /app
 
-COPY scripts scripts
-
-COPY package.json .
-COPY tsconfig.json .
-COPY yarn.lock .
-COPY .yarn .yarn
-COPY .yarnrc.yml .
-COPY packages/subtree-updater packages/subtree-updater
-COPY packages/circuits packages/circuits
-COPY circuit-artifacts circuit-artifacts
-
 RUN corepack enable
+
+# install foundry
+RUN curl -L https://foundry.paradigm.xyz | bash
+ENV PATH="$PATH:/root/.foundry/bin"
+RUN foundryup
+
+# copy over entire monorepo
+COPY . .
+
+# install deps & build
 RUN yarn install
 
+# build witness generator
 WORKDIR /app/packages/circuits
-
 RUN ./scripts/build_witness_generator.sh
 
-WORKDIR /app/packages/subtree-updater
 
-RUN yarn build
-RUN npm i -g
-
-COPY packages/config/configs /app/configs
-
+# build
 WORKDIR /app
+RUN yarn turbo run build --filter="@nocturne-xyz/subtree-updater..."
+
+
+# setup CLI
+WORKDIR /app/actors/subtree-updater
+RUN npm i -g 
 
 ENTRYPOINT ["subtree-updater-cli"]
