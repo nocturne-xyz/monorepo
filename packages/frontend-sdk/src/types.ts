@@ -8,7 +8,7 @@ import {
   OperationRequest,
   OperationStatusResponse,
 } from "@nocturne-xyz/core";
-import { ContractTransaction } from "ethers";
+import { ContractReceipt } from "ethers";
 
 export interface Endpoints {
   screenerEndpoint: string;
@@ -31,7 +31,7 @@ export interface SyncWithProgressOutput {
 }
 
 export interface NocturneSdkConfig {
-  network: NocturneConfig;
+  config: NocturneConfig;
   endpoints: Endpoints;
 }
 
@@ -42,8 +42,8 @@ export interface GetBalanceOpts {
   ignoreOptimisticNFs?: boolean;
 }
 
-export interface InitiateDepositResult {
-  tx: ContractTransaction;
+export interface DepositHandleWithReceipt {
+  receipt: ContractReceipt;
   handle: DepositHandle;
 }
 
