@@ -9,8 +9,8 @@ import {
 } from "@nocturne-xyz/core";
 import {
   DepositHandle,
-  GetBalanceOpts,
   DepositHandleWithReceipt,
+  GetBalanceOpts,
   OperationHandle,
   OperationRequestWithMetadata,
   SyncWithProgressOutput,
