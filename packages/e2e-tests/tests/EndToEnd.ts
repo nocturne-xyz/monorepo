@@ -31,12 +31,11 @@ import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller
 
 chai.use(chaiAsPromised);
 
-// ALICE_UNWRAP_VAL + ALICE_TO_BOB_PRIV_VAL should be between PER_NOTE_AMOUNT
-// and and 2 * PER_NOTE_AMOUNT
 const PER_NOTE_AMOUNT = 100n * 1_000_000n;
 const ALICE_TO_BOB_PUB_VAL = PER_NOTE_AMOUNT * 3n - PER_NOTE_AMOUNT / 2n; // 2.5 notes
 const ALICE_UNWRAP_VAL = ALICE_TO_BOB_PUB_VAL + PER_NOTE_AMOUNT / 4n; // 2.75 notes
 const ALICE_TO_BOB_PRIV_VAL = PER_NOTE_AMOUNT / 4n;
+const COMPLETE_CONF_PAYMENT_AMOUNT = (PER_NOTE_AMOUNT * 2n * 3n) / 4n; // 3/4 of total deposit amount in 'alice deposits one' test case
 
 describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", async () => {
   let teardown: () => Promise<void>;
@@ -246,7 +245,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       chainId,
       tellerContract: teller.address,
     })
-      .unwrap(erc20Asset, ALICE_UNWRAP_VAL) // unwrap 2.75 notes
+      .unwrap(erc20Asset, ALICE_UNWRAP_VAL) // unwrap total 2.75 notes
       .confidentialPayment(
         erc20Asset,
         ALICE_TO_BOB_PRIV_VAL, // conf pay 0.25 notes
@@ -257,7 +256,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
       )
-      .build();
+      .build(); // NOTE: alice spends all 4 notes because its 2.75 unwrapped + 0.25 conf pay + gas
 
     const bundlerBalanceBefore = (
       await gasToken.balanceOf(await bundlerEoa.getAddress())
@@ -297,8 +296,9 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         { includeUncommitted: true }
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
-      // alice should have four nonzero notes total
-      expect(nonZeroNotesAlice.length).to.equal(4);
+      // alice should have 2 nonzero notes total, since all 4 notes spent, alice gets 1 output
+      // note from JSs and 1 refund note (all in same token)
+      expect(nonZeroNotesAlice.length).to.equal(2);
       console.log("alice post-op notes:", nonZeroNotesAlice);
 
       // alice should have a note with refund value from public spendk
@@ -345,7 +345,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     );
   });
 
-  it(`alice deposits one ${PER_NOTE_AMOUNT} token note and confidentially pays Bob ${ALICE_TO_BOB_PRIV_VAL} without revealing asset`, async () => {
+  it(`alice deposits one ${PER_NOTE_AMOUNT} token note and confidentially pays Bob ${COMPLETE_CONF_PAYMENT_AMOUNT} without revealing asset`, async () => {
     console.log("deposit funds and commit note commitments");
     await depositFundsMultiToken(
       depositManager,
