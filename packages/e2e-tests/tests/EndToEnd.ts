@@ -34,9 +34,9 @@ chai.use(chaiAsPromised);
 // ALICE_UNWRAP_VAL + ALICE_TO_BOB_PRIV_VAL should be between PER_NOTE_AMOUNT
 // and and 2 * PER_NOTE_AMOUNT
 const PER_NOTE_AMOUNT = 100n * 1_000_000n;
-const ALICE_UNWRAP_VAL = 120n * 1_000_000n;
-const ALICE_TO_BOB_PUB_VAL = 100n * 1_000_000n;
-const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
+const ALICE_TO_BOB_PUB_VAL = PER_NOTE_AMOUNT * 3n - PER_NOTE_AMOUNT / 2n; // 2.5 notes
+const ALICE_UNWRAP_VAL = ALICE_TO_BOB_PUB_VAL + PER_NOTE_AMOUNT / 4n; // 2.75 notes
+const ALICE_TO_BOB_PRIV_VAL = PER_NOTE_AMOUNT / 4n;
 
 describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", async () => {
   let teardown: () => Promise<void>;
@@ -218,12 +218,15 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     );
   });
 
-  it(`alice deposits two ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately`, async () => {
+  it(`alice deposits four ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately`, async () => {
     console.log("deposit funds and commit note commitments");
     await depositFundsMultiToken(
       depositManager,
       [
-        [erc20, [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]],
+        [
+          erc20,
+          [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT, PER_NOTE_AMOUNT, PER_NOTE_AMOUNT],
+        ],
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
@@ -235,7 +238,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        [await bobEoa.getAddress(), ALICE_TO_BOB_PUB_VAL]
+        [await bobEoa.getAddress(), ALICE_TO_BOB_PUB_VAL] // transfer 2.5 notes
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
@@ -243,10 +246,10 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       chainId,
       tellerContract: teller.address,
     })
-      .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
+      .unwrap(erc20Asset, ALICE_UNWRAP_VAL) // unwrap 2.75 notes
       .confidentialPayment(
         erc20Asset,
-        ALICE_TO_BOB_PRIV_VAL,
+        ALICE_TO_BOB_PRIV_VAL, // conf pay 0.25 notes
         nocturneWalletSDKBob.signer.canonicalAddress()
       )
       .action(erc20.address, encodedFunction)
@@ -281,7 +284,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         (await erc20.balanceOf(await bobEoa.getAddress())).toBigInt()
       ).to.equal(ALICE_TO_BOB_PUB_VAL);
       expect((await erc20.balanceOf(teller.address)).toBigInt()).to.equal(
-        2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
+        4n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
       );
       expect((await erc20.balanceOf(handler.address)).toBigInt()).to.equal(1n);
     };
@@ -294,8 +297,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         { includeUncommitted: true }
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
-      // alice should have two nonzero notes total
-      expect(nonZeroNotesAlice.length).to.equal(2);
+      // alice should have four nonzero notes total
+      expect(nonZeroNotesAlice.length).to.equal(4);
       console.log("alice post-op notes:", nonZeroNotesAlice);
 
       // alice should have a note with refund value from public spendk
@@ -304,11 +307,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
       expect(foundNotesAlice.length).to.equal(1);
 
-      // alice should have another note with refund value from private payment to bob
+      // alice should have another note with output value from private payment to bob
       foundNotesAlice = nonZeroNotesAlice.filter(
         (n) =>
           n.value ===
-          2n * PER_NOTE_AMOUNT - ALICE_UNWRAP_VAL - ALICE_TO_BOB_PRIV_VAL
+          4n * PER_NOTE_AMOUNT - ALICE_UNWRAP_VAL - ALICE_TO_BOB_PRIV_VAL
       );
       expect(foundNotesAlice.length).to.equal(1);
 
