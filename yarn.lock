@@ -3309,7 +3309,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": 1.0.15-testnet
     "@nocturne-xyz/contracts": 1.0.33-testnet
-    "@nocturne-xyz/core": "workspace:^"
+    "@nocturne-xyz/core": 0.1.0
     "@nocturne-xyz/local-prover": 1.0.7-testnet
     "@nocturne-xyz/offchain-utils": 0.1.10
     "@openzeppelin/defender-relay-client": 1.47.1
