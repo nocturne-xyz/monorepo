@@ -184,7 +184,7 @@ export class NocturneSdk implements NocturneSdkApi {
         depositRequestHash,
         request: dr,
         getPendingSubstatus: async () =>
-          this.fetchDepositRequestStatus(depositRequestHash),
+          await this.fetchDepositRequestStatus(depositRequestHash),
       };
     });
   }
@@ -731,7 +731,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
       const depositRequestHash = hashDepositRequest(request);
       const getPendingSubstatus = async () =>
-        this.fetchDepositRequestStatus(depositRequestHash);
+        await this.fetchDepositRequestStatus(depositRequestHash);
 
       const handle = {
         depositRequestHash,
