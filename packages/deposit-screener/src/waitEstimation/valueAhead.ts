@@ -1,6 +1,6 @@
 import { Job, Queue } from "bullmq";
 import { DepositRequestJobData } from "../types";
-import { AssetTrait, DepositRequest } from "@nocturne-xyz/wallet-sdk";
+import { AssetTrait, DepositRequest } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 
 export async function totalValueAheadInScreenerQueueInclusive(

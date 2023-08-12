@@ -12,7 +12,7 @@ import {
   OperationRequestBuilder,
   computeOperationDigest,
   proveOperation,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ethers } from "ethers";

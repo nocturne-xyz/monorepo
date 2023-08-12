@@ -4,7 +4,7 @@ import {
   DepositEventType,
   DepositEvent,
   TotalEntityIndex,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 
 export interface DepositEventsBatch {
   totalEntityIndex: TotalEntityIndex;

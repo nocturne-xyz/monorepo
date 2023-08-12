@@ -8,7 +8,7 @@ import {
   max,
   parseEventsFromContractReceipt,
   unzip,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import { RateLimitWindow } from "./rateLimitWindow";
 import { DepositScreenerDB } from "./db";
 import IORedis from "ioredis";

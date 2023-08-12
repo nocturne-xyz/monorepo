@@ -1,10 +1,6 @@
 import { deployContractsWithDummyConfig } from "../src/deploy";
 import { ethers } from "ethers";
-import {
-  CanonAddress,
-  StealthAddressTrait,
-  zip,
-} from "@nocturne-xyz/wallet-sdk";
+import { CanonAddress, StealthAddressTrait, zip } from "@nocturne-xyz/core";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import fs from "fs";
 import findWorkspaceRoot from "find-yarn-workspace-root";

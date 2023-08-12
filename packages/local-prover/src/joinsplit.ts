@@ -6,7 +6,7 @@ import {
   JoinSplitProofWithPublicSignals,
   JoinSplitProver,
   VerifyingKey,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 
 export class WasmJoinSplitProver implements JoinSplitProver {
   wasmPath: string;

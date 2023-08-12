@@ -1,4 +1,4 @@
-import { Address } from "@nocturne-xyz/wallet-sdk";
+import { Address } from "@nocturne-xyz/core";
 import { MAGIC_LONG_DELAY_VALUE, MAGIC_ZERO_DELAY_VALUE } from "../utils";
 
 export class DummyScreenerDelayCalculator {

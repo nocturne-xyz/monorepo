@@ -27,8 +27,8 @@
   "dependencies": {
     "@nocturne-xyz/config": "1.0.15-testnet",
     "@nocturne-xyz/contracts": "1.0.32-alpha",
+    "@nocturne-xyz/core": "0.1.0",
     "@nocturne-xyz/offchain-utils": "0.1.10",
-    "@nocturne-xyz/wallet-sdk": "0.1.0",
     "@openzeppelin/defender-relay-client": "1.47.1",
     "@types/commander": "^2.12.2",
     "@types/cors": "^2.8.13",

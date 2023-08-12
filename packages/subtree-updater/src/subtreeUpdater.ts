@@ -17,7 +17,7 @@ import {
   merkleIndexToSubtreeIndex,
   BaseProof,
   SubtreeUpdateInputs,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import IORedis from "ioredis";
 import { Handler } from "@nocturne-xyz/contracts";
 import { ActorHandle, makeCreateCounterFn } from "@nocturne-xyz/offchain-utils";

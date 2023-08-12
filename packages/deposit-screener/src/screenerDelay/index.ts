@@ -1,4 +1,4 @@
-import { Address } from "@nocturne-xyz/wallet-sdk";
+import { Address } from "@nocturne-xyz/core";
 
 export interface ScreenerDelayCalculator {
   calculateDelaySeconds(

@@ -13,7 +13,7 @@ import {
   randomFr,
   encodeEncodedAssetAddrWithSignBitsPI,
   TreeConstants,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 
 const { ZERO_VALUE, ARITY, DEPTH } = TreeConstants;
 
