@@ -124,7 +124,7 @@ export const getNocturneSdkConfig = (
   const config = loadNocturneConfigBuiltin(networkName);
   const endpoints = getEndpoints(networkName);
   return {
-    network: config,
+    config,
     endpoints,
   };
 };

@@ -11,7 +11,7 @@ import {
   BundlerOperationID,
   DepositHandle,
   GetBalanceOpts,
-  InitiateDepositResult,
+  DepositHandleWithReceipt,
   OperationHandle,
   OperationRequestWithMetadata,
   SyncWithProgressOutput,
@@ -32,7 +32,7 @@ export interface NocturneSdkApi {
   initiateEthDeposits(
     values: bigint[],
     gasCompensationPerDeposit: bigint
-  ): Promise<InitiateDepositResult>;
+  ): Promise<DepositHandleWithReceipt[]>;
 
   /**
    * @param erc20Address Asset address
@@ -43,7 +43,7 @@ export interface NocturneSdkApi {
     erc20Address: Address,
     values: bigint[],
     gasCompensationPerDeposit: bigint
-  ): Promise<InitiateDepositResult>;
+  ): Promise<DepositHandleWithReceipt[]>;
 
   getAllDeposits(): Promise<DepositHandle[]>;
 

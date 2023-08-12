@@ -49,7 +49,7 @@ import {
   BundlerOperationID,
   DepositHandle,
   GetBalanceOpts,
-  InitiateDepositResult,
+  DepositHandleWithReceipt,
   NocturneSdkConfig,
   OperationHandle,
   OperationRequestWithMetadata,
@@ -97,13 +97,13 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     this.signerThunk = thunk(() => this.getWindowSigner());
     this.depositManagerContractThunk = thunk(async () =>
       DepositManager__factory.connect(
-        this.config.network.depositManagerAddress(),
+        this.config.config.depositManagerAddress(),
         await this.signerThunk()
       )
     );
     this.handlerContractThunk = thunk(async () =>
       Handler__factory.connect(
-        this.config.network.handlerAddress(),
+        this.config.config.handlerAddress(),
         await this.signerThunk()
       )
     );
@@ -117,10 +117,9 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
    * @param gasCompensationPerDeposit Gas compensation per deposit
    */
   async initiateEthDeposits(
-    // TODO make API response conform to new change
     values: bigint[],
     gasCompensationPerDeposit: bigint
-  ): Promise<InitiateDepositResult> {
+  ): Promise<DepositHandleWithReceipt[]> {
     const signer = await this.getWindowSigner();
 
     const ethToWrap = values.reduce((acc, val) => acc + val, 0n);
@@ -140,16 +139,12 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     const tx = await (
       await this.depositManagerContractThunk()
     ).instantiateETHMultiDeposit(values, depositAddr, { value: totalValue });
-    const erc20s = this.config.network.erc20s; // TODO holy hack, need to refactor config for better consumption
-    const wethAddress = (
-      erc20s.get("weth") ??
-      erc20s.get("WETH") ??
-      erc20s.get("Weth")
-    )?.address;
+    const erc20s = this.config.config.erc20s;
+    const wethAddress = erc20s.get("weth")?.address;
     if (!wethAddress) {
       throw new Error("WETH address not found in Nocturne config");
     }
-    return this.formInitiateDepositResult(tx);
+    return this.formDepositHandlesWithTxReceipt(tx);
   }
 
   async getAllDeposits(): Promise<DepositHandle[]> {
@@ -161,7 +156,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     erc20Address: Address,
     values: bigint[],
     gasCompensationPerDeposit: bigint
-  ): Promise<InitiateDepositResult> {
+  ): Promise<DepositHandleWithReceipt[]> {
     const signer = await this.getWindowSigner();
     const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
 
@@ -191,7 +186,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       values,
       depositAddr
     );
-    return this.formInitiateDepositResult(tx);
+    return this.formDepositHandlesWithTxReceipt(tx);
   }
 
   /**
@@ -616,51 +611,57 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       },
     })) as string;
   }
-  private async formInitiateDepositResult(
+
+  private async formDepositHandlesWithTxReceipt(
     tx: ContractTransaction
-  ): Promise<InitiateDepositResult> {
-    const signer = await this.getWindowSigner();
-    const event = parseEventsFromContractReceipt(
-      await tx.wait(),
+  ): Promise<DepositHandleWithReceipt[]> {
+    const receipt = await tx.wait();
+    const events = parseEventsFromContractReceipt(
+      receipt,
       (await this.depositManagerContractThunk()).interface.getEvent(
         "DepositInstantiated"
       )
-    ).at(0) as DepositInstantiatedEvent | undefined;
-    if (!event) {
-      throw new Error("Deposit failed - no event found");
-    }
-    const { encodedAsset, value, nonce, depositAddr, gasCompensation } =
-      event.args;
+    ) as DepositInstantiatedEvent[];
+    return events.map((event) => {
+      const {
+        encodedAsset,
+        value,
+        nonce,
+        depositAddr,
+        gasCompensation,
+        spender,
+      } = event.args;
 
-    const depositRequest: DepositRequest = {
-      spender: await signer.getAddress(),
-      encodedAsset: {
-        encodedAssetAddr: encodedAsset.encodedAssetAddr.toBigInt(),
-        encodedAssetId: encodedAsset.encodedAssetId.toBigInt(),
-      },
-      value: value.toBigInt(),
-      depositAddr: {
-        h1: depositAddr.h1.toBigInt(),
-        h2: depositAddr.h2.toBigInt(),
-      },
-      nonce: nonce.toBigInt(),
-      gasCompensation: gasCompensation.toBigInt(),
-    };
+      const request: DepositRequest = {
+        spender: spender,
+        encodedAsset: {
+          encodedAssetAddr: encodedAsset.encodedAssetAddr.toBigInt(),
+          encodedAssetId: encodedAsset.encodedAssetId.toBigInt(),
+        },
+        value: value.toBigInt(),
+        depositAddr: {
+          h1: depositAddr.h1.toBigInt(),
+          h2: depositAddr.h2.toBigInt(),
+        },
+        nonce: nonce.toBigInt(),
+        gasCompensation: gasCompensation.toBigInt(),
+      };
 
-    const depositRequestHash = hashDepositRequest(depositRequest);
-    const getStatus = async () =>
-      this.fetchDepositRequestStatus(depositRequestHash);
+      const depositRequestHash = hashDepositRequest(request);
+      const getStatus = async () =>
+        this.fetchDepositRequestStatus(depositRequestHash);
 
-    const handle = {
-      depositRequestHash,
-      request: depositRequest,
-      getStatus,
-    };
+      const handle = {
+        depositRequestHash,
+        request,
+        getStatus,
+      };
 
-    return {
-      tx,
-      handle,
-    };
+      return {
+        receipt,
+        handle,
+      };
+    });
   }
 
   private async getWindowSigner(): Promise<ethers.Signer> {
