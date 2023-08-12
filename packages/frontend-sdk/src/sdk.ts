@@ -53,6 +53,7 @@ import {
   DepositHandle,
   DepositHandleWithReceipt,
   DepositRequestWithMetadata,
+  DepositWithSubstatusHandle,
   GetBalanceOpts,
   NocturneSdkConfig,
   OperationHandle,
@@ -186,6 +187,29 @@ export class NocturneSdk implements NocturneSdkApi {
           this.fetchDepositRequestStatus(depositRequestHash),
       };
     });
+  }
+
+  async getAllDepositsWithSubstatus(): Promise<DepositWithSubstatusHandle[]> {
+    const deposits = await this.getAllDeposits();
+    // todo make status /mget endpoint, this is fine for now
+    const depositsWithSubstatus: Promise<DepositWithSubstatusHandle>[] =
+      deposits.map(async (deposit) => {
+        let substatus: PendingDepositStatusResponse | undefined;
+
+        if (deposit.request.status === "Pending") {
+          substatus = await this.fetchDepositRequestStatus(
+            deposit.depositRequestHash
+          );
+        }
+        const { depositRequestHash, request } = deposit;
+        return {
+          ...substatus,
+          depositRequestHash,
+          request,
+        };
+      });
+
+    return await Promise.all(depositsWithSubstatus);
   }
 
   async initiateErc20Deposits(

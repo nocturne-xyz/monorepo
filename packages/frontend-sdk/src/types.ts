@@ -63,11 +63,18 @@ export type PendingDepositStatusResponse = Omit<
 > & {
   substatus: keyof typeof DepositRequestStatus;
 };
+
 export interface DepositHandle {
   depositRequestHash: string;
   request: DepositRequestWithMetadata;
   getPendingSubstatus: () => Promise<PendingDepositStatusResponse>;
 }
+
+export type DepositWithSubstatusHandle = Omit<
+  DepositHandle,
+  "getPendingSubstatus"
+> &
+  Partial<PendingDepositStatusResponse>;
 
 export interface OperationHandle {
   digest: bigint;
