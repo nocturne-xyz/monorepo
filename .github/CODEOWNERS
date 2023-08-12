@@ -9,6 +9,7 @@ packages/circuits @Sladuca
 # SDKs
 
 packages/sdk @luketchang @Sladuca
+packages/crypto-utils @Sladuca
 
 # Frontend
 

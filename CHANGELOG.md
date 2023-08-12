@@ -2,6 +2,24 @@
 
 ### Unreleased
 
+- overhauled monorepo structure:
+  - move actors out of `packages` into a separate `actors` dir 
+  - move snap out of `packages` into a separate `app` dir
+  - move `crypto-utils` into monorepo
+  - add entry to `CODEOWNERS` for `crypto-utils`
+  - add unnecessary large files to `.dockerignore`, reducing build context size from 9GB to 2GB
+  - change actor dockerfiles s.t. they pull entire monorepo into build context to allow containers to use workspace deps
+  - remove all package-specific docker build/push scripts
+  - change `prepare_docker.sh` and `push_docker` s.t. it takes a `-o` option for specifying a specific actor to build
+  - rename `prepare_docker.sh` to `build_docker.sh`
+  - change local dev setup start actors with nodemon instead of docker
+  - add turborepo "root script" for `deployAndDeposit.ts`
+  - add turborepo `dev` script that stands up the entire system tracking necessary dependencies
+  - add `dev.sh`, which is just a shim to get around turborepo not handling long-running deps
+  - move `setup_subgraph.sh` into E2E test dir, as that's the only place it's used
+  - remove `run_local.sh`
+  - remove unused scripts from root pacakge.json
+  - update `scripts/README.md`
 - Removed old site
 - site script runs new subtree updater:
   - use docker compose
