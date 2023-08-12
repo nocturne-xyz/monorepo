@@ -27,6 +27,7 @@ import {
   StealthAddress,
   StealthAddressTrait,
   SyncOpts,
+  Thunk,
   VerifyingKey,
   computeOperationDigest,
   decomposeCompressedPoint,
@@ -36,6 +37,7 @@ import {
   joinSplitPublicSignalsToArray,
   parseEventsFromContractReceipt,
   proveOperation,
+  thunk,
   unpackFromSolidityProof,
 } from "@nocturne-xyz/sdk";
 import retry from "async-retry";
@@ -73,6 +75,10 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   protected config: NocturneSdkConfig;
   protected provider: ValidProvider;
 
+  protected signerThunk: Thunk<ethers.Signer>;
+  protected depositManagerContractThunk: Thunk<DepositManager>;
+  protected handlerContractThunk: Thunk<Handler>;
+
   constructor(
     networkName: SupportedNetwork = "mainnet",
     provider?: ValidProvider
@@ -87,22 +93,19 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     this.screenerEndpoint = config.endpoints.screenerEndpoint;
     this.config = config;
     this.provider = provider || getProvider();
-  }
 
-  protected depositManagerContract(
-    signerOrProvider: ethers.Signer | ValidProvider
-  ): DepositManager {
-    return DepositManager__factory.connect(
-      this.config.network.depositManagerAddress(),
-      signerOrProvider
+    this.signerThunk = thunk(() => this.getWindowSigner());
+    this.depositManagerContractThunk = thunk(async () =>
+      DepositManager__factory.connect(
+        this.config.network.depositManagerAddress(),
+        await this.signerThunk()
+      )
     );
-  }
-  protected handlerContract(
-    signerOrProvider: ethers.Signer | ValidProvider
-  ): Handler {
-    return Handler__factory.connect(
-      this.config.network.depositManagerAddress(),
-      signerOrProvider
+    this.handlerContractThunk = thunk(async () =>
+      Handler__factory.connect(
+        this.config.network.handlerAddress(),
+        await this.signerThunk()
+      )
     );
   }
 
@@ -134,8 +137,8 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     const depositAddr = StealthAddressTrait.compress(
       await this.getRandomStealthAddress()
     );
-    const tx = await this.depositManagerContract(
-      signer
+    const tx = await (
+      await this.depositManagerContractThunk()
     ).instantiateETHMultiDeposit(values, depositAddr, { value: totalValue });
     const erc20s = this.config.network.erc20s; // TODO holy hack, need to refactor config for better consumption
     const wethAddress = (
@@ -177,17 +180,17 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       erc20Address,
       signer
     );
-    await erc20Contract.approve(
-      this.depositManagerContract(signer).address,
-      totalValue
-    );
+    const depositManagerContract = await this.depositManagerContractThunk();
+    await erc20Contract.approve(depositManagerContract.address, totalValue);
 
     const depositAddr = StealthAddressTrait.compress(
       await this.getRandomStealthAddress()
     );
-    const tx = await this.depositManagerContract(
-      signer
-    ).instantiateErc20MultiDeposit(erc20Address, values, depositAddr);
+    const tx = await depositManagerContract.instantiateErc20MultiDeposit(
+      erc20Address,
+      values,
+      depositAddr
+    );
     return this.formInitiateDepositResult(tx);
   }
 
@@ -253,13 +256,15 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     if (signerAddress.toLowerCase() !== req.spender.toLowerCase()) {
       throw new Error("Spender and signer addresses do not match");
     }
-    const isOutstandingDeposit = await this.depositManagerContract(
-      signer
-    )._outstandingDepositHashes(hashDepositRequest(req));
+    const depositManagerContract = await this.depositManagerContractThunk();
+    const isOutstandingDeposit =
+      await depositManagerContract._outstandingDepositHashes(
+        hashDepositRequest(req)
+      );
     if (!isOutstandingDeposit) {
       throw new Error("Deposit request does not exist");
     }
-    return this.depositManagerContract(signer).retrieveDeposit(req);
+    return depositManagerContract.retrieveDeposit(req);
   }
   /**
    * Fetch status of existing deposit request given its hash.
@@ -496,9 +501,9 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
    * returning newly synced merkle indices as syncing process occurs.
    */
   async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
-    const provider = this.provider;
+    const handlerContract = await this.handlerContractThunk();
     let latestMerkleIndexOnChain =
-      (await this.handlerContract(provider).totalCount()).toNumber() - 1;
+      (await handlerContract.totalCount()).toNumber() - 1;
     let latestSyncedMerkleIndex =
       (await this.getLatestSyncedMerkleIndex()) ?? 0;
 
@@ -515,7 +520,8 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
 
         if (count % refetchEvery === 0) {
           latestMerkleIndexOnChain =
-            (await sdk.handlerContract(provider).totalCount()).toNumber() - 1;
+            (await (await sdk.handlerContractThunk()).totalCount()).toNumber() -
+            1;
         }
         count++;
         yield {
@@ -616,7 +622,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     const signer = await this.getWindowSigner();
     const event = parseEventsFromContractReceipt(
       await tx.wait(),
-      this.depositManagerContract(signer).interface.getEvent(
+      (await this.depositManagerContractThunk()).interface.getEvent(
         "DepositInstantiated"
       )
     ).at(0) as DepositInstantiatedEvent | undefined;
