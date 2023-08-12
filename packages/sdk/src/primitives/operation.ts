@@ -14,6 +14,8 @@ import {
   TrackedAsset,
 } from "./types";
 import { ethers, TypedDataDomain } from "ethers";
+import * as JSON from "bigint-json-serialization";
+
 const { _TypedDataEncoder } = ethers.utils;
 
 export const TELLER_CONTRACT_NAME = "NocturneTeller";
@@ -132,18 +134,25 @@ export function toSignableOperation(
   const joinSplitAssets = dedup(
     joinSplits.map(({ encodedAsset }) => encodedAsset)
   );
+  // we need to stringify because object refs are not equal, so they won't be deduped
+  // we need to sort because the order of the elements of the set
+  // is non-deterministic
   const trackedJoinSplitAssets: Array<TrackedAsset> = Array.from(
     joinSplitAssets.map((encodedAsset) => {
-      return { encodedAsset, minRefundValue: 0n };
+      return JSON.stringify({ encodedAsset, minRefundValue: 0n });
     })
-  );
+  )
+    .sort()
+    .map(JSON.parse);
 
   const refundAssets = dedup(encodedRefundAssets);
   const trackedRefundAssets: Array<TrackedAsset> = Array.from(
     refundAssets.map((encodedAsset) => {
-      return { encodedAsset, minRefundValue: 0n };
+      return JSON.stringify({ encodedAsset, minRefundValue: 0n });
     })
-  );
+  )
+    .sort()
+    .map(JSON.parse);
 
   const trackedAssets = trackedJoinSplitAssets.concat(trackedRefundAssets);
 
@@ -215,21 +224,28 @@ export function toSubmittableOperation(
     atomicActions,
   } = op;
 
+  // we need to stringify because object refs are not equal, so they won't be deduped
+  // we need to sort because the order of the elements of the set
+  // is non-deterministic
   const trackedJoinSplitAssets: Array<TrackedAsset> = Array.from(
     new Set(
       joinSplits.map(({ encodedAsset }) => {
-        return { encodedAsset, minRefundValue: 0n };
+        return JSON.stringify({ encodedAsset, minRefundValue: 0n });
       })
     )
-  );
+  )
+    .sort()
+    .map(JSON.parse);
 
   const trackedRefundAssets: Array<TrackedAsset> = Array.from(
     new Set(
       encodedRefundAssets.map((encodedAsset) => {
-        return { encodedAsset, minRefundValue: 0n };
+        return JSON.stringify({ encodedAsset, minRefundValue: 0n });
       })
     )
-  );
+  )
+    .sort()
+    .map(JSON.parse);
 
   const trackedAssets = trackedJoinSplitAssets.concat(trackedRefundAssets);
 
