@@ -84,6 +84,7 @@ const runProcess = new Command("processor")
     let provider: ethers.providers.Provider;
     let signer: ethers.Signer;
     if (relayerApiKey && relayerApiSecret) {
+      console.log("[SCREENER] HI");
       const credentials = {
         apiKey: relayerApiKey,
         apiSecret: relayerApiSecret,
@@ -93,6 +94,7 @@ const runProcess = new Command("processor")
         speed: "average",
       });
     } else if (rpcUrl && privateKey) {
+      console.log("[SCREENER] YO");
       provider = new ethers.providers.JsonRpcProvider(rpcUrl);
       signer = new ethers.Wallet(privateKey, provider);
     } else {
