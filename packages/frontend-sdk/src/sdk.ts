@@ -1,10 +1,10 @@
-import { NocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager,
   DepositManager__factory,
   Handler,
   Handler__factory,
 } from "@nocturne-xyz/contracts";
+import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
   ActionMetadata,
@@ -19,8 +19,6 @@ import {
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
   OpDigestWithMetadata,
-  OperationMetadata,
-  OperationRequest,
   OperationRequestBuilder,
   OperationStatusResponse,
   ProvenOperation,
@@ -29,6 +27,7 @@ import {
   StealthAddress,
   StealthAddressTrait,
   SyncOpts,
+  Thunk,
   VerifyingKey,
   computeOperationDigest,
   decomposeCompressedPoint,
@@ -36,104 +35,77 @@ import {
   fetchDepositEvents,
   hashDepositRequest,
   joinSplitPublicSignalsToArray,
+  parseEventsFromContractReceipt,
   proveOperation,
+  thunk,
   unpackFromSolidityProof,
 } from "@nocturne-xyz/sdk";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
-import { ContractTransaction } from "ethers";
+import { ContractTransaction, ethers } from "ethers";
+import { NocturneSdkApi } from "./api";
+import vkey from "./joinsplit/joinsplitVkey.json";
+import {
+  BundlerOperationID,
+  DepositHandle,
+  GetBalanceOpts,
+  DepositHandleWithReceipt,
+  NocturneSdkConfig,
+  OperationHandle,
+  OperationRequestWithMetadata,
+  SupportedNetwork,
+  SyncWithProgressOutput,
+} from "./types";
 import {
   SNAP_ID,
   SUBGRAPH_URL,
+  ValidProvider,
+  getNocturneSdkConfig,
+  getProvider,
   getTokenContract,
-  getWindowSigner,
 } from "./utils";
 
-const WASM_PATH = "/joinsplit.wasm";
-const ZKEY_PATH = "/joinsplit.zkey";
-const VKEY_PATH = "/joinSplitVkey.json";
+const WASM_PATH = "/joinsplit/joinsplit.wasm"; // ! TODO this pathing style might be outdated, no longer work
+const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
 
-export type BundlerOperationID = string;
+export class NocturneFrontendSDK implements NocturneSdkApi {
+  protected joinSplitProver: WasmJoinSplitProver;
+  protected bundlerEndpoint: string;
+  protected screenerEndpoint: string;
+  protected config: NocturneSdkConfig;
+  protected provider: ValidProvider;
 
-export interface Endpoints {
-  screenerEndpoint: string;
-  bundlerEndpoint: string;
-}
+  protected signerThunk: Thunk<ethers.Signer>;
+  protected depositManagerContractThunk: Thunk<DepositManager>;
+  protected handlerContractThunk: Thunk<Handler>;
 
-export interface ContractAddresses {
-  depositManagerAddress: string;
-  handlerAddress: string;
-}
-
-export interface SyncProgress {
-  latestSyncedMerkleIndex: number;
-}
-
-export interface SyncWithProgressOutput {
-  latestSyncedMerkleIndex: number;
-  latestMerkleIndexOnChain: number;
-  progressIter: ClosableAsyncIterator<SyncProgress>;
-}
-
-export class NocturneFrontendSDK {
-  joinSplitProver: WasmJoinSplitProver;
-  depositManagerContract: DepositManager;
-  handlerContract: Handler;
-  bundlerEndpoint: string;
-  screenerEndpoint: string;
-
-  private constructor(
-    depositManagerContract: DepositManager,
-    handlerContract: Handler,
-    endpoints: Endpoints,
-    wasmPath: string,
-    zkeyPath: string,
-    vkey: VerifyingKey
+  constructor(
+    networkName: SupportedNetwork = "mainnet",
+    provider?: ValidProvider
   ) {
-    this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
-    this.depositManagerContract = depositManagerContract;
-    this.depositManagerContract = depositManagerContract;
-    this.handlerContract = handlerContract;
-    this.screenerEndpoint = endpoints.screenerEndpoint;
-    this.bundlerEndpoint = endpoints.bundlerEndpoint;
-    this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
-  }
-
-  /**
-   * Instantiate new `NocturneFrontendSDK` instance.
-   *
-   * @param depositManagerContractAddress Teller contract address
-   * @param screenerEndpoint Screener endpoint
-   * @param bundlerEndpoint Bundler endpoint
-   * @param wasPath Joinsplit wasm path
-   * @param zkeyPath Joinsplit zkey path
-   * @param vkey Vkey object
-   */
-  static async instantiate(
-    config: NocturneConfig,
-    endpoints: Endpoints,
-    wasmPath: string,
-    zkeyPath: string,
-    vkey: any
-  ): Promise<NocturneFrontendSDK> {
-    const signer = await getWindowSigner();
-
-    const depositManagerAddress = config.depositManagerAddress();
-    const depositManagerContract = DepositManager__factory.connect(
-      depositManagerAddress,
-      signer
+    const config = getNocturneSdkConfig(networkName);
+    this.joinSplitProver = new WasmJoinSplitProver(
+      WASM_PATH,
+      ZKEY_PATH,
+      vkey as VerifyingKey
     );
+    this.bundlerEndpoint = config.endpoints.bundlerEndpoint;
+    this.screenerEndpoint = config.endpoints.screenerEndpoint;
+    this.config = config;
+    this.provider = provider || getProvider();
 
-    const handlerAddress = config.handlerAddress();
-    const handlerContract = Handler__factory.connect(handlerAddress, signer);
-
-    return new NocturneFrontendSDK(
-      depositManagerContract,
-      handlerContract,
-      endpoints,
-      wasmPath,
-      zkeyPath,
-      vkey
+    this.signerThunk = thunk(() => this.getWindowSigner());
+    this.depositManagerContractThunk = thunk(async () =>
+      DepositManager__factory.connect(
+        this.config.config.depositManagerAddress(),
+        await this.signerThunk()
+      )
+    );
+    this.handlerContractThunk = thunk(async () =>
+      Handler__factory.connect(
+        this.config.config.handlerAddress(),
+        await this.signerThunk()
+      )
     );
   }
 
@@ -144,11 +116,11 @@ export class NocturneFrontendSDK {
    * @param values Asset amounts
    * @param gasCompensationPerDeposit Gas compensation per deposit
    */
-  async instantiateETHDeposits(
+  async initiateEthDeposits(
     values: bigint[],
     gasCompensationPerDeposit: bigint
-  ): Promise<ContractTransaction> {
-    const signer = await getWindowSigner();
+  ): Promise<DepositHandleWithReceipt[]> {
+    const signer = await this.getWindowSigner();
 
     const ethToWrap = values.reduce((acc, val) => acc + val, 0n);
     const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
@@ -162,29 +134,30 @@ export class NocturneFrontendSDK {
     }
 
     const depositAddr = StealthAddressTrait.compress(
-      await this.getRandomizedAddr()
+      await this.getRandomStealthAddress()
     );
-    return this.depositManagerContract.instantiateETHMultiDeposit(
-      values,
-      depositAddr,
-      { value: totalValue }
-    );
+    const tx = await (
+      await this.depositManagerContractThunk()
+    ).instantiateETHMultiDeposit(values, depositAddr, { value: totalValue });
+    const erc20s = this.config.config.erc20s;
+    const wethAddress = erc20s.get("weth")?.address;
+    if (!wethAddress) {
+      throw new Error("WETH address not found in Nocturne config");
+    }
+    return this.formDepositHandlesWithTxReceipt(tx);
   }
 
-  /**
-   * Call `depositManager.instantiateErc20MultiDeposit` given the provided
-   * `erc20Address`, `valuse`, and `gasCompPerDeposit`.
-   *
-   * @param erc20Address Asset address
-   * @param values Asset amounts
-   * @param gasCompensationPerDeposit Gas compensation per deposit
-   */
-  async instantiateErc20Deposits(
+  async getAllDeposits(): Promise<DepositHandle[]> {
+    // TODO unless there's some other way, will entail adding gql consumer to fe-sdk
+    throw new Error("Not yet implemented!");
+  }
+
+  async initiateErc20Deposits(
     erc20Address: Address,
     values: bigint[],
     gasCompensationPerDeposit: bigint
-  ): Promise<ContractTransaction> {
-    const signer = await getWindowSigner();
+  ): Promise<DepositHandleWithReceipt[]> {
+    const signer = await this.getWindowSigner();
     const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
 
     const signerBalance = (await signer.getBalance()).toBigInt();
@@ -194,26 +167,26 @@ export class NocturneFrontendSDK {
       );
     }
 
-    const totalValue = values.reduce((acc, val) => acc + val, 0n);
+    const depositAmount = values.reduce((acc, val) => acc + val, 0n);
+    const totalValue = depositAmount + gasCompRequired;
 
     const erc20Contract = getTokenContract(
       AssetType.ERC20,
       erc20Address,
       signer
     );
-    await erc20Contract.approve(
-      this.depositManagerContract.address,
-      totalValue
-    );
+    const depositManagerContract = await this.depositManagerContractThunk();
+    await erc20Contract.approve(depositManagerContract.address, totalValue);
 
     const depositAddr = StealthAddressTrait.compress(
-      await this.getRandomizedAddr()
+      await this.getRandomStealthAddress()
     );
-    return this.depositManagerContract.instantiateErc20MultiDeposit(
+    const tx = await depositManagerContract.instantiateErc20MultiDeposit(
       erc20Address,
       values,
       depositAddr
     );
+    return this.formDepositHandlesWithTxReceipt(tx);
   }
 
   /**
@@ -227,7 +200,7 @@ export class NocturneFrontendSDK {
     amount: bigint,
     recipientAddress: Address
   ): Promise<BundlerOperationID> {
-    const signer = await getWindowSigner();
+    const signer = await this.getWindowSigner();
     const provider = signer.provider;
 
     if (!provider) {
@@ -260,11 +233,11 @@ export class NocturneFrontendSDK {
       erc20Address,
       amount,
     };
-
-    const provenOperation = await this.signAndProveOperation(operationRequest, {
-      action,
+    const provenOperation = await this.signAndProveOperation({
+      request: operationRequest,
+      metadata: { action },
     });
-    return this.submitProvenOperation(provenOperation);
+    return this.submitOperation(provenOperation);
   }
 
   /**
@@ -273,18 +246,20 @@ export class NocturneFrontendSDK {
   async retrievePendingDeposit(
     req: DepositRequest
   ): Promise<ContractTransaction> {
-    const signer = await (await getWindowSigner()).getAddress();
-    if (signer.toLowerCase() !== req.spender.toLowerCase()) {
+    const signer = await this.getWindowSigner();
+    const signerAddress = await signer.getAddress();
+    if (signerAddress.toLowerCase() !== req.spender.toLowerCase()) {
       throw new Error("Spender and signer addresses do not match");
     }
+    const depositManagerContract = await this.depositManagerContractThunk();
     const isOutstandingDeposit =
-      await this.depositManagerContract._outstandingDepositHashes(
+      await depositManagerContract._outstandingDepositHashes(
         hashDepositRequest(req)
       );
     if (!isOutstandingDeposit) {
       throw new Error("Deposit request does not exist");
     }
-    return this.depositManagerContract.retrieveDeposit(req);
+    return depositManagerContract.retrieveDeposit(req);
   }
   /**
    * Fetch status of existing deposit request given its hash.
@@ -307,17 +282,11 @@ export class NocturneFrontendSDK {
     );
   }
 
-  /**
-   * Fetch quote of wait time in seconds given spender, assetAddr, and value.
-   *
-   * @param erc20Address Asset address
-   * @param totalValue Asset amount
-   */
-  async fetchDepositQuote(
+  async getErc20DepositQuote(
     erc20Address: Address,
     totalValue: bigint
   ): Promise<DepositQuoteResponse> {
-    const signer = await getWindowSigner();
+    const signer = await this.getWindowSigner();
     const spender = await signer.getAddress();
 
     return await retry(
@@ -342,18 +311,25 @@ export class NocturneFrontendSDK {
   }
 
   /**
-   * Generate `ProvenOperation` given an `operationRequest`.
+   * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
+   * This includes all joinsplit tx inputs.
    *
    * @param operationRequest Operation request
    */
-  async signAndProveOperation(
-    operationRequest: OperationRequest,
-    opMetadata: OperationMetadata
-  ): Promise<ProvenOperation> {
-    const op = await this.requestSignOperation(operationRequest, opMetadata);
-
+  async signOperationRequest(
+    operationRequest: OperationRequestWithMetadata
+  ): Promise<SignedOperation> {
+    console.log("[fe-sdk] metadata:", operationRequest.metadata);
+    const json = await this.invokeSnap({
+      method: "nocturne_signOperation",
+      params: {
+        operationRequest: JSON.stringify(operationRequest.request),
+        opMetadata: JSON.stringify(operationRequest.metadata),
+      },
+    });
+    const op = JSON.parse(json) as SignedOperation;
     console.log("SignedOperation:", op);
-    return await this.proveOperation(op);
+    return op;
   }
 
   async proveOperation(op: SignedOperation): Promise<ProvenOperation> {
@@ -408,7 +384,7 @@ export class NocturneFrontendSDK {
 
   // Submit a proven operation to the bundler server
   // returns the bundler's ID for the submitted operation, which can be used to check the status of the operation
-  async submitProvenOperation(
+  async submitOperation(
     operation: ProvenOperation
   ): Promise<BundlerOperationID> {
     return await retry(
@@ -438,50 +414,62 @@ export class NocturneFrontendSDK {
     );
   }
 
+  async signAndProveOperation(
+    operationRequest: OperationRequestWithMetadata
+  ): Promise<ProvenOperation> {
+    const op = await this.signOperationRequest(operationRequest);
+
+    return await this.proveOperation(op);
+  }
+
   /**
    * Return a list of snap's assets (address & id) along with its given balance.
    * if includeUncommitted is defined and true, then the method include notes that are not yet committed to the commitment tree
    * if ignoreOptimisticNFs is defined and true, then the method will include notes that have been used by the SDK, but may not have been nullified on-chain yet
    * if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
    */
-  async getAllBalances({
-    includeUncommitted = false,
-    ignoreOptimisticNFs = false,
-  } = {}): Promise<AssetWithBalance[]> {
-    const params = {
-      includeUncommitted,
-      ignoreOptimisticNFs,
-    };
-    console.log("[fe-sdk] getAllBalances with params:", params);
-    const json = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
-      params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_getAllBalances",
-          params,
-        },
-      },
-    })) as string;
+  async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
+    console.log("[fe-sdk] getAllBalances with params:", opts);
+    const json = await this.invokeSnap({
+      method: "nocturne_getAllBalances",
+      params: opts,
+    });
 
     return JSON.parse(json) as AssetWithBalance[];
   }
 
-  /**
-   * Return list of all inflight operation digests and metadata about each operation.
-   */
-  async getInflightOpDigestsWithMetadata(): Promise<OpDigestWithMetadata[]> {
-    const json = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
+  async getBalanceForAsset(
+    erc20Address: Address,
+    opts?: GetBalanceOpts
+  ): Promise<AssetWithBalance> {
+    const asset = AssetTrait.erc20AddressToAsset(erc20Address);
+    const json = await this.invokeSnap({
+      method: "nocturne_getBalanceForAsset",
       params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_getInflightOpDigestsWithMetadata",
-        },
+        asset,
+        opts,
       },
-    })) as string;
+    });
+    if (json === undefined) {
+      throw new Error("Balance for asset does not exist");
+    }
+    return JSON.parse(json) as AssetWithBalance;
+  }
 
-    return JSON.parse(json) as OpDigestWithMetadata[];
+  async getInFlightOperations(): Promise<OperationHandle[]> {
+    const json = await this.invokeSnap({
+      method: "nocturne_getInFlightOperations",
+    });
+    const operationHandles = (JSON.parse(json) as OpDigestWithMetadata[]).map(
+      ({ opDigest: digest, metadata }) => {
+        return {
+          digest,
+          metadata,
+          getStatus: () => this.fetchBundlerOperationStatus(digest),
+        };
+      }
+    );
+    return operationHandles;
   }
 
   /**
@@ -498,7 +486,7 @@ export class NocturneFrontendSDK {
         return (await res.json()) as OperationStatusResponse;
       },
       {
-        retries: 5,
+        retries: 5, // TODO later scope: this should probably be configurable by the caller
       }
     );
   }
@@ -508,8 +496,9 @@ export class NocturneFrontendSDK {
    * returning newly synced merkle indices as syncing process occurs.
    */
   async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
+    const handlerContract = await this.handlerContractThunk();
     let latestMerkleIndexOnChain =
-      (await this.handlerContract.totalCount()).toNumber() - 1;
+      (await handlerContract.totalCount()).toNumber() - 1;
     let latestSyncedMerkleIndex =
       (await this.getLatestSyncedMerkleIndex()) ?? 0;
 
@@ -526,7 +515,8 @@ export class NocturneFrontendSDK {
 
         if (count % refetchEvery === 0) {
           latestMerkleIndexOnChain =
-            (await sdk.handlerContract.totalCount()).toNumber() - 1;
+            (await (await sdk.handlerContractThunk()).totalCount()).toNumber() -
+            1;
         }
         count++;
         yield {
@@ -553,18 +543,12 @@ export class NocturneFrontendSDK {
    * Invoke snap `syncNotes` method, returning latest synced merkle index.
    */
   async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
-    const latestSyncedMerkleIndexJson = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
+    const latestSyncedMerkleIndexJson = await this.invokeSnap({
+      method: "nocturne_sync",
       params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_sync",
-          params: {
-            syncOpts: syncOpts ?? JSON.stringify(syncOpts),
-          },
-        },
+        syncOpts: syncOpts ?? JSON.stringify(syncOpts),
       },
-    })) as string;
+    });
 
     const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
       ? JSON.parse(latestSyncedMerkleIndexJson)
@@ -578,15 +562,9 @@ export class NocturneFrontendSDK {
   }
 
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
-    const latestSyncedMerkleIndexJson = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
-      params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_getLatestSyncedMerkleIndex",
-        },
-      },
-    })) as string;
+    const latestSyncedMerkleIndexJson = await this.invokeSnap({
+      method: "nocturne_getLatestSyncedMerkleIndex",
+    });
 
     const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
       ? JSON.parse(latestSyncedMerkleIndexJson)
@@ -600,87 +578,94 @@ export class NocturneFrontendSDK {
   }
 
   /**
+   * Retrieve a freshly randomized address from the snap.
+   */
+  async getRandomStealthAddress(): Promise<StealthAddress> {
+    const json = await this.invokeSnap({
+      method: "nocturne_getRandomizedAddr",
+    });
+
+    return JSON.parse(json) as StealthAddress;
+  }
+
+  /**
    * Query subgraph for all spender's deposits
    */
   async fetchAllDeposits(): Promise<DepositEvent[]> {
     const withEntityIndices = await fetchDepositEvents(SUBGRAPH_URL, {
-      spender: await (await getWindowSigner()).getAddress(),
+      spender: await (await this.getWindowSigner()).getAddress(),
     });
 
     return withEntityIndices.map((e) => e.inner);
   }
-  /**
-   * Fetches a `SignedOperation` from the snap given an `OperationRequest`.
-   * This includes all joinsplit tx inputs.
-   *
-   * @param operationRequest Operation request
-   */
-  protected async requestSignOperation(
-    operationRequest: OperationRequest,
-    opMetadata: OperationMetadata
-  ): Promise<SignedOperation> {
-    console.log("[fe-sdk] metadata:", opMetadata);
-    const json = (await window.ethereum.request({
+
+  private async invokeSnap(request: {
+    method: string;
+    params?: object;
+  }): Promise<string> {
+    return (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
-        request: {
-          method: "nocturne_signOperation",
-          params: {
-            operationRequest: JSON.stringify(operationRequest),
-            opMetadata: JSON.stringify(opMetadata),
-          },
-        },
+        request,
       },
     })) as string;
-
-    return JSON.parse(json) as SignedOperation;
   }
 
-  /**
-   * Fetches a freshly randomized address from the snap.
-   */
-  protected async getRandomizedAddr(): Promise<StealthAddress> {
-    const json = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
-      params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_getRandomizedAddr",
+  private async formDepositHandlesWithTxReceipt(
+    tx: ContractTransaction
+  ): Promise<DepositHandleWithReceipt[]> {
+    const receipt = await tx.wait();
+    const events = parseEventsFromContractReceipt(
+      receipt,
+      (await this.depositManagerContractThunk()).interface.getEvent(
+        "DepositInstantiated"
+      )
+    ) as DepositInstantiatedEvent[];
+    return events.map((event) => {
+      const {
+        encodedAsset,
+        value,
+        nonce,
+        depositAddr,
+        gasCompensation,
+        spender,
+      } = event.args;
+
+      const request: DepositRequest = {
+        spender: spender,
+        encodedAsset: {
+          encodedAssetAddr: encodedAsset.encodedAssetAddr.toBigInt(),
+          encodedAssetId: encodedAsset.encodedAssetId.toBigInt(),
         },
-      },
-    })) as string;
+        value: value.toBigInt(),
+        depositAddr: {
+          h1: depositAddr.h1.toBigInt(),
+          h2: depositAddr.h2.toBigInt(),
+        },
+        nonce: nonce.toBigInt(),
+        gasCompensation: gasCompensation.toBigInt(),
+      };
 
-    return JSON.parse(json) as StealthAddress;
+      const depositRequestHash = hashDepositRequest(request);
+      const getStatus = async () =>
+        this.fetchDepositRequestStatus(depositRequestHash);
+
+      const handle = {
+        depositRequestHash,
+        request,
+        getStatus,
+      };
+
+      return {
+        receipt,
+        handle,
+      };
+    });
   }
-}
 
-/**
- * Load a `NocturneFrontendSDK` instance, provided a teller contract
- * address and paths to local prover's wasm, zkey, and
- * vkey. Circuit file paths default to caller's current directory (joinsplit.
- * wasm, joinsplit.zkey, joinSplitVkey.json).
- *
- * @param depositManagerAddress Teller contract address
- * @param screenerEndpoint Screener endpoint
- * @param bundlerEndpoint Bundler endpoint
- * @param wasmPath Wasm path
- * @param zkeyPath Zkey path
- * @param vkeyPath Vkey path
- */
-export async function loadNocturneFrontendSDK(
-  config: NocturneConfig,
-  endpoints: Endpoints,
-  wasmPath: string = WASM_PATH,
-  zkeyPath: string = ZKEY_PATH,
-  vkeyPath: string = VKEY_PATH
-): Promise<NocturneFrontendSDK> {
-  const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
-  return await NocturneFrontendSDK.instantiate(
-    config,
-    endpoints,
-    wasmPath,
-    zkeyPath,
-    vkey as VerifyingKey
-  );
+  private async getWindowSigner(): Promise<ethers.Signer> {
+    await this.provider.send("eth_requestAccounts", []);
+    return this.provider.getSigner();
+  }
 }

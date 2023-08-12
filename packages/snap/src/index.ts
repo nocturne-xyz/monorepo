@@ -93,6 +93,13 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
       return JSON.stringify(
         await sdk.getAllAssetBalances(request.params as unknown as GetNotesOpts) // yikes typing
       );
+    // can return undefined
+    case "nocturne_getBalanceForAsset":
+      console.log("Syncing...");
+      await sdk.sync();
+      return JSON.stringify(
+        await sdk.getBalanceForAsset(request.params as unknown as GetNotesOpts) // yikes typing
+      );
     case "nocturne_sync":
       if (snapIsSyncing) {
         console.log(
@@ -181,7 +188,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
         console.log("Error getting pre-proof operation:", err);
         throw err;
       }
-    case "nocturne_getInflightOpDigestsWithMetadata":
+    case "nocturne_getInFlightOperations":
       const opDigestsAndMetadata =
         await sdk.getAllOptimisticOpDigestsWithMetadata();
       return JSON.stringify(opDigestsAndMetadata);

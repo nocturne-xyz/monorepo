@@ -131,6 +131,10 @@ export class NocturneWalletSDK {
     });
   }
 
+  async getBalanceForAsset(asset: Asset, opts?: GetNotesOpts): Promise<bigint> {
+    return await this.db.getBalanceForAsset(asset, opts);
+  }
+
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
     return await this.db.latestSyncedMerkleIndex();
   }

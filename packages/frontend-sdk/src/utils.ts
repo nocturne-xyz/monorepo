@@ -3,11 +3,23 @@ import { ethers } from "ethers";
 import ERC20 from "./abis/ERC20.json";
 import ERC721 from "./abis/ERC721.json";
 import ERC1155 from "./abis/ERC1155.json";
-
+import { NocturneSdkConfig, SupportedNetwork } from "./types";
+import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 export interface TokenDetails {
   decimals: number;
   symbol: string;
 }
+
+const ENDPOINTS = {
+  sepolia: {
+    screenerEndpoint: "https://screener.nocturnelabs.xyz",
+    bundlerEndpoint: "https://bundler.nocturnelabs.xyz",
+  },
+  localnet: {
+    screenerEndpoint: "http://localhost:8000",
+    bundlerEndpoint: "http://localhost:8000",
+  },
+};
 
 export const SNAP_ID =
   process.env.NEXT_PUBLIC_SNAP_ORIGIN ??
@@ -20,10 +32,12 @@ export const SUBGRAPH_URL =
 console.log("SNAP_ID: ", SNAP_ID);
 console.log("SUBGRAPH_URL: ", SUBGRAPH_URL);
 
-export async function getWindowSigner(): Promise<ethers.Signer> {
-  const provider = new ethers.providers.Web3Provider(window.ethereum as any);
-  await provider.send("eth_requestAccounts", []);
-  return provider.getSigner();
+export type ValidProvider =
+  | ethers.providers.JsonRpcProvider
+  | ethers.providers.Web3Provider;
+
+export function getProvider(): ValidProvider {
+  return new ethers.providers.Web3Provider(window.ethereum as any);
 }
 
 export function getTokenContract(
@@ -92,3 +106,25 @@ export function formatAbbreviatedAddress(address: string): string {
     address.substring(address.length - 4)
   ).toLowerCase();
 }
+
+const getEndpoints = (networkName: SupportedNetwork) => {
+  switch (networkName) {
+    case "sepolia":
+      return ENDPOINTS.sepolia;
+    case "localnet":
+      return ENDPOINTS.localnet;
+    default:
+      throw new Error(`Network not supported: ${networkName}`);
+  }
+};
+
+export const getNocturneSdkConfig = (
+  networkName: SupportedNetwork
+): NocturneSdkConfig => {
+  const config = loadNocturneConfigBuiltin(networkName);
+  const endpoints = getEndpoints(networkName);
+  return {
+    config,
+    endpoints,
+  };
+};
