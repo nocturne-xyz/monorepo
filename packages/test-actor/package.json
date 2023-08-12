@@ -32,7 +32,7 @@
     "bigint-json-serialization": "^1.0.1",
     "commander": "^10.0.0",
     "dotenv": "^16.0.3",
-    "ethers": "^5.7.2",
+    "ethers": "5.7.2",
     "lmdb": "^2.8.2",
     "node-fetch": "^3.3.1",
     "randombytes": "^2.1.0",
