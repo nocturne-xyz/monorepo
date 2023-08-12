@@ -27,7 +27,7 @@ import { OpTracker } from "./OpTracker";
 import { getTotalEntityIndexOfNewestNoteInOp } from "./totalEntityIndexOfNewestNoteInOp";
 
 const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000; // 10 minutes
-const BUNDLER_RECEIVED_OP_BUFFER: number = 45 * 1000; // 45 seconds (buffer in case proof gen takes a while)
+const BUNDLER_RECEIVED_OP_BUFFER: number = 90 * 1000; // 90 seconds (buffer in case proof gen takes a while)
 
 export class NocturneWalletSDK {
   protected provider: ethers.providers.Provider;
