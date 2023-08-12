@@ -212,6 +212,16 @@ export class NocturneSdk implements NocturneSdkApi {
     return await Promise.all(depositsWithSubstatus);
   }
 
+  async getSubstatusForDeposits(
+    depositRequestHashes: string[]
+  ): Promise<PendingDepositStatusResponse[]> {
+    // todo make status /mget endpoint
+    const substatuses = depositRequestHashes.map(async (hash) => {
+      return await this.fetchDepositRequestStatus(hash);
+    });
+    return await Promise.all(substatuses);
+  }
+
   async initiateErc20Deposits(
     erc20Address: Address,
     values: bigint[],
@@ -330,7 +340,7 @@ export class NocturneSdk implements NocturneSdkApi {
    *
    * @param depositHash Deposit hash
    */
-  async fetchDepositRequestStatus(
+  protected async fetchDepositRequestStatus(
     depositHash: string
   ): Promise<PendingDepositStatusResponse> {
     const depositStatusResponse = (await retry(
