@@ -6,10 +6,6 @@ import {
 } from "@nocturne-xyz/contracts";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
-  makeCreateCounterFn,
-  makeCreateHistogramFn,
-} from "@nocturne-xyz/offchain-utils";
-import {
   Address,
   Asset,
   JoinSplitProver,
@@ -24,7 +20,11 @@ import {
   proveOperation,
   randomBigInt,
   sleep,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
+import {
+  makeCreateCounterFn,
+  makeCreateHistogramFn,
+} from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";

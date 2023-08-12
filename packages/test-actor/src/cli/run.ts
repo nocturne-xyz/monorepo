@@ -11,7 +11,7 @@ import {
   SubgraphSDKSyncAdapter,
   MockEthToTokenConverter,
   BundlerOpTracker,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import { Command } from "commander";
 import { ethers } from "ethers";

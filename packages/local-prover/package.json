@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@nocturne-xyz/circuit-utils": "^0.1.12",
-    "@nocturne-xyz/wallet-sdk": "workspace:^",
+    "@nocturne-xyz/core": "workspace:^",
     "bigint-conversion": "^2.3.0",
     "bigint-json-serialization": "^1.0.1",
     "snarkjs": "^0.7.0"

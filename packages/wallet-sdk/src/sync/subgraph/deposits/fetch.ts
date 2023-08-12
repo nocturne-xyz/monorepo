@@ -1,6 +1,6 @@
 import { DepositRequest, EncodedAsset } from "../../../primitives";
 import { CompressedStealthAddress } from "../../../crypto";
-import { SubgraphUtils } from "../";
+import { SubgraphUtils } from "..";
 import {
   TotalEntityIndex,
   TotalEntityIndexTrait,

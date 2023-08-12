@@ -1,6 +1,6 @@
 import { Job } from "bullmq";
 import { DepositRequestJobData } from "../types";
-import { Address } from "@nocturne-xyz/wallet-sdk";
+import { Address } from "@nocturne-xyz/core";
 import { divideDecimalPreserving } from "../utils";
 
 const SECS_IN_HOUR = 60 * 60;

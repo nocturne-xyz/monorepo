@@ -14,10 +14,7 @@ import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { sleep } from "../src/utils";
 import { BatcherDB, StatusDB } from "../src/db";
 import * as JSON from "bigint-json-serialization";
-import {
-  OperationStatus,
-  computeOperationDigest,
-} from "@nocturne-xyz/wallet-sdk";
+import { OperationStatus, computeOperationDigest } from "@nocturne-xyz/core";
 
 const BATCH_SIZE = 8;
 const MAX_BATCH_LATENCY_SECS = 5;

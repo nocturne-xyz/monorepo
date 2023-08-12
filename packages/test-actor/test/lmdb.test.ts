@@ -1,6 +1,6 @@
 import "mocha";
 import { expect } from "chai";
-import { KV, zip } from "@nocturne-xyz/wallet-sdk";
+import { KV, zip } from "@nocturne-xyz/core";
 import { LMDBKVStore } from "../src/lmdb";
 import fs from "fs";
 

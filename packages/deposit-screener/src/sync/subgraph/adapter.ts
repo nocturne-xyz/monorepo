@@ -9,7 +9,7 @@ import {
   TotalEntityIndexTrait,
   SubgraphUtils,
   max,
-} from "@nocturne-xyz/wallet-sdk";
+} from "@nocturne-xyz/core";
 import { Logger } from "winston";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
