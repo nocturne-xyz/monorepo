@@ -1,4 +1,4 @@
-import { Address } from "@nocturne-xyz/sdk";
+import { Address } from "@nocturne-xyz/core";
 import { ScreeningApi } from ".";
 
 export const MAGIC_REJECTION_VALUE = 30303000000000000n; // 0.030303

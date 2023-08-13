@@ -10,7 +10,7 @@ import {
   AssetType,
   subtreeUpdateInputsFromBatch,
   range,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import { RapidsnarkSubtreeUpdateProver } from "../src/rapidsnarkProver";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 

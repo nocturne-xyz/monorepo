@@ -1,4 +1,4 @@
-import { DepositRequest } from "@nocturne-xyz/sdk";
+import { DepositRequest } from "@nocturne-xyz/core";
 import { TypedDataSigner } from "@ethersproject/abstract-signer"; // TODO: replace with ethers post update
 import { DEPOSIT_REQUEST_TYPES } from "./constants";
 

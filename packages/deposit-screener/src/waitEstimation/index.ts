@@ -6,7 +6,7 @@ import {
   AssetTrait,
   DepositRequest,
   DepositRequestStatus,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import { ScreenerDelayCalculator } from "../screenerDelay";
 import { ScreeningApi } from "../screening";
 import {

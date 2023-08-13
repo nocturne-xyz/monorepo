@@ -7,10 +7,8 @@ import {
   OperationMetadata,
   OperationRequest,
   OperationStatusResponse,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import { ContractReceipt } from "ethers";
-
-export type BundlerOperationID = string;
 
 export interface Endpoints {
   screenerEndpoint: string;
@@ -37,11 +35,11 @@ export interface NocturneSdkConfig {
   endpoints: Endpoints;
 }
 
-export type SupportedNetwork = "sepolia" | "mainnet" | "localnet";
+export type SupportedNetwork = "sepolia" | "mainnet" | "localhost";
 
 export interface GetBalanceOpts {
-  includeUncommitted: boolean;
-  ignoreOptimisticNFs: boolean;
+  includeUncommitted?: boolean;
+  ignoreOptimisticNFs?: boolean;
 }
 
 export interface DepositHandleWithReceipt {

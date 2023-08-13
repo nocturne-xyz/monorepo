@@ -5,7 +5,6 @@ import {
   Handler__factory,
 } from "@nocturne-xyz/contracts";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
-import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
   ActionMetadata,
   Address,
@@ -40,17 +39,17 @@ import {
   unpackFromSolidityProof,
   decomposeCompressedPoint,
   SubmittableOperationWithNetworkInfo,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
+import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction, ethers } from "ethers";
+import vkey from "../circuit-artifacts/joinsplit/joinsplitVkey.json";
 import { NocturneSdkApi } from "./api";
-import vkey from "./joinsplit/joinsplitVkey.json";
 import {
-  BundlerOperationID,
   DepositHandle,
-  GetBalanceOpts,
   DepositHandleWithReceipt,
+  GetBalanceOpts,
   NocturneSdkConfig,
   OperationHandle,
   OperationRequestWithMetadata,
@@ -65,20 +64,16 @@ import {
   getProvider,
   getTokenContract,
 } from "./utils";
-import {
-  NocturneConfig,
-  loadNocturneConfigBuiltin,
-} from "@nocturne-xyz/config";
 
-const WASM_PATH = "/joinsplit/joinsplit.wasm"; // ! TODO this pathing style might be outdated, no longer work
-const ZKEY_PATH = "/joinsplit/joinsplit.zkey";
+const WASM_PATH = "../circuit-artifacts/joinsplit/joinsplit.wasm";
+const ZKEY_PATH = "../circuit-artifacts/joinsplit/joinsplit.zkey";
 
-export class NocturneFrontendSDK implements NocturneSdkApi {
+export class NocturneSdk implements NocturneSdkApi {
   protected joinSplitProver: WasmJoinSplitProver;
   protected bundlerEndpoint: string;
   protected screenerEndpoint: string;
   protected config: NocturneSdkConfig;
-  protected provider: ValidProvider;
+  protected _provider: ValidProvider | undefined;
 
   protected signerThunk: Thunk<ethers.Signer>;
   protected depositManagerContractThunk: Thunk<DepositManager>;
@@ -97,7 +92,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     this.bundlerEndpoint = config.endpoints.bundlerEndpoint;
     this.screenerEndpoint = config.endpoints.screenerEndpoint;
     this.config = config;
-    this.provider = provider || getProvider();
+    this._provider = provider;
 
     this.signerThunk = thunk(() => this.getWindowSigner());
     this.depositManagerContractThunk = thunk(async () =>
@@ -112,6 +107,21 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
         await this.signerThunk()
       )
     );
+  }
+
+  protected get provider(): ValidProvider {
+    // we cannot directly assign provider from constructor, as window is not defined at compile-time, so would fail for callers
+    if (typeof window === "undefined") {
+      throw new Error(
+        "NocturneSdk must be instantiated in a browser environment"
+      );
+    }
+    return this._provider ?? getProvider();
+  }
+
+  protected async getWindowSigner(): Promise<ethers.Signer> {
+    await this.provider.send("eth_requestAccounts", []);
+    return this.provider.getSigner();
   }
 
   /**
@@ -153,7 +163,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   }
 
   async getAllDeposits(): Promise<DepositHandle[]> {
-    // TODO unless there's some other way, will entail adding gql consumer to fe-sdk
+    // TODO
     throw new Error("Not yet implemented!");
   }
 
@@ -204,7 +214,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     erc20Address: Address,
     amount: bigint,
     recipientAddress: Address
-  ): Promise<BundlerOperationID> {
+  ): Promise<OperationHandle> {
     const signer = await this.getWindowSigner();
     const provider = signer.provider;
 
@@ -226,8 +236,8 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     const encodedErc20 = AssetTrait.erc20AddressToAsset(erc20Address);
 
     const operationRequest = new OperationRequestBuilder({
-      chainId: BigInt(this.config.contracts.network.chainId),
-      tellerContract: this.config.tellerAddress(),
+      chainId: BigInt(this.config.config.contracts.network.chainId),
+      tellerContract: this.config.config.tellerAddress(),
     })
       .unwrap(encodedErc20, amount)
       .action(erc20Address, encodedFunction)
@@ -244,7 +254,11 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       request: operationRequest,
       metadata: { action },
     });
-    return this.submitOperation(provenOperation);
+    const opHandleWithoutMetadata = this.submitOperation(provenOperation);
+    return {
+      ...opHandleWithoutMetadata,
+      metadata: { action },
+    };
   }
 
   /**
@@ -400,12 +414,8 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     return results.every((result) => result);
   }
 
-  // Submit a proven operation to the bundler server
-  // returns the bundler's ID for the submitted operation, which can be used to check the status of the operation
-  async submitOperation(
-    operation: ProvenOperation
-  ): Promise<BundlerOperationID> {
-    return await retry(
+  async submitOperation(operation: ProvenOperation): Promise<OperationHandle> {
+    const opDigest = (await retry(
       async () => {
         const res = await fetch(`${this.bundlerEndpoint}/relay`, {
           method: "POST",
@@ -429,7 +439,13 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
       {
         retries: 5,
       }
-    );
+    )) as string;
+    const digest = BigInt(opDigest);
+    return {
+      digest,
+      getStatus: () => this.fetchBundlerOperationStatus(digest),
+      metadata: undefined,
+    };
   }
 
   async signAndProveOperation(
@@ -491,25 +507,6 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
   }
 
   /**
-   * Given an operation digest, fetches and returns the operation status, enum'd as OperationStatus.
-   */
-  async fetchBundlerOperationStatus(
-    opDigest: bigint
-  ): Promise<OperationStatusResponse> {
-    return await retry(
-      async () => {
-        const res = await fetch(
-          `${this.bundlerEndpoint}/operations/${opDigest}`
-        );
-        return (await res.json()) as OperationStatusResponse;
-      },
-      {
-        retries: 5, // TODO later scope: this should probably be configurable by the caller
-      }
-    );
-  }
-
-  /**
    * Start syncing process, returning current merkle index at tip of chain and iterator
    * returning newly synced merkle indices as syncing process occurs.
    */
@@ -526,7 +523,7 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     );
 
     let closed = false;
-    const generator = async function* (sdk: NocturneFrontendSDK) {
+    const generator = async function* (sdk: NocturneSdk) {
       let count = 0;
       while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
         latestSyncedMerkleIndex = (await sdk.sync(syncOpts)) ?? 0;
@@ -617,6 +614,25 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
     return withEntityIndices.map((e) => e.inner);
   }
 
+  /**
+   * Given an operation digest, fetches and returns the operation status, enum'd as OperationStatus.
+   */
+  protected async fetchBundlerOperationStatus(
+    opDigest: bigint
+  ): Promise<OperationStatusResponse> {
+    return await retry(
+      async () => {
+        const res = await fetch(
+          `${this.bundlerEndpoint}/operations/${opDigest}`
+        );
+        return (await res.json()) as OperationStatusResponse;
+      },
+      {
+        retries: 5, // TODO later scope: this should probably be configurable by the caller
+      }
+    );
+  }
+
   private async invokeSnap(request: {
     method: string;
     params?: object;
@@ -680,10 +696,5 @@ export class NocturneFrontendSDK implements NocturneSdkApi {
         handle,
       };
     });
-  }
-
-  private async getWindowSigner(): Promise<ethers.Signer> {
-    await this.provider.send("eth_requestAccounts", []);
-    return this.provider.getSigner();
   }
 }

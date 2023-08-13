@@ -31,8 +31,8 @@
   "dependencies": {
     "@metamask/snaps-ui": "^0.32.2",
     "@nocturne-xyz/config": "workspace:^",
+    "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/crypto-utils": "^0.1.7",
-    "@nocturne-xyz/sdk": "workspace:^",
     "bigint-json-serialization": "^1.0.1",
     "buffer": "^6.0.3"
   },

@@ -8,7 +8,7 @@ import {
   StealthAddressTrait,
   VerifyingKey,
   decomposeCompressedPoint,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 
 export class WasmJoinSplitProver implements JoinSplitProver {
   wasmPath: string;

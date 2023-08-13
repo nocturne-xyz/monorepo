@@ -6,12 +6,11 @@ import {
   SignedOperation,
   StealthAddress,
   SyncOpts,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import {
-  BundlerOperationID,
   DepositHandle,
-  GetBalanceOpts,
   DepositHandleWithReceipt,
+  GetBalanceOpts,
   OperationHandle,
   OperationRequestWithMetadata,
   SyncWithProgressOutput,
@@ -55,13 +54,13 @@ export interface NocturneSdkApi {
    * @param amount Asset amount
    * @param recipientAddress Recipient address
    */
-  anonTransferErc20( // TODO this wasn't originally included, I assume we need it
+  anonTransferErc20(
     erc20Address: Address,
     amount: bigint,
     recipientAddress: Address
-  ): Promise<BundlerOperationID>;
+  ): Promise<OperationHandle>;
 
-  submitOperation(operation: ProvenOperation): Promise<BundlerOperationID>; // ! I kept signature as BundlerOperationID because I'm not sure if we want to fetch info immediately on submission, TODO remove this after resolve
+  submitOperation(operation: ProvenOperation): Promise<OperationHandle>;
 
   signAndProveOperation(
     operationRequest: OperationRequestWithMetadata
