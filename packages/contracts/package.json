@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/contracts",
-  "version": "1.0.34-testnet",
+  "version": "0.1.0",
   "description": "Nocturne contracts",
   "license": "MIT OR Apache-2.0",
   "author": "Luke Tchang",
