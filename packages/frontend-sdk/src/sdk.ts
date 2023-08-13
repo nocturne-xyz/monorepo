@@ -12,7 +12,6 @@ import {
   AssetType,
   AssetWithBalance,
   ClosableAsyncIterator,
-  DepositEvent,
   DepositQuoteResponse,
   DepositRequest,
   DepositStatusResponse,
@@ -31,7 +30,6 @@ import {
   computeOperationDigest,
   decomposeCompressedPoint,
   encodeEncodedAssetAddrWithSignBitsPI,
-  fetchDepositEvents,
   hashDepositRequest,
   joinSplitPublicSignalsToArray,
   parseEventsFromContractReceipt,
@@ -76,6 +74,12 @@ import { DepositRequestStatusByHashQueryDocument } from "./gql/queries/DepositRe
 const WASM_PATH = "../circuit-artifacts/joinsplit/joinsplit.wasm";
 const ZKEY_PATH = "../circuit-artifacts/joinsplit/joinsplit.zkey";
 
+export interface NocturneSdkOptions {
+  networkName?: SupportedNetwork;
+  provider?: SupportedProvider;
+  snap?: GetSnapOptions;
+}
+
 export class NocturneSdk implements NocturneSdkApi {
   protected joinSplitProver: WasmJoinSplitProver;
   protected endpoints: Endpoints;
@@ -89,11 +93,10 @@ export class NocturneSdk implements NocturneSdkApi {
   protected handlerContractThunk: Thunk<Handler>;
 
   // Caller MUST conform to EIP-1193 spec (window.ethereum) https://eips.ethereum.org/EIPS/eip-1193
-  constructor(
-    networkName: SupportedNetwork,
-    provider: SupportedProvider,
-    snapOptions: GetSnapOptions
-  ) {
+  constructor(options: NocturneSdkOptions = {}) {
+    const networkName = options.networkName || "mainnet";
+    const provider = options.provider || new ethers.providers.Web3Provider(window?.ethereum as any);
+    const snapOptions = options.snap;
     const config = getNocturneSdkConfig(networkName);
     this.joinSplitProver = new WasmJoinSplitProver(
       WASM_PATH,
@@ -103,7 +106,7 @@ export class NocturneSdk implements NocturneSdkApi {
     this.endpoints = config.endpoints;
     this.config = config;
     this.provider = provider;
-    this.snap = new SnapStateSdk(snapOptions.version, snapOptions.snapId, networkName);
+    this.snap = new SnapStateSdk(snapOptions?.version, snapOptions?.snapId, networkName);
 
     this.signerThunk = thunk(() => this.getWindowSigner());
     this.depositManagerContractThunk = thunk(async () =>
@@ -605,17 +608,6 @@ export class NocturneSdk implements NocturneSdkApi {
     });
 
     return JSON.parse(json) as StealthAddress;
-  }
-
-  /**
-   * Query subgraph for all spender's deposits
-   */
-  async fetchAllDeposits(): Promise<DepositEvent[]> {
-    const withEntityIndices = await fetchDepositEvents(this.endpoints.subgraphEndpoint, {
-      spender: await (await this.getWindowSigner()).getAddress(),
-    });
-
-    return withEntityIndices.map((e) => e.inner);
   }
 
   /**
