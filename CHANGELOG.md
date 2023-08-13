@@ -20,6 +20,7 @@
   - remove `run_local.sh`
   - remove unused scripts from root pacakge.json
   - update `scripts/README.md`
+  - add `changesets`
 - Removed old site
 - site script runs new subtree updater:
   - use docker compose
