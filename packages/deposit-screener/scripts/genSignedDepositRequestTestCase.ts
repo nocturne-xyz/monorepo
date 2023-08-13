@@ -3,8 +3,8 @@ import {
   AssetType,
   DepositRequest,
   hashDepositRequest,
+  ERC20_ID,
 } from "@nocturne-xyz/core";
-import { ERC20_ID } from "@nocturne-xyz/core/dist/src/primitives/asset";
 import { ethers, Wallet } from "ethers";
 import { EIP712Domain, signDepositRequest } from "../src";
 import findWorkspaceRoot from "find-yarn-workspace-root";

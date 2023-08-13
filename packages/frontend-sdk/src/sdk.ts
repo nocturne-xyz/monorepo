@@ -607,7 +607,7 @@ export class NocturneSdk implements NocturneSdkApi {
     const latestSyncedMerkleIndexJson = await this.invokeSnap({
       method: "nocturne_sync",
       params: {
-        syncOpts: syncOpts ? JSON.stringify(syncOpts) : undefined,
+        syncOpts: syncOpts ?? JSON.stringify(syncOpts),
       },
     });
 

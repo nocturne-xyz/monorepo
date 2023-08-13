@@ -9,13 +9,13 @@ import {
 } from "@nocturne-xyz/core";
 import {
   DepositHandle,
-  GetBalanceOpts,
   DepositHandleWithReceipt,
+  DepositWithSubstatusHandle,
+  GetBalanceOpts,
   OperationHandle,
   OperationRequestWithMetadata,
-  SyncWithProgressOutput,
-  DepositWithSubstatusHandle,
   PendingDepositStatusResponse,
+  SyncWithProgressOutput,
 } from "./types";
 
 export interface NocturneSdkApi {
