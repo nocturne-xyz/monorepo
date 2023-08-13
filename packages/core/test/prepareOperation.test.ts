@@ -131,12 +131,14 @@ describe("gatherNotes", () => {
         expirationDate: Date.now() + 1_000_000,
         merkleIndices: [0],
         metadata: {
-          action: {
-            type: "Transfer",
-            recipientAddress: "0xdeadbeef",
-            erc20Address: shitcoin.assetAddr,
-            amount: 10n,
-          },
+          items: [
+            {
+              type: "Transfer",
+              recipientAddress: "0xdeadbeef",
+              erc20Address: shitcoin.assetAddr,
+              amount: 10n,
+            },
+          ],
         },
       },
       [{ nullifier: 420n }]
@@ -182,7 +184,7 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
     const op = await prepareOperation(deps, gasCompAccountedOpRequest);
     expect(op).to.not.be.null;
@@ -237,7 +239,7 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
     const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
     expect(op).to.not.be.null;
@@ -290,7 +292,7 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
     const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
     expect(op).to.not.be.null;
@@ -349,7 +351,7 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
     const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
     expect(op).to.not.be.null;
@@ -411,7 +413,7 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
     const op = await prepareOperation(deps, gasCompAccountedOpRequest);
     expect(op).to.not.be.null;
@@ -470,7 +472,7 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
     const op = await prepareOperation(deps, gasCompAccountedOpRequest);
 
@@ -511,11 +513,13 @@ describe("prepareOperation", async () => {
       .build();
 
     // Add one more joinsplit request for the same that adds up to total unwrap amount = 2000
-    opRequest.joinSplitRequests.push(opRequest.joinSplitRequests[0]);
+    opRequest.request.joinSplitRequests.push(
+      opRequest.request.joinSplitRequests[0]
+    );
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
     const op = await prepareOperation(deps, gasCompAccountedOpRequest);
 

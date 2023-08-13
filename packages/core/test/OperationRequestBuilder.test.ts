@@ -18,7 +18,7 @@ import {
 } from "./utils";
 
 describe("OperationRequestBuilder", () => {
-  it("builds OperaionRequest with 1 action, 1 unwrap, 0 payments, no params set", () => {
+  it("builds OperationRequest with 1 action, 1 unwrap, 0 payments, no params set", () => {
     const expected: OperationRequest = {
       joinSplitRequests: [
         {
@@ -49,7 +49,7 @@ describe("OperationRequestBuilder", () => {
       .deadline(2n)
       .build();
 
-    expect(opRequest).to.eql(expected);
+    expect(opRequest.request).to.eql(expected);
   });
 
   it("builds OperaionRequest with 1 action, 1 unwrap, 1 payment, no params set", () => {
@@ -92,7 +92,7 @@ describe("OperationRequestBuilder", () => {
       .deadline(2n)
       .build();
 
-    expect(opRequest).to.eql(expected);
+    expect(opRequest.request).to.eql(expected);
   });
 
   it("builds OperationRuqestion with 1 action, 1 unwrap, 0 payments, all params set", () => {
@@ -138,7 +138,7 @@ describe("OperationRequestBuilder", () => {
       .deadline(2n)
       .build();
 
-    expect(opRequest).to.eql(expected);
+    expect(opRequest.request).to.eql(expected);
   });
 
   it("builds operation with 0 actions, 0 unwraps, 2 payments, no params set", () => {
@@ -187,11 +187,11 @@ describe("OperationRequestBuilder", () => {
     expected.joinSplitRequests.sort((a, b) =>
       a.asset.assetAddr.localeCompare(b.asset.assetAddr)
     );
-    opRequest.joinSplitRequests.sort((a, b) =>
+    opRequest.request.joinSplitRequests.sort((a, b) =>
       a.asset.assetAddr.localeCompare(b.asset.assetAddr)
     );
 
-    expect(opRequest).to.eql(expected);
+    expect(opRequest.request).to.eql(expected);
   });
 
   it("builds OperaionRequest with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", () => {
@@ -278,11 +278,11 @@ describe("OperationRequestBuilder", () => {
     expected.joinSplitRequests.sort((a, b) =>
       a.asset.assetAddr.localeCompare(b.asset.assetAddr)
     );
-    opRequest.joinSplitRequests.sort((a, b) =>
+    opRequest.request.joinSplitRequests.sort((a, b) =>
       a.asset.assetAddr.localeCompare(b.asset.assetAddr)
     );
 
-    expect(opRequest).to.eql(expected);
+    expect(opRequest.request).to.eql(expected);
   });
 
   it("combines requests of same asset when no conf payments", () => {
@@ -330,6 +330,6 @@ describe("OperationRequestBuilder", () => {
       .deadline(2n)
       .build();
 
-    expect(opRequest).to.eql(expected);
+    expect(opRequest.request).to.eql(expected);
   });
 });

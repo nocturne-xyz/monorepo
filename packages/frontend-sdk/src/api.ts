@@ -6,13 +6,13 @@ import {
   SignedOperation,
   StealthAddress,
   SyncOpts,
+  OperationRequestWithMetadata,
 } from "@nocturne-xyz/core";
 import {
   DepositHandle,
   DepositHandleWithReceipt,
   GetBalanceOpts,
   OperationHandle,
-  OperationRequestWithMetadata,
   SyncWithProgressOutput,
 } from "./types";
 

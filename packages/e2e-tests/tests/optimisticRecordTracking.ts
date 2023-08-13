@@ -113,7 +113,7 @@ describe("Optimistic nullifier tracking", () => {
       .build();
 
     // prepare op
-    const preSignOp = await sdk.prepareOperation(opRequest);
+    const preSignOp = await sdk.prepareOperation(opRequest.request);
     const signedOp = sdk.signOperation(preSignOp);
 
     console.log("signedOp", signedOp);
@@ -234,7 +234,7 @@ describe("Optimistic nullifier tracking", () => {
       .build();
 
     // prepare op
-    const preSignOp = await sdk.prepareOperation(opRequest);
+    const preSignOp = await sdk.prepareOperation(opRequest.request);
     const signedOp = sdk.signOperation(preSignOp);
 
     console.log("signedOp", signedOp);

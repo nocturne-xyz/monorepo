@@ -1,7 +1,7 @@
 import { CanonAddress, CompressedStealthAddress } from "../crypto";
 import { JoinSplitInputs, MerkleProofInput, SolidityProof } from "../proof";
 import { IncludedNote, Note } from "./note";
-import { EncodedAsset } from "./asset";
+import { Asset, EncodedAsset } from "./asset";
 import { SerializedHybridCiphertext } from "@nocturne-xyz/crypto-utils";
 
 export const BN254_SCALAR_FIELD_MODULUS =
@@ -195,15 +195,25 @@ export interface OptimisticOpDigestRecord {
   metadata?: OperationMetadata;
 }
 
-export interface ActionMetadata {
+export interface OperationMetadata {
+  items: OperationMetadataItem[];
+}
+
+export type OperationMetadataItem =
+  | ConfidentialPaymentMetadata
+  | ActionMetadata;
+
+export type ActionMetadata = {
   type: "Transfer";
   recipientAddress: Address;
   erc20Address: Address;
   amount: bigint;
-}
+};
 
-export interface OperationMetadata {
-  action: ActionMetadata;
+export interface ConfidentialPaymentMetadata {
+  recipient: CanonAddress;
+  asset: Asset;
+  amount: bigint;
 }
 
 export interface OpDigestWithMetadata {

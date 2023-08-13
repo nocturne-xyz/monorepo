@@ -181,7 +181,9 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         .build();
 
       console.log("preparing op...");
-      const preSign = await nocturneWalletSDKAlice.prepareOperation(opRequest);
+      const preSign = await nocturneWalletSDKAlice.prepareOperation(
+        opRequest.request
+      );
       const signed = nocturneWalletSDKAlice.signOperation(preSign);
       console.log("proving op...");
       const op = await proveOperation(joinSplitProver, signed);

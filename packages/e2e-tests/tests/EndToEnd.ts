@@ -19,6 +19,7 @@ import {
   JoinSplitProver,
   proveOperation,
   OperationStatus,
+  OperationRequestWithMetadata,
 } from "@nocturne-xyz/core";
 import {
   GAS_FAUCET_DEFAULT_AMOUNT,
@@ -97,7 +98,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
   });
 
   async function testE2E(
-    operationRequest: OperationRequest,
+    opRequestWithMetadata: OperationRequestWithMetadata,
     contractChecks: () => Promise<void>,
     offchainChecks: () => Promise<void>,
     expectedBundlerStatus: OperationStatus
@@ -117,7 +118,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     console.log("prepare, sign, and prove operation with NocturneWalletSDK");
     const preSign = await nocturneWalletSDKAlice.prepareOperation(
-      operationRequest
+      opRequestWithMetadata.request
     );
     const signed = nocturneWalletSDKAlice.signOperation(preSign);
     const operation = await proveOperation(joinSplitProver, signed);
