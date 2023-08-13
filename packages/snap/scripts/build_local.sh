@@ -6,7 +6,7 @@ SNAP_BUNDLE_JS="./dist/bundle.js"
 LOCAL_RPC_URL="http://127.0.0.1:8545/"
 LOCAL_BUNDLER_URL="http://127.0.0.1:3000"
 LOCAL_SUBGRAPH_API_URL="http://127.0.0.1:8000/subgraphs/name/nocturne"
-LOCAL_CONFIG="localnet"
+LOCAL_CONFIG="localhost"
 
 sed -i '' -r -e "s|const RPC_URL = .*|const RPC_URL = \"$LOCAL_RPC_URL\";|g" $SNAP_BUNDLE_JS
 echo "RPC_URL after sed:"

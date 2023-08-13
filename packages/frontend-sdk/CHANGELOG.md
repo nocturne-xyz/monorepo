@@ -3,7 +3,6 @@
 ### Unreleased
 
 - `NocturneFrontendSDK` renamed to `NocturneSDK`
-- Package name migrated from `frontend-sdk` to `sdk`
 - `sync` method takes and propogates `SyncOpts` as params to snap/sdk
 - instantiate fe-sdk with `config`
 - add method to fetch operation status from bundler
