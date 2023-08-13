@@ -258,29 +258,16 @@ function getTrackedAssets(
   op: PreSignOperation | SignedOperation | ProvenOperation
 ): TrackedAsset[] {
   const { joinSplits, encodedRefundAssets } = op;
+  const assets: TrackedAsset[] = [
+    ...joinSplits.map(({ encodedAsset }) => ({
+      encodedAsset,
+      minRefundValue: 0n, // TODO: placeholder, we need to figure out how to set this
+    })),
+    ...encodedRefundAssets.map((encodedAsset) => ({
+      encodedAsset,
+      minRefundValue: 0n, // TODO: placeholder, we need to figure out how to set this
+    })),
+  ];
 
-  // we need to stringify because object refs are not equal, so they won't be deduped
-  // we need to sort because the order of the elements of the set
-  // is non-deterministic
-  const joinSplitAssets = dedup(
-    joinSplits.map(({ encodedAsset }) => encodedAsset)
-  );
-  const trackedJoinSplitAssets: Array<TrackedAsset> = Array.from(
-    joinSplitAssets.map((encodedAsset) => {
-      return JSON.stringify({ encodedAsset, minRefundValue: 0n }); // TODO: use real min refund vals
-    })
-  )
-    .sort()
-    .map(JSON.parse);
-
-  const refundAssets = dedup(encodedRefundAssets);
-  const trackedRefundAssets: Array<TrackedAsset> = Array.from(
-    refundAssets.map((encodedAsset) => {
-      return JSON.stringify({ encodedAsset, minRefundValue: 0n }); // TODO: use real min refund vals
-    })
-  )
-    .sort()
-    .map(JSON.parse);
-
-  return dedup(trackedJoinSplitAssets.concat(trackedRefundAssets));
+  return dedup(assets.map(JSON.stringify)).sort().map(JSON.parse);
 }

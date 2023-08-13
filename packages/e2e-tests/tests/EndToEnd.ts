@@ -32,10 +32,6 @@ import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller
 chai.use(chaiAsPromised);
 
 const PER_NOTE_AMOUNT = 100n * 1_000_000n;
-const ALICE_TO_BOB_PUB_VAL = PER_NOTE_AMOUNT * 3n - PER_NOTE_AMOUNT / 2n; // 2.5 notes
-const ALICE_UNWRAP_VAL = ALICE_TO_BOB_PUB_VAL + PER_NOTE_AMOUNT / 4n; // 2.75 notes
-const ALICE_TO_BOB_PRIV_VAL = PER_NOTE_AMOUNT / 4n;
-const COMPLETE_CONF_PAYMENT_AMOUNT = (PER_NOTE_AMOUNT * 2n * 3n) / 4n; // 3/4 of total deposit amount in 'alice deposits one' test case
 
 describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", async () => {
   let teardown: () => Promise<void>;
@@ -156,7 +152,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       chainId,
       tellerContract: teller.address,
     })
-      .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
+      .unwrap(erc20Asset, PER_NOTE_AMOUNT)
       .gasPrice(1n)
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
@@ -190,7 +186,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        [await bobEoa.getAddress(), ALICE_TO_BOB_PUB_VAL]
+        [await bobEoa.getAddress(), PER_NOTE_AMOUNT]
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
@@ -198,7 +194,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       chainId,
       tellerContract: teller.address,
     })
-      .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
+      .unwrap(erc20Asset, (PER_NOTE_AMOUNT * 3n) / 2n)
       .action(erc20.address, encodedFunction)
       .gas({
         executionGasLimit: 1n, // Intentionally too low
@@ -217,6 +213,9 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     );
   });
 
+  const ALICE_UNWRAP_VAL = PER_NOTE_AMOUNT * 2n + (PER_NOTE_AMOUNT * 3n) / 4n; // 2.75 notes
+  const ALICE_TO_BOB_PUB_VAL = PER_NOTE_AMOUNT * 2n + PER_NOTE_AMOUNT / 2n; // 2.5 notes
+  const ALICE_TO_BOB_PRIV_VAL = PER_NOTE_AMOUNT / 4n; // 0.25 notes
   it(`alice deposits four ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately`, async () => {
     console.log("deposit funds and commit note commitments");
     await depositFundsMultiToken(
@@ -345,6 +344,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     );
   });
 
+  const COMPLETE_CONF_PAYMENT_AMOUNT = (PER_NOTE_AMOUNT * 2n * 3n) / 4n; // 3/4 of note
   it(`alice deposits one ${PER_NOTE_AMOUNT} token note and confidentially pays Bob ${COMPLETE_CONF_PAYMENT_AMOUNT} without revealing asset`, async () => {
     console.log("deposit funds and commit note commitments");
     await depositFundsMultiToken(
