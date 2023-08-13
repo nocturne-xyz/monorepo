@@ -8,7 +8,7 @@ export {
   OperationHandle,
   GetBalanceOpts,
   SyncProgress,
-  SyncWithProgressOutput
+  SyncWithProgressOutput,
 } from "./types";
 
 export { 
