@@ -48,10 +48,9 @@ export interface NocturneSdkApi {
 
   getAllDeposits(): Promise<DepositHandle[]>;
 
-  getAllDepositsWithSubstatus(): Promise<DepositWithSubstatusHandle[]>;
 
-  getSubstatusForDeposits(
-    depositRequestHashes: string[]
+  getStatusForDeposits(
+    depositHashes: string[]
   ): Promise<PendingDepositStatusResponse[]>;
 
   // *** OPERATION METHODS *** //
