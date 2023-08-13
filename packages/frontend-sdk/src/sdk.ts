@@ -71,6 +71,7 @@ import {
 import { Client as UrqlClient, fetchExchange } from "@urql/core";
 import { DepositRequestsBySpenderQueryDocument } from "./gql/queries/DepositRequestsBySpenderQueryDocument";
 import { DepositRequestStatusByHashQueryDocument } from "./gql/queries/DepositRequestStatusByHashQueryDocument";
+import { Erc20Config } from "@nocturne-xyz/config";
 
 const WASM_PATH = "../circuit-artifacts/joinsplit/joinsplit.wasm";
 const ZKEY_PATH = "../circuit-artifacts/joinsplit/joinsplit.zkey";
@@ -96,7 +97,9 @@ export class NocturneSdk implements NocturneSdkApi {
   // Caller MUST conform to EIP-1193 spec (window.ethereum) https://eips.ethereum.org/EIPS/eip-1193
   constructor(options: NocturneSdkOptions = {}) {
     const networkName = options.networkName || "mainnet";
-    const provider = options.provider || new ethers.providers.Web3Provider(window?.ethereum as any);
+    const provider =
+      options.provider ||
+      new ethers.providers.Web3Provider(window?.ethereum as any);
     const snapOptions = options.snap;
     const config = getNocturneSdkConfig(networkName);
     this.joinSplitProver = new WasmJoinSplitProver(
@@ -107,7 +110,11 @@ export class NocturneSdk implements NocturneSdkApi {
     this.endpoints = config.endpoints;
     this.config = config;
     this.provider = provider;
-    this._snap = new SnapStateSdk(snapOptions?.version, snapOptions?.snapId, networkName);
+    this._snap = new SnapStateSdk(
+      snapOptions?.version,
+      snapOptions?.snapId,
+      networkName
+    );
 
     this.signerThunk = thunk(() => this.getWindowSigner());
     this.depositManagerContractThunk = thunk(async () =>
@@ -628,6 +635,11 @@ export class NocturneSdk implements NocturneSdkApi {
     return JSON.parse(json) as StealthAddress;
   }
 
+  // ! TODO this is an atrocious signature to hand consumers
+  getAvailableErc20s(): Map<string, Erc20Config> {
+    return this.config.config.erc20s;
+  }
+
   /**
    * Given an operation digest, fetches and returns the operation status, enum'd as OperationStatus.
    */
@@ -711,11 +723,15 @@ export class NocturneSdk implements NocturneSdkApi {
   ): Promise<DepositRequestStatusWithMetadata> {
     let subgraphStatus = initialSubgraphStatus;
     if (!subgraphStatus) {
-      const { data, error } = await this.urqlClient.query(DepositRequestStatusByHashQueryDocument, { hash: depositRequestHash }).toPromise();
+      const { data, error } = await this.urqlClient
+        .query(DepositRequestStatusByHashQueryDocument, {
+          hash: depositRequestHash,
+        })
+        .toPromise();
       if (error || !data) {
         throw new Error(error?.message ?? "Deposit request query failed");
       }
-      
+
       if (!data.depositRequest) {
         return {
           status: DepositRequestStatus.DoesNotExist,

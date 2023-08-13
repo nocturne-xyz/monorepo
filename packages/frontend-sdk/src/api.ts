@@ -9,6 +9,7 @@ import {
   OperationRequestWithMetadata,
 } from "@nocturne-xyz/core";
 import { GetSnapsResponse, Snap } from "./metamask/types";
+import { Erc20Config } from "@nocturne-xyz/config";
 import {
   DepositHandle,
   DepositHandleWithReceipt,
@@ -108,16 +109,20 @@ export interface NocturneSdkApi {
   getLatestSyncedMerkleIndex(): Promise<number | undefined>;
 
   getRandomStealthAddress(): Promise<StealthAddress>;
+
+  // *** ACCESSOR METHODS *** //
+
+  snap: SnapStateApi;
+
+  getAvailableErc20s(): Map<string, Erc20Config>;
 }
 
 // *** SNAP STATE METHODS *** //
 export interface SnapStateApi {
-
   /**
    * id and version of the snap
    */
   snapId: string;
-
 
   /**
    * version of the snap being connected to if specified

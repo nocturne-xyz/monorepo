@@ -11,7 +11,7 @@ export {
   SyncWithProgressOutput,
 } from "./types";
 
-export { 
+export {
   DepositQuoteResponse,
   DepositRequest,
   OperationRequest,
@@ -26,4 +26,5 @@ export {
   SyncOpts,
 } from "@nocturne-xyz/core";
 
+export { Erc20Config } from "@nocturne-xyz/config";
 export { GetSnapOptions } from "./metamask/types";
