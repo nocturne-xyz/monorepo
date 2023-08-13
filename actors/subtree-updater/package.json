@@ -24,7 +24,7 @@
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test",
     "server": "yarn ts-node ./server.ts",
-    "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
+    "setup-rapidsnark": "../../packages/circuits/scripts/setup_rapidsnark_prover.sh",
     "test:unit": "yarn setup-rapidsnark && mocha --timeout 500000 --require ts-node/register --exit test/**"
   },
   "dependencies": {
