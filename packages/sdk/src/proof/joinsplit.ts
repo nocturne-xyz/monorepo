@@ -109,8 +109,8 @@ export function joinSplitPublicSignalsToArray(
     publicSignals.nullifierB,
     publicSignals.senderCommitment,
     publicSignals.opDigest,
-    publicSignals.pubEncodedAssetAddrWithSignBits,
     publicSignals.pubEncodedAssetId,
+    publicSignals.pubEncodedAssetAddrWithSignBits,
     publicSignals.refundAddrH1CompressedY,
     publicSignals.refundAddrH2CompressedY,
   ];

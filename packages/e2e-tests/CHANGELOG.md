@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- change 'alice deposits two' test case to 'alice deposits four' and have alice generate 2 JSs to test batch verify (when proofs.length > 1) functionality
 - use chainid and teller contract address in op request builder post-eip712 op
 - remove mint 721/1155 test case
 - remove deployment and deposits of erc721/1155s

@@ -14,6 +14,8 @@ import {
   TrackedAsset,
 } from "./types";
 import { ethers, TypedDataDomain } from "ethers";
+import * as JSON from "bigint-json-serialization";
+
 const { _TypedDataEncoder } = ethers.utils;
 
 export const TELLER_CONTRACT_NAME = "NocturneTeller";
@@ -119,7 +121,6 @@ export function toSignableOperation(
     networkInfo,
     joinSplits,
     refundAddr,
-    encodedRefundAssets,
     actions,
     encodedGasAsset,
     gasAssetRefundThreshold,
@@ -129,29 +130,13 @@ export function toSignableOperation(
     atomicActions,
   } = op;
 
-  const joinSplitAssets = dedup(
-    joinSplits.map(({ encodedAsset }) => encodedAsset)
-  );
-  const trackedJoinSplitAssets: Array<TrackedAsset> = Array.from(
-    joinSplitAssets.map((encodedAsset) => {
-      return { encodedAsset, minRefundValue: 0n };
-    })
-  );
-
-  const refundAssets = dedup(encodedRefundAssets);
-  const trackedRefundAssets: Array<TrackedAsset> = Array.from(
-    refundAssets.map((encodedAsset) => {
-      return { encodedAsset, minRefundValue: 0n };
-    })
-  );
-
-  const trackedAssets = trackedJoinSplitAssets.concat(trackedRefundAssets);
+  const trackedAssets = getTrackedAssets(op);
 
   const pubJoinSplits: SignablePublicJoinSplit[] = [];
   const confJoinSplits: SignableJoinSplit[] = [];
   for (const js of joinSplits) {
     if (js.publicSpend > 0n) {
-      const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
+      const assetIndex = trackedAssets.findIndex((a) =>
         AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
       );
       pubJoinSplits.push({
@@ -205,7 +190,6 @@ export function toSubmittableOperation(
     networkInfo,
     joinSplits,
     refundAddr,
-    encodedRefundAssets,
     actions,
     encodedGasAsset,
     gasAssetRefundThreshold,
@@ -215,29 +199,13 @@ export function toSubmittableOperation(
     atomicActions,
   } = op;
 
-  const trackedJoinSplitAssets: Array<TrackedAsset> = Array.from(
-    new Set(
-      joinSplits.map(({ encodedAsset }) => {
-        return { encodedAsset, minRefundValue: 0n };
-      })
-    )
-  );
-
-  const trackedRefundAssets: Array<TrackedAsset> = Array.from(
-    new Set(
-      encodedRefundAssets.map((encodedAsset) => {
-        return { encodedAsset, minRefundValue: 0n };
-      })
-    )
-  );
-
-  const trackedAssets = trackedJoinSplitAssets.concat(trackedRefundAssets);
+  const trackedAssets = getTrackedAssets(op);
 
   const pubJoinSplits: SubmittablePublicJoinSplit[] = [];
   const confJoinSplits: SubmittableJoinSplit[] = [];
   for (const js of joinSplits) {
     if (js.publicSpend > 0n) {
-      const assetIndex = trackedJoinSplitAssets.findIndex((a) =>
+      const assetIndex = trackedAssets.findIndex((a) =>
         AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
       );
       pubJoinSplits.push({
@@ -284,4 +252,23 @@ export function toSubmittableOperation(
     deadline,
     atomicActions,
   };
+}
+
+function getTrackedAssets(
+  op: PreSignOperation | SignedOperation | ProvenOperation
+): TrackedAsset[] {
+  const { joinSplits, encodedRefundAssets } = op;
+  const assets: TrackedAsset[] = [
+    ...joinSplits.map(({ encodedAsset }) => ({
+      encodedAsset,
+      minRefundValue: 0n, // TODO: placeholder, we need to figure out how to set this
+    })),
+    ...encodedRefundAssets.map((encodedAsset) => ({
+      encodedAsset,
+      minRefundValue: 0n, // TODO: placeholder, we need to figure out how to set this
+    })),
+  ];
+
+  // stringify assets to ensure uniqueness in map + for sorting
+  return dedup(assets.map(JSON.stringify)).sort().map(JSON.parse);
 }
