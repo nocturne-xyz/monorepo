@@ -691,7 +691,7 @@ export class NocturneSdk implements NocturneSdkApi {
     depositRequestHash: string,
     initialSubgraphStatus?: GqlDepositRequestStatus
   ): Promise<DepositRequestStatusWithMetadata> {
-    let subgraphStatus = initialSubgraphStatus;
+    const subgraphStatus = initialSubgraphStatus;
     if (!subgraphStatus) {
       throw new Error(
         "TODO Method not implemented, need to add new fetch from gql by depositRequestHash"
