@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-- Package name migrated from `sdk` to `wallet-sdk`
+- Package name migrated from `sdk` to `core`
 - fix bug in `toSignableOperation/toSubmittableOperation`, ensure tracked asset formatting is deterministic
 - bump gas price est to 40% buffer
 - Fix op digest tracking resulting in digests getting removed too early

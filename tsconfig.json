@@ -41,7 +41,7 @@
       "path": "./packages/circuits"
     },
     {
-      "path": "./packages/sdk"
+      "path": "./packages/core"
     },
     {
       "path": "./packages/deploy"
@@ -50,7 +50,7 @@
       "path": "./packages/deposit-screener"
     },
     {
-      "path": "./packages/sdk"
+      "path": "./packages/frontend-sdk"
     },
     {
       "path": "./packages/local-prover"
