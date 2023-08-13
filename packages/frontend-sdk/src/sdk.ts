@@ -85,7 +85,7 @@ export class NocturneSdk implements NocturneSdkApi {
   protected endpoints: Endpoints;
   protected config: NocturneSdkConfig;
   protected provider: SupportedProvider;
-  protected snap: SnapStateApi;
+  protected _snap: SnapStateApi;
   protected urqlClient: UrqlClient;
 
   protected signerThunk: Thunk<ethers.Signer>;
@@ -106,7 +106,7 @@ export class NocturneSdk implements NocturneSdkApi {
     this.endpoints = config.endpoints;
     this.config = config;
     this.provider = provider;
-    this.snap = new SnapStateSdk(snapOptions?.version, snapOptions?.snapId, networkName);
+    this._snap = new SnapStateSdk(snapOptions?.version, snapOptions?.snapId, networkName);
 
     this.signerThunk = thunk(() => this.getWindowSigner());
     this.depositManagerContractThunk = thunk(async () =>
@@ -126,6 +126,10 @@ export class NocturneSdk implements NocturneSdkApi {
       url: this.endpoints.subgraphEndpoint,
       exchanges: [fetchExchange],
     });
+  }
+
+  snap(): SnapStateApi {
+    return this._snap;
   }
 
   protected async getWindowSigner(): Promise<ethers.Signer> {
@@ -636,7 +640,7 @@ export class NocturneSdk implements NocturneSdkApi {
     return (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
-        snapId: this.snap.snapId,
+        snapId: this._snap.snapId,
         request,
       },
     })) as string;
