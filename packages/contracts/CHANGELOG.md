@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add bitmap checks to offchain merkle unit tests
 - modify invariant tests to accomodate `retrieveETHDeposit`
 - add `retrieveETHDeposit` to DepositManager + fallback fn for receiving ETH when calling `weth.withdraw`
 - track pre/post op merkle count and attach to `OperationResult` and `OperationProcessed` event
