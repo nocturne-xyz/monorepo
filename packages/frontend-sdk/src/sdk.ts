@@ -44,7 +44,9 @@ import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction, ethers } from "ethers";
 import vkey from "../circuit-artifacts/joinsplit/joinsplitVkey.json";
-import { NocturneSdkApi } from "./api";
+import { NocturneSdkApi, SnapStateApi } from "./api";
+import { SnapStateSdk } from "./metamask";
+import { GetSnapOptions } from "./metamask/types";
 import {
   DepositHandle,
   DepositHandleWithReceipt,
@@ -73,15 +75,22 @@ export class NocturneSdk implements NocturneSdkApi {
   protected screenerEndpoint: string;
   protected config: NocturneSdkConfig;
   protected _provider: ValidProvider | undefined;
+  protected _snap: SnapStateApi;
 
   protected signerThunk: Thunk<ethers.Signer>;
   protected depositManagerContractThunk: Thunk<DepositManager>;
   protected handlerContractThunk: Thunk<Handler>;
 
-  constructor(
-    networkName: SupportedNetwork = "mainnet",
-    provider?: ValidProvider
-  ) {
+  // Caller MUST conform to EIP-1193 spec (window.ethereum) https://eips.ethereum.org/EIPS/eip-1193
+  constructor({
+    networkName = "mainnet",
+    provider,
+    snap,
+  }: {
+    networkName?: SupportedNetwork;
+    provider?: ValidProvider;
+    snap?: GetSnapOptions;
+  } = {}) {
     const config = getNocturneSdkConfig(networkName);
     this.joinSplitProver = new WasmJoinSplitProver(
       WASM_PATH,
@@ -92,6 +101,7 @@ export class NocturneSdk implements NocturneSdkApi {
     this.screenerEndpoint = config.endpoints.screenerEndpoint;
     this.config = config;
     this._provider = provider;
+    this._snap = new SnapStateSdk(snap?.version, snap?.snapId, networkName);
 
     this.signerThunk = thunk(() => this.getWindowSigner());
     this.depositManagerContractThunk = thunk(async () =>
@@ -106,6 +116,10 @@ export class NocturneSdk implements NocturneSdkApi {
         await this.signerThunk()
       )
     );
+  }
+
+  get snap(): SnapStateApi {
+    return this._snap;
   }
 
   protected get provider(): ValidProvider {

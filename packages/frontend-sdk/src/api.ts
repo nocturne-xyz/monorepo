@@ -7,6 +7,7 @@ import {
   StealthAddress,
   SyncOpts,
 } from "@nocturne-xyz/core";
+import { GetSnapsResponse, Snap } from "./metamask/types";
 import {
   DepositHandle,
   DepositHandleWithReceipt,
@@ -107,4 +108,34 @@ export interface NocturneSdkApi {
   getLatestSyncedMerkleIndex(): Promise<number | undefined>;
 
   getRandomStealthAddress(): Promise<StealthAddress>;
+}
+
+// *** SNAP STATE METHODS *** //
+export interface SnapStateApi {
+  /**
+   * Detect if the wallet injecting the ethereum object is Flask.
+   *
+   * @returns true if the MetaMask version is Flask, false otherwise.
+   */
+  isFlask(): Promise<boolean>;
+
+  /**
+   * Connect Nocturne snap version to MetaMask.
+   * https://docs.metamask.io/snaps/reference/rpc-api/#wallet_requestsnaps
+   *
+   * @returns The snaps installed in MetaMask.
+   */
+  connect(): Promise<GetSnapsResponse>;
+
+  /**
+   * Once Nocturne snap has been connected, get the snap from MetaMask.
+   *
+   * @returns The snap object returned by the extension.
+   */
+  get(): Promise<Snap | undefined>;
+
+  /**
+   * Clear the Snap DB, upon local dev restart or odd behavior in testnet.
+   */
+  clearDb(): Promise<void>;
 }
