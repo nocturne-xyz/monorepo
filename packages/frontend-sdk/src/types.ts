@@ -6,11 +6,12 @@ import {
   OperationMetadata,
   OperationStatusResponse,
 } from "@nocturne-xyz/core";
-import { ContractReceipt } from "ethers";
+import { ContractReceipt, ethers } from "ethers";
 
 export interface Endpoints {
   screenerEndpoint: string;
   bundlerEndpoint: string;
+  subgraphEndpoint: string;
 }
 
 export interface ContractAddresses {
@@ -52,8 +53,9 @@ export interface DepositRequestWithMetadata extends DepositRequest {
   txHashRetrieved?: string;
 }
 
-export type DepositRequestStatus =
-  | "DOES_NOT_EXIST"
+export enum DepositRequestStatus {
+  DoesNotExist = "DOES_NOT_EXIST",
+
   // deposit has been initiated on-chain
   // and funds are in escrow, but
   // they still have yet to be moved
@@ -61,23 +63,27 @@ export type DepositRequestStatus =
   // user can "retrieve" the deposit
   // from escrow to "cancel" it and
   // get their money back
-  | "INITIATED"
-  | "FAILED_SCREEN"
-  | "AWAITING_FULFILLMENT"
+  Initiated = "INITIATED",
+  FailedScreen = "FAILED_SCREEN",
+  AwaitingFulfillment = "AWAITING_FULFILLMENT",
+
   // user has "cancelled" their deposit
   // by "retrieving" it from escrow
-  | "RETRIEVED"
+  Retrieved = "RETRIEVED",
+
   // screener has moved the deposit
   // into the teller, but the commitment
   // tree hasn't been updated yet,
   // so the funds aren't yet spendable.
   // the user can no longer retrieve their
   // deposit from escrow
-  | "FULFILLED"
+  Fulfilled = "FULFILLED",
 
   // the commitment tree has been updated
   // and the deposited funds are spendable
-  | "COMPLETE";
+  Complete = "COMPLETE",
+}
+
 
 export interface DepositRequestStatusWithMetadata {
   status: DepositRequestStatus;
@@ -96,3 +102,12 @@ export interface OperationHandle {
   getStatus: () => Promise<OperationStatusResponse>;
   metadata?: OperationMetadata;
 }
+
+export interface TokenDetails {
+  decimals: number;
+  symbol: string;
+}
+
+export type SupportedProvider =
+  | ethers.providers.JsonRpcProvider
+  | ethers.providers.Web3Provider;

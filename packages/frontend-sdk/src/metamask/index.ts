@@ -6,8 +6,8 @@ const NOCTURNE_SNAP_ORIGIN = "npm:@nocturne-xyz/snap";
 
 export class SnapStateSdk implements SnapStateApi {
   constructor(
-    private version?: string,
-    private snapId: string = NOCTURNE_SNAP_ORIGIN,
+    readonly version?: string,
+    readonly snapId: string = NOCTURNE_SNAP_ORIGIN,
     private env: SupportedNetwork = "mainnet"
   ) {}
 

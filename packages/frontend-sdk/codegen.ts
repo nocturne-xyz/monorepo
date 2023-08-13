@@ -1,5 +1,6 @@
-import { SUBGRAPH_URL } from "./src/utils";
 import { CodegenConfig } from "@graphql-codegen/cli";
+
+const SUBGRAPH_URL = "http://localhost:8000/subgraphs/name/nocturne";
 
 const config: CodegenConfig = {
   schema: SUBGRAPH_URL,

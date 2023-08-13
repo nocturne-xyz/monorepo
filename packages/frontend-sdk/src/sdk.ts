@@ -52,62 +52,58 @@ import { DepositRequestStatus as GqlDepositRequestStatus } from "./gql/autogener
 import {
   DepositHandle,
   DepositHandleWithReceipt,
+  DepositRequestStatus,
   DepositRequestStatusWithMetadata,
   DepositRequestWithMetadata,
+  Endpoints,
   GetBalanceOpts,
   NocturneSdkConfig,
   OperationHandle,
   SupportedNetwork,
   SyncWithProgressOutput,
+  SupportedProvider,
 } from "./types";
 import {
-  SNAP_ID,
-  SUBGRAPH_URL,
-  ValidProvider,
-  fetchSubgraphDepositRequestsQuery,
   getNocturneSdkConfig,
-  getProvider,
   getTokenContract,
-  toDepositRequestStatus,
+  flattenDepositRequestStatus,
   toDepositRequestWithMetadata,
 } from "./utils";
+import { Client as UrqlClient, fetchExchange } from "urql";
+import { DepositRequestsBySpenderQueryDocument } from "./gql/queries/DepositRequestsBySpenderQueryDocument";
+import { DepositRequestStatusByHashQueryDocument } from "./gql/queries/DepositRequestStatusByHashQueryDocument";
 
 const WASM_PATH = "../circuit-artifacts/joinsplit/joinsplit.wasm";
 const ZKEY_PATH = "../circuit-artifacts/joinsplit/joinsplit.zkey";
 
 export class NocturneSdk implements NocturneSdkApi {
   protected joinSplitProver: WasmJoinSplitProver;
-  protected bundlerEndpoint: string;
-  protected screenerEndpoint: string;
+  protected endpoints: Endpoints;
   protected config: NocturneSdkConfig;
-  protected _provider: ValidProvider | undefined;
-  protected _snap: SnapStateApi;
+  protected provider: SupportedProvider;
+  protected snap: SnapStateApi;
+  protected urqlClient: UrqlClient;
 
   protected signerThunk: Thunk<ethers.Signer>;
   protected depositManagerContractThunk: Thunk<DepositManager>;
   protected handlerContractThunk: Thunk<Handler>;
 
   // Caller MUST conform to EIP-1193 spec (window.ethereum) https://eips.ethereum.org/EIPS/eip-1193
-  constructor({
-    networkName = "mainnet",
-    provider,
-    snap,
-  }: {
-    networkName?: SupportedNetwork;
-    provider?: ValidProvider;
-    snap?: GetSnapOptions;
-  } = {}) {
+  constructor(
+    networkName: SupportedNetwork,
+    provider: SupportedProvider,
+    snapOptions: GetSnapOptions
+  ) {
     const config = getNocturneSdkConfig(networkName);
     this.joinSplitProver = new WasmJoinSplitProver(
       WASM_PATH,
       ZKEY_PATH,
       vkey as VerifyingKey
     );
-    this.bundlerEndpoint = config.endpoints.bundlerEndpoint;
-    this.screenerEndpoint = config.endpoints.screenerEndpoint;
+    this.endpoints = config.endpoints;
     this.config = config;
-    this._provider = provider;
-    this._snap = new SnapStateSdk(snap?.version, snap?.snapId, networkName);
+    this.provider = provider;
+    this.snap = new SnapStateSdk(snapOptions.version, snapOptions.snapId, networkName);
 
     this.signerThunk = thunk(() => this.getWindowSigner());
     this.depositManagerContractThunk = thunk(async () =>
@@ -122,20 +118,11 @@ export class NocturneSdk implements NocturneSdkApi {
         await this.signerThunk()
       )
     );
-  }
 
-  get snap(): SnapStateApi {
-    return this._snap;
-  }
-
-  protected get provider(): ValidProvider {
-    // we cannot directly assign provider from constructor, as window is not defined at compile-time, so would fail for callers
-    if (typeof window === "undefined") {
-      throw new Error(
-        "NocturneSdk must be instantiated in a browser environment"
-      );
-    }
-    return this._provider ?? getProvider();
+    this.urqlClient = new UrqlClient({
+      url: this.endpoints.subgraphEndpoint,
+      exchanges: [fetchExchange],
+    });
   }
 
   protected async getWindowSigner(): Promise<ethers.Signer> {
@@ -183,11 +170,18 @@ export class NocturneSdk implements NocturneSdkApi {
 
   async getAllDeposits(): Promise<DepositHandle[]> {
     const spender = await (await this.getWindowSigner()).getAddress();
-    const data = await fetchSubgraphDepositRequestsQuery(spender);
+    const { data, error } = await this.urqlClient
+      .query(DepositRequestsBySpenderQueryDocument, { spender })
+      .toPromise();
+
+    if (error || !data) {
+      throw new Error(error?.message ?? "Deposit request query failed");
+    }
+
     return Promise.all(
       data.depositRequests
         .map(toDepositRequestWithMetadata)
-        .map(this.toDepositHandle)
+        .map(this.makeDepositHandle)
     );
   }
 
@@ -314,7 +308,7 @@ export class NocturneSdk implements NocturneSdkApi {
     return (await retry(
       async () => {
         const res = await fetch(
-          `${this.screenerEndpoint}/status/${depositHash}`
+          `${this.endpoints.screenerEndpoint}/status/${depositHash}`
         );
         return (await res.json()) as DepositStatusResponse;
       },
@@ -333,7 +327,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
     return await retry(
       async () => {
-        const res = await fetch(`${this.screenerEndpoint}/quote`, {
+        const res = await fetch(`${this.endpoints.screenerEndpoint}/quote`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -427,7 +421,7 @@ export class NocturneSdk implements NocturneSdkApi {
   async submitOperation(operation: ProvenOperation): Promise<OperationHandle> {
     const opDigest = (await retry(
       async () => {
-        const res = await fetch(`${this.bundlerEndpoint}/relay`, {
+        const res = await fetch(`${this.endpoints.bundlerEndpoint}/relay`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -617,7 +611,7 @@ export class NocturneSdk implements NocturneSdkApi {
    * Query subgraph for all spender's deposits
    */
   async fetchAllDeposits(): Promise<DepositEvent[]> {
-    const withEntityIndices = await fetchDepositEvents(SUBGRAPH_URL, {
+    const withEntityIndices = await fetchDepositEvents(this.endpoints.subgraphEndpoint, {
       spender: await (await this.getWindowSigner()).getAddress(),
     });
 
@@ -633,7 +627,7 @@ export class NocturneSdk implements NocturneSdkApi {
     return await retry(
       async () => {
         const res = await fetch(
-          `${this.bundlerEndpoint}/operations/${opDigest}`
+          `${this.endpoints.bundlerEndpoint}/operations/${opDigest}`
         );
         return (await res.json()) as OperationStatusResponse;
       },
@@ -650,7 +644,7 @@ export class NocturneSdk implements NocturneSdkApi {
     return (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
-        snapId: SNAP_ID,
+        snapId: this.snap.snapId,
         request,
       },
     })) as string;
@@ -694,7 +688,8 @@ export class NocturneSdk implements NocturneSdkApi {
         };
         return {
           receipt,
-          handle: await this.toDepositHandle(request),
+          // TODO restructure and flatten this logic
+          handle: await this.makeDepositHandle(request),
         };
       })
     );
@@ -704,24 +699,33 @@ export class NocturneSdk implements NocturneSdkApi {
     depositRequestHash: string,
     initialSubgraphStatus?: GqlDepositRequestStatus
   ): Promise<DepositRequestStatusWithMetadata> {
-    const subgraphStatus = initialSubgraphStatus;
+    let subgraphStatus = initialSubgraphStatus;
     if (!subgraphStatus) {
-      throw new Error(
-        "TODO Method not implemented, need to add new fetch from gql by depositRequestHash"
-      );
+      const { data, error } = await this.urqlClient.query(DepositRequestStatusByHashQueryDocument, { hash: depositRequestHash }).toPromise();
+      if (error || !data) {
+        throw new Error(error?.message ?? "Deposit request query failed");
+      }
+      
+      if (!data.depositRequest) {
+        return {
+          status: DepositRequestStatus.DoesNotExist,
+        };
+      }
+      subgraphStatus = data.depositRequest.status;
     }
+
     const screenerResponse = await this.fetchScreenerDepositRequestStatus(
       depositRequestHash
     );
     const { status: screenerStatus, estimatedWaitSeconds } = screenerResponse;
-    const status = toDepositRequestStatus(subgraphStatus, screenerStatus);
+    const status = flattenDepositRequestStatus(subgraphStatus, screenerStatus);
     return {
       status,
       estimatedWaitSeconds,
     };
   }
 
-  private async toDepositHandle(
+  private async makeDepositHandle(
     requestWithStatus: DepositRequestWithMetadata & {
       subgraphStatus?: GqlDepositRequestStatus;
     }

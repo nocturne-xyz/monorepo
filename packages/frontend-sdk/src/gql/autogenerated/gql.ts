@@ -13,6 +13,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
+    "\n  query fetchDepositRequest($hash: ID!) {\n    depositRequest(id: $hash) {\n      status\n    }\n  }\n": types.FetchDepositRequestDocument,
     "\n  query fetchDepositRequests($spender: Bytes!) {\n    depositRequests(where: { spender: $spender }) {\n      spender\n      status\n      encodedAssetAddr\n      encodedAssetId\n      value\n      depositAddrH1\n      depositAddrH2\n      nonce\n      gasCompensation\n      instantiationTxHash\n      completionTxHash\n      retrievalTxHash\n      createdAtTotalEntityIndex\n    }\n  }\n": types.FetchDepositRequestsDocument,
 };
 
@@ -30,6 +31,10 @@ const documents = {
  */
 export function graphql(source: string): unknown;
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query fetchDepositRequest($hash: ID!) {\n    depositRequest(id: $hash) {\n      status\n    }\n  }\n"): (typeof documents)["\n  query fetchDepositRequest($hash: ID!) {\n    depositRequest(id: $hash) {\n      status\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

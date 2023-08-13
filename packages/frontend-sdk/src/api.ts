@@ -112,6 +112,18 @@ export interface NocturneSdkApi {
 
 // *** SNAP STATE METHODS *** //
 export interface SnapStateApi {
+
+  /**
+   * id and version of the snap
+   */
+  snapId: string;
+
+
+  /**
+   * version of the snap being connected to if specified
+   */
+  version?: string;
+
   /**
    * Detect if the wallet injecting the ethereum object is Flask.
    *
