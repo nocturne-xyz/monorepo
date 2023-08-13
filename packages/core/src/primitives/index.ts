@@ -1,21 +1,22 @@
-export * from "./types";
 export * as TreeConstants from "./treeConstants";
+export * from "./types";
 
-export { BinaryPoseidonTree } from "./binaryPoseidonTree";
-export {
-  Note,
-  IncludedNote,
-  IncludedNoteWithNullifier,
-  IncludedNoteCommitment,
-  EncodedNote,
-  NoteTrait,
-} from "./note";
 export {
   Asset,
-  EncodedAsset,
-  AssetWithBalance,
-  AssetType,
   AssetTrait,
+  AssetType,
+  AssetWithBalance,
+  ERC20_ID,
+  EncodedAsset,
 } from "./asset";
+export { BinaryPoseidonTree } from "./binaryPoseidonTree";
 export { hashDepositRequest } from "./depositHash";
+export {
+  EncodedNote,
+  IncludedNote,
+  IncludedNoteCommitment,
+  IncludedNoteWithNullifier,
+  Note,
+  NoteTrait,
+} from "./note";
 export { computeOperationDigest } from "./operationDigest";
