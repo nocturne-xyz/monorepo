@@ -4,7 +4,6 @@ import {
   ClosableAsyncIterator,
   DepositRequest,
   OperationMetadata,
-  OperationRequest,
   OperationStatusResponse,
 } from "@nocturne-xyz/core";
 import { ContractReceipt } from "ethers";
@@ -96,9 +95,4 @@ export interface OperationHandle {
   digest: bigint;
   getStatus: () => Promise<OperationStatusResponse>;
   metadata?: OperationMetadata;
-}
-
-export interface OperationRequestWithMetadata {
-  request: OperationRequest;
-  metadata: OperationMetadata;
 }

@@ -12,6 +12,7 @@ export {
   OperationRequest,
   OperationGasParams,
   OperationRequestBuilder,
+  OperationRequestWithMetadata,
 } from "./operationRequest";
 export { NocturneWalletSDK } from "./NocturneWalletSDK";
 export { GetNotesOpts } from "./NocturneDB";

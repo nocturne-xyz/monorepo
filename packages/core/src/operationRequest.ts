@@ -1,7 +1,7 @@
-import { Asset, Address, Action } from "./primitives";
-import { CanonAddress, StealthAddress } from "./crypto";
-import { groupByArr } from "./utils";
 import { ethers } from "ethers";
+import { CanonAddress, StealthAddress } from "./crypto";
+import { Action, Address, Asset, OperationMetadata } from "./primitives";
+import { groupByArr } from "./utils";
 
 const ONE_DAY_SECONDS = 24 * 60 * 60;
 
@@ -22,6 +22,11 @@ export interface OperationRequest {
   executionGasLimit?: bigint;
   maxNumRefunds?: bigint;
   gasPrice?: bigint;
+}
+
+export interface OperationRequestWithMetadata {
+  request: OperationRequest;
+  meta: OperationMetadata;
 }
 
 export interface GasAccountedOperationRequest
@@ -53,12 +58,12 @@ interface ConfidentialPayment {
 
 export class OperationRequestBuilder {
   private op: OperationRequest;
+  private metadata: OperationMetadata;
   private joinSplitsAndPaymentsByAsset: Map<
     Asset,
     JoinSplitsAndPaymentsForAsset
   >;
 
-  // constructor takes no parameters. `new NocturneOperationBuilder()`
   constructor() {
     this.op = {
       joinSplitRequests: [],
@@ -68,6 +73,9 @@ export class OperationRequestBuilder {
       deadline: 0n,
     };
 
+    this.metadata = {
+      items: [],
+    };
     this.joinSplitsAndPaymentsByAsset = new Map();
   }
 
@@ -81,7 +89,6 @@ export class OperationRequestBuilder {
       contractAddress: ethers.utils.getAddress(contractAddress),
       encodedFunction,
     };
-
     this.op.actions.push(action);
     return this;
   }
@@ -123,6 +130,11 @@ export class OperationRequestBuilder {
     payments.push(payment);
     this.joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
 
+    this.metadata.items.push({
+      recipient: receiver,
+      asset,
+      amount: amountUnits,
+    });
     return this;
   }
 
@@ -183,7 +195,7 @@ export class OperationRequestBuilder {
   // if `refundAddr` was not called, the refund address will not be set.
   // In the output, unwraps, actions, and refunds are guaranteed
   // to appear in the order their corresponding methods were invoked
-  build(): OperationRequest {
+  build(): OperationRequestWithMetadata {
     const joinSplitRequests = [];
 
     // consolidate joinSplits and payments for each asset
@@ -241,7 +253,7 @@ export class OperationRequestBuilder {
       throw new Error("No joinSplits or payments specified");
     }
 
-    return this.op;
+    return { request: this.op, meta: this.metadata };
   }
 }
 
