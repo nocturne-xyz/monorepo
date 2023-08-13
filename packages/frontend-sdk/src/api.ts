@@ -10,11 +10,9 @@ import {
 import {
   DepositHandle,
   DepositHandleWithReceipt,
-  DepositWithSubstatusHandle,
   GetBalanceOpts,
   OperationHandle,
   OperationRequestWithMetadata,
-  PendingDepositStatusResponse,
   SyncWithProgressOutput,
 } from "./types";
 
@@ -47,11 +45,6 @@ export interface NocturneSdkApi {
   ): Promise<DepositHandleWithReceipt[]>;
 
   getAllDeposits(): Promise<DepositHandle[]>;
-
-
-  getStatusForDeposits(
-    depositHashes: string[]
-  ): Promise<PendingDepositStatusResponse[]>;
 
   // *** OPERATION METHODS *** //
 
