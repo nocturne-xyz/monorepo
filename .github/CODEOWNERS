@@ -8,11 +8,11 @@ packages/circuits @Sladuca
 
 # SDKs
 
-packages/wallet-sdk @luketchang @Sladuca
+packages/core @luketchang @Sladuca
 
 # Frontend
 
-packages/sdk @luketchang @Sladuca @panieldark
+packages/frontend-sdk @luketchang @Sladuca @panieldark
 
 # Offchain
 
