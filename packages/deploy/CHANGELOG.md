@@ -1,6 +1,15 @@
 # Changelog
 
-### Unreleased
+## 1.0.1
+
+### Patch Changes
+
+- Updated dependencies [a65bf2a9]
+  - @nocturne-xyz/contracts@0.1.1
+  - @nocturne-xyz/config@0.1.1
+  - @nocturne-xyz/sdk@0.1.1
+
+### Pre-Release 
 
 - call whitelist on supported contracts (tokens + protocols)
 - Include teller contract name and version in Teller init call

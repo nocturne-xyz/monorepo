@@ -1,13 +1,19 @@
 # Changelog
 
-### Unreleased
+## 0.1.9
+
+### Patch Changes
+
+- a65bf2a9: overhaul monorepo structure and switch to proper semver
+
+### Pre-Release
 
 - add `NumBits` and `NumBytes` to `AffineCurve`
 - expose separate entrpoints for browser and node
 - add `SerializedHybridCiphertext` and two functions for converting to/from `HybridCiphertext` to avoid with browser `Uin8Array` nonsense
 - add `NumBytes` to `PrimeField`
 - rename package to `@nocturne-xyz/crypto-utils`
-- add module `hybrid-encryption` containing a generic `HybridCipher` 
+- add module `hybrid-encryption` containing a generic `HybridCipher`
 - add separate `fromEntropy` method to `PrimeField` for reducing arbitrary `Uint8Array`s into field elements
 - add `toBytes` and `fromBytes` to curve
 - make `ZModPField.toBytes` and `ZModPField.fromBytes` algorithmic constant-time

@@ -1,6 +1,15 @@
 # Changelog
 
-### Unreleased
+## 0.1.0
+
+### Patch Changes
+
+- Updated dependencies [a65bf2a9]
+  - @nocturne-xyz/contracts@0.1.1
+  - @nocturne-xyz/config@0.1.1
+  - @nocturne-xyz/sdk@0.1.1
+
+### Pre-Release
 
 - replace tx manager with OZ relay
 - update relay schema after collapsing tracked assets into single array

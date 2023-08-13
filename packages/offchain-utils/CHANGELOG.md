@@ -1,6 +1,6 @@
 # Changelog
 
-### Unreleased
+### Pre-Release
 
 - move redis out to remove peer-dependency on `ioredis`
 - add `opentelemetry` default instrumentation + metric name formatting util

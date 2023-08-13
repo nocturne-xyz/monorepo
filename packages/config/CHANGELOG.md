@@ -1,6 +1,12 @@
 # Changelog
 
-### Unreleased
+## 0.1.1
+
+### Patch Changes
+
+- a65bf2a9: overhaul monorepo structure and switch to proper semver
+
+### Pre-Release
 
 - ensure all loaded addrs are checksum addresses by adding parsing util fn
 - redeploy sepolia post gas-optimization PRs

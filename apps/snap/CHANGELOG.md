@@ -1,6 +1,15 @@
 # Changelog
 
-### Unreleased
+## 0.1.0
+
+### Patch Changes
+
+- Updated dependencies [a65bf2a9]
+  - @nocturne-xyz/crypto-utils@0.1.9
+  - @nocturne-xyz/config@0.1.1
+  - @nocturne-xyz/sdk@0.1.1
+
+### Pre-Release
 
 - Add `lastSyncedMerkleIndex` usage if sync already is taking place
 - remove custom gas est call in snap and let sdk handle

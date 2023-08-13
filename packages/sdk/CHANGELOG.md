@@ -1,6 +1,16 @@
 # Changelog
 
-### Unreleased
+## 0.1.1
+
+### Patch Changes
+
+- a65bf2a9: overhaul monorepo structure and switch to proper semver
+- Updated dependencies [a65bf2a9]
+  - @nocturne-xyz/crypto-utils@0.1.9
+  - @nocturne-xyz/contracts@0.1.1
+  - @nocturne-xyz/config@0.1.1
+
+### Pre-Release 
 
 - bump gas price est to 40% buffer
 - Fix op digest tracking resulting in digests getting removed too early

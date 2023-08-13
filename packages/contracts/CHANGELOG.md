@@ -1,6 +1,12 @@
 # Changelog
 
-### Unreleased
+## 0.1.1
+
+### Patch Changes
+
+- a65bf2a9: overhaul monorepo structure and switch to proper semver
+
+### Pre-release 
 
 - modify invariant tests to accomodate `retrieveETHDeposit`
 - add `retrieveETHDeposit` to DepositManager + fallback fn for receiving ETH when calling `weth.withdraw`

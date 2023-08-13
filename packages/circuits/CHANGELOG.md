@@ -1,6 +1,6 @@
 # Changelog
 
-### Unreleased
+### Pre-Release 
 
 - add positive security annotations to subtreeupdate circuit
 - add positive security annotations to `joinsplit.circom`

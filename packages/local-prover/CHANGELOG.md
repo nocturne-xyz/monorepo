@@ -1,6 +1,15 @@
 # Changelog
 
-### Unreleased
+## 0.1.1
+
+### Patch Changes
+
+- a65bf2a9: overhaul monorepo structure and switch to proper semver
+- Updated dependencies [a65bf2a9]
+  - @nocturne-xyz/crypto-utils@0.1.9
+  - @nocturne-xyz/sdk@0.1.1
+
+### Pre-Release
 
 - update `JoinSplitInputs` type with zero'd out `encodedAsset` PIs
 - update `JoinSplitInputs` type with `refundAddr` and `senderCommitment` instead of `encSenderCanoAddr` and `encRandomness`
@@ -13,9 +22,9 @@
 - add `encRandomness` to inputs
 - clean up module hierarchy, remove unnecessary exports, and make exports explicit
 - use `poseidonBN` from `@nocturne-xyz/crypto-utils`
-- Rename 
-	- `LocalJoinSplitProver` -> `WasmJoinSplitProver`
-	- `LocalSubtreeUpdateProver` -> `WasmSubtreeUpdateProver`
+- Rename
+  - `LocalJoinSplitProver` -> `WasmJoinSplitProver`
+  - `LocalSubtreeUpdateProver` -> `WasmSubtreeUpdateProver`
 - use `OperationStatus` from `@nocturne-xyz/sdk`
 - move `subtreeUpdateInputsFromBatch` to `sdk`
 - Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`

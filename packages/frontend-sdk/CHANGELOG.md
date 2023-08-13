@@ -1,6 +1,17 @@
 # Changelog
 
-### Unreleased
+## 0.1.1
+
+### Patch Changes
+
+- a65bf2a9: overhaul monorepo structure and switch to proper semver
+- Updated dependencies [a65bf2a9]
+  - @nocturne-xyz/local-prover@0.1.1
+  - @nocturne-xyz/contracts@0.1.1
+  - @nocturne-xyz/config@0.1.1
+  - @nocturne-xyz/sdk@0.1.1
+
+### Pre-Release
 
 - `sync` method takes and propogates `SyncOpts` as params to snap/sdk
 - instantiate fe-sdk with `config`
