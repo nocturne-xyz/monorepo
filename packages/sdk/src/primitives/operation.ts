@@ -269,5 +269,6 @@ function getTrackedAssets(
     })),
   ];
 
+  // stringify assets to ensure uniqueness in map + for sorting
   return dedup(assets.map(JSON.stringify)).sort().map(JSON.parse);
 }
