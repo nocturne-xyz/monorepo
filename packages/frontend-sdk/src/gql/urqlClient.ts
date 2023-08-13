@@ -6,4 +6,6 @@ const client = new Client({
   exchanges: [fetchExchange],
 });
 
-export const getUrqlClient = (): Client => client;
+export function getUrqlClient(): Client {
+  return client;
+}
