@@ -12,7 +12,7 @@ import {
   ProvenOperation,
   RelayResponse,
   OperationStatusResponse,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import { Teller } from "@nocturne-xyz/contracts";
 import {
   checkNotEnoughGasError,

@@ -31,7 +31,7 @@ import {
   MockEthToTokenConverter,
   RPCSDKSyncAdapter,
   BundlerOpTracker,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 
 import {
   NocturneDeployConfig,

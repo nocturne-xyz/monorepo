@@ -1,5 +1,5 @@
 import { DepositManager } from "@nocturne-xyz/contracts";
-import { DepositRequest } from "@nocturne-xyz/sdk";
+import { DepositRequest } from "@nocturne-xyz/core";
 import { Logger } from "winston";
 import { DepositScreenerDB } from "./db";
 import { ScreeningApi } from "./screening";

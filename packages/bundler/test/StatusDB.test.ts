@@ -3,7 +3,7 @@ import { expect } from "chai";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { StatusDB } from "../src/db";
-import { OperationStatus } from "@nocturne-xyz/sdk";
+import { OperationStatus } from "@nocturne-xyz/core";
 
 describe("StatusDB", async () => {
   let server: RedisMemoryServer;

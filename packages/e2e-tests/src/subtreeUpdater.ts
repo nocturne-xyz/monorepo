@@ -2,7 +2,7 @@ import {
   SubtreeUpdater,
   RapidsnarkSubtreeUpdateProver,
 } from "@nocturne-xyz/subtree-updater";
-import { MockSubtreeUpdateProver } from "@nocturne-xyz/sdk";
+import { MockSubtreeUpdateProver } from "@nocturne-xyz/core";
 import { ethers } from "ethers";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { Handler__factory } from "@nocturne-xyz/contracts";

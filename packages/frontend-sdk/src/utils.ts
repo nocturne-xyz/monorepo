@@ -1,4 +1,4 @@
-import { Address, AssetType } from "@nocturne-xyz/sdk";
+import { Address, AssetType } from "@nocturne-xyz/core";
 import { ethers } from "ethers";
 import ERC20 from "./abis/ERC20.json";
 import ERC721 from "./abis/ERC721.json";
@@ -15,9 +15,9 @@ const ENDPOINTS = {
     screenerEndpoint: "https://screener.nocturnelabs.xyz",
     bundlerEndpoint: "https://bundler.nocturnelabs.xyz",
   },
-  localnet: {
-    screenerEndpoint: "http://localhost:8000",
-    bundlerEndpoint: "http://localhost:8000",
+  localhost: {
+    screenerEndpoint: "http://localhost:3001",
+    bundlerEndpoint: "http://localhost:3000",
   },
 };
 
@@ -37,7 +37,7 @@ export type ValidProvider =
   | ethers.providers.Web3Provider;
 
 export function getProvider(): ValidProvider {
-  return new ethers.providers.Web3Provider(window.ethereum as any);
+  return new ethers.providers.Web3Provider(window?.ethereum as any);
 }
 
 export function getTokenContract(
@@ -111,8 +111,8 @@ const getEndpoints = (networkName: SupportedNetwork) => {
   switch (networkName) {
     case "sepolia":
       return ENDPOINTS.sepolia;
-    case "localnet":
-      return ENDPOINTS.localnet;
+    case "localhost":
+      return ENDPOINTS.localhost;
     default:
       throw new Error(`Network not supported: ${networkName}`);
   }

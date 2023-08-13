@@ -1,4 +1,4 @@
-import { Address } from "@nocturne-xyz/sdk";
+import { Address } from "@nocturne-xyz/core";
 
 export const ACTOR_NAME = "deposit-screener";
 

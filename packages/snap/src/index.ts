@@ -10,7 +10,7 @@ import {
   OperationMetadata,
   SyncOpts,
   GetNotesOpts,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
 import { ethers } from "ethers";
 import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
@@ -98,7 +98,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
       console.log("Syncing...");
       await sdk.sync();
       return JSON.stringify(
-        await sdk.getBalanceForAsset(request.params as unknown as GetNotesOpts) // yikes typing
+        await sdk.getBalanceForAsset(request.params as unknown as any) // yikes typing
       );
     case "nocturne_sync":
       if (snapIsSyncing) {

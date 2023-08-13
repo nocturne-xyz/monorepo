@@ -11,7 +11,7 @@ import {
   NoteTrait,
   subtreeUpdateInputsFromBatch,
   TreeConstants,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import { WasmSubtreeUpdateProver } from "../src/subtreeUpdate";
 import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 

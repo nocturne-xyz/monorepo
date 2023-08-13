@@ -10,7 +10,7 @@ import {
   MockSubtreeUpdateProver,
   SubtreeUpdateProver,
   assertOrErr,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import { RapidsnarkSubtreeUpdateProver } from "../../../rapidsnarkProver";
 import {
   DefenderRelayProvider,

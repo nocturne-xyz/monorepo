@@ -1,6 +1,6 @@
 import { deployContractsWithDummyConfig } from "../src/deploy";
 import { ethers } from "ethers";
-import { CanonAddress, StealthAddressTrait, zip } from "@nocturne-xyz/sdk";
+import { CanonAddress, StealthAddressTrait, zip } from "@nocturne-xyz/core";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import fs from "fs";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -111,7 +111,11 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
       );
       const tx = await depositManager
         .connect(deployerEoa)
-        .instantiateErc20MultiDeposit(token.address, [amount], StealthAddressTrait.compress(addr));
+        .instantiateErc20MultiDeposit(
+          token.address,
+          [amount],
+          StealthAddressTrait.compress(addr)
+        );
       await tx.wait(1);
     }
   }

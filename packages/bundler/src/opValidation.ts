@@ -3,7 +3,7 @@ import {
   Bundle,
   computeOperationDigest,
   ProvenOperation,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import { Teller } from "@nocturne-xyz/contracts";
 import { NullifierDB } from "./db";
 import { Logger } from "winston";
