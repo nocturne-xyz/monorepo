@@ -38,6 +38,7 @@ import {
   proveOperation,
   thunk,
   unpackFromSolidityProof,
+  OperationRequestWithMetadata,
 } from "@nocturne-xyz/core";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import retry from "async-retry";
@@ -53,7 +54,6 @@ import {
   GetBalanceOpts,
   NocturneSdkConfig,
   OperationHandle,
-  OperationRequestWithMetadata,
   SupportedNetwork,
   SyncWithProgressOutput,
 } from "./types";
@@ -261,10 +261,9 @@ export class NocturneSdk implements NocturneSdkApi {
       erc20Address,
       amount,
     };
-    const provenOperation = await this.signAndProveOperation({
-      request: operationRequest,
-      metadata: { action },
-    });
+
+    const provenOperation = await this.signAndProveOperation(operationRequest);
+
     const opHandleWithoutMetadata = this.submitOperation(provenOperation);
     return {
       ...opHandleWithoutMetadata,
@@ -351,12 +350,12 @@ export class NocturneSdk implements NocturneSdkApi {
   async signOperationRequest(
     operationRequest: OperationRequestWithMetadata
   ): Promise<SignedOperation> {
-    console.log("[fe-sdk] metadata:", operationRequest.metadata);
+    console.log("[fe-sdk] metadata:", operationRequest.meta);
     const json = await this.invokeSnap({
       method: "nocturne_signOperation",
       params: {
         operationRequest: JSON.stringify(operationRequest.request),
-        opMetadata: JSON.stringify(operationRequest.metadata),
+        opMetadata: JSON.stringify(operationRequest.meta),
       },
     });
     const op = JSON.parse(json) as SignedOperation;

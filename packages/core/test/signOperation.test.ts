@@ -55,7 +55,7 @@ describe("signOperation", () => {
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest.request
     );
     const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
 

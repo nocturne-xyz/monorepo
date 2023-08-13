@@ -6,6 +6,7 @@ import {
   SignedOperation,
   StealthAddress,
   SyncOpts,
+  OperationRequestWithMetadata,
 } from "@nocturne-xyz/core";
 import { GetSnapsResponse, Snap } from "./metamask/types";
 import {
@@ -13,7 +14,6 @@ import {
   DepositHandleWithReceipt,
   GetBalanceOpts,
   OperationHandle,
-  OperationRequestWithMetadata,
   SyncWithProgressOutput,
 } from "./types";
 
