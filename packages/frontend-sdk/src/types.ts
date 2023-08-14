@@ -84,7 +84,6 @@ export enum DepositRequestStatus {
   Complete = "COMPLETE",
 }
 
-
 export interface DepositRequestStatusWithMetadata {
   status: DepositRequestStatus;
   estimatedWaitSeconds?: number;
@@ -93,7 +92,7 @@ export interface DepositRequestStatusWithMetadata {
 export interface DepositHandle {
   depositRequestHash: string;
   request: DepositRequestWithMetadata;
-  initialStatus: DepositRequestStatusWithMetadata;
+  currentStatus: DepositRequestStatusWithMetadata;
   getStatus: () => Promise<DepositRequestStatusWithMetadata>;
 }
 
