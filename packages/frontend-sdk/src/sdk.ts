@@ -88,7 +88,7 @@ export interface NocturneSdkOptions {
 }
 
 export class NocturneSdk implements NocturneSdkApi {
-  protected joinSplitProver: WasmJoinSplitProver;
+  protected joinSplitProverThunk: Thunk<WasmJoinSplitProver>;
   protected endpoints: Endpoints;
   protected config: NocturneSdkConfig;
   protected _provider?: SupportedProvider;
@@ -104,11 +104,17 @@ export class NocturneSdk implements NocturneSdkApi {
     const networkName = options.networkName || "mainnet";
     const snapOptions = options.snap;
     const config = getNocturneSdkConfig(networkName);
-    this.joinSplitProver = new WasmJoinSplitProver(
-      WASM_PATH,
-      ZKEY_PATH,
-      vkey as VerifyingKey
-    );
+
+    // HACK `@nocturne-xyz/local-prover` doesn't work with server components (imports a lot of unnecessar garbage)
+    this.joinSplitProverThunk = thunk(async () => {
+      const { WasmJoinSplitProver } = await import("@nocturne-xyz/local-prover");
+      return new WasmJoinSplitProver(
+        WASM_PATH,
+        ZKEY_PATH,
+        vkey as VerifyingKey
+      );
+    });
+
     this.endpoints = config.endpoints;
     this.config = config;
     this._provider = options.provider;
@@ -403,7 +409,8 @@ export class NocturneSdk implements NocturneSdkApi {
   async proveOperation(
     op: SignedOperation
   ): Promise<SubmittableOperationWithNetworkInfo> {
-    return await proveOperation(this.joinSplitProver, op);
+    const prover = await this.joinSplitProverThunk();
+    return await proveOperation(prover, op);
   }
 
   async verifyProvenOperation(operation: ProvenOperation): Promise<boolean> {
@@ -454,7 +461,8 @@ export class NocturneSdk implements NocturneSdkApi {
 
     const results = await Promise.all(
       proofsWithPublicInputs.map(async (proofWithPis) => {
-        return await this.joinSplitProver.verifyJoinSplitProof(proofWithPis);
+        const prover = await this.joinSplitProverThunk();
+        await prover.verifyJoinSplitProof(proofWithPis);
       })
     );
 
