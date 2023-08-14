@@ -1,25 +1,23 @@
-import {
-  NocturneWalletSDK,
-  NocturneSigner,
-  SparseMerkleProver,
-  OperationRequest,
-  OperationRequestWithMetadata,
-  NocturneDB,
-  SubgraphSDKSyncAdapter,
-  MockEthToTokenConverter,
-  BundlerOpTracker,
-  OperationMetadata,
-  SyncOpts,
-  GetNotesOpts,
-} from "@nocturne-xyz/core";
-import { ethers } from "ethers";
 import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
 import { OnRpcRequestHandler } from "@metamask/snaps-types";
-import { SnapKvStore } from "./snapdb";
-import * as JSON from "bigint-json-serialization";
-import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
-import { makeSignOperationContent } from "./utils/display";
 import { heading, panel, text } from "@metamask/snaps-ui";
+import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
+import {
+  BundlerOpTracker,
+  GetNotesOpts,
+  MockEthToTokenConverter,
+  NocturneDB,
+  NocturneSigner,
+  NocturneWalletSDK,
+  SparseMerkleProver,
+  SubgraphSDKSyncAdapter,
+  SyncOpts,
+} from "@nocturne-xyz/core";
+import { OperationMetadata, OperationRequest } from "@nocturne-xyz/sdk";
+import * as JSON from "bigint-json-serialization";
+import { ethers } from "ethers";
+import { SnapKvStore } from "./snapdb";
+import { makeSignOperationContent } from "./utils/display";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Sepolia
@@ -143,11 +141,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
 
       console.log("done syncing");
 
-      const operationRequestWithMetadata = JSON.parse(
-        request.params as any
-      ) as OperationRequestWithMetadata;
-      const { request: operationRequest, meta: opMetadata } =
-        operationRequestWithMetadata;
+      const operationRequest = JSON.parse(
+        (request.params as any).request
+      ) as OperationRequest;
+      const opMetadata = JSON.parse(
+        (request.params as any).meta
+      ) as OperationMetadata;
 
       // Ensure user has minimum balance for request
       if (!(await sdk.hasEnoughBalanceForOperationRequest(operationRequest))) {
