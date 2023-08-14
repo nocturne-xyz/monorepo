@@ -3,7 +3,7 @@
   "description": "Nocturne Snap",
   "proposedName": "Nocturne Snap",
   "source": {
-    "shasum": "qoC5leYEIW+AolhRjZB+w2KSJQ04iVPhDod89+C1am8=",
+    "shasum": "yh0v9fl86j6PgSguZgzrI1IaI0lpfa8QfQR+6teymtc=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",

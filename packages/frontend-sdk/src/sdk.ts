@@ -67,7 +67,7 @@ import {
   flattenDepositRequestStatus,
   toDepositRequestWithMetadata,
 } from "./utils";
-import { Client as UrqlClient, fetchExchange } from "urql";
+import { Client as UrqlClient, fetchExchange } from "@urql/core";
 import { DepositRequestsBySpenderQueryDocument } from "./gql/queries/DepositRequestsBySpenderQueryDocument";
 import { DepositRequestStatusByHashQueryDocument } from "./gql/queries/DepositRequestStatusByHashQueryDocument";
 

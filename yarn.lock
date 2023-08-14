@@ -4353,6 +4353,7 @@ __metadata:
     "@types/react": ^18.2.20
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
+    "@urql/core": ^4.1.1
     async-retry: ^1.3.3
     bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
@@ -4361,10 +4362,8 @@ __metadata:
     ethers: ^5.7.2
     graphql: ^16.7.1
     mocha: ^10.1.0
-    react: ^18.2.0
     ts-node: ^10.9.1
     typescript: ^4.8.4
-    urql: ^4.0.5
   languageName: unknown
   linkType: soft
 
@@ -6400,7 +6399,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@urql/core@npm:^4.1.0":
+"@urql/core@npm:^4.1.1":
   version: 4.1.1
   resolution: "@urql/core@npm:4.1.1"
   dependencies:
@@ -15594,7 +15593,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"loose-envify@npm:^1.0.0, loose-envify@npm:^1.1.0":
+"loose-envify@npm:^1.0.0":
   version: 1.4.0
   resolution: "loose-envify@npm:1.4.0"
   dependencies:
@@ -18262,15 +18261,6 @@ __metadata:
     iconv-lite: 0.4.24
     unpipe: 1.0.0
   checksum: ba1583c8d8a48e8fbb7a873fdbb2df66ea4ff83775421bfe21ee120140949ab048200668c47d9ae3880012f6e217052690628cf679ddfbd82c9fc9358d574676
-  languageName: node
-  linkType: hard
-
-"react@npm:^18.2.0":
-  version: 18.2.0
-  resolution: "react@npm:18.2.0"
-  dependencies:
-    loose-envify: ^1.1.0
-  checksum: 88e38092da8839b830cda6feef2e8505dec8ace60579e46aa5490fc3dc9bba0bd50336507dc166f43e3afc1c42939c09fe33b25fae889d6f402721dcd78fca1b
   languageName: node
   linkType: hard
 
@@ -21407,18 +21397,6 @@ __metadata:
   version: 9.0.0
   resolution: "urlpattern-polyfill@npm:9.0.0"
   checksum: d3658b78a10eaee514c464f5a4336c408c70cf01e9b915cb1df5892b3c49003d1ed4042dc72d1b18493b8b847883e84fbf2bf358abb5dff84b2725d5e8463bcb
-  languageName: node
-  linkType: hard
-
-"urql@npm:^4.0.5":
-  version: 4.0.5
-  resolution: "urql@npm:4.0.5"
-  dependencies:
-    "@urql/core": ^4.1.0
-    wonka: ^6.3.2
-  peerDependencies:
-    react: ">= 16.8.0"
-  checksum: e8fe5ee624970d289f5832d3f62bab980e26d2e1b141cc6f82d4c1d009f6481bf58ff5f27971fac55bc8f953dbed6d7aaf62f005782bfd9d130c5c3e4033188b
   languageName: node
   linkType: hard
 
