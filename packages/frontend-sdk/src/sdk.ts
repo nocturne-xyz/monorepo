@@ -107,9 +107,11 @@ export class NocturneSdk implements NocturneSdkApi {
     const snapOptions = options.snap;
     const config = getNocturneSdkConfig(networkName);
 
-    // HACK `@nocturne-xyz/local-prover` doesn't work with server components (imports a lot of unnecessar garbage)
+    // HACK `@nocturne-xyz/local-prover` doesn't work with server components (imports a lot of unnecessary garbage)
     this.joinSplitProverThunk = thunk(async () => {
-      const { WasmJoinSplitProver } = await import("@nocturne-xyz/local-prover");
+      const { WasmJoinSplitProver } = await import(
+        "@nocturne-xyz/local-prover"
+      );
       return new WasmJoinSplitProver(
         WASM_PATH,
         ZKEY_PATH,
@@ -306,13 +308,14 @@ export class NocturneSdk implements NocturneSdkApi {
       amount,
     };
 
-    const submittableOperation = await this.signAndProveOperation(
-      operationRequest
-    );
+    const submittableOperation = await this.signAndProveOperation({
+      ...operationRequest,
+      meta: { items: [action] },
+    });
     const opHandleWithoutMetadata = this.submitOperation(submittableOperation);
     return {
       ...opHandleWithoutMetadata,
-      metadata: { action },
+      meta: { items: [action] },
     };
   }
 
@@ -396,12 +399,14 @@ export class NocturneSdk implements NocturneSdkApi {
     operationRequest: OperationRequestWithMetadata
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", operationRequest.meta);
+    const params = {
+      request: JSON.stringify(operationRequest.request),
+      meta: JSON.stringify(operationRequest.meta),
+    };
+    console.log("[fe-sdk] params", params);
     const json = await this.invokeSnap({
       method: "nocturne_signOperation",
-      params: {
-        operationRequest: JSON.stringify(operationRequest.request),
-        opMetadata: JSON.stringify(operationRequest.meta),
-      },
+      params,
     });
     const op = JSON.parse(json) as SignedOperation;
     console.log("SignedOperation:", op);
