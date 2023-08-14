@@ -80,8 +80,10 @@ import {
   toDepositRequestWithMetadata,
 } from "./utils";
 
-const WASM_PATH = "../circuit-artifacts/joinsplit/joinsplit.wasm";
-const ZKEY_PATH = "../circuit-artifacts/joinsplit/joinsplit.zkey";
+const WASM_PATH =
+  "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.wasm";
+const ZKEY_PATH =
+  "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.zkey";
 
 export interface NocturneSdkOptions {
   networkName?: SupportedNetwork;
@@ -208,9 +210,9 @@ export class NocturneSdk implements NocturneSdkApi {
   async getAllDeposits(): Promise<DepositHandle[]> {
     const spender = await (await this.getWindowSigner()).getAddress();
     const { data, error }: OperationResult<FetchDepositRequestsQuery> =
-      await this.urqlClient
-        .query(DepositRequestsBySpenderQueryDocument, { spender })
-        .toPromise();
+      await this.urqlClient.query(DepositRequestsBySpenderQueryDocument, {
+        spender,
+      });
 
     if (error || !data) {
       throw new Error(error?.message ?? "Deposit request query failed");
@@ -727,7 +729,9 @@ export class NocturneSdk implements NocturneSdkApi {
           spender,
         } = event.args;
 
-        const request: DepositRequestWithMetadata = {
+        const request: DepositRequestWithMetadata & {
+          subgraphStatus?: GqlDepositRequestStatus;
+        } = {
           spender,
           encodedAsset: {
             encodedAssetAddr: encodedAsset.encodedAssetAddr.toBigInt(),
@@ -741,6 +745,7 @@ export class NocturneSdk implements NocturneSdkApi {
           nonce: nonce.toBigInt(),
           gasCompensation: gasCompensation.toBigInt(),
           createdAtBlock: tx.blockNumber,
+          subgraphStatus: GqlDepositRequestStatus.Pending,
         };
         return {
           receipt,
@@ -789,15 +794,12 @@ async function getDepositRequestStatus(
   let subgraphStatus = initialSubgraphStatus;
   if (!subgraphStatus) {
     const { data, error }: OperationResult<FetchDepositRequestQuery> =
-      await urqlClient
-        .query(DepositRequestStatusByHashQueryDocument, {
-          hash: depositRequestHash,
-        })
-        .toPromise();
+      await urqlClient.query(DepositRequestStatusByHashQueryDocument, {
+        hash: depositRequestHash,
+      });
     if (error || !data) {
       throw new Error(error?.message ?? "Deposit request query failed");
     }
-    console.log("getDepositRequestStatus", data);
     if (!data.depositRequest) {
       throw new Error(
         `Deposit request with hash ${depositRequestHash} not found`
