@@ -12,7 +12,6 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 import {
   NocturneWalletSDK,
   NocturneDB,
-  OperationRequest,
   OperationRequestBuilder,
   queryEvents,
   Asset,
