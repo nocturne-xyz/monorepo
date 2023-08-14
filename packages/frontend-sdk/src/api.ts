@@ -7,6 +7,7 @@ import {
   StealthAddress,
   SyncOpts,
   OperationRequestWithMetadata,
+  SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/core";
 import { GetSnapsResponse, Snap } from "./metamask/types";
 import { Erc20Config } from "@nocturne-xyz/config";
@@ -62,11 +63,11 @@ export interface NocturneSdkApi {
     recipientAddress: Address
   ): Promise<OperationHandle>;
 
-  submitOperation(operation: ProvenOperation): Promise<OperationHandle>;
+  submitOperation(operation: SubmittableOperationWithNetworkInfo): Promise<OperationHandle>;
 
   signAndProveOperation(
     operationRequest: OperationRequestWithMetadata
-  ): Promise<ProvenOperation>;
+  ): Promise<SubmittableOperationWithNetworkInfo>;
 
   getInFlightOperations(): Promise<OperationHandle[]>;
 
@@ -102,7 +103,7 @@ export interface NocturneSdkApi {
     operationRequest: OperationRequestWithMetadata
   ): Promise<SignedOperation>;
 
-  proveOperation(op: SignedOperation): Promise<ProvenOperation>;
+  proveOperation(op: SignedOperation): Promise<SubmittableOperationWithNetworkInfo>;
 
   verifyProvenOperation(operation: ProvenOperation): Promise<boolean>;
 

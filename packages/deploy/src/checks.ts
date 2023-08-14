@@ -15,7 +15,7 @@ import {
 import { proxyAdmin, proxyImplementation } from "./proxyUtils";
 import { assertOrErr, getSelector } from "./utils";
 import { NocturneConfig } from "@nocturne-xyz/config/dist/src/config";
-import { protocolWhitelistKey } from "@nocturne-xyz/sdk";
+import { protocolWhitelistKey } from "@nocturne-xyz/core";
 
 export async function checkNocturneDeployment(
   config: NocturneConfig,

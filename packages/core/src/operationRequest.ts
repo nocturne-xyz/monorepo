@@ -1,6 +1,12 @@
 import { ethers } from "ethers";
 import { CanonAddress, StealthAddress } from "./crypto";
-import { Action, Address, Asset, OperationMetadata } from "./primitives";
+import {
+  Action,
+  Address,
+  Asset,
+  OperationMetadata,
+  NetworkInfo,
+} from "./primitives";
 import { groupByArr } from "./utils";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 

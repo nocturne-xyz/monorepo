@@ -16,6 +16,7 @@ export {
   AssetWithBalance,
   AssetType,
   AssetTrait,
+  ERC20_ID,
 } from "./asset";
 export { hashDepositRequest } from "./depositHash";
 export {

@@ -284,9 +284,8 @@ export class NocturneSdk implements NocturneSdkApi {
       amount,
     };
 
-    const provenOperation = await this.signAndProveOperation(operationRequest);
-
-    const opHandleWithoutMetadata = this.submitOperation(provenOperation);
+    const submittableOperation = await this.signAndProveOperation(operationRequest);
+    const opHandleWithoutMetadata = this.submitOperation(submittableOperation);
     return {
       ...opHandleWithoutMetadata,
       metadata: { action },
@@ -446,7 +445,7 @@ export class NocturneSdk implements NocturneSdkApi {
     return results.every((result) => result);
   }
 
-  async submitOperation(operation: ProvenOperation): Promise<OperationHandle> {
+  async submitOperation(operation: SubmittableOperationWithNetworkInfo): Promise<OperationHandle> {
     const opDigest = (await retry(
       async () => {
         const res = await fetch(`${this.endpoints.bundlerEndpoint}/relay`, {
@@ -482,7 +481,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
   async signAndProveOperation(
     operationRequest: OperationRequestWithMetadata
-  ): Promise<ProvenOperation> {
+  ): Promise<SubmittableOperationWithNetworkInfo> {
     const op = await this.signOperationRequest(operationRequest);
 
     return await this.proveOperation(op);

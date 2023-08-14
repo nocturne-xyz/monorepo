@@ -26,8 +26,8 @@ const ENDPOINTS = {
   sepolia: {
     screenerEndpoint: "https://screener.nocturnelabs.xyz",
     bundlerEndpoint: "https://bundler.nocturnelabs.xyz",
-    subgraphEndpoint:
-      "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.21-testnet/gn",
+    // HACK: temporary workaround to make iteration on site easier
+    subgraphEndpoint: process.env.NEXT_PUBLIC_SUBGRAPH_URL ?? "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.21-testnet/gn",
   },
   localhost: {
     screenerEndpoint: "http://localhost:3001",
