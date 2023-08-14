@@ -209,7 +209,7 @@ export class NocturneSdk implements NocturneSdkApi {
     return Promise.all(
       data.depositRequests
         .map(toDepositRequestWithMetadata)
-        .map(async (req) => await this.makeDepositHandle(req))
+        .map(async (req) => this.makeDepositHandle(req))
     );
   }
 
@@ -736,41 +736,6 @@ export class NocturneSdk implements NocturneSdkApi {
     );
   }
 
-  private async getDepositRequestStatus(
-    depositRequestHash: string,
-    initialSubgraphStatus?: GqlDepositRequestStatus
-  ): Promise<DepositRequestStatusWithMetadata> {
-    let subgraphStatus = initialSubgraphStatus;
-    if (!subgraphStatus) {
-      const { data, error }: OperationResult<FetchDepositRequestQuery> =
-        await this.urqlClient
-          .query(DepositRequestStatusByHashQueryDocument, {
-            hash: depositRequestHash,
-          })
-          .toPromise();
-      if (error || !data) {
-        throw new Error(error?.message ?? "Deposit request query failed");
-      }
-
-      if (!data.depositRequest) {
-        return {
-          status: DepositRequestStatus.DoesNotExist,
-        };
-      }
-      subgraphStatus = data.depositRequest.status;
-    }
-
-    const screenerResponse = await this.fetchScreenerDepositRequestStatus(
-      depositRequestHash
-    );
-    const { status: screenerStatus, estimatedWaitSeconds } = screenerResponse;
-    const status = flattenDepositRequestStatus(subgraphStatus, screenerStatus);
-    return {
-      status,
-      estimatedWaitSeconds,
-    };
-  }
-
   private async makeDepositHandle(
     requestWithStatus: DepositRequestWithMetadata & {
       subgraphStatus?: GqlDepositRequestStatus;
@@ -779,8 +744,14 @@ export class NocturneSdk implements NocturneSdkApi {
     const { subgraphStatus, ...request } = requestWithStatus;
     const depositRequestHash = hashDepositRequest(request);
     const getStatus = async () =>
-      await this.getDepositRequestStatus(depositRequestHash);
-    const currentStatus = await this.getDepositRequestStatus(
+      await getDepositRequestStatus(
+        this.endpoints.screenerEndpoint,
+        this.urqlClient,
+        depositRequestHash
+      );
+    const currentStatus = await getDepositRequestStatus(
+      this.endpoints.screenerEndpoint,
+      this.urqlClient,
       depositRequestHash,
       subgraphStatus
     );
@@ -791,4 +762,49 @@ export class NocturneSdk implements NocturneSdkApi {
       getStatus,
     };
   }
+}
+
+async function getDepositRequestStatus(
+  screenerEndpoint: string,
+  urqlClient: UrqlClient,
+  depositRequestHash: string,
+  initialSubgraphStatus?: GqlDepositRequestStatus
+): Promise<DepositRequestStatusWithMetadata> {
+  let subgraphStatus = initialSubgraphStatus;
+  if (!subgraphStatus) {
+    const { data, error }: OperationResult<FetchDepositRequestQuery> =
+      await urqlClient
+        .query(DepositRequestStatusByHashQueryDocument, {
+          hash: depositRequestHash,
+        })
+        .toPromise();
+    if (error || !data) {
+      throw new Error(error?.message ?? "Deposit request query failed");
+    }
+
+    if (!data.depositRequest) {
+      return {
+        status: DepositRequestStatus.DoesNotExist,
+      };
+    }
+    subgraphStatus = data.depositRequest.status;
+  }
+
+  const screenerResponse = await retry(
+    async () => {
+      const res = await fetch(
+        `${screenerEndpoint}/status/${depositRequestHash}`
+      );
+      return (await res.json()) as DepositStatusResponse;
+    },
+    {
+      retries: 5,
+    }
+  );
+  const { status: screenerStatus, estimatedWaitSeconds } = screenerResponse;
+  const status = flattenDepositRequestStatus(subgraphStatus, screenerStatus);
+  return {
+    status,
+    estimatedWaitSeconds,
+  };
 }

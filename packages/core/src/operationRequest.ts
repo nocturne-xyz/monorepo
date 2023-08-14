@@ -147,6 +147,7 @@ export class OperationRequestBuilder {
     this.joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
 
     this.metadata.items.push({
+      type: "ConfidentialPayment",
       recipient: receiver,
       asset,
       amount: amountUnits,

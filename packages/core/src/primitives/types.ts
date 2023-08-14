@@ -204,13 +204,15 @@ export type OperationMetadataItem =
   | ActionMetadata;
 
 export type ActionMetadata = {
-  type: "Transfer";
+  type: "Action";
+  actionType: "Transfer";
   recipientAddress: Address;
   erc20Address: Address;
   amount: bigint;
 };
 
 export interface ConfidentialPaymentMetadata {
+  type: "ConfidentialPayment";
   recipient: CanonAddress;
   asset: Asset;
   amount: bigint;
