@@ -54,8 +54,6 @@ export interface DepositRequestWithMetadata extends DepositRequest {
 }
 
 export enum DepositRequestStatus {
-  DoesNotExist = "DOES_NOT_EXIST",
-
   // deposit has been initiated on-chain
   // and funds are in escrow, but
   // they still have yet to be moved

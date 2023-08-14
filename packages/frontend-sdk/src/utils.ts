@@ -192,6 +192,6 @@ export function flattenDepositRequestStatus(
       }
     }
     default:
-      return DepositRequestStatus.DoesNotExist;
+      throw new Error(`Unknown subgraph status: ${subgraphStatus}`);
   }
 }

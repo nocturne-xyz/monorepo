@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/frontend-sdk",
-  "version": "1.0.58-testnet",
+  "version": "1.0.61-testnet",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
