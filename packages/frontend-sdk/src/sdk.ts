@@ -135,7 +135,7 @@ export class NocturneSdk implements NocturneSdkApi {
     });
   }
 
-  snap(): SnapStateApi {
+  get snap(): SnapStateApi {
     return this._snap;
   }
 
