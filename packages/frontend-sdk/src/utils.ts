@@ -26,7 +26,8 @@ const ENDPOINTS = {
   sepolia: {
     screenerEndpoint: "https://screener.nocturnelabs.xyz",
     bundlerEndpoint: "https://bundler.nocturnelabs.xyz",
-    subgraphEndpoint: "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.21-testnet/gn",
+    subgraphEndpoint:
+      "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.21-testnet/gn",
   },
   localhost: {
     screenerEndpoint: "http://localhost:3001",
@@ -106,7 +107,7 @@ export function getNocturneSdkConfig(
   networkName: SupportedNetwork
 ): NocturneSdkConfig {
   const config = loadNocturneConfigBuiltin(networkName);
-  
+
   let endpoints: Endpoints;
   switch (networkName) {
     case "sepolia":
@@ -123,14 +124,7 @@ export function getNocturneSdkConfig(
     config,
     endpoints,
   };
-};
-
-// TODO add as method in core SDK
-export function convertToBlockNumber(createdAtTotalEntityIndex: bigint): number {
-  return Number(
-    TotalEntityIndexTrait.toComponents(createdAtTotalEntityIndex).blockNumber
-  );
-};
+}
 
 export function toDepositRequestWithMetadata(
   gqlDeposit: Omit<GqlDepositRequest, "id">
@@ -165,19 +159,18 @@ export function toDepositRequestWithMetadata(
       h1: depositAddrH1,
       h2: depositAddrH2,
     },
-    createdAtBlock: convertToBlockNumber(
+    createdAtBlock: TotalEntityIndexTrait.convertToBlockNumber(
       BigInt(gqlDeposit.createdAtTotalEntityIndex)
     ),
     txHashInstantiated: instantiationTxHash,
     txHashCompleted: completionTxHash,
     txHashRetrieved: retrievalTxHash,
   };
-};
-
+}
 
 export function flattenDepositRequestStatus(
   subgraphStatus: GqlDepositRequestStatus,
-  screenerStatus: ScreenerDepositRequestStatus,
+  screenerStatus: ScreenerDepositRequestStatus
 ): DepositRequestStatus {
   switch (subgraphStatus) {
     case GqlDepositRequestStatus.Retrieved:
@@ -199,4 +192,4 @@ export function flattenDepositRequestStatus(
     default:
       return DepositRequestStatus.DoesNotExist;
   }
-};
+}

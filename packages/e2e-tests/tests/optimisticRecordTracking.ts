@@ -122,7 +122,7 @@ describe("Optimistic nullifier tracking", () => {
       amount: amountToSpend,
     };
     await sdk.applyOptimisticRecordsForOp(signedOp, {
-      action,
+      items: [action],
     });
 
     // DB should have OptimisticNFRecords for merkle index 0 and 1
@@ -155,14 +155,14 @@ describe("Optimistic nullifier tracking", () => {
       opDigestRecord.merkleIndices[1]
     );
 
-    expect(opDigestRecord.metadata!.action).to.eql(action);
+    expect(opDigestRecord.metadata!.items[0]).to.eql(action);
 
     // Check exposed op digest + metadata method on wallet sdk
     const opDigestsWithMetadata =
       await sdk.getAllOptimisticOpDigestsWithMetadata();
     expect(opDigestsWithMetadata.length).to.eql(1);
     expect(opDigestsWithMetadata[0].opDigest).to.eql(opDigest);
-    expect(opDigestsWithMetadata[0].metadata).to.eql({ action });
+    expect(opDigestsWithMetadata[0].metadata?.items[0]).to.eql({ action });
 
     // when we get balances, we should only see one asset and only 200 tokens
     const balances = await sdk.getAllAssetBalances();
@@ -238,7 +238,7 @@ describe("Optimistic nullifier tracking", () => {
       recipientAddress: eoa.address,
       amount: amountToSpend,
     };
-    await sdk.applyOptimisticRecordsForOp(signedOp, { action });
+    await sdk.applyOptimisticRecordsForOp(signedOp, { items: [action] });
 
     // DB should have OptimisticNFRecords for merkle index 0 and 1
     const nfRecords = await db.getAllOptimisticNFRecords();
@@ -270,14 +270,14 @@ describe("Optimistic nullifier tracking", () => {
       opDigestRecord.merkleIndices[1]
     );
 
-    expect(opDigestRecord.metadata!.action).to.eql(action);
+    expect(opDigestRecord.metadata!.items[0]).to.eql(action);
 
     // Check exposed op digest + metadata method on wallet sdk
     const opDigestsWithMetadata =
       await sdk.getAllOptimisticOpDigestsWithMetadata();
     expect(opDigestsWithMetadata.length).to.eql(1);
     expect(opDigestsWithMetadata[0].opDigest).to.eql(opDigest);
-    expect(opDigestsWithMetadata[0].metadata).to.eql({ action });
+    expect(opDigestsWithMetadata[0].metadata?.items[0]).to.eql({ action });
 
     // when we get balances, we should only see one asset and only 200 tokens
     const balances = await sdk.getAllAssetBalances();

@@ -1,6 +1,6 @@
 export type GetSnapsResponse = Record<string, Snap>;
 
-export interface Snap{
+export interface Snap {
   permissionName: string;
   id: string;
   version: string;
@@ -19,5 +19,5 @@ export interface GetSnapOptions {
   version?: string;
 
   // see documentation / ask the team for this
-  snapId: string; 
+  snapId?: string; 
 };

@@ -43,6 +43,10 @@ export class TotalEntityIndexTrait {
     );
   }
 
+  static convertToBlockNumber(createdAtTotalEntityIndex: bigint): number {
+    return Number(this.toComponents(createdAtTotalEntityIndex).blockNumber);
+  }
+
   // return a `TotalEntityIndex` (TEI) corresponding to the given block number
   // if `mode` is `UP_TO`, return the TEI of the 0th event in the block, namely `(blockNumber, 0, 0, 0)`
   // if `mode` is `THROUGH`, return the TEI of the last event in the block, namely `(blockNumber, U32_MAX, U32_MAX, U32_MAX)`
