@@ -16,7 +16,6 @@ import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC11
 import {
   NocturneWalletSDK,
   NocturneDB,
-  OperationRequest,
   OperationRequestBuilder,
   queryEvents,
   Asset,
