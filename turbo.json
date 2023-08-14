@@ -61,13 +61,6 @@
         "@nocturne-xyz/core#build"
       ]
     },
-    "@nocturne-xyz/site#build": {
-      "dependsOn": [
-        "@nocturne-xyz/core#build",
-        "@nocturne-xyz/local-prover#build",
-        "@nocturne-xyz/frontend-sdk#build"
-      ]
-    },
     "@nocturne-xyz/e2e-tests#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
