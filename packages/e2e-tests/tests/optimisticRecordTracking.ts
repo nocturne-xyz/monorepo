@@ -166,7 +166,7 @@ describe("Optimistic nullifier tracking", () => {
       await sdk.getAllOptimisticOpDigestsWithMetadata();
     expect(opDigestsWithMetadata.length).to.eql(1);
     expect(opDigestsWithMetadata[0].opDigest).to.eql(opDigest);
-    expect(opDigestsWithMetadata[0].metadata?.items[0]).to.eql({ action });
+    expect(opDigestsWithMetadata[0].metadata?.items[0]).to.eql(action);
 
     // when we get balances, we should only see one asset and only 200 tokens
     const balances = await sdk.getAllAssetBalances();
@@ -285,7 +285,7 @@ describe("Optimistic nullifier tracking", () => {
       await sdk.getAllOptimisticOpDigestsWithMetadata();
     expect(opDigestsWithMetadata.length).to.eql(1);
     expect(opDigestsWithMetadata[0].opDigest).to.eql(opDigest);
-    expect(opDigestsWithMetadata[0].metadata?.items[0]).to.eql({ action });
+    expect(opDigestsWithMetadata[0].metadata!.items[0]).to.eql(action);
 
     // when we get balances, we should only see one asset and only 200 tokens
     const balances = await sdk.getAllAssetBalances();
