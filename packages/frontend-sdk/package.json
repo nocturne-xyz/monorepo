@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/frontend-sdk",
-  "version": "1.0.73-testnet",
+  "version": "1.0.75-testnet",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,12 +13,12 @@
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "codegen": "graphql-codegen",
-    "lint": "eslint --fix src --ext .ts",
-    "publish": "yarn build; yarn npm publish --access public",
     "copy-circuit-artifacts": "yarn copy-wasm && yarn copy-zkey && yarn copy-vkey",
+    "copy-vkey": "cp ../../circuit-artifacts/joinsplit/joinsplit_cpp/vkey.json ./circuit-artifacts/joinsplit/joinsplitVkey.json",
     "copy-wasm": "cp ../../circuit-artifacts/joinsplit/joinsplit_js/joinsplit.wasm ./circuit-artifacts/joinsplit//joinsplit.wasm",
     "copy-zkey": "cp ../../circuit-artifacts/joinsplit/joinsplit_cpp/joinsplit.zkey ./circuit-artifacts/joinsplit/joinsplit.zkey",
-    "copy-vkey": "cp ../../circuit-artifacts/joinsplit/joinsplit_cpp/vkey.json ./circuit-artifacts/joinsplit/joinsplitVkey.json",
+    "lint": "eslint --fix src --ext .ts",
+    "publish": "yarn build; yarn npm publish --access public",
     "test:unit": ""
   },
   "dependencies": {

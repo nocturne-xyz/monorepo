@@ -761,7 +761,6 @@ export class NocturneSdk implements NocturneSdkApi {
       subgraphStatus?: GqlDepositRequestStatus;
     }
   ): Promise<DepositHandle> {
-    console.log("[fe-sdk] makeDepositHandle", requestWithStatus);
     const { subgraphStatus, ...request } = requestWithStatus;
     const depositRequestHash = hashDepositRequest(request);
     const getStatus = async () =>
