@@ -33,4 +33,9 @@ export {
 } from "@nocturne-xyz/core";
 
 export { Erc20Config } from "@nocturne-xyz/config";
-export { GetSnapOptions } from "./metamask/types";
+export {
+  GetSnapOptions,
+  GetSnapsResponse,
+  MetamaskState,
+  Snap,
+} from "./metamask/types";
