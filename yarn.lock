@@ -1870,7 +1870,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.0.0":
+"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.21.0":
   version: 7.22.10
   resolution: "@babel/runtime@npm:7.22.10"
   dependencies:
@@ -4031,14 +4031,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nocturne-xyz/bundler@workspace:^, @nocturne-xyz/bundler@workspace:packages/bundler":
+"@nocturne-xyz/bundler@workspace:^, @nocturne-xyz/bundler@workspace:actors/bundler":
   version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
+  resolution: "@nocturne-xyz/bundler@workspace:actors/bundler"
   dependencies:
-    "@nocturne-xyz/config": 1.0.19-testnet
-    "@nocturne-xyz/contracts": 1.0.34-testnet
-    "@nocturne-xyz/core": 0.1.1
-    "@nocturne-xyz/offchain-utils": 0.1.10
+    "@nocturne-xyz/config": "workspace:^"
+    "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/core": "workspace:^"
+    "@nocturne-xyz/offchain-utils": "workspace:^"
     "@openzeppelin/defender-relay-client": 1.47.1
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -4055,6 +4055,7 @@ __metadata:
     bullmq: ^3.4.1
     chai: ^4.3.6
     commander: ^9.4.1
+    concurrently: ^8.2.0
     cors: ^2.8.5
     dotenv: ^16.0.3
     eslint: ^7.32.0
@@ -4065,6 +4066,7 @@ __metadata:
     ioredis: ^5.2.4
     mocha: ^10.1.0
     morgan: ^1.10.0
+    nodemon: ^3.0.1
     prettier: ^2.8.8
     redis-memory-server: ^0.6.0
     ts-node: ^10.9.1
@@ -4092,7 +4094,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@1.0.19-testnet, @nocturne-xyz/config@^1.0.19-testnet, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
+"@nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/config@workspace:packages/config"
   dependencies:
@@ -4116,18 +4118,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@npm:^1.0.16-alpha":
-  version: 1.0.16-testnet
-  resolution: "@nocturne-xyz/config@npm:1.0.16-testnet"
-  dependencies:
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    ethers: ^5.7.2
-  checksum: fde20466760e9142a25d795d6a3ad895c3b16ca8ce263031a84c98307b3fe8c071e36a2c442bba3931efde0db773031c0e0b58e5f0685dc46fa467156d5d6908
-  languageName: node
-  linkType: hard
-
-"@nocturne-xyz/contracts@1.0.34-testnet, @nocturne-xyz/contracts@^1.0.34-testnet, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -4157,27 +4148,6 @@ __metadata:
     typescript: ^4.5.5
   languageName: unknown
   linkType: soft
-
-"@nocturne-xyz/core@npm:0.1.1":
-  version: 0.1.1
-  resolution: "@nocturne-xyz/core@npm:0.1.1"
-  dependencies:
-    "@nocturne-xyz/config": ^1.0.19-testnet
-    "@nocturne-xyz/contracts": ^1.0.34-testnet
-    "@nocturne-xyz/crypto-utils": ^0.1.7
-    "@types/randombytes": ^2.0.0
-    "@zk-kit/incremental-merkle-tree": ^1.0.0
-    async-retry: ^1.3.3
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    ethers: ^5.7.2
-    js-sha256: ^0.9.0
-    randombytes: ^2.1.0
-    sorted-btree: ^1.8.1
-    winston: ^3.9.0
-  checksum: a15df1b36d15fb32f277da633e91c8e9799fab4f135703b5b61ce7ddc92b0e5eba4623fccc77cb922948f3aee45f15642c8351ab2ce6b9d2ce3376dfdbd68339
-  languageName: node
-  linkType: hard
 
 "@nocturne-xyz/core@workspace:^, @nocturne-xyz/core@workspace:packages/core":
   version: 0.0.0-use.local
@@ -4219,25 +4189,30 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/crypto-utils@npm:0.1.6":
-  version: 0.1.6
-  resolution: "@nocturne-xyz/crypto-utils@npm:0.1.6"
+"@nocturne-xyz/crypto-utils@^0.1.7, @nocturne-xyz/crypto-utils@workspace:^, @nocturne-xyz/crypto-utils@workspace:packages/crypto-utils":
+  version: 0.0.0-use.local
+  resolution: "@nocturne-xyz/crypto-utils@workspace:packages/crypto-utils"
   dependencies:
     "@noble/hashes": ^1.3.1
     "@stablelib/chacha20poly1305": ^1.0.1
-  checksum: 87c890c8cc622d18aacf36a1e9377e5d711c73682a6826dc0f1342c4cb663e66c61121f9ca813a511c00f83e722a17ed6faef883611c3cd5d92f3aea3dab2dc8
-  languageName: node
-  linkType: hard
-
-"@nocturne-xyz/crypto-utils@npm:^0.1.7":
-  version: 0.1.7
-  resolution: "@nocturne-xyz/crypto-utils@npm:0.1.7"
-  dependencies:
-    "@noble/hashes": ^1.3.1
-    "@stablelib/chacha20poly1305": ^1.0.1
-  checksum: 01b8659e456633b671c1832ae29d4c67c64b1da3dce7076dbbb50c20a62f0cb86655714a84f50c3e084c39cece1fc9a02f500df4527951390e90b732081c0457
-  languageName: node
-  linkType: hard
+    "@types/bn.js": ^5.1.1
+    "@types/chai": ^4.3.3
+    "@types/mocha": ^10.0.0
+    "@types/node": ^18.8.0
+    "@typescript-eslint/eslint-plugin": ^5.20.0
+    "@typescript-eslint/parser": ^5.20.0
+    chai: ^4.3.6
+    chai-as-promised: ^7.1.1
+    circomlibjs: nocturne-xyz/circomlibjs
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.3.0
+    ffjavascript: 0.2.57
+    mocha: ^10.1.0
+    prettier: ^2.8.0
+    ts-node: ^10.9.1
+    typescript: ^4.8.4
+  languageName: unknown
+  linkType: soft
 
 "@nocturne-xyz/deploy@workspace:^, @nocturne-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
@@ -4263,14 +4238,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/deposit-screener@workspace:^, @nocturne-xyz/deposit-screener@workspace:packages/deposit-screener":
+"@nocturne-xyz/deposit-screener@workspace:^, @nocturne-xyz/deposit-screener@workspace:actors/deposit-screener":
   version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
+  resolution: "@nocturne-xyz/deposit-screener@workspace:actors/deposit-screener"
   dependencies:
-    "@nocturne-xyz/config": 1.0.19-testnet
-    "@nocturne-xyz/contracts": 1.0.34-testnet
-    "@nocturne-xyz/core": 0.1.1
-    "@nocturne-xyz/offchain-utils": 0.1.10
+    "@nocturne-xyz/config": "workspace:^"
+    "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/core": "workspace:^"
+    "@nocturne-xyz/offchain-utils": "workspace:^"
     "@opentelemetry/api": ^1.4.1
     "@opentelemetry/exporter-metrics-otlp-http": ^0.40.0
     "@opentelemetry/instrumentation": ^0.40.0
@@ -4300,6 +4275,7 @@ __metadata:
     chai: ^4.3.6
     chai-as-promised: ^7.1.1
     commander: ^10.0.0
+    concurrently: ^8.2.0
     cors: ^2.8.5
     dotenv: ^16.0.3
     eslint: ^7.32.0
@@ -4311,6 +4287,7 @@ __metadata:
     js-sha256: ^0.9.0
     mocha: ^10.1.0
     morgan: ^1.10.0
+    nodemon: ^3.0.1
     prettier: ^2.8.8
     randombytes: ^2.1.0
     sinon: ^15.0.1
@@ -4391,19 +4368,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/local-prover@npm:1.0.8-testnet":
-  version: 1.0.8-testnet
-  resolution: "@nocturne-xyz/local-prover@npm:1.0.8-testnet"
-  dependencies:
-    "@nocturne-xyz/crypto-utils": ^0.1.7
-    "@nocturne-xyz/sdk": ^1.0.177-testnet
-    bigint-conversion: ^2.3.0
-    bigint-json-serialization: ^1.0.1
-    snarkjs: ^0.7.0
-  checksum: 9c7f912171a8a8261e8a7ee6946a12cf2c75bbca3c2c200747ff7fc2031996511e929f725ed652df7a4bec873b445312edb8bd59ef4d171e749a9e7cd07a10aa
-  languageName: node
-  linkType: hard
-
 "@nocturne-xyz/local-prover@workspace:^, @nocturne-xyz/local-prover@workspace:packages/local-prover":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/local-prover@workspace:packages/local-prover"
@@ -4431,7 +4395,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/offchain-utils@0.1.10, @nocturne-xyz/offchain-utils@workspace:^, @nocturne-xyz/offchain-utils@workspace:packages/offchain-utils":
+"@nocturne-xyz/offchain-utils@workspace:^, @nocturne-xyz/offchain-utils@workspace:packages/offchain-utils":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/offchain-utils@workspace:packages/offchain-utils"
   dependencies:
@@ -4457,30 +4421,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@npm:^1.0.177-testnet":
-  version: 1.0.177-testnet
-  resolution: "@nocturne-xyz/sdk@npm:1.0.177-testnet"
-  dependencies:
-    "@nocturne-xyz/config": ^1.0.16-alpha
-    "@nocturne-xyz/contracts": ^1.0.34-testnet
-    "@nocturne-xyz/crypto-utils": ^0.1.7
-    "@types/randombytes": ^2.0.0
-    "@zk-kit/incremental-merkle-tree": ^1.0.0
-    async-retry: ^1.3.3
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    ethers: ^5.7.2
-    js-sha256: ^0.9.0
-    randombytes: ^2.1.0
-    sorted-btree: ^1.8.1
-    winston: ^3.9.0
-  checksum: 8159eeba59d723d57856a6fa2bf8f4bc19e03c8d4ecedbab5c7aa30b8a92d1d0232415436368f3775a539da7ae51fc31d01bf8e4c858b41f681d6a8d77b7a78a
-  languageName: node
-  linkType: hard
-
-"@nocturne-xyz/snap@workspace:packages/snap":
+"@nocturne-xyz/snap@workspace:apps/snap":
   version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/snap@workspace:packages/snap"
+  resolution: "@nocturne-xyz/snap@workspace:apps/snap"
   dependencies:
     "@lavamoat/allow-scripts": ^2.0.3
     "@metamask/auto-changelog": ^2.6.0
@@ -4493,7 +4436,7 @@ __metadata:
     "@metamask/snaps-ui": ^0.32.2
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/core": "workspace:^"
-    "@nocturne-xyz/crypto-utils": ^0.1.7
+    "@nocturne-xyz/crypto-utils": "workspace:^"
     "@typescript-eslint/eslint-plugin": ^5.33.0
     "@typescript-eslint/parser": ^5.20.0
     bigint-json-serialization: ^1.0.1
@@ -4515,15 +4458,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/subtree-updater@workspace:^, @nocturne-xyz/subtree-updater@workspace:packages/subtree-updater":
+"@nocturne-xyz/subtree-updater@workspace:^, @nocturne-xyz/subtree-updater@workspace:actors/subtree-updater":
   version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
+  resolution: "@nocturne-xyz/subtree-updater@workspace:actors/subtree-updater"
   dependencies:
-    "@nocturne-xyz/config": 1.0.19-testnet
-    "@nocturne-xyz/contracts": 1.0.34-testnet
-    "@nocturne-xyz/core": 0.1.1
-    "@nocturne-xyz/crypto-utils": 0.1.6
-    "@nocturne-xyz/offchain-utils": 0.1.10
+    "@nocturne-xyz/config": "workspace:^"
+    "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/core": "workspace:^"
+    "@nocturne-xyz/crypto-utils": "workspace:^"
+    "@nocturne-xyz/offchain-utils": "workspace:^"
     "@openzeppelin/defender-relay-client": 1.47.1
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
@@ -4537,6 +4480,7 @@ __metadata:
     bigint-json-serialization: ^1.0.1
     chai: ^4.3.7
     commander: ^9.4.1
+    concurrently: ^8.2.0
     dotenv: ^16.0.3
     eslint: ^8.28.0
     eslint-config-prettier: ^8.5.0
@@ -4544,6 +4488,7 @@ __metadata:
     find-yarn-workspace-root: ^2.0.0
     ioredis: ^5.3.1
     mocha: ^10.1.0
+    nodemon: ^3.0.1
     prettier: ^2.8.8
     redis-memory-server: ^0.6.0
     snarkjs: ^0.7.0
@@ -4556,15 +4501,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/test-actor@workspace:packages/test-actor":
+"@nocturne-xyz/test-actor@workspace:actors/test-actor":
   version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/test-actor@workspace:packages/test-actor"
+  resolution: "@nocturne-xyz/test-actor@workspace:actors/test-actor"
   dependencies:
-    "@nocturne-xyz/config": 1.0.19-testnet
-    "@nocturne-xyz/contracts": 1.0.34-testnet
-    "@nocturne-xyz/core": 0.1.1
-    "@nocturne-xyz/local-prover": 1.0.8-testnet
-    "@nocturne-xyz/offchain-utils": 0.1.10
+    "@nocturne-xyz/config": "workspace:^"
+    "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/core": "workspace:^"
+    "@nocturne-xyz/local-prover": "workspace:^"
+    "@nocturne-xyz/offchain-utils": "workspace:^"
     "@openzeppelin/defender-relay-client": 1.47.1
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -4584,7 +4529,7 @@ __metadata:
     dotenv: ^16.0.3
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
-    ethers: 5.7.2
+    ethers: ^5.7.2
     find-yarn-workspace-root: ^2.0.0
     lmdb: ^2.8.2
     mocha: ^10.1.0
@@ -8256,6 +8201,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"blake-hash@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "blake-hash@npm:2.0.0"
+  dependencies:
+    node-addon-api: ^3.0.0
+    node-gyp: latest
+    node-gyp-build: ^4.2.2
+    readable-stream: ^3.6.0
+  checksum: a0d9a8f3953b986d3b30a741a6c000dedcc9a03b1318f52cc01ae62d18829ba6cb1a4d8cbe74785abfdc952a21db410984523bd457764aca716162cfd3ca8ea4
+  languageName: node
+  linkType: hard
+
 "blake2b-wasm@npm:^2.4.0":
   version: 2.4.0
   resolution: "blake2b-wasm@npm:2.4.0"
@@ -8263,6 +8220,16 @@ __metadata:
     b4a: ^1.0.1
     nanoassert: ^2.0.0
   checksum: 1839dd0693681228d81f781dd8680a6803a629ca374aed5ac02fa649ce40a67a85eb49eeb2ec6aeb7ef3ef5aa169b3579b50eabf7afa360d190338bc3e8666bd
+  languageName: node
+  linkType: hard
+
+"blake2b@npm:^2.1.3":
+  version: 2.1.4
+  resolution: "blake2b@npm:2.1.4"
+  dependencies:
+    blake2b-wasm: ^2.4.0
+    nanoassert: ^2.0.0
+  checksum: cd598c96d459017714b7f9cb8892ef2b0a94f362e26e6baa46b7b8b189af0006ce25ab1713e3ec1484eb18ce7ebe1eb24e07d01e42ab1147067de2419c7f6158
   languageName: node
   linkType: hard
 
@@ -9261,6 +9228,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+circomlibjs@nocturne-xyz/circomlibjs:
+  version: 0.0.8
+  resolution: "circomlibjs@https://github.com/nocturne-xyz/circomlibjs.git#commit=d32b33e2f0b236a828be95111412a1c0381cf9e4"
+  dependencies:
+    blake-hash: ^2.0.0
+    blake2b: ^2.1.3
+    buffer: ^6.0.3
+    ffjavascript: ^0.2.38
+  checksum: f9b6c3e7c61cedbf2712f48fbdf32f631a525c56910f8d196addd75a00be9a84da36a4df991f6ef430de46bdd596b17c354578b3de42fc1504b699ff50dcdfd4
+  languageName: node
+  linkType: hard
+
 "class-is@npm:^1.1.0":
   version: 1.1.0
   resolution: "class-is@npm:1.1.0"
@@ -9671,6 +9650,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"concurrently@npm:^8.2.0":
+  version: 8.2.0
+  resolution: "concurrently@npm:8.2.0"
+  dependencies:
+    chalk: ^4.1.2
+    date-fns: ^2.30.0
+    lodash: ^4.17.21
+    rxjs: ^7.8.1
+    shell-quote: ^1.8.1
+    spawn-command: 0.0.2
+    supports-color: ^8.1.1
+    tree-kill: ^1.2.2
+    yargs: ^17.7.2
+  bin:
+    conc: dist/bin/concurrently.js
+    concurrently: dist/bin/concurrently.js
+  checksum: eafe6a4d9b7fda87f55ea285cfc6acd937a5286ceec8991ab48e6cc27c45fce6a5c6f45e18d7555defa15dc7d7e8941bc5a9d1ceaf182e31441d420e00333434
+  languageName: node
+  linkType: hard
+
 "console-browserify@npm:^1.1.0":
   version: 1.2.0
   resolution: "console-browserify@npm:1.2.0"
@@ -10050,6 +10049,15 @@ __metadata:
   version: 2.2.2
   resolution: "dataloader@npm:2.2.2"
   checksum: 4dabd247089c29f194e94d5434d504f99156c5c214a03463c20f3f17f40398d7e179edee69a27c16e315519ac8739042a810090087ae26449a0e685156a02c65
+  languageName: node
+  linkType: hard
+
+"date-fns@npm:^2.30.0":
+  version: 2.30.0
+  resolution: "date-fns@npm:2.30.0"
+  dependencies:
+    "@babel/runtime": ^7.21.0
+  checksum: f7be01523282e9bb06c0cd2693d34f245247a29098527d4420628966a2d9aad154bd0e90a6b1cf66d37adcb769cd108cf8a7bd49d76db0fb119af5cdd13644f4
   languageName: node
   linkType: hard
 
@@ -10896,6 +10904,17 @@ __metadata:
   version: 4.0.0
   resolution: "escape-string-regexp@npm:4.0.0"
   checksum: 98b48897d93060f2322108bf29db0feba7dd774be96cd069458d1453347b25ce8682ecc39859d4bca2203cc0ab19c237bcc71755eff49a0f8d90beadeeba5cc5
+  languageName: node
+  linkType: hard
+
+"eslint-config-prettier@npm:^8.3.0":
+  version: 8.10.0
+  resolution: "eslint-config-prettier@npm:8.10.0"
+  peerDependencies:
+    eslint: ">=7.0.0"
+  bin:
+    eslint-config-prettier: bin/cli.js
+  checksum: 153266badd477e49b0759816246b2132f1dbdb6c7f313ca60a9af5822fd1071c2bc5684a3720d78b725452bbac04bb130878b2513aea5e72b1b792de5a69fec8
   languageName: node
   linkType: hard
 
@@ -11782,7 +11801,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:5.7.2, ethers@npm:^5.0.1, ethers@npm:^5.0.2, ethers@npm:^5.5.2, ethers@npm:^5.7.1, ethers@npm:^5.7.2":
+"ethers@npm:^4.0.40":
+  version: 4.0.49
+  resolution: "ethers@npm:4.0.49"
+  dependencies:
+    aes-js: 3.0.0
+    bn.js: ^4.11.9
+    elliptic: 6.5.4
+    hash.js: 1.1.3
+    js-sha3: 0.5.7
+    scrypt-js: 2.0.4
+    setimmediate: 1.0.4
+    uuid: 2.0.1
+    xmlhttprequest: 1.8.0
+  checksum: 357115348a5f1484c7745fae1d852876788216c7d94c072c80132192f1800c4d388433ea2456750856641d6d4eed8a3b41847eb44f5e1c42139963864e3bcc38
+  languageName: node
+  linkType: hard
+
+"ethers@npm:^5.0.1, ethers@npm:^5.0.2, ethers@npm:^5.5.2, ethers@npm:^5.7.1, ethers@npm:^5.7.2":
   version: 5.7.2
   resolution: "ethers@npm:5.7.2"
   dependencies:
@@ -11817,23 +11853,6 @@ __metadata:
     "@ethersproject/web": 5.7.1
     "@ethersproject/wordlists": 5.7.0
   checksum: b7c08cf3e257185a7946117dbbf764433b7ba0e77c27298dec6088b3bc871aff711462b0621930c56880ff0a7ceb8b1d3a361ffa259f93377b48e34107f62553
-  languageName: node
-  linkType: hard
-
-"ethers@npm:^4.0.40":
-  version: 4.0.49
-  resolution: "ethers@npm:4.0.49"
-  dependencies:
-    aes-js: 3.0.0
-    bn.js: ^4.11.9
-    elliptic: 6.5.4
-    hash.js: 1.1.3
-    js-sha3: 0.5.7
-    scrypt-js: 2.0.4
-    setimmediate: 1.0.4
-    uuid: 2.0.1
-    xmlhttprequest: 1.8.0
-  checksum: 357115348a5f1484c7745fae1d852876788216c7d94c072c80132192f1800c4d388433ea2456750856641d6d4eed8a3b41847eb44f5e1c42139963864e3bcc38
   languageName: node
   linkType: hard
 
@@ -12266,6 +12285,17 @@ __metadata:
     wasmcurves: 0.2.1
     web-worker: ^1.2.0
   checksum: a2e77936b3b189b4728c625d04c2740ff7e2216970c7ba19ef0d480447ab770d08a01c036dbd906a3f587c297b697318e8cdaaaf2ec5d503003703e72dc82f30
+  languageName: node
+  linkType: hard
+
+"ffjavascript@npm:^0.2.38":
+  version: 0.2.60
+  resolution: "ffjavascript@npm:0.2.60"
+  dependencies:
+    wasmbuilder: 0.0.16
+    wasmcurves: 0.2.2
+    web-worker: ^1.2.0
+  checksum: 5dbd597ee108373af1ba1877757a08b47db4bcd7b3b043b260d4475a0b1125454de00fb214224f85d9e6e6a6c0a1cfabd1ba9a2b68279b99c581404266e78138
   languageName: node
   linkType: hard
 
@@ -13826,6 +13856,13 @@ __metadata:
   version: 1.2.1
   resolution: "ieee754@npm:1.2.1"
   checksum: 5144c0c9815e54ada181d80a0b810221a253562422e7c6c3a60b1901154184f49326ec239d618c416c1c5945a2e197107aee8d986a3dd836b53dffefd99b5e7e
+  languageName: node
+  linkType: hard
+
+"ignore-by-default@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "ignore-by-default@npm:1.0.1"
+  checksum: 441509147b3615e0365e407a3c18e189f78c07af08564176c680be1fabc94b6c789cad1342ad887175d4ecd5225de86f73d376cec8e06b42fd9b429505ffcf8a
   languageName: node
   linkType: hard
 
@@ -16839,6 +16876,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-addon-api@npm:^3.0.0":
+  version: 3.2.1
+  resolution: "node-addon-api@npm:3.2.1"
+  dependencies:
+    node-gyp: latest
+  checksum: 2369986bb0881ccd9ef6bacdf39550e07e089a9c8ede1cbc5fc7712d8e2faa4d50da0e487e333d4125f8c7a616c730131d1091676c9d499af1d74560756b4a18
+  languageName: node
+  linkType: hard
+
 "node-addon-api@npm:^6.1.0":
   version: 6.1.0
   resolution: "node-addon-api@npm:6.1.0"
@@ -16938,7 +16984,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-gyp-build@npm:^4.2.0, node-gyp-build@npm:^4.3.0":
+"node-gyp-build@npm:^4.2.0, node-gyp-build@npm:^4.2.2, node-gyp-build@npm:^4.3.0":
   version: 4.6.0
   resolution: "node-gyp-build@npm:4.6.0"
   bin:
@@ -17010,6 +17056,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"nodemon@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "nodemon@npm:3.0.1"
+  dependencies:
+    chokidar: ^3.5.2
+    debug: ^3.2.7
+    ignore-by-default: ^1.0.1
+    minimatch: ^3.1.2
+    pstree.remy: ^1.1.8
+    semver: ^7.5.3
+    simple-update-notifier: ^2.0.0
+    supports-color: ^5.5.0
+    touch: ^3.1.0
+    undefsafe: ^2.0.5
+  bin:
+    nodemon: bin/nodemon.js
+  checksum: 6a5d81855760d6617049eccce10ccf02bddb482dab13ceea5280ae595ec7004eee13e7b934368e3f46c37fe4d970342a8c38c99cae7e93e4d7a3ed1c1ecb6acf
+  languageName: node
+  linkType: hard
+
 "nofilter@npm:^1.0.4":
   version: 1.0.4
   resolution: "nofilter@npm:1.0.4"
@@ -17043,6 +17109,17 @@ __metadata:
   bin:
     nopt: bin/nopt.js
   checksum: 82149371f8be0c4b9ec2f863cc6509a7fd0fa729929c009f3a58e4eb0c9e4cae9920e8f1f8eb46e7d032fec8fb01bede7f0f41a67eb3553b7b8e14fa53de1dac
+  languageName: node
+  linkType: hard
+
+"nopt@npm:~1.0.10":
+  version: 1.0.10
+  resolution: "nopt@npm:1.0.10"
+  dependencies:
+    abbrev: 1
+  bin:
+    nopt: ./bin/nopt.js
+  checksum: f62575aceaa3be43f365bf37a596b89bbac2e796b001b6d2e2a85c2140a4e378ff919e2753ccba959c4fd344776fc88c29b393bc167fa939fb1513f126f4cd45
   languageName: node
   linkType: hard
 
@@ -18008,7 +18085,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^2.8.8":
+"prettier@npm:^2.8.0, prettier@npm:^2.8.8":
   version: 2.8.8
   resolution: "prettier@npm:2.8.8"
   bin:
@@ -18136,6 +18213,13 @@ __metadata:
   version: 1.9.0
   resolution: "psl@npm:1.9.0"
   checksum: 20c4277f640c93d393130673f392618e9a8044c6c7bf61c53917a0fddb4952790f5f362c6c730a9c32b124813e173733f9895add8d26f566ed0ea0654b2e711d
+  languageName: node
+  linkType: hard
+
+"pstree.remy@npm:^1.1.8":
+  version: 1.1.8
+  resolution: "pstree.remy@npm:1.1.8"
+  checksum: 5cb53698d6bb34dfb278c8a26957964aecfff3e161af5fbf7cee00bbe9d8547c7aced4bd9cb193bce15fb56e9e4220fc02a5bf9c14345ffb13a36b858701ec2d
   languageName: node
   linkType: hard
 
@@ -19084,7 +19168,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rxjs@npm:^7.5.5":
+"rxjs@npm:^7.5.5, rxjs@npm:^7.8.1":
   version: 7.8.1
   resolution: "rxjs@npm:7.8.1"
   dependencies:
@@ -19241,6 +19325,17 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: ba9c7cbbf2b7884696523450a61fee1a09930d888b7a8d7579025ad93d459b2d1949ee5bbfeb188b2be5f4ac163544c5e98491ad6152df34154feebc2cc337c1
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.5.3":
+  version: 7.5.4
+  resolution: "semver@npm:7.5.4"
+  dependencies:
+    lru-cache: ^6.0.0
+  bin:
+    semver: bin/semver.js
+  checksum: 12d8ad952fa353b0995bf180cdac205a4068b759a140e5d3c608317098b3575ac2f1e09182206bf2eb26120e1c0ed8fb92c48c592f6099680de56bb071423ca3
   languageName: node
   linkType: hard
 
@@ -19459,7 +19554,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shell-quote@npm:^1.7.3":
+"shell-quote@npm:^1.7.3, shell-quote@npm:^1.8.1":
   version: 1.8.1
   resolution: "shell-quote@npm:1.8.1"
   checksum: 5f01201f4ef504d4c6a9d0d283fa17075f6770bfbe4c5850b074974c68062f37929ca61700d95ad2ac8822e14e8c4b990ca0e6e9272e64befd74ce5e19f0736b
@@ -19522,6 +19617,15 @@ __metadata:
   dependencies:
     is-arrayish: ^0.3.1
   checksum: a7f3f2ab5c76c4472d5c578df892e857323e452d9f392e1b5cf74b74db66e6294a1e1b8b390b519fa1b96b5b613f2a37db6cffef52c3f1f8f3c5ea64eb2d54c0
+  languageName: node
+  linkType: hard
+
+"simple-update-notifier@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "simple-update-notifier@npm:2.0.0"
+  dependencies:
+    semver: ^7.5.3
+  checksum: 9ba00d38ce6a29682f64a46213834e4eb01634c2f52c813a9a7b8873ca49cdbb703696f3290f3b27dc067de6d9418b0b84bef22c3eb074acf352529b2d6c27fd
   languageName: node
   linkType: hard
 
@@ -19892,6 +19996,13 @@ __metadata:
   version: 0.6.1
   resolution: "source-map@npm:0.6.1"
   checksum: 59ce8640cf3f3124f64ac289012c2b8bd377c238e316fb323ea22fbfe83da07d81e000071d7242cad7a23cd91c7de98e4df8830ec3f133cb6133a5f6e9f67bc2
+  languageName: node
+  linkType: hard
+
+"spawn-command@npm:0.0.2":
+  version: 0.0.2
+  resolution: "spawn-command@npm:0.0.2"
+  checksum: e35c5d28177b4d461d33c88cc11f6f3a5079e2b132c11e1746453bbb7a0c0b8a634f07541a2a234fa4758239d88203b758def509161b651e81958894c0b4b64b
   languageName: node
   linkType: hard
 
@@ -20336,7 +20447,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"supports-color@npm:8.1.1":
+"supports-color@npm:8.1.1, supports-color@npm:^8.1.1":
   version: 8.1.1
   resolution: "supports-color@npm:8.1.1"
   dependencies:
@@ -20352,7 +20463,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"supports-color@npm:^5.3.0":
+"supports-color@npm:^5.3.0, supports-color@npm:^5.5.0":
   version: 5.5.0
   resolution: "supports-color@npm:5.5.0"
   dependencies:
@@ -20753,6 +20864,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"touch@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "touch@npm:3.1.0"
+  dependencies:
+    nopt: ~1.0.10
+  bin:
+    nodetouch: ./bin/nodetouch.js
+  checksum: e0be589cb5b0e6dbfce6e7e077d4a0d5f0aba558ef769c6d9c33f635e00d73d5be49da6f8631db302ee073919d82b5b7f56da2987feb28765c95a7673af68647
+  languageName: node
+  linkType: hard
+
 "tough-cookie@npm:^2.3.3, tough-cookie@npm:~2.5.0":
   version: 2.5.0
   resolution: "tough-cookie@npm:2.5.0"
@@ -20767,6 +20889,15 @@ __metadata:
   version: 0.0.3
   resolution: "tr46@npm:0.0.3"
   checksum: 726321c5eaf41b5002e17ffbd1fb7245999a073e8979085dacd47c4b4e8068ff5777142fc6726d6ca1fd2ff16921b48788b87225cbc57c72636f6efa8efbffe3
+  languageName: node
+  linkType: hard
+
+"tree-kill@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "tree-kill@npm:1.2.2"
+  bin:
+    tree-kill: cli.js
+  checksum: 49117f5f410d19c84b0464d29afb9642c863bc5ba40fcb9a245d474c6d5cc64d1b177a6e6713129eb346b40aebb9d4631d967517f9fbe8251c35b21b13cd96c7
   languageName: node
   linkType: hard
 
@@ -21287,6 +21418,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"undefsafe@npm:^2.0.5":
+  version: 2.0.5
+  resolution: "undefsafe@npm:2.0.5"
+  checksum: f42ab3b5770fedd4ada175fc1b2eb775b78f609156f7c389106aafd231bfc210813ee49f54483d7191d7b76e483bc7f537b5d92d19ded27156baf57592eb02cc
+  languageName: node
+  linkType: hard
+
 "underscore@npm:1.9.1":
   version: 1.9.1
   resolution: "underscore@npm:1.9.1"
@@ -21748,6 +21886,15 @@ __metadata:
   dependencies:
     wasmbuilder: 0.0.16
   checksum: 3bfd6c3bf339e5e3980590afecf83d5a06fbb0ec8d4e1612c5d7a8edd90173c05270b45832330964eac281c70b9d04229de430673952c6516c2feb9c42d2ab03
+  languageName: node
+  linkType: hard
+
+"wasmcurves@npm:0.2.2":
+  version: 0.2.2
+  resolution: "wasmcurves@npm:0.2.2"
+  dependencies:
+    wasmbuilder: 0.0.16
+  checksum: 95ca8afe3816862f16d4f8f4cbed4a4fb522be03a41af3cf7d65429bcac9ff4ccbc6e02762dd14933f0e5903cfb93d15cf31fc4acc953f3fcdb31190eba969e8
   languageName: node
   linkType: hard
 
@@ -22757,7 +22904,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yargs@npm:^17.0.0":
+"yargs@npm:^17.0.0, yargs@npm:^17.7.2":
   version: 17.7.2
   resolution: "yargs@npm:17.7.2"
   dependencies:

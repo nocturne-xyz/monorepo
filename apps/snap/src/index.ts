@@ -13,7 +13,7 @@ import {
   SubgraphSDKSyncAdapter,
   SyncOpts,
 } from "@nocturne-xyz/core";
-import { OperationMetadata, OperationRequest } from "@nocturne-xyz/sdk";
+import { OperationMetadata, OperationRequest } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
 import { SnapKvStore } from "./snapdb";
