@@ -2,6 +2,7 @@ import { Erc20Config } from "@nocturne-xyz/config";
 import {
   Address,
   AssetWithBalance,
+  DepositRequest,
   DepositQuoteResponse,
   OperationRequestWithMetadata,
   ProvenOperation,
@@ -10,7 +11,6 @@ import {
   SubmittableOperationWithNetworkInfo,
   SyncOpts,
 } from "@nocturne-xyz/core";
-import { DepositRequest } from "@nocturne-xyz/sdk";
 import { ContractTransaction } from "ethers";
 import { GetSnapsResponse, Snap } from "./metamask/types";
 import {
