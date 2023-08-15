@@ -4417,7 +4417,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
-    "@nocturne-xyz/crypto-utils": ^0.1.7
+    "@nocturne-xyz/crypto-utils": ^0.2.0
     "@types/async-retry": ^1.4.5
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -4451,7 +4451,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/crypto-utils@^0.1.7, @nocturne-xyz/crypto-utils@workspace:^, @nocturne-xyz/crypto-utils@workspace:packages/crypto-utils":
+"@nocturne-xyz/crypto-utils@^0.2.0, @nocturne-xyz/crypto-utils@workspace:^, @nocturne-xyz/crypto-utils@workspace:packages/crypto-utils":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/crypto-utils@workspace:packages/crypto-utils"
   dependencies:
@@ -4635,7 +4635,7 @@ __metadata:
   resolution: "@nocturne-xyz/local-prover@workspace:packages/local-prover"
   dependencies:
     "@nocturne-xyz/core": "workspace:^"
-    "@nocturne-xyz/crypto-utils": ^0.1.7
+    "@nocturne-xyz/crypto-utils": ^0.2.0
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/mocha": ^10.0.0

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- 6c0a5d7c: overhaul monorepo structure & start proper versioning system
+
 ### Unreleased
 
 - add bitmap checks to offchain merkle unit tests

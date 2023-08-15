@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- 6c0a5d7c: overhaul monorepo structure & start proper versioning system
+
+### Patch Changes
+
+- Updated dependencies [6c0a5d7c]
+  - @nocturne-xyz/crypto-utils@0.2.0
+  - @nocturne-xyz/contracts@0.2.0
+  - @nocturne-xyz/config@0.2.0
+  - @nocturne-xyz/core@0.1.4
+
 ### Unreleased
 
 - replace tx manager with OZ relay

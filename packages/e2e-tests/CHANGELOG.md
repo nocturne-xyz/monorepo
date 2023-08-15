@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- 6c0a5d7c: overhaul monorepo structure & start proper versioning system
+
 ### Unreleased
 
 - change 'alice deposits two' test case to 'alice deposits four' and have alice generate 2 JSs to test batch verify (when proofs.length > 1) functionality

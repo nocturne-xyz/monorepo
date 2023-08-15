@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- 6c0a5d7c: overhaul monorepo structure & start proper versioning system
+
 ### Unreleased
 
 - add positive security annotations to subtreeupdate circuit
@@ -8,9 +14,9 @@
 - change `IsOrderGreaterThan8` to `IsOrderL`, which is a stricter condition that leaves less room for error
 - add witness-gen only BJJ scalar mul
 - in `subtreeupdate.circom`, append `bitmap` to preimage of the batch accumulator hash to prevent malicious prover from lying about insertion type (TOB-4)
-- in `joinsplit.circom` separate "public encodedAsset` from `private encodedAsset` and check that;
+- in `joinsplit.circom` separate "public encodedAsset`from`private encodedAsset` and check that;
   - they're equal when `publicSpend` is nonzero
-  - they "public encodedAsset` is masked to 0 when `publicSpend` is 0
+  - they "public encodedAsset`is masked to 0 when`publicSpend` is 0
 - force `refundAddr` to be owned by the sender
 - replace ElGamal encryption with `senderCommitment`
 - add `IsOrderGreaterThan8` template and use it to check BJJ points given as input in joinsplit circuit
