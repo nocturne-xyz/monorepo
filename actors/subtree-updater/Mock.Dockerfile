@@ -2,27 +2,26 @@ FROM node:18.12.1
 
 WORKDIR /app
 
-COPY scripts scripts
-
-COPY package.json .
-COPY tsconfig.json .
-COPY yarn.lock .
-COPY .yarn .yarn
-COPY .yarnrc.yml .
-COPY packages/subtree-updater packages/subtree-updater
-
 RUN corepack enable
+
+# install foundry
+RUN curl -L https://foundry.paradigm.xyz | bash
+ENV PATH="$PATH:/root/.foundry/bin"
+RUN foundryup
+
+# copy over entire monorepo
+COPY . .
+
+# install deps & build
 RUN yarn install
 
-WORKDIR /app/packages/circuits
-
-WORKDIR /app/packages/subtree-updater
-
-RUN yarn build
-RUN npm i -g
-
+# build
 WORKDIR /app
+RUN yarn turbo run build --filter="@nocturne-xyz/subtree-updater..."
 
-COPY packages/config/configs /app/configs
+
+# setup CLI
+WORKDIR /app/actors/subtree-updater
+RUN npm i -g 
 
 ENTRYPOINT ["subtree-updater-cli"]

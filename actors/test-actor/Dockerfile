@@ -1,21 +1,23 @@
 FROM node:18.12.1
 
+
 WORKDIR /app
+RUN corepack enable
 
-COPY package.json .
-COPY tsconfig.json .
-COPY yarn.lock .
-COPY .yarn .yarn
-COPY .yarnrc.yml .
-COPY packages/test-actor packages/test-actor
-COPY circuit-artifacts/joinsplit circuit-artifacts/joinsplit
+# install foundry
+RUN curl -L https://foundry.paradigm.xyz | bash
+ENV PATH="$PATH:/root/.foundry/bin"
+RUN foundryup
 
+# copy over entire monorepo
+COPY . .
+
+# install deps & build
 RUN yarn install
+RUN yarn turbo run build --filter="@nocturne-xyz/test-actor..."
 
-WORKDIR /app/packages/test-actor
-RUN yarn build
-RUN npm i -g
-
-COPY packages/config/configs /app/configs
+# setup CLI
+WORKDIR /app/actors/test-actor
+RUN npm i -g 
 
 ENTRYPOINT ["test-actor-cli"]
