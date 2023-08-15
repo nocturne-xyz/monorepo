@@ -39,7 +39,7 @@ interface AssetAndTicker {
 }
 
 // TODO: ask bundler for the batch size and make a more intelligent estimate than this
-const PER_JOINSPLIT_GAS = 380_000n; // cost of verifying single proof (280k) + handling single joinsplit (80k) + buffer (20k)
+const PER_JOINSPLIT_GAS = 420_000n; // cost of verifying single proof (280k) + handling single joinsplit (80k) + buffer (20k)
 const PER_REFUND_GAS = 100_000n; // cost of refund handle (40k) + refund tree (50k) + buffer (10k)
 
 export interface HandleOpRequestGasDeps {

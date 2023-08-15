@@ -24,10 +24,12 @@ import {
 
 const ENDPOINTS = {
   sepolia: {
-    screenerEndpoint: "https://screener.nocturnelabs.xyz",
-    bundlerEndpoint: "https://bundler.nocturnelabs.xyz",
+    screenerEndpoint: "https://screener.testnet.nocturnelabs.xyz",
+    bundlerEndpoint: "https://bundler.testnet.nocturnelabs.xyz",
     // HACK: temporary workaround to make iteration on site easier
-    subgraphEndpoint: process.env.NEXT_PUBLIC_SUBGRAPH_URL ?? "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.21-testnet/gn",
+    subgraphEndpoint:
+      process.env.NEXT_PUBLIC_SUBGRAPH_URL ??
+      "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.21-testnet/gn",
   },
   localhost: {
     screenerEndpoint: "http://localhost:3001",
@@ -190,6 +192,6 @@ export function flattenDepositRequestStatus(
       }
     }
     default:
-      return DepositRequestStatus.DoesNotExist;
+      throw new Error(`Unknown subgraph status: ${subgraphStatus}`);
   }
 }

@@ -120,7 +120,8 @@ describe("Optimistic nullifier tracking", () => {
 
     // apply op NFs
     const action: ActionMetadata = {
-      type: "Transfer",
+      type: "Action",
+      actionType: "Transfer",
       erc20Address: erc20Asset.assetAddr,
       recipientAddress: eoa.address,
       amount: amountToSpend,
@@ -241,7 +242,8 @@ describe("Optimistic nullifier tracking", () => {
 
     // apply op NFs
     const action: ActionMetadata = {
-      type: "Transfer",
+      type: "Action",
+      actionType: "Transfer",
       erc20Address: erc20Asset.assetAddr,
       recipientAddress: eoa.address,
       amount: amountToSpend,

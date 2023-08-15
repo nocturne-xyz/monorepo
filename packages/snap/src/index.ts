@@ -1,24 +1,23 @@
-import {
-  NocturneWalletSDK,
-  NocturneSigner,
-  SparseMerkleProver,
-  OperationRequest,
-  NocturneDB,
-  SubgraphSDKSyncAdapter,
-  MockEthToTokenConverter,
-  BundlerOpTracker,
-  OperationMetadata,
-  SyncOpts,
-  GetNotesOpts,
-} from "@nocturne-xyz/core";
-import { ethers } from "ethers";
 import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
 import { OnRpcRequestHandler } from "@metamask/snaps-types";
-import { SnapKvStore } from "./snapdb";
-import * as JSON from "bigint-json-serialization";
-import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
-import { makeSignOperationContent } from "./utils/display";
 import { heading, panel, text } from "@metamask/snaps-ui";
+import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
+import {
+  BundlerOpTracker,
+  GetNotesOpts,
+  MockEthToTokenConverter,
+  NocturneDB,
+  NocturneSigner,
+  NocturneWalletSDK,
+  SparseMerkleProver,
+  SubgraphSDKSyncAdapter,
+  SyncOpts,
+} from "@nocturne-xyz/core";
+import { OperationMetadata, OperationRequest } from "@nocturne-xyz/sdk";
+import * as JSON from "bigint-json-serialization";
+import { ethers } from "ethers";
+import { SnapKvStore } from "./snapdb";
+import { makeSignOperationContent } from "./utils/display";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Sepolia
@@ -81,6 +80,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
   );
   console.log("Config:", RPC_URL, BUNDLER_URL, SUBGRAPH_API_URL, config);
   console.log("Switching on method: ", request.method);
+  // ! TODO we need better types on these, as any changes are breaking & only caught at runtime. also are very difficult to debug, since snap JSON RPC logs are unhelpful
   switch (request.method) {
     case "nocturne_getRandomizedAddr":
       return JSON.stringify(signer.generateRandomStealthAddress());
@@ -142,27 +142,29 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
       console.log("done syncing");
 
       const operationRequest = JSON.parse(
-        (request.params as any).operationRequest
+        (request.params as any).request
       ) as OperationRequest;
-
-      const opMetadata: OperationMetadata = JSON.parse(
-        (request.params as any).opMetadata
-      );
+      const opMetadata = JSON.parse(
+        (request.params as any).meta
+      ) as OperationMetadata;
 
       // Ensure user has minimum balance for request
       if (!(await sdk.hasEnoughBalanceForOperationRequest(operationRequest))) {
         throw new Error("Insufficient balance for operation request");
       }
-      const { heading: _heading, text: _text } = makeSignOperationContent(
+      const contentItems = makeSignOperationContent(
+        // specifies nothing about ordering
         opMetadata,
         config.erc20s
-      );
+      ).flatMap((item) => {
+        return [heading(item.heading), text(item.text)];
+      });
       // Confirm spend sig auth
       const res = await snap.request({
         method: "snap_dialog",
         params: {
           type: "confirmation",
-          content: panel([heading(_heading), text(_text)]),
+          content: panel(contentItems),
         },
       });
 

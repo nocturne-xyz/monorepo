@@ -54,8 +54,6 @@ export interface DepositRequestWithMetadata extends DepositRequest {
 }
 
 export enum DepositRequestStatus {
-  DoesNotExist = "DOES_NOT_EXIST",
-
   // deposit has been initiated on-chain
   // and funds are in escrow, but
   // they still have yet to be moved
@@ -84,7 +82,6 @@ export enum DepositRequestStatus {
   Complete = "COMPLETE",
 }
 
-
 export interface DepositRequestStatusWithMetadata {
   status: DepositRequestStatus;
   estimatedWaitSeconds?: number;
@@ -93,7 +90,7 @@ export interface DepositRequestStatusWithMetadata {
 export interface DepositHandle {
   depositRequestHash: string;
   request: DepositRequestWithMetadata;
-  initialStatus: DepositRequestStatusWithMetadata;
+  currentStatus: DepositRequestStatusWithMetadata;
   getStatus: () => Promise<DepositRequestStatusWithMetadata>;
 }
 

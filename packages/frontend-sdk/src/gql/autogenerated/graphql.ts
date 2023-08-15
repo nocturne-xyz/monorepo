@@ -38,6 +38,7 @@ export type DepositEvent = {
   gasCompensation: Scalars['BigInt']['output'];
   id: Scalars['ID']['output'];
   nonce: Scalars['BigInt']['output'];
+  noteMerkleIndex?: Maybe<Scalars['BigInt']['output']>;
   spender: Scalars['Bytes']['output'];
   type: DepositEventType;
   value: Scalars['BigInt']['output'];
@@ -109,6 +110,14 @@ export type DepositEvent_Filter = {
   nonce_lte?: InputMaybe<Scalars['BigInt']['input']>;
   nonce_not?: InputMaybe<Scalars['BigInt']['input']>;
   nonce_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  noteMerkleIndex?: InputMaybe<Scalars['BigInt']['input']>;
+  noteMerkleIndex_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  noteMerkleIndex_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  noteMerkleIndex_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  noteMerkleIndex_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  noteMerkleIndex_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  noteMerkleIndex_not?: InputMaybe<Scalars['BigInt']['input']>;
+  noteMerkleIndex_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
   or?: InputMaybe<Array<InputMaybe<DepositEvent_Filter>>>;
   spender?: InputMaybe<Scalars['Bytes']['input']>;
   spender_contains?: InputMaybe<Scalars['Bytes']['input']>;
@@ -142,6 +151,7 @@ export enum DepositEvent_OrderBy {
   GasCompensation = 'gasCompensation',
   Id = 'id',
   Nonce = 'nonce',
+  NoteMerkleIndex = 'noteMerkleIndex',
   Spender = 'spender',
   Type = 'type',
   Value = 'value'
@@ -159,6 +169,7 @@ export type DepositRequest = {
   id: Scalars['ID']['output'];
   instantiationTxHash: Scalars['Bytes']['output'];
   nonce: Scalars['BigInt']['output'];
+  noteMerkleIndex?: Maybe<Scalars['BigInt']['output']>;
   retrievalTxHash?: Maybe<Scalars['Bytes']['output']>;
   spender: Scalars['Bytes']['output'];
   status: DepositRequestStatus;
@@ -259,6 +270,14 @@ export type DepositRequest_Filter = {
   nonce_lte?: InputMaybe<Scalars['BigInt']['input']>;
   nonce_not?: InputMaybe<Scalars['BigInt']['input']>;
   nonce_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  noteMerkleIndex?: InputMaybe<Scalars['BigInt']['input']>;
+  noteMerkleIndex_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  noteMerkleIndex_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  noteMerkleIndex_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  noteMerkleIndex_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  noteMerkleIndex_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  noteMerkleIndex_not?: InputMaybe<Scalars['BigInt']['input']>;
+  noteMerkleIndex_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
   or?: InputMaybe<Array<InputMaybe<DepositRequest_Filter>>>;
   retrievalTxHash?: InputMaybe<Scalars['Bytes']['input']>;
   retrievalTxHash_contains?: InputMaybe<Scalars['Bytes']['input']>;
@@ -305,6 +324,7 @@ export enum DepositRequest_OrderBy {
   Id = 'id',
   InstantiationTxHash = 'instantiationTxHash',
   Nonce = 'nonce',
+  NoteMerkleIndex = 'noteMerkleIndex',
   RetrievalTxHash = 'retrievalTxHash',
   Spender = 'spender',
   Status = 'status',
@@ -470,15 +490,10 @@ export type EncodedOrEncryptedNote_Filter = {
 
 export enum EncodedOrEncryptedNote_OrderBy {
   EncryptedNote = 'encryptedNote',
+  EncryptedNoteCiphertextBytes = 'encryptedNote__ciphertextBytes',
   EncryptedNoteCommitment = 'encryptedNote__commitment',
-  EncryptedNoteEncappedKey = 'encryptedNote__encappedKey',
-  EncryptedNoteEncodedAssetAddr = 'encryptedNote__encodedAssetAddr',
-  EncryptedNoteEncodedAssetId = 'encryptedNote__encodedAssetId',
-  EncryptedNoteEncryptedNonce = 'encryptedNote__encryptedNonce',
-  EncryptedNoteEncryptedValue = 'encryptedNote__encryptedValue',
+  EncryptedNoteEncapsulatedSecretBytes = 'encryptedNote__encapsulatedSecretBytes',
   EncryptedNoteId = 'encryptedNote__id',
-  EncryptedNoteOwnerH1 = 'encryptedNote__ownerH1',
-  EncryptedNoteOwnerH2 = 'encryptedNote__ownerH2',
   Id = 'id',
   MerkleIndex = 'merkleIndex',
   Note = 'note',
@@ -493,21 +508,26 @@ export enum EncodedOrEncryptedNote_OrderBy {
 
 export type EncryptedNote = {
   __typename?: 'EncryptedNote';
+  ciphertextBytes: Scalars['Bytes']['output'];
   commitment: Scalars['BigInt']['output'];
-  encappedKey: Scalars['BigInt']['output'];
-  encodedAssetAddr: Scalars['BigInt']['output'];
-  encodedAssetId: Scalars['BigInt']['output'];
-  encryptedNonce: Scalars['BigInt']['output'];
-  encryptedValue: Scalars['BigInt']['output'];
+  encapsulatedSecretBytes: Scalars['Bytes']['output'];
   id: Scalars['ID']['output'];
-  ownerH1: Scalars['BigInt']['output'];
-  ownerH2: Scalars['BigInt']['output'];
 };
 
 export type EncryptedNote_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
   and?: InputMaybe<Array<InputMaybe<EncryptedNote_Filter>>>;
+  ciphertextBytes?: InputMaybe<Scalars['Bytes']['input']>;
+  ciphertextBytes_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  ciphertextBytes_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  ciphertextBytes_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  ciphertextBytes_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  ciphertextBytes_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  ciphertextBytes_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  ciphertextBytes_not?: InputMaybe<Scalars['Bytes']['input']>;
+  ciphertextBytes_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  ciphertextBytes_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
   commitment?: InputMaybe<Scalars['BigInt']['input']>;
   commitment_gt?: InputMaybe<Scalars['BigInt']['input']>;
   commitment_gte?: InputMaybe<Scalars['BigInt']['input']>;
@@ -516,46 +536,16 @@ export type EncryptedNote_Filter = {
   commitment_lte?: InputMaybe<Scalars['BigInt']['input']>;
   commitment_not?: InputMaybe<Scalars['BigInt']['input']>;
   commitment_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  encappedKey?: InputMaybe<Scalars['BigInt']['input']>;
-  encappedKey_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  encappedKey_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  encappedKey_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  encappedKey_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  encappedKey_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  encappedKey_not?: InputMaybe<Scalars['BigInt']['input']>;
-  encappedKey_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  encodedAssetAddr?: InputMaybe<Scalars['BigInt']['input']>;
-  encodedAssetAddr_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  encodedAssetAddr_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  encodedAssetAddr_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  encodedAssetAddr_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  encodedAssetAddr_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  encodedAssetAddr_not?: InputMaybe<Scalars['BigInt']['input']>;
-  encodedAssetAddr_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  encodedAssetId?: InputMaybe<Scalars['BigInt']['input']>;
-  encodedAssetId_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  encodedAssetId_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  encodedAssetId_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  encodedAssetId_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  encodedAssetId_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  encodedAssetId_not?: InputMaybe<Scalars['BigInt']['input']>;
-  encodedAssetId_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  encryptedNonce?: InputMaybe<Scalars['BigInt']['input']>;
-  encryptedNonce_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  encryptedNonce_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  encryptedNonce_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  encryptedNonce_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  encryptedNonce_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  encryptedNonce_not?: InputMaybe<Scalars['BigInt']['input']>;
-  encryptedNonce_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  encryptedValue?: InputMaybe<Scalars['BigInt']['input']>;
-  encryptedValue_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  encryptedValue_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  encryptedValue_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  encryptedValue_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  encryptedValue_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  encryptedValue_not?: InputMaybe<Scalars['BigInt']['input']>;
-  encryptedValue_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  encapsulatedSecretBytes?: InputMaybe<Scalars['Bytes']['input']>;
+  encapsulatedSecretBytes_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  encapsulatedSecretBytes_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  encapsulatedSecretBytes_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  encapsulatedSecretBytes_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  encapsulatedSecretBytes_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  encapsulatedSecretBytes_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  encapsulatedSecretBytes_not?: InputMaybe<Scalars['Bytes']['input']>;
+  encapsulatedSecretBytes_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  encapsulatedSecretBytes_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
   id?: InputMaybe<Scalars['ID']['input']>;
   id_gt?: InputMaybe<Scalars['ID']['input']>;
   id_gte?: InputMaybe<Scalars['ID']['input']>;
@@ -565,34 +555,13 @@ export type EncryptedNote_Filter = {
   id_not?: InputMaybe<Scalars['ID']['input']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
   or?: InputMaybe<Array<InputMaybe<EncryptedNote_Filter>>>;
-  ownerH1?: InputMaybe<Scalars['BigInt']['input']>;
-  ownerH1_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  ownerH1_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  ownerH1_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  ownerH1_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  ownerH1_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  ownerH1_not?: InputMaybe<Scalars['BigInt']['input']>;
-  ownerH1_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  ownerH2?: InputMaybe<Scalars['BigInt']['input']>;
-  ownerH2_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  ownerH2_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  ownerH2_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  ownerH2_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  ownerH2_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  ownerH2_not?: InputMaybe<Scalars['BigInt']['input']>;
-  ownerH2_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
 };
 
 export enum EncryptedNote_OrderBy {
+  CiphertextBytes = 'ciphertextBytes',
   Commitment = 'commitment',
-  EncappedKey = 'encappedKey',
-  EncodedAssetAddr = 'encodedAssetAddr',
-  EncodedAssetId = 'encodedAssetId',
-  EncryptedNonce = 'encryptedNonce',
-  EncryptedValue = 'encryptedValue',
-  Id = 'id',
-  OwnerH1 = 'ownerH1',
-  OwnerH2 = 'ownerH2'
+  EncapsulatedSecretBytes = 'encapsulatedSecretBytes',
+  Id = 'id'
 }
 
 export type FilledBatchWithZerosEvent = {
