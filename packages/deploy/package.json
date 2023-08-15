@@ -1,8 +1,9 @@
 {
   "name": "@nocturne-xyz/deploy",
-  "version": "1.0.1-alpha",
+  "version": "0.1.0",
   "license": "MIT",
   "main": "dist/index.js",
+  "private": true,
   "types": "dist/index.d.ts",
   "files": [
     "dist/**/*",
@@ -21,7 +22,7 @@
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
-    "@nocturne-xyz/core": "workspace:^",
+    "@nocturne-xyz/sdk": "workspace:^",
     "dotenv": "^16.0.3"
   },
   "devDependencies": {

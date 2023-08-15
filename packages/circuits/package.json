@@ -1,7 +1,8 @@
 {
   "name": "@nocturne-xyz/circuits",
-  "version": "1.0.0-alpha",
   "license": "MIT",
+  "version": "0.1.0",
+  "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
