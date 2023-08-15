@@ -24,8 +24,8 @@ import {
 
 const ENDPOINTS = {
   sepolia: {
-    screenerEndpoint: "https://screener.nocturnelabs.xyz",
-    bundlerEndpoint: "https://bundler.nocturnelabs.xyz",
+    screenerEndpoint: "https://screener.testnet.nocturnelabs.xyz",
+    bundlerEndpoint: "https://bundler.testnet.nocturnelabs.xyz",
     // HACK: temporary workaround to make iteration on site easier
     subgraphEndpoint:
       process.env.NEXT_PUBLIC_SUBGRAPH_URL ??
