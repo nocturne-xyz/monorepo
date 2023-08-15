@@ -12,7 +12,7 @@ new NocturneSdk({
   snap?: GetSnapOptions;
 } = {})
 
-examples:
+// examples:
 new NocturneSdk() // defaults to mainnet, ethers Web3Provider and latest version of Nocturne Snap
 
 new NocturneSdk({
