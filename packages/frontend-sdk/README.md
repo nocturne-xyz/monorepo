@@ -159,14 +159,14 @@ Transfers are an example of an `Operation` (another example are Confidential Pay
 - Only [committed balances](#includeUncommited) may be transferred
 
 ```ts
-const handles = await sdk.anonTransferErc20(
+const handles = await sdk.initiateAnonErc20Transfer(
         <erc20 address>,
         <total value to transfer>,
         <address to transfer to>
       );
 ```
 
-[anonTransferErc20() example](<https://github.com/nocturne-xyz/interface/blob/frontend-sdk-readme-freeze/src/app/(DepositAndTransfer)/(Transfer)/TransferForm.tsx#L40>)
+[initiateAnonErc20Transfer() example](<https://github.com/nocturne-xyz/interface/blob/frontend-sdk-readme-freeze/src/app/(DepositAndTransfer)/(Transfer)/TransferForm.tsx#L40>)
 
 To get operations that are in-flight, one can use the returned `OperationHandle` struct to retrieve up-to-date statuses per operation, or use `getInFlightOperations()` to retrieve all in-flight operation handles.
 
