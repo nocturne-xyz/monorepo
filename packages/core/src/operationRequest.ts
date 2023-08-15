@@ -177,7 +177,7 @@ export class OperationRequestBuilder {
 
   // Specify gas parameters up-front.
   // this is optional - if not given, the SDK will estimate it for you.
-  // it's reccomended to just let the SDK estimate this instead.
+  // it's recommended to just let the SDK estimate this instead.
   // returns `this` so it's chainable
   gas(gasParams: OperationGasParams): OperationRequestBuilder {
     const { executionGasLimit, gasPrice } = gasParams;

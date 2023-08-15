@@ -1,16 +1,18 @@
+import { Erc20Config } from "@nocturne-xyz/config";
 import {
   Address,
   AssetWithBalance,
   DepositQuoteResponse,
+  OperationRequestWithMetadata,
   ProvenOperation,
   SignedOperation,
   StealthAddress,
-  SyncOpts,
-  OperationRequestWithMetadata,
   SubmittableOperationWithNetworkInfo,
+  SyncOpts,
 } from "@nocturne-xyz/core";
+import { DepositRequest } from "@nocturne-xyz/sdk";
+import { ContractTransaction } from "ethers";
 import { GetSnapsResponse, Snap } from "./metamask/types";
-import { Erc20Config } from "@nocturne-xyz/config";
 import {
   DepositHandle,
   DepositHandleWithReceipt,
@@ -21,6 +23,11 @@ import {
 
 export interface NocturneSdkApi {
   // *** DEPOSIT METHODS *** //
+
+  /**
+   *  Provides an ETA on how long the deposits will take to enter the protocol.
+   * Used for both ETH/WETH and ERC20 deposits.
+   */
 
   getErc20DepositQuote(
     erc20Address: Address,
@@ -49,6 +56,11 @@ export interface NocturneSdkApi {
 
   getAllDeposits(): Promise<DepositHandle[]>;
 
+  /**
+   * Initiates a deposit retrieval from the deposit manager contract.
+   */
+  retrievePendingDeposit(req: DepositRequest): Promise<ContractTransaction>;
+
   // *** OPERATION METHODS *** //
 
   /**
@@ -57,13 +69,15 @@ export interface NocturneSdkApi {
    * @param amount Asset amount
    * @param recipientAddress Recipient address
    */
-  anonTransferErc20(
+  initiateAnonErc20Transfer(
     erc20Address: Address,
     amount: bigint,
     recipientAddress: Address
   ): Promise<OperationHandle>;
 
-  submitOperation(operation: SubmittableOperationWithNetworkInfo): Promise<OperationHandle>;
+  submitOperation(
+    operation: SubmittableOperationWithNetworkInfo
+  ): Promise<OperationHandle>;
 
   signAndProveOperation(
     operationRequest: OperationRequestWithMetadata
@@ -93,7 +107,7 @@ export interface NocturneSdkApi {
 
   // returns latest `merkleIndex` synced. Usually can be ignored
   // by default, syncs to the tip. This can take a long time, so
-  // it's reccomended to call `syncWithProgress` instead and
+  // it's recommended to call `syncWithProgress` instead and
   // give feedback to the user
   sync(syncOpts?: SyncOpts): Promise<number | undefined>;
 
@@ -103,7 +117,9 @@ export interface NocturneSdkApi {
     operationRequest: OperationRequestWithMetadata
   ): Promise<SignedOperation>;
 
-  proveOperation(op: SignedOperation): Promise<SubmittableOperationWithNetworkInfo>;
+  proveOperation(
+    op: SignedOperation
+  ): Promise<SubmittableOperationWithNetworkInfo>;
 
   verifyProvenOperation(operation: ProvenOperation): Promise<boolean>;
 
@@ -121,7 +137,7 @@ export interface NocturneSdkApi {
 // *** SNAP STATE METHODS *** //
 export interface SnapStateApi {
   /**
-   * id and version of the snap
+   * id of the snap (i.e, "npm:@nocturne-xyz/snap", or "local:http://localhost:<port>")
    */
   snapId: string;
 
