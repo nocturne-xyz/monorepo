@@ -184,7 +184,7 @@ describe("Optimistic nullifier tracking", () => {
     // update op digest buffer)
     const dateNow = Date.now;
     Date.now = () => {
-      return dateNow() + 60 * 1000;
+      return dateNow() + 92 * 1000;
     };
     await sdk.updateOptimisticNullifiers();
     Date.now = dateNow;
