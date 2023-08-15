@@ -29,7 +29,7 @@ import {
   RPCSDKSyncAdapter,
   BundlerOpTracker,
   range,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 
 import {
   NocturneDeployConfig,

@@ -1,7 +1,7 @@
 import {
   computeOperationDigest,
   SubmittableOperationWithNetworkInfo,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import IORedis from "ioredis";
 import { RedisTransaction } from ".";
 

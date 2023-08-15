@@ -8,7 +8,7 @@ packages/circuits @Sladuca
 
 # SDKs
 
-packages/sdk @luketchang @Sladuca
+packages/core @luketchang @Sladuca
 
 # Frontend
 

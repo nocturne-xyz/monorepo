@@ -5,7 +5,7 @@ import {
   OperationStatus,
   computeOperationDigest,
   SubmittableOperationWithNetworkInfo,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import {
   OperationBatchJobData,
   OPERATION_BATCH_QUEUE,

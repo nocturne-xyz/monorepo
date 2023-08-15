@@ -11,7 +11,7 @@ import {
   hashDepositRequest,
   DepositEventType,
   TotalEntityIndexTrait,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import { Job, Queue, Worker } from "bullmq";
 import { ethers } from "ethers";
 import { DepositScreenerDB } from "./db";

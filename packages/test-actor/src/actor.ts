@@ -1,33 +1,34 @@
+import { Erc20Config } from "@nocturne-xyz/config";
 import {
   DepositManager,
   SimpleERC20Token__factory,
   Teller,
 } from "@nocturne-xyz/contracts";
+import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
+  Address,
+  Asset,
+  JoinSplitProver,
   NocturneWalletSDK,
   OperationRequest,
-  sleep,
-  JoinSplitProver,
-  proveOperation,
-  parseEventsFromContractReceipt,
-  Asset,
   OperationRequestBuilder,
-  computeOperationDigest,
+  OperationRequestWithMetadata,
   StealthAddressTrait,
+  computeOperationDigest,
   min,
-  Address,
-} from "@nocturne-xyz/sdk";
-import * as JSON from "bigint-json-serialization";
-import { Erc20Config } from "@nocturne-xyz/config";
-import { ethers } from "ethers";
-import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
-import { Logger } from "winston";
-import * as ot from "@opentelemetry/api";
+  parseEventsFromContractReceipt,
+  proveOperation,
+  sleep,
+} from "@nocturne-xyz/core";
 import {
   makeCreateCounterFn,
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
 import randomBytes from "randombytes";
+import * as ot from "@opentelemetry/api";
+import * as JSON from "bigint-json-serialization";
+import { ethers } from "ethers";
+import { Logger } from "winston";
 
 export const ACTOR_NAME = "test-actor";
 const COMPONENT_NAME = "main";
@@ -305,7 +306,7 @@ export class TestActor {
 
     let opRequest: OperationRequest;
     if (true) {
-      opRequest = await this.erc20TransferOpRequest(asset, value);
+      opRequest = (await this.erc20TransferOpRequest(asset, value)).request;
     } else {
       // TODO: add swapper call case and replace if(true) with flipcoin
     }
@@ -379,7 +380,7 @@ export class TestActor {
   private async erc20TransferOpRequest(
     asset: Asset,
     value: bigint
-  ): Promise<OperationRequest> {
+  ): Promise<OperationRequestWithMetadata> {
     const simpleErc20 = SimpleERC20Token__factory.connect(
       asset.assetAddr,
       this.txSigner

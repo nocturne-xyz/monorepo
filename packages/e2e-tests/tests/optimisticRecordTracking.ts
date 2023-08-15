@@ -13,7 +13,7 @@ import {
   OperationRequestBuilder,
   computeOperationDigest,
   proveOperation,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ethers } from "ethers";
@@ -113,20 +113,21 @@ describe("Optimistic nullifier tracking", () => {
       .build();
 
     // prepare op
-    const preSignOp = await sdk.prepareOperation(opRequest);
+    const preSignOp = await sdk.prepareOperation(opRequest.request);
     const signedOp = sdk.signOperation(preSignOp);
 
     console.log("signedOp", signedOp);
 
     // apply op NFs
     const action: ActionMetadata = {
-      type: "Transfer",
+      type: "Action",
+      actionType: "Transfer",
       erc20Address: erc20Asset.assetAddr,
       recipientAddress: eoa.address,
       amount: amountToSpend,
     };
     await sdk.applyOptimisticRecordsForOp(signedOp, {
-      action,
+      items: [action],
     });
 
     // DB should have OptimisticNFRecords for merkle index 0 and 1
@@ -159,14 +160,14 @@ describe("Optimistic nullifier tracking", () => {
       opDigestRecord.merkleIndices[1]
     );
 
-    expect(opDigestRecord.metadata!.action).to.eql(action);
+    expect(opDigestRecord.metadata!.items[0]).to.eql(action);
 
     // Check exposed op digest + metadata method on wallet sdk
     const opDigestsWithMetadata =
       await sdk.getAllOptimisticOpDigestsWithMetadata();
     expect(opDigestsWithMetadata.length).to.eql(1);
     expect(opDigestsWithMetadata[0].opDigest).to.eql(opDigest);
-    expect(opDigestsWithMetadata[0].metadata).to.eql({ action });
+    expect(opDigestsWithMetadata[0].metadata?.items[0]).to.eql(action);
 
     // when we get balances, we should only see one asset and only 200 tokens
     const balances = await sdk.getAllAssetBalances();
@@ -183,7 +184,7 @@ describe("Optimistic nullifier tracking", () => {
     // update op digest buffer)
     const dateNow = Date.now;
     Date.now = () => {
-      return dateNow() + 60 * 1000;
+      return dateNow() + 92 * 1000;
     };
     await sdk.updateOptimisticNullifiers();
     Date.now = dateNow;
@@ -234,19 +235,20 @@ describe("Optimistic nullifier tracking", () => {
       .build();
 
     // prepare op
-    const preSignOp = await sdk.prepareOperation(opRequest);
+    const preSignOp = await sdk.prepareOperation(opRequest.request);
     const signedOp = sdk.signOperation(preSignOp);
 
     console.log("signedOp", signedOp);
 
     // apply op NFs
     const action: ActionMetadata = {
-      type: "Transfer",
+      type: "Action",
+      actionType: "Transfer",
       erc20Address: erc20Asset.assetAddr,
       recipientAddress: eoa.address,
       amount: amountToSpend,
     };
-    await sdk.applyOptimisticRecordsForOp(signedOp, { action });
+    await sdk.applyOptimisticRecordsForOp(signedOp, { items: [action] });
 
     // DB should have OptimisticNFRecords for merkle index 0 and 1
     const nfRecords = await db.getAllOptimisticNFRecords();
@@ -278,14 +280,14 @@ describe("Optimistic nullifier tracking", () => {
       opDigestRecord.merkleIndices[1]
     );
 
-    expect(opDigestRecord.metadata!.action).to.eql(action);
+    expect(opDigestRecord.metadata!.items[0]).to.eql(action);
 
     // Check exposed op digest + metadata method on wallet sdk
     const opDigestsWithMetadata =
       await sdk.getAllOptimisticOpDigestsWithMetadata();
     expect(opDigestsWithMetadata.length).to.eql(1);
     expect(opDigestsWithMetadata[0].opDigest).to.eql(opDigest);
-    expect(opDigestsWithMetadata[0].metadata).to.eql({ action });
+    expect(opDigestsWithMetadata[0].metadata!.items[0]).to.eql(action);
 
     // when we get balances, we should only see one asset and only 200 tokens
     const balances = await sdk.getAllAssetBalances();

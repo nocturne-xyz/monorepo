@@ -1,5 +1,5 @@
 import { Erc20Config } from "@nocturne-xyz/config";
-import { OperationMetadata } from "@nocturne-xyz/sdk";
+import { OperationMetadata } from "@nocturne-xyz/core";
 import { formatUnits } from "ethers/lib/utils";
 
 const lookupTickerByAddress = (
@@ -21,31 +21,36 @@ export const makeSignOperationContent = (
 ): {
   heading: string;
   text: string;
-} => {
-  const {
-    amount: amountSmallestUnits,
-    recipientAddress,
-    erc20Address,
-    type: operationType,
-  } = opMetadata.action;
-  if (operationType !== "Transfer") {
-    throw new Error(`Operation type ${operationType} not yet supported!`);
-  }
+}[] => {
+  return opMetadata.items.map((item) => {
+    if (item.type === "ConfidentialPayment")
+      throw new Error(`${item.type} snap display not yet supported`);
+    const {
+      amount: amountSmallestUnits,
+      recipientAddress,
+      erc20Address,
+      actionType: operationType,
+    } = item;
 
-  const ticker = lookupTickerByAddress(erc20Address, erc20s);
-  const displayAmount = formatUnits(amountSmallestUnits);
-  const recognizedTicker = `Action: Send **${displayAmount} ${ticker}**
+    if (operationType !== "Transfer") {
+      throw new Error(`Operation type ${operationType} not yet supported!`);
+    }
+
+    const ticker = lookupTickerByAddress(erc20Address, erc20s);
+    const displayAmount = formatUnits(amountSmallestUnits);
+    const recognizedTicker = `Action: Send **${displayAmount} ${ticker}**
   Recipient Address: ${recipientAddress}`;
-  const unrecognizedTicker = `Amount: ${displayAmount}
+    const unrecognizedTicker = `Amount: ${displayAmount}
 Asset token address: ${erc20Address} _(Unrecognized asset)_
 Recipient Address: ${recipientAddress}
 `;
 
-  const heading = "Confirm transfer from your Nocturne account";
-  const text = ticker ? recognizedTicker : unrecognizedTicker;
+    const heading = "Confirm transfer from your Nocturne account";
+    const text = ticker ? recognizedTicker : unrecognizedTicker;
 
-  return {
-    heading,
-    text,
-  };
+    return {
+      heading,
+      text,
+    };
+  });
 };

@@ -1,6 +1,6 @@
 import { deployContractsWithDummyConfig } from "../src/deploy";
 import { ethers } from "ethers";
-import { CanonAddress, StealthAddressTrait, zip } from "@nocturne-xyz/sdk";
+import { CanonAddress, StealthAddressTrait, zip } from "@nocturne-xyz/core";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import fs from "fs";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -38,8 +38,8 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   },
   // daniel
   {
-    x: 13531689123416805716331537813779700645671861656766439231000337499514067314527n,
-    y: 9150388931323684233675444879308861863417877410681960738798079806736017909290n,
+    x: 21810094662991584248543670544455324407472165516530325978277936815581820240557n,
+    y: 3135900180088362648756962571679051832113174405893784187728428392187928197296n,
   },
 ];
 

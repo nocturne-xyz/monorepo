@@ -1,4 +1,4 @@
-import { KV, KVStore, zip } from "@nocturne-xyz/sdk";
+import { KV, KVStore, zip } from "@nocturne-xyz/core";
 import lmdb, { open, Database } from "lmdb";
 
 interface LMDBKvStoreOpts {

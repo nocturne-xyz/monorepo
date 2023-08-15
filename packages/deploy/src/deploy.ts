@@ -26,7 +26,7 @@ import {
 import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { getSelector } from "./utils";
-import { protocolWhitelistKey } from "@nocturne-xyz/sdk";
+import { protocolWhitelistKey } from "@nocturne-xyz/core";
 
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,

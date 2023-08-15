@@ -16,7 +16,7 @@ import {
   EncodedAsset,
   JoinSplitProver,
   range,
-} from "@nocturne-xyz/sdk";
+} from "@nocturne-xyz/core";
 
 const { ZERO_VALUE, ARITY, DEPTH } = TreeConstants;
 

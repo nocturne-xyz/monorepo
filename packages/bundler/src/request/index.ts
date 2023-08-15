@@ -1,4 +1,4 @@
-import { RelayRequest } from "@nocturne-xyz/sdk";
+import { RelayRequest } from "@nocturne-xyz/core";
 import validateRelay from "./relay";
 import {
   ErrString,

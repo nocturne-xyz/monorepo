@@ -41,7 +41,7 @@
       "path": "./packages/circuits"
     },
     {
-      "path": "./packages/sdk"
+      "path": "./packages/core"
     },
     {
       "path": "./packages/deploy"
