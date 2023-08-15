@@ -133,7 +133,8 @@ describe("gatherNotes", () => {
         metadata: {
           items: [
             {
-              type: "Transfer",
+              type: "Action",
+              actionType: "Transfer",
               recipientAddress: "0xdeadbeef",
               erc20Address: shitcoin.assetAddr,
               amount: 10n,
