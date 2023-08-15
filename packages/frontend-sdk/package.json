@@ -15,7 +15,7 @@
     "codegen": "graphql-codegen",
     "copy-circuit-artifacts": "yarn copy-wasm && yarn copy-zkey && yarn copy-vkey",
     "copy-vkey": "cp ../../circuit-artifacts/joinsplit/joinsplit_cpp/vkey.json ./circuit-artifacts/joinsplit/joinsplitVkey.json",
-    "copy-wasm": "cp ../../circuit-artifacts/joinsplit/joinsplit_js/joinsplit.wasm ./circuit-artifacts/joinsplit//joinsplit.wasm",
+    "copy-wasm": "cp ../../circuit-artifacts/joinsplit/joinsplit_js/joinsplit.wasm ./circuit-artifacts/joinsplit/joinsplit.wasm",
     "copy-zkey": "cp ../../circuit-artifacts/joinsplit/joinsplit_cpp/joinsplit.zkey ./circuit-artifacts/joinsplit/joinsplit.zkey",
     "lint": "eslint --fix src --ext .ts",
     "publish": "yarn build; yarn npm publish --access public",
