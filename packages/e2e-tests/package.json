@@ -1,21 +1,19 @@
 {
   "name": "@nocturne-xyz/e2e-tests",
-  "version": "1.0.0-alpha",
   "description": "",
   "license": "ISC",
   "author": "",
+  "version": "0.1.0",
+  "private": true,
   "main": "index.js",
   "scripts": {
     "build": "",
     "clean": "rm -rf .turbo cache artifacts db",
-    "graph-node": "docker-compose -f ../../graph-node/docker/docker-compose.yml up",
-    "hardhat-deposit": "npx ts-node ./scripts/deployAndDeposit.ts",
-    "prepare": "./prepare.sh",
     "prettier:check": "prettier --check ./tests ./src",
     "prettier:write": "prettier --write ./tests ./src",
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
-    "setup-subgraph": "bash -c \"../../scripts/setup_subgraph.sh\"",
-    "test:e2e": "yarn setup-subgraph && mocha --require ts-node/register tests/** --timeout 10000000 --exit"
+    "setup-subgraph": "bash -c \"./scripts/setup_subgraph.sh\"",
+    "test:e2e": "mocha --require ts-node/register tests/** --timeout 10000000 --exit"
   },
   "dependencies": {
     "@nocturne-xyz/offchain-utils": "workspace:^",
@@ -43,7 +41,7 @@
     "envfile": "^6.18.0",
     "ethers": "^5.7.2",
     "find-yarn-workspace-root": "^2.0.0",
-    "hardhat": "^2.13.1",
+    "hardhat": "^2.17.1",
     "mocha": "^10.1.0",
     "prettier": "^2.8.8",
     "ts-node": "^10.9.1",

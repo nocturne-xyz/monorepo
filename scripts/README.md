@@ -5,31 +5,40 @@ Installs some deps needed if you're on a mac:
 - homebrew
 - GNU sed
 
-## `prepare_docker.sh`
+## `build_docker.sh`
 
-builds docker containers for offchain actors.
-takes the following options:
+builds docker containers for offchain actors
 
-- `-p` (optional): prover mode for subtree updater, 'mock' or 'rapidsnark'. Defaults to 'mock'.
+`build_docker.sh` takes the following options:
 
-This can be invoked from yarn via `yarn prepare:docker`.
+- `-p` (optional): prover mode for subtree updater, `mock` or `rapidsnark`. Defaults to `mock`.
+- `-o` (optional): only build the specified actor. can be `'bundler`, `deposit-screener`, `subtree-updater`, or `test-actor`.
+
+This can be invoked from yarn via `yarn build:docker`, with args following.
+For example, to build just the subtree updater with the rapidsnark prover, run `yarn build:docker -p radidsnark -o subtree-updater`
+
+## `push_docker.sh`
+
+pushes docker containers for offchain actors. You must be signed into docker (i.e. `docker login`) and have access to the `nocturnelabs` organization to be able to run this.
+
+`push_docker.sh` takes the following options:
+- `-o` (optional): only push the specified actor. can be `'bundler`, `deposit-screener`, `subtree-updater`, or `test-actor`.
+
 
 ### example
 
 `yarn prepare:docker -p radisnark`
 
-## `run_local.sh`
+## `dev.sh`
 
-Spins up the entire protocol, and MetaMask snap locally.
+spins up a local instance of nocturne, including a hardhat node, subgraph, contracts, and offchain actors.
 
-This can be invoked from yarn via `yarn dev:site`.
+You should never have to invoke this directly. Instead, you should simply run `yarn dev`
 
-After it finishes, run interface repo's `yarn dev` to see the site. (First time instructions are in the interface repo's README.)
 
-### site script quirks
+### Quirks
 
 - if you are using an M1 mac, please check [the M1 doc](../M1_README.md) - it probably wont work until you go through the steps listed there.
-- if the bundler code has changed, it'll probably take a minute or so for the bundler to spin up, so if you immediately open the site and try to submit an op, you might get an error saying `ECONN_REFUSED` or something like that.
 - make sure you clean the DB after each fresh invocation of `yarn dev:site`. Not doing this can cause the snap to appear broken.
 
 ## `rebuild_graph_m1.sh`

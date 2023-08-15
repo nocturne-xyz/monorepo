@@ -2,85 +2,19 @@
   "$schema": "https://turborepo.org/schema.json",
   "pipeline": {
     "lint": {},
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["build", "//#deploy-and-deposit", "//#deploy-subgraph"] 
+    },
+    "//#deploy-subgraph": {
+      "cache": false
+    },
+    "//#deploy-and-deposit": {
+      "cache": false
+    },
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
-    },
-    "@nocturne-xyz/contracts#build": {},
-    "@nocturne-xyz/config#build": {
-      "dependsOn": ["@nocturne-xyz/contracts#build"]
-    },
-    "@nocturne-xyz/core#build": {
-      "dependsOn": [
-        "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/config#build"
-      ]
-    },
-    "@nocturne-xyz/deploy#build": {
-      "dependsOn": [
-        "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/config#build",
-        "@nocturne-xyz/core#build"
-      ]
-    },
-    "@nocturne-xyz/bundler#build": {
-      "dependsOn": [
-        "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/core#build",
-        "@nocturne-xyz/config#build",
-        "@nocturne-xyz/offchain-utils#build"
-      ]
-    },
-    "@nocturne-xyz/snap#build": {
-      "dependsOn": ["@nocturne-xyz/core#build"]
-    },
-    "@nocturne-xyz/local-prover#build": {
-      "dependsOn": ["@nocturne-xyz/core#build"]
-    },
-    "@nocturne-xyz/test-actor#build": {
-      "dependsOn": [
-        "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/core#build",
-        "@nocturne-xyz/config#build",
-        "@nocturne-xyz/local-prover#build",
-        "@nocturne-xyz/offchain-utils#build"
-      ]
-    },
-    "@nocturne-xyz/deposit-screener#build": {
-      "dependsOn": [
-        "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/core#build",
-        "@nocturne-xyz/config#build",
-        "@nocturne-xyz/offchain-utils#build"
-      ]
-    },
-    "@nocturne-xyz/frontend-sdk#build": {
-      "dependsOn": [
-        "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/local-prover#build",
-        "@nocturne-xyz/core#build"
-      ]
-    },
-    "@nocturne-xyz/e2e-tests#build": {
-      "dependsOn": [
-        "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/core#build",
-        "@nocturne-xyz/deploy#build",
-        "@nocturne-xyz/subtree-updater#build",
-        "@nocturne-xyz/local-prover#build",
-        "@nocturne-xyz/bundler#build",
-        "@nocturne-xyz/deposit-screener#build",
-        "@nocturne-xyz/offchain-utils#build"
-      ]
-    },
-    "@nocturne-xyz/subtree-updater#build": {
-      "dependsOn": [
-        "@nocturne-xyz/core#build",
-        "@nocturne-xyz/local-prover#build",
-        "@nocturne-xyz/circuits#build",
-        "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/offchain-utils#build"
-      ]
+      "dependsOn": ["^build"]
     },
     "test": {
       "dependsOn": ["build"],
