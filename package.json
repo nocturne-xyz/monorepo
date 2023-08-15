@@ -24,7 +24,7 @@
     "push:docker": "scripts/push_docker.sh",
     "deploy-and-deposit": "cd packages/e2e-tests && ts-node ./scripts/deployAndDeposit.ts",
     "deploy-subgraph": "sleep 5 && cd subgraph && yarn install && yarn build && yarn create-local && yarn deploy-local",
-    "publish-packages": "yarn clean && yarn build && yarn test:unit && yarn test:e2e && changeset publish"
+    "publish-packages": "yarn clean && yarn build && changeset version && yarn workspaces foreach --no-private --from '@nocturne-xyz/*' npm publish --access public --tolerate-republish && yarn changeset tag"
   },
   "devDependencies": {
     "@changesets/cli": "^2.26.2",

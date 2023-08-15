@@ -1,7 +1,7 @@
 {
   "name": "@nocturne-xyz/snap",
   "description": "Nocturne Snap",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "(MIT-0 OR Apache-2.0)",
   "main": "src/index.ts",
   "files": [
@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "build": "mm-snap build",
+    "dev": "yarn build && yarn build:local && yarn serve",
     "build:clean": "yarn clean && yarn build",
     "build:local": "./scripts/build_local.sh",
     "build:website": "node ./scripts/build-website.js",

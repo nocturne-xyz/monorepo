@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- fix publish command
+
+### Patch Changes
+
+- Updated dependencies
+  - @nocturne-xyz/contracts@0.3.0
+  - @nocturne-xyz/config@0.3.0
+  - @nocturne-xyz/core@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes
