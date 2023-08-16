@@ -13,7 +13,7 @@ import {
   RelayResponse,
   OperationStatusResponse,
 } from "@nocturne-xyz/core";
-import { Teller } from "@nocturne-xyz/contracts";
+import { Handler, Teller } from "@nocturne-xyz/contracts";
 import {
   checkNotEnoughGasError,
   checkNullifierConflictError,
@@ -32,6 +32,7 @@ export interface HandleRelayDeps {
   nullifierDB: NullifierDB;
   redis: IORedis;
   tellerContract: Teller;
+  handlerContract: Handler;
   provider: ethers.providers.Provider;
   logger: Logger;
   metrics: BundlerServerMetrics;
@@ -44,6 +45,7 @@ export function makeRelayHandler({
   nullifierDB,
   redis,
   tellerContract,
+  handlerContract,
   provider,
   logger,
   metrics,
@@ -104,6 +106,7 @@ export function makeRelayHandler({
     childLogger.debug("validating reverts");
     const revertErr = await checkRevertError(
       tellerContract,
+      handlerContract,
       provider,
       childLogger,
       operation
