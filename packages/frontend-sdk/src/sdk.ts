@@ -268,7 +268,7 @@ export class NocturneSdk implements NocturneSdkApi {
    * @param amount Asset amount
    * @param recipientAddress Recipient address
    */
-  async anonTransferErc20(
+  async initiateAnonErc20Transfer(
     erc20Address: Address,
     amount: bigint,
     recipientAddress: Address
@@ -321,9 +321,6 @@ export class NocturneSdk implements NocturneSdkApi {
     };
   }
 
-  /**
-   * Initiates a deposit retrieval from the deposit manager contract.
-   */
   async retrievePendingDeposit(
     req: DepositRequest
   ): Promise<ContractTransaction> {
