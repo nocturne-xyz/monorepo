@@ -4,7 +4,7 @@ import {
   computeOperationDigest,
   SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/core";
-import { Teller } from "@nocturne-xyz/contracts";
+import { Handler, Teller } from "@nocturne-xyz/contracts";
 import { NullifierDB } from "./db";
 import { Logger } from "winston";
 import { ErrString } from "@nocturne-xyz/offchain-utils";
@@ -49,6 +49,7 @@ export async function checkNullifierConflictError(
 
 export async function checkRevertError(
   tellerContract: Teller,
+  handlerContract: Handler,
   provider: ethers.providers.Provider,
   logger: Logger,
   operation: SubmittableOperationWithNetworkInfo
@@ -60,13 +61,26 @@ export async function checkRevertError(
     const data = tellerContract.interface.encodeFunctionData("processBundle", [
       bundle,
     ]);
-
     const est = await provider.estimateGas({
       to: tellerContract.address,
       data,
     });
-
     logger.info("operation gas estimate: ", { est: est.toBigInt() });
+
+    const bundler = handlerContract.address;
+    const result = await handlerContract.callStatic.handleOperation(
+      operation,
+      300_000 *
+        (operation.pubJoinSplits.length + operation.confJoinSplits.length), // upper bound on verification gas needed
+      bundler,
+      { from: tellerContract.address } // hack to avoid simulation reverting, only teller can call handler
+    );
+
+    const { opProcessed, failureReason } = result;
+    if (!opProcessed || failureReason) {
+      return `operation processing fails with: ${failureReason}`;
+    }
+
     return undefined;
   } catch (e) {
     return `operation reverts with: ${e}`;

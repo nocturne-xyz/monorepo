@@ -43,6 +43,7 @@ const runServer = new Command("server")
     );
     const server = new BundlerServer(
       config.tellerAddress(),
+      config.handlerAddress(),
       provider,
       getRedis(),
       logger
