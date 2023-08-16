@@ -17,7 +17,7 @@
     "dev": "yarn dev:env && concurrently --kill-others \"yarn dev:redis\" \"yarn dev:updater\"",
     "dev:env": "cp .env.dev .env",
     "dev:redis": "docker run --name subtree-updater-redis -p 6381:6381 --rm redis redis-server --port 6381 --loglevel warning",
-    "dev:updater": "nodemon src/cli/index.ts run subtree-updater --config-name-or-path localhost --log-dir ../../logs/subtree-updater --use-mock-prover --fill-batch-latency-ms 3000",
+    "dev:updater": "nodemon src/cli/index.ts run subtree-updater --config-name-or-path localhost --log-dir ../../logs/subtree-updater --use-mock-prover --fill-batch-latency-ms 3000 --stdout-log-level info",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",

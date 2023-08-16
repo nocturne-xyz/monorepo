@@ -19,6 +19,7 @@ cleanup() {
 SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 ROOT_DIR="$SCRIPT_DIR/../"
 LOG_DIR="$ROOT_DIR/logs"
+rm -rf "$LOG_DIR/**"
 
 trap 'cleanup; trap - SIGTERM && kill 0' SIGINT SIGTERM EXIT
 
@@ -28,9 +29,13 @@ npx hardhat node &> "$LOG_DIR/hardhat" &
 HARDHAT_PID=$!
 popd
 
+sleep 1
+
 echo "starting graph-node..."
 docker-compose -f graph-node/docker/docker-compose.yml up &> "$LOG_DIR/graph-node" &
 GRAPH_NODE_PID=$!
+
+sleep 3
 
 echo "running turbo dev script..."
 yarn turbo run dev
