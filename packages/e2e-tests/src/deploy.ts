@@ -118,10 +118,7 @@ export interface TestDeployment {
 const HH_URL = "http://0.0.0.0:8545";
 export const SUBGRAPH_URL = "http://localhost:8000/subgraphs/name/nocturne";
 
-const DEFAULT_BUNDLER_CONFIG: Omit<
-  BundlerConfig,
-  "tellerAddress" | "txSignerKey" | "ignoreGas"
-> = {
+const DEFAULT_BUNDLER_CONFIG: Pick<BundlerConfig, "maxLatency" | "rpcUrl"> = {
   maxLatency: 1,
   rpcUrl: HH_URL,
 };
@@ -212,6 +209,7 @@ export async function setupTestDeployment(
       ...DEFAULT_BUNDLER_CONFIG,
       ...givenBundlerConfig,
       tellerAddress: teller.address,
+      handlerAddress: handler.address,
       txSignerKey: bundlerEoa.privateKey,
     };
     actorConfig.configs.bundler = bundlerConfig;

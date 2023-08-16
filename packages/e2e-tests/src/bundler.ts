@@ -10,6 +10,7 @@ import IORedis from "ioredis";
 
 export interface BundlerConfig {
   tellerAddress: string;
+  handlerAddress: string;
   maxLatency: number;
   rpcUrl: string;
   txSignerKey: string;
@@ -74,6 +75,7 @@ function startBundlerServer(config: BundlerConfig, redis: IORedis): TeardownFn {
   const logger = makeTestLogger("bundler", "server");
   const server = new BundlerServer(
     config.tellerAddress,
+    config.handlerAddress,
     provider,
     redis,
     logger,
