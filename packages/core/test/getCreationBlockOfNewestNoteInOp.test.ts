@@ -6,7 +6,7 @@ import {
   shitcoin,
   testGasAssets,
 } from "./utils";
-import { MockEthToTokenConverter, OpRequestBuilder } from "../src";
+import { MockEthToTokenConverter, newOpRequestBuilder } from "../src";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { prepareOperation } from "../src/prepareOperation";
 import { expect } from "chai";
@@ -32,7 +32,7 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
       tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
-    const builder = new OpRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });

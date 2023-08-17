@@ -11,7 +11,7 @@ import {
   JoinSplitProver,
   NocturneWalletSDK,
   OperationRequest,
-  OpRequestBuilder,
+  newOpRequestBuilder,
   OperationRequestWithMetadata,
   StealthAddressTrait,
   computeOperationDigest,
@@ -393,7 +393,7 @@ export class TestActor {
 
     const chainId = this._chainId ?? BigInt(await this.txSigner.getChainId());
 
-    return new OpRequestBuilder({
+    return newOpRequestBuilder({
       chainId,
       tellerContract: this.teller.address,
     })

@@ -12,7 +12,7 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 import {
   NocturneWalletSDK,
   NocturneDB,
-  OpRequestBuilder,
+  newOpRequestBuilder,
   queryEvents,
   Asset,
   JoinSplitProver,
@@ -184,7 +184,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     // HH's default gas price seems to be somewhere around 1 gwei experimentally
     // unfortunately it doesn't have a way to set it in the chain itself, only in hre
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const operationRequest = new OpRequestBuilder({
+    const operationRequest = newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -227,7 +227,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const operationRequest = new OpRequestBuilder({
+    const operationRequest = newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -279,7 +279,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const operationRequest = new OpRequestBuilder({
+    const operationRequest = newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -403,7 +403,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const PAYMENT_AMOUNT = (PER_NOTE_AMOUNT * 2n * 3n) / 4n; // 3/4 of total deposit amount
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const operationRequest = new OpRequestBuilder({
+    const operationRequest = newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })

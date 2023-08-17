@@ -10,7 +10,7 @@ import {
   JoinSplitProver,
   NocturneWalletSDK,
   proveOperation,
-  OpRequestBuilder,
+  newOpRequestBuilder,
   NoteTrait,
   unzip,
 } from "@nocturne-xyz/core";
@@ -166,7 +166,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         );
 
       const chainId = BigInt((await provider.getNetwork()).chainId);
-      const builder = new OpRequestBuilder({
+      const builder = newOpRequestBuilder({
         chainId,
         tellerContract: teller.address,
       });
