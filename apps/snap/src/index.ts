@@ -87,15 +87,19 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
     case "nocturne_getAllBalances":
       console.log("Syncing...");
       await sdk.sync();
-      return JSON.stringify(
-        await sdk.getAllAssetBalances(request.params as unknown as GetNotesOpts) // yikes typing
-      );
+
+      const maybeGetNotesOptsAll = (request.params as any).opts;
+      const getNotesOptsAll: GetNotesOpts | undefined = maybeGetNotesOptsAll
+        ? JSON.parse(maybeGetNotesOptsAll)
+        : undefined;
+      return JSON.stringify(await sdk.getAllAssetBalances(getNotesOptsAll));
     // can return undefined
     case "nocturne_getBalanceForAsset":
       console.log("Syncing...");
       await sdk.sync();
+
       return JSON.stringify(
-        await sdk.getBalanceForAsset(request.params as unknown as any) // yikes typing
+        await sdk.getBalanceForAsset(request.params as unknown as any) // TODO: cannot pass request.params like this, getBalanceForAsset takes two params, parse first
       );
     case "nocturne_sync":
       if (snapIsSyncing) {
