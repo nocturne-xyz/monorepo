@@ -1,14 +1,42 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- fix publish command
+
+### Patch Changes
+
+- Updated dependencies
+  - @nocturne-xyz/local-prover@0.3.0
+  - @nocturne-xyz/contracts@0.3.0
+  - @nocturne-xyz/config@0.3.0
+  - @nocturne-xyz/core@0.3.0
+
+## 0.2.0
+
+### Minor Changes
+
+- 6c0a5d7c: overhaul monorepo structure & start proper versioning system
+
+### Patch Changes
+
+- Updated dependencies [6c0a5d7c]
+  - @nocturne-xyz/local-prover@0.2.0
+  - @nocturne-xyz/contracts@0.2.0
+  - @nocturne-xyz/config@0.2.0
+  - @nocturne-xyz/core@0.1.4
+
 ### Unreleased
 
 - Refactor API:
-	- `NocturneFrontendSDK` renamed to `NocturneSDK`
-	- remove async init
-	- add new types `DepositHandle` and `OperationHandle` that abstract away status fetching
-	- "flatten" deposit statuses from chain vs screener into a single `DepositStatus` enum
-	- add utils for connecting to / interacting with the snap
-	- change `metadata` type
+  - `NocturneFrontendSDK` renamed to `NocturneSDK`
+  - remove async init
+  - add new types `DepositHandle` and `OperationHandle` that abstract away status fetching
+  - "flatten" deposit statuses from chain vs screener into a single `DepositStatus` enum
+  - add utils for connecting to / interacting with the snap
+  - change `metadata` type
 - `sync` method takes and propogates `SyncOpts` as params to snap/sdk
 - instantiate fe-sdk with `config`
 - add method to fetch operation status from bundler

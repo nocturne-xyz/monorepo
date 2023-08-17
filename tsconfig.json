@@ -29,7 +29,19 @@
 
   "references": [
     {
-      "path": "./packages/bundler"
+      "path": "./apps/snap"
+    },
+    {
+      "path": "./actors/bundler"
+    },
+    {
+      "path": "./actors/deposit-screener"
+    },
+    {
+      "path": "./actors/subtree-updater"
+    },
+    {
+      "path": "./actors/test-actor"
     },
     {
       "path": "./packages/contracts"
@@ -44,10 +56,10 @@
       "path": "./packages/core"
     },
     {
-      "path": "./packages/deploy"
+      "path": "./packages/crypto-utils"
     },
     {
-      "path": "./packages/deposit-screener"
+      "path": "./packages/deploy"
     },
     {
       "path": "./packages/frontend-sdk"
@@ -57,15 +69,6 @@
     },
     {
       "path": "./packages/e2e-tests"
-    },
-    {
-      "path": "./packages/subtree-updater"
-    },
-    {
-      "path": "./packages/snap"
-    },
-    {
-      "path": "./packages/test-actor"
     },
     {
       "path": "./packages/offchain-utils"

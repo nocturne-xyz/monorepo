@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- fix publish command
+
+### Patch Changes
+
+- Updated dependencies
+  - @nocturne-xyz/crypto-utils@0.3.0
+  - @nocturne-xyz/core@0.3.0
+
+## 0.2.0
+
+### Minor Changes
+
+- 6c0a5d7c: overhaul monorepo structure & start proper versioning system
+
+### Patch Changes
+
+- Updated dependencies [6c0a5d7c]
+  - @nocturne-xyz/crypto-utils@0.2.0
+  - @nocturne-xyz/core@0.1.4
+
 ### Unreleased
 
 - update `JoinSplitInputs` type with zero'd out `encodedAsset` PIs
@@ -13,9 +37,9 @@
 - add `encRandomness` to inputs
 - clean up module hierarchy, remove unnecessary exports, and make exports explicit
 - use `poseidonBN` from `@nocturne-xyz/crypto-utils`
-- Rename 
-	- `LocalJoinSplitProver` -> `WasmJoinSplitProver`
-	- `LocalSubtreeUpdateProver` -> `WasmSubtreeUpdateProver`
+- Rename
+  - `LocalJoinSplitProver` -> `WasmJoinSplitProver`
+  - `LocalSubtreeUpdateProver` -> `WasmSubtreeUpdateProver`
 - use `OperationStatus` from `@nocturne-xyz/sdk`
 - move `subtreeUpdateInputsFromBatch` to `sdk`
 - Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`
