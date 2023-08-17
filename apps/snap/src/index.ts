@@ -87,6 +87,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
     case "nocturne_getAllBalances":
       console.log("Syncing...");
       await sdk.sync();
+      console.log("nocturne_getAllBalances params:", request.params);
       return JSON.stringify(
         await sdk.getAllAssetBalances(request.params as unknown as GetNotesOpts) // yikes typing
       );

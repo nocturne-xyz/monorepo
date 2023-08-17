@@ -5,8 +5,8 @@ import {
   runCommandBackground,
   sleep,
 } from "./utils";
-import { assertOrErr } from "@nocturne-xyz/deploy/dist/src/utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
+import { assertOrErr } from "@nocturne-xyz/core";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const E2E_TESTS_DIR = `${ROOT_DIR}/packages/e2e-tests`;
