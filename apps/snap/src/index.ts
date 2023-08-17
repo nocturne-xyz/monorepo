@@ -100,9 +100,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
       await sdk.sync();
 
       const maybeGetNotesOptsSingle = (request.params as any).opts;
-      const getNotesOptsSingle: GetNotesOpts | undefined = maybeGetNotesOptsAll
-        ? JSON.parse(maybeGetNotesOptsSingle)
-        : undefined;
+      const getNotesOptsSingle: GetNotesOpts | undefined =
+        maybeGetNotesOptsSingle
+          ? JSON.parse(maybeGetNotesOptsSingle)
+          : undefined;
       const asset: Asset = JSON.parse((request.params as any).asset);
 
       return JSON.stringify(
