@@ -3,11 +3,13 @@ import {
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
-} from "./types";
+} from ".";
 import { Address, AssetTrait } from "../primitives";
 import ERC20_ABI from "./ERC20.json";
 
 export interface Erc20PluginMethods {
+  // adds an ERC20 transfer to the operation
+  // handles encoding, unwrapping, and metadata
   erc20Transfer(
     contractAddress: Address,
     recipient: Address,
