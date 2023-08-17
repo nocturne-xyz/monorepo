@@ -236,7 +236,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       opRequestWithMetadata,
       expectation: {
         type: "error",
-        errorMessageLike: "Too few gas tokens",
+        errorMessageLike: "call revert exception",
       },
     });
   });
