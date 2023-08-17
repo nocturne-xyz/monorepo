@@ -12,6 +12,7 @@ import {
   SparseMerkleProver,
   SubgraphSDKSyncAdapter,
   SyncOpts,
+  Asset,
 } from "@nocturne-xyz/core";
 import { OperationMetadata, OperationRequest } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
@@ -98,8 +99,14 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
       console.log("Syncing...");
       await sdk.sync();
 
+      const maybeGetNotesOptsSingle = (request.params as any).opts;
+      const getNotesOptsSingle: GetNotesOpts | undefined = maybeGetNotesOptsAll
+        ? JSON.parse(maybeGetNotesOptsSingle)
+        : undefined;
+      const asset: Asset = JSON.parse((request.params as any).asset);
+
       return JSON.stringify(
-        await sdk.getBalanceForAsset(request.params as unknown as any) // TODO: cannot pass request.params like this, getBalanceForAsset takes two params, parse first
+        await sdk.getBalanceForAsset(asset, getNotesOptsSingle)
       );
     case "nocturne_sync":
       if (snapIsSyncing) {
