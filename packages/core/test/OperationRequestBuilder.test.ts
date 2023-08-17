@@ -1,7 +1,7 @@
 import "mocha";
 import { expect } from "chai";
 import {
-  OperationRequestBuilder,
+  OpRequestBuilder,
   OperationRequest,
   range,
   NocturneSigner,
@@ -17,7 +17,7 @@ import {
   DUMMY_CONTRACT_ADDR,
 } from "./utils";
 
-describe("OperationRequestBuilder", () => {
+describe("OpRequestBuilder", () => {
   it("builds OperationRequest with 1 action, 1 unwrap, 0 payments, no params set", () => {
     const expected: OperationRequest = {
       joinSplitRequests: [
@@ -38,7 +38,7 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = new OpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -80,7 +80,7 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = new OpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -122,7 +122,7 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = new OpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -173,7 +173,7 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = new OpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -251,7 +251,7 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = new OpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -313,7 +313,7 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = new OpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });

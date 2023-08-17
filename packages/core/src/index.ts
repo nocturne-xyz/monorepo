@@ -11,9 +11,9 @@ export * from "./OpTracker";
 export {
   OperationRequest,
   OperationGasParams,
-  OperationRequestBuilder,
+  OpRequestBuilder,
   OperationRequestWithMetadata,
-} from "./operationRequest";
+} from "./primitives/operationRequest";
 export { NocturneWalletSDK } from "./NocturneWalletSDK";
 export { GetNotesOpts } from "./NocturneDB";
 export { SyncOpts } from "./syncSDK";

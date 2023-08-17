@@ -1,4 +1,4 @@
-import { JoinSplitRequest } from "../operationRequest";
+import { JoinSplitRequest } from "../primitives/operationRequest";
 import {
   Note,
   PreProofJoinSplit,

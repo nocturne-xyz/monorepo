@@ -10,7 +10,7 @@ import {
   JoinSplitProver,
   NocturneDB,
   NocturneWalletSDK,
-  OperationRequestBuilder,
+  OpRequestBuilder,
   computeOperationDigest,
   proveOperation,
 } from "@nocturne-xyz/core";
@@ -99,7 +99,7 @@ describe("Optimistic nullifier tracking", () => {
 
     // make op request spending 200 tokens
     const amountToSpend = 200n;
-    const opRequest = new OperationRequestBuilder({
+    const opRequest = new OpRequestBuilder({
       chainId: 31337n,
       tellerContract: teller.address,
     })
@@ -221,7 +221,7 @@ describe("Optimistic nullifier tracking", () => {
 
     // make op request spending 200 tokens
     const amountToSpend = 200n;
-    const opRequest = new OperationRequestBuilder({
+    const opRequest = new OpRequestBuilder({
       chainId: 31337n,
       tellerContract: teller.address,
     })

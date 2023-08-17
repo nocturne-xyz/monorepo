@@ -10,7 +10,10 @@ import {
 import { NocturneSigner } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
 import { prepareOperation } from "./prepareOperation";
-import { OperationRequest, ensureOpRequestChainInfo } from "./operationRequest";
+import {
+  OperationRequest,
+  ensureOpRequestChainInfo,
+} from "./primitives/operationRequest";
 import { GetNotesOpts, NocturneDB } from "./NocturneDB";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";

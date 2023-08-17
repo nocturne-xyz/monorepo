@@ -12,7 +12,7 @@ import {
   testGasAssets,
   DUMMY_CONTRACT_ADDR,
 } from "./utils";
-import { OperationRequestBuilder } from "../src";
+import { OpRequestBuilder } from "../src";
 import { prepareOperation } from "../src/prepareOperation";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { signOperation } from "../src/signOperation";
@@ -38,7 +38,7 @@ describe("signOperation", () => {
     const receiver = receiverSigner.canonicalAddress();
 
     // make operation request and prepare it
-    const builder = new OperationRequestBuilder({
+    const builder = new OpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });

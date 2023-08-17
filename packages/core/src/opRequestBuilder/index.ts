@@ -1,73 +1,36 @@
-import { ethers } from "ethers";
-import { CanonAddress, StealthAddress } from "./crypto";
+import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
+import { CanonAddress, StealthAddress } from "../crypto";
+import {
+  ConfidentialPayment,
+  JoinSplitRequest,
+  OperationGasParams,
+  OperationRequest,
+  OperationRequestWithMetadata,
+} from "../primitives/operationRequest";
 import {
   Action,
   Address,
   Asset,
-  OperationMetadata,
   NetworkInfo,
-} from "./primitives";
-import { groupByArr } from "./utils";
-import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
-
-const ONE_DAY_SECONDS = 24 * 60 * 60;
-
-// A joinsplit request is an unwrapRequest plus an optional payment
-export interface JoinSplitRequest {
-  asset: Asset;
-  unwrapValue: bigint;
-  payment?: ConfidentialPayment;
-}
-
-export interface OperationRequest {
-  joinSplitRequests: JoinSplitRequest[];
-  refundAssets: Asset[];
-  actions: Action[];
-  chainId: bigint;
-  tellerContract: Address;
-  deadline: bigint;
-  refundAddr?: StealthAddress;
-  executionGasLimit?: bigint;
-  gasPrice?: bigint;
-}
-
-export interface OperationRequestWithMetadata {
-  request: OperationRequest;
-  meta: OperationMetadata;
-}
-
-export interface GasAccountedOperationRequest
-  extends Omit<OperationRequest, "executionGasLimit" | "gasPrice"> {
-  gasAssetRefundThreshold: bigint;
-  executionGasLimit: bigint;
-  gasPrice: bigint;
-  gasAsset: Asset;
-}
-
-export interface OperationGasParams {
-  executionGasLimit: bigint;
-  gasPrice?: bigint;
-}
+  OperationMetadata,
+} from "../primitives";
+import { ethers } from "ethers";
+import { groupByArr } from "../utils";
 
 type JoinSplitsAndPaymentsForAsset = [
   JoinSplitRequest[],
   ConfidentialPayment[]
 ];
 
-interface ConfidentialPayment {
-  value: bigint;
-  receiver: CanonAddress;
-}
+// the base OpRequestBuilder. This is the only builder users should explicitly construct.
+// to add functionality (erc20s, protocol integrations, etc), user should call `.use(plugin)` with the relevant plugin
+export class OpRequestBuilder
+  implements OpRequestBuilderExt<BaseOpRequestBuilderMethods>
+{
+  _op: OperationRequest;
+  _metadata: OperationMetadata;
+  _joinSplitsAndPaymentsByAsset: Map<Asset, JoinSplitsAndPaymentsForAsset>;
 
-export class OperationRequestBuilder {
-  private op: OperationRequest;
-  private metadata: OperationMetadata;
-  private joinSplitsAndPaymentsByAsset: Map<
-    Asset,
-    JoinSplitsAndPaymentsForAsset
-  >;
-
-  // constructor takes no parameters. `new NocturneOperationBuilder()`
   constructor(network: string | NetworkInfo) {
     let chainId: bigint;
     let tellerContract: Address;
@@ -80,7 +43,7 @@ export class OperationRequestBuilder {
       tellerContract = network.tellerContract;
     }
 
-    this.op = {
+    this._op = {
       chainId,
       tellerContract,
       joinSplitRequests: [],
@@ -89,23 +52,27 @@ export class OperationRequestBuilder {
       deadline: 0n,
     };
 
-    this.metadata = {
+    this._metadata = {
       items: [],
     };
-    this.joinSplitsAndPaymentsByAsset = new Map();
+
+    this._joinSplitsAndPaymentsByAsset = new Map();
+  }
+
+  use<E2 extends BaseOpRequestBuilderMethods>(
+    plugin: OpRequestBuilderPlugin<BaseOpRequestBuilderMethods, E2>
+  ): OpRequestBuilderExt<E2> {
+    return plugin(this);
   }
 
   // add an action  to the operation
   // returns `this` so it's chainable
-  action(
-    contractAddress: Address,
-    encodedFunction: string
-  ): OperationRequestBuilder {
+  action(contractAddress: Address, encodedFunction: string): this {
     const action: Action = {
       contractAddress: ethers.utils.getAddress(contractAddress),
       encodedFunction,
     };
-    this.op.actions.push(action);
+    this._op.actions.push(action);
     return this;
   }
 
@@ -113,17 +80,17 @@ export class OperationRequestBuilder {
   // `ammountUnits` is the amount in EVM (uint256) representation. It is up to
   // the caller to handle decimal conversions
   // returns `this` so it's chainable
-  unwrap(asset: Asset, amountUnits: bigint): OperationRequestBuilder {
+  unwrap(asset: Asset, amountUnits: bigint): this {
     const joinSplit: JoinSplitRequest = {
       asset,
       unwrapValue: amountUnits,
     };
 
-    const [joinSplits, payments] = this.joinSplitsAndPaymentsByAsset.get(
+    const [joinSplits, payments] = this._joinSplitsAndPaymentsByAsset.get(
       asset
     ) ?? [[], []];
     joinSplits.push(joinSplit);
-    this.joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+    this._joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
 
     return this;
   }
@@ -134,19 +101,19 @@ export class OperationRequestBuilder {
     asset: Asset,
     amountUnits: bigint,
     receiver: CanonAddress
-  ): OperationRequestBuilder {
+  ): this {
     const payment: ConfidentialPayment = {
       value: amountUnits,
       receiver,
     };
 
-    const [joinSplits, payments] = this.joinSplitsAndPaymentsByAsset.get(
+    const [joinSplits, payments] = this._joinSplitsAndPaymentsByAsset.get(
       asset
     ) ?? [[], []];
     payments.push(payment);
-    this.joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+    this._joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
 
-    this.metadata.items.push({
+    this._metadata.items.push({
       type: "ConfidentialPayment",
       recipient: receiver,
       asset,
@@ -156,22 +123,22 @@ export class OperationRequestBuilder {
   }
 
   // indicates that the operation expects a refund of asset `Asset`.
-  refundAsset(asset: Asset): OperationRequestBuilder {
-    this.op.refundAssets.push(asset);
+  refundAsset(asset: Asset): this {
+    this._op.refundAssets.push(asset);
     return this;
   }
 
   // Set the stealth address `refundAddr` up-front.
   // if this is not set, the wallet will generate a new one
   // returns `this` so it's chainable
-  refundAddr(addr: StealthAddress): OperationRequestBuilder {
-    this.op.refundAddr = addr;
+  refundAddr(addr: StealthAddress): this {
+    this._op.refundAddr = addr;
     return this;
   }
 
   // Attach deadline to operation
-  deadline(deadline: bigint): OperationRequestBuilder {
-    this.op.deadline = deadline;
+  deadline(deadline: bigint): this {
+    this._op.deadline = deadline;
     return this;
   }
 
@@ -179,24 +146,18 @@ export class OperationRequestBuilder {
   // this is optional - if not given, the SDK will estimate it for you.
   // it's recommended to just let the SDK estimate this instead.
   // returns `this` so it's chainable
-  gas(gasParams: OperationGasParams): OperationRequestBuilder {
+  gas(gasParams: OperationGasParams): this {
     const { executionGasLimit, gasPrice } = gasParams;
-    this.op.executionGasLimit = executionGasLimit;
-    this.op.gasPrice = gasPrice;
+    this._op.executionGasLimit = executionGasLimit;
+    this._op.gasPrice = gasPrice;
     return this;
   }
 
-  gasPrice(gasPrice: bigint): OperationRequestBuilder {
-    this.op.gasPrice = gasPrice;
+  gasPrice(gasPrice: bigint): this {
+    this._op.gasPrice = gasPrice;
     return this;
   }
 
-  // builds the `OperationRequest`.
-  // unwraps become `joinSplitRequest`s.
-  // all `confidentialPayment`s and joinSplits for the same asset are consolidated
-  // if `refundAddr` was not called, the refund address will not be set.
-  // In the output, unwraps, actions, and refunds are guaranteed
-  // to appear in the order their corresponding methods were invoked
   build(): OperationRequestWithMetadata {
     const joinSplitRequests = [];
 
@@ -204,7 +165,7 @@ export class OperationRequestBuilder {
     for (const [
       asset,
       [joinSplits, payments],
-    ] of this.joinSplitsAndPaymentsByAsset.entries()) {
+    ] of this._joinSplitsAndPaymentsByAsset.entries()) {
       // consolidate payments to the same receiver
       const paymentsByReceiver = groupByArr(payments, (p) =>
         p.receiver.toString()
@@ -249,31 +210,49 @@ export class OperationRequestBuilder {
       }
     }
 
-    this.op.joinSplitRequests = joinSplitRequests;
+    this._op.joinSplitRequests = joinSplitRequests;
 
-    if (this.op.joinSplitRequests.length == 0) {
+    if (this._op.joinSplitRequests.length == 0) {
       throw new Error("No joinSplits or payments specified");
     }
 
-    return { request: this.op, meta: this.metadata };
+    return {
+      request: this._op,
+      meta: this._metadata,
+    };
   }
 }
 
-export async function ensureOpRequestChainInfo(
-  opRequest: OperationRequest,
-  provider: ethers.providers.Provider
-): Promise<OperationRequest> {
-  if (opRequest.chainId === 0n) {
-    const chainId = BigInt((await provider.getNetwork()).chainId);
-    opRequest.chainId = chainId;
-  }
+export type OpRequestBuilderPlugin<
+  E extends BaseOpRequestBuilderMethods,
+  E2 extends E
+> = (inner: OpRequestBuilderExt<E>) => OpRequestBuilderExt<E2>;
 
-  if (opRequest.deadline === 0n) {
-    const deadline = BigInt(
-      (await provider.getBlock("latest")).timestamp + ONE_DAY_SECONDS
-    );
-    opRequest.deadline = deadline;
-  }
+// generic type for an `OpRequestBuilder` extended arbitrarily via plugins
+// only plugin implementors should ever need to think about this
+export type OpRequestBuilderExt<E extends BaseOpRequestBuilderMethods> = E & {
+  _op: OperationRequest;
+  _metadata: OperationMetadata;
+  _joinSplitsAndPaymentsByAsset: Map<Asset, JoinSplitsAndPaymentsForAsset>;
 
-  return opRequest;
+  build(): OperationRequestWithMetadata;
+  use<E2 extends E>(
+    plugin: OpRequestBuilderPlugin<E, E2>
+  ): OpRequestBuilderExt<E2>;
+};
+
+// methods that are available by default on `OpRequestBuilder`
+export interface BaseOpRequestBuilderMethods {
+  action(contractAddress: Address, encodedFunction: string): this;
+  unwrap(asset: Asset, amountUnits: bigint): this;
+  confidentialPayment(
+    asset: Asset,
+    amountUnits: bigint,
+    receiver: CanonAddress
+  ): this;
+  refundAsset(asset: Asset): this;
+  refundAddr(addr: StealthAddress): this;
+  deadline(deadline: bigint): this;
+  gas(gasParams: OperationGasParams): this;
+  gasPrice(gasPrice: bigint): this;
 }

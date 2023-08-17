@@ -2,7 +2,7 @@ import { NocturneDB } from "./NocturneDB";
 import {
   JoinSplitRequest,
   GasAccountedOperationRequest,
-} from "./operationRequest";
+} from "./primitives/operationRequest";
 import {
   PreSignJoinSplit,
   Note,
