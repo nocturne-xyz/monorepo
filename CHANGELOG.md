@@ -8,7 +8,7 @@ We use changesets for changelogs and versioning. See their docs for more informa
 
 Whenever you make a PR a package, you need to first determine:
 1. whether or not the change requires a changeset. Typically, anything that changes functionality in a non-trivial way or anything you'd want to add to the changelog should have a changeset.
-2. if you do need a changeset, then determine what kind of version bump it should represent, according to semver rules:
+2. if you do need a changeset, then determine what kind of version bump it should represent according to semver rules:
 > Given a version number MAJOR.MINOR.PATCH, increment the:
 >  MAJOR version when you make incompatible API changes
 >  MINOR version when you add functionality in a backward compatible manner
@@ -22,12 +22,14 @@ This will create a file with a random-looking name in `./changeset` containing t
 
 ### Releasing
 
-Over time, as PRs are merged, changesets will accumulate in `.changest/`. When we're ready to do a release, we currently:
-1. pullc
-2. run `yarn changeset version` to apply the changesets. This wiill remove all of the "random-looking" files in `./changeset`, apply their changelog entries to all of the respective package's changelogs, and increment the version numbers in `package.json`s. This will not publish any packages
+Over time, as PRs are merged, changesets will accumulate in `.changeset/`. When we're ready to do a release, we currently:
+1. pull down main
+2. run `yarn changeset version` to apply the changesets. This wiill remove all of the "random-looking" files in `./changeset`, apply their changelog entries to all of the respective package's changelogs, and increment the version numbers in their `package.json`s. It will *not* publish any packages.
 3. open a release PR containing these changes and review them to make sure they're right (dependencies are right version and we're not breaking semver rules)
 4. once you're sure it's correct, run `yarn publish-packages` to publish all of the packages that need to be published.
 5. merge the PR
+
+Eventually this can be automated, but for now it's manual.
 
 ### Publishing to npm
 
