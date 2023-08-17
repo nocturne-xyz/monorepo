@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.2
+
+### Patch Changes
+
+- Republishing due to missed fixes in 0.3.1
+
+## 0.3.1
+
+### Patch Changes
+
+- 14d0ac58: fix snap<>fe-sdk bug, ensure fe-sdk stringifies all snap params, ensure snap parses them
+
 ## 0.3.0
 
 ### Minor Changes

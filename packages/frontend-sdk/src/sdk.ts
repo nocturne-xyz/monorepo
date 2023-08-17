@@ -545,8 +545,8 @@ export class NocturneSdk implements NocturneSdkApi {
     const json = await this.invokeSnap({
       method: "nocturne_getBalanceForAsset",
       params: {
-        asset,
-        opts,
+        asset: JSON.stringify(asset),
+        opts: opts ? JSON.stringify(opts) : undefined,
       },
     });
     if (json === undefined) {

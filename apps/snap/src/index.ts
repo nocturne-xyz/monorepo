@@ -12,6 +12,7 @@ import {
   SparseMerkleProver,
   SubgraphSDKSyncAdapter,
   SyncOpts,
+  Asset,
 } from "@nocturne-xyz/core";
 import { OperationMetadata, OperationRequest } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
@@ -87,15 +88,26 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
     case "nocturne_getAllBalances":
       console.log("Syncing...");
       await sdk.sync();
-      return JSON.stringify(
-        await sdk.getAllAssetBalances(request.params as unknown as GetNotesOpts) // yikes typing
-      );
+
+      const maybeGetNotesOptsAll = (request.params as any).opts;
+      const getNotesOptsAll: GetNotesOpts | undefined = maybeGetNotesOptsAll
+        ? JSON.parse(maybeGetNotesOptsAll)
+        : undefined;
+      return JSON.stringify(await sdk.getAllAssetBalances(getNotesOptsAll));
     // can return undefined
     case "nocturne_getBalanceForAsset":
       console.log("Syncing...");
       await sdk.sync();
+
+      const maybeGetNotesOptsSingle = (request.params as any).opts;
+      const getNotesOptsSingle: GetNotesOpts | undefined =
+        maybeGetNotesOptsSingle
+          ? JSON.parse(maybeGetNotesOptsSingle)
+          : undefined;
+      const asset: Asset = JSON.parse((request.params as any).asset);
+
       return JSON.stringify(
-        await sdk.getBalanceForAsset(request.params as unknown as any) // yikes typing
+        await sdk.getBalanceForAsset(asset, getNotesOptsSingle)
       );
     case "nocturne_sync":
       if (snapIsSyncing) {
