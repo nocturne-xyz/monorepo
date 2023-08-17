@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/local-prover",
-  "version": "1.0.9-testnet",
+  "version": "0.3.0",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@nocturne-xyz/core": "workspace:^",
-    "@nocturne-xyz/crypto-utils": "^0.1.7",
+    "@nocturne-xyz/crypto-utils": "^0.3.0",
     "bigint-conversion": "^2.3.0",
     "bigint-json-serialization": "^1.0.1",
     "snarkjs": "^0.7.0"

@@ -1,1 +1,12 @@
-packages/circuits/data
+/packages/circuits/data
+/doc-images
+/.yarn/cache
+/.yarn/install-state.gz
+/fixtures
+/graph-node
+/subgraph
+/node_modules
+*/circuits-artifacts*
+!circuit-artifacts/joinsplit/joinsplit_cpp/joinsplit.zkey
+!circuit-artifacts/joinsplit/joinsplit_cpp/vkey.json
+!circuit-artifacts/joinsplit/joinsplit_js/*

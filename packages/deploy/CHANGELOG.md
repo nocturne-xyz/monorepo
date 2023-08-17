@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- fix publish command
+
+### Patch Changes
+
+- Updated dependencies
+  - @nocturne-xyz/contracts@0.3.0
+  - @nocturne-xyz/config@0.3.0
+  - @nocturne-xyz/core@0.3.0
+
+## 0.2.0
+
+### Minor Changes
+
+- 6c0a5d7c: overhaul monorepo structure & start proper versioning system
+
+### Patch Changes
+
+- Updated dependencies [6c0a5d7c]
+  - @nocturne-xyz/contracts@0.2.0
+  - @nocturne-xyz/config@0.2.0
+
 ### Unreleased
 
 - call whitelist on supported contracts (tokens + protocols)

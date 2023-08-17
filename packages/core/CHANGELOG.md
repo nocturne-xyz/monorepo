@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- fix publish command
+
+### Patch Changes
+
+- Updated dependencies
+  - @nocturne-xyz/crypto-utils@0.3.0
+  - @nocturne-xyz/contracts@0.3.0
+  - @nocturne-xyz/config@0.3.0
+
+## 0.2.0
+
+### Patch Changes
+
+- Updated dependencies [6c0a5d7c]
+  - @nocturne-xyz/crypto-utils@0.2.0
+  - @nocturne-xyz/contracts@0.2.0
+  - @nocturne-xyz/config@0.2.0
+
 ### Unreleased
 
 - Package name migrated from `sdk` to `core`

@@ -1,29 +1,31 @@
-# Contracts
+# contracts 
 
 packages/contracts @luketchang
 
-# Circuits
+# circuits 
 
 packages/circuits @Sladuca
 
-# SDKs
+# apps
 
-packages/core @luketchang @Sladuca
+packages/snap @luketchang @Sladuca
 
-# Frontend
-
-packages/frontend-sdk @luketchang @Sladuca @panieldark
-
-# Offchain
+# actors 
 
 packages/bundler @luketchang @Sladuca
 packages/subtree-updater @Sladuca
 packages/deposit-screener @Sladuca @luketchang
 packages/test-actor @Sladuca @luketchang
 
-# Other Packages
+# SDKs
 
+packages/core @luketchang @Sladuca
+packages/frontend-sdk @luketchang @Sladuca @panieldark
+
+# other packages
+
+packages/config @luketchang
 packages/deploy @luketchang
 packages/e2e-tests @luketchang @Sladuca
 packages/local-prover @Sladuca
-packages/snap @luketchang @Sladuca
+packages/crypto-utils @Sladuca
