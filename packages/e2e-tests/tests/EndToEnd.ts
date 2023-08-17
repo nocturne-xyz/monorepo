@@ -31,22 +31,26 @@ import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller
 
 chai.use(chaiAsPromised);
 
-type Expectation =
-  | {
-      type: "success";
-      expectedBundlerStatus: OperationStatus;
-    }
-  | {
-      type: "error";
-      errorMessageLike: string;
-    };
+interface BundlerSubmissionSuccess {
+  type: "success";
+  expectedBundlerStatus: OperationStatus;
+}
 
-type TestE2eParams = {
+interface BundlerSubmissionError {
+  type: "error";
+  errorMessageLike: string;
+}
+
+type BundlerSubmissionResult =
+  | BundlerSubmissionSuccess
+  | BundlerSubmissionError;
+
+interface TestE2eParams {
   opRequestWithMetadata: OperationRequestWithMetadata;
-  expectation: Expectation;
+  expectedResult: BundlerSubmissionResult;
   contractChecks?: () => Promise<void>;
   offchainChecks?: () => Promise<void>;
-};
+}
 
 const PER_NOTE_AMOUNT = 100n * 1_000_000n;
 
@@ -117,7 +121,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     opRequestWithMetadata,
     contractChecks,
     offchainChecks,
-    expectation,
+    expectedResult,
   }: TestE2eParams): Promise<void> {
     console.log("alice: Sync SDK");
     await nocturneWalletSDKAlice.sync();
@@ -141,10 +145,10 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     console.log("proven operation:", operation);
 
-    if (expectation.type === "error") {
+    if (expectedResult.type === "error") {
       expect(await submitAndProcessOperation(operation)).to.throw(
         Error,
-        expectation.errorMessageLike
+        expectedResult.errorMessageLike
       );
       return;
     }
@@ -153,7 +157,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     await contractChecks?.();
     await offchainChecks?.();
 
-    expect(expectation.expectedBundlerStatus).to.eql(status);
+    expect(expectedResult.expectedBundlerStatus).to.eql(status);
   }
 
   it("bundler rejects operation with gas price < chain's gas price", async () => {
@@ -188,7 +192,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     await expect(
       testE2E({
         opRequestWithMetadata,
-        expectation: {
+        expectedResult: {
           type: "success",
           expectedBundlerStatus: OperationStatus.BUNDLE_REVERTED,
         },
@@ -234,7 +238,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     await testE2E({
       opRequestWithMetadata,
-      expectation: {
+      expectedResult: {
         type: "error",
         errorMessageLike: "call revert exception",
       },
@@ -368,7 +372,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       opRequestWithMetadata,
       contractChecks,
       offchainChecks,
-      expectation: {
+      expectedResult: {
         type: "success",
         expectedBundlerStatus: OperationStatus.EXECUTED_SUCCESS,
       },
@@ -475,7 +479,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       opRequestWithMetadata,
       contractChecks,
       offchainChecks,
-      expectation: {
+      expectedResult: {
         type: "success",
         expectedBundlerStatus: OperationStatus.EXECUTED_SUCCESS,
       },
