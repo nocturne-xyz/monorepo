@@ -1,7 +1,7 @@
 {
   "name": "@nocturne-xyz/snap",
   "description": "Nocturne Snap",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "license": "(MIT-0 OR Apache-2.0)",
   "main": "src/index.ts",
   "files": [
