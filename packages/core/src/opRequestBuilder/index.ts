@@ -16,16 +16,19 @@ import {
 } from "../primitives";
 import { ethers } from "ethers";
 import { groupByArr } from "../utils";
+import {
+  BaseOpRequestBuilder,
+  JoinSplitsAndPaymentsForAsset,
+  OpRequestBuilderExt,
+  OpRequestBuilderPlugin,
+} from "./types";
 
-type JoinSplitsAndPaymentsForAsset = [
-  JoinSplitRequest[],
-  ConfidentialPayment[]
-];
+export { Erc20Plugin } from "./Erc20Plugin";
 
 // the base OpRequestBuilder. This is the only builder users should explicitly construct.
 // to add functionality (erc20s, protocol integrations, etc), user should call `.use(plugin)` with the relevant plugin
 export class OpRequestBuilder
-  implements OpRequestBuilderExt<BaseOpRequestBuilderMethods>
+  implements OpRequestBuilderExt<BaseOpRequestBuilder>
 {
   _op: OperationRequest;
   _metadata: OperationMetadata;
@@ -59,8 +62,8 @@ export class OpRequestBuilder
     this._joinSplitsAndPaymentsByAsset = new Map();
   }
 
-  use<E2 extends BaseOpRequestBuilderMethods>(
-    plugin: OpRequestBuilderPlugin<BaseOpRequestBuilderMethods, E2>
+  use<E2 extends BaseOpRequestBuilder>(
+    plugin: OpRequestBuilderPlugin<BaseOpRequestBuilder, E2>
   ): OpRequestBuilderExt<E2> {
     return plugin(this);
   }
@@ -221,38 +224,4 @@ export class OpRequestBuilder
       meta: this._metadata,
     };
   }
-}
-
-export type OpRequestBuilderPlugin<
-  E extends BaseOpRequestBuilderMethods,
-  E2 extends E
-> = (inner: OpRequestBuilderExt<E>) => OpRequestBuilderExt<E2>;
-
-// generic type for an `OpRequestBuilder` extended arbitrarily via plugins
-// only plugin implementors should ever need to think about this
-export type OpRequestBuilderExt<E extends BaseOpRequestBuilderMethods> = E & {
-  _op: OperationRequest;
-  _metadata: OperationMetadata;
-  _joinSplitsAndPaymentsByAsset: Map<Asset, JoinSplitsAndPaymentsForAsset>;
-
-  build(): OperationRequestWithMetadata;
-  use<E2 extends E>(
-    plugin: OpRequestBuilderPlugin<E, E2>
-  ): OpRequestBuilderExt<E2>;
-};
-
-// methods that are available by default on `OpRequestBuilder`
-export interface BaseOpRequestBuilderMethods {
-  action(contractAddress: Address, encodedFunction: string): this;
-  unwrap(asset: Asset, amountUnits: bigint): this;
-  confidentialPayment(
-    asset: Asset,
-    amountUnits: bigint,
-    receiver: CanonAddress
-  ): this;
-  refundAsset(asset: Asset): this;
-  refundAddr(addr: StealthAddress): this;
-  deadline(deadline: bigint): this;
-  gas(gasParams: OperationGasParams): this;
-  gasPrice(gasPrice: bigint): this;
 }

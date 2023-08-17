@@ -13,7 +13,7 @@ import {
 } from "./utils";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { ERC20_ID } from "../src/primitives/asset";
-import { JoinSplitRequest } from "../src/operationRequest";
+import { JoinSplitRequest } from "../src/primitives/operationRequest";
 import { MockEthToTokenConverter } from "../src/conversion";
 
 chai.use(chaiAsPromised);
