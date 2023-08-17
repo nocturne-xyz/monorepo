@@ -31,6 +31,27 @@ import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller
 
 chai.use(chaiAsPromised);
 
+interface BundlerSubmissionSuccess {
+  type: "success";
+  expectedBundlerStatus: OperationStatus;
+}
+
+interface BundlerSubmissionError {
+  type: "error";
+  errorMessageLike: string;
+}
+
+type BundlerSubmissionResult =
+  | BundlerSubmissionSuccess
+  | BundlerSubmissionError;
+
+interface TestE2eParams {
+  opRequestWithMetadata: OperationRequestWithMetadata;
+  expectedResult: BundlerSubmissionResult;
+  contractChecks?: () => Promise<void>;
+  offchainChecks?: () => Promise<void>;
+}
+
 const PER_NOTE_AMOUNT = 100n * 1_000_000n;
 
 describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", async () => {
@@ -96,12 +117,12 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     await teardown();
   });
 
-  async function testE2E(
-    opRequestWithMetadata: OperationRequestWithMetadata,
-    contractChecks: () => Promise<void>,
-    offchainChecks: () => Promise<void>,
-    expectedBundlerStatus: OperationStatus
-  ): Promise<void> {
+  async function testE2E({
+    opRequestWithMetadata,
+    contractChecks,
+    offchainChecks,
+    expectedResult,
+  }: TestE2eParams): Promise<void> {
     console.log("alice: Sync SDK");
     await nocturneWalletSDKAlice.sync();
 
@@ -123,11 +144,20 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const operation = await proveOperation(joinSplitProver, signed);
 
     console.log("proven operation:", operation);
-    const status = await submitAndProcessOperation(operation);
 
-    await contractChecks();
-    await offchainChecks();
-    expect(expectedBundlerStatus).to.eql(status);
+    if (expectedResult.type === "error") {
+      expect(await submitAndProcessOperation(operation)).to.throw(
+        Error,
+        expectedResult.errorMessageLike
+      );
+      return;
+    }
+
+    const status = await submitAndProcessOperation(operation);
+    await contractChecks?.();
+    await offchainChecks?.();
+
+    expect(expectedResult.expectedBundlerStatus).to.eql(status);
   }
 
   it("bundler rejects operation with gas price < chain's gas price", async () => {
@@ -148,7 +178,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     // HH's default gas price seems to be somewhere around 1 gwei experimentally
     // unfortunately it doesn't have a way to set it in the chain itself, only in hre
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const operationRequest = new OperationRequestBuilder({
+    const opRequestWithMetadata = new OperationRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -160,16 +190,17 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       .build();
 
     await expect(
-      testE2E(
-        operationRequest,
-        async () => {},
-        async () => {},
-        OperationStatus.BUNDLE_REVERTED
-      )
+      testE2E({
+        opRequestWithMetadata,
+        expectedResult: {
+          type: "success",
+          expectedBundlerStatus: OperationStatus.BUNDLE_REVERTED,
+        },
+      })
     ).to.eventually.be.rejectedWith("gas price too low");
   });
 
-  it("bundler marks under-gassed operation OPERATION_EXECUTION_FAILED", async () => {
+  it("bundler rejects operation and throws call revert exception via opValidation.checkRevertError()", async () => {
     console.log("deposit funds and commit note commitments");
     await depositFundsMultiToken(
       depositManager,
@@ -190,7 +221,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const operationRequest = new OperationRequestBuilder({
+    const opRequestWithMetadata = new OperationRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -205,12 +236,13 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       )
       .build();
 
-    await testE2E(
-      operationRequest,
-      async () => {},
-      async () => {},
-      OperationStatus.OPERATION_EXECUTION_FAILED
-    );
+    await testE2E({
+      opRequestWithMetadata,
+      expectedResult: {
+        type: "error",
+        errorMessageLike: "call revert exception",
+      },
+    });
   });
 
   const ALICE_UNWRAP_VAL = PER_NOTE_AMOUNT * 2n + (PER_NOTE_AMOUNT * 3n) / 4n; // 2.75 notes
@@ -240,7 +272,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const operationRequest = new OperationRequestBuilder({
+    const opRequestWithMetadata = new OperationRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -336,12 +368,15 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(bundlerBalanceAfter > bundlerBalanceBefore).to.be.true;
     };
 
-    await testE2E(
-      operationRequest,
+    await testE2E({
+      opRequestWithMetadata,
       contractChecks,
       offchainChecks,
-      OperationStatus.EXECUTED_SUCCESS
-    );
+      expectedResult: {
+        type: "success",
+        expectedBundlerStatus: OperationStatus.EXECUTED_SUCCESS,
+      },
+    });
   });
 
   const COMPLETE_CONF_PAYMENT_AMOUNT = (PER_NOTE_AMOUNT * 2n * 3n) / 4n; // 3/4 of note
@@ -361,7 +396,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const PAYMENT_AMOUNT = (PER_NOTE_AMOUNT * 2n * 3n) / 4n; // 3/4 of total deposit amount
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const operationRequest = new OperationRequestBuilder({
+    const opRequestWithMetadata = new OperationRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -440,11 +475,14 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(bundlerBalanceAfter > bundlerBalanceBefore).to.be.true;
     };
 
-    await testE2E(
-      operationRequest,
+    await testE2E({
+      opRequestWithMetadata,
       contractChecks,
       offchainChecks,
-      OperationStatus.EXECUTED_SUCCESS
-    );
+      expectedResult: {
+        type: "success",
+        expectedBundlerStatus: OperationStatus.EXECUTED_SUCCESS,
+      },
+    });
   });
 });

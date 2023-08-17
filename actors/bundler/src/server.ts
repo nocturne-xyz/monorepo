@@ -12,7 +12,12 @@ import {
   ACTOR_NAME,
 } from "./types";
 import { NullifierDB, StatusDB } from "./db";
-import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
+import {
+  Handler,
+  Handler__factory,
+  Teller,
+  Teller__factory,
+} from "@nocturne-xyz/contracts";
 import {
   makeCheckNFHandler,
   makeGetOperationStatusHandler,
@@ -41,12 +46,14 @@ export class BundlerServer {
   nullifierDB: NullifierDB;
   logger: Logger;
   tellerContract: Teller;
+  handlerContract: Handler;
   provider: ethers.providers.Provider;
   metrics: BundlerServerMetrics;
   ignoreGas?: boolean;
 
   constructor(
     tellerAddress: string,
+    handlerAddress: string,
     provider: ethers.providers.Provider,
     redis: IORedis,
     logger: Logger,
@@ -59,6 +66,7 @@ export class BundlerServer {
     this.logger = logger;
     this.provider = provider;
     this.tellerContract = Teller__factory.connect(tellerAddress, provider);
+    this.handlerContract = Handler__factory.connect(handlerAddress, provider);
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
     const createCounter = makeCreateCounterFn(
@@ -100,6 +108,7 @@ export class BundlerServer {
         nullifierDB: this.nullifierDB,
         redis: this.redis,
         tellerContract: this.tellerContract,
+        handlerContract: this.handlerContract,
         provider: this.provider,
         logger: this.logger.child({
           route: "/relay",
