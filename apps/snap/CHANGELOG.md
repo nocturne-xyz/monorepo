@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2
+
+### Patch Changes
+
+- use opts for get notes opts single for getBalanceForAsset
+
 ## 0.3.1
 
 ### Patch Changes
