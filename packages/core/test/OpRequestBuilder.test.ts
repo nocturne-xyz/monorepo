@@ -350,9 +350,6 @@ describe("OpRequestBuilder", () => {
       "0x1E2cD78882b12d3954a049Fd82FFD691565dC0A5"
     );
 
-    console.log("pre-use", builder);
-    console.log("post-use", builder.use(Erc20Plugin));
-
     const opRequest = builder
       .use(Erc20Plugin)
       .erc20Transfer(shitcoin.assetAddr, recipient, 100n)

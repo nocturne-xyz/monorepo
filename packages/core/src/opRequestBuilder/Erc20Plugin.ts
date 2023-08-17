@@ -32,8 +32,6 @@ export function Erc20Plugin<EInner extends BaseOpRequestBuilder>(
     return plugin(this);
   }
 
-  console.log("inner", inner);
-
   return {
     ...inner,
     use: use,
