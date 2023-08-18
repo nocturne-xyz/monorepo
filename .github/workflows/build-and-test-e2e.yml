@@ -1,5 +1,7 @@
 name: Build/Cache Docker + E2E Tests
-on: [push]
+on:
+  pull_request:
+    types: [synchronize]
 jobs:
   build-and-test-e2e:
     runs-on: ubuntu-latest
