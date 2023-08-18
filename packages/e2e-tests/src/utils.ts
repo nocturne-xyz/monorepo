@@ -5,7 +5,9 @@ import {
   SubmittableOperationWithNetworkInfo,
   SubtreeUpdateProver,
   computeOperationDigest,
+  range,
 } from "@nocturne-xyz/core";
+import { Mutex } from "async-mutex";
 import { spawn } from "child_process";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -278,11 +280,17 @@ interface RedisHandle {
   clearRedis: () => Promise<void>;
 }
 
+// HACK specify ports to use up-front to ensure they don't conflict with any of the actors
+const redisPorts = range(6000, 6100);
+const mutex = new Mutex();
 export function makeRedisInstance(): RedisHandle {
   const redisThunk = thunk(async () => {
-    const server = await RedisMemoryServer.create();
+    const port = await mutex.runExclusive(() => redisPorts.pop());
+    if (!port)
+      throw new Error("ran out of available ports for redis instances");
+
+    const server = await RedisMemoryServer.create({ instance: { port } });
     const host = await server.getHost();
-    const port = await server.getPort();
     return new IORedis(port, host);
   });
 

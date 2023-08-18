@@ -13,7 +13,7 @@
     "prettier:write": "prettier --write ./tests ./src",
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
     "setup-subgraph": "bash -c \"./scripts/setup_subgraph.sh\"",
-    "test:e2e": "mocha --require ts-node/register tests/** --timeout 10000000 --exit"
+    "test:e2e": "yarn setup-subgraph && mocha --require ts-node/register tests/** --timeout 10000000 --exit"
   },
   "dependencies": {
     "@nocturne-xyz/offchain-utils": "workspace:^",
@@ -33,6 +33,7 @@
     "@types/glob": "^8.0.0",
     "@types/mocha": "^10.0.0",
     "@types/uuid": "^9.0.0",
+    "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
     "chai": "^4.3.6",
     "docker-compose": "0.23.19",
@@ -44,6 +45,7 @@
     "hardhat": "^2.17.1",
     "mocha": "^10.1.0",
     "prettier": "^2.8.8",
+    "redis-memory-server": "^0.7.0",
     "ts-node": "^10.9.1",
     "uuid": "^9.0.0"
   },
