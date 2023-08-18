@@ -323,7 +323,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
   async retrievePendingDeposit(
     req: DepositRequest,
-    returnAs: "ETH" | "WETH" = "ETH"
+    retrieveAs: "ETH" | "WETH" = "ETH"
   ): Promise<ContractTransaction> {
     const signer = await this.getWindowSigner();
     const signerAddress = await signer.getAddress();
@@ -338,7 +338,7 @@ export class NocturneSdk implements NocturneSdkApi {
     if (!isOutstandingDeposit) {
       throw new Error("Deposit request does not exist");
     }
-    if (returnAs === "ETH") {
+    if (retrieveAs === "ETH") {
       return depositManagerContract.retrieveETHDeposit(req);
     } else {
       return depositManagerContract.retrieveDeposit(req);
