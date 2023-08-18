@@ -37,8 +37,8 @@ GRAPH_NODE_PID=$!
 
 sleep 3
 
-echo "running turbo dev script..."
-yarn turbo run dev
+echo "running turbowatch script..."
+yarn exec turbowatch ./turbowatch.ts
 
 wait $GRAPH_NODE_PID
 wait $HARDHAT_PID
