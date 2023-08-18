@@ -1,7 +1,7 @@
 name: Build/Cache Docker + E2E Tests
 on:
   pull_request:
-    types: [synchronize]
+    types: [opened, synchronize]
 jobs:
   build-and-test-e2e:
     runs-on: ubuntu-latest
@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: "v18.12.1"
           cache: "yarn"
-      - name: corepack enable 
+      - name: corepack enable
         run: corepack enable
       - name: install foundry
         uses: foundry-rs/foundry-toolchain@v1
