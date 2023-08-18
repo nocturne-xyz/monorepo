@@ -1,24 +1,25 @@
 import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
-import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { heading, panel, text } from "@metamask/snaps-ui";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import {
+  Asset,
   BundlerOpTracker,
   GetNotesOpts,
   MockEthToTokenConverter,
   NocturneDB,
   NocturneSigner,
   NocturneWalletSDK,
+  OperationMetadata,
+  OperationRequest,
   SparseMerkleProver,
   SubgraphSDKSyncAdapter,
   SyncOpts,
-  Asset,
 } from "@nocturne-xyz/core";
-import { OperationMetadata, OperationRequest } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
 import { SnapKvStore } from "./snapdb";
 import { makeSignOperationContent } from "./utils/display";
+import { RpcRequestHandler, assertAllMethodsHandled } from "./utils/types";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Sepolia
@@ -60,7 +61,8 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
  * @throws If the request method is not valid for this snap.
  * @throws If the `snap_dialog` call failed.
  */
-export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
+
+export const onRpcRequest: RpcRequestHandler = async ({ request }) => {
   const kvStore = new SnapKvStore();
   const nocturneDB = new NocturneDB(kvStore);
   const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
@@ -81,14 +83,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
   );
   console.log("Config:", RPC_URL, BUNDLER_URL, SUBGRAPH_API_URL, config);
   console.log("Switching on method: ", request.method);
-  // ! TODO we need better types on these, as any changes are breaking & only caught at runtime. also are very difficult to debug, since snap JSON RPC logs are unhelpful
   switch (request.method) {
     case "nocturne_getRandomizedAddr":
       return JSON.stringify(signer.generateRandomStealthAddress());
     case "nocturne_getAllBalances":
       console.log("Syncing...");
       await sdk.sync();
-
       const maybeGetNotesOptsAll = (request.params as any).opts;
       const getNotesOptsAll: GetNotesOpts | undefined = maybeGetNotesOptsAll
         ? JSON.parse(maybeGetNotesOptsAll)
@@ -212,6 +212,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
       );
       return;
     default:
-      throw new Error("Method not found.");
+      assertAllMethodsHandled(request);
   }
 };
