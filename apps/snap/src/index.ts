@@ -2,18 +2,13 @@ import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
 import { heading, panel, text } from "@metamask/snaps-ui";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import {
-  Asset,
   BundlerOpTracker,
-  GetNotesOpts,
   MockEthToTokenConverter,
   NocturneDB,
   NocturneSigner,
   NocturneWalletSDK,
-  OperationMetadata,
-  OperationRequest,
   SparseMerkleProver,
   SubgraphSDKSyncAdapter,
-  SyncOpts,
 } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
@@ -63,6 +58,10 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
  */
 
 export const onRpcRequest: RpcRequestHandler = async ({ request }) => {
+  request.params = request.params
+    ? JSON.parse(request.params as unknown as string)
+    : undefined;
+
   const kvStore = new SnapKvStore();
   const nocturneDB = new NocturneDB(kvStore);
   const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
@@ -89,26 +88,12 @@ export const onRpcRequest: RpcRequestHandler = async ({ request }) => {
     case "nocturne_getAllBalances":
       console.log("Syncing...");
       await sdk.sync();
-      const maybeGetNotesOptsAll = (request.params as any).opts;
-      const getNotesOptsAll: GetNotesOpts | undefined = maybeGetNotesOptsAll
-        ? JSON.parse(maybeGetNotesOptsAll)
-        : undefined;
-      return JSON.stringify(await sdk.getAllAssetBalances(getNotesOptsAll));
-    // can return undefined
+      return JSON.stringify(await sdk.getAllAssetBalances(request.params.opts));
     case "nocturne_getBalanceForAsset":
       console.log("Syncing...");
       await sdk.sync();
-
-      const maybeGetNotesOptsSingle = (request.params as any).opts;
-      const getNotesOptsSingle: GetNotesOpts | undefined =
-        maybeGetNotesOptsSingle
-          ? JSON.parse(maybeGetNotesOptsSingle)
-          : undefined;
-      const asset: Asset = JSON.parse((request.params as any).asset);
-
-      return JSON.stringify(
-        await sdk.getBalanceForAsset(asset, getNotesOptsSingle)
-      );
+      const { asset, opts } = request.params;
+      return JSON.stringify(await sdk.getBalanceForAsset(asset, opts));
     case "nocturne_sync":
       if (snapIsSyncing) {
         console.log(
@@ -117,11 +102,7 @@ export const onRpcRequest: RpcRequestHandler = async ({ request }) => {
         );
         return lastSyncedMerkleIndex;
       }
-      const maybeSyncOpts = (request.params as any).syncOpts;
-      const syncOpts: SyncOpts | undefined = maybeSyncOpts
-        ? JSON.parse(maybeSyncOpts)
-        : undefined;
-
+      const syncOpts = request.params;
       console.log("Syncing", syncOpts);
       snapIsSyncing = true;
       let latestSyncedMerkleIndex: number | undefined;
@@ -153,15 +134,9 @@ export const onRpcRequest: RpcRequestHandler = async ({ request }) => {
 
       console.log("done syncing");
 
-      const operationRequest = JSON.parse(
-        (request.params as any).request
-      ) as OperationRequest;
-      const opMetadata = JSON.parse(
-        (request.params as any).meta
-      ) as OperationMetadata;
-
+      const { request: opRequest, meta: opMetadata } = request.params;
       // Ensure user has minimum balance for request
-      if (!(await sdk.hasEnoughBalanceForOperationRequest(operationRequest))) {
+      if (!(await sdk.hasEnoughBalanceForOperationRequest(opRequest))) {
         throw new Error("Insufficient balance for operation request");
       }
       const contentItems = makeSignOperationContent(
@@ -183,11 +158,10 @@ export const onRpcRequest: RpcRequestHandler = async ({ request }) => {
       if (!res) {
         throw new Error("Snap request rejected by user");
       }
-
-      console.log("Operation request: ", operationRequest);
+      console.log("Operation request: ", opRequest);
       try {
-        const preSignOp = await sdk.prepareOperation(operationRequest);
-        const signedOp = await sdk.signOperation(preSignOp);
+        const preSignOp = await sdk.prepareOperation(opRequest);
+        const signedOp = sdk.signOperation(preSignOp);
         console.log(
           "PreProofOperationInputsAndProofInputs: ",
           JSON.stringify(signedOp)
