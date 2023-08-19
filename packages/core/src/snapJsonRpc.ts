@@ -1,14 +1,14 @@
 import * as JSON from "bigint-json-serialization";
-import { GetNotesOpts } from "../NocturneDB";
-import { StealthAddress } from "../crypto";
-import { OperationRequestWithMetadata } from "../operationRequest";
+import { GetNotesOpts } from "./NocturneDB";
+import { StealthAddress } from "./crypto";
+import { OperationRequestWithMetadata } from "./operationRequest";
 import {
   Asset,
   AssetWithBalance,
   OpDigestWithMetadata,
   SignedOperation,
-} from "../primitives";
-import { SyncOpts } from "../syncSDK";
+} from "./primitives";
+import { SyncOpts } from "./syncSDK";
 
 export type LatestSyncedMerkleIndex = number | undefined;
 

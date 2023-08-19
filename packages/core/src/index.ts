@@ -8,6 +8,7 @@ export * from "./sync";
 export * from "./request";
 export * from "./OpTracker";
 export * from "./operationRequest";
+export * from "./snapJsonRpc";
 
 export { NocturneWalletSDK } from "./NocturneWalletSDK";
 export { GetNotesOpts } from "./NocturneDB";

@@ -32,7 +32,7 @@
   "dependencies": {
     "@metamask/snaps-ui": "^0.32.2",
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/core": "*",
+    "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/crypto-utils": "workspace:^",
     "bigint-json-serialization": "^1.0.1",
     "buffer": "^6.0.3"
