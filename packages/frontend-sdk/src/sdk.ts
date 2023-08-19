@@ -18,7 +18,7 @@ import {
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
   OpDigestWithMetadata,
-  OperationRequestBuilder,
+  newOpRequestBuilder,
   OperationRequestWithMetadata,
   OperationStatusResponse,
   ProvenOperation,
@@ -293,7 +293,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
     const encodedErc20 = AssetTrait.erc20AddressToAsset(erc20Address);
 
-    const operationRequest = new OperationRequestBuilder({
+    const operationRequest = newOpRequestBuilder({
       chainId: BigInt(this.config.config.contracts.network.chainId),
       tellerContract: this.config.config.tellerAddress(),
     })
