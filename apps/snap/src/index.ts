@@ -8,6 +8,7 @@ import {
   NocturneDB,
   NocturneSigner,
   NocturneWalletSDK,
+  RpcRequestMethod,
   SnapRpcRequestHandler,
   SnapRpcRequestHandlerArgs,
   SparseMerkleProver,
@@ -73,7 +74,9 @@ export const onRpcRequest: OnRpcRequestHandler = async (args) => {
   }
 };
 
-const handleRpcRequest: SnapRpcRequestHandler = async ({ request }) => {
+async function handleRpcRequest({
+  request,
+}: SnapRpcRequestHandlerArgs): Promise<RpcRequestMethod["return"]> {
   request.params = request.params
     ? parseObjectValues(request.params)
     : undefined;
@@ -206,4 +209,4 @@ const handleRpcRequest: SnapRpcRequestHandler = async ({ request }) => {
     default:
       assertAllRpcMethodsHandled(request);
   }
-};
+}
