@@ -4451,7 +4451,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/core@*, @nocturne-xyz/core@workspace:^, @nocturne-xyz/core@workspace:packages/core":
+"@nocturne-xyz/core@workspace:^, @nocturne-xyz/core@workspace:packages/core":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/core@workspace:packages/core"
   dependencies:
@@ -4740,7 +4740,7 @@ __metadata:
     "@metamask/snaps-types": 0.32.2
     "@metamask/snaps-ui": ^0.32.2
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/core": "*"
+    "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/crypto-utils": "workspace:^"
     "@typescript-eslint/eslint-plugin": ^5.33.0
     "@typescript-eslint/parser": ^5.20.0
