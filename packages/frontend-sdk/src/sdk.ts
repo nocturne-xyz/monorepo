@@ -32,6 +32,7 @@ import {
   SignedOperation,
   StealthAddress,
   StealthAddressTrait,
+  stringifyObjectValues,
   SubmittableOperationWithNetworkInfo,
   SyncMethod,
   SyncOpts,
@@ -685,12 +686,8 @@ export class NocturneSdk implements NocturneSdkApi {
   ): Promise<RpcMethod["return"]> {
     console.log("[fe-sdk] invoking snap with request:", request);
     const stringifiedParams = request.params
-      ? JSON.stringify(request.params)
+      ? stringifyObjectValues(request.params)
       : undefined;
-    console.log(
-      `[fe-sdk] stringifiedParams for method ${request.method}`,
-      stringifiedParams
-    );
     const jsonRpcRequest = {
       method: "wallet_invokeSnap",
       params: {

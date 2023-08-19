@@ -1,3 +1,4 @@
+import * as JSON from "bigint-json-serialization";
 import { GetNotesOpts } from "../NocturneDB";
 import { StealthAddress } from "../crypto";
 import { OperationRequestWithMetadata } from "../operationRequest";
@@ -87,4 +88,22 @@ export type SnapRpcRequestHandler = (args: {
 
 export function assertAllRpcMethodsHandled(request: never): never {
   throw new Error("Snap JSON RPC method not handled: " + request);
+}
+
+export function parseObjectValues(params: object): object {
+  return Object.fromEntries(
+    Object.entries(params).map(([key, value]) => [
+      key,
+      typeof value === "string" ? JSON.parse(value) : value,
+    ])
+  );
+}
+
+export function stringifyObjectValues(params: object): object {
+  return Object.fromEntries(
+    Object.entries(params).map(([key, value]) => [
+      key,
+      typeof value === "object" ? JSON.stringify(value) : value,
+    ])
+  );
 }

@@ -10,6 +10,7 @@ import {
   SparseMerkleProver,
   SubgraphSDKSyncAdapter,
   assertAllRpcMethodsHandled,
+  parseObjectValues,
   SnapRpcRequestHandler,
 } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
@@ -61,7 +62,7 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
 export const onRpcRequest: SnapRpcRequestHandler = async ({ request }) => {
   try {
     request.params = request.params
-      ? JSON.parse(request.params as unknown as string)
+      ? parseObjectValues(request.params)
       : undefined;
 
     const kvStore = new SnapKvStore();
