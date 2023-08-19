@@ -146,10 +146,16 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     console.log("proven operation:", operation);
 
     if (expectedResult.type === "error") {
-      expect(await submitAndProcessOperation(operation)).to.throw(
-        Error,
-        expectedResult.errorMessageLike
-      );
+      try {
+        await submitAndProcessOperation(operation);
+        throw new Error(
+          `expected error like: ${expectedResult.errorMessageLike} but got success instead`
+        );
+      } catch (err) {
+        expect((err as Error).message).to.include(
+          expectedResult.errorMessageLike
+        );
+      }
       return;
     }
 
@@ -240,7 +246,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       opRequestWithMetadata,
       expectedResult: {
         type: "error",
-        errorMessageLike: "call revert exception",
+        errorMessageLike:
+          "operation processing fails with: exceeded `executionGasLimit`",
       },
     });
   });

@@ -140,14 +140,41 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
 
           from = highestTotalEntityIndex + 1n;
         } else {
-          // otherwise, we've caught up and there's nothing more to fetch.
+          // otherwise, there are no more new notes / tree insertions to fetch
+          // therefore we're in one of two cases:
+          // 1) we're fully caught up
+          // 2) a subtree commit occurred, which we need to notify the SDK of
+
+          const currentBlockTotalEntityIndex =
+            TotalEntityIndexTrait.fromBlockNumber(latestIndexedBlock);
+
+          // check the latest committed merkle index
+          // if it's bigger than the one from the last iteration,
+          // then emit an empty diff with only the latest committed merkle index
+          const newLatestCommittedMerkleIndex =
+            await fetchlatestCommittedMerkleIndex(endpoint);
+          if (
+            !latestCommittedMerkleIndex ||
+            (newLatestCommittedMerkleIndex &&
+              newLatestCommittedMerkleIndex > latestCommittedMerkleIndex)
+          ) {
+            latestCommittedMerkleIndex = newLatestCommittedMerkleIndex;
+            const stateDiff: EncryptedStateDiff = {
+              notes: [],
+              nullifiers: [],
+              latestNewlySyncedMerkleIndex: undefined,
+              latestCommittedMerkleIndex,
+              totalEntityIndex: currentBlockTotalEntityIndex,
+            };
+
+            yield stateDiff;
+          }
+
           // set `from` to the entity index corresponding to the latest indexed block
           // if it's greater than the current `from`.
 
           // this is to prevent an busy loops in the case where the subgraph has indexed a block corresponding
           // to a totalEntityIndex > `endTotalEntityIndex` but we haven't found any insertions in that block
-          const currentBlockTotalEntityIndex =
-            TotalEntityIndexTrait.fromBlockNumber(latestIndexedBlock);
           if (currentBlockTotalEntityIndex > from) {
             from = currentBlockTotalEntityIndex;
           }
