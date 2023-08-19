@@ -103,6 +103,8 @@ export class NocturneSdk implements NocturneSdkApi {
   protected depositManagerContractThunk: Thunk<DepositManager>;
   protected handlerContractThunk: Thunk<Handler>;
 
+  private wethAddress: string | undefined;
+
   // Caller MUST conform to EIP-1193 spec (window.ethereum) https://eips.ethereum.org/EIPS/eip-1193
   constructor(options: NocturneSdkOptions = {}) {
     const networkName = options.networkName || "mainnet";
@@ -148,6 +150,8 @@ export class NocturneSdk implements NocturneSdkApi {
       url: this.endpoints.subgraphEndpoint,
       exchanges: [fetchExchange],
     });
+
+    this.wethAddress = this.config.config.erc20s.get("weth")?.address;
   }
 
   protected get provider(): SupportedProvider {
@@ -199,9 +203,7 @@ export class NocturneSdk implements NocturneSdkApi {
     const tx = await (
       await this.depositManagerContractThunk()
     ).instantiateETHMultiDeposit(values, depositAddr, { value: totalValue });
-    const erc20s = this.config.config.erc20s;
-    const wethAddress = erc20s.get("weth")?.address;
-    if (!wethAddress) {
+    if (!this.wethAddress) {
       throw new Error("WETH address not found in Nocturne config");
     }
     return this.formDepositHandlesWithTxReceipt(tx);
@@ -323,7 +325,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
   async retrievePendingDeposit(
     req: DepositRequest,
-    retrieveAs: "ETH" | "WETH" = "ETH"
+    retrieveEthDepositsAs: "ETH" | "WETH" = "ETH"
   ): Promise<ContractTransaction> {
     const signer = await this.getWindowSigner();
     const signerAddress = await signer.getAddress();
@@ -338,7 +340,11 @@ export class NocturneSdk implements NocturneSdkApi {
     if (!isOutstandingDeposit) {
       throw new Error("Deposit request does not exist");
     }
-    if (retrieveAs === "ETH") {
+    const asset = AssetTrait.decode(req.encodedAsset);
+    if (
+      retrieveEthDepositsAs === "ETH" &&
+      asset.assetAddr === this.wethAddress
+    ) {
       return depositManagerContract.retrieveETHDeposit(req);
     } else {
       return depositManagerContract.retrieveDeposit(req);
