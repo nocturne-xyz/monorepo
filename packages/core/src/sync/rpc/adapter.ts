@@ -102,7 +102,8 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         ]);
 
         // update `latestCommittedMerkleIndex` according to the `SubtreeUpdate` events received
-        if (subtreeUpdateCommits.length > 0) {
+        const treeWasUpdated = subtreeUpdateCommits.length > 0;
+        if (treeWasUpdated) {
           latestCommittedMerkleIndex = maxArray(
             subtreeUpdateCommits.map(({ inner: { subtreeBatchOffset } }) => {
               return batchOffsetToLatestMerkleIndexInBatch(subtreeBatchOffset);
@@ -161,8 +162,8 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
           blockNumber: BigInt(to),
         });
 
-        // if there are remaining events after filtering, yield a diff
-        if (nullifiers.length + notes.length > 0) {
+        // if there are remaining events after filtering OR the tree was updated, yield a diff
+        if (nullifiers.length + notes.length > 0 || treeWasUpdated) {
           const diff: EncryptedStateDiff = {
             notes: filteredNotes,
             nullifiers: filteredNullifiers.map((n) => n.inner),

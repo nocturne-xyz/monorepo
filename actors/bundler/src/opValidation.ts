@@ -70,8 +70,7 @@ export async function checkRevertError(
     const bundler = handlerContract.address;
     const result = await handlerContract.callStatic.handleOperation(
       operation,
-      300_000 *
-        (operation.pubJoinSplits.length + operation.confJoinSplits.length), // upper bound on verification gas needed
+      300_000, // upper bound on verification gas needed
       bundler,
       { from: tellerContract.address } // hack to avoid simulation reverting, only teller can call handler
     );
