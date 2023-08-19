@@ -27,12 +27,11 @@ import {
   OperationStatusResponse,
   ProvenOperation,
   RelayRequest,
-  RpcRequestMethods,
+  RpcRequestMethod,
   SignOperationMethod,
   SignedOperation,
   StealthAddress,
   StealthAddressTrait,
-  stringifyObjectValues,
   SubmittableOperationWithNetworkInfo,
   SyncMethod,
   SyncOpts,
@@ -45,6 +44,7 @@ import {
   joinSplitPublicSignalsToArray,
   parseEventsFromContractReceipt,
   proveOperation,
+  stringifyObjectValues,
   thunk,
   unpackFromSolidityProof,
 } from "@nocturne-xyz/core";
@@ -681,7 +681,7 @@ export class NocturneSdk implements NocturneSdkApi {
     );
   }
 
-  private async invokeSnap<RpcMethod extends RpcRequestMethods>(
+  private async invokeSnap<RpcMethod extends RpcRequestMethod>(
     request: Omit<RpcMethod, "return">
   ): Promise<RpcMethod["return"]> {
     console.log("[fe-sdk] invoking snap with request:", request);

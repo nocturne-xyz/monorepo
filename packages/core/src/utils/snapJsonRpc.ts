@@ -71,7 +71,7 @@ export interface ClearDbMethod {
   return: undefined;
 }
 
-export type RpcRequestMethods =
+export type RpcRequestMethod =
   | GetAllBalancesMethod
   | GetBalanceForAssetMethod
   | SyncMethod
@@ -81,10 +81,14 @@ export type RpcRequestMethods =
   | GetInFlightOperationsMethod
   | ClearDbMethod;
 
-export type SnapRpcRequestHandler = (args: {
+export type SnapRpcRequestHandlerArgs = {
   origin: string;
-  request: RpcRequestMethods;
-}) => Promise<string | number | undefined>;
+  request: RpcRequestMethod;
+};
+
+export type SnapRpcRequestHandler = (
+  args: SnapRpcRequestHandlerArgs
+) => Promise<RpcRequestMethod["return"]>;
 
 export function assertAllRpcMethodsHandled(request: never): never {
   throw new Error("Snap JSON RPC method not handled: " + request);
