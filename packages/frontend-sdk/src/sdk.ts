@@ -22,7 +22,6 @@ import {
   GetLatestSyncedMerkleIndexMethod,
   GetRandomizedAddrMethod,
   JoinSplitProofWithPublicSignals,
-  OpDigestWithMetadata,
   newOpRequestBuilder,
   OperationRequestWithMetadata,
   OperationStatusResponse,
