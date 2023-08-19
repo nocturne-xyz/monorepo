@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { CanonAddress, StealthAddress } from "../crypto";
-import { Action, Address, Asset, OperationMetadata } from ".";
+import { Action, Address, Asset, OperationMetadata } from "../primitives";
 
 const ONE_DAY_SECONDS = 24 * 60 * 60;
 

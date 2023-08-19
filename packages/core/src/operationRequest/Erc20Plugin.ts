@@ -3,7 +3,7 @@ import {
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
-} from ".";
+} from "./builder";
 import { Address, AssetTrait } from "../primitives";
 import ERC20_ABI from "./ERC20.json";
 

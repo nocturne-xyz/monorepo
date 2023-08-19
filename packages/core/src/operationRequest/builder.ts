@@ -5,18 +5,17 @@ import {
   JoinSplitRequest,
   OperationGasParams,
   OperationRequestWithMetadata,
-} from "../primitives/operationRequest";
+  OperationRequest,
+} from "./operationRequest";
 import {
   Action,
   Address,
   Asset,
   NetworkInfo,
   OperationMetadata,
-  OperationRequest,
 } from "../primitives";
 import { ethers } from "ethers";
 import { groupByArr } from "../utils";
-export { Erc20Plugin } from "./Erc20Plugin";
 
 export type OpRequestBuilder = OpRequestBuilderExt<BaseOpRequestBuilder>;
 

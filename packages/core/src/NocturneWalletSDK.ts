@@ -13,7 +13,7 @@ import { prepareOperation } from "./prepareOperation";
 import {
   OperationRequest,
   ensureOpRequestChainInfo,
-} from "./primitives/operationRequest";
+} from "./operationRequest/operationRequest";
 import { GetNotesOpts, NocturneDB } from "./NocturneDB";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";

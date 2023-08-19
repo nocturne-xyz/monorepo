@@ -25,8 +25,3 @@ export {
   toSignableOperation,
   toSubmittableOperation,
 } from "./operation";
-export {
-  OperationRequest,
-  OperationGasParams,
-  OperationRequestWithMetadata,
-} from "./operationRequest";

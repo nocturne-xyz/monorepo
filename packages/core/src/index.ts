@@ -7,12 +7,8 @@ export * from "./store";
 export * from "./sync";
 export * from "./request";
 export * from "./OpTracker";
+export * from "./operationRequest";
 
-export {
-  OpRequestBuilder,
-  newOpRequestBuilder,
-  Erc20Plugin,
-} from "./OpRequestBuilder";
 export { NocturneWalletSDK } from "./NocturneWalletSDK";
 export { GetNotesOpts } from "./NocturneDB";
 export { SyncOpts } from "./syncSDK";

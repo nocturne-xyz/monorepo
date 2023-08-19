@@ -19,7 +19,7 @@ import {
   DUMMY_CONTRACT_ADDR,
 } from "./utils";
 import { ethers } from "ethers";
-import ERC20_ABI from "../src/OpRequestBuilder/ERC20.json";
+import ERC20_ABI from "../src/operationRequest/ERC20.json";
 
 describe("OpRequestBuilder", () => {
   it("builds OperationRequest with 1 action, 1 unwrap, 0 payments, no params set", () => {
