@@ -5,7 +5,7 @@ import {
   GasAccountedOperationRequest,
   JoinSplitRequest,
   OperationRequest,
-} from "./operationRequest";
+} from "./operationRequest/operationRequest";
 import {
   Operation,
   OperationResult,

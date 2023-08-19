@@ -1,11 +1,13 @@
 import "mocha";
 import { expect } from "chai";
 import {
-  OperationRequestBuilder,
+  newOpRequestBuilder,
   OperationRequest,
   range,
   NocturneSigner,
   generateRandomSpendingKey,
+  Erc20Plugin,
+  OperationRequestWithMetadata,
 } from "../src";
 import {
   shitcoin,
@@ -16,8 +18,10 @@ import {
   getDummyHex,
   DUMMY_CONTRACT_ADDR,
 } from "./utils";
+import { ethers } from "ethers";
+import ERC20_ABI from "../src/operationRequest/ERC20.json";
 
-describe("OperationRequestBuilder", () => {
+describe("OpRequestBuilder", () => {
   it("builds OperationRequest with 1 action, 1 unwrap, 0 payments, no params set", () => {
     const expected: OperationRequest = {
       joinSplitRequests: [
@@ -38,7 +42,7 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -80,7 +84,7 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -122,7 +126,7 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -173,7 +177,7 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -251,7 +255,7 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -313,7 +317,7 @@ describe("OperationRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -331,5 +335,66 @@ describe("OperationRequestBuilder", () => {
       .build();
 
     expect(opRequest.request).to.eql(expected);
+  });
+
+  it("uses Erc20Plugin", () => {
+    const sk = generateRandomSpendingKey();
+    const signer = new NocturneSigner(sk);
+    const refundAddr = signer.generateRandomStealthAddress();
+
+    const builder = newOpRequestBuilder({
+      chainId: 1n,
+      tellerContract: DUMMY_CONTRACT_ADDR,
+    });
+    const recipient = ethers.utils.getAddress(
+      "0x1E2cD78882b12d3954a049Fd82FFD691565dC0A5"
+    );
+
+    const opRequest = builder
+      .use(Erc20Plugin)
+      .erc20Transfer(shitcoin.assetAddr, recipient, 100n)
+      .refundAddr(refundAddr)
+      .deadline(2n)
+      .build();
+
+    const contract = new ethers.Contract(shitcoin.assetAddr, ERC20_ABI);
+    const encodedFunction = contract.interface.encodeFunctionData("transfer", [
+      recipient,
+      100n,
+    ]);
+    const expected: OperationRequestWithMetadata = {
+      request: {
+        joinSplitRequests: [
+          {
+            asset: shitcoin,
+            unwrapValue: 100n,
+          },
+        ],
+        refundAssets: [],
+        refundAddr: refundAddr,
+        actions: [
+          {
+            contractAddress: shitcoin.assetAddr,
+            encodedFunction,
+          },
+        ],
+        chainId: 1n,
+        tellerContract: DUMMY_CONTRACT_ADDR,
+        deadline: 2n,
+      },
+      meta: {
+        items: [
+          {
+            type: "Action",
+            actionType: "Transfer",
+            recipientAddress: recipient,
+            erc20Address: shitcoin.assetAddr,
+            amount: 100n,
+          },
+        ],
+      },
+    };
+
+    expect(opRequest).to.eql(expected);
   });
 });
