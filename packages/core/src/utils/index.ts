@@ -29,3 +29,4 @@ export {
   merkleIndexToSubtreeIndex,
   batchOffsetToLatestMerkleIndexInBatch,
 } from "./treeIndex";
+export * from "./snapJsonRpc";
