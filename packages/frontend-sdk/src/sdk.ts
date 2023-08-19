@@ -16,17 +16,24 @@ import {
   DepositQuoteResponse,
   DepositRequest,
   DepositStatusResponse,
+  GetAllBalancesMethod,
+  GetBalanceForAssetMethod,
+  GetInFlightOperationsMethod,
+  GetLatestSyncedMerkleIndexMethod,
+  GetRandomizedAddrMethod,
   JoinSplitProofWithPublicSignals,
-  OpDigestWithMetadata,
   newOpRequestBuilder,
   OperationRequestWithMetadata,
   OperationStatusResponse,
   ProvenOperation,
   RelayRequest,
+  RpcRequestMethod,
+  SignOperationMethod,
   SignedOperation,
   StealthAddress,
   StealthAddressTrait,
   SubmittableOperationWithNetworkInfo,
+  SyncMethod,
   SyncOpts,
   Thunk,
   VerifyingKey,
@@ -37,6 +44,7 @@ import {
   joinSplitPublicSignalsToArray,
   parseEventsFromContractReceipt,
   proveOperation,
+  stringifyObjectValues,
   thunk,
   unpackFromSolidityProof,
 } from "@nocturne-xyz/core";
@@ -398,16 +406,10 @@ export class NocturneSdk implements NocturneSdkApi {
     operationRequest: OperationRequestWithMetadata
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", operationRequest.meta);
-    const params = {
-      request: JSON.stringify(operationRequest.request),
-      meta: JSON.stringify(operationRequest.meta),
-    };
-    console.log("[fe-sdk] params", params);
-    const json = await this.invokeSnap({
+    const op = await this.invokeSnap<SignOperationMethod>({
       method: "nocturne_signOperation",
-      params,
+      params: operationRequest,
     });
-    const op = JSON.parse(json) as SignedOperation;
     console.log("SignedOperation:", op);
     return op;
   }
@@ -527,39 +529,35 @@ export class NocturneSdk implements NocturneSdkApi {
    */
   async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
     console.log("[fe-sdk] getAllBalances with params:", opts);
-    const json = await this.invokeSnap({
+    return await this.invokeSnap<GetAllBalancesMethod>({
       method: "nocturne_getAllBalances",
       params: {
-        opts: opts ? JSON.stringify(opts) : undefined,
+        opts,
       },
     });
-
-    return JSON.parse(json) as AssetWithBalance[];
   }
 
+  // todo currently core's getBalanceForAsset doesn't distinguish b/t balance not existing, and balance being 0
   async getBalanceForAsset(
     erc20Address: Address,
     opts?: GetBalanceOpts
-  ): Promise<AssetWithBalance> {
+  ): Promise<bigint> {
     const asset = AssetTrait.erc20AddressToAsset(erc20Address);
-    const json = await this.invokeSnap({
+    return await this.invokeSnap<GetBalanceForAssetMethod>({
       method: "nocturne_getBalanceForAsset",
       params: {
-        asset: JSON.stringify(asset),
-        opts: opts ? JSON.stringify(opts) : undefined,
+        asset,
+        opts,
       },
     });
-    if (json === undefined) {
-      throw new Error("Balance for asset does not exist");
-    }
-    return JSON.parse(json) as AssetWithBalance;
   }
 
   async getInFlightOperations(): Promise<OperationHandle[]> {
-    const json = await this.invokeSnap({
-      method: "nocturne_getInFlightOperations",
-    });
-    const operationHandles = (JSON.parse(json) as OpDigestWithMetadata[]).map(
+    const opDigestsWithMetadata =
+      await this.invokeSnap<GetInFlightOperationsMethod>({
+        method: "nocturne_getInFlightOperations",
+      });
+    const operationHandles = opDigestsWithMetadata.map(
       ({ opDigest: digest, metadata }) => {
         return {
           digest,
@@ -623,16 +621,12 @@ export class NocturneSdk implements NocturneSdkApi {
    * Invoke snap `syncNotes` method, returning latest synced merkle index.
    */
   async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
-    const latestSyncedMerkleIndexJson = await this.invokeSnap({
+    const latestSyncedMerkleIndex = await this.invokeSnap<SyncMethod>({
       method: "nocturne_sync",
       params: {
-        syncOpts: syncOpts ? JSON.stringify(syncOpts) : undefined,
+        opts: syncOpts,
       },
     });
-
-    const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
-      ? JSON.parse(latestSyncedMerkleIndexJson)
-      : undefined;
 
     console.log(
       "[sync] FE-SDK latestSyncedMerkleIndex",
@@ -642,13 +636,10 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
-    const latestSyncedMerkleIndexJson = await this.invokeSnap({
-      method: "nocturne_getLatestSyncedMerkleIndex",
-    });
-
-    const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
-      ? JSON.parse(latestSyncedMerkleIndexJson)
-      : undefined;
+    const latestSyncedMerkleIndex =
+      await this.invokeSnap<GetLatestSyncedMerkleIndexMethod>({
+        method: "nocturne_getLatestSyncedMerkleIndex",
+      });
 
     console.log(
       "[getLatestSyncedMerkleIndex] FE-SDK latestSyncedMerkleIndex",
@@ -661,11 +652,9 @@ export class NocturneSdk implements NocturneSdkApi {
    * Retrieve a freshly randomized address from the snap.
    */
   async getRandomStealthAddress(): Promise<StealthAddress> {
-    const json = await this.invokeSnap({
+    return await this.invokeSnap<GetRandomizedAddrMethod>({
       method: "nocturne_getRandomizedAddr",
     });
-
-    return JSON.parse(json) as StealthAddress;
   }
 
   // ! TODO this is an atrocious signature to hand consumers
@@ -692,17 +681,28 @@ export class NocturneSdk implements NocturneSdkApi {
     );
   }
 
-  private async invokeSnap(request: {
-    method: string;
-    params?: object;
-  }): Promise<string> {
-    return (await window.ethereum.request({
+  private async invokeSnap<RpcMethod extends RpcRequestMethod>(
+    request: Omit<RpcMethod, "return">
+  ): Promise<RpcMethod["return"]> {
+    console.log("[fe-sdk] invoking snap with request:", request);
+    const stringifiedParams = request.params
+      ? stringifyObjectValues(request.params)
+      : undefined;
+    const jsonRpcRequest = {
       method: "wallet_invokeSnap",
       params: {
         snapId: this._snap.snapId,
-        request,
+        request: {
+          method: request.method,
+          params: stringifiedParams,
+        },
       },
-    })) as string;
+    };
+    console.log("[fe-sdk] jsonRpcRequest", jsonRpcRequest);
+    const response = await window.ethereum.request<RpcMethod["return"]>(
+      jsonRpcRequest
+    );
+    return response ? JSON.parse(response as unknown as string) : undefined;
   }
 
   private async formDepositHandlesWithTxReceipt(

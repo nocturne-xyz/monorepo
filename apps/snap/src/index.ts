@@ -4,17 +4,18 @@ import { heading, panel, text } from "@metamask/snaps-ui";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import {
   BundlerOpTracker,
-  GetNotesOpts,
   MockEthToTokenConverter,
   NocturneDB,
   NocturneSigner,
   NocturneWalletSDK,
+  RpcRequestMethod,
+  SnapRpcRequestHandler,
+  SnapRpcRequestHandlerArgs,
   SparseMerkleProver,
   SubgraphSDKSyncAdapter,
-  SyncOpts,
-  Asset,
+  assertAllRpcMethodsHandled,
+  parseObjectValues,
 } from "@nocturne-xyz/core";
-import { OperationMetadata, OperationRequest } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
 import { SnapKvStore } from "./snapdb";
@@ -60,7 +61,26 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
  * @throws If the request method is not valid for this snap.
  * @throws If the `snap_dialog` call failed.
  */
-export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
+
+export const onRpcRequest: OnRpcRequestHandler = async (args) => {
+  try {
+    const handledResponse = await handleRpcRequest(
+      args as unknown as SnapRpcRequestHandlerArgs
+    );
+    return handledResponse ? JSON.stringify(handledResponse) : undefined;
+  } catch (e) {
+    console.error("Snap has thrown error for request: ", args.request);
+    throw e;
+  }
+};
+
+async function handleRpcRequest({
+  request,
+}: SnapRpcRequestHandlerArgs): Promise<RpcRequestMethod["return"]> {
+  request.params = request.params
+    ? parseObjectValues(request.params)
+    : undefined;
+
   const kvStore = new SnapKvStore();
   const nocturneDB = new NocturneDB(kvStore);
   const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
@@ -81,34 +101,20 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
   );
   console.log("Config:", RPC_URL, BUNDLER_URL, SUBGRAPH_API_URL, config);
   console.log("Switching on method: ", request.method);
-  // ! TODO we need better types on these, as any changes are breaking & only caught at runtime. also are very difficult to debug, since snap JSON RPC logs are unhelpful
+  console.log("Request Params:", request.params);
   switch (request.method) {
     case "nocturne_getRandomizedAddr":
-      return JSON.stringify(signer.generateRandomStealthAddress());
+      return signer.generateRandomStealthAddress();
     case "nocturne_getAllBalances":
       console.log("Syncing...");
       await sdk.sync();
+      return await sdk.getAllAssetBalances(request.params?.opts);
 
-      const maybeGetNotesOptsAll = (request.params as any).opts;
-      const getNotesOptsAll: GetNotesOpts | undefined = maybeGetNotesOptsAll
-        ? JSON.parse(maybeGetNotesOptsAll)
-        : undefined;
-      return JSON.stringify(await sdk.getAllAssetBalances(getNotesOptsAll));
-    // can return undefined
     case "nocturne_getBalanceForAsset":
       console.log("Syncing...");
       await sdk.sync();
-
-      const maybeGetNotesOptsSingle = (request.params as any).opts;
-      const getNotesOptsSingle: GetNotesOpts | undefined =
-        maybeGetNotesOptsSingle
-          ? JSON.parse(maybeGetNotesOptsSingle)
-          : undefined;
-      const asset: Asset = JSON.parse((request.params as any).asset);
-
-      return JSON.stringify(
-        await sdk.getBalanceForAsset(asset, getNotesOptsSingle)
-      );
+      const { asset, opts } = request.params;
+      return await sdk.getBalanceForAsset(asset, opts);
     case "nocturne_sync":
       if (snapIsSyncing) {
         console.log(
@@ -117,11 +123,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
         );
         return lastSyncedMerkleIndex;
       }
-      const maybeSyncOpts = (request.params as any).syncOpts;
-      const syncOpts: SyncOpts | undefined = maybeSyncOpts
-        ? JSON.parse(maybeSyncOpts)
-        : undefined;
-
+      const { opts: syncOpts } = request.params;
       console.log("Syncing", syncOpts);
       snapIsSyncing = true;
       let latestSyncedMerkleIndex: number | undefined;
@@ -153,15 +155,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
 
       console.log("done syncing");
 
-      const operationRequest = JSON.parse(
-        (request.params as any).request
-      ) as OperationRequest;
-      const opMetadata = JSON.parse(
-        (request.params as any).meta
-      ) as OperationMetadata;
-
+      const { request: opRequest, meta: opMetadata } = request.params;
       // Ensure user has minimum balance for request
-      if (!(await sdk.hasEnoughBalanceForOperationRequest(operationRequest))) {
+      if (!(await sdk.hasEnoughBalanceForOperationRequest(opRequest))) {
         throw new Error("Insufficient balance for operation request");
       }
       const contentItems = makeSignOperationContent(
@@ -183,18 +179,17 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
       if (!res) {
         throw new Error("Snap request rejected by user");
       }
-
-      console.log("Operation request: ", operationRequest);
+      console.log("Operation request: ", opRequest);
       try {
-        const preSignOp = await sdk.prepareOperation(operationRequest);
-        const signedOp = await sdk.signOperation(preSignOp);
+        const preSignOp = await sdk.prepareOperation(opRequest);
+        const signedOp = sdk.signOperation(preSignOp);
         console.log(
           "PreProofOperationInputsAndProofInputs: ",
           JSON.stringify(signedOp)
         );
 
         await sdk.applyOptimisticRecordsForOp(signedOp, opMetadata);
-        return JSON.stringify(signedOp);
+        return signedOp;
       } catch (err) {
         console.log("Error getting pre-proof operation:", err);
         throw err;
@@ -202,7 +197,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
     case "nocturne_getInFlightOperations":
       const opDigestsAndMetadata =
         await sdk.getAllOptimisticOpDigestsWithMetadata();
-      return JSON.stringify(opDigestsAndMetadata);
+      return opDigestsAndMetadata;
     case "nocturne_clearDb":
       await kvStore.clear();
       console.log(
@@ -212,6 +207,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
       );
       return;
     default:
-      throw new Error("Method not found.");
+      assertAllRpcMethodsHandled(request);
   }
-};
+}

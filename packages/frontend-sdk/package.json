@@ -22,6 +22,7 @@
     "test:unit": ""
   },
   "dependencies": {
+    "@metamask/providers": "^11.1.1",
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",
