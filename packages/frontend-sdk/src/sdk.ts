@@ -1,4 +1,8 @@
-import { Erc20Config } from "@nocturne-xyz/config";
+import {
+  Erc20Config,
+  getNetworkConfig,
+  NocturneConfig2,
+} from "@nocturne-xyz/config";
 import {
   DepositManager,
   DepositManager__factory,
@@ -103,6 +107,8 @@ export class NocturneSdk implements NocturneSdkApi {
   protected joinSplitProverThunk: Thunk<WasmJoinSplitProver>;
   protected endpoints: Endpoints;
   protected config: NocturneSdkConfig;
+  protected config2: NocturneConfig2;
+
   protected _provider?: SupportedProvider;
   protected _snap: SnapStateApi;
   protected urqlClient: UrqlClient;
@@ -116,6 +122,7 @@ export class NocturneSdk implements NocturneSdkApi {
     const networkName = options.networkName || "mainnet";
     const snapOptions = options.snap;
     const config = getNocturneSdkConfig(networkName);
+    this.config2 = getNetworkConfig(networkName);
 
     // HACK `@nocturne-xyz/local-prover` doesn't work with server components (imports a lot of unnecessary garbage)
     this.joinSplitProverThunk = thunk(async () => {
@@ -128,8 +135,9 @@ export class NocturneSdk implements NocturneSdkApi {
         vkey as VerifyingKey
       );
     });
-
-    this.endpoints = config.endpoints;
+    const getWethAddress = () => {
+    };
+    this.wethAddress = this.endpoints = config.endpoints;
     this.config = config;
     this._provider = options.provider;
     this._snap = new SnapStateSdk(

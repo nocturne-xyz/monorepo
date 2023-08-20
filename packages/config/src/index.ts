@@ -5,6 +5,8 @@ export {
   NocturneConfigProperties,
   Erc20Config,
   ProtocolAddressWithMethods,
+  getNetworkConfig,
+  NocturneConfig2, // todo remov
 } from "./config";
 export { NocturneContractDeployment } from "./deployment";
 export * from "./utils";

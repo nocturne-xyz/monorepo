@@ -1,7 +1,7 @@
 import { Address, NocturneContractDeployment } from "./deployment";
-import * as sepolia from "../configs/sepolia.json";
-import * as localhost from "../configs/localhost.json";
-import * as exampleNetwork from "../configs/example-network.json";
+import sepolia from "../configs/sepolia.json";
+import localhost from "../configs/localhost.json";
+import exampleNetwork from "../configs/example-network.json";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
 import { ensureChecksumAddresses } from "./utils";
@@ -19,15 +19,9 @@ export interface Erc20Config {
   isGasAsset: boolean;
 }
 
-export interface NocturneConfigProperties {
-  contracts: NocturneContractDeployment;
-  erc20s: [string, Erc20Config][]; // ticker -> erc20 config
-  protocolAllowlist: [string, ProtocolAddressWithMethods][]; // name -> entry
-}
-
 export class NocturneConfig {
   contracts: NocturneContractDeployment;
-  erc20s: Map<string, Erc20Config>; // ticker -> erc20 config
+  erc20s: Map<string, Erc20Config>;
   protocolAllowlist: Map<string, ProtocolAddressWithMethods>;
 
   constructor(
@@ -111,4 +105,34 @@ export function loadNocturneConfigBuiltin(name: string): NocturneConfig {
     default:
       throw new Error(`unknown config name: ${name}`);
   }
+}
+
+// TODO refactor above to this
+type SepoliaConfig = { type: "sepolia" } & typeof sepolia;
+type LocalhostConfig = { type: "localhost" } & typeof localhost;
+type ExampleNetworkConfig = { type: "example-network" } & typeof exampleNetwork;
+export type NocturneConfig2 =
+  | SepoliaConfig
+  | LocalhostConfig
+  | ExampleNetworkConfig;
+
+export function getNetworkConfig(networkName: string): NocturneConfig2 {
+  let network: NocturneConfig2;
+  switch (networkName) {
+    case "sepolia":
+      network = { ...sepolia, type: "sepolia" } as const;
+      const test = network.contracts satisfies NocturneContractDeployment;
+      const erc20s = network.erc20s satisfies Record<string, Erc20Config>; // Type 'string' is not assignable to type 'bigint'.
+      // not worth the time sink; unfortunately this is not a priority
+      break;
+    case "localhost":
+      network = { ...localhost, type: "localhost" };
+      break;
+    case "example-network":
+      network = { ...exampleNetwork, type: "example-network" };
+      break;
+    default:
+      throw new Error(`Unknown config name: ${networkName}`);
+  }
+  return network;
 }
