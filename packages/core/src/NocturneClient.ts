@@ -7,7 +7,7 @@ import {
   OpDigestWithMetadata,
   computeOperationDigest,
 } from "./primitives";
-import { NocturneSigner } from "./crypto";
+import { NocturneViewer } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
 import { prepareOperation } from "./prepareOperation";
 import {
@@ -41,11 +41,11 @@ export class NocturneClient {
   protected tokenConverter: EthToTokenConverter;
   protected opTracker: OpTracker;
 
-  readonly signer: NocturneSigner;
+  readonly viewer: NocturneViewer;
   readonly gasAssets: Map<string, Asset>;
 
   constructor(
-    signer: NocturneSigner,
+    viewer: NocturneViewer,
     provider: ethers.providers.Provider,
     configOrNetworkName: NocturneConfig | string,
     merkleProver: SparseMerkleProver,
@@ -70,7 +70,7 @@ export class NocturneClient {
         })
     );
 
-    this.signer = signer;
+    this.viewer = viewer;
     this.handlerContract = Handler__factory.connect(
       this.config.handlerAddress(),
       provider
@@ -85,7 +85,7 @@ export class NocturneClient {
   // Sync SDK, returning last synced merkle index of last state diff
   async sync(opts?: SyncOpts): Promise<number | undefined> {
     const latestSyncedMerkleIndex = await syncSDK(
-      { viewer: this.signer },
+      { viewer: this.viewer },
       this.syncAdapter,
       this.db,
       this.merkleProver,
@@ -106,7 +106,7 @@ export class NocturneClient {
       tokenConverter: this.tokenConverter,
       handlerContract: this.handlerContract,
       merkle: this.merkleProver,
-      viewer: this.signer,
+      viewer: this.viewer,
     };
     const gasAccountedOpRequest = await handleGasForOperationRequest(
       deps,
