@@ -12,10 +12,15 @@ export interface SignOperationMethod {
   return: SignedOperation;
 }
 
+export interface RequestViewingKeyMethodResponse {
+  vk: ViewingKey;
+  vkNonce: bigint;
+}
+
 export interface RequestViewingKeyMethod {
   method: "nocturne_requestViewingKey";
   params: undefined;
-  return: ViewingKey;
+  return: RequestViewingKeyMethodResponse;
 }
 
 export type RpcRequestMethod = SignOperationMethod | RequestViewingKeyMethod;

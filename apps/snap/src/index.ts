@@ -74,7 +74,11 @@ async function handleRpcRequest({
   console.log("Request Params:", request.params);
   switch (request.method) {
     case "nocturne_requestViewingKey":
-      return signer.viewer().vk;
+      const viewer = signer.viewer();
+      return {
+        vk: viewer.vk,
+        vkNonce: viewer.vkNonce,
+      };
     case "nocturne_signOperation":
       console.log("Request params: ", request.params);
 
@@ -96,7 +100,7 @@ async function handleRpcRequest({
       });
 
       if (!res) {
-        throw new Error("Snap request rejected by user");
+        throw new Error("snap request rejected by user");
       }
 
       console.log("signing operation:", op);

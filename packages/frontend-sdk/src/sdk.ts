@@ -16,11 +16,6 @@ import {
   DepositQuoteResponse,
   DepositRequest,
   DepositStatusResponse,
-  GetAllBalancesMethod,
-  GetBalanceForAssetMethod,
-  GetInFlightOperationsMethod,
-  GetLatestSyncedMerkleIndexMethod,
-  GetRandomizedAddrMethod,
   JoinSplitProofWithPublicSignals,
   newOpRequestBuilder,
   OperationRequestWithMetadata,
@@ -33,7 +28,6 @@ import {
   StealthAddress,
   StealthAddressTrait,
   SubmittableOperationWithNetworkInfo,
-  SyncMethod,
   SyncOpts,
   Thunk,
   VerifyingKey,
@@ -47,6 +41,16 @@ import {
   stringifyObjectValues,
   thunk,
   unpackFromSolidityProof,
+  NocturneClient,
+  RequestViewingKeyMethod,
+  NocturneViewer,
+  SparseMerkleProver,
+  NocturneDB,
+  InMemoryKVStore,
+  SubgraphSDKSyncAdapter,
+  MockEthToTokenConverter,
+  BundlerOpTracker,
+  PreSignOperation,
 } from "@nocturne-xyz/core";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
@@ -107,9 +111,13 @@ export class NocturneSdk implements NocturneSdkApi {
   protected _snap: SnapStateApi;
   protected urqlClient: UrqlClient;
 
+  protected merkleProver: SparseMerkleProver;
+  protected db: NocturneDB;
+
   protected signerThunk: Thunk<ethers.Signer>;
   protected depositManagerContractThunk: Thunk<DepositManager>;
   protected handlerContractThunk: Thunk<Handler>;
+  protected clientThunk: Thunk<NocturneClient>;
 
   // Caller MUST conform to EIP-1193 spec (window.ethereum) https://eips.ethereum.org/EIPS/eip-1193
   constructor(options: NocturneSdkOptions = {}) {
@@ -155,6 +163,29 @@ export class NocturneSdk implements NocturneSdkApi {
     this.urqlClient = new UrqlClient({
       url: this.endpoints.subgraphEndpoint,
       exchanges: [fetchExchange],
+    });
+
+    // TODO: add IdbKVStore + make this actually persistent 
+    const kv = new InMemoryKVStore();
+    this.merkleProver = new SparseMerkleProver(kv);
+    this.db = new NocturneDB(kv);
+
+    this.clientThunk = thunk(async () => {
+      const { vk, vkNonce } = await this.invokeSnap<RequestViewingKeyMethod>({
+        method: "nocturne_requestViewingKey",
+        params: undefined,
+      });
+
+      return new NocturneClient(
+        new NocturneViewer(vk, vkNonce),
+        this.provider,
+        this.config.config,
+        this.merkleProver,
+        this.db,
+        new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
+        new MockEthToTokenConverter(),
+        new BundlerOpTracker(this.endpoints.bundlerEndpoint)
+      );
     });
   }
 
@@ -403,14 +434,40 @@ export class NocturneSdk implements NocturneSdkApi {
    * @param operationRequest Operation request
    */
   async signOperationRequest(
-    operationRequest: OperationRequestWithMetadata
+    operationRequest: OperationRequestWithMetadata,
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", operationRequest.meta);
+    const client = await this.clientThunk();
+    // NOTE: we should never end up in situation where this is called before normal nocturne_sync, otherwise there will be long delay
+    await client.sync();
+    await client.updateOptimisticNullifiers();
+
+    const { meta: opMeta, request: opRequest } = operationRequest;
+
+    // Ensure user has minimum balance for request
+    if (!(await client.hasEnoughBalanceForOperationRequest(opRequest))) {
+      throw new Error("Insufficient balance for operation request");
+    }
+
+    let preSignOp: PreSignOperation | undefined;
+    try {
+      preSignOp = await client.prepareOperation(opRequest);
+    } catch (e) {
+      console.log("[fe-sdk] prepareOperation failed: ", e);
+      throw e;
+    }
+
     const op = await this.invokeSnap<SignOperationMethod>({
       method: "nocturne_signOperation",
-      params: operationRequest,
+      params: { op: preSignOp, metadata: opMeta },
     });
+
     console.log("SignedOperation:", op);
+
+    // ! should this be optional? should there be a separate method for this the frontend
+    // ! can optionally call to get more control over how / when NFs are cached?
+    await client.applyOptimisticRecordsForOp(op, opMeta);
+
     return op;
   }
 
@@ -529,12 +586,12 @@ export class NocturneSdk implements NocturneSdkApi {
    */
   async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
     console.log("[fe-sdk] getAllBalances with params:", opts);
-    return await this.invokeSnap<GetAllBalancesMethod>({
-      method: "nocturne_getAllBalances",
-      params: {
-        opts,
-      },
-    });
+    const client = await this.clientThunk();
+  
+    // ! do we still want to auto-sync here?
+    // ! may be a better idea to leave this up to the caller
+    await client.sync();
+    return await client.getAllAssetBalances(opts);
   }
 
   // todo currently core's getBalanceForAsset doesn't distinguish b/t balance not existing, and balance being 0
@@ -543,20 +600,17 @@ export class NocturneSdk implements NocturneSdkApi {
     opts?: GetBalanceOpts
   ): Promise<bigint> {
     const asset = AssetTrait.erc20AddressToAsset(erc20Address);
-    return await this.invokeSnap<GetBalanceForAssetMethod>({
-      method: "nocturne_getBalanceForAsset",
-      params: {
-        asset,
-        opts,
-      },
-    });
+    const client = await this.clientThunk();
+
+    // ! do we still want to auto-sync here?
+    // ! may be a better idea to leave this up to the caller
+    await client.sync();
+    return client.getBalanceForAsset(asset, opts);
   }
 
   async getInFlightOperations(): Promise<OperationHandle[]> {
-    const opDigestsWithMetadata =
-      await this.invokeSnap<GetInFlightOperationsMethod>({
-        method: "nocturne_getInFlightOperations",
-      });
+    const client = await this.clientThunk();
+    const opDigestsWithMetadata = await client.getAllOptimisticOpDigestsWithMetadata();
     const operationHandles = opDigestsWithMetadata.map(
       ({ opDigest: digest, metadata }) => {
         return {
@@ -621,26 +675,28 @@ export class NocturneSdk implements NocturneSdkApi {
    * Invoke snap `syncNotes` method, returning latest synced merkle index.
    */
   async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
-    const latestSyncedMerkleIndex = await this.invokeSnap<SyncMethod>({
-      method: "nocturne_sync",
-      params: {
-        opts: syncOpts,
-      },
-    });
-
-    console.log(
-      "[sync] FE-SDK latestSyncedMerkleIndex",
-      latestSyncedMerkleIndex
-    );
+    let latestSyncedMerkleIndex: number | undefined;
+    try {
+      // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
+      const client = await this.clientThunk();
+      latestSyncedMerkleIndex = await client.sync(syncOpts);
+      await client.updateOptimisticNullifiers();
+      console.log(
+        "Synced. state is now: ",
+        //@ts-ignore
+        JSON.stringify(await kvStore.kv())
+      );
+    } catch (e) {
+      console.log("Error syncing notes: ", e);
+      throw e;
+    }
+    console.log("[sync] FE-sdk latestSyncedMerkleIndex, ", latestSyncedMerkleIndex);
     return latestSyncedMerkleIndex;
   }
 
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
-    const latestSyncedMerkleIndex =
-      await this.invokeSnap<GetLatestSyncedMerkleIndexMethod>({
-        method: "nocturne_getLatestSyncedMerkleIndex",
-      });
-
+    const client = await this.clientThunk();
+    const latestSyncedMerkleIndex = await client.getLatestSyncedMerkleIndex();
     console.log(
       "[getLatestSyncedMerkleIndex] FE-SDK latestSyncedMerkleIndex",
       latestSyncedMerkleIndex
@@ -652,9 +708,8 @@ export class NocturneSdk implements NocturneSdkApi {
    * Retrieve a freshly randomized address from the snap.
    */
   async getRandomStealthAddress(): Promise<StealthAddress> {
-    return await this.invokeSnap<GetRandomizedAddrMethod>({
-      method: "nocturne_getRandomizedAddr",
-    });
+    const client = await this.clientThunk();
+    return await client.viewer.generateRandomStealthAddress();
   }
 
   // ! TODO this is an atrocious signature to hand consumers
