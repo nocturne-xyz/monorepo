@@ -5,6 +5,7 @@ import {
   Handler,
   Handler__factory,
 } from "@nocturne-xyz/contracts";
+import { Mutex } from "async-mutex";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
   ActionMetadata,
@@ -110,6 +111,7 @@ export class NocturneSdk implements NocturneSdkApi {
   protected _provider?: SupportedProvider;
   protected _snap: SnapStateApi;
   protected urqlClient: UrqlClient;
+  protected syncMutex: Mutex;
 
   protected merkleProver: SparseMerkleProver;
   protected db: NocturneDB;
@@ -145,6 +147,7 @@ export class NocturneSdk implements NocturneSdkApi {
       snapOptions?.snapId,
       networkName
     );
+    this.syncMutex = new Mutex();
 
     this.signerThunk = thunk(() => this.getWindowSigner());
     this.depositManagerContractThunk = thunk(async () =>
@@ -439,7 +442,7 @@ export class NocturneSdk implements NocturneSdkApi {
     console.log("[fe-sdk] metadata:", operationRequest.meta);
     const client = await this.clientThunk();
     // NOTE: we should never end up in situation where this is called before normal nocturne_sync, otherwise there will be long delay
-    await client.sync();
+    await this.syncMutex.runExclusive(async () => await client.sync());
     await client.updateOptimisticNullifiers();
 
     const { meta: opMeta, request: opRequest } = operationRequest;
@@ -464,8 +467,6 @@ export class NocturneSdk implements NocturneSdkApi {
 
     console.log("SignedOperation:", op);
 
-    // ! should this be optional? should there be a separate method for this the frontend
-    // ! can optionally call to get more control over how / when NFs are cached?
     await client.applyOptimisticRecordsForOp(op, opMeta);
 
     return op;
@@ -588,9 +589,7 @@ export class NocturneSdk implements NocturneSdkApi {
     console.log("[fe-sdk] getAllBalances with params:", opts);
     const client = await this.clientThunk();
   
-    // ! do we still want to auto-sync here?
-    // ! may be a better idea to leave this up to the caller
-    await client.sync();
+    await this.syncMutex.runExclusive(async () => await client.sync());
     return await client.getAllAssetBalances(opts);
   }
 
@@ -602,9 +601,7 @@ export class NocturneSdk implements NocturneSdkApi {
     const asset = AssetTrait.erc20AddressToAsset(erc20Address);
     const client = await this.clientThunk();
 
-    // ! do we still want to auto-sync here?
-    // ! may be a better idea to leave this up to the caller
-    await client.sync();
+    await this.syncMutex.runExclusive(async () => await client.sync());
     return client.getBalanceForAsset(asset, opts);
   }
 
@@ -679,7 +676,7 @@ export class NocturneSdk implements NocturneSdkApi {
     try {
       // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
       const client = await this.clientThunk();
-      latestSyncedMerkleIndex = await client.sync(syncOpts);
+      latestSyncedMerkleIndex = await this.syncMutex.runExclusive(async () => await client.sync(syncOpts));
       await client.updateOptimisticNullifiers();
       console.log(
         "Synced. state is now: ",
