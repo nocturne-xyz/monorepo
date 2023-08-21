@@ -9,7 +9,7 @@ import {
   Asset,
   JoinSplitProver,
   NocturneDB,
-  NocturneWalletSDK,
+  NocturneClient,
   newOpRequestBuilder,
   computeOperationDigest,
   proveOperation,
@@ -27,7 +27,7 @@ describe("Optimistic nullifier tracking", () => {
   let teardown: () => Promise<void>;
   let fillSubtreeBatch: () => Promise<void>;
 
-  let sdk: NocturneWalletSDK;
+  let sdk: NocturneClient;
   let db: NocturneDB;
   let teller: Teller;
   let depositManager: DepositManager;
@@ -69,7 +69,7 @@ describe("Optimistic nullifier tracking", () => {
     );
 
     joinSplitProver = setup.joinSplitProver;
-    sdk = setup.nocturneWalletSDKAlice;
+    sdk = setup.NocturneClientAlice;
     db = setup.nocturneDBAlice;
   });
 

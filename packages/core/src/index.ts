@@ -10,7 +10,7 @@ export * from "./OpTracker";
 export * from "./operationRequest";
 export * from "./snapJsonRpc";
 
-export { NocturneWalletSDK } from "./NocturneWalletSDK";
+export { NocturneClient } from "./NocturneClient";
 export { GetNotesOpts } from "./NocturneDB";
 export { SyncOpts } from "./syncSDK";
 export { signOperation } from "./signOperation";

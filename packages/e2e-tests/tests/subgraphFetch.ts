@@ -2,7 +2,7 @@ import { DepositManager } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
   Asset,
-  NocturneWalletSDK,
+  NocturneClient,
   StealthAddressTrait,
   fetchDepositEvents,
   sleep,
@@ -22,8 +22,8 @@ describe("Fetching Deposit Events", function () {
   let provider: ethers.providers.Provider;
   let depositManager: DepositManager;
   let gasToken: SimpleERC20Token;
-  let nocturneWalletSDKAlice: NocturneWalletSDK;
-  let nocturneWalletSDKBob: NocturneWalletSDK;
+  let NocturneClientAlice: NocturneClient;
+  let NocturneClientBob: NocturneClient;
   let aliceEoa: ethers.Wallet;
   let bobEoa: ethers.Wallet;
   let gasTokenAsset: Asset;
@@ -37,7 +37,7 @@ describe("Fetching Deposit Events", function () {
 
     ({ teardown, provider, aliceEoa, bobEoa, depositManager } = testDeployment);
     ({ gasToken, gasTokenAsset } = testDeployment.tokens);
-    ({ nocturneWalletSDKAlice, nocturneWalletSDKBob } = await setupTestClient(
+    ({ NocturneClientAlice, NocturneClientBob } = await setupTestClient(
       testDeployment.config,
       provider,
       {
@@ -52,9 +52,8 @@ describe("Fetching Deposit Events", function () {
 
   it("Should fetch all deposit events, with no query conditional params specified", async () => {
     const aliceStealthAddr =
-      nocturneWalletSDKAlice.signer.canonicalStealthAddress();
-    const bobStealthAddr =
-      nocturneWalletSDKBob.signer.canonicalStealthAddress();
+      NocturneClientAlice.signer.canonicalStealthAddress();
+    const bobStealthAddr = NocturneClientBob.signer.canonicalStealthAddress();
 
     await depositFundsSingleToken(
       depositManager,

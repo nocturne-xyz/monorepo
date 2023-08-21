@@ -9,7 +9,7 @@ import {
   Address,
   Asset,
   JoinSplitProver,
-  NocturneWalletSDK,
+  NocturneClient,
   OperationRequest,
   newOpRequestBuilder,
   OperationRequestWithMetadata,
@@ -58,7 +58,7 @@ export class TestActor {
   txSigner: ethers.Signer;
   teller: Teller;
   depositManager: DepositManager;
-  sdk: NocturneWalletSDK;
+  sdk: NocturneClient;
   prover: JoinSplitProver;
   bundlerEndpoint: string;
   erc20s: Map<string, Erc20Config>;
@@ -73,7 +73,7 @@ export class TestActor {
     txSigner: ethers.Signer,
     teller: Teller,
     depositManager: DepositManager,
-    sdk: NocturneWalletSDK,
+    sdk: NocturneClient,
     prover: JoinSplitProver,
     bundlerEndpoint: string,
     erc20s: Map<string, Erc20Config>,

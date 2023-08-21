@@ -7,7 +7,7 @@ import {
   SparseMerkleProver,
   NocturneDB,
   NocturneSigner,
-  NocturneWalletSDK,
+  NocturneClient,
   SubgraphSDKSyncAdapter,
   MockEthToTokenConverter,
   BundlerOpTracker,
@@ -151,7 +151,7 @@ export const run = new Command("run")
     const merkleProver = await SparseMerkleProver.loadFromKV(kv);
     const db = new NocturneDB(kv);
     const syncAdapter = new SubgraphSDKSyncAdapter(subgraphEndpoint, logger);
-    const sdk = new NocturneWalletSDK(
+    const sdk = new NocturneClient(
       nocturneSigner,
       provider,
       config,

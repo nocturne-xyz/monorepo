@@ -13,7 +13,7 @@ import {
 
 import {
   NocturneSigner,
-  NocturneWalletSDK,
+  NocturneClient,
   InMemoryKVStore,
   NocturneDB,
   SparseMerkleProver,
@@ -450,9 +450,9 @@ export enum SyncAdapterOption {
 
 export interface ClientSetup {
   nocturneDBAlice: NocturneDB;
-  nocturneWalletSDKAlice: NocturneWalletSDK;
+  NocturneClientAlice: NocturneClient;
   nocturneDBBob: NocturneDB;
-  nocturneWalletSDKBob: NocturneWalletSDK;
+  NocturneClientBob: NocturneClient;
   joinSplitProver: JoinSplitProver;
 }
 
@@ -470,11 +470,11 @@ export async function setupTestClient(
     syncAdapter = new RPCSDKSyncAdapter(provider, handlerProxy.proxy);
   }
 
-  console.log("Create NocturneWalletSDKAlice");
+  console.log("Create NocturneClientAlice");
   const aliceKV = new InMemoryKVStore();
   const nocturneDBAlice = new NocturneDB(aliceKV);
   const merkleProverAlice = new SparseMerkleProver(aliceKV);
-  const nocturneWalletSDKAlice = setupNocturneWalletSDK(
+  const NocturneClientAlice = setupNocturneClient(
     Uint8Array.from(range(32)),
     config,
     provider,
@@ -483,11 +483,11 @@ export async function setupTestClient(
     syncAdapter
   );
 
-  console.log("Create NocturneWalletSDKBob");
+  console.log("Create NocturneClientBob");
   const bobKV = new InMemoryKVStore();
   const nocturneDBBob = new NocturneDB(bobKV);
   const merkleProverBob = new SparseMerkleProver(aliceKV);
-  const nocturneWalletSDKBob = setupNocturneWalletSDK(
+  const NocturneClientBob = setupNocturneClient(
     Uint8Array.from(range(32).map((n) => 2 * n)),
     config,
     provider,
@@ -500,24 +500,24 @@ export async function setupTestClient(
 
   return {
     nocturneDBAlice,
-    nocturneWalletSDKAlice,
+    NocturneClientAlice,
     nocturneDBBob,
-    nocturneWalletSDKBob,
+    NocturneClientBob,
     joinSplitProver,
   };
 }
 
-function setupNocturneWalletSDK(
+function setupNocturneClient(
   sk: Uint8Array,
   config: NocturneConfig,
   provider: ethers.providers.Provider,
   nocturneDB: NocturneDB,
   merkleProver: SparseMerkleProver,
   syncAdapter: SDKSyncAdapter
-): NocturneWalletSDK {
+): NocturneClient {
   const nocturneSigner = new NocturneSigner(sk);
 
-  return new NocturneWalletSDK(
+  return new NocturneClient(
     nocturneSigner,
     provider,
     config,
