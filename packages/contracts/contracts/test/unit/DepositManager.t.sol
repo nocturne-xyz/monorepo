@@ -114,6 +114,7 @@ contract DepositManagerTest is Test {
             address(weth),
             GLOBAL_CAP,
             MAX_DEPOSIT_SIZE,
+            uint8(1),
             18
         );
 
@@ -137,6 +138,7 @@ contract DepositManagerTest is Test {
                 address(ERC20s[i]),
                 GLOBAL_CAP,
                 MAX_DEPOSIT_SIZE,
+                uint8(1),
                 18
             );
         }
@@ -152,6 +154,7 @@ contract DepositManagerTest is Test {
             address(token),
             globalCapWholeTokens,
             maxDepositSizeWholeTokens,
+            uint8(1),
             precision
         );
 
@@ -160,12 +163,14 @@ contract DepositManagerTest is Test {
             uint32 _globalCapWholeTokens,
             uint32 _maxDepositSizeWholeTokens,
             uint32 _lastResetTimestamp,
+            uint8 _resetWindowHours,
             uint8 _precision
         ) = depositManager._erc20Caps(address(token));
         assertEq(_runningGlobalDeposited, 0);
         assertEq(_globalCapWholeTokens, globalCapWholeTokens);
         assertEq(_maxDepositSizeWholeTokens, maxDepositSizeWholeTokens);
         assertEq(_lastResetTimestamp, block.timestamp);
+        assertEq(_resetWindowHours, 1);
         assertEq(_precision, precision);
     }
 
@@ -181,6 +186,7 @@ contract DepositManagerTest is Test {
             address(token),
             globalCapWholeTokens,
             maxDepositSizeWholeTokens,
+            uint8(1),
             precision
         );
 
@@ -192,6 +198,7 @@ contract DepositManagerTest is Test {
             address(token),
             globalCapWholeTokens,
             globalCapWholeTokens + 1,
+            uint8(1),
             precision
         );
     }

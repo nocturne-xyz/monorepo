@@ -242,6 +242,7 @@ async function setErc20Caps(
       erc20Config.address,
       erc20Config.globalCapWholeTokens,
       erc20Config.maxDepositSizeWholeTokens,
+      erc20Config.resetWindowHours,
       erc20Config.precision
     );
     await tx.wait(config.opts?.confirmations);
