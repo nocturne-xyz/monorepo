@@ -17,7 +17,6 @@ import {
 import { GetNotesOpts, NocturneDB } from "./NocturneDB";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
-import { signOperation } from "./signOperation";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
 import { SDKSyncAdapter, TotalEntityIndexTrait } from "./sync";
@@ -115,10 +114,6 @@ export class NocturneWalletSDK {
     );
 
     return await prepareOperation(deps, gasAccountedOpRequest);
-  }
-
-  signOperation(preSignOperation: PreSignOperation): SignedOperation {
-    return signOperation(this.signer, preSignOperation);
   }
 
   async getAllAssetBalances(opts?: GetNotesOpts): Promise<AssetWithBalance[]> {

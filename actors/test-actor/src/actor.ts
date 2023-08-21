@@ -19,6 +19,7 @@ import {
   parseEventsFromContractReceipt,
   proveOperation,
   sleep,
+  signOperation,
 } from "@nocturne-xyz/core";
 import {
   makeCreateCounterFn,
@@ -314,7 +315,7 @@ export class TestActor {
     // prepare, sign, and prove
     try {
       const preSign = await this.sdk.prepareOperation(opRequest);
-      const signed = this.sdk.signOperation(preSign);
+      const signed = signOperation(this.sdk.signer, preSign);
       await this.sdk.applyOptimisticRecordsForOp(signed);
 
       const opDigest = computeOperationDigest(signed);

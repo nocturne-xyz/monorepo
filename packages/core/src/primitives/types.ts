@@ -222,3 +222,8 @@ export interface OpDigestWithMetadata {
   opDigest: bigint;
   metadata?: OperationMetadata;
 }
+
+export interface OperationWithMetadata<T extends Operation> {
+  op: T;
+  metadata?: OperationMetadata;
+}

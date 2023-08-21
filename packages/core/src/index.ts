@@ -13,6 +13,7 @@ export * from "./snapJsonRpc";
 export { NocturneWalletSDK } from "./NocturneWalletSDK";
 export { GetNotesOpts } from "./NocturneDB";
 export { SyncOpts } from "./syncSDK";
+export { signOperation } from "./signOperation";
 export { proveOperation } from "./proveOperation";
 export { NocturneDB } from "./NocturneDB";
 export { SparseMerkleProver } from "./SparseMerkleProver";
