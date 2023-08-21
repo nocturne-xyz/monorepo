@@ -637,10 +637,10 @@ export class NocturneSdk implements NocturneSdkApi {
     );
 
     let closed = false;
-    const generator = async function* (sdk: NocturneSdk) {
+    const generator = async function* (sdk: NocturneSdk, client: NocturneClient) {
       let count = 0;
       while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
-        latestSyncedMerkleIndex = (await sdk.sync(syncOpts)) ?? 0;
+        latestSyncedMerkleIndex = (await client.sync(syncOpts)) ?? 0;
 
         if (count % refetchEvery === 0) {
           latestMerkleIndexOnChain =
@@ -655,7 +655,7 @@ export class NocturneSdk implements NocturneSdkApi {
     };
 
     const progressIter = new ClosableAsyncIterator(
-      generator(this),
+      generator(this, await this.clientThunk()),
       async () => {
         closed = true;
       }
@@ -678,11 +678,6 @@ export class NocturneSdk implements NocturneSdkApi {
       const client = await this.clientThunk();
       latestSyncedMerkleIndex = await this.syncMutex.runExclusive(async () => await client.sync(syncOpts));
       await client.updateOptimisticNullifiers();
-      console.log(
-        "Synced. state is now: ",
-        //@ts-ignore
-        JSON.stringify(await kvStore.kv())
-      );
     } catch (e) {
       console.log("Error syncing notes: ", e);
       throw e;
