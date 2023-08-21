@@ -450,9 +450,11 @@ export enum SyncAdapterOption {
 
 export interface ClientSetup {
   nocturneDBAlice: NocturneDB;
-  NocturneClientAlice: NocturneClient;
+  nocturneSignerAlice: NocturneSigner;
+  nocturneClientAlice: NocturneClient;
+  nocturneSignerBob: NocturneSigner;
   nocturneDBBob: NocturneDB;
-  NocturneClientBob: NocturneClient;
+  nocturneClientBob: NocturneClient;
   joinSplitProver: JoinSplitProver;
 }
 
@@ -470,12 +472,13 @@ export async function setupTestClient(
     syncAdapter = new RPCSDKSyncAdapter(provider, handlerProxy.proxy);
   }
 
-  console.log("Create NocturneClientAlice");
+  console.log("Create nocturneClientAlice");
   const aliceKV = new InMemoryKVStore();
   const nocturneDBAlice = new NocturneDB(aliceKV);
   const merkleProverAlice = new SparseMerkleProver(aliceKV);
-  const NocturneClientAlice = setupNocturneClient(
-    Uint8Array.from(range(32)),
+  const nocturneSignerAlice = new NocturneSigner(Uint8Array.from(range(32)));
+  const nocturneClientAlice = setupNocturneClient(
+    nocturneSignerAlice,
     config,
     provider,
     nocturneDBAlice,
@@ -483,12 +486,15 @@ export async function setupTestClient(
     syncAdapter
   );
 
-  console.log("Create NocturneClientBob");
+  console.log("Create nocturneClientBob");
   const bobKV = new InMemoryKVStore();
   const nocturneDBBob = new NocturneDB(bobKV);
   const merkleProverBob = new SparseMerkleProver(aliceKV);
-  const NocturneClientBob = setupNocturneClient(
-    Uint8Array.from(range(32).map((n) => 2 * n)),
+  const nocturneSignerBob = new NocturneSigner(
+    Uint8Array.from(range(32).map((n) => 2 * n))
+  );
+  const nocturneClientBob = setupNocturneClient(
+    nocturneSignerBob,
     config,
     provider,
     nocturneDBBob,
@@ -500,25 +506,25 @@ export async function setupTestClient(
 
   return {
     nocturneDBAlice,
-    NocturneClientAlice,
+    nocturneSignerAlice,
+    nocturneClientAlice,
     nocturneDBBob,
-    NocturneClientBob,
+    nocturneSignerBob,
+    nocturneClientBob,
     joinSplitProver,
   };
 }
 
 function setupNocturneClient(
-  sk: Uint8Array,
+  signer: NocturneSigner,
   config: NocturneConfig,
   provider: ethers.providers.Provider,
   nocturneDB: NocturneDB,
   merkleProver: SparseMerkleProver,
   syncAdapter: SDKSyncAdapter
 ): NocturneClient {
-  const nocturneSigner = new NocturneSigner(sk);
-
   return new NocturneClient(
-    nocturneSigner,
+    signer,
     provider,
     config,
     merkleProver,

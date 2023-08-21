@@ -19,6 +19,8 @@ import {
   proveOperation,
   OperationStatus,
   OperationRequestWithMetadata,
+  NocturneSigner,
+  signOperation,
 } from "@nocturne-xyz/core";
 import {
   GAS_FAUCET_DEFAULT_AMOUNT,
@@ -66,10 +68,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
   let depositManager: DepositManager;
   let teller: Teller;
   let handler: Handler;
+  let nocturneSignerAlice: NocturneSigner;
   let nocturneDBAlice: NocturneDB;
-  let NocturneClientAlice: NocturneClient;
+  let nocturneClientAlice: NocturneClient;
   let nocturneDBBob: NocturneDB;
-  let NocturneClientBob: NocturneClient;
+  let nocturneClientBob: NocturneClient;
   let joinSplitProver: JoinSplitProver;
 
   let erc20: SimpleERC20Token;
@@ -104,9 +107,10 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     ({
       nocturneDBAlice,
-      NocturneClientAlice,
+      nocturneSignerAlice,
+      nocturneClientAlice,
       nocturneDBBob,
-      NocturneClientBob,
+      nocturneClientBob,
       joinSplitProver,
     } = await setupTestClient(testDeployment.config, provider, {
       gasAssets: new Map([["GAS", gasTokenAsset.assetAddr]]),
@@ -124,10 +128,10 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     expectedResult,
   }: TestE2eParams): Promise<void> {
     console.log("alice: Sync SDK");
-    await NocturneClientAlice.sync();
+    await nocturneClientAlice.sync();
 
     console.log("bob: Sync SDK");
-    await NocturneClientBob.sync();
+    await nocturneClientBob.sync();
 
     const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
     console.log("alice pre-op notes:", preOpNotesAlice);
@@ -137,10 +141,10 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     );
 
     console.log("prepare, sign, and prove operation with NocturneClient");
-    const preSign = await NocturneClientAlice.prepareOperation(
+    const preSign = await nocturneClientAlice.prepareOperation(
       opRequestWithMetadata.request
     );
-    const signed = NocturneClientAlice.signOperation(preSign);
+    const signed = signOperation(nocturneSignerAlice, preSign);
     const operation = await proveOperation(joinSplitProver, signed);
 
     console.log("proven operation:", operation);
@@ -175,7 +179,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
-      NocturneClientAlice.signer.generateRandomStealthAddress()
+      nocturneClientAlice.viewer.generateRandomStealthAddress()
     );
     console.log("fill batch and wait for subtree update");
     await fillSubtreeBatch();
@@ -215,7 +219,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
-      NocturneClientAlice.signer.generateRandomStealthAddress()
+      nocturneClientAlice.viewer.generateRandomStealthAddress()
     );
     await fillSubtreeBatch();
 
@@ -267,7 +271,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
-      NocturneClientAlice.signer.generateRandomStealthAddress()
+      nocturneClientAlice.viewer.generateRandomStealthAddress()
     );
     await fillSubtreeBatch();
 
@@ -287,7 +291,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       .confidentialPayment(
         erc20Asset,
         ALICE_TO_BOB_PRIV_VAL, // conf pay 0.25 notes
-        NocturneClientBob.signer.canonicalAddress()
+        nocturneClientBob.viewer.canonicalAddress()
       )
       .action(erc20.address, encodedFunction)
       .gasPrice(GAS_PRICE)
@@ -328,7 +332,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
-      await NocturneClientAlice.sync();
+      await nocturneClientAlice.sync();
       const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
         erc20Asset,
         { includeUncommitted: true }
@@ -354,7 +358,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(foundNotesAlice.length).to.equal(1);
 
       console.log("bob: Sync SDK post-operation");
-      await NocturneClientBob.sync();
+      await nocturneClientBob.sync();
       const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset, {
         includeUncommitted: true,
       })!;
@@ -396,7 +400,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
-      NocturneClientAlice.signer.generateRandomStealthAddress()
+      nocturneClientAlice.viewer.generateRandomStealthAddress()
     );
     await fillSubtreeBatch();
 
@@ -410,7 +414,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       .confidentialPayment(
         erc20Asset,
         PAYMENT_AMOUNT, // Spend 3/4 of deposit amount for conf payment
-        NocturneClientBob.signer.canonicalAddress()
+        nocturneClientBob.viewer.canonicalAddress()
       )
       .gasPrice(GAS_PRICE)
       .deadline(
@@ -444,7 +448,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
-      await NocturneClientAlice.sync();
+      await nocturneClientAlice.sync();
       const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
         erc20Asset,
         { includeUncommitted: true }
@@ -461,7 +465,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(foundNotesAlice.length).to.equal(1);
 
       console.log("bob: Sync SDK post-operation");
-      await NocturneClientBob.sync();
+      await nocturneClientBob.sync();
       const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset, {
         includeUncommitted: true,
       })!;

@@ -13,6 +13,8 @@ import {
   newOpRequestBuilder,
   NoteTrait,
   unzip,
+  NocturneSigner,
+  signOperation,
 } from "@nocturne-xyz/core";
 import {
   SyncAdapterOption,
@@ -55,7 +57,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     let depositManager: DepositManager;
     let token: SimpleERC20Token;
     let gasToken: SimpleERC20Token;
-    let NocturneClientAlice: NocturneClient;
+    let nocturneSignerAlice: NocturneSigner;
+    let nocturneClientAlice: NocturneClient;
 
     let joinSplitProver: JoinSplitProver;
 
@@ -81,14 +84,11 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       gasToken = testDeployment.tokens.gasToken;
       console.log("gas Token deployed at: ", gasToken.address);
 
-      ({ NocturneClientAlice, joinSplitProver } = await setupTestClient(
-        testDeployment.config,
-        provider,
-        {
+      ({ nocturneClientAlice, nocturneSignerAlice, joinSplitProver } =
+        await setupTestClient(testDeployment.config, provider, {
           syncAdapter,
           gasAssets: new Map([["GAS", gasToken.address]]),
-        }
-      ));
+        }));
     });
 
     afterEach(async () => {
@@ -101,7 +101,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         depositManager,
         token,
         aliceEoa,
-        NocturneClientAlice.signer.generateRandomStealthAddress(),
+        nocturneClientAlice.viewer.generateRandomStealthAddress(),
         [100n, 100n]
       );
 
@@ -110,23 +110,23 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
       // force subtree update by filling batch and sync SDK
       await fillSubtreeBatch();
-      await NocturneClientAlice.sync();
+      await nocturneClientAlice.sync();
 
       // check that DB has notes and merkle has leaves for them
       //@ts-ignore
-      const allNotes = await NocturneClientAlice.db.getAllNotes();
+      const allNotes = await nocturneClientAlice.db.getAllNotes();
       const notes = Array.from(allNotes.values()).flat();
       expect(notes.length).to.eql(2);
 
       //@ts-ignore
-      expect(NocturneClientAlice.merkleProver.count()).to.eql(2);
+      expect(nocturneClientAlice.merkleProver.count()).to.eql(2);
       expect(
         //@ts-ignore
-        BigInt(NocturneClientAlice.merkleProver.getProof(0).leaf)
+        BigInt(nocturneClientAlice.merkleProver.getProof(0).leaf)
       ).to.equal(ncs[0]);
       expect(
         //@ts-ignore
-        BigInt(NocturneClientAlice.merkleProver.getProof(1).leaf)
+        BigInt(nocturneClientAlice.merkleProver.getProof(1).leaf)
       ).to.equal(ncs[1]);
     });
 
@@ -140,7 +140,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
           [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
         ],
         aliceEoa,
-        NocturneClientAlice.signer.generateRandomStealthAddress()
+        nocturneClientAlice.viewer.generateRandomStealthAddress()
       );
 
       // force subtree update by filling batch and sync SDK...
@@ -150,7 +150,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       await sleep(2000);
 
       console.log("syncing SDK...");
-      await NocturneClientAlice.sync();
+      await nocturneClientAlice.sync();
 
       // spend one of them...
       const asset = {
@@ -181,10 +181,10 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         .build();
 
       console.log("preparing op...");
-      const preSign = await NocturneClientAlice.prepareOperation(
+      const preSign = await nocturneClientAlice.prepareOperation(
         opRequest.request
       );
-      const signed = NocturneClientAlice.signOperation(preSign);
+      const signed = signOperation(nocturneSignerAlice, preSign);
       console.log("proving op...");
       const op = await proveOperation(joinSplitProver, signed);
 
@@ -198,13 +198,13 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
       // sync SDK again...
       console.log("syncing SDK again...");
-      await NocturneClientAlice.sync();
+      await nocturneClientAlice.sync();
 
       // check that the DB nullified the spent note
       // after the op, the 80 token note should be nullified, so they should have
       // no non-zero notes for `token`
       //@ts-ignore
-      const notesForToken = await NocturneClientAlice.db.getNotesForAsset({
+      const notesForToken = await nocturneClientAlice.db.getNotesForAsset({
         assetType: AssetType.ERC20,
         assetAddr: token.address,
         id: 0n,
@@ -220,7 +220,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       // check that the merkle prover marked spent note's commitment for pruning
       // the spent note was inserted first, at merkle index 0
       //@ts-ignore
-      expect(NocturneClientAlice.merkleProver.leaves.has(0)).to.be.false;
+      expect(nocturneClientAlice.merkleProver.leaves.has(0)).to.be.false;
     });
   };
 }

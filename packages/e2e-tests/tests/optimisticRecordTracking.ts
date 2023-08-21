@@ -13,6 +13,8 @@ import {
   newOpRequestBuilder,
   computeOperationDigest,
   proveOperation,
+  NocturneSigner,
+  signOperation,
 } from "@nocturne-xyz/core";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
@@ -27,6 +29,7 @@ describe("Optimistic nullifier tracking", () => {
   let teardown: () => Promise<void>;
   let fillSubtreeBatch: () => Promise<void>;
 
+  let signer: NocturneSigner;
   let sdk: NocturneClient;
   let db: NocturneDB;
   let teller: Teller;
@@ -69,7 +72,8 @@ describe("Optimistic nullifier tracking", () => {
     );
 
     joinSplitProver = setup.joinSplitProver;
-    sdk = setup.NocturneClientAlice;
+    signer = setup.nocturneSignerAlice;
+    sdk = setup.nocturneClientAlice;
     db = setup.nocturneDBAlice;
   });
 
@@ -83,7 +87,7 @@ describe("Optimistic nullifier tracking", () => {
       depositManager,
       erc20,
       eoa,
-      sdk.signer.canonicalStealthAddress(),
+      sdk.viewer.canonicalStealthAddress(),
       [100n, 100n, 100n, 100n]
     );
     await fillSubtreeBatch();
@@ -114,7 +118,7 @@ describe("Optimistic nullifier tracking", () => {
 
     // prepare op
     const preSignOp = await sdk.prepareOperation(opRequest.request);
-    const signedOp = sdk.signOperation(preSignOp);
+    const signedOp = signOperation(signer, preSignOp);
 
     console.log("signedOp", signedOp);
 
@@ -205,7 +209,7 @@ describe("Optimistic nullifier tracking", () => {
       depositManager,
       erc20,
       eoa,
-      sdk.signer.canonicalStealthAddress(),
+      sdk.viewer.canonicalStealthAddress(),
       [100n, 100n, 100n, 100n]
     );
     await fillSubtreeBatch();
@@ -236,7 +240,7 @@ describe("Optimistic nullifier tracking", () => {
 
     // prepare op
     const preSignOp = await sdk.prepareOperation(opRequest.request);
-    const signedOp = sdk.signOperation(preSignOp);
+    const signedOp = signOperation(signer, preSignOp);
 
     console.log("signedOp", signedOp);
 

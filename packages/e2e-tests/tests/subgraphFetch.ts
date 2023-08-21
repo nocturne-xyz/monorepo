@@ -22,8 +22,8 @@ describe("Fetching Deposit Events", function () {
   let provider: ethers.providers.Provider;
   let depositManager: DepositManager;
   let gasToken: SimpleERC20Token;
-  let NocturneClientAlice: NocturneClient;
-  let NocturneClientBob: NocturneClient;
+  let nocturneClientAlice: NocturneClient;
+  let nocturneClientBob: NocturneClient;
   let aliceEoa: ethers.Wallet;
   let bobEoa: ethers.Wallet;
   let gasTokenAsset: Asset;
@@ -37,7 +37,7 @@ describe("Fetching Deposit Events", function () {
 
     ({ teardown, provider, aliceEoa, bobEoa, depositManager } = testDeployment);
     ({ gasToken, gasTokenAsset } = testDeployment.tokens);
-    ({ NocturneClientAlice, NocturneClientBob } = await setupTestClient(
+    ({ nocturneClientAlice, nocturneClientBob } = await setupTestClient(
       testDeployment.config,
       provider,
       {
@@ -52,8 +52,8 @@ describe("Fetching Deposit Events", function () {
 
   it("Should fetch all deposit events, with no query conditional params specified", async () => {
     const aliceStealthAddr =
-      NocturneClientAlice.signer.canonicalStealthAddress();
-    const bobStealthAddr = NocturneClientBob.signer.canonicalStealthAddress();
+      nocturneClientAlice.viewer.canonicalStealthAddress();
+    const bobStealthAddr = nocturneClientBob.viewer.canonicalStealthAddress();
 
     await depositFundsSingleToken(
       depositManager,
