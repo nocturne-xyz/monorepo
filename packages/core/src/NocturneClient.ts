@@ -82,6 +82,10 @@ export class NocturneClient {
     this.opTracker = nulliferChecker;
   }
 
+  async clearDb(): Promise<void> {
+    await this.db.kv.clear();
+  }
+
   // Sync SDK, returning last synced merkle index of last state diff
   async sync(opts?: SyncOpts): Promise<number | undefined> {
     const latestSyncedMerkleIndex = await syncSDK(

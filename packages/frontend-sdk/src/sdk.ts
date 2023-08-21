@@ -696,6 +696,11 @@ export class NocturneSdk implements NocturneSdkApi {
     return latestSyncedMerkleIndex;
   }
 
+  async clearSyncState(): Promise<void> {
+    const client = await this.clientThunk();
+    await client.clearDb();
+  }
+
   /**
    * Retrieve a freshly randomized address from the snap.
    */
