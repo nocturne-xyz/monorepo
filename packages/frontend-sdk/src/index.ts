@@ -4,7 +4,7 @@ export {
   DepositHandleWithReceipt,
   DepositRequestStatus,
   DepositRequestStatusWithMetadata,
-  DisplayDepositRequestWithMetadata as DepositRequestWithMetadata,
+  DisplayDepositRequestWithMetadata,
   GetBalanceOpts,
   NocturneSdkConfig,
   OperationHandle,
