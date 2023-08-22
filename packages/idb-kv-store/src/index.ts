@@ -5,7 +5,6 @@ interface IdbKvStoreSchema extends DBSchema {
   "kv-store": {
     key: string;
     value: string;
-    indexes: { "by-key": string };
   };
 }
 
@@ -93,7 +92,7 @@ export class IdbKvStore implements KVStore {
     endKey: string
   ): Promise<AsyncIterable<KV>> {
     async function* generator(db: IDBPDatabase<IdbKvStoreSchema>) {
-      const index = db.transaction("kv-store").store.index("by-key");
+      const index = db.transaction("kv-store", "readonly").store;
       const range = IDBKeyRange.bound(startKey, endKey, false, true);
       for await (const cursor of index.iterate(range)) {
         yield [cursor.key, cursor.value] as KV;
@@ -105,7 +104,7 @@ export class IdbKvStore implements KVStore {
 
   async iterPrefix(prefix: string): Promise<AsyncIterable<KV>> {
     async function* generator(db: IDBPDatabase<IdbKvStoreSchema>) {
-      const index = db.transaction("kv-store").store.index("by-key");
+      const index = db.transaction("kv-store", "readonly").store;
       const range = IDBKeyRange.lowerBound(prefix, true);
       for await (const cursor of index.iterate(range)) {
         if (!cursor.key.startsWith(prefix)) {
@@ -121,18 +120,22 @@ export class IdbKvStore implements KVStore {
   async getMany(keys: string[]): Promise<KV[]> {
     const db = await this.db();
     const tx = db.transaction("kv-store", "readonly");
-    return (
-      await Promise.all(keys.map(async (key) => [key, await tx.store.get(key)]))
-    ).filter(([_key, value]) => value !== undefined) as KV[];
+    const results = await Promise.all(
+      keys.map(async (key) => [key, await tx.store.get(key)])
+    );
+    await tx.done;
+
+    return results.filter(([_key, value]) => value !== undefined) as KV[];
   }
 
   async putMany(kvs: KV[]): Promise<boolean> {
     const db = await this.db();
     try {
       const tx = db.transaction("kv-store", "readwrite");
-      await Promise.all(
-        kvs.map(async ([key, value]) => await tx.store.put(value, key))
-      );
+      await Promise.all([
+        ...kvs.map(async ([key, value]) => await tx.store.put(value, key)),
+        tx.done,
+      ]);
     } catch (err) {
       console.error("Error in putMany:", err);
       return false;
@@ -144,7 +147,10 @@ export class IdbKvStore implements KVStore {
     const db = await this.db();
     try {
       const tx = db.transaction("kv-store", "readwrite");
-      await Promise.all(keys.map(async (key) => await tx.store.delete(key)));
+      await Promise.all([
+        ...keys.map(async (key) => await tx.store.delete(key)),
+        tx.done,
+      ]);
     } catch (err) {
       console.error("Error in removeMany:", err);
       return false;

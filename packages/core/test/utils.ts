@@ -17,6 +17,7 @@ import {
   IncludedNote,
   KV,
   KVStore,
+  DumpableKVStore,
 } from "../src";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import randomBytes from "randombytes";
@@ -153,13 +154,15 @@ export async function setup(
 }
 
 export const testKvStoreImpl =
-  <T extends KVStore>(kv: T, cleanup: (kv: T) => Promise<void>) =>
+  <T extends KVStore>(kv: T, cleanup?: (kv: T) => Promise<void>) =>
   async () => {
     afterEach(async () => {
       await kv.clear();
     });
 
-    after(async () => await cleanup(kv));
+    if (cleanup) {
+      after(async () => await cleanup(kv));
+    }
 
     it("stores, gets, and removes primitive values in KV", async () => {
       await kv.putString("hello", "world");
@@ -273,6 +276,52 @@ export const testKvStoreImpl =
       for (const [key, value] of gotKvs) {
         expect(["a", "b", "c"].includes(key)).to.be.true;
         expect(["1", "2", "3"].includes(value)).to.be.true;
+      }
+    });
+  };
+
+export const testDumpableKvStoreImpl =
+  <T extends DumpableKVStore>(kv: T, cleanup?: (kv: T) => Promise<void>) =>
+  async () => {
+    testKvStoreImpl(kv, cleanup)();
+
+    it("dumps to an object", async () => {
+      const kvs: KV[] = [
+        ["a", "1"],
+        ["b", "2"],
+        ["c", "3"],
+        ["d", "4"],
+        ["e", "5"],
+      ];
+
+      await kv.putMany(kvs);
+
+      const dump = await kv.dump();
+      for (const [key, value] of kvs) {
+        expect(dump[key]).to.not.be.undefined;
+        expect(dump[key]).to.eql(value);
+      }
+    });
+
+    it("loads from a dump", async () => {
+      const kvs: KV[] = [
+        ["a", "1"],
+        ["b", "2"],
+        ["c", "3"],
+        ["d", "4"],
+        ["e", "5"],
+      ];
+
+      await kv.putMany(kvs);
+
+      const dump = await kv.dump();
+
+      const newKV = new InMemoryKVStore();
+      await newKV.loadFromDump(dump);
+
+      for await (const [key, value] of await newKV.iterRange("a", "f")) {
+        expect(dump[key]).to.not.be.undefined;
+        expect(value).to.eql(dump[key]);
       }
     });
   };
