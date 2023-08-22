@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
-uint256 constant GAS_PER_JOINSPLIT_HANDLE = 65_000; // two 20k SSTOREs from NF insertions, ~20k for merkle tree checks + NF mapping checks + processing joinsplits (+5k buffer)
+uint256 constant GAS_PER_JOINSPLIT_HANDLE = 100_000; // two 20k SSTOREs from NF insertions, ~60k for merkle tree checks + NF mapping checks + processing joinsplits not including tree insertions (+5k buffer)
 uint256 constant GAS_PER_INSERTION_SUBTREE_UPDATE = 25_000; // Full 16 leaf non-zero subtree update = 320k / 16 = 20k per insertion (+5k buffer)
-uint256 constant GAS_PER_INSERTION_ENQUEUE = 20_000; // 15k for queue non-fresh SSTORE excluding subtree update (+5k buffer)
+uint256 constant GAS_PER_INSERTION_ENQUEUE = 25_000; // 20k for enqueueing note commitment not including subtree update cost (+5k buffer)
+uint256 constant GAS_PER_OPERATION_MISC = 110_000; // remaining gas cost for operation including  miscellaneous costs such as sending gas tokens to bundler, requesting assets from teller, sending tokens back for refunds, calldata, event, etc.
 
 enum AssetType {
     ERC20,
@@ -126,8 +127,8 @@ library OperationLib {
             ((perJoinSplitVerifyGas + GAS_PER_JOINSPLIT_HANDLE) *
                 numJoinSplits) +
             ((GAS_PER_INSERTION_SUBTREE_UPDATE + GAS_PER_INSERTION_ENQUEUE) *
-                self.trackedAssets.length + // NOTE: assume refund for every asset
-                (numJoinSplits * 2));
+                (self.trackedAssets.length + (numJoinSplits * 2))) + // NOTE: assume refund for every asset
+            GAS_PER_OPERATION_MISC;
     }
 
     function maxGasAssetCost(
