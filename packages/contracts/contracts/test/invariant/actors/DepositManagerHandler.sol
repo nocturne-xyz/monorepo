@@ -243,7 +243,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         ISimpleERC20Token erc20 = ISimpleERC20Token(erc20s[erc20Index]);
         uint256 numDeposits = bound(numDepositsSeed, 1, 10);
 
-        (, uint32 globalCapWholeTokens, , , uint8 precision) = depositManager
+        (, uint32 globalCapWholeTokens, , , , uint8 precision) = depositManager
             ._erc20Caps(address(erc20));
         uint256 globalCap = uint256(globalCapWholeTokens) * 10 ** precision;
 

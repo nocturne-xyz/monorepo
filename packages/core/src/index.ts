@@ -7,13 +7,9 @@ export * from "./store";
 export * from "./sync";
 export * from "./request";
 export * from "./OpTracker";
+export * from "./operationRequest";
+export * from "./snapJsonRpc";
 
-export {
-  OperationRequest,
-  OperationGasParams,
-  OperationRequestBuilder,
-  OperationRequestWithMetadata,
-} from "./operationRequest";
 export { NocturneWalletSDK } from "./NocturneWalletSDK";
 export { GetNotesOpts } from "./NocturneDB";
 export { SyncOpts } from "./syncSDK";
