@@ -47,7 +47,6 @@ import {
   NocturneViewer,
   SparseMerkleProver,
   NocturneDB,
-  InMemoryKVStore,
   SubgraphSDKSyncAdapter,
   MockEthToTokenConverter,
   BundlerOpTracker,
@@ -441,8 +440,14 @@ export class NocturneSdk implements NocturneSdkApi {
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", operationRequest.meta);
     const client = await this.clientThunk();
+
     // NOTE: we should never end up in situation where this is called before normal nocturne_sync, otherwise there will be long delay
+    const warnTimeout = setTimeout(() => {
+      console.warn("[fe-sdk] the SDK has not yet been synced. This may cause a long delay until `signOperation` returns. It's strongly reccomended to explicitly use `sync` or `syncWithProgress` to ensure the SDK is fully synced before calling `signOperation`");
+    }, 5000);
     await this.syncMutex.runExclusive(async () => await client.sync());
+    clearTimeout(warnTimeout);
+
     await client.updateOptimisticNullifiers();
 
     const { meta: opMeta, request: opRequest } = operationRequest;
