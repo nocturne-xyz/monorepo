@@ -127,7 +127,7 @@ library OperationUtils {
         uint256 handleJoinSplitGas = OperationLib.totalNumJoinSplits(op) *
             GAS_PER_JOINSPLIT_HANDLE;
         uint256 refundGas = opResult.numRefunds *
-            (GAS_PER_REFUND_HANDLE + GAS_PER_REFUND_TREE);
+            (GAS_PER_INSERTION_ENQUEUE + GAS_PER_INSERTION_SUBTREE_UPDATE);
 
         return
             op.gasPrice *
