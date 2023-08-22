@@ -87,34 +87,61 @@ export class IdbKvStore implements KVStore {
     return true;
   }
 
+  // ! Note - this implementation is not "atomic" because indexedDB auto-closes transactions after the microtask
+  // ! queue is empty, and there's nothing stopping the consumer of this iterator from performing async operations
+  // ! before pulling the next value from the iterator.
   async iterRange(
     startKey: string,
     endKey: string
   ): Promise<AsyncIterable<KV>> {
     async function* generator(db: IDBPDatabase<IdbKvStoreSchema>) {
-      const index = db.transaction("kv-store", "readonly").store;
-      const range = IDBKeyRange.bound(startKey, endKey, false, true);
-      for await (const cursor of index.iterate(range)) {
+      let range = IDBKeyRange.bound(startKey, endKey, false, true);
+      while (true) {
+        const cursor = await db
+          .transaction("kv-store", "readonly")
+          .store.openCursor(range);
+        if (!cursor) break;
+
+        console.log(
+          "[iter] cursor.key:",
+          cursor.key,
+          "cursor.value:",
+          cursor.value
+        );
         yield [cursor.key, cursor.value] as KV;
+
+        range = IDBKeyRange.bound(cursor.key, endKey, true, true);
       }
     }
 
-    return generator(await this.db());
+    return await generator(await this.db());
   }
 
+  // ! Note - this implementation is not "atomic" because indexedDB auto-closes transactions after the microtask
+  // ! queue is empty, and there's nothing stopping the consumer of this iterator from performing async operations
+  // ! before pulling the next value from the iterator.
   async iterPrefix(prefix: string): Promise<AsyncIterable<KV>> {
     async function* generator(db: IDBPDatabase<IdbKvStoreSchema>) {
-      const index = db.transaction("kv-store", "readonly").store;
-      const range = IDBKeyRange.lowerBound(prefix, true);
-      for await (const cursor of index.iterate(range)) {
-        if (!cursor.key.startsWith(prefix)) {
-          break;
-        }
+      let range = IDBKeyRange.lowerBound(prefix, false);
+      while (true) {
+        const cursor = await db
+          .transaction("kv-store", "readonly")
+          .store.openCursor(range);
+        if (!cursor || !cursor.key.startsWith(prefix)) break;
+
+        console.log(
+          "[iterPrefix] cursor.key:",
+          cursor.key,
+          "cursor.value:",
+          cursor.value
+        );
         yield [cursor.key, cursor.value] as KV;
+
+        range = IDBKeyRange.lowerBound(cursor.key, true);
       }
     }
 
-    return generator(await this.db());
+    return await generator(await this.db());
   }
 
   async getMany(keys: string[]): Promise<KV[]> {

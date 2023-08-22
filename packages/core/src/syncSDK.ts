@@ -120,10 +120,16 @@ async function updateMerkle(
         includes.push(true);
       }
     }
+    console.log("[syncSDK] inserting batch uncommitted", {
+      startIndex,
+      leaves,
+      includes,
+    });
     merkle.insertBatchUncommitted(startIndex, leaves, includes);
   }
 
   // commit up to latest subtree commit
+  console.log("[syncSDK] committing up to index", latestCommittedMerkleIndex);
   merkle.commitUpToIndex(latestCommittedMerkleIndex);
 
   // mark nullified ones for pruning

@@ -114,7 +114,6 @@ export class NocturneSdk implements NocturneSdkApi {
   protected urqlClient: UrqlClient;
   protected syncMutex: Mutex;
 
-  protected merkleProver: SparseMerkleProver;
   protected db: NocturneDB;
 
   protected signerThunk: Thunk<ethers.Signer>;
@@ -171,7 +170,6 @@ export class NocturneSdk implements NocturneSdkApi {
 
     // TODO: add IdbKVStore + make this actually persistent 
     const kv = new IdbKvStore(`nocturne-fe-sdk-${networkName}`);
-    this.merkleProver = new SparseMerkleProver(kv);
     this.db = new NocturneDB(kv);
 
     this.clientThunk = thunk(async () => {
@@ -184,7 +182,7 @@ export class NocturneSdk implements NocturneSdkApi {
         new NocturneViewer(vk, vkNonce),
         this.provider,
         this.config.config,
-        this.merkleProver,
+        await SparseMerkleProver.loadFromKV(kv),
         this.db,
         new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
         new MockEthToTokenConverter(),
@@ -691,7 +689,6 @@ export class NocturneSdk implements NocturneSdkApi {
   async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
     let latestSyncedMerkleIndex: number | undefined;
     try {
-      // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
       const client = await this.clientThunk();
       latestSyncedMerkleIndex = await this.syncMutex.runExclusive(async () => await client.sync(syncOpts));
       await client.updateOptimisticNullifiers();
