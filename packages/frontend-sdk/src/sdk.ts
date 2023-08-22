@@ -5,6 +5,7 @@ import {
   Handler,
   Handler__factory,
 } from "@nocturne-xyz/contracts";
+import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
 import { Mutex } from "async-mutex";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
@@ -169,7 +170,7 @@ export class NocturneSdk implements NocturneSdkApi {
     });
 
     // TODO: add IdbKVStore + make this actually persistent 
-    const kv = new InMemoryKVStore();
+    const kv = new IdbKvStore(`nocturne-fe-sdk-${networkName}`);
     this.merkleProver = new SparseMerkleProver(kv);
     this.db = new NocturneDB(kv);
 

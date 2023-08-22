@@ -4650,6 +4650,7 @@ __metadata:
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/core": "workspace:^"
+    "@nocturne-xyz/idb-kv-store": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@types/async-retry": ^1.4.5
     "@types/bn.js": ^5.1.1
@@ -4674,7 +4675,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/idb-kv-store@workspace:packages/idb-kv-store":
+"@nocturne-xyz/idb-kv-store@workspace:^, @nocturne-xyz/idb-kv-store@workspace:packages/idb-kv-store":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/idb-kv-store@workspace:packages/idb-kv-store"
   dependencies:
