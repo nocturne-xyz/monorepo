@@ -14,7 +14,6 @@ import {
   AssetWithBalance,
   ClosableAsyncIterator,
   DepositQuoteResponse,
-  DepositRequest,
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
   OpDigestWithMetadata,
@@ -48,7 +47,7 @@ import {
 } from "@urql/core";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
-import { ContractTransaction, ethers } from "ethers";
+import { BigNumber, ContractTransaction, ethers } from "ethers";
 import vkey from "../circuit-artifacts/joinsplit/joinsplitVkey.json";
 import { NocturneSdkApi, SnapStateApi } from "./api";
 import {
@@ -64,7 +63,8 @@ import {
   DepositHandle,
   DepositHandleWithReceipt,
   DepositRequestStatusWithMetadata,
-  DepositRequestWithMetadata,
+  DisplayDepositRequest,
+  DisplayDepositRequestWithMetadata,
   Endpoints,
   GetBalanceOpts,
   NocturneSdkConfig,
@@ -77,6 +77,7 @@ import {
   flattenDepositRequestStatus,
   getNocturneSdkConfig,
   getTokenContract,
+  toDepositRequest,
   toDepositRequestWithMetadata,
 } from "./utils";
 
@@ -324,14 +325,15 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   async retrievePendingDeposit(
-    req: DepositRequest,
+    displayRequest: DisplayDepositRequest,
     retrieveEthDepositsAs: "ETH" | "WETH" = "ETH"
   ): Promise<ContractTransaction> {
     const signer = await this.getWindowSigner();
     const signerAddress = await signer.getAddress();
-    if (signerAddress.toLowerCase() !== req.spender.toLowerCase()) {
+    if (signerAddress.toLowerCase() !== displayRequest.spender.toLowerCase()) {
       throw new Error("Spender and signer addresses do not match");
     }
+    const req = toDepositRequest(displayRequest);
     const depositManagerContract = await this.depositManagerContractThunk();
     const isOutstandingDeposit =
       await depositManagerContract._outstandingDepositHashes(
@@ -340,10 +342,9 @@ export class NocturneSdk implements NocturneSdkApi {
     if (!isOutstandingDeposit) {
       throw new Error("Deposit request does not exist");
     }
-    const asset = AssetTrait.decode(req.encodedAsset);
     if (
       retrieveEthDepositsAs === "ETH" &&
-      asset.assetAddr === this.wethAddress
+      displayRequest.asset.assetAddr === this.wethAddress
     ) {
       return depositManagerContract.retrieveETHDeposit(req);
     } else {
@@ -729,7 +730,7 @@ export class NocturneSdk implements NocturneSdkApi {
     return Promise.all(
       events.map(async (event) => {
         const {
-          encodedAsset,
+          encodedAsset: _encodedAsset,
           value,
           nonce,
           depositAddr,
@@ -737,21 +738,25 @@ export class NocturneSdk implements NocturneSdkApi {
           spender,
         } = event.args;
 
-        const request: DepositRequestWithMetadata & {
+        const encodedAsset = {
+          encodedAssetAddr: _encodedAsset.encodedAssetAddr.toBigInt(),
+          encodedAssetId: _encodedAsset.encodedAssetId.toBigInt(),
+        };
+        const asset = AssetTrait.decode(encodedAsset);
+
+        const request: DisplayDepositRequestWithMetadata & {
           subgraphStatus?: GqlDepositRequestStatus;
         } = {
           spender,
-          encodedAsset: {
-            encodedAssetAddr: encodedAsset.encodedAssetAddr.toBigInt(),
-            encodedAssetId: encodedAsset.encodedAssetId.toBigInt(),
+          asset: {
+            assetAddr: asset.assetAddr,
+            assetType: asset.assetType,
+            id: BigNumber.from(asset.id),
           },
-          value: value.toBigInt(),
-          depositAddr: {
-            h1: depositAddr.h1.toBigInt(),
-            h2: depositAddr.h2.toBigInt(),
-          },
-          nonce: nonce.toBigInt(),
-          gasCompensation: gasCompensation.toBigInt(),
+          value,
+          depositAddr,
+          nonce,
+          gasCompensation,
           createdAtBlock: tx.blockNumber,
           subgraphStatus: GqlDepositRequestStatus.Pending,
         };
@@ -765,12 +770,12 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   private async makeDepositHandle(
-    requestWithStatus: DepositRequestWithMetadata & {
+    requestWithStatus: DisplayDepositRequestWithMetadata & {
       subgraphStatus?: GqlDepositRequestStatus;
     }
   ): Promise<DepositHandle> {
     const { subgraphStatus, ...request } = requestWithStatus;
-    const depositRequestHash = hashDepositRequest(request);
+    const depositRequestHash = hashDepositRequest(toDepositRequest(request));
     const getStatus = async () =>
       await getDepositRequestStatus(
         this.endpoints.screenerEndpoint,
