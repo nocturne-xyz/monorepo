@@ -152,7 +152,7 @@ export const run = new Command("run")
     const db = new NocturneDB(kv);
     const syncAdapter = new SubgraphSDKSyncAdapter(subgraphEndpoint, logger);
     const sdk = new NocturneClient(
-      nocturneSigner,
+      nocturneSigner.viewer(),
       provider,
       config,
       merkleProver,
@@ -177,6 +177,7 @@ export const run = new Command("run")
       signer,
       teller,
       depositManager,
+      nocturneSigner,
       sdk,
       prover,
       bundlerEndpoint,

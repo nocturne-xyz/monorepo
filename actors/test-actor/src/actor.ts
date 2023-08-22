@@ -20,6 +20,7 @@ import {
   proveOperation,
   sleep,
   signOperation,
+  NocturneSigner,
 } from "@nocturne-xyz/core";
 import {
   makeCreateCounterFn,
@@ -58,7 +59,8 @@ export class TestActor {
   txSigner: ethers.Signer;
   teller: Teller;
   depositManager: DepositManager;
-  sdk: NocturneClient;
+  nocturneSigner: NocturneSigner;
+  client: NocturneClient;
   prover: JoinSplitProver;
   bundlerEndpoint: string;
   erc20s: Map<string, Erc20Config>;
@@ -73,7 +75,8 @@ export class TestActor {
     txSigner: ethers.Signer,
     teller: Teller,
     depositManager: DepositManager,
-    sdk: NocturneClient,
+    nocturneSigner: NocturneSigner,
+    client: NocturneClient,
     prover: JoinSplitProver,
     bundlerEndpoint: string,
     erc20s: Map<string, Erc20Config>,
@@ -83,7 +86,8 @@ export class TestActor {
     this.txSigner = txSigner;
     this.teller = teller;
     this.depositManager = depositManager;
-    this.sdk = sdk;
+    this.nocturneSigner = nocturneSigner;
+    this.client = client;
     this.prover = prover;
     this.bundlerEndpoint = bundlerEndpoint;
 
@@ -132,8 +136,8 @@ export class TestActor {
   async runOps(interval: number, batchEvery?: number): Promise<void> {
     let i = 0;
     while (true) {
-      await this.sdk.sync();
-      const balances = await this.sdk.getAllAssetBalances();
+      await this.client.sync();
+      const balances = await this.client.getAllAssetBalances();
       this.logger.info("balances: ", balances);
 
       if (batchEvery && i !== 0 && i % batchEvery === 0) {
@@ -174,7 +178,7 @@ export class TestActor {
   }
 
   private async getRandomErc20AndValue(): Promise<[Asset, bigint] | undefined> {
-    const assetsWithBalance = await this.sdk.getAllAssetBalances();
+    const assetsWithBalance = await this.client.getAllAssetBalances();
     if (assetsWithBalance.length === 0) {
       this.logger.warn("test-actor has no asset balances");
       return undefined;
@@ -263,7 +267,7 @@ export class TestActor {
         erc20Token.address,
         [randomValue],
         StealthAddressTrait.compress(
-          this.sdk.signer.generateRandomStealthAddress()
+          this.client.viewer.generateRandomStealthAddress()
         )
       );
     const receipt = await instantiateDepositTx.wait(1);
@@ -314,9 +318,9 @@ export class TestActor {
 
     // prepare, sign, and prove
     try {
-      const preSign = await this.sdk.prepareOperation(opRequest);
-      const signed = signOperation(this.sdk.signer, preSign);
-      await this.sdk.applyOptimisticRecordsForOp(signed);
+      const preSign = await this.client.prepareOperation(opRequest);
+      const signed = signOperation(this.nocturneSigner, preSign);
+      await this.client.applyOptimisticRecordsForOp(signed);
 
       const opDigest = computeOperationDigest(signed);
       this.logger.info(`proving operation with digest ${opDigest}`, {

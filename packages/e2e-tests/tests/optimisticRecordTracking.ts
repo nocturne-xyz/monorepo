@@ -30,7 +30,7 @@ describe("Optimistic nullifier tracking", () => {
   let fillSubtreeBatch: () => Promise<void>;
 
   let signer: NocturneSigner;
-  let sdk: NocturneClient;
+  let client: NocturneClient;
   let db: NocturneDB;
   let teller: Teller;
   let depositManager: DepositManager;
@@ -73,7 +73,7 @@ describe("Optimistic nullifier tracking", () => {
 
     joinSplitProver = setup.joinSplitProver;
     signer = setup.nocturneSignerAlice;
-    sdk = setup.nocturneClientAlice;
+    client = setup.nocturneClientAlice;
     db = setup.nocturneDBAlice;
   });
 
@@ -87,13 +87,13 @@ describe("Optimistic nullifier tracking", () => {
       depositManager,
       erc20,
       eoa,
-      sdk.viewer.canonicalStealthAddress(),
+      client.viewer.canonicalStealthAddress(),
       [100n, 100n, 100n, 100n]
     );
     await fillSubtreeBatch();
 
     // sync sdk
-    await sdk.sync();
+    await client.sync();
 
     const encodedTransfer =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
@@ -117,7 +117,7 @@ describe("Optimistic nullifier tracking", () => {
       .build();
 
     // prepare op
-    const preSignOp = await sdk.prepareOperation(opRequest.request);
+    const preSignOp = await client.prepareOperation(opRequest.request);
     const signedOp = signOperation(signer, preSignOp);
 
     console.log("signedOp", signedOp);
@@ -130,7 +130,7 @@ describe("Optimistic nullifier tracking", () => {
       recipientAddress: eoa.address,
       amount: amountToSpend,
     };
-    await sdk.applyOptimisticRecordsForOp(signedOp, {
+    await client.applyOptimisticRecordsForOp(signedOp, {
       items: [action],
     });
 
@@ -168,13 +168,13 @@ describe("Optimistic nullifier tracking", () => {
 
     // Check exposed op digest + metadata method on wallet sdk
     const opDigestsWithMetadata =
-      await sdk.getAllOptimisticOpDigestsWithMetadata();
+      await client.getAllOptimisticOpDigestsWithMetadata();
     expect(opDigestsWithMetadata.length).to.eql(1);
     expect(opDigestsWithMetadata[0].opDigest).to.eql(opDigest);
     expect(opDigestsWithMetadata[0].metadata?.items[0]).to.eql(action);
 
     // when we get balances, we should only see one asset and only 200 tokens
-    const balances = await sdk.getAllAssetBalances();
+    const balances = await client.getAllAssetBalances();
     expect(balances.length).to.equal(1);
     // TODO: fix checksum vs call caps
     // expect(balances[0].asset).to.deep.equal(erc20Asset);
@@ -190,7 +190,7 @@ describe("Optimistic nullifier tracking", () => {
     Date.now = () => {
       return dateNow() + 92 * 1000;
     };
-    await sdk.updateOptimisticNullifiers();
+    await client.updateOptimisticNullifiers();
     Date.now = dateNow;
 
     // DB should have no more optimistic records
@@ -209,13 +209,13 @@ describe("Optimistic nullifier tracking", () => {
       depositManager,
       erc20,
       eoa,
-      sdk.viewer.canonicalStealthAddress(),
+      client.viewer.canonicalStealthAddress(),
       [100n, 100n, 100n, 100n]
     );
     await fillSubtreeBatch();
 
     // sync sdk
-    await sdk.sync();
+    await client.sync();
 
     const encodedTransfer =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
@@ -239,7 +239,7 @@ describe("Optimistic nullifier tracking", () => {
       .build();
 
     // prepare op
-    const preSignOp = await sdk.prepareOperation(opRequest.request);
+    const preSignOp = await client.prepareOperation(opRequest.request);
     const signedOp = signOperation(signer, preSignOp);
 
     console.log("signedOp", signedOp);
@@ -252,7 +252,7 @@ describe("Optimistic nullifier tracking", () => {
       recipientAddress: eoa.address,
       amount: amountToSpend,
     };
-    await sdk.applyOptimisticRecordsForOp(signedOp, { items: [action] });
+    await client.applyOptimisticRecordsForOp(signedOp, { items: [action] });
 
     // DB should have OptimisticNFRecords for merkle index 0 and 1
     const nfRecords = await db.getAllOptimisticNFRecords();
@@ -288,13 +288,13 @@ describe("Optimistic nullifier tracking", () => {
 
     // Check exposed op digest + metadata method on wallet sdk
     const opDigestsWithMetadata =
-      await sdk.getAllOptimisticOpDigestsWithMetadata();
+      await client.getAllOptimisticOpDigestsWithMetadata();
     expect(opDigestsWithMetadata.length).to.eql(1);
     expect(opDigestsWithMetadata[0].opDigest).to.eql(opDigest);
     expect(opDigestsWithMetadata[0].metadata!.items[0]).to.eql(action);
 
     // when we get balances, we should only see one asset and only 200 tokens
-    const balances = await sdk.getAllAssetBalances();
+    const balances = await client.getAllAssetBalances();
     expect(balances.length).to.equal(1);
     // TODO: fix checksum vs call caps
     // expect(balances[0].asset).to.deep.equal(erc20Asset);
@@ -305,7 +305,7 @@ describe("Optimistic nullifier tracking", () => {
     await submitAndProcessOperation(op);
 
     // ensure it removes NFs when it indexes NFs from events
-    await sdk.sync();
+    await client.sync();
 
     // DB should have no optimistic NF records
     const nfRecordsAfter = await db.getAllOptimisticNFRecords();
