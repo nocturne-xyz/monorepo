@@ -449,8 +449,8 @@ export enum SyncAdapterOption {
 }
 
 export interface ClientSetup {
-  nocturneDBAlice: NocturneDB;
   nocturneSignerAlice: NocturneSigner;
+  nocturneDBAlice: NocturneDB;
   nocturneClientAlice: NocturneClient;
   nocturneSignerBob: NocturneSigner;
   nocturneDBBob: NocturneDB;
