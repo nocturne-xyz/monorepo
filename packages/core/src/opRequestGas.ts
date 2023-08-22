@@ -39,8 +39,8 @@ interface AssetAndTicker {
 }
 
 // TODO: ask bundler for the batch size and make a more intelligent estimate than this
-const PER_JOINSPLIT_GAS = 420_000n; // cost of verifying single proof (280k) + handling single joinsplit (80k) + buffer (20k)
-const PER_REFUND_GAS = 100_000n; // cost of refund handle (40k) + refund tree (50k) + buffer (10k)
+const PER_JOINSPLIT_GAS = 420_000n; // cost of verifying single proof (280k) + handling single joinsplit (65k) + 2 NC queue insertions (45k) + 30k buffer
+const PER_REFUND_GAS = 70_000n; // cost of refund enqueue (20k) + refund subtree update (25k) + buffer + 15k buffer
 
 export interface HandleOpRequestGasDeps {
   db: NocturneDB;
@@ -58,6 +58,7 @@ interface GasEstimatedOperationRequest
 
 interface GasParams {
   gasPrice: bigint;
+  numJoinSplits: bigint;
   numJoinSplitAssets: bigint;
   executionGasLimit: bigint;
 }
@@ -77,7 +78,7 @@ export async function handleGasForOperationRequest(
 ): Promise<GasAccountedOperationRequest> {
   // estimate gas params for opRequest
   console.log("estimating gas for op request");
-  const { gasPrice, numJoinSplitAssets, executionGasLimit } =
+  const { gasPrice, numJoinSplits, numJoinSplitAssets, executionGasLimit } =
     await estimateGasForOperationRequest(deps, opRequest);
 
   const gasEstimatedOpRequest: GasEstimatedOperationRequest = {
@@ -105,15 +106,15 @@ export async function handleGasForOperationRequest(
     );
     const totalGasUnitsEstimate =
       executionGasLimit +
-      numJoinSplitAssets * PER_JOINSPLIT_GAS +
+      numJoinSplits * PER_JOINSPLIT_GAS +
       numRefundsEstimate * PER_REFUND_GAS;
 
     console.log(`execution gas limit: ${executionGasLimit}`, {
       executionGasLimit,
     });
-    console.log(`joinSplits gas: ${numJoinSplitAssets * PER_JOINSPLIT_GAS}`, {
-      numJoinSplitAssets,
-      joinSplitsGas: numJoinSplitAssets * PER_JOINSPLIT_GAS,
+    console.log(`joinSplits gas: ${numJoinSplits * PER_JOINSPLIT_GAS}`, {
+      numJoinSplits,
+      joinSplitsGas: numJoinSplits * PER_JOINSPLIT_GAS,
     });
     console.log(`refunds gas: ${numRefundsEstimate * PER_REFUND_GAS}`, {
       numRefundsEstimate,
@@ -305,6 +306,7 @@ async function estimateGasForOperationRequest(
   );
 
   return {
+    numJoinSplits: BigInt(preparedOp.joinSplits.length),
     numJoinSplitAssets: BigInt(joinSplitAssets.size),
     executionGasLimit,
     gasPrice,

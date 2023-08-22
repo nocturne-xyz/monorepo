@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 uint256 constant GAS_PER_JOINSPLIT_HANDLE = 65_000; // two 20k SSTOREs from NF insertions, ~20k for merkle tree checks + NF mapping checks + processing joinsplits (+5k buffer)
 uint256 constant GAS_PER_INSERTION_SUBTREE_UPDATE = 25_000; // Full 16 leaf non-zero subtree update = 320k / 16 = 20k per insertion (+5k buffer)
-uint256 constant GAS_PER_INSERTION_ENQUEUE = 20_000; // 5k for queue non-fresh SSTORE excluding subtree update (+5k buffer)
+uint256 constant GAS_PER_INSERTION_ENQUEUE = 20_000; // 15k for queue non-fresh SSTORE excluding subtree update (+5k buffer)
 
 enum AssetType {
     ERC20,
