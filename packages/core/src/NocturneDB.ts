@@ -414,16 +414,9 @@ export class NocturneDB {
 
     const iterPrefix = await this.kv.iterPrefix(NOTES_BY_ASSET_PREFIX);
     for await (const [assetKey, stringifiedIndices] of iterPrefix) {
-      console.log("[assetKey, stringifiedIndices]", [
-        assetKey,
-        stringifiedIndices,
-      ]);
-      console.log("1");
       const indices: number[] = JSON.parse(stringifiedIndices);
       let notes = await this.getNotesByMerkleIndices(indices);
-      console.log("2");
       notes = await this.filterNotesByOpts(notes, opts);
-      console.log("3");
 
       const notesForAsset = allNotes.get(assetKey) ?? [];
       notesForAsset.push(...notes);
