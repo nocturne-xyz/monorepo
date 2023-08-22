@@ -4674,6 +4674,28 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nocturne-xyz/idb-kv-store@workspace:packages/idb-kv-store":
+  version: 0.0.0-use.local
+  resolution: "@nocturne-xyz/idb-kv-store@workspace:packages/idb-kv-store"
+  dependencies:
+    "@nocturne-xyz/core": "workspace:^"
+    "@types/chai": ^4.3.3
+    "@types/chai-as-promised": ^7.1.5
+    "@types/mocha": ^10.0.0
+    "@types/node": ^18.8.0
+    "@typescript-eslint/eslint-plugin": ^5.20.0
+    "@typescript-eslint/parser": ^5.20.0
+    chai: ^4.3.6
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.8.0
+    idb: ^7.1.1
+    mocha: ^10.1.0
+    prettier: ^2.8.8
+    ts-node: ^10.9.1
+    typescript: ^4.8.4
+  languageName: unknown
+  linkType: soft
+
 "@nocturne-xyz/local-prover@workspace:^, @nocturne-xyz/local-prover@workspace:packages/local-prover":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/local-prover@workspace:packages/local-prover"
@@ -14606,6 +14628,13 @@ circomlibjs@nocturne-xyz/circomlibjs:
   dependencies:
     safer-buffer: ">= 2.1.2 < 3.0.0"
   checksum: 3f60d47a5c8fc3313317edfd29a00a692cc87a19cac0159e2ce711d0ebc9019064108323b5e493625e25594f11c6236647d8e256fbe7a58f4a3b33b89e6d30bf
+  languageName: node
+  linkType: hard
+
+"idb@npm:^7.1.1":
+  version: 7.1.1
+  resolution: "idb@npm:7.1.1"
+  checksum: 1973c28d53c784b177bdef9f527ec89ec239ec7cf5fcbd987dae75a16c03f5b7dfcc8c6d3285716fd0309dd57739805390bd9f98ce23b1b7d8849a3b52de8d56
   languageName: node
   linkType: hard
 
