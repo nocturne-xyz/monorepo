@@ -2,7 +2,7 @@ import "mocha";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
-import { Asset, AssetType, OperationRequestBuilder } from "../src";
+import { Asset, AssetType, newOpRequestBuilder } from "../src";
 import {
   setup,
   shitcoin,
@@ -13,7 +13,7 @@ import {
 } from "./utils";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { ERC20_ID } from "../src/primitives/asset";
-import { JoinSplitRequest } from "../src/operationRequest";
+import { JoinSplitRequest } from "../src/operationRequest/operationRequest";
 import { MockEthToTokenConverter } from "../src/conversion";
 
 chai.use(chaiAsPromised);
@@ -39,7 +39,7 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -77,7 +77,7 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -122,7 +122,7 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -176,7 +176,7 @@ describe("handleGasForOperationRequest", async () => {
       db: nocturneDB,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });

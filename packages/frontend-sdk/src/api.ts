@@ -100,7 +100,7 @@ export interface NocturneSdkApi {
   getBalanceForAsset(
     erc20Address: Address,
     opts?: GetBalanceOpts
-  ): Promise<AssetWithBalance>;
+  ): Promise<bigint>;
 
   // *** SYNCING METHODS *** //
 

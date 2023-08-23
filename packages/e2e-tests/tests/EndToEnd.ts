@@ -10,15 +10,17 @@ import {
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
-  NocturneWalletSDK,
+  NocturneClient,
   NocturneDB,
-  OperationRequestBuilder,
+  newOpRequestBuilder,
   queryEvents,
   Asset,
   JoinSplitProver,
   proveOperation,
   OperationStatus,
   OperationRequestWithMetadata,
+  NocturneSigner,
+  signOperation,
 } from "@nocturne-xyz/core";
 import {
   GAS_FAUCET_DEFAULT_AMOUNT,
@@ -66,10 +68,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
   let depositManager: DepositManager;
   let teller: Teller;
   let handler: Handler;
+  let nocturneSignerAlice: NocturneSigner;
   let nocturneDBAlice: NocturneDB;
-  let nocturneWalletSDKAlice: NocturneWalletSDK;
+  let nocturneClientAlice: NocturneClient;
   let nocturneDBBob: NocturneDB;
-  let nocturneWalletSDKBob: NocturneWalletSDK;
+  let nocturneClientBob: NocturneClient;
   let joinSplitProver: JoinSplitProver;
 
   let erc20: SimpleERC20Token;
@@ -104,9 +107,10 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     ({
       nocturneDBAlice,
-      nocturneWalletSDKAlice,
+      nocturneSignerAlice,
+      nocturneClientAlice,
       nocturneDBBob,
-      nocturneWalletSDKBob,
+      nocturneClientBob,
       joinSplitProver,
     } = await setupTestClient(testDeployment.config, provider, {
       gasAssets: new Map([["GAS", gasTokenAsset.assetAddr]]),
@@ -124,10 +128,10 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     expectedResult,
   }: TestE2eParams): Promise<void> {
     console.log("alice: Sync SDK");
-    await nocturneWalletSDKAlice.sync();
+    await nocturneClientAlice.sync();
 
     console.log("bob: Sync SDK");
-    await nocturneWalletSDKBob.sync();
+    await nocturneClientBob.sync();
 
     const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
     console.log("alice pre-op notes:", preOpNotesAlice);
@@ -136,11 +140,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       await nocturneDBAlice.latestCommittedMerkleIndex()
     );
 
-    console.log("prepare, sign, and prove operation with NocturneWalletSDK");
-    const preSign = await nocturneWalletSDKAlice.prepareOperation(
+    console.log("prepare, sign, and prove operation with NocturneClient");
+    const preSign = await nocturneClientAlice.prepareOperation(
       opRequestWithMetadata.request
     );
-    const signed = nocturneWalletSDKAlice.signOperation(preSign);
+    const signed = signOperation(nocturneSignerAlice, preSign);
     const operation = await proveOperation(joinSplitProver, signed);
 
     console.log("proven operation:", operation);
@@ -175,7 +179,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
-      nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
+      nocturneClientAlice.viewer.generateRandomStealthAddress()
     );
     console.log("fill batch and wait for subtree update");
     await fillSubtreeBatch();
@@ -184,7 +188,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     // HH's default gas price seems to be somewhere around 1 gwei experimentally
     // unfortunately it doesn't have a way to set it in the chain itself, only in hre
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = new OperationRequestBuilder({
+    const opRequestWithMetadata = newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -215,7 +219,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
-      nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
+      nocturneClientAlice.viewer.generateRandomStealthAddress()
     );
     await fillSubtreeBatch();
 
@@ -227,7 +231,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = new OperationRequestBuilder({
+    const opRequestWithMetadata = newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -267,7 +271,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
-      nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
+      nocturneClientAlice.viewer.generateRandomStealthAddress()
     );
     await fillSubtreeBatch();
 
@@ -279,7 +283,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = new OperationRequestBuilder({
+    const opRequestWithMetadata = newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -287,7 +291,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       .confidentialPayment(
         erc20Asset,
         ALICE_TO_BOB_PRIV_VAL, // conf pay 0.25 notes
-        nocturneWalletSDKBob.signer.canonicalAddress()
+        nocturneClientBob.viewer.canonicalAddress()
       )
       .action(erc20.address, encodedFunction)
       .gasPrice(GAS_PRICE)
@@ -328,7 +332,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
-      await nocturneWalletSDKAlice.sync();
+      await nocturneClientAlice.sync();
       const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
         erc20Asset,
         { includeUncommitted: true }
@@ -354,7 +358,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(foundNotesAlice.length).to.equal(1);
 
       console.log("bob: Sync SDK post-operation");
-      await nocturneWalletSDKBob.sync();
+      await nocturneClientBob.sync();
       const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset, {
         includeUncommitted: true,
       })!;
@@ -396,21 +400,21 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
-      nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
+      nocturneClientAlice.viewer.generateRandomStealthAddress()
     );
     await fillSubtreeBatch();
 
     const PAYMENT_AMOUNT = (PER_NOTE_AMOUNT * 2n * 3n) / 4n; // 3/4 of total deposit amount
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = new OperationRequestBuilder({
+    const opRequestWithMetadata = newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
       .confidentialPayment(
         erc20Asset,
         PAYMENT_AMOUNT, // Spend 3/4 of deposit amount for conf payment
-        nocturneWalletSDKBob.signer.canonicalAddress()
+        nocturneClientBob.viewer.canonicalAddress()
       )
       .gasPrice(GAS_PRICE)
       .deadline(
@@ -444,7 +448,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
-      await nocturneWalletSDKAlice.sync();
+      await nocturneClientAlice.sync();
       const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
         erc20Asset,
         { includeUncommitted: true }
@@ -461,7 +465,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(foundNotesAlice.length).to.equal(1);
 
       console.log("bob: Sync SDK post-operation");
-      await nocturneWalletSDKBob.sync();
+      await nocturneClientBob.sync();
       const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset, {
         includeUncommitted: true,
       })!;

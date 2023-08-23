@@ -1,37 +1,24 @@
 import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
 import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { heading, panel, text } from "@metamask/snaps-ui";
-import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import {
-  BundlerOpTracker,
-  GetNotesOpts,
-  MockEthToTokenConverter,
-  NocturneDB,
   NocturneSigner,
-  NocturneWalletSDK,
-  SparseMerkleProver,
-  SubgraphSDKSyncAdapter,
-  SyncOpts,
-  Asset,
+  SnapRpcRequestHandlerArgs,
+  RpcRequestMethod,
+  parseObjectValues,
+  signOperation,
+  assertAllRpcMethodsHandled,
 } from "@nocturne-xyz/core";
-import { OperationMetadata, OperationRequest } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
-import { SnapKvStore } from "./snapdb";
 import { makeSignOperationContent } from "./utils/display";
+import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Sepolia
-const RPC_URL =
-  "https://eth-sepolia.g.alchemy.com/v2/0xjMuoUbPaLxWwD9EqOUFoJTuRh7qh0t";
-const BUNDLER_URL = "https://bundler.testnet.nocturnelabs.xyz";
-const SUBGRAPH_API_URL =
-  "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.21-testnet/gn";
-const config = loadNocturneConfigBuiltin("sepolia");
 
 const NOCTURNE_BIP44_COINTYPE = 6789;
-let snapIsSyncing = false;
-let lastSyncedMerkleIndex: number | undefined;
+const config = loadNocturneConfigBuiltin("sepolia");
 
 async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
   const nocturneNode = await snap.request({
@@ -60,113 +47,45 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
  * @throws If the request method is not valid for this snap.
  * @throws If the `snap_dialog` call failed.
  */
-export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
-  const kvStore = new SnapKvStore();
-  const nocturneDB = new NocturneDB(kvStore);
-  const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+
+export const onRpcRequest: OnRpcRequestHandler = async (args) => {
+  try {
+    const handledResponse = await handleRpcRequest(
+      args as unknown as SnapRpcRequestHandlerArgs
+    );
+    return handledResponse ? JSON.stringify(handledResponse) : undefined;
+  } catch (e) {
+    console.error("Snap has thrown error for request: ", args.request);
+    throw e;
+  }
+};
+
+async function handleRpcRequest({
+  request,
+}: SnapRpcRequestHandlerArgs): Promise<RpcRequestMethod["return"]> {
+  //@ts-ignore
+  request.params = request.params
+    ? parseObjectValues(request.params)
+    : undefined;
+
   const signer = await getNocturneSignerFromBIP44();
-  console.log("Snap Nocturne Canonical Address: ", signer.canonicalAddress());
 
-  const merkleProver = await SparseMerkleProver.loadFromKV(kvStore);
-  const syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_API_URL);
-  const sdk = new NocturneWalletSDK(
-    signer,
-    provider,
-    config,
-    merkleProver,
-    nocturneDB,
-    syncAdapter,
-    new MockEthToTokenConverter(),
-    new BundlerOpTracker(BUNDLER_URL)
-  );
-  console.log("Config:", RPC_URL, BUNDLER_URL, SUBGRAPH_API_URL, config);
   console.log("Switching on method: ", request.method);
-  // ! TODO we need better types on these, as any changes are breaking & only caught at runtime. also are very difficult to debug, since snap JSON RPC logs are unhelpful
+  console.log("Request Params:", request.params);
   switch (request.method) {
-    case "nocturne_getRandomizedAddr":
-      return JSON.stringify(signer.generateRandomStealthAddress());
-    case "nocturne_getAllBalances":
-      console.log("Syncing...");
-      await sdk.sync();
-
-      const maybeGetNotesOptsAll = (request.params as any).opts;
-      const getNotesOptsAll: GetNotesOpts | undefined = maybeGetNotesOptsAll
-        ? JSON.parse(maybeGetNotesOptsAll)
-        : undefined;
-      return JSON.stringify(await sdk.getAllAssetBalances(getNotesOptsAll));
-    // can return undefined
-    case "nocturne_getBalanceForAsset":
-      console.log("Syncing...");
-      await sdk.sync();
-
-      const maybeGetNotesOptsSingle = (request.params as any).opts;
-      const getNotesOptsSingle: GetNotesOpts | undefined =
-        maybeGetNotesOptsSingle
-          ? JSON.parse(maybeGetNotesOptsSingle)
-          : undefined;
-      const asset: Asset = JSON.parse((request.params as any).asset);
-
-      return JSON.stringify(
-        await sdk.getBalanceForAsset(asset, getNotesOptsSingle)
-      );
-    case "nocturne_sync":
-      if (snapIsSyncing) {
-        console.log(
-          "Snap is already syncing, returning last synced index, ",
-          lastSyncedMerkleIndex
-        );
-        return lastSyncedMerkleIndex;
-      }
-      const maybeSyncOpts = (request.params as any).syncOpts;
-      const syncOpts: SyncOpts | undefined = maybeSyncOpts
-        ? JSON.parse(maybeSyncOpts)
-        : undefined;
-
-      console.log("Syncing", syncOpts);
-      snapIsSyncing = true;
-      let latestSyncedMerkleIndex: number | undefined;
-      try {
-        // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
-        latestSyncedMerkleIndex = await sdk.sync(syncOpts);
-        await sdk.updateOptimisticNullifiers();
-        console.log(
-          "Synced. state is now: ",
-          //@ts-ignore
-          JSON.stringify(await kvStore.kv())
-        );
-      } catch (e) {
-        console.log("Error syncing notes: ", e);
-        throw e;
-      } finally {
-        snapIsSyncing = false;
-      }
-      console.log("latestSyncedMerkleIndex, ", latestSyncedMerkleIndex);
-      lastSyncedMerkleIndex = latestSyncedMerkleIndex ?? lastSyncedMerkleIndex;
-      return latestSyncedMerkleIndex;
-    case "nocturne_getLatestSyncedMerkleIndex":
-      return await sdk.getLatestSyncedMerkleIndex();
+    case "nocturne_requestViewingKey":
+      const viewer = signer.viewer();
+      return {
+        vk: viewer.vk,
+        vkNonce: viewer.vkNonce,
+      };
     case "nocturne_signOperation":
       console.log("Request params: ", request.params);
 
-      await sdk.sync(); // NOTE: we should never end up in situation where this is called before normal nocturne_sync, otherwise there will be long delay
-      await sdk.updateOptimisticNullifiers();
-
-      console.log("done syncing");
-
-      const operationRequest = JSON.parse(
-        (request.params as any).request
-      ) as OperationRequest;
-      const opMetadata = JSON.parse(
-        (request.params as any).meta
-      ) as OperationMetadata;
-
-      // Ensure user has minimum balance for request
-      if (!(await sdk.hasEnoughBalanceForOperationRequest(operationRequest))) {
-        throw new Error("Insufficient balance for operation request");
-      }
+      const { op, metadata } = request.params;
       const contentItems = makeSignOperationContent(
         // specifies nothing about ordering
-        opMetadata,
+        metadata ?? { items: [] },
         config.erc20s
       ).flatMap((item) => {
         return [heading(item.heading), text(item.text)];
@@ -181,37 +100,22 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
       });
 
       if (!res) {
-        throw new Error("Snap request rejected by user");
+        throw new Error("snap request rejected by user");
       }
 
-      console.log("Operation request: ", operationRequest);
+      console.log("signing operation:", op);
       try {
-        const preSignOp = await sdk.prepareOperation(operationRequest);
-        const signedOp = await sdk.signOperation(preSignOp);
+        const signedOp = await signOperation(signer, op);
         console.log(
           "PreProofOperationInputsAndProofInputs: ",
           JSON.stringify(signedOp)
         );
-
-        await sdk.applyOptimisticRecordsForOp(signedOp, opMetadata);
-        return JSON.stringify(signedOp);
+        return signedOp;
       } catch (err) {
         console.log("Error getting pre-proof operation:", err);
         throw err;
       }
-    case "nocturne_getInFlightOperations":
-      const opDigestsAndMetadata =
-        await sdk.getAllOptimisticOpDigestsWithMetadata();
-      return JSON.stringify(opDigestsAndMetadata);
-    case "nocturne_clearDb":
-      await kvStore.clear();
-      console.log(
-        "Cleared DB, state: ",
-        //@ts-ignore
-        JSON.stringify(await kvStore.kv())
-      );
-      return;
     default:
-      throw new Error("Method not found.");
+      assertAllRpcMethodsHandled(request);
   }
-};
+}

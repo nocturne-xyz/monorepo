@@ -15,6 +15,7 @@ export interface Erc20Config {
   address: Address;
   globalCapWholeTokens: bigint;
   maxDepositSizeWholeTokens: bigint;
+  resetWindowHours: bigint;
   precision: bigint;
   isGasAsset: boolean;
 }

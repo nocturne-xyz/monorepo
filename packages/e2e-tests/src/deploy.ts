@@ -13,7 +13,7 @@ import {
 
 import {
   NocturneSigner,
-  NocturneWalletSDK,
+  NocturneClient,
   InMemoryKVStore,
   NocturneDB,
   SparseMerkleProver,
@@ -339,6 +339,7 @@ export async function deployContractsWithDummyConfig(
           globalCapWholeTokens: 5000n,
           maxDepositSizeWholeTokens: 500n,
           precision: 18n,
+          resetWindowHours: 3n,
           isGasAsset: true,
         },
       ],
@@ -349,6 +350,7 @@ export async function deployContractsWithDummyConfig(
           globalCapWholeTokens: 5000n,
           maxDepositSizeWholeTokens: 500n,
           precision: 18n,
+          resetWindowHours: 3n,
           isGasAsset: true,
         },
       ],
@@ -359,6 +361,7 @@ export async function deployContractsWithDummyConfig(
           globalCapWholeTokens: 5000n,
           maxDepositSizeWholeTokens: 500n,
           precision: 18n,
+          resetWindowHours: 3n,
           isGasAsset: true,
         },
       ],
@@ -446,10 +449,12 @@ export enum SyncAdapterOption {
 }
 
 export interface ClientSetup {
+  nocturneSignerAlice: NocturneSigner;
   nocturneDBAlice: NocturneDB;
-  nocturneWalletSDKAlice: NocturneWalletSDK;
+  nocturneClientAlice: NocturneClient;
+  nocturneSignerBob: NocturneSigner;
   nocturneDBBob: NocturneDB;
-  nocturneWalletSDKBob: NocturneWalletSDK;
+  nocturneClientBob: NocturneClient;
   joinSplitProver: JoinSplitProver;
 }
 
@@ -467,12 +472,13 @@ export async function setupTestClient(
     syncAdapter = new RPCSDKSyncAdapter(provider, handlerProxy.proxy);
   }
 
-  console.log("Create NocturneWalletSDKAlice");
+  console.log("Create nocturneClientAlice");
   const aliceKV = new InMemoryKVStore();
   const nocturneDBAlice = new NocturneDB(aliceKV);
   const merkleProverAlice = new SparseMerkleProver(aliceKV);
-  const nocturneWalletSDKAlice = setupNocturneWalletSDK(
-    Uint8Array.from(range(32)),
+  const nocturneSignerAlice = new NocturneSigner(Uint8Array.from(range(32)));
+  const nocturneClientAlice = setupNocturneClient(
+    nocturneSignerAlice,
     config,
     provider,
     nocturneDBAlice,
@@ -480,12 +486,15 @@ export async function setupTestClient(
     syncAdapter
   );
 
-  console.log("Create NocturneWalletSDKBob");
+  console.log("Create nocturneClientBob");
   const bobKV = new InMemoryKVStore();
   const nocturneDBBob = new NocturneDB(bobKV);
   const merkleProverBob = new SparseMerkleProver(aliceKV);
-  const nocturneWalletSDKBob = setupNocturneWalletSDK(
-    Uint8Array.from(range(32).map((n) => 2 * n)),
+  const nocturneSignerBob = new NocturneSigner(
+    Uint8Array.from(range(32).map((n) => 2 * n))
+  );
+  const nocturneClientBob = setupNocturneClient(
+    nocturneSignerBob,
     config,
     provider,
     nocturneDBBob,
@@ -497,25 +506,25 @@ export async function setupTestClient(
 
   return {
     nocturneDBAlice,
-    nocturneWalletSDKAlice,
+    nocturneSignerAlice,
+    nocturneClientAlice,
     nocturneDBBob,
-    nocturneWalletSDKBob,
+    nocturneSignerBob,
+    nocturneClientBob,
     joinSplitProver,
   };
 }
 
-function setupNocturneWalletSDK(
-  sk: Uint8Array,
+function setupNocturneClient(
+  signer: NocturneSigner,
   config: NocturneConfig,
   provider: ethers.providers.Provider,
   nocturneDB: NocturneDB,
   merkleProver: SparseMerkleProver,
   syncAdapter: SDKSyncAdapter
-): NocturneWalletSDK {
-  const nocturneSigner = new NocturneSigner(sk);
-
-  return new NocturneWalletSDK(
-    nocturneSigner,
+): NocturneClient {
+  return new NocturneClient(
+    signer,
     provider,
     config,
     merkleProver,

@@ -5,6 +5,7 @@ import {
   Handler,
   Handler__factory,
 } from "@nocturne-xyz/contracts";
+import { Mutex } from "async-mutex";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
   ActionMetadata,
@@ -16,12 +17,13 @@ import {
   DepositQuoteResponse,
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
-  OpDigestWithMetadata,
-  OperationRequestBuilder,
+  newOpRequestBuilder,
   OperationRequestWithMetadata,
   OperationStatusResponse,
   ProvenOperation,
   RelayRequest,
+  RpcRequestMethod,
+  SignOperationMethod,
   SignedOperation,
   StealthAddress,
   StealthAddressTrait,
@@ -36,8 +38,19 @@ import {
   joinSplitPublicSignalsToArray,
   parseEventsFromContractReceipt,
   proveOperation,
+  stringifyObjectValues,
   thunk,
   unpackFromSolidityProof,
+  NocturneClient,
+  RequestViewingKeyMethod,
+  NocturneViewer,
+  SparseMerkleProver,
+  NocturneDB,
+  SubgraphSDKSyncAdapter,
+  MockEthToTokenConverter,
+  BundlerOpTracker,
+  PreSignOperation,
+  InMemoryKVStore,
 } from "@nocturne-xyz/core";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
@@ -99,10 +112,15 @@ export class NocturneSdk implements NocturneSdkApi {
   protected _provider?: SupportedProvider;
   protected _snap: SnapStateApi;
   protected urqlClient: UrqlClient;
+  protected syncMutex: Mutex;
+
+  protected merkleProver: SparseMerkleProver;
+  protected db: NocturneDB;
 
   protected signerThunk: Thunk<ethers.Signer>;
   protected depositManagerContractThunk: Thunk<DepositManager>;
   protected handlerContractThunk: Thunk<Handler>;
+  protected clientThunk: Thunk<NocturneClient>;
 
   private wethAddress: string | undefined;
 
@@ -132,6 +150,7 @@ export class NocturneSdk implements NocturneSdkApi {
       snapOptions?.snapId,
       networkName
     );
+    this.syncMutex = new Mutex();
 
     this.signerThunk = thunk(() => this.getWindowSigner());
     this.depositManagerContractThunk = thunk(async () =>
@@ -152,7 +171,32 @@ export class NocturneSdk implements NocturneSdkApi {
       exchanges: [fetchExchange],
     });
 
-    this.wethAddress = this.config.config.erc20s.get("weth")?.address;
+    // TODO: add IdbKVStore + make this actually persistent 
+    const kv = new InMemoryKVStore();
+    this.merkleProver = new SparseMerkleProver(kv);
+    this.db = new NocturneDB(kv);
+
+    this.clientThunk = thunk(async () => {
+      const { vk, vkNonce } = await this.invokeSnap<RequestViewingKeyMethod>({
+        method: "nocturne_requestViewingKey",
+        params: undefined,
+      });
+
+      return new NocturneClient(
+        new NocturneViewer(vk, vkNonce),
+        this.provider,
+        this.config.config,
+        this.merkleProver,
+        this.db,
+        new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
+        new MockEthToTokenConverter(),
+        new BundlerOpTracker(this.endpoints.bundlerEndpoint)
+      );
+    });
+  }
+  
+  protected get wethAddress(): string | undefined {
+    return this.config.config.erc20s.get("weth")?.address;
   }
 
   protected get provider(): SupportedProvider {
@@ -296,7 +340,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
     const encodedErc20 = AssetTrait.erc20AddressToAsset(erc20Address);
 
-    const operationRequest = new OperationRequestBuilder({
+    const operationRequest = newOpRequestBuilder({
       chainId: BigInt(this.config.config.contracts.network.chainId),
       tellerContract: this.config.config.tellerAddress(),
     })
@@ -407,20 +451,44 @@ export class NocturneSdk implements NocturneSdkApi {
    * @param operationRequest Operation request
    */
   async signOperationRequest(
-    operationRequest: OperationRequestWithMetadata
+    operationRequest: OperationRequestWithMetadata,
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", operationRequest.meta);
-    const params = {
-      request: JSON.stringify(operationRequest.request),
-      meta: JSON.stringify(operationRequest.meta),
-    };
-    console.log("[fe-sdk] params", params);
-    const json = await this.invokeSnap({
+    const client = await this.clientThunk();
+
+    // NOTE: we should never end up in situation where this is called before normal nocturne_sync, otherwise there will be long delay
+    const warnTimeout = setTimeout(() => {
+      console.warn("[fe-sdk] the SDK has not yet been synced. This may cause a long delay until `signOperation` returns. It's strongly reccomended to explicitly use `sync` or `syncWithProgress` to ensure the SDK is fully synced before calling `signOperation`");
+    }, 5000);
+    await this.syncMutex.runExclusive(async () => await client.sync());
+    clearTimeout(warnTimeout);
+
+    await client.updateOptimisticNullifiers();
+
+    const { meta: opMeta, request: opRequest } = operationRequest;
+
+    // Ensure user has minimum balance for request
+    if (!(await client.hasEnoughBalanceForOperationRequest(opRequest))) {
+      throw new Error("Insufficient balance for operation request");
+    }
+
+    let preSignOp: PreSignOperation | undefined;
+    try {
+      preSignOp = await client.prepareOperation(opRequest);
+    } catch (e) {
+      console.log("[fe-sdk] prepareOperation failed: ", e);
+      throw e;
+    }
+
+    const op = await this.invokeSnap<SignOperationMethod>({
       method: "nocturne_signOperation",
-      params,
+      params: { op: preSignOp, metadata: opMeta },
     });
-    const op = JSON.parse(json) as SignedOperation;
+
     console.log("SignedOperation:", op);
+
+    await client.applyOptimisticRecordsForOp(op, opMeta);
+
     return op;
   }
 
@@ -539,39 +607,28 @@ export class NocturneSdk implements NocturneSdkApi {
    */
   async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
     console.log("[fe-sdk] getAllBalances with params:", opts);
-    const json = await this.invokeSnap({
-      method: "nocturne_getAllBalances",
-      params: {
-        opts: opts ? JSON.stringify(opts) : undefined,
-      },
-    });
-
-    return JSON.parse(json) as AssetWithBalance[];
+    const client = await this.clientThunk();
+  
+    await this.syncMutex.runExclusive(async () => await client.sync());
+    return await client.getAllAssetBalances(opts);
   }
 
+  // todo currently core's getBalanceForAsset doesn't distinguish b/t balance not existing, and balance being 0
   async getBalanceForAsset(
     erc20Address: Address,
     opts?: GetBalanceOpts
-  ): Promise<AssetWithBalance> {
+  ): Promise<bigint> {
     const asset = AssetTrait.erc20AddressToAsset(erc20Address);
-    const json = await this.invokeSnap({
-      method: "nocturne_getBalanceForAsset",
-      params: {
-        asset: JSON.stringify(asset),
-        opts: opts ? JSON.stringify(opts) : undefined,
-      },
-    });
-    if (json === undefined) {
-      throw new Error("Balance for asset does not exist");
-    }
-    return JSON.parse(json) as AssetWithBalance;
+    const client = await this.clientThunk();
+
+    await this.syncMutex.runExclusive(async () => await client.sync());
+    return client.getBalanceForAsset(asset, opts);
   }
 
   async getInFlightOperations(): Promise<OperationHandle[]> {
-    const json = await this.invokeSnap({
-      method: "nocturne_getInFlightOperations",
-    });
-    const operationHandles = (JSON.parse(json) as OpDigestWithMetadata[]).map(
+    const client = await this.clientThunk();
+    const opDigestsWithMetadata = await client.getAllOptimisticOpDigestsWithMetadata();
+    const operationHandles = opDigestsWithMetadata.map(
       ({ opDigest: digest, metadata }) => {
         return {
           digest,
@@ -600,10 +657,10 @@ export class NocturneSdk implements NocturneSdkApi {
     );
 
     let closed = false;
-    const generator = async function* (sdk: NocturneSdk) {
+    const generator = async function* (sdk: NocturneSdk, client: NocturneClient) {
       let count = 0;
       while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
-        latestSyncedMerkleIndex = (await sdk.sync(syncOpts)) ?? 0;
+        latestSyncedMerkleIndex = (await client.sync(syncOpts)) ?? 0;
 
         if (count % refetchEvery === 0) {
           latestMerkleIndexOnChain =
@@ -618,7 +675,7 @@ export class NocturneSdk implements NocturneSdkApi {
     };
 
     const progressIter = new ClosableAsyncIterator(
-      generator(this),
+      generator(this, await this.clientThunk()),
       async () => {
         closed = true;
       }
@@ -635,33 +692,23 @@ export class NocturneSdk implements NocturneSdkApi {
    * Invoke snap `syncNotes` method, returning latest synced merkle index.
    */
   async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
-    const latestSyncedMerkleIndexJson = await this.invokeSnap({
-      method: "nocturne_sync",
-      params: {
-        syncOpts: syncOpts ? JSON.stringify(syncOpts) : undefined,
-      },
-    });
-
-    const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
-      ? JSON.parse(latestSyncedMerkleIndexJson)
-      : undefined;
-
-    console.log(
-      "[sync] FE-SDK latestSyncedMerkleIndex",
-      latestSyncedMerkleIndex
-    );
+    let latestSyncedMerkleIndex: number | undefined;
+    try {
+      // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
+      const client = await this.clientThunk();
+      latestSyncedMerkleIndex = await this.syncMutex.runExclusive(async () => await client.sync(syncOpts));
+      await client.updateOptimisticNullifiers();
+    } catch (e) {
+      console.log("Error syncing notes: ", e);
+      throw e;
+    }
+    console.log("[sync] FE-sdk latestSyncedMerkleIndex, ", latestSyncedMerkleIndex);
     return latestSyncedMerkleIndex;
   }
 
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
-    const latestSyncedMerkleIndexJson = await this.invokeSnap({
-      method: "nocturne_getLatestSyncedMerkleIndex",
-    });
-
-    const latestSyncedMerkleIndex = latestSyncedMerkleIndexJson
-      ? JSON.parse(latestSyncedMerkleIndexJson)
-      : undefined;
-
+    const client = await this.clientThunk();
+    const latestSyncedMerkleIndex = await client.getLatestSyncedMerkleIndex();
     console.log(
       "[getLatestSyncedMerkleIndex] FE-SDK latestSyncedMerkleIndex",
       latestSyncedMerkleIndex
@@ -669,15 +716,17 @@ export class NocturneSdk implements NocturneSdkApi {
     return latestSyncedMerkleIndex;
   }
 
+  async clearSyncState(): Promise<void> {
+    const client = await this.clientThunk();
+    await client.clearDb();
+  }
+
   /**
    * Retrieve a freshly randomized address from the snap.
    */
   async getRandomStealthAddress(): Promise<StealthAddress> {
-    const json = await this.invokeSnap({
-      method: "nocturne_getRandomizedAddr",
-    });
-
-    return JSON.parse(json) as StealthAddress;
+    const client = await this.clientThunk();
+    return await client.viewer.generateRandomStealthAddress();
   }
 
   // ! TODO this is an atrocious signature to hand consumers
@@ -704,17 +753,28 @@ export class NocturneSdk implements NocturneSdkApi {
     );
   }
 
-  private async invokeSnap(request: {
-    method: string;
-    params?: object;
-  }): Promise<string> {
-    return (await window.ethereum.request({
+  private async invokeSnap<RpcMethod extends RpcRequestMethod>(
+    request: Omit<RpcMethod, "return">
+  ): Promise<RpcMethod["return"]> {
+    console.log("[fe-sdk] invoking snap with request:", request);
+    const stringifiedParams = request.params
+      ? stringifyObjectValues(request.params)
+      : undefined;
+    const jsonRpcRequest = {
       method: "wallet_invokeSnap",
       params: {
         snapId: this._snap.snapId,
-        request,
+        request: {
+          method: request.method,
+          params: stringifiedParams,
+        },
       },
-    })) as string;
+    };
+    console.log("[fe-sdk] jsonRpcRequest", jsonRpcRequest);
+    const response = await window.ethereum.request<RpcMethod["return"]>(
+      jsonRpcRequest
+    );
+    return response ? JSON.parse(response as unknown as string) : undefined;
   }
 
   private async formDepositHandlesWithTxReceipt(
