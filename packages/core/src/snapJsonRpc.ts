@@ -1,85 +1,29 @@
 import * as JSON from "bigint-json-serialization";
-import { GetNotesOpts } from "./NocturneDB";
-import { StealthAddress } from "./crypto";
-import { OperationRequestWithMetadata } from "./operationRequest";
 import {
-  Asset,
-  AssetWithBalance,
-  OpDigestWithMetadata,
+  OperationWithMetadata,
+  PreSignOperation,
   SignedOperation,
 } from "./primitives";
-import { SyncOpts } from "./syncSDK";
-
-export type LatestSyncedMerkleIndex = number | undefined;
-
-export interface GetAllBalancesParams {
-  opts?: GetNotesOpts;
-}
-export interface GetBalanceForAssetParams {
-  opts?: GetNotesOpts;
-  asset: Asset;
-}
-export interface SyncParams {
-  opts?: SyncOpts;
-}
-type SignOperationParams = OperationRequestWithMetadata;
-
-export interface GetAllBalancesMethod {
-  method: "nocturne_getAllBalances";
-  params: GetAllBalancesParams;
-  return: AssetWithBalance[];
-}
-
-export interface GetBalanceForAssetMethod {
-  method: "nocturne_getBalanceForAsset";
-  params: GetBalanceForAssetParams;
-  return: bigint;
-}
-export interface SyncMethod {
-  method: "nocturne_sync";
-  params: SyncParams;
-  return: LatestSyncedMerkleIndex;
-}
+import { ViewingKey } from "./crypto";
 
 export interface SignOperationMethod {
   method: "nocturne_signOperation";
-  params: SignOperationParams;
+  params: OperationWithMetadata<PreSignOperation>;
   return: SignedOperation;
 }
 
-export interface GetRandomizedAddrMethod {
-  method: "nocturne_getRandomizedAddr";
-  params?: undefined;
-  return: StealthAddress;
+export interface RequestViewingKeyMethodResponse {
+  vk: ViewingKey;
+  vkNonce: bigint;
 }
 
-export interface GetLatestSyncedMerkleIndexMethod {
-  method: "nocturne_getLatestSyncedMerkleIndex";
-  params?: undefined;
-  return: LatestSyncedMerkleIndex;
+export interface RequestViewingKeyMethod {
+  method: "nocturne_requestViewingKey";
+  params: undefined;
+  return: RequestViewingKeyMethodResponse;
 }
 
-export interface GetInFlightOperationsMethod {
-  method: "nocturne_getInFlightOperations";
-  params?: undefined;
-  return: OpDigestWithMetadata[];
-}
-
-export interface ClearDbMethod {
-  method: "nocturne_clearDb";
-  params?: undefined;
-  return: undefined;
-}
-
-export type RpcRequestMethod =
-  | GetAllBalancesMethod
-  | GetBalanceForAssetMethod
-  | SyncMethod
-  | SignOperationMethod
-  | GetRandomizedAddrMethod
-  | GetLatestSyncedMerkleIndexMethod
-  | GetInFlightOperationsMethod
-  | ClearDbMethod;
+export type RpcRequestMethod = SignOperationMethod | RequestViewingKeyMethod;
 
 export type SnapRpcRequestHandlerArgs = {
   origin: string;

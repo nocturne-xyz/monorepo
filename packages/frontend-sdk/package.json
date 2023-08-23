@@ -28,6 +28,7 @@
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
     "@urql/core": "^4.1.1",
+    "async-mutex": "^0.4.0",
     "async-retry": "^1.3.3",
     "bigint-json-serialization": "^1.0.1",
     "ethers": "^5.7.2"
