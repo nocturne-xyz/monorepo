@@ -191,6 +191,9 @@ export class NocturneSdk implements NocturneSdkApi {
       );
     });
   }
+  protected get wethAddress(): string | undefined {
+    return this.config.config.erc20s.get("weth")?.address;
+  }
 
   protected get provider(): SupportedProvider {
     if (typeof window === "undefined") {
@@ -241,9 +244,7 @@ export class NocturneSdk implements NocturneSdkApi {
     const tx = await (
       await this.depositManagerContractThunk()
     ).instantiateETHMultiDeposit(values, depositAddr, { value: totalValue });
-    const erc20s = this.config.config.erc20s;
-    const wethAddress = erc20s.get("weth")?.address;
-    if (!wethAddress) {
+    if (!this.wethAddress) {
       throw new Error("WETH address not found in Nocturne config");
     }
     return this.formDepositHandlesWithTxReceipt(tx);
@@ -364,7 +365,8 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   async retrievePendingDeposit(
-    req: DepositRequest
+    req: DepositRequest,
+    retrieveEthDepositsAs: "ETH" | "WETH" = "ETH"
   ): Promise<ContractTransaction> {
     const signer = await this.getWindowSigner();
     const signerAddress = await signer.getAddress();
@@ -379,7 +381,15 @@ export class NocturneSdk implements NocturneSdkApi {
     if (!isOutstandingDeposit) {
       throw new Error("Deposit request does not exist");
     }
-    return depositManagerContract.retrieveDeposit(req);
+    const asset = AssetTrait.decode(req.encodedAsset);
+    if (
+      retrieveEthDepositsAs === "ETH" &&
+      asset.assetAddr === this.wethAddress
+    ) {
+      return depositManagerContract.retrieveETHDeposit(req);
+    } else {
+      return depositManagerContract.retrieveDeposit(req);
+    }
   }
   /**
    * Fetch status of existing deposit request given its hash.
