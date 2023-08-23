@@ -28,6 +28,6 @@ export function maxGasLimitForSingleJoinSplit(): bigint {
   return (
     GAS_PER_JOINSPLIT_VERIFY_SINGLE +
     GAS_PER_JOINSPLIT_HANDLE +
-    2n * (GAS_PER_INSERTION_SUBTREE_UPDATE + GAS_PER_INSERTION_ENQUEUE)
+    3n * (GAS_PER_INSERTION_SUBTREE_UPDATE + GAS_PER_INSERTION_ENQUEUE) // 2 new NCs + refund
   );
 }
