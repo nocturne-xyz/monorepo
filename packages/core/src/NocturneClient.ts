@@ -7,7 +7,7 @@ import {
   OpDigestWithMetadata,
   computeOperationDigest,
 } from "./primitives";
-import { NocturneSigner } from "./crypto";
+import { NocturneViewer } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
 import { prepareOperation } from "./prepareOperation";
 import {
@@ -17,7 +17,6 @@ import {
 import { GetNotesOpts, NocturneDB } from "./NocturneDB";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
-import { signOperation } from "./signOperation";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
 import { SDKSyncAdapter, TotalEntityIndexTrait } from "./sync";
@@ -32,7 +31,7 @@ import { getTotalEntityIndexOfNewestNoteInOp } from "./totalEntityIndexOfNewestN
 const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000; // 10 minutes
 const BUNDLER_RECEIVED_OP_BUFFER: number = 90 * 1000; // 90 seconds (buffer in case proof gen takes a while)
 
-export class NocturneWalletSDK {
+export class NocturneClient {
   protected provider: ethers.providers.Provider;
   protected config: NocturneConfig;
   protected handlerContract: Handler;
@@ -42,11 +41,11 @@ export class NocturneWalletSDK {
   protected tokenConverter: EthToTokenConverter;
   protected opTracker: OpTracker;
 
-  readonly signer: NocturneSigner;
+  readonly viewer: NocturneViewer;
   readonly gasAssets: Map<string, Asset>;
 
   constructor(
-    signer: NocturneSigner,
+    viewer: NocturneViewer,
     provider: ethers.providers.Provider,
     configOrNetworkName: NocturneConfig | string,
     merkleProver: SparseMerkleProver,
@@ -71,7 +70,7 @@ export class NocturneWalletSDK {
         })
     );
 
-    this.signer = signer;
+    this.viewer = viewer;
     this.handlerContract = Handler__factory.connect(
       this.config.handlerAddress(),
       provider
@@ -83,10 +82,14 @@ export class NocturneWalletSDK {
     this.opTracker = nulliferChecker;
   }
 
+  async clearDb(): Promise<void> {
+    await this.db.kv.clear();
+  }
+
   // Sync SDK, returning last synced merkle index of last state diff
   async sync(opts?: SyncOpts): Promise<number | undefined> {
     const latestSyncedMerkleIndex = await syncSDK(
-      { viewer: this.signer },
+      { viewer: this.viewer },
       this.syncAdapter,
       this.db,
       this.merkleProver,
@@ -107,7 +110,7 @@ export class NocturneWalletSDK {
       tokenConverter: this.tokenConverter,
       handlerContract: this.handlerContract,
       merkle: this.merkleProver,
-      viewer: this.signer,
+      viewer: this.viewer,
     };
     const gasAccountedOpRequest = await handleGasForOperationRequest(
       deps,
@@ -115,10 +118,6 @@ export class NocturneWalletSDK {
     );
 
     return await prepareOperation(deps, gasAccountedOpRequest);
-  }
-
-  signOperation(preSignOperation: PreSignOperation): SignedOperation {
-    return signOperation(this.signer, preSignOperation);
   }
 
   async getAllAssetBalances(opts?: GetNotesOpts): Promise<AssetWithBalance[]> {
