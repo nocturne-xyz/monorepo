@@ -103,8 +103,6 @@ export class NocturneSdk implements NocturneSdkApi {
   protected depositManagerContractThunk: Thunk<DepositManager>;
   protected handlerContractThunk: Thunk<Handler>;
 
-  private wethAddress: string | undefined;
-
   // Caller MUST conform to EIP-1193 spec (window.ethereum) https://eips.ethereum.org/EIPS/eip-1193
   constructor(options: NocturneSdkOptions = {}) {
     const networkName = options.networkName || "mainnet";
@@ -150,8 +148,9 @@ export class NocturneSdk implements NocturneSdkApi {
       url: this.endpoints.subgraphEndpoint,
       exchanges: [fetchExchange],
     });
-
-    this.wethAddress = this.config.config.erc20s.get("weth")?.address;
+  }
+  protected get wethAddress(): string | undefined {
+    return this.config.config.erc20s.get("weth")?.address;
   }
 
   protected get provider(): SupportedProvider {
