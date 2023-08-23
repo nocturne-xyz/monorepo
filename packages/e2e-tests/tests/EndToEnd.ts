@@ -256,7 +256,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     });
   });
 
-  it(`alice deposits four notes, public ERC20 transfers some to Bob, privatelypays some to Bob`, async () => {
+  it(`alice deposits four notes, public ERC20 transfers some to Bob, privately pays some to Bob`, async () => {
     const ALICE_UNWRAP_VAL = PER_NOTE_AMOUNT * 2n + (PER_NOTE_AMOUNT * 3n) / 4n; // 2.75 notes
     const ALICE_TO_BOB_PUB_VAL = PER_NOTE_AMOUNT * 2n + PER_NOTE_AMOUNT / 2n; // 2.5 notes
     const ALICE_TO_BOB_PRIV_VAL = PER_NOTE_AMOUNT / 4n; // 0.25 notes

@@ -3,10 +3,10 @@ import { Operation } from "./types";
 
 // Numbers and logic copied from contracts Types.sol
 const GAS_PER_JOINSPLIT_VERIFY_SINGLE = 290_000n;
-const GAS_PER_JOINSPLIT_HANDLE = 100_000n;
+const GAS_PER_JOINSPLIT_HANDLE = 120_000n;
 const GAS_PER_INSERTION_SUBTREE_UPDATE = 25_000n;
 const GAS_PER_INSERTION_ENQUEUE = 25_000n;
-const GAS_PER_OPERATION_MISC = 110_000n;
+const GAS_PER_OPERATION_MISC = 90_000n;
 const GAS_BUFFER = 100_000n;
 
 export function maxGasLimitForOperation(op: Operation): bigint {
