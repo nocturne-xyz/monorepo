@@ -29,8 +29,7 @@ contract DepositManager is
 
     // Struct for erc20 rate limit info
     struct Erc20Cap {
-        // Total deposited for asset over last 1h (in precision units), uint128 leaves space for
-        // 3x10^20 whole tokens even with 18 decimals
+        // Total deposited for asset over last `resetWindowHours` (in precision units), uint128 leaves space for 3x10^20 whole tokens even with 18 decimals
         uint128 runningGlobalDeposited;
         // Global cap for asset in whole tokens, globalCapWholeTokens * 10^precision should never
         // exceed uint128.max (checked in setter)
@@ -39,6 +38,8 @@ contract DepositManager is
         uint32 maxDepositSizeWholeTokens;
         // block.timestamp of last reset (limit at year 2106)
         uint32 lastResetTimestamp;
+        // Number of hours until `runningGlobalDeposited` will be reset by a deposit
+        uint8 resetWindowHours;
         // Decimals for asset, tokens = whole tokens * 10^precision
         uint8 precision;
     }
@@ -138,6 +139,7 @@ contract DepositManager is
                 cap.globalCapWholeTokens |
                 cap.maxDepositSizeWholeTokens |
                 cap.lastResetTimestamp |
+                cap.resetWindowHours |
                 cap.precision) != 0,
             "!supported erc20"
         );
@@ -154,7 +156,7 @@ contract DepositManager is
     }
 
     /// @notice Ensures deposit does not exceed global cap for asset
-    /// @dev Resets hourly global cap if block.timestamp > lastResetTimestamp + 1 hour
+    /// @dev Resets global cap if block.timestamp > lastResetTimestamp + resetWindowHours seconds
     /// @dev Since we store running count of erc20 deposited in uint128 in Erc20Cap,
     ///      the checked value must be < uint128.max
     /// @param encodedAsset Encoded erc20 to check cap for
@@ -173,7 +175,10 @@ contract DepositManager is
         Erc20Cap memory cap = _erc20Caps[token];
 
         // Clear expired global cap if possible
-        if (block.timestamp > cap.lastResetTimestamp + SECONDS_IN_HOUR) {
+        if (
+            block.timestamp >
+            cap.lastResetTimestamp + (cap.resetWindowHours * SECONDS_IN_HOUR)
+        ) {
             cap.runningGlobalDeposited = 0;
             cap.lastResetTimestamp = uint32(block.timestamp);
         }
@@ -216,6 +221,7 @@ contract DepositManager is
         address token,
         uint32 globalCapWholeTokens,
         uint32 maxDepositSizeWholeTokens,
+        uint8 resetWindowHours,
         uint8 precision
     ) external onlyOwner {
         require(
@@ -231,6 +237,7 @@ contract DepositManager is
             globalCapWholeTokens: globalCapWholeTokens,
             maxDepositSizeWholeTokens: maxDepositSizeWholeTokens,
             lastResetTimestamp: uint32(block.timestamp),
+            resetWindowHours: resetWindowHours,
             precision: precision
         });
     }

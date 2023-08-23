@@ -8,7 +8,7 @@ import {
   generateRandomSpendingKey,
 } from "../src/crypto";
 import { range } from "../src/utils";
-import { AssetTrait, OperationRequestBuilder } from "../src";
+import { AssetTrait, newOpRequestBuilder } from "../src";
 import { prepareOperation, __private } from "../src/prepareOperation";
 import { sortNotesByValue } from "../src/utils";
 import {
@@ -168,7 +168,7 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -222,7 +222,7 @@ describe("prepareOperation", async () => {
     const receiverSigner = new NocturneSigner(receiverRk);
     const receiver = receiverSigner.canonicalAddress();
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -274,7 +274,7 @@ describe("prepareOperation", async () => {
     };
     const refundAddr = signer.generateRandomStealthAddress();
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -335,7 +335,7 @@ describe("prepareOperation", async () => {
       .map((sk) => new NocturneSigner(sk))
       .map((signer) => signer.canonicalAddress());
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -386,7 +386,7 @@ describe("prepareOperation", async () => {
 
     const refundAddr = signer.generateRandomStealthAddress();
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -456,7 +456,7 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
@@ -498,7 +498,7 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const builder = new OperationRequestBuilder({
+    const builder = newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });

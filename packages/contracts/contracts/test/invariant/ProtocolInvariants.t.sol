@@ -83,6 +83,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
             address(weth),
             type(uint32).max,
             type(uint32).max,
+            uint8(1),
             weth.decimals()
         );
 
@@ -90,6 +91,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
             address(depositErc20),
             type(uint32).max,
             type(uint32).max,
+            uint8(1),
             depositErc20.decimals()
         );
 
