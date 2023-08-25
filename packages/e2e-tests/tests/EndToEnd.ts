@@ -417,7 +417,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
-      nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
+      nocturneSignerAlice.generateRandomStealthAddress()
     );
     await fillSubtreeBatch();
 
@@ -473,7 +473,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
-      await nocturneWalletSDKAlice.sync();
+      await nocturneClientAlice.sync();
       const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
         erc20Asset,
         { includeUncommitted: true }
