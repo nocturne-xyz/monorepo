@@ -134,7 +134,8 @@ library OperationUtils {
             (opResult.verificationGas +
                 handleJoinSplitGas +
                 opResult.executionGas +
-                refundGas);
+                refundGas
+                + GAS_PER_OPERATION_MISC);
     }
 
     // From https://ethereum.stackexchange.com/questions/83528

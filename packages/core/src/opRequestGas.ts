@@ -30,7 +30,7 @@ import {
 
 // refunds < 600k gas * gasPrice converted to gasAsset not worth refunding given single joinsplit
 // processing is costs around 600k when not batched
-const DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS = 600_000n;
+const DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS = 0n;
 
 const DUMMY_GAS_ASSET: Asset = {
   assetType: AssetType.ERC20,
