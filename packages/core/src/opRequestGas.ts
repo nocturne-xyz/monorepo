@@ -24,13 +24,14 @@ import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
 import {
-  maxGasLimitForOperation,
-  maxGasLimitForSingleJoinSplit,
+  maxGasForOperation,
+  maxGasForAdditionalJoinSplit,
 } from "./primitives/gasCalculation";
 
-// refunds < 600k gas * gasPrice converted to gasAsset not worth refunding given single joinsplit
-// processing is costs around 600k when not batched
-const DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS = 0n;
+// If gas asset refund is less than this amount * gasPrice denominated in the gas asset, refund will
+// not be processed and funds will be sent to bundler. This is because cost of processing would
+// outweight value of note.
+const DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS = 600_000n;
 
 const DUMMY_GAS_ASSET: Asset = {
   assetType: AssetType.ERC20,
@@ -205,7 +206,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
     // to the list, and we're done
     const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
     const extraJoinSplitCostInGasAsset = await tokenConverter.weiToTargetErc20(
-      maxGasLimitForSingleJoinSplit() * gasPrice,
+      maxGasForAdditionalJoinSplit() * gasPrice,
       ticker
     );
     console.log("extraJoinSplitCostInGasAsset", extraJoinSplitCostInGasAsset);
@@ -278,7 +279,7 @@ async function estimateGasForOperationRequest(
   }
 
   preparedOp.executionGasLimit = executionGasLimit;
-  const totalGasLimit = maxGasLimitForOperation(preparedOp);
+  const totalGasLimit = maxGasForOperation(preparedOp);
 
   // if gasPrice is not specified, get it from RPC node
   // NOTE: gasPrice returned in wei

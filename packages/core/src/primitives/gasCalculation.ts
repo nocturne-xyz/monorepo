@@ -9,7 +9,7 @@ const GAS_PER_INSERTION_ENQUEUE = 25_000n;
 const GAS_PER_OPERATION_MISC = 100_000n;
 const GAS_BUFFER = 100_000n;
 
-export function maxGasLimitForOperation(op: Operation): bigint {
+export function maxGasForOperation(op: Operation): bigint {
   const numJoinSplits = op.joinSplits.length;
   const numUniqueAssets = getTrackedAssets(op).length;
 
@@ -24,7 +24,7 @@ export function maxGasLimitForOperation(op: Operation): bigint {
   );
 }
 
-export function maxGasLimitForSingleJoinSplit(): bigint {
+export function maxGasForAdditionalJoinSplit(): bigint {
   return (
     GAS_PER_JOINSPLIT_VERIFY_SINGLE +
     GAS_PER_JOINSPLIT_HANDLE +
