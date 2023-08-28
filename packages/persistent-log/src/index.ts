@@ -12,7 +12,7 @@ interface InsertionLogOptions {
 }
 
 // a string of the form `N-M`, where N and M are both decimal-formatted 64-bit unsigned integers
-type RedisStreamId = string;
+export type RedisStreamId = string;
 export class RedisStreamIdTrait {
   // checks that the given `id` is well-formed
   static fromString(id: string): RedisStreamId {
@@ -53,14 +53,14 @@ export class RedisStreamIdTrait {
   }
 }
 
-interface WithRedisStreamId<T> {
+export interface WithRedisStreamId<T> {
   id: RedisStreamId;
   inner: T;
 }
 
-interface ScanOptions {
-  // if given, the iterator will only return elements with index >= `startId`
-  // if this id is > current tip AND `infinite` is set to `false`, the returned iterator will be
+export interface ScanOptions {
+  // if given, the iterator will only return elements with index > `startId`
+  // if this id is >= current tip AND `infinite` is set to `false`, the returned iterator will be empty
   startId?: string;
 
   // if given, the iterator will only return elements with index < `endId`,
@@ -70,6 +70,7 @@ interface ScanOptions {
 
   // if true, returned iterator will scan over all past, present, and future elements
   // if false, returned iterator will terminate once redis returns an empty response
+  // defaults to false
   infinite?: boolean;
 
   // amount of time in milliseconds to block for when waiting for new data until terminating the query and re-trying
@@ -175,7 +176,7 @@ export class PersistentLog<T> {
     };
 
     // start at `startTotalEntityIndex` if it was given
-    let lowerBound = options?.startId ?? "-";
+    let lowerBound = options?.startId ?? "0-0";
     logger && logger.debug(`starting scan from ${lowerBound}`);
     let closed = false;
     const generator = async function* () {
