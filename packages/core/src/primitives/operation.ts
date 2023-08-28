@@ -254,7 +254,7 @@ export function toSubmittableOperation(
   };
 }
 
-function getTrackedAssets(
+export function getTrackedAssets(
   op: PreSignOperation | SignedOperation | ProvenOperation
 ): TrackedAsset[] {
   const { joinSplits, encodedRefundAssets } = op;

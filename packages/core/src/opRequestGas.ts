@@ -23,9 +23,15 @@ import { prepareOperation } from "./prepareOperation";
 import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
+import {
+  maxGasForOperation,
+  maxGasForAdditionalJoinSplit,
+} from "./primitives/gasCalculation";
 
-// refunds < 200k gas * gasPrice converted to gasAsset not worth refunding
-const DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS = 200_000n;
+// If gas asset refund is less than this amount * gasPrice denominated in the gas asset, refund will
+// not be processed and funds will be sent to bundler. This is because cost of processing would
+// outweight value of note.
+const DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS = 600_000n;
 
 const DUMMY_GAS_ASSET: Asset = {
   assetType: AssetType.ERC20,
@@ -37,10 +43,6 @@ interface AssetAndTicker {
   asset: Asset;
   ticker: string;
 }
-
-// TODO: ask bundler for the batch size and make a more intelligent estimate than this
-const PER_JOINSPLIT_GAS = 420_000n; // cost of verifying single proof (280k) + handling single joinsplit (80k) + buffer (20k)
-const PER_REFUND_GAS = 100_000n; // cost of refund handle (40k) + refund tree (50k) + buffer (10k)
 
 export interface HandleOpRequestGasDeps {
   db: NocturneDB;
@@ -57,9 +59,9 @@ interface GasEstimatedOperationRequest
 }
 
 interface GasParams {
-  gasPrice: bigint;
-  numJoinSplitAssets: bigint;
+  totalGasLimit: bigint;
   executionGasLimit: bigint;
+  gasPrice: bigint;
 }
 
 // VK corresponding to SK of 1 with minimum valid nonce
@@ -77,7 +79,7 @@ export async function handleGasForOperationRequest(
 ): Promise<GasAccountedOperationRequest> {
   // estimate gas params for opRequest
   console.log("estimating gas for op request");
-  const { gasPrice, numJoinSplitAssets, executionGasLimit } =
+  const { totalGasLimit, executionGasLimit, gasPrice } =
     await estimateGasForOperationRequest(deps, opRequest);
 
   const gasEstimatedOpRequest: GasEstimatedOperationRequest = {
@@ -96,29 +98,7 @@ export async function handleGasForOperationRequest(
       gasAssetRefundThreshold: 0n,
     };
   } else {
-    // Otherwise, we need to add gas compensation to the operation request
-
-    // compute an estimate of the total amount of gas the op will cost given the gas params
-    // we add 1 to `maxNumRefund` because we may add another joinSplitRequest to pay for gas
-    const numRefundsEstimate = BigInt(
-      Number(numJoinSplitAssets) + opRequest.refundAssets.length
-    );
-    const totalGasUnitsEstimate =
-      executionGasLimit +
-      numJoinSplitAssets * PER_JOINSPLIT_GAS +
-      numRefundsEstimate * PER_REFUND_GAS;
-
-    console.log(`execution gas limit: ${executionGasLimit}`, {
-      executionGasLimit,
-    });
-    console.log(`joinSplits gas: ${numJoinSplitAssets * PER_JOINSPLIT_GAS}`, {
-      numJoinSplitAssets,
-      joinSplitsGas: numJoinSplitAssets * PER_JOINSPLIT_GAS,
-    });
-    console.log(`refunds gas: ${numRefundsEstimate * PER_REFUND_GAS}`, {
-      numRefundsEstimate,
-      refundsGas: numRefundsEstimate * PER_REFUND_GAS,
-    });
+    console.log(`total gas limit pre gas update: ${totalGasLimit}`);
 
     // attempt to update the joinSplitRequests with gas compensation
     // gasAsset will be `undefined` if the user's too broke to pay for gas
@@ -127,7 +107,7 @@ export async function handleGasForOperationRequest(
         deps.gasAssets,
         deps.db,
         gasEstimatedOpRequest.joinSplitRequests,
-        totalGasUnitsEstimate,
+        totalGasLimit,
         gasPrice,
         deps.tokenConverter
       );
@@ -225,10 +205,14 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
     // if user has enough gas token, create a new joinsplit request to include the gas, add it
     // to the list, and we're done
     const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
-    const extraJoinSplitWei = gasPrice * (PER_JOINSPLIT_GAS + PER_REFUND_GAS);
     const extraJoinSplitCostInGasAsset = await tokenConverter.weiToTargetErc20(
-      extraJoinSplitWei,
+      maxGasForAdditionalJoinSplit() * gasPrice,
       ticker
+    );
+    console.log("extraJoinSplitCostInGasAsset", extraJoinSplitCostInGasAsset);
+    console.log(
+      "gas estimate of existing:",
+      gasEstimatesInGasAssets.get(ticker)!
     );
     const estimateInGasAssetIncludingNewJoinSplit =
       gasEstimatesInGasAssets.get(ticker)! + extraJoinSplitCostInGasAsset;
@@ -294,18 +278,17 @@ async function estimateGasForOperationRequest(
     executionGasLimit = (result.executionGas * 12n) / 10n;
   }
 
+  preparedOp.executionGasLimit = executionGasLimit;
+  const totalGasLimit = maxGasForOperation(preparedOp);
+
   // if gasPrice is not specified, get it from RPC node
   // NOTE: gasPrice returned in wei
   gasPrice =
     gasPrice ??
     ((await handlerContract.provider.getGasPrice()).toBigInt() * 14n) / 10n;
 
-  const joinSplitAssets = new Set(
-    preparedOp.joinSplits.map((js) => js.encodedAsset)
-  );
-
   return {
-    numJoinSplitAssets: BigInt(joinSplitAssets.size),
+    totalGasLimit,
     executionGasLimit,
     gasPrice,
   };

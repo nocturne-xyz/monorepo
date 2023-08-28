@@ -378,7 +378,7 @@ contract OperationGenerator is InvariantUtils {
             executionGasLimit +
             ((perJoinSplitVerifyGas + GAS_PER_JOINSPLIT_HANDLE) *
                 numJoinSplits) +
-            ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) *
+            ((GAS_PER_INSERTION_SUBTREE_UPDATE + GAS_PER_INSERTION_ENQUEUE) *
                 DEFAULT_MAX_NUM_REFUNDS);
     }
 }
