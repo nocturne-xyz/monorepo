@@ -2383,7 +2383,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         // joinsplits.
         // 20 joinsplits handles (no proof verification) equates to at least below gas tokens:
         //    gasPrice * joinSplit handle cost = 300 * 110k = 33M per joinsplit
-        //    20 joinsplits would be 660M gas despite one note only being 50M
+        //    20 joinsplits would be 660M gwei despite one note only being 50M
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
