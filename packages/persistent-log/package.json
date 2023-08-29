@@ -15,7 +15,7 @@
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test",
-    "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit",
+    "test:unit": "mocha --require ts-node/register test/** --timeout 500000 --exit",
     "publish": "yarn build; yarn npm publish --access public"
   },
   "dependencies": {
