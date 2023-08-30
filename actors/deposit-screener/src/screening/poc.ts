@@ -15,7 +15,7 @@ type Data = TrmData | MisttrackData;
 class Rule {
   next: Rule | null;
   threshold: (data: Data) => boolean;
-  call: Thunk<Data>;
+  call: Thunk<Data, [DepositRequest]>;
   action: Rejection | Delay;
   constructor({
     call,
@@ -33,7 +33,7 @@ class Rule {
   }
 
   async check(deposit: DepositRequest): Promise<Rejection | Delay | undefined> {
-    const data = await this.call(deposit); // TODO fix this up with thunk, won't work as is
+    const data = await this.call(deposit);
     return this.threshold(data) ? this.action : undefined;
   }
 }
@@ -41,7 +41,7 @@ class Rule {
 class RuleSet {
   head: Rule | null = null;
   tail: Rule | null = null;
-  delay: number = 0;
+  delay = 0;
 
   constructor() {}
 

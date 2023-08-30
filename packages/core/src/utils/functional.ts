@@ -113,17 +113,21 @@ export function maxArray(arr: number[] | bigint[]): number | bigint {
   return arr.reduce((curr, x) => max(curr, x));
 }
 
-export type Thunk<T> = () => Promise<T>;
+export type Thunk<T, P extends any[] = any[]> = (...args: P) => Promise<T>;
 
-export function thunk<T>(fn: () => Promise<T>): Thunk<T> {
-  let item: T | undefined;
+export function thunk<T, P extends any[] = any[]>(
+  fn: (...args: P) => Promise<T>
+): Thunk<T, P> {
+  let cache = new Map<string, T>(); // cached based on computed result from varying args
 
-  return async () => {
-    if (!item) {
-      item = await fn();
+  return async (...args: P) => {
+    const cacheKey = JSON.stringify(args);
+    if (!cache.has(cacheKey)) {
+      const result = await fn(...args);
+      cache.set(cacheKey, result);
     }
 
-    return item;
+    return cache.get(cacheKey)!;
   };
 }
 
