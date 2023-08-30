@@ -1,0 +1,1 @@
+export { TreeInsertionSyncAdapter } from "./syncAdapter";

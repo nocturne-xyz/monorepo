@@ -1,0 +1,65 @@
+{
+  "name": "@nocturne-xyz/insertion-writer",
+  "license": "MIT",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "src/**/*"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "yarn dev:env && concurrently --kill-others \"yarn dev:redis-1\", \"yarn dev:redis-2\", \"yarn dev:writer\"",
+    "dev:env": "cp .env.dev .env",
+    "dev:redis-1": "docker run --name insertion-log-1 -p 6381:6381 --rm redis redis-server --port 6381 --loglevel warning",
+    "dev:redis-2": "docker run --name insertion-log-2 -p 6382:6382 --rm redis redis-server --port 6382 --loglevel warning",
+    "dev:writer": "nodemon src/cli/index.ts run insertion-writer --log-dir ../../logs/insertion-writer --stdout-log-level info",
+    "check": "tsc --noEmit",
+    "clean": "rm -rf .turbo dist",
+    "lint": "eslint --fix src --ext .ts",
+    "prettier:check": "prettier --check ./src ./test",
+    "prettier:write": "prettier --write ./src ./test"
+  },
+  "dependencies": {
+    "@nocturne-xyz/config": "workspace:^",
+    "@nocturne-xyz/core": "workspace:^",
+    "@nocturne-xyz/crypto-utils": "workspace:^",
+    "@nocturne-xyz/offchain-utils": "workspace:^",
+    "@nocturne-xyz/persistent-log": "workspace:^",
+    "async-mutex": "^0.4.0",
+    "async-retry": "^1.3.3",
+    "bigint-json-serialization": "^1.0.1",
+    "commander": "^9.4.1",
+    "dotenv": "^16.0.3",
+    "ethers": "^5.7.2",
+    "ioredis": "^5.3.2",
+    "snarkjs": "^0.7.0",
+    "winston": "^3.8.2"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.1",
+    "@types/chai": "^4.3.4",
+    "@types/commander": "^2.12.2",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^18.8.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.44.0",
+    "chai": "^4.3.7",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.28.0",
+    "eslint-config-prettier": "^8.5.0",
+    "find-yarn-workspace-root": "^2.0.0",
+    "mocha": "^10.1.0",
+    "nodemon": "^3.0.1",
+    "prettier": "^2.8.8",
+    "redis-memory-server": "^0.6.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.3",
+    "wtfnode": "^0.9.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
