@@ -118,7 +118,7 @@ export type Thunk<T, P extends any[] = any[]> = (...args: P) => Promise<T>;
 export function thunk<T, P extends any[] = any[]>(
   fn: (...args: P) => Promise<T>
 ): Thunk<T, P> {
-  let cache = new Map<string, T>(); // cached based on computed result from varying args
+  const cache = new Map<string, T>(); // cached based on computed result from varying args
 
   return async (...args: P) => {
     const cacheKey = JSON.stringify(args);
