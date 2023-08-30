@@ -14,7 +14,10 @@ type Data = TrmData | MisttrackData;
 
 const API_CALLS = {
   // {{TRM_URL}}/public/v2/screening/addresses
-  TRM_SCREENING_ADDRESSES: async () => await Promise.resolve({ risk: 0.5 }),
+  TRM_SCREENING_ADDRESSES: async (deposit: DepositRequest) => {
+    console.log(deposit);
+    await Promise.resolve({ risk: 0.5 });
+  },
 };
 
 class Rule<T extends Data> {
