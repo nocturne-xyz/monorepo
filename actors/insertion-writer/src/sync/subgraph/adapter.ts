@@ -19,7 +19,7 @@ import { fetchTeiFromMerkleIndex } from "../../utils";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
-export class SubgraphTreeInsertionSyncAdapter 
+export class SubgraphTreeInsertionSyncAdapter
   implements TreeInsertionSyncAdapter
 {
   private readonly graphqlEndpoint: string;
@@ -40,7 +40,7 @@ export class SubgraphTreeInsertionSyncAdapter
 
     let closed = false;
     const generator = async function* () {
-      let _from: bigint | undefined = undefined
+      let _from: bigint | undefined = undefined;
       while (!_from) {
         _from = await fetchTeiFromMerkleIndex(endpoint, startMerkleIndex);
         await sleep(opts?.throttleMs ?? 1000);
@@ -97,7 +97,7 @@ export class SubgraphTreeInsertionSyncAdapter
               const batch = range(0, insertion.numZeros).map((i) => ({
                 noteCommitment: TreeConstants.ZERO_VALUE,
                 merkleIndex: startIndex + i,
-              // HACK: add `i` to `totalEntityIndex` to ensure all of the zeros have unique `totalEntityIndex`s
+                // HACK: add `i` to `totalEntityIndex` to ensure all of the zeros have unique `totalEntityIndex`s
               }));
 
               yield batch;
