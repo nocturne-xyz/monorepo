@@ -16,7 +16,7 @@ const API_CALLS = {
   // {{TRM_URL}}/public/v2/screening/addresses
   TRM_SCREENING_ADDRESSES: async (deposit: DepositRequest) => {
     console.log(deposit);
-    await Promise.resolve({ risk: 0.5 });
+    return await Promise.resolve({ risk: 0.5 });
   },
 };
 
@@ -88,7 +88,6 @@ class RuleSet {
  * USAGE
  */
 // todo make facade for both TRM & Misttrack APIs
-// todo reuse calls to apis, by extracting it out and making properties it returns usable by actionthreshold
 const TRM_RULE_1 = new Rule({
   // > $0 of ownership exposure to severe risk categories
   call: "TRM_SCREENING_ADDRESSES",
