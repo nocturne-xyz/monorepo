@@ -1,4 +1,4 @@
-import { DepositRequest, Thunk, thunk } from "@nocturne-xyz/core";
+import { DepositRequest } from "@nocturne-xyz/core";
 
 type Rejection = { type: "Rejection"; reason: string };
 type Delay = { type: "Delay"; time: number };
@@ -12,38 +12,47 @@ type MisttrackData = {
 
 type Data = TrmData | MisttrackData;
 
+const API_CALLS = {
+  // {{TRM_URL}}/public/v2/screening/addresses
+  TRM_SCREENING_ADDRESSES: async () => await Promise.resolve({ risk: 0.5 }),
+};
+
 class Rule<T extends Data> {
-  next: Rule<any> | null;
-  threshold: (data: T) => boolean;
-  call: Thunk<T, [DepositRequest]>;
-  action: Rejection | Delay;
+  public next: Rule<any> | null;
+  private threshold: (data: T) => boolean;
+  private call: keyof typeof API_CALLS;
+  private action: Rejection | Delay;
   constructor({
     call,
     threshold,
     action,
   }: {
-    call: (deposit: DepositRequest) => Promise<T>;
+    call: keyof typeof API_CALLS;
     threshold: (data: T) => boolean;
     action: Rejection | Delay;
   }) {
     this.next = null;
-    this.call = thunk(call);
+    this.call = call;
     this.threshold = threshold;
     this.action = action;
   }
 
-  async check(deposit: DepositRequest): Promise<Rejection | Delay | undefined> {
-    const data = await this.call(deposit);
+  async check(
+    deposit: DepositRequest,
+    cache: Record<string, Data>
+  ): Promise<Rejection | Delay | undefined> {
+    if (!cache[this.call]) {
+      cache[this.call] = await API_CALLS[this.call](deposit);
+    }
+    const data = cache[this.call] as T;
     return this.threshold(data) ? this.action : undefined;
   }
 }
 
 class RuleSet {
-  head: Rule<any> | null = null;
-  tail: Rule<any> | null = null;
-  delay = 0;
-
-  constructor() {}
+  private head: Rule<any> | null = null;
+  private tail: Rule<any> | null = null;
+  private delay = 0;
 
   add<T extends Data>(rule: Rule<T>) {
     if (!this.head) {
@@ -52,13 +61,14 @@ class RuleSet {
       this.tail!.next = rule;
     }
     this.tail = rule;
+    return this;
   }
 
   async check(deposit: DepositRequest): Promise<Rejection | Delay> {
-    // todo iterate through calls, dedup
     let currRule = this.head;
+    const cache: Record<string, Data> = {};
     while (currRule !== null) {
-      const result = await currRule.check(deposit);
+      const result = await currRule.check(deposit, cache);
       if (result) {
         if (result.type === "Rejection") {
           return result;
@@ -78,7 +88,7 @@ class RuleSet {
 // todo reuse calls to apis, by extracting it out and making properties it returns usable by actionthreshold
 const TRM_RULE_1 = new Rule({
   // > $0 of ownership exposure to severe risk categories
-  call: (deposit: DepositRequest) => Promise.resolve({ risk: 0.5 }),
+  call: "TRM_SCREENING_ADDRESSES",
   threshold(data: TrmData) {
     return data.risk > 0.5; // TODO actually implement
   },
