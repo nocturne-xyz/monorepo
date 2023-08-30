@@ -1,13 +1,13 @@
 import { DepositRequest } from "@nocturne-xyz/core";
 
 type Rejection = { type: "Rejection"; reason: string };
-type Delay = { type: "Delay"; time: number };
+type Delay = { type: "Delay"; timeSeconds: number };
 
 type TrmData = {
-  risk: number; // TODO, implement
+  risk: number; // TODO, use vals from response
 };
 type MisttrackData = {
-  misttrackRisk: number; // TODO, implement
+  misttrackRisk: number;
 };
 
 type Data = TrmData | MisttrackData;
@@ -18,7 +18,12 @@ const API_CALLS = {
     console.log(deposit);
     return await Promise.resolve({ risk: 0.5 });
   },
-};
+  // {{MISTTRACK_BASE_URL}}/risk_score
+  MISTTRACK_ADDRESS_RISK_SCORE: async (deposit: DepositRequest) => {
+    console.log(deposit);
+    return await Promise.resolve({ misttrackRisk: 0.5 });
+  },
+} as const;
 
 class Rule<T extends Data> {
   public next: Rule<any> | null;
@@ -76,25 +81,47 @@ class RuleSet {
         if (result.type === "Rejection") {
           return result;
         }
-        this.delay += result.time;
+        this.delay += result.timeSeconds;
       }
       currRule = currRule.next;
     }
-    return { type: "Delay", time: this.delay };
+    return { type: "Delay", timeSeconds: this.delay };
   }
 }
 
 /**
- * USAGE
+ * SETUP
  */
 // todo make facade for both TRM & Misttrack APIs
 const TRM_RULE_1 = new Rule({
-  // > $0 of ownership exposure to severe risk categories
   call: "TRM_SCREENING_ADDRESSES",
-  threshold(data: TrmData) {
-    return data.risk > 0.5; // TODO actually implement
-  },
+  threshold: (data: TrmData) => data.risk > 0.5,
   action: { type: "Rejection", reason: "Risk is too high" },
 });
+const TRM_RULE_2 = new Rule({
+  call: "TRM_SCREENING_ADDRESSES",
+  threshold: (data: TrmData) => data.risk > 0.25,
+  action: { type: "Delay", timeSeconds: 1000 },
+});
+const MISTTRACK_RULE_1 = new Rule({
+  call: "MISTTRACK_ADDRESS_RISK_SCORE",
+  threshold: (data: MisttrackData) => data.misttrackRisk > 0.5,
+  action: { type: "Rejection", reason: "misttrackRisk is too high" },
+});
 
-const RULESET_V1 = new RuleSet().add(TRM_RULE_1);
+const RULESET_V1 = new RuleSet()
+  .add(TRM_RULE_1)
+  .add(TRM_RULE_2)
+  .add(MISTTRACK_RULE_1);
+
+/**
+ * USAGE
+ */
+const DUMMY_DEPOSIT_REQUEST = {} as DepositRequest;
+RULESET_V1.check(DUMMY_DEPOSIT_REQUEST)
+  .then((result) => {
+    console.log(result);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
