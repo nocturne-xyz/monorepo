@@ -11,10 +11,9 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "dev": "yarn dev:env && concurrently --kill-others \"yarn dev:redis-1\", \"yarn dev:redis-2\", \"yarn dev:writer\"",
+    "dev": "yarn dev:env && concurrently --kill-others \"yarn dev:redis\", \"yarn dev:writer\"",
     "dev:env": "cp .env.dev .env",
-    "dev:redis-1": "docker run --name insertion-log-1 -p 6381:6381 --rm redis redis-server --port 6381 --loglevel warning",
-    "dev:redis-2": "docker run --name insertion-log-2 -p 6382:6382 --rm redis redis-server --port 6382 --loglevel warning",
+    "dev:redis": "docker run --name insertion-log-1 -p 6381:6381 --rm redis redis-server --port 6381 --loglevel warning",
     "dev:writer": "nodemon src/cli/index.ts run insertion-writer --log-dir ../../logs/insertion-writer --stdout-log-level info",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
