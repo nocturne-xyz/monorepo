@@ -1,9 +1,13 @@
 import {
   DepositStatusResponse,
+  IncludedEncryptedNote,
+  IncludedNote,
   MockSubtreeUpdateProver,
+  NoteTrait,
   OperationStatus,
   SubmittableOperationWithNetworkInfo,
   SubtreeUpdateProver,
+  TreeConstants,
   computeOperationDigest,
   range,
 } from "@nocturne-xyz/core";
@@ -18,6 +22,9 @@ import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { thunk } from "@nocturne-xyz/core";
+import { Insertion } from "@nocturne-xyz/insertion-writer/src/sync/syncAdapter";
+import { fetchTreeInsertions } from "@nocturne-xyz/subtree-updater/src/sync/subgraph/fetch";
+import { SUBGRAPH_URL } from "./deploy";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;
@@ -301,4 +308,26 @@ export function makeRedisInstance(): RedisHandle {
       redis.flushall();
     },
   };
+}
+
+export async function getAllTreeInsertionsFromSubgraph(): Promise<Insertion[]> {
+  const treeInsertionEvents = await fetchTreeInsertions(SUBGRAPH_URL, 0n);
+  return treeInsertionEvents.flatMap(({ inner: insertion }): Insertion[] => {
+    if ("numZeros" in insertion) {
+      return range(insertion.numZeros).map((i) => ({
+        merkleIndex: insertion.merkleIndex + i,
+        noteCommitment: TreeConstants.ZERO_VALUE,
+      }));
+    } else if (NoteTrait.isEncryptedNote(insertion)) {
+      const noteCommitment = (insertion as IncludedEncryptedNote).commitment;
+      return [
+        {
+          merkleIndex: insertion.merkleIndex,
+          noteCommitment,
+        },
+      ];
+    } else {
+      return [insertion as IncludedNote];
+    }
+  });
 }

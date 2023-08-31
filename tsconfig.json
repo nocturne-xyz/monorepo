@@ -44,6 +44,9 @@
       "path": "./actors/test-actor"
     },
     {
+      "path": "./actors/insertion-writer"
+    },
+    {
       "path": "./packages/contracts"
     },
     {
