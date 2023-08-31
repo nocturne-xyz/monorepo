@@ -1,11 +1,11 @@
 import { DepositRequest } from "@nocturne-xyz/core";
 
-export type TrmData = {
+export interface TrmData {
   risk: number; // TODO, use vals from response
-};
-export type MisttrackData = {
+}
+export interface MisttrackData {
   misttrackRisk: number;
-};
+}
 
 export type Data = TrmData | MisttrackData;
 

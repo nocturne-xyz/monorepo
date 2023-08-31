@@ -1,8 +1,14 @@
 import { DepositRequest } from "@nocturne-xyz/core";
 import { API_CALLS, Data } from "./apiCalls";
 
-export type Rejection = { type: "Rejection"; reason: string };
-export type Delay = { type: "Delay"; timeSeconds: number };
+export interface Rejection {
+  type: "Rejection";
+  reason: string;
+}
+export interface Delay {
+  type: "Delay";
+  timeSeconds: number;
+}
 
 export class Rule<T extends Data> {
   public next: Rule<any> | null;
