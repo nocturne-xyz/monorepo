@@ -23,6 +23,7 @@
     "test:unit": "mocha --require ts-node/register test/** --timeout 500000 --exit"
   },
   "dependencies": {
+    "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/offchain-utils": "workspace:^",
     "@nocturne-xyz/persistent-log": "workspace:^",
