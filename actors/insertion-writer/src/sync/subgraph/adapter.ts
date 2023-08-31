@@ -40,7 +40,7 @@ export class SubgraphTreeInsertionSyncAdapter
 
     let closed = false;
     const generator = async function* () {
-      let _from: bigint | undefined = undefined;
+      let _from = startMerkleIndex === 0 ? 0n : undefined;
       while (!_from) {
         _from = await fetchTeiFromMerkleIndex(endpoint, startMerkleIndex);
         await sleep(opts?.throttleMs ?? 1000);

@@ -14,7 +14,7 @@ import { ClosableAsyncIterator } from "@nocturne-xyz/core/src";
 import { PersistentLog } from "@nocturne-xyz/persistent-log";
 import { merkleIndexToRedisStreamId } from "../src/utils";
 
-describe("TestTreeInsertionSyncAdapter", () => {
+describe("InsertionWriter", () => {
   it("replicates all insertions from merkle index 0 into one persistent log", async () => {
     const redis = await makeRedis();
 

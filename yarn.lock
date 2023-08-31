@@ -4132,6 +4132,7 @@ __metadata:
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/deploy": "workspace:^"
     "@nocturne-xyz/deposit-screener": "workspace:^"
+    "@nocturne-xyz/insertion-writer": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
     "@nocturne-xyz/subtree-updater": "workspace:^"
@@ -4217,7 +4218,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/insertion-writer@workspace:actors/insertion-writer":
+"@nocturne-xyz/insertion-writer@workspace:^, @nocturne-xyz/insertion-writer@workspace:actors/insertion-writer":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/insertion-writer@workspace:actors/insertion-writer"
   dependencies:

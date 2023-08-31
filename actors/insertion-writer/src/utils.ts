@@ -49,8 +49,11 @@ query fetchTeiFromMerkleIndex($merkleIndex: Int!) {
 }`;
 
 // if `merkleIndex` has been seen in by some tree insertion
-// event in the subgraph, will return the corresponding merkle index
+// event in the subgraph, will return the corresponding TEI
 // otherwise, it will return undefined.
+//
+// NOTE: if `merkleIndex` corresponds to a `FilledBatchWithZerosEvent`,
+// and it's not the startIndex, this function will also return undefined
 export async function fetchTeiFromMerkleIndex(
   endpoint: string,
   merkleIndex: number
@@ -61,7 +64,11 @@ export async function fetchTeiFromMerkleIndex(
     "TeiFromMerkleIndex"
   );
   const res = await query({ merkleIndex });
-  if (!res.data) {
+  if (
+    !res.data ||
+    (res.data.encodedOrEncryptedNotes.length === 0 &&
+      res.data.filledBatchWithZerosEvents.length === 0)
+  ) {
     return undefined;
   }
 

@@ -9,6 +9,8 @@ import {
 import { Insertion } from "./sync/syncAdapter";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
+export * from "./sync";
+
 export class InsertionWriter {
   adapter: TreeInsertionSyncAdapter;
   logger: Logger;
