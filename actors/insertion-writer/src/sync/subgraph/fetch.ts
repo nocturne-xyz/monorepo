@@ -9,8 +9,10 @@ import {
   EncodedOrEncryptedNoteResponse,
   encryptedNoteFromEncryptedNoteResponse,
   includedNoteFromNoteResponse,
+  SubgraphUtils,
 } from "@nocturne-xyz/core";
-import { makeSubgraphQuery } from "@nocturne-xyz/core/dist/src/sync/subgraph/utils";
+
+const { makeSubgraphQuery } = SubgraphUtils;
 
 export type TreeInsertion =
   | FilledBatchWithZerosEvent

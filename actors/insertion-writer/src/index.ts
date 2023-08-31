@@ -21,6 +21,7 @@ export class InsertionWriter {
     logger: Logger
   ) {
     this.adapter = syncAdapter;
+    this.logger = logger;
     this.insertionLog = new PersistentLog<Insertion>(redis, "insertion-log", {
       logger: logger.child({ function: "insertion log" }),
     });

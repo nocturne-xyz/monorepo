@@ -54,7 +54,8 @@ export class TestTreeInsertionSyncAdapter implements TreeInsertionSyncAdapter {
     _opts?: IterSyncOpts
   ): ClosableAsyncIterator<Insertion[]> {
     return this.source.filter(
-      (insertions) => insertions[0].merkleIndex >= startMerkleIndex
+      (insertions) =>
+        insertions.length > 0 && insertions[0].merkleIndex >= startMerkleIndex
     );
   }
 }

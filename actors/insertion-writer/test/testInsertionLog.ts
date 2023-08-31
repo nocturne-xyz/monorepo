@@ -6,19 +6,22 @@ import {
   TestTreeInsertionSyncAdapter,
   randomInsertions,
 } from "./testSyncAdapter";
-import { range, sleep, unzip } from "@nocturne-xyz/core";
+import { range, sleep } from "@nocturne-xyz/core";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { InsertionWriter } from "../src";
 import { Insertion } from "../src/sync/syncAdapter";
+import { ClosableAsyncIterator } from "@nocturne-xyz/core/src";
+import { PersistentLog } from "@nocturne-xyz/persistent-log";
+import { merkleIndexToRedisStreamId } from "../src/utils";
 
 describe("TestTreeInsertionSyncAdapter", () => {
   it("replicates all insertions from merkle index 0 into one persistent log", async () => {
-    const [redises, teardown] = await makeRedises(1);
+    const redis = await makeRedis();
 
     // setup a source of random insertions
     const expectedInsertions: Insertion[] = [];
-    const source = randomInsertions().tap((insertion) =>
-      expectedInsertions.push(...insertion)
+    const source = randomInsertions().tap((batch) =>
+      expectedInsertions.push(...batch)
     );
 
     // instantiate test adapter over source of random insertions
@@ -29,44 +32,84 @@ describe("TestTreeInsertionSyncAdapter", () => {
       "testInsertionLog.ts",
       "replicates insertion log into one persistent log"
     );
-    const writer = new InsertionWriter(adapter, redises[0], logger);
+    const writer = new InsertionWriter(adapter, redis, logger);
 
     // run for a while
     const handle = await writer.start();
-    await sleep(50_000);
+    await sleep(20_000);
 
     // close source, should cause writer to terminate
-    await source.close();
-    await handle.promise;
+    await handle.teardown();
 
     // check that insertion log is correct
     const insertionLog = writer.insertionLog;
-    const actualInsertions = await insertionLog.scan().collect();
-    expect(actualInsertions).to.deep.equal([expectedInsertions]);
-    await teardown();
+    const actualInsertions = (
+      await insertionLog
+        .scan()
+        .map((elems) => elems.map(({ inner }) => inner))
+        .collect()
+    ).flat();
+    expect(actualInsertions).to.deep.equal(expectedInsertions);
+  });
+
+  it("skips insertions that are already in the log", async () => {
+    const redis = await makeRedis();
+
+    // setup a source of random insertions that we can repeat in multiple iterators
+    const insertionBatches: Insertion[][] = [];
+    const source = randomInsertions();
+    const log = new PersistentLog<Insertion>(redis, "insertion-log");
+
+    // push first 20 insertion batches into an array
+    for (const _ of range(20)) {
+      const batch = (await source.iter.next()).value as Insertion[];
+      insertionBatches.push(batch);
+    }
+
+    // push first 10 into redis directly
+    let merkleIndex = 0;
+    for (const i of range(10)) {
+      const batch = insertionBatches[i];
+      await log.push(
+        batch.map((insertion, i) => ({
+          inner: insertion,
+          id: merkleIndexToRedisStreamId(merkleIndex + i),
+        }))
+      );
+      merkleIndex += batch.length;
+    }
+
+    // make an adapter over a new iterator that repeats the first 20 insertions
+    const adapter = new TestTreeInsertionSyncAdapter(
+      ClosableAsyncIterator.fromArray(insertionBatches)
+    );
+
+    // instantiate insertion writer
+    const logger = makeTestLogger(
+      "testInsertionLog.ts",
+      "skips insertions that are already in the log"
+    );
+    const writer = new InsertionWriter(adapter, redis, logger);
+
+    // run until completion
+    const handle = await writer.start();
+    await handle.promise;
+
+    // check that insertion log is correct
+    const actualInsertions = (
+      await log
+        .scan()
+        .map((elems) => elems.map(({ inner }) => inner))
+        .collect()
+    ).flat();
+    expect(actualInsertions).to.deep.equal(insertionBatches.flat());
   });
 });
 
 // returns redises and a teardown function
-async function makeRedises(
-  numRedises: number
-): Promise<[IORedis[], () => Promise<void>]> {
-  const [redises, teardownFns] = unzip(
-    await Promise.all(
-      range(numRedises).map(async () => {
-        const server = await RedisMemoryServer.create();
-        const host = await server.getHost();
-        const port = await server.getPort();
-        const redis = new IORedis(port, host);
-        return [redis, async () => server.stop()];
-      })
-    )
-  );
-
-  return [
-    redises,
-    async () => {
-      Promise.all(teardownFns.map((teardown) => teardown()));
-    },
-  ];
+async function makeRedis(): Promise<IORedis> {
+  const server = await RedisMemoryServer.create();
+  const host = await server.getHost();
+  const port = await server.getPort();
+  return new IORedis(port, host);
 }
