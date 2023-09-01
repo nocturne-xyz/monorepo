@@ -127,5 +127,93 @@ contract WstethTest is ForkBase {
         assertEq(wsteth.balanceOf(address(teller)), wstethExpectedOutAmount);
     }
 
-    // TODO: test multiple wsteth deposits
+    function testWstethMultiDeposit(
+        uint256 wethInAmount,
+        uint256 numDeposits
+    ) public {
+        numDeposits = bound(numDeposits, 1, 10);
+        wethInAmount = bound(wethInAmount, 1000, 10000 ether);
+
+        // Adjust weth in amount to be divisible by num deposits
+        if (wethInAmount % numDeposits != 0) {
+            wethInAmount = wethInAmount - (wethInAmount % numDeposits);
+        }
+        reserveAndDeposit(address(weth), wethInAmount);
+
+        uint256 wstethExpectedOutAmount = wsteth.getWstETHByStETH(wethInAmount);
+
+        console.log("wstethExpectedOutAmount:", wstethExpectedOutAmount);
+
+        // Format operation to unwrap weth, unwrap to eth, then send to wsteth
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
+        trackedRefundAssets[0] = TrackedAsset({
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(wsteth),
+                ERC20_ID
+            ),
+            minRefundValue: wstethExpectedOutAmount - 10 // // TODO: why -10 buffer in case of uneven-ness?
+        });
+
+        // Format actions
+        Action[] memory actions = new Action[](1 + numDeposits);
+        actions[0] = Action({
+            contractAddress: address(weth),
+            encodedFunction: abi.encodeWithSelector(
+                weth.approve.selector,
+                address(wstethAdapter),
+                wethInAmount
+            )
+        });
+
+        // Create multiple weth -> wsteth deposits
+        for (uint256 i = 1; i <= numDeposits; i++) {
+            actions[i] = Action({
+                contractAddress: address(wstethAdapter),
+                encodedFunction: abi.encodeWithSelector(
+                    wstethAdapter.convert.selector,
+                    wethInAmount / numDeposits
+                )
+            });
+        }
+
+        // Create operation to convert weth to wsteth
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(weth)
+                ),
+                joinSplitRefundValues: new uint256[](1),
+                gasToken: address(weth),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(wethInAmount, 1)
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: 10_000_000, // large gas limit
+                gasPrice: 0,
+                actions: actions,
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Check pre op balances
+        assertEq(weth.balanceOf(address(teller)), wethInAmount);
+        assertEq(wsteth.balanceOf(address(teller)), 0);
+
+        // Execute operation
+        vm.prank(BUNDLER);
+        teller.processBundle(bundle);
+
+        // Check post op balances
+        assertEq(weth.balanceOf(address(teller)), 0);
+        assertGe(
+            wsteth.balanceOf(address(teller)),
+            wstethExpectedOutAmount - 10
+        ); // TODO: why -10 buffer in case of uneven-ness?
+    }
 }
