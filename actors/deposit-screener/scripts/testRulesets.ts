@@ -19,16 +19,17 @@ import { DummyTrmData } from "../src/screening/checks/apiCalls";
     },
     action: { type: "Rejection", reason: "This should not fire" },
   });
-  //   const REJECT_ALWAYS = new Rule({
-  //     call: "DUMMY_TRM_SCREENING_ADDRESSES",
-  //     threshold: () => {
-  //       return true;
-  //     },
-  //     action: {
-  //       type: "Rejection",
-  //       reason: "If included, this should make the deposit always reject",
-  //     },
-  //   });
+  // const REJECT_ALWAYS = new Rule({
+  //   name: "REJECT_ALWAYS",
+  //   call: "DUMMY_TRM_SCREENING_ADDRESSES",
+  //   threshold: () => {
+  //     return true;
+  //   },
+  //   action: {
+  //     type: "Rejection",
+  //     reason: "If included, this should make the deposit always reject",
+  //   },
+  // });
   const DELAY_100_IF_RISK_IS_POINT_FIVE = new Rule({
     name: "DELAY_100_IF_RISK_IS_POINT_FIVE",
     call: "DUMMY_TRM_SCREENING_ADDRESSES",
@@ -70,10 +71,8 @@ import { DummyTrmData } from "../src/screening/checks/apiCalls";
 
   DUMMY_RULESET.check(DUMMY_DEPOSIT_REQUEST)
     .then((result) => {
-      console.log("Expected result: ", {
-        type: "Delay",
-        timeSeconds: 300,
-      });
+      // // @ts-ignore
+      // console.log("Expected result: ", REJECT_ALWAYS.action);
       console.log("Actual result: ", result);
     })
     .catch((err) => {
