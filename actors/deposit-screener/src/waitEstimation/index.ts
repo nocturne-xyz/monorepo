@@ -128,14 +128,15 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
   // ensure passes screen
   console.log("in estimateSecondsUntilCompletionForProspectiveDeposit");
 
-  const passesScreen = await screeningApi.isSafeDepositRequest(
+  const checkResult = await screeningApi.checkDeposit({
     spender,
     assetAddr,
-    value
-  );
-  if (!passesScreen) {
+    value,
+  });
+
+  if (checkResult.type === "Rejection") {
     throw new Error(
-      `Prospective deposit request failed screening. spender: ${spender}. assetAddr: ${assetAddr}, value: ${value}`
+      `Prospective deposit request failed screening. reason: ${checkResult.reason} spender: ${spender}. assetAddr: ${assetAddr}, value: ${value}`
     );
   }
 

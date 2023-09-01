@@ -253,13 +253,21 @@ export class DepositScreenerScreener {
         }
 
         childLogger.debug(`checking deposit request`);
-        const isSafe = await this.screeningApi.isSafeDepositRequest(
-          depositRequest.spender,
+        const checkResult = await this.screeningApi.checkDeposit({
+          spender: depositRequest.spender,
           assetAddr,
-          depositRequest.value
-        );
+          value: depositRequest.value,
+        });
 
-        if (isSafe) {
+        if (checkResult.type === "Rejection") {
+          childLogger.warn(
+            `deposit failed first screening stage with reason: ${checkResult.reason}`
+          );
+          await this.db.setDepositRequestStatus(
+            depositRequest,
+            DepositRequestStatus.FailedScreen
+          );
+        } else {
           childLogger.info(
             "deposit passed first screening stage. pushing to delay queue"
           );
@@ -273,14 +281,6 @@ export class DepositScreenerScreener {
           this.metrics.depositsPassedFirstScreenValueCounter.add(
             Number(depositRequest.value),
             attributes
-          );
-        } else {
-          childLogger.warn(
-            `deposit failed first screening stage with reason <TODO>`
-          );
-          await this.db.setDepositRequestStatus(
-            depositRequest,
-            DepositRequestStatus.FailedScreen
           );
         }
       }
@@ -373,13 +373,16 @@ export class DepositScreenerScreener {
         childLogger.debug(
           `checking if deposit request passed second screening`
         );
-        const valid = await this.screeningApi.isSafeDepositRequest(
-          depositRequest.spender,
+        const checkResult = await this.screeningApi.checkDeposit({
+          spender: depositRequest.spender,
           assetAddr,
-          depositRequest.value
-        );
-        if (!valid) {
-          childLogger.warn(`deposit failed second screening screening`);
+          value: depositRequest.value,
+        });
+
+        if (checkResult.type === "Rejection") {
+          childLogger.warn(
+            `deposit failed second screening screening with reason ${checkResult.reason}`
+          );
           return;
         }
 

@@ -1,5 +1,4 @@
 import { ScreeningDepositRequest } from "..";
-import { ScreeningService as TrmScreeningService } from "./externalApis/trm/generated";
 
 export interface DummyTrmData {
   risk: number;
