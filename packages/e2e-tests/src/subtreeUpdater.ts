@@ -31,6 +31,8 @@ export interface SubtreeUpdaterConfig {
 
 const { getRedis, clearRedis } = makeRedisInstance();
 
+export const getInsertionLogRedis = getRedis;
+
 export async function startSubtreeUpdater(
   config: SubtreeUpdaterConfig
 ): Promise<() => Promise<void>> {

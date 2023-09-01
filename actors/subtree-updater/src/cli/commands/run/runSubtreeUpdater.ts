@@ -59,7 +59,6 @@ export const runSubtreeUpdater = new Command("subtree-updater")
     const {
       configNameOrPath,
       logDir,
-      throttleMs,
       useMockProver,
       fillBatchLatencyMs,
       rapidsnarkExecutablePath,
