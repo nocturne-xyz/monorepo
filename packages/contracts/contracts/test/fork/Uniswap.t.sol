@@ -7,30 +7,29 @@ import {ForkBase} from "./ForkBase.sol";
 import {IWeth} from "../../interfaces/IWeth.sol";
 import {IWsteth} from "../../interfaces/IWsteth.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {WstethAdapter} from "../../adapters/WstethAdapter.sol";
 import "../../libs/Types.sol";
 import "../../libs/AssetUtils.sol";
 import "../utils/NocturneUtils.sol";
+import "../interfaces/IUniswapV3.sol";
 
-contract WstethTest is ForkBase {
+contract UniswapTest is ForkBase {
     IWeth public constant weth =
         IWeth(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     IWsteth public constant wsteth =
         IWsteth(0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0);
 
-    WstethAdapter wstethAdapter;
+    IUniswapV3 public constant uniswap =
+        IUniswapV3(0xE592427A0AEce92De3Edee1F18E0157C05861564);
 
     function setUp() public {
         baseSetUp();
 
-        wstethAdapter = new WstethAdapter(address(weth), address(wsteth));
-
-        // Whitelist weth, wsteth, wsteth adapter
+        // Whitelist weth, wsteth, wsteth adapter, and uniswap
         handler.setContractPermission(address(weth), true);
         handler.setContractPermission(address(wsteth), true);
-        handler.setContractPermission(address(wstethAdapter), true);
+        handler.setContractPermission(address(uniswap), true);
 
-        // Whitelist weth approve, wsteth approve, wsteth adapter convert
+        // Whitelist weth approve, wsteth approve, wsteth adapter convert, and uniswap input swaps
         handler.setContractMethodPermission(
             address(weth),
             weth.approve.selector,
@@ -42,8 +41,13 @@ contract WstethTest is ForkBase {
             true
         );
         handler.setContractMethodPermission(
-            address(wstethAdapter),
-            wstethAdapter.convert.selector,
+            address(uniswap),
+            uniswap.exactInputSingle.selector,
+            true
+        );
+        handler.setContractMethodPermission(
+            address(uniswap),
+            uniswap.exactInput.selector,
             true
         );
 
@@ -52,61 +56,78 @@ contract WstethTest is ForkBase {
         deal(address(wsteth), address(handler), 1);
     }
 
-    function testWstethSingleDeposit(uint256 wethInAmount) public {
-        wethInAmount = bound(wethInAmount, 1000, 10000 ether);
-        reserveAndDeposit(address(weth), wethInAmount);
+    function testUniswapDirectSwap(uint256 wstethInAmount) public {
+        // Hardcode upper bound to ~$5.1M swap
+        wstethInAmount = bound(wstethInAmount, 10000, 3000 ether);
+        reserveAndDeposit(address(wsteth), wstethInAmount);
 
-        uint256 wstethExpectedOutAmount = wsteth.getWstETHByStETH(wethInAmount);
+        // Get expected weth out amount, 5% slippage tolerance
+        uint256 wethExpectedOutAmount = (wsteth.getStETHByWstETH(
+            wstethInAmount
+        ) * 95) / 100;
 
-        // Format operation to unwrap weth, unwrap to eth, then send to wsteth
+        // Format weth as refund asset
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
         trackedRefundAssets[0] = TrackedAsset({
             encodedAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
-                address(wsteth),
+                address(weth),
                 ERC20_ID
             ),
-            minRefundValue: wstethExpectedOutAmount
+            minRefundValue: wethExpectedOutAmount
         });
 
-        // Format actions
+        // Format swap data
+        ExactInputSingleParams
+            memory exactInputParams = ExactInputSingleParams({
+                tokenIn: address(wsteth),
+                tokenOut: address(weth),
+                fee: 100,
+                recipient: address(handler),
+                deadline: block.timestamp + 3600,
+                amountIn: wstethInAmount,
+                amountOutMinimum: wethExpectedOutAmount,
+                sqrtPriceLimitX96: 0
+            });
+
+        // Format approve and swap call in actions
         Action[] memory actions = new Action[](2);
         actions[0] = Action({
-            contractAddress: address(weth),
+            contractAddress: address(wsteth),
             encodedFunction: abi.encodeWithSelector(
-                weth.approve.selector,
-                address(wstethAdapter),
-                wethInAmount
+                wsteth.approve.selector,
+                address(uniswap),
+                wstethInAmount
             )
         });
-
-        address[] memory outputTokens = new address[](1);
-        outputTokens[0] = address(wsteth);
         actions[1] = Action({
-            contractAddress: address(wstethAdapter),
+            contractAddress: address(uniswap),
             encodedFunction: abi.encodeWithSelector(
-                wstethAdapter.convert.selector,
-                wethInAmount
+                uniswap.exactInputSingle.selector,
+                exactInputParams
             )
         });
 
-        // Create operation to convert weth to wsteth
+        // Create operation for swap
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    address(weth)
+                    address(wsteth)
                 ),
                 joinSplitRefundValues: new uint256[](1),
-                gasToken: address(weth),
+                gasToken: address(wsteth),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
-                        NocturneUtils.fillJoinSplitPublicSpends(wethInAmount, 1)
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            wstethInAmount,
+                            1
+                        )
                     ),
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
-                executionGasLimit: 200_000,
+                executionGasLimit: 1_000_000,
                 gasPrice: 0,
                 actions: actions,
                 atomicActions: true,
@@ -115,17 +136,15 @@ contract WstethTest is ForkBase {
         );
 
         // Check pre op balances
-        assertEq(weth.balanceOf(address(teller)), wethInAmount);
-        assertEq(wsteth.balanceOf(address(teller)), 0);
+        assertEq(wsteth.balanceOf(address(teller)), wstethInAmount);
+        assertEq(weth.balanceOf(address(teller)), 0);
 
         // Execute operation
         vm.prank(BUNDLER);
         teller.processBundle(bundle);
 
         // Check post op balances
-        assertEq(weth.balanceOf(address(teller)), 0);
-        assertEq(wsteth.balanceOf(address(teller)), wstethExpectedOutAmount);
+        assertEq(wsteth.balanceOf(address(teller)), 0);
+        assertGe(weth.balanceOf(address(teller)), wethExpectedOutAmount);
     }
-
-    // TODO: test multiple wsteth deposits
 }
