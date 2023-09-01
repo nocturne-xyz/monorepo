@@ -2,7 +2,12 @@ import "mocha";
 import { expect } from "chai";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
-import { PersistentLog, RedisStreamIdTrait, WithRedisStreamId } from "../src";
+import {
+  PersistentLog,
+  RedisStreamId,
+  RedisStreamIdTrait,
+  WithRedisStreamId,
+} from "../src";
 import { min, range, sleep } from "@nocturne-xyz/core";
 
 function randomBigIntBounded(max: bigint): bigint {
@@ -10,7 +15,7 @@ function randomBigIntBounded(max: bigint): bigint {
 }
 
 const makeStreamIdWrapper = <T>() => {
-  let currentId = "0-1";
+  let currentId: RedisStreamId = "0-1";
 
   return (item: T): WithRedisStreamId<T> => {
     const res = {

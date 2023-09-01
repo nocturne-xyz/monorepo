@@ -12,12 +12,12 @@ interface InsertionLogOptions {
 }
 
 // a string of the form `N-M`, where N and M are both decimal-formatted 64-bit unsigned integers
-export type RedisStreamId = string;
+export type RedisStreamId = `${number}-${number}`;
 export class RedisStreamIdTrait {
   // checks that the given `id` is well-formed
   static fromString(id: string): RedisStreamId {
     const parts = id.split("-");
-    if (parts.length !== 2) {
+    if (parts.length > 2) {
       throw new Error(`Invalid RedisStreamId: ${id}`);
     }
     const [lhs, rhs] = parts;
@@ -32,7 +32,7 @@ export class RedisStreamIdTrait {
       throw new Error(`Invalid RedisStreamId: ${id}`);
     }
 
-    return id;
+    return id as RedisStreamId;
   }
 
   static toComponents(id: RedisStreamId): [bigint, bigint] {
@@ -49,7 +49,7 @@ export class RedisStreamIdTrait {
     if (lhs > U64_MAX || rhs > U64_MAX) {
       throw new Error(`Invalid RedisStreamId: ${lhs}-${rhs}`);
     }
-    return `${lhs.toString()}-${rhs.toString()}`;
+    return `${Number(lhs)}-${Number(rhs)}`;
   }
 }
 
@@ -61,12 +61,12 @@ export interface WithRedisStreamId<T> {
 export interface ScanOptions {
   // if given, the iterator will only return elements with index > `startId`
   // if this id is >= current tip AND `infinite` is set to `false`, the returned iterator will be empty
-  startId?: string;
+  startId?: RedisStreamId;
 
   // if given, the iterator will only return elements with index < `endId`,
   // and it will terminate once the iterator reaches `endId`
   // if this id > current tip AND `infinite` is set to `false`, this option changes nothing
-  endId?: string;
+  endId?: RedisStreamId;
 
   // if true, returned iterator will scan over all past, present, and future elements
   // if false, returned iterator will terminate once redis returns an empty response
@@ -136,7 +136,11 @@ export class PersistentLog<T> {
     });
   }
 
-  // same as before, except `syncAndPipe` was removed from the premises
+  // returns a closable async iterator over elements in the log
+  // iterator behavior can be configured via `options`.
+  // By default, it will return an iterator over all elements in the log
+  // and terminate once it reaches the end of the log.
+  // see `ScanOptions` for more details
   scan(options?: ScanOptions): ClosableAsyncIterator<WithRedisStreamId<T>[]> {
     const redis = this.redis;
     const logger = this.logger;
@@ -146,8 +150,9 @@ export class PersistentLog<T> {
 
     // include the "BLOCK" argument if `infinite` is true
     const poll = async (lowerBound: RedisStreamId) => {
+      let entriesByStream;
       if (options?.infinite) {
-        const entriesByStream = await redis.xread(
+        entriesByStream = await redis.xread(
           "COUNT",
           REDIS_BATCH_SIZE_STRING,
           "BLOCK",
@@ -156,23 +161,19 @@ export class PersistentLog<T> {
           streamKey,
           lowerBound
         );
-
-        // we only care about one stream, and we only care about the entries themselves
-        // [0] gets the [key, entries] pair for the 0th stream, [1] gets the entries themselves
-        return entriesByStream?.[0][1];
       } else {
-        const entriesByStream = await redis.xread(
+        entriesByStream = await redis.xread(
           "COUNT",
           REDIS_BATCH_SIZE_STRING,
           "STREAMS",
           streamKey,
           lowerBound
         );
-
-        // we only care about one stream, and we only care about the entries themselves
-        // [0] gets the [key, entries] pair for the 0th stream, [1] gets the entries themselves
-        return entriesByStream?.[0][1];
       }
+
+      // we only care about one stream, and we only care about the entries themselves
+      // [0] gets the [key, entries] pair for the 0th stream, [1] gets the entries themselves
+      return entriesByStream?.[0][1];
     };
 
     // start at `startTotalEntityIndex` if it was given
@@ -195,7 +196,7 @@ export class PersistentLog<T> {
         // not necessarily typesafe - we assume the caller pointed it to the right redis stream
         let batch = entries.map(([id, fields]) => {
           const inner = JSON.parse(fields[1]).inner as T;
-          return { id, inner };
+          return { id: RedisStreamIdTrait.fromString(id), inner };
         });
 
         // filter out all data >= `options.endId` if given
@@ -211,7 +212,7 @@ export class PersistentLog<T> {
         yield batch;
 
         const lastId = batch[batch.length - 1].id;
-        lowerBound = `${lastId}`;
+        lowerBound = RedisStreamIdTrait.fromString(lastId);
       }
 
       // not sure if we need this, but we should probably start doing this in hand-written iters
