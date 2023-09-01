@@ -70,7 +70,11 @@ import { DummyTrmData } from "../src/screening/checks/apiCalls";
 
   DUMMY_RULESET.check(DUMMY_DEPOSIT_REQUEST)
     .then((result) => {
-      console.log(result);
+      console.log("Expected result: ", {
+        type: "Delay",
+        timeSeconds: 300,
+      });
+      console.log("Actual result: ", result);
     })
     .catch((err) => {
       console.log(err);
