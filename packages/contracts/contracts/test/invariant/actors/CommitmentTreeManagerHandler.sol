@@ -19,8 +19,6 @@ import "../../utils/NocturneUtils.sol";
 import "../../../libs/Types.sol";
 
 contract CommitmentTreeManagerHandler is InvariantUtils {
-    uint256 constant ERC20_ID = 0;
-
     using LibIncrementalTree for IncrementalTree;
 
     // ______PUBLIC______

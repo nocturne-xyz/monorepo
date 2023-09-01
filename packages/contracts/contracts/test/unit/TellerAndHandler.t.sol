@@ -35,18 +35,17 @@ import "../../libs/Types.sol";
 
 contract TellerAndHandlerTest is Test, PoseidonDeployer {
     using LibOffchainMerkleTree for OffchainMerkleTree;
-    uint256 public constant BN254_SCALAR_FIELD_MODULUS =
-        21888242871839275222246405745257275088548364400416034343698204186575808495617;
-
     using stdJson for string;
     using TreeTestLib for TreeTest;
+
+    uint256 public constant BN254_SCALAR_FIELD_MODULUS =
+        21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
     // Check storage layout file
     uint256 constant OPERATION_STAGE_STORAGE_SLOT = 278;
     uint256 constant ENTERED_EXECUTE_ACTIONS = 3;
 
     uint256 constant DEFAULT_GAS_LIMIT = 500_000;
-    uint256 constant ERC20_ID = 0;
 
     address constant ALICE = address(1);
     address constant BOB = address(2);
@@ -444,7 +443,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             ALICE,
             address(token),
             PER_NOTE_AMOUNT,
-            NocturneUtils.ERC20_ID,
+            ERC20_ID,
             NocturneUtils.defaultStealthAddress()
         );
 
@@ -473,7 +472,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             ALICE,
             address(token),
             PER_NOTE_AMOUNT,
-            NocturneUtils.ERC20_ID,
+            ERC20_ID,
             NocturneUtils.defaultStealthAddress()
         );
         vm.prank(ALICE);
