@@ -1,28 +1,26 @@
-import IORedis from "ioredis";
-import express from "express";
-import * as os from "os";
-import cors from "cors";
-import { Logger } from "winston";
-import morgan from "morgan";
+import { Address } from "@nocturne-xyz/core";
+import { ActorHandle, HealthCheckResponse } from "@nocturne-xyz/offchain-utils";
 import { Queue } from "bullmq";
+import cors from "cors";
+import express from "express";
+import IORedis from "ioredis";
+import morgan from "morgan";
+import * as os from "os";
+import { Logger } from "winston";
+import { DepositScreenerDB } from "./db";
+import { makeDepositStatusHandler, makeQuoteHandler } from "./routes";
+import { ScreeningCheckerApi } from "./screening";
 import {
   DepositRequestJobData,
   SCREENER_DELAY_QUEUE,
   getFulfillmentQueueName,
 } from "./types";
-import { DepositScreenerDB } from "./db";
-import { Address } from "@nocturne-xyz/core";
-import { makeDepositStatusHandler, makeQuoteHandler } from "./routes";
-import { ScreenerDelayCalculator } from "./screenerDelay";
-import { ScreeningCheckerApi } from "./screening";
-import { ActorHandle, HealthCheckResponse } from "@nocturne-xyz/offchain-utils";
 
 export class DepositScreenerServer {
   logger: Logger;
   redis: IORedis;
   db: DepositScreenerDB;
   screeningApi: ScreeningCheckerApi;
-  screenerDelayCalculator: ScreenerDelayCalculator;
   screenerQueue: Queue<DepositRequestJobData>;
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
   supportedAssetRateLimits: Map<Address, bigint>;
@@ -31,14 +29,12 @@ export class DepositScreenerServer {
     logger: Logger,
     redis: IORedis,
     screeningApi: ScreeningCheckerApi,
-    screenerDelayCalculator: ScreenerDelayCalculator,
     supportedAssetRateLimits: Map<Address, bigint>
   ) {
     this.logger = logger;
     this.redis = redis;
     this.db = new DepositScreenerDB(redis);
     this.screeningApi = screeningApi;
-    this.screenerDelayCalculator = screenerDelayCalculator;
     this.screenerQueue = new Queue(SCREENER_DELAY_QUEUE, { connection: redis });
     this.fulfillerQueues = new Map(
       Array.from(supportedAssetRateLimits.keys()).map((address) => {
@@ -71,7 +67,6 @@ export class DepositScreenerServer {
       makeQuoteHandler({
         logger: this.logger,
         screeningApi: this.screeningApi,
-        screenerDelayCalculator: this.screenerDelayCalculator,
         screenerQueue: this.screenerQueue,
         fulfillerQueues: this.fulfillerQueues,
         rateLimits: this.supportedAssetRateLimits,
