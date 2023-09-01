@@ -4,13 +4,15 @@ import { DummyTrmData } from "../src/screening/checks/apiCalls";
 
 (async () => {
   const DELAY_50_ALWAYS = new Rule({
+    name: "DELAY_50_ALWAYS",
     call: "DUMMY_TRM_SCREENING_ADDRESSES",
     threshold: () => {
       return true;
     },
-    action: { type: "Delay", timeSeconds: 50 },
+    action: { type: "Delay", operation: "Add", value: 50 },
   });
   const REJECT_IF_RISK_OVER_POINT_5 = new Rule({
+    name: "REJECT_IF_RISK_OVER_POINT_5",
     call: "DUMMY_TRM_SCREENING_ADDRESSES",
     threshold: (data: DummyTrmData) => {
       return data.risk > 0.5;
@@ -28,24 +30,36 @@ import { DummyTrmData } from "../src/screening/checks/apiCalls";
   //     },
   //   });
   const DELAY_100_IF_RISK_IS_POINT_FIVE = new Rule({
+    name: "DELAY_100_IF_RISK_IS_POINT_FIVE",
     call: "DUMMY_TRM_SCREENING_ADDRESSES",
     threshold: (data: DummyTrmData) => {
       return data.risk === 0.5;
     },
-    action: { type: "Delay", timeSeconds: 100 },
+    action: { type: "Delay", operation: "Add", value: 100 },
   });
+  const DELAY_BY_FACTOR_OF_2_IF_RISK_IS_POINT_FIVE = new Rule({
+    name: "DELAY_BY_FACTOR_OF_2_IF_RISK_IS_POINT_FIVE",
+    call: "DUMMY_TRM_SCREENING_ADDRESSES",
+    threshold: (data: DummyTrmData) => {
+      return data.risk === 0.5;
+    },
+    action: { type: "Delay", operation: "Multiply", value: 2 },
+  });
+
   const DELAY_10000000_NEVER = new Rule({
+    name: "DELAY_10000000_NEVER",
     call: "DUMMY_TRM_SCREENING_ADDRESSES",
     threshold: () => {
       return false;
     },
-    action: { type: "Delay", timeSeconds: 10000000 },
+    action: { type: "Delay", operation: "Add", value: 10000000 },
   });
   const DUMMY_RULESET = new RuleSet()
     .add(DELAY_50_ALWAYS)
     .add(REJECT_IF_RISK_OVER_POINT_5)
     // .add(REJECT_ALWAYS)
     .add(DELAY_100_IF_RISK_IS_POINT_FIVE)
+    .add(DELAY_BY_FACTOR_OF_2_IF_RISK_IS_POINT_FIVE)
     .add(DELAY_10000000_NEVER);
 
   const DUMMY_DEPOSIT_REQUEST: ScreeningDepositRequest = {

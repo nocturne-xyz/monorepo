@@ -1,5 +1,5 @@
 import { Address } from "@nocturne-xyz/core";
-import { RULESET_V1 } from "./checks/v1/RuleSetV1";
+import { RULESET_V1 } from "./checks/v1/RULESET_V1";
 import { Delay, Rejection } from "./checks/RuleSet";
 
 export interface ScreeningDepositRequest {
