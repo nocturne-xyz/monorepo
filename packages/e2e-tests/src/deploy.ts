@@ -222,24 +222,6 @@ export async function setupTestDeployment(
     proms.push(startBundler(bundlerConfig));
   }
 
-  // deploy subtree updater & insertion writer if requested
-  if (config.include.subtreeUpdater) {
-    // subtree updater
-    const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
-    const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
-      ...DEFAULT_SUBTREE_UPDATER_CONFIG,
-      ...givenSubtreeUpdaterConfig,
-      handlerAddress: handler.address,
-      txSignerKey: subtreeUpdaterEoa.privateKey,
-    };
-    actorConfig.configs.subtreeUpdater = subtreeUpdaterConfig;
-
-    proms.push(startSubtreeUpdater(subtreeUpdaterConfig));
-
-    // insertion writer
-    proms.push(startInsertionWriter(DEFAULT_INSERITON_WRITER_CONFIG));
-  }
-
   if (config.include.depositScreener) {
     const givenDepositScreenerConfig = config.configs?.depositScreener ?? {};
     const depositScreenerConfig: DepositScreenerConfig = {
@@ -252,6 +234,35 @@ export async function setupTestDeployment(
     actorConfig.configs.depositScreener = depositScreenerConfig;
 
     proms.push(startDepositScreener(depositScreenerConfig, deployment.erc20s));
+  }
+
+  // deploy subtree updater & insertion writer if requested
+  if (config.include.subtreeUpdater) {
+    // subtree updater
+    const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
+    const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
+      ...DEFAULT_SUBTREE_UPDATER_CONFIG,
+      ...givenSubtreeUpdaterConfig,
+      handlerAddress: handler.address,
+      txSignerKey: subtreeUpdaterEoa.privateKey,
+    };
+    actorConfig.configs.subtreeUpdater = subtreeUpdaterConfig;
+
+    const startUpdaterAndInsertionWriter = async () => {
+      const teardownInsertionWriter = await startInsertionWriter(
+        DEFAULT_INSERITON_WRITER_CONFIG
+      );
+      const teardownSubtreeUpdater = await startSubtreeUpdater(
+        subtreeUpdaterConfig
+      );
+
+      return async () => {
+        await teardownInsertionWriter();
+        await teardownSubtreeUpdater();
+      };
+    };
+
+    proms.push(startUpdaterAndInsertionWriter());
   }
 
   const actorTeardownFns = await Promise.all(proms);

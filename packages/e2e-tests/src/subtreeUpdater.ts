@@ -2,11 +2,10 @@ import {
   SubtreeUpdater,
   RapidsnarkSubtreeUpdateProver,
 } from "@nocturne-xyz/subtree-updater";
-import { MockSubtreeUpdateProver } from "@nocturne-xyz/core";
+import { MockSubtreeUpdateProver, thunk } from "@nocturne-xyz/core";
 import { ethers } from "ethers";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { Handler__factory } from "@nocturne-xyz/contracts";
-import { SubgraphSubtreeUpdaterSyncAdapter } from "@nocturne-xyz/subtree-updater/src/sync/subgraph/adapter";
 import { makeRedisInstance } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import path from "path";
@@ -29,9 +28,11 @@ export interface SubtreeUpdaterConfig {
   useRapidsnark?: boolean;
 }
 
-const { getRedis, clearRedis } = makeRedisInstance();
+const { getRedis, clearRedis, getRedisServer } = makeRedisInstance();
 
-export const getInsertionLogRedis = getRedis;
+export const getInsertionLogRedisServer = thunk(async () => {
+  return await getRedisServer();
+});
 
 export async function startSubtreeUpdater(
   config: SubtreeUpdaterConfig
@@ -42,10 +43,6 @@ export async function startSubtreeUpdater(
   const handlerContract = Handler__factory.connect(
     config.handlerAddress,
     signer
-  );
-  const syncAdapter = new SubgraphSubtreeUpdaterSyncAdapter(
-    config.subgraphUrl,
-    logger
   );
   const prover = config.useRapidsnark
     ? new RapidsnarkSubtreeUpdateProver(
@@ -58,10 +55,10 @@ export async function startSubtreeUpdater(
     : new MockSubtreeUpdateProver();
   const updater = new SubtreeUpdater(
     handlerContract,
-    syncAdapter,
     logger,
     await getRedis(),
     prover,
+    config.subgraphUrl,
     {
       fillBatchLatency: config.fillBatchLatency,
     }

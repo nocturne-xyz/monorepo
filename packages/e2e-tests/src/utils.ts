@@ -283,6 +283,7 @@ export function runCommandBackground(
 }
 
 interface RedisHandle {
+  getRedisServer: () => Promise<RedisMemoryServer>;
   getRedis: () => Promise<IORedis>;
   clearRedis: () => Promise<void>;
 }
@@ -291,20 +292,21 @@ interface RedisHandle {
 const redisPorts = range(6000, 6100);
 const mutex = new Mutex();
 export function makeRedisInstance(): RedisHandle {
-  const redisThunk = thunk(async () => {
+  const redisThunk = thunk<[IORedis, RedisMemoryServer]>(async () => {
     const port = await mutex.runExclusive(() => redisPorts.pop());
     if (!port)
       throw new Error("ran out of available ports for redis instances");
 
     const server = await RedisMemoryServer.create({ instance: { port } });
     const host = await server.getHost();
-    return new IORedis(port, host);
+    return [new IORedis(port, host), server];
   });
 
   return {
-    getRedis: async () => await redisThunk(),
+    getRedisServer: async () => (await redisThunk())[1],
+    getRedis: async () => (await redisThunk())[0],
     clearRedis: async () => {
-      const redis = await redisThunk();
+      const [redis, _] = await redisThunk();
       redis.flushall();
     },
   };

@@ -164,22 +164,27 @@ export class SubtreeUpdater {
 
   async start(): Promise<ActorHandle> {
     const logger = this.logger.child({ function: "start" });
+    logger.info("starting subtree updater");
 
     const latestCommittedMerkleIndexAtStart =
-      (await fetchlatestCommittedMerkleIndex(this.subgraphEndpoint)) ?? 0;
+      await fetchlatestCommittedMerkleIndex(this.subgraphEndpoint);
 
-    // recover in-memory tree from insertion log up to and including the latest committed subtree
-    await this.recoverTree(
-      this.logger.child({ function: "recoverTree" }),
-      latestCommittedMerkleIndexAtStart ?? 0
-    );
+    if (latestCommittedMerkleIndexAtStart !== undefined) {
+      // recover in-memory tree from insertion log up to and including the latest committed subtree
+      await this.recoverTree(
+        this.logger.child({ function: "recoverTree" }),
+        latestCommittedMerkleIndexAtStart ?? 0
+      );
+    }
 
     // construct infinite iterator over all new and future insertions from the log
+    const startId = latestCommittedMerkleIndexAtStart
+      ? merkleIndexToRedisStreamId(latestCommittedMerkleIndexAtStart + 1)
+      : undefined;
+    logger.info(`starting iterator at stream ID ${startId}`);
     const allInsertions = ClosableAsyncIterator.flatMap(
       this.insertionLog.scan({
-        startId: merkleIndexToRedisStreamId(
-          latestCommittedMerkleIndexAtStart + 1
-        ),
+        startId,
         infinite: true,
       }),
       ({ inner }) => inner
@@ -195,12 +200,9 @@ export class SubtreeUpdater {
       // metrics
       .tap((batch) => {
         for (const insertion of batch) {
-          logger.debug(
-            `got insertion at merkleIndex ${insertion.merkleIndex}`,
-            {
-              insertion,
-            }
-          );
+          logger.info(`got insertion at merkleIndex ${insertion.merkleIndex}`, {
+            insertion,
+          });
 
           const noteOrCommitment = NoteTrait.isCommitment(insertion)
             ? "commitment"
@@ -267,7 +269,7 @@ export class SubtreeUpdater {
     const teardown = async () => {
       await proofInputInfos.close();
       await runProm;
-      this.logger.debug("teardown completed");
+      this.logger.info("teardown completed");
     };
 
     const promise = (async () => {
