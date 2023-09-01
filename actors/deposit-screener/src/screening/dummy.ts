@@ -1,9 +1,9 @@
 import { Address } from "@nocturne-xyz/core";
-import { ScreeningApi } from ".";
+import { ScreeningCheckerApi } from ".";
 
 export const MAGIC_REJECTION_VALUE = 30303000000000000n; // 0.030303
 
-export class DummyScreeningApi implements ScreeningApi {
+export class DummyScreeningApi implements ScreeningCheckerApi {
   async isSafeDepositRequest(
     spender: Address,
     assetAddr: Address,

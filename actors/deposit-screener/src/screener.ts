@@ -15,7 +15,7 @@ import {
 import { Job, Queue, Worker } from "bullmq";
 import { ethers } from "ethers";
 import { DepositScreenerDB } from "./db";
-import { ScreeningApi } from "./screening";
+import { ScreeningCheckerApi } from "./screening";
 import { DepositEventsBatch, ScreenerSyncAdapter } from "./sync/syncAdapter";
 import {
   SCREENER_DELAY_QUEUE,
@@ -52,7 +52,7 @@ interface DepositScreenerScreenerMetrics {
 export class DepositScreenerScreener {
   adapter: ScreenerSyncAdapter;
   depositManagerContract: DepositManager;
-  screeningApi: ScreeningApi;
+  screeningApi: ScreeningCheckerApi;
   delayCalculator: ScreenerDelayCalculator;
   screenerDelayQueue: Queue<DepositRequestJobData>;
   db: DepositScreenerDB;
@@ -68,7 +68,7 @@ export class DepositScreenerScreener {
     provider: ethers.providers.Provider,
     redis: IORedis,
     logger: Logger,
-    screeningApi: ScreeningApi,
+    screeningApi: ScreeningCheckerApi,
     screenerDelayCalculator: ScreenerDelayCalculator,
     supportedAssets: Set<Address>,
     startBlock?: number

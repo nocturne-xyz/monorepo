@@ -1,13 +1,13 @@
-import { Command } from "commander";
-import { DepositScreenerServer } from "../../../server";
-import { makeLogger } from "@nocturne-xyz/offchain-utils";
-import { getRedis } from "./utils";
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
-import { DummyScreeningApi, ScreeningApi } from "../../../screening";
+import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import { Command } from "commander";
 import {
   DummyScreenerDelayCalculator,
   ScreenerDelayCalculator,
 } from "../../../screenerDelay";
+import { DummyScreeningApi, ScreeningCheckerApi } from "../../../screening";
+import { DepositScreenerServer } from "../../../server";
+import { getRedis } from "./utils";
 
 const runServer = new Command("server")
   .summary("run deposit screener server")
@@ -52,7 +52,7 @@ const runServer = new Command("server")
       ])
     );
 
-    let screeningApi: ScreeningApi;
+    let screeningApi: ScreeningCheckerApi;
     let screeningDelayCalculator: ScreenerDelayCalculator;
     if (env === "local" || env == "development") {
       const { dummyScreeningDelay } = options;

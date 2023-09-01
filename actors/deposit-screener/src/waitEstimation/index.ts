@@ -8,7 +8,7 @@ import {
   DepositRequestStatus,
 } from "@nocturne-xyz/core";
 import { ScreenerDelayCalculator } from "../screenerDelay";
-import { ScreeningApi } from "../screening";
+import { ScreeningCheckerApi } from "../screening";
 import {
   totalValueAheadInFulfillerQueueInclusive,
   totalValueAheadInScreenerQueueInclusive,
@@ -105,7 +105,7 @@ export async function estimateSecondsUntilDepositCompletion(
 }
 
 export interface EstimateProspectiveWaitDeps {
-  screeningApi: ScreeningApi;
+  screeningApi: ScreeningCheckerApi;
   screenerDelayCalculator: ScreenerDelayCalculator;
   rateLimits: Map<Address, bigint>;
   screenerQueue: Queue<DepositRequestJobData>;

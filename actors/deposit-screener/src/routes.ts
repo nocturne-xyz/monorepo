@@ -12,7 +12,7 @@ import {
   DepositQuoteResponse,
   DepositRequestStatus,
 } from "@nocturne-xyz/core";
-import { ScreeningApi } from "./screening";
+import { ScreeningCheckerApi } from "./screening";
 import { DepositScreenerDB } from "./db";
 import { Queue } from "bullmq";
 import { DepositRequestJobData } from "./types";
@@ -67,7 +67,7 @@ export function makeDepositStatusHandler({
 
 export interface QuoteHandlerDeps {
   logger: Logger;
-  screeningApi: ScreeningApi;
+  screeningApi: ScreeningCheckerApi;
   screenerDelayCalculator: ScreenerDelayCalculator;
   screenerQueue: Queue<DepositRequestJobData>;
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;

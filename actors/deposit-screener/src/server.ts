@@ -14,14 +14,14 @@ import { DepositScreenerDB } from "./db";
 import { Address } from "@nocturne-xyz/core";
 import { makeDepositStatusHandler, makeQuoteHandler } from "./routes";
 import { ScreenerDelayCalculator } from "./screenerDelay";
-import { ScreeningApi } from "./screening";
+import { ScreeningCheckerApi } from "./screening";
 import { ActorHandle, HealthCheckResponse } from "@nocturne-xyz/offchain-utils";
 
 export class DepositScreenerServer {
   logger: Logger;
   redis: IORedis;
   db: DepositScreenerDB;
-  screeningApi: ScreeningApi;
+  screeningApi: ScreeningCheckerApi;
   screenerDelayCalculator: ScreenerDelayCalculator;
   screenerQueue: Queue<DepositRequestJobData>;
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
@@ -30,7 +30,7 @@ export class DepositScreenerServer {
   constructor(
     logger: Logger,
     redis: IORedis,
-    screeningApi: ScreeningApi,
+    screeningApi: ScreeningCheckerApi,
     screenerDelayCalculator: ScreenerDelayCalculator,
     supportedAssetRateLimits: Map<Address, bigint>
   ) {

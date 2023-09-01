@@ -5,7 +5,7 @@ import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
-import { DummyScreeningApi, ScreeningApi } from "../../../screening";
+import { DummyScreeningApi, ScreeningCheckerApi } from "../../../screening";
 import {
   DummyScreenerDelayCalculator,
   ScreenerDelayCalculator,
@@ -111,7 +111,7 @@ const runProcess = new Command("processor")
       Array.from(config.erc20s.values()).map(({ address }) => address)
     );
 
-    let screeningApi: ScreeningApi;
+    let screeningApi: ScreeningCheckerApi;
     let screeningDelayCalculator: ScreenerDelayCalculator;
     if (env === "local" || env == "development") {
       const { dummyScreeningDelay } = options;

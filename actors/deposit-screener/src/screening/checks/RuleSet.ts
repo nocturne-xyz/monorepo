@@ -1,4 +1,4 @@
-import { DepositRequest } from "@nocturne-xyz/core";
+import { ScreeningDepositRequest } from "..";
 import { API_CALLS, Data } from "./apiCalls";
 
 export interface Rejection {
@@ -31,7 +31,7 @@ export class Rule<T extends Data> {
   }
 
   async check(
-    deposit: DepositRequest,
+    deposit: ScreeningDepositRequest,
     cache: Record<string, Data>
   ): Promise<Rejection | Delay | undefined> {
     if (!cache[this.call]) {
@@ -57,7 +57,7 @@ export class RuleSet {
     return this;
   }
 
-  async check(deposit: DepositRequest): Promise<Rejection | Delay> {
+  async check(deposit: ScreeningDepositRequest): Promise<Rejection | Delay> {
     let currRule = this.head;
     const cache: Record<string, Data> = {};
     while (currRule !== null) {
