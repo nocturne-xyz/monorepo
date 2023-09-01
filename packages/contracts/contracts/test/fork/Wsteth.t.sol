@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import {IWeth} from "../../interfaces/IWeth.sol";
 import {IWsteth} from "../../interfaces/IWsteth.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {EthAdapter} from "../../EthAdapter.sol";
+import {WstethAdapter} from "../../adapters/WstethAdapter.sol";
 import {Teller} from "../../Teller.sol";
 import {Handler} from "../../Handler.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
@@ -39,10 +39,10 @@ contract WstethTest is Test {
 
     Teller teller;
     Handler handler;
-    EthAdapter ethAdapter;
+    WstethAdapter wstethAdapter;
 
     function setUp() public {
-        ethAdapter = new EthAdapter(address(weth));
+        wstethAdapter = new WstethAdapter(address(weth), address(wsteth));
         teller = new Teller();
         handler = new Handler();
 
@@ -64,7 +64,7 @@ contract WstethTest is Test {
         // Whitelist weth, wsteth, and balancer
         handler.setContractPermission(address(weth), true);
         handler.setContractPermission(address(wsteth), true);
-        handler.setContractPermission(address(ethAdapter), true);
+        handler.setContractPermission(address(wstethAdapter), true);
         handler.setContractPermission(address(balancer), true);
 
         handler.setContractMethodPermission(
@@ -78,8 +78,8 @@ contract WstethTest is Test {
             true
         );
         handler.setContractMethodPermission(
-            address(ethAdapter),
-            ethAdapter.withEthValue.selector,
+            address(wstethAdapter),
+            wstethAdapter.convert.selector,
             true
         );
         handler.setContractMethodPermission(
@@ -136,7 +136,7 @@ contract WstethTest is Test {
             contractAddress: address(weth),
             encodedFunction: abi.encodeWithSelector(
                 weth.approve.selector,
-                address(ethAdapter),
+                address(wstethAdapter),
                 wethInAmount
             )
         });
@@ -144,15 +144,10 @@ contract WstethTest is Test {
         address[] memory outputTokens = new address[](1);
         outputTokens[0] = address(wsteth);
         actions[1] = Action({
-            contractAddress: address(ethAdapter),
+            contractAddress: address(wstethAdapter),
             encodedFunction: abi.encodeWithSelector(
-                ethAdapter.withEthValue.selector,
-                wethInAmount,
-                Action({
-                    contractAddress: address(wsteth),
-                    encodedFunction: bytes("")
-                }),
-                outputTokens
+                wstethAdapter.convert.selector,
+                wethInAmount
             )
         });
 
@@ -200,10 +195,10 @@ contract WstethTest is Test {
 
         console.log("wstethInAmount", wstethInAmount);
 
-        // Get expected weth out amount, 2% slippage tolerance
+        // Get expected weth out amount, 5% slippage tolerance
         uint256 wethExpectedOutAmount = (wsteth.getStETHByWstETH(
             wstethInAmount
-        ) * 90) / 100;
+        ) * 95) / 100;
 
         console.log("wethExpectedOutAmount", wethExpectedOutAmount);
 
