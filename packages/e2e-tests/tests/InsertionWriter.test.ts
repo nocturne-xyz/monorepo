@@ -145,7 +145,9 @@ describe("InsertionWriter", () => {
       range(5).map((i) => BigInt(i))
     );
 
+    // fill batch and sync
     await fillSubtreeBatch();
+    await client.sync();
 
     // do an op
     const eoaAddr = await eoa.getAddress();
