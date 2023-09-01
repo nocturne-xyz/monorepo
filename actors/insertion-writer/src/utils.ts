@@ -1,12 +1,13 @@
 import { SubgraphUtils } from "@nocturne-xyz/core";
+import { RedisStreamId } from "@nocturne-xyz/persistent-log";
 
 const { makeSubgraphQuery } = SubgraphUtils;
 
-export function merkleIndexToRedisStreamId(merkleIndex: number): string {
+export function merkleIndexToRedisStreamId(merkleIndex: number): RedisStreamId {
   return `${merkleIndex}-1`;
 }
 
-export function merkleIndexFromRedisStreamId(id: string): number {
+export function merkleIndexFromRedisStreamId(id: RedisStreamId): number {
   const components = id.split("-");
   if (!components || components.length !== 2) {
     throw new Error("invalid id");
