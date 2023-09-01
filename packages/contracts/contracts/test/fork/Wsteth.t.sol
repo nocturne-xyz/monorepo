@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import {IWeth} from "../../interfaces/IWeth.sol";
 import {IWsteth} from "../../interfaces/IWsteth.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {WstethAdapter} from "../../adapters/WstethAdapter.sol";
+import {EthAdapter} from "../../EthAdapter.sol";
 import {Teller} from "../../Teller.sol";
 import {Handler} from "../../Handler.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
@@ -24,8 +24,14 @@ contract WstethTest is Test {
 
     IBalancer public constant balancer =
         IBalancer(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
-    bytes32 public constant WSTETH_ETH_POOL_ID = bytes32(0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080);
-    bytes32 public constant TRI_ETH_POOL_ID = bytes32(0x42ed016f826165c2e5976fe5bc3df540c5ad0af700000000000000000000058b);
+    bytes32 public constant WSTETH_ETH_POOL_ID =
+        bytes32(
+            0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080
+        );
+    bytes32 public constant TRI_ETH_POOL_ID =
+        bytes32(
+            0x42ed016f826165c2e5976fe5bc3df540c5ad0af700000000000000000000058b
+        );
 
     address public constant DEPOSIT_SOURCE = address(0x111);
     address public constant ALICE = address(0x222);
@@ -33,10 +39,10 @@ contract WstethTest is Test {
 
     Teller teller;
     Handler handler;
-    WstethAdapter wstethAdapter;
+    EthAdapter ethAdapter;
 
     function setUp() public {
-        wstethAdapter = new WstethAdapter(address(weth), address(wsteth));
+        ethAdapter = new EthAdapter(address(weth));
         teller = new Teller();
         handler = new Handler();
 
@@ -58,7 +64,7 @@ contract WstethTest is Test {
         // Whitelist weth, wsteth, and balancer
         handler.setContractPermission(address(weth), true);
         handler.setContractPermission(address(wsteth), true);
-        handler.setContractPermission(address(wstethAdapter), true);
+        handler.setContractPermission(address(ethAdapter), true);
         handler.setContractPermission(address(balancer), true);
 
         handler.setContractMethodPermission(
@@ -72,8 +78,8 @@ contract WstethTest is Test {
             true
         );
         handler.setContractMethodPermission(
-            address(wstethAdapter),
-            wstethAdapter.convert.selector,
+            address(ethAdapter),
+            ethAdapter.withEthValue.selector,
             true
         );
         handler.setContractMethodPermission(
@@ -130,15 +136,23 @@ contract WstethTest is Test {
             contractAddress: address(weth),
             encodedFunction: abi.encodeWithSelector(
                 weth.approve.selector,
-                address(wstethAdapter),
+                address(ethAdapter),
                 wethInAmount
             )
         });
+
+        address[] memory outputTokens = new address[](1);
+        outputTokens[0] = address(wsteth);
         actions[1] = Action({
-            contractAddress: address(wstethAdapter),
+            contractAddress: address(ethAdapter),
             encodedFunction: abi.encodeWithSelector(
-                wstethAdapter.convert.selector,
-                wethInAmount
+                ethAdapter.withEthValue.selector,
+                wethInAmount,
+                Action({
+                    contractAddress: address(wsteth),
+                    encodedFunction: bytes("")
+                }),
+                outputTokens
             )
         });
 
@@ -154,10 +168,7 @@ contract WstethTest is Test {
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
-                        NocturneUtils.fillJoinSplitPublicSpends(
-                            wethInAmount,
-                            1
-                        )
+                        NocturneUtils.fillJoinSplitPublicSpends(wethInAmount, 1)
                     ),
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
@@ -190,7 +201,9 @@ contract WstethTest is Test {
         console.log("wstethInAmount", wstethInAmount);
 
         // Get expected weth out amount, 2% slippage tolerance
-        uint256 wethExpectedOutAmount = (wsteth.getStETHByWstETH(wstethInAmount) * 90) / 100;
+        uint256 wethExpectedOutAmount = (wsteth.getStETHByWstETH(
+            wstethInAmount
+        ) * 90) / 100;
 
         console.log("wethExpectedOutAmount", wethExpectedOutAmount);
 
