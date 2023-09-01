@@ -26,7 +26,7 @@
     "test:deep-invariant": "FOUNDRY_PROFILE=deep forge test",
     "test:gas-report": "yarn test:unit --gas-report",
     "test:invariant-summary": "yarn test:unit -vv -m invariant_callSummary",
-    "test:unit": "forge test --no-match-contract LidoAndBalancerTest",
+    "test:unit": "forge test --no-match-contract WstethTest",
     "test:fork": "forge test --match-contract WstethTest --fork-url https://eth-mainnet.g.alchemy.com/v2/X21iuJe_hcEAH4cooxG7xGuTQ-ebJJmB",
     "publish": "yarn build; yarn npm publish --access public"
   },
