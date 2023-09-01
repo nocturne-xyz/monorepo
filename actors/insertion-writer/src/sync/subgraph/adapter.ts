@@ -40,17 +40,24 @@ export class SubgraphTreeInsertionSyncAdapter
 
     let closed = false;
     const generator = async function* () {
-      let _from = startMerkleIndex === 0 ? 0n : undefined;
-      while (!_from) {
-        _from = await fetchTeiFromMerkleIndex(endpoint, startMerkleIndex);
-        await sleep(opts?.throttleMs ?? 1000);
-        if (closed) {
-          return;
-        }
+      // figure out what TEI to start polling the subggraph at
+      const _from =
+        startMerkleIndex === 0
+          ? 0n
+          : await fetchTeiFromMerkleIndex(endpoint, startMerkleIndex);
+      // if `fetchTeiFromMerkleIndex returned undefined, either an error occurred or `startMerkleIndex` is in the future
+      // the latter case is an edge case that's not worth the complexity to handle, so we'll just throw an error
+      if (_from === undefined) {
+        throw new Error("invalid start merkle index");
       }
 
+      // hack to get typescript to recognize that `_from` can't be `undefined` at this point
       let from = _from;
 
+      // function for throttling subgraph queries so that we don't bludgeon it to death:
+      // - if we're caught up, sleep for 5 seconds, because we're basically waiting for another block
+      // - if we're not caught up and `opts.throttleMs` was given sleep for `opts.throttleMs`
+      // - otherwise, sleep for 0 milliseconds
       const maybeApplyThrottle = async (currentBlock: number) => {
         const isCaughtUp =
           from >=
@@ -78,11 +85,14 @@ export class SubgraphTreeInsertionSyncAdapter
         );
 
         // if we got insertions, get the greatest total entity index we saw and set from to that plus one
+        // then yield them in order
         if (insertions.length > 0) {
           from = maxArray(sorted.map((i) => i.totalEntityIndex)) + 1n;
 
           for (const { inner: insertion } of sorted) {
+            // case on the kind of insertion event
             if ("numZeros" in insertion) {
+              // if it's a `FilledBatchWithZerosEvent`, yield a batch of ZERO_VALUEs
               const startIndex = insertion.merkleIndex;
               const meta = {
                 startIndex: startIndex,
@@ -102,6 +112,7 @@ export class SubgraphTreeInsertionSyncAdapter
 
               yield batch;
             } else if (NoteTrait.isEncryptedNote(insertion)) {
+              // if it's an `EncryptedNote`, yield the note's commitment
               const noteCommitment = (insertion as IncludedEncryptedNote)
                 .commitment;
               const meta = {
@@ -122,6 +133,7 @@ export class SubgraphTreeInsertionSyncAdapter
 
               yield [res];
             } else {
+              // otherwise, it's an `EncodedNote` - yield the note itself
               const meta = {
                 merkleIndex: insertion.merkleIndex,
                 note: insertion,
