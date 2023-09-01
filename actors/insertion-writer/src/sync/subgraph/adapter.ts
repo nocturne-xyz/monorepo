@@ -15,8 +15,7 @@ import {
 import { TreeInsertionSyncAdapter } from "../syncAdapter";
 import { fetchTreeInsertions } from "./fetch";
 import { Logger } from "winston";
-import { fetchTeiFromMerkleIndex } from "../../utils";
-import { Insertion } from "@nocturne-xyz/persistent-log";
+import { fetchTeiFromMerkleIndex } from "@nocturne-xyz/offchain-utils";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 

@@ -4379,6 +4379,7 @@ __metadata:
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/crypto-utils": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
+    "@nocturne-xyz/persistent-log": "workspace:^"
     "@openzeppelin/defender-relay-client": 1.47.1
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4

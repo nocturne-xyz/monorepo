@@ -1,1 +1,0 @@
-export { SubtreeUpdaterSyncAdapter } from "./syncAdapter";
