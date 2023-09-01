@@ -20,6 +20,7 @@ SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 ROOT_DIR="$SCRIPT_DIR/../"
 LOG_DIR="$ROOT_DIR/logs"
 rm -rf "$LOG_DIR/**"
+mkdir -p "$LOG_DIR"
 
 trap 'cleanup; trap - SIGTERM && kill 0' SIGINT SIGTERM EXIT
 

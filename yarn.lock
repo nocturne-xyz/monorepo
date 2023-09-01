@@ -4286,6 +4286,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/offchain-utils@workspace:packages/offchain-utils"
   dependencies:
+    "@nocturne-xyz/persistent-log": "workspace:^"
     "@opentelemetry/api": ^1.4.1
     "@opentelemetry/exporter-metrics-otlp-http": ^0.40.0
     "@opentelemetry/instrumentation": ^0.40.0
