@@ -9,9 +9,8 @@ import {
 import { range, sleep } from "@nocturne-xyz/core";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { InsertionWriter } from "../src";
-import { Insertion } from "../src/sync/syncAdapter";
 import { ClosableAsyncIterator } from "@nocturne-xyz/core/src";
-import { PersistentLog } from "@nocturne-xyz/persistent-log";
+import { PersistentLog, Insertion } from "@nocturne-xyz/persistent-log";
 
 describe("InsertionWriter", () => {
   it("replicates all insertions from merkle index 0 into one persistent log", async () => {
@@ -42,12 +41,7 @@ describe("InsertionWriter", () => {
 
     // check that insertion log is correct
     const insertionLog = writer.insertionLog;
-    const actualInsertions = (
-      await insertionLog
-        .scan()
-        .map((elems) => elems.map(({ inner }) => inner))
-        .collect()
-    ).flat();
+    const actualInsertions = (await insertionLog.scan().collect()).flat();
     expect(actualInsertions).to.deep.equal(expectedInsertions);
   });
 

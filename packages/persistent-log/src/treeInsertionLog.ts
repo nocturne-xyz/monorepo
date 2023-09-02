@@ -1,4 +1,8 @@
-import { ClosableAsyncIterator } from "@nocturne-xyz/core";
+import {
+  ClosableAsyncIterator,
+  IncludedNote,
+  IncludedNoteCommitment,
+} from "@nocturne-xyz/core";
 import {
   InsertionLogOptions,
   PersistentLog,
@@ -7,20 +11,17 @@ import {
 } from "./persistentLog";
 import IORedis from "ioredis";
 
-export interface WithIndex<T> {
-  index: number;
-  inner: T;
-}
+export type Insertion = IncludedNote | IncludedNoteCommitment;
 
-export class IntegerKeyedPersistentLog<T> {
-  inner: PersistentLog<T>;
+export class TreeInsertionLog {
+  inner: PersistentLog<Insertion>;
 
   constructor(
     redis: IORedis,
     streamKey: string,
     options?: InsertionLogOptions
   ) {
-    this.inner = new PersistentLog<T>(redis, streamKey, options);
+    this.inner = new PersistentLog<Insertion>(redis, streamKey, options);
   }
 
   async getTip(): Promise<number | undefined> {
@@ -31,22 +32,19 @@ export class IntegerKeyedPersistentLog<T> {
     return undefined;
   }
 
-  async push(elems: WithIndex<T>[]): Promise<void> {
+  async push(insertions: Insertion[]): Promise<void> {
     await this.inner.push(
-      elems.map(({ index, inner }) => ({
-        inner,
-        id: indexToRedisStreamId(index),
+      insertions.map((insertion) => ({
+        inner: insertion,
+        id: indexToRedisStreamId(insertion.merkleIndex),
       }))
     );
   }
 
-  scan(options?: ScanOptions): ClosableAsyncIterator<WithIndex<T>[]> {
-    return this.inner.scan(options).map((batch) =>
-      batch.map(({ id, inner }) => ({
-        index: indexFromRedisStreamId(id),
-        inner,
-      }))
-    );
+  scan(options?: ScanOptions): ClosableAsyncIterator<Insertion[]> {
+    return this.inner
+      .scan(options)
+      .map((batch) => batch.map(({ inner }) => inner));
   }
 }
 

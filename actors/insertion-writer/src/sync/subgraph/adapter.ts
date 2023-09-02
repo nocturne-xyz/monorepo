@@ -12,10 +12,11 @@ import {
   max,
   range,
 } from "@nocturne-xyz/core";
-import { Insertion, TreeInsertionSyncAdapter } from "../syncAdapter";
+import { TreeInsertionSyncAdapter } from "../syncAdapter";
 import { fetchTreeInsertions } from "./fetch";
 import { Logger } from "winston";
 import { fetchTeiFromMerkleIndex } from "../../utils";
+import { Insertion } from "@nocturne-xyz/persistent-log";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 

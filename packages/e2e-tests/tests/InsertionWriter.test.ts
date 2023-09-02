@@ -118,9 +118,9 @@ describe("InsertionWriter", () => {
 
     // check insertion log in redis matches expected
     const expectedInsertions = await getAllTreeInsertionsFromSubgraph();
-    const actualInsertions = (await writer.insertionLog.scan().collect())
-      .flat()
-      .map(({ inner }) => inner);
+    const actualInsertions = (
+      await writer.insertionLog.scan().collect()
+    ).flat();
     expect(actualInsertions).to.deep.equal(expectedInsertions);
   });
 
@@ -171,9 +171,9 @@ describe("InsertionWriter", () => {
 
     // check insertion log in redis matches expected
     const expectedInsertions = await getAllTreeInsertionsFromSubgraph();
-    const actualInsertions = (await writer.insertionLog.scan().collect())
-      .flat()
-      .map(({ inner }) => inner);
+    const actualInsertions = (
+      await writer.insertionLog.scan().collect()
+    ).flat();
     expect(actualInsertions).to.deep.equal(expectedInsertions);
   });
 
@@ -220,9 +220,9 @@ describe("InsertionWriter", () => {
 
     // check insertion log in redis matches expected
     const expectedInsertions = await getAllTreeInsertionsFromSubgraph();
-    const actualInsertions = (await writer.insertionLog.scan().collect())
-      .flat()
-      .map(({ inner }) => inner);
+    const actualInsertions = (
+      await writer.insertionLog.scan().collect()
+    ).flat();
     expect(actualInsertions).to.deep.equal(expectedInsertions);
   });
 });

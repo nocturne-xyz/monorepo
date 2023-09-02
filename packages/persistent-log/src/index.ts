@@ -1,2 +1,2 @@
 export * from "./persistentLog";
-export * from "./integerKeyedPersistentLog";
+export * from "./treeInsertionLog";

@@ -1,8 +1,7 @@
-import { IntegerKeyedPersistentLog } from "@nocturne-xyz/persistent-log";
+import { TreeInsertionLog } from "@nocturne-xyz/persistent-log";
 import IORedis from "ioredis";
 import { Logger } from "winston";
 import { TreeInsertionSyncAdapter } from "./sync";
-import { Insertion } from "./sync/syncAdapter";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 export * from "./sync";
@@ -10,7 +9,7 @@ export * from "./sync";
 export class InsertionWriter {
   adapter: TreeInsertionSyncAdapter;
   logger: Logger;
-  insertionLog: IntegerKeyedPersistentLog<Insertion>;
+  insertionLog: TreeInsertionLog;
 
   constructor(
     // only needs provider, not signer
@@ -20,13 +19,9 @@ export class InsertionWriter {
   ) {
     this.adapter = syncAdapter;
     this.logger = logger;
-    this.insertionLog = new IntegerKeyedPersistentLog<Insertion>(
-      redis,
-      "insertion-log",
-      {
-        logger: logger.child({ function: "insertion log" }),
-      }
-    );
+    this.insertionLog = new TreeInsertionLog(redis, "insertion-log", {
+      logger: logger.child({ function: "insertion log" }),
+    });
   }
 
   async start(queryThrottleMs?: number): Promise<ActorHandle> {
@@ -47,12 +42,7 @@ export class InsertionWriter {
         };
 
         this.logger.info(`got batch of ${insertions.length} insertions`, meta);
-        await this.insertionLog.push(
-          insertions.map((insertion) => ({
-            inner: insertion,
-            index: insertion.merkleIndex,
-          }))
-        );
+        await this.insertionLog.push(insertions);
         this.logger.info(
           `pushed batch of ${insertions.length} into insertion log`,
           meta

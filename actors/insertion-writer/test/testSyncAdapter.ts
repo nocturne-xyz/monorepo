@@ -5,8 +5,8 @@ import {
   range,
   sleep,
 } from "@nocturne-xyz/core";
+import { Insertion } from "@nocturne-xyz/persistent-log";
 import { TreeInsertionSyncAdapter } from "../src/sync";
-import { Insertion } from "../src/sync/syncAdapter";
 import {
   randomBigInt,
   DUMMY_ROOT_KEY,
