@@ -19,7 +19,7 @@ import {
 export const runSubtreeUpdater = new Command("subtree-updater")
   .summary("run subtree updater service")
   .description(
-    "must supply .env file with REDIS_URL, RPC_URL, TX_SIGNER_KEY, and SUBGRAPH_ENDPOINT"
+    "must supply .env file with REDIS_URL, RPC_URL, TX_SIGNER_KEY, and SUBGRAPH_URL"
   )
   .requiredOption(
     "--config-name-or-path <string>",
