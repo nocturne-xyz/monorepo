@@ -135,7 +135,7 @@ describe("InsertionLog", () => {
     }
   });
 
-  it("`scan` retruns past and future entries when `infinite` is set to `true`", async () => {
+  it("`scan` retruns past and future entries", async () => {
     const log = new PersistentLog<number>(redis, "test");
     const withStreamId = makeStreamIdWrapper<number>();
 
@@ -144,7 +144,7 @@ describe("InsertionLog", () => {
     await log.push(allEntries);
 
     // iterator over all entries
-    const scan = log.scan({ infinite: true, pollTimeout: 1000 });
+    const scan = log.scan({ terminateOnEmpty: false, pollTimeout: 1000 });
 
     // entries inserted over time
     const writer = async function () {

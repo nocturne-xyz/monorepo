@@ -60,18 +60,18 @@ export interface WithRedisStreamId<T> {
 
 export interface ScanOptions {
   // if given, the iterator will only return elements with index > `startId`
-  // if this id is >= current tip AND `infinite` is set to `false`, the returned iterator will be empty
+  // if this id is >= current tip AND `terminateOnEmpty` is set to `false`, the returned iterator will be empty
   startId?: RedisStreamId;
 
   // if given, the iterator will only return elements with index < `endId`,
   // and it will terminate once the iterator reaches `endId`
-  // if this id > current tip AND `infinite` is set to `false`, this option changes nothing
+  // if this id > current tip AND `terminateOnEmpty` is set to `false`, this option changes nothing
   endId?: RedisStreamId;
 
-  // if true, returned iterator will scan over all past, present, and future elements
-  // if false, returned iterator will terminate once redis returns an empty response
-  // defaults to false
-  infinite?: boolean;
+  // if true, returned iterator will terminate once it reaches the end of the log and there's no more data
+  // if false, returned iterator will block and wait for new data when it reaches the end of the log
+  // defaults to true
+  terminateOnEmpty?: boolean;
 
   // amount of time in milliseconds to block for when waiting for new data until terminating the query and re-trying
   // defaults to 30000 (30 seconds)
@@ -145,18 +145,17 @@ export class PersistentLog<T> {
     const redis = this.redis;
     const logger = this.logger;
     const streamKey = this.streamKey;
+    const terminateOnEmpty = options?.terminateOnEmpty ?? true;
 
     const pollTimeout = (options?.pollTimeout ?? 30000).toString();
 
-    // include the "BLOCK" argument if `infinite` is true
+    // include the "BLOCK" argument if `terminateOnEmpty` is false
     const poll = async (lowerBound: RedisStreamId) => {
       let entriesByStream;
-      if (options?.infinite) {
+      if (terminateOnEmpty) {
         entriesByStream = await redis.xread(
           "COUNT",
           REDIS_BATCH_SIZE_STRING,
-          "BLOCK",
-          pollTimeout,
           "STREAMS",
           streamKey,
           lowerBound
@@ -165,6 +164,8 @@ export class PersistentLog<T> {
         entriesByStream = await redis.xread(
           "COUNT",
           REDIS_BATCH_SIZE_STRING,
+          "BLOCK",
+          pollTimeout,
           "STREAMS",
           streamKey,
           lowerBound
@@ -183,14 +184,14 @@ export class PersistentLog<T> {
     const generator = async function* () {
       while (!closed) {
         const entries = await poll(lowerBound);
-        // if there's no data and `options.infinite` is `true`, then we
+        // if there's no data and `options.terminateOnEmpty` is `false`, then we
         // should simply poll again, neither yielding nor terminating
-        // if there's no data and `options.infinite` is `false`, then
+        // if there's no data and `options.terminateOnEmpty` is `true`, then
         // we should terminate
-        if ((!entries || entries.length === 0) && options?.infinite) {
-          continue;
-        } else if (!entries || entries.length === 0) {
+        if ((!entries || entries.length === 0) && terminateOnEmpty) {
           break;
+        } else if (!entries || entries.length === 0) {
+          continue;
         }
 
         // not necessarily typesafe - we assume the caller pointed it to the right redis stream
