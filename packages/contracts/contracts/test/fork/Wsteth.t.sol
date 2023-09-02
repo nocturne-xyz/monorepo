@@ -58,7 +58,7 @@ contract WstethTest is ForkBase {
 
         uint256 wstethExpectedOutAmount = wsteth.getWstETHByStETH(wethInAmount);
 
-        // Format operation to unwrap weth, unwrap to eth, then send to wsteth
+        // Format weth as refund asset
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
         trackedRefundAssets[0] = TrackedAsset({
             encodedAsset: AssetUtils.encodeAsset(
@@ -144,7 +144,7 @@ contract WstethTest is ForkBase {
 
         console.log("wstethExpectedOutAmount:", wstethExpectedOutAmount);
 
-        // Format operation to unwrap weth, unwrap to eth, then send to wsteth
+        // Format weth as refund asset
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](1);
         trackedRefundAssets[0] = TrackedAsset({
             encodedAsset: AssetUtils.encodeAsset(
@@ -152,7 +152,7 @@ contract WstethTest is ForkBase {
                 address(wsteth),
                 ERC20_ID
             ),
-            minRefundValue: wstethExpectedOutAmount - 10 // // TODO: why -10 buffer in case of uneven-ness?
+            minRefundValue: wstethExpectedOutAmount - 10 // TODO: why -10 buffer in case of uneven-ness?
         });
 
         // Format actions

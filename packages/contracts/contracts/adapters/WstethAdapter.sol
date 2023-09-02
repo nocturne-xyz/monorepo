@@ -8,7 +8,7 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 /// @title WstethAdapter
 /// @author Nocturne Labs
 /// @notice Adapter contract for interacting with wsteth. The Handler contract does not support ETH
-///         value transfers directly, thus we need a thin adapter for haendling the weth -> eth step
+///         value transfers directly, thus we need a thin adapter for handling the weth -> eth step
 ///         when converting weth to wsteth.
 contract WstethAdapter {
     // Weth contract
