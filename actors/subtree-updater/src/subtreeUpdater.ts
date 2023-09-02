@@ -18,14 +18,9 @@ import {
 } from "@nocturne-xyz/core";
 import IORedis from "ioredis";
 import { Handler } from "@nocturne-xyz/contracts";
-import {
-  ActorHandle,
-  makeCreateCounterFn,
-  Insertion,
-  merkleIndexToRedisStreamId,
-} from "@nocturne-xyz/offchain-utils";
+import { ActorHandle, makeCreateCounterFn } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
-import { PersistentLog } from "@nocturne-xyz/persistent-log";
+import { TreeInsertionLog, Insertion } from "@nocturne-xyz/persistent-log";
 import { Mutex } from "async-mutex";
 import { ACTOR_NAME, COMPONENT_NAME } from "./constants";
 
@@ -66,7 +61,7 @@ export class SubtreeUpdater {
   prover: SubtreeUpdateProver;
   subgraphEndpoint: string;
 
-  insertionLog: PersistentLog<Insertion>;
+  insertionLog: TreeInsertionLog;
 
   fillBatchTimeout: NodeJS.Timeout | undefined;
   fillBatchLatency: number | undefined;
@@ -102,7 +97,7 @@ export class SubtreeUpdater {
       COMPONENT_NAME
     );
 
-    this.insertionLog = new PersistentLog<Insertion>(
+    this.insertionLog = new TreeInsertionLog(
       this.redis,
       INSERTION_LOG_STREAM_NAME,
       {
@@ -143,18 +138,14 @@ export class SubtreeUpdater {
     // stop when we've recovered up to the latest committed merkle index
     const previousInsertions = this.insertionLog.scan({
       // end is exclusive, so we add 1 to get everything up to and through the latest committed merkle index
-      endId: merkleIndexToRedisStreamId(latestCommittedMerkleIndex + 1),
+      endMerkleIndex: latestCommittedMerkleIndex + 1,
       // we want to ensure we get all of the insertions up to `endId` even if insertion writer is behind,
       // se we set `terminateOnEmpty` to `false so we block until we get all of the committed insertions
       terminateOnEmpty: false,
     });
 
-    for await (const wrappedInsertions of previousInsertions.iter) {
-      const includes = [
-        true,
-        ...range(wrappedInsertions.length - 1).map(() => false),
-      ];
-      const insertions = wrappedInsertions.map(({ inner }) => inner);
+    for await (const insertions of previousInsertions.iter) {
+      const includes = new Array(insertions.length).fill(false);
       const { leaves, subtreeBatchOffset } =
         batchInfoFromInsertions(insertions);
       this.tree.insertBatch(subtreeBatchOffset, leaves, includes);
@@ -178,16 +169,17 @@ export class SubtreeUpdater {
     }
 
     // construct infinite iterator over all new and future insertions from the log
-    const startId = latestCommittedMerkleIndexAtStart
-      ? merkleIndexToRedisStreamId(latestCommittedMerkleIndexAtStart + 1)
+    const startMerkleIndex = latestCommittedMerkleIndexAtStart
+      ? latestCommittedMerkleIndexAtStart + 1
       : undefined;
-    logger.info(`starting iterator at stream ID ${startId}`);
-    const allInsertions = ClosableAsyncIterator.flatMap(
+    logger.info(
+      `scanning over insertion log starting from merkle index ${startMerkleIndex}`
+    );
+    const allInsertions = ClosableAsyncIterator.flatten(
       this.insertionLog.scan({
-        startId,
+        startMerkleIndex,
         terminateOnEmpty: false,
-      }),
-      ({ inner }) => inner
+      })
     );
 
     const proofInputInfos = allInsertions

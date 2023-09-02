@@ -7,10 +7,7 @@ import {
   randomInsertions,
 } from "./testSyncAdapter";
 import { range, sleep } from "@nocturne-xyz/core";
-import {
-  makeTestLogger,
-  merkleIndexToRedisStreamId,
-} from "@nocturne-xyz/offchain-utils";
+import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { InsertionWriter } from "../src";
 import { ClosableAsyncIterator } from "@nocturne-xyz/core/src";
 import { PersistentLog, Insertion } from "@nocturne-xyz/persistent-log";

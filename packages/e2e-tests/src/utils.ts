@@ -23,7 +23,7 @@ import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { thunk } from "@nocturne-xyz/core";
 import { Insertion } from "@nocturne-xyz/persistent-log";
-import { fetchTreeInsertions } from "@nocturne-xyz/subtree-updater/src/sync/subgraph/fetch";
+import { fetchTreeInsertions } from "@nocturne-xyz/insertion-writer/src/sync/subgraph/fetch";
 import { SUBGRAPH_URL } from "./deploy";
 
 const ROOT_DIR = findWorkspaceRoot()!;
