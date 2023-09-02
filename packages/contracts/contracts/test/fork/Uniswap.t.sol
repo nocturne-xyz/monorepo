@@ -56,7 +56,7 @@ contract UniswapTest is ForkBase {
         deal(address(wsteth), address(handler), 1);
     }
 
-    function testUniswapDirectSwapSingle(uint256 wstethInAmount) public {
+    function testUniswapSwapSingle(uint256 wstethInAmount) public {
         // Hardcode upper bound to ~$5.1M swap
         wstethInAmount = bound(wstethInAmount, 10000, 3000 ether);
         reserveAndDeposit(address(wsteth), wstethInAmount);

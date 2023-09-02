@@ -79,7 +79,7 @@ contract BalancerTest is ForkBase {
         deal(address(wsteth), address(handler), 1);
     }
 
-    function testBalancerDirectSwap(uint256 wstethInAmount) public {
+    function testBalancerSwapSingle(uint256 wstethInAmount) public {
         // Hardcode upper bound to ~$1.7M swap
         wstethInAmount = bound(wstethInAmount, 10000, 1000 ether);
         reserveAndDeposit(address(wsteth), wstethInAmount);
@@ -175,7 +175,7 @@ contract BalancerTest is ForkBase {
         assertGe(weth.balanceOf(address(teller)), wethExpectedOutAmount);
     }
 
-    function testBalancerMultihopSwap(uint256 wstethInAmount) public {
+    function testBalancerSwapMultihop(uint256 wstethInAmount) public {
         // TODO: why is it that the batch swap fails when the wstethInAmount < 10k wei?
         // Hardcode upper bound to ~$1.7M swap
         wstethInAmount = bound(wstethInAmount, 100_000, 1000 ether);
