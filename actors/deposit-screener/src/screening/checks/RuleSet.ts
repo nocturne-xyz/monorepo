@@ -73,7 +73,8 @@ export class RuleSet {
   private tail: Rule<any> | null = null;
   private delay = 0;
 
-  add<T extends Data>(rule: Rule<T>): RuleSet {
+  add<T extends Data>(ruleParams: RuleParams<T>): RuleSet {
+    const rule = new Rule<T>(ruleParams);
     if (!this.head) {
       this.head = rule;
     } else {
