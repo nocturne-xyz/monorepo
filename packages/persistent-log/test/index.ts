@@ -144,7 +144,10 @@ describe("InsertionLog", () => {
     await log.push(allEntries);
 
     // iterator over all entries
-    const scan = log.scan({ terminateOnEmpty: false, pollTimeout: 1000 });
+    const scan = log.scan({
+      terminateOnEmpty: false,
+      xreadOptions: { pollTimeout: 1000 },
+    });
 
     // entries inserted over time
     const writer = async function () {

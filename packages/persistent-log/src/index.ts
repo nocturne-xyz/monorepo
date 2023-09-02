@@ -58,6 +58,12 @@ export interface WithRedisStreamId<T> {
   inner: T;
 }
 
+export interface ScanXreadOptions {
+  // maximum amount time in milliseconds to block for new data before on each call to XREAD
+  // defaults to 30000 (30 seconds)
+  pollTimeout?: number;
+}
+
 export interface ScanOptions {
   // if given, the iterator will only return elements with index > `startId`
   // if this id is >= current tip AND `terminateOnEmpty` is set to `false`, the returned iterator will be empty
@@ -65,7 +71,7 @@ export interface ScanOptions {
 
   // if given, the iterator will only return elements with index < `endId`,
   // and it will terminate once the iterator reaches `endId`
-  // if this id > current tip AND `terminateOnEmpty` is set to `false`, this option changes nothing
+  // if this id > current tip AND `terminateOnEmpty` is set to `false`, the returned iterator will terminate before `endId` is reached
   endId?: RedisStreamId;
 
   // if true, returned iterator will terminate once it reaches the end of the log and there's no more data
@@ -73,9 +79,8 @@ export interface ScanOptions {
   // defaults to true
   terminateOnEmpty?: boolean;
 
-  // amount of time in milliseconds to block for when waiting for new data until terminating the query and re-trying
-  // defaults to 30000 (30 seconds)
-  pollTimeout?: number;
+  // see `ScanXreadOptions` for more details
+  xreadOptions?: ScanXreadOptions;
 }
 
 export class PersistentLog<T> {
@@ -147,7 +152,9 @@ export class PersistentLog<T> {
     const streamKey = this.streamKey;
     const terminateOnEmpty = options?.terminateOnEmpty ?? true;
 
-    const pollTimeout = (options?.pollTimeout ?? 30000).toString();
+    const pollTimeout = (
+      options?.xreadOptions?.pollTimeout ?? 30000
+    ).toString();
 
     // include the "BLOCK" argument if `terminateOnEmpty` is false
     const poll = async (lowerBound: RedisStreamId) => {
