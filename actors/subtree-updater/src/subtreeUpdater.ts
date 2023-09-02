@@ -145,8 +145,8 @@ export class SubtreeUpdater {
       // end is exclusive, so we add 1 to get everything up to and through the latest committed merkle index
       endId: merkleIndexToRedisStreamId(latestCommittedMerkleIndex + 1),
       // we want to ensure we get all of the insertions up to `endId` even if insertion writer is behind,
-      // se we set `infinite` to true so we block until we get all of the committed insertions
-      infinite: true,
+      // se we set `terminateOnEmpty` to `false so we block until we get all of the committed insertions
+      terminateOnEmpty: false,
     });
 
     for await (const wrappedInsertions of previousInsertions.iter) {
@@ -185,7 +185,7 @@ export class SubtreeUpdater {
     const allInsertions = ClosableAsyncIterator.flatMap(
       this.insertionLog.scan({
         startId,
-        infinite: true,
+        terminateOnEmpty: false,
       }),
       ({ inner }) => inner
     );
