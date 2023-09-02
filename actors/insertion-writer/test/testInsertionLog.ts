@@ -12,7 +12,6 @@ import { InsertionWriter } from "../src";
 import { Insertion } from "../src/sync/syncAdapter";
 import { ClosableAsyncIterator } from "@nocturne-xyz/core/src";
 import { PersistentLog } from "@nocturne-xyz/persistent-log";
-import { merkleIndexToRedisStreamId } from "../src/utils";
 
 describe("InsertionWriter", () => {
   it("replicates all insertions from merkle index 0 into one persistent log", async () => {
@@ -73,7 +72,7 @@ describe("InsertionWriter", () => {
       await log.push(
         batch.map((insertion, i) => ({
           inner: insertion,
-          id: merkleIndexToRedisStreamId(merkleIndex + i),
+          id: `${merkleIndex + i}-1`,
         }))
       );
       merkleIndex += batch.length;

@@ -1,11 +1,7 @@
-import { PersistentLog } from "@nocturne-xyz/persistent-log";
+import { IntegerKeyedPersistentLog } from "@nocturne-xyz/persistent-log";
 import IORedis from "ioredis";
 import { Logger } from "winston";
 import { TreeInsertionSyncAdapter } from "./sync";
-import {
-  merkleIndexFromRedisStreamId,
-  merkleIndexToRedisStreamId,
-} from "./utils";
 import { Insertion } from "./sync/syncAdapter";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
@@ -14,7 +10,7 @@ export * from "./sync";
 export class InsertionWriter {
   adapter: TreeInsertionSyncAdapter;
   logger: Logger;
-  insertionLog: PersistentLog<Insertion>;
+  insertionLog: IntegerKeyedPersistentLog<Insertion>;
 
   constructor(
     // only needs provider, not signer
@@ -24,23 +20,23 @@ export class InsertionWriter {
   ) {
     this.adapter = syncAdapter;
     this.logger = logger;
-    this.insertionLog = new PersistentLog<Insertion>(redis, "insertion-log", {
-      logger: logger.child({ function: "insertion log" }),
-    });
+    this.insertionLog = new IntegerKeyedPersistentLog<Insertion>(
+      redis,
+      "insertion-log",
+      {
+        logger: logger.child({ function: "insertion log" }),
+      }
+    );
   }
 
   async start(queryThrottleMs?: number): Promise<ActorHandle> {
     const logTip = await this.insertionLog.getTip();
     this.logger.debug(`current log tip: ${logTip}`);
 
-    const logTipMerkleIndex = logTip
-      ? merkleIndexFromRedisStreamId(logTip)
-      : undefined;
     this.logger.debug("starting iterator");
-    const newInsertionBatches = this.adapter.iterInsertions(
-      logTipMerkleIndex ?? 0,
-      { throttleMs: queryThrottleMs }
-    );
+    const newInsertionBatches = this.adapter.iterInsertions(logTip ?? 0, {
+      throttleMs: queryThrottleMs,
+    });
 
     const runProm = (async () => {
       this.logger.debug("starting main loop");
@@ -54,7 +50,7 @@ export class InsertionWriter {
         await this.insertionLog.push(
           insertions.map((insertion) => ({
             inner: insertion,
-            id: merkleIndexToRedisStreamId(insertion.merkleIndex),
+            index: insertion.merkleIndex,
           }))
         );
         this.logger.info(
