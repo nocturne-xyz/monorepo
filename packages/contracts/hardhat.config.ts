@@ -90,6 +90,7 @@ module.exports = {
       'BalanceManager',
       'JoinSplitVerifier',
       'SubtreeUpdateVerifier',
+      'WstethAdapter',
       'SimpleERC20Token',
       'SimpleERC721Token',
       'SimpleERC1155Token',
