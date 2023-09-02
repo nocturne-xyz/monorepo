@@ -30,10 +30,12 @@ export class InsertionWriter {
   }
 
   async start(queryThrottleMs?: number): Promise<ActorHandle> {
-    const logTip = (await this.insertionLog.getTip()) ?? "0-0";
+    const logTip = await this.insertionLog.getTip();
     this.logger.debug(`current log tip: ${logTip}`);
 
-    const logTipMerkleIndex = merkleIndexFromRedisStreamId(logTip);
+    const logTipMerkleIndex = logTip
+      ? merkleIndexFromRedisStreamId(logTip)
+      : undefined;
     this.logger.debug("starting iterator");
     const newInsertionBatches = this.adapter.iterInsertions(
       logTipMerkleIndex ?? 0,
