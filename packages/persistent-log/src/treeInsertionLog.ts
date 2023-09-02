@@ -13,6 +13,12 @@ import IORedis from "ioredis";
 
 export type Insertion = IncludedNote | IncludedNoteCommitment;
 
+export interface TreeInsertionLogScanOptions
+  extends Omit<ScanOptions, "startId" | "endId"> {
+  startMerkleIndex?: number;
+  endMerkleIndex?: number;
+}
+
 export class TreeInsertionLog {
   inner: PersistentLog<Insertion>;
 
@@ -41,9 +47,19 @@ export class TreeInsertionLog {
     );
   }
 
-  scan(options?: ScanOptions): ClosableAsyncIterator<Insertion[]> {
+  scan(
+    options?: TreeInsertionLogScanOptions
+  ): ClosableAsyncIterator<Insertion[]> {
+    const { startMerkleIndex, endMerkleIndex, ...rest } = options ?? {};
+    const startId = startMerkleIndex
+      ? indexToRedisStreamId(startMerkleIndex)
+      : undefined;
+    const endId = endMerkleIndex
+      ? indexToRedisStreamId(endMerkleIndex)
+      : undefined;
+    const innerOptions: ScanOptions = { ...rest, startId, endId };
     return this.inner
-      .scan(options)
+      .scan(innerOptions)
       .map((batch) => batch.map(({ inner }) => inner));
   }
 }
