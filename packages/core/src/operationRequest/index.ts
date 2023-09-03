@@ -5,3 +5,4 @@ export {
 } from "./operationRequest";
 export { OpRequestBuilder, newOpRequestBuilder } from "./builder";
 export { Erc20Plugin } from "./plugins/Erc20Plugin";
+export { WstethAdapterPlugin } from "./plugins/WstethAdapterPlugin";

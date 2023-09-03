@@ -1,11 +1,10 @@
-import { ethers } from "ethers";
 import {
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
 } from "../builder";
 import { Address, AssetTrait } from "../../primitives";
-import { WstethAdapter, WstethAdapter__factory } from "@nocturne-xyz/contracts";
+import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
 
 export interface WstethAdapterPluginMethods {
   // adds an ERC20 transfer to the operation
@@ -16,7 +15,7 @@ export interface WstethAdapterPluginMethods {
 export type Erc20PluginExt<T extends BaseOpRequestBuilder> = T &
   WstethAdapterPluginMethods;
 
-export function Erc20Plugin<EInner extends BaseOpRequestBuilder>(
+export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
   inner: OpRequestBuilderExt<EInner>
 ): OpRequestBuilderExt<Erc20PluginExt<EInner>> {
   type E = Erc20PluginExt<EInner>;
@@ -34,37 +33,38 @@ export function Erc20Plugin<EInner extends BaseOpRequestBuilder>(
     convertWethToWsteth(amount: bigint) {
       const chainId = this._op.chainId;
 
+      let wethAddress: Address;
       let wstethAdapterAddress: Address;
+      let wstethAddress: Address;
       if (chainId === 1n) {
         // mainnet
-        wstethAdapterAddress = "0x1234"; // TODO: fill with right address
+        wethAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+        wstethAdapterAddress = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"; // TODO: fill with real address
+        wstethAddress = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0";
+      } else {
+        throw new Error(`wsteth not supported on chain with id: ${chainId}`);
       }
 
-      const encodedFunctionData =
+      const encodedWeth = AssetTrait.erc20AddressToAsset(wethAddress);
+      const encodedWsteth = AssetTrait.erc20AddressToAsset(wstethAddress);
+
+      const encodedFunction =
         WstethAdapter__factory.createInterface().encodeFunctionData("convert", [
           amount,
         ]);
 
-      // const contract = new ethers.Contract(tokenContractAddress, ERC20_ABI);
-      // const encodedFunction = contract.interface.encodeFunctionData(
-      //   "transfer",
-      //   [recipient, amount]
-      // );
+      this.unwrap(encodedWeth, amount).action(
+        wstethAdapterAddress,
+        encodedFunction
+      );
 
-      // const encodedErc20 = AssetTrait.erc20AddressToAsset(tokenContractAddress);
+      this._metadata.items.push({
+        type: "Action",
+        actionType: "Weth To Wsteth",
+        amount,
+      });
 
-      // this.unwrap(encodedErc20, amount).action(
-      //   tokenContractAddress,
-      //   encodedFunction
-      // );
-
-      // this._metadata.items.push({
-      //   type: "Action",
-      //   actionType: "Transfer",
-      //   recipientAddress: recipient,
-      //   erc20Address: tokenContractAddress,
-      //   amount,
-      // });
+      this.refundAsset(encodedWsteth);
 
       return this;
     },
