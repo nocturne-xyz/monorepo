@@ -24,7 +24,7 @@ export interface RequestViewingKeyMethod {
   return: RequestViewingKeyMethodResponse;
 }
 
-export interface GetCanonAddrSigCheckProofInputs {
+export interface GetCanonAddrSigCheckProofInputsMethod {
   method: "nocturne_getCanonAddrSigCheckProofInputs";
   params: undefined;
   return: CanonAddrSigCheckInputs;
@@ -33,7 +33,7 @@ export interface GetCanonAddrSigCheckProofInputs {
 export type RpcRequestMethod =
   | SignOperationMethod
   | RequestViewingKeyMethod
-  | GetCanonAddrSigCheckProofInputs;
+  | GetCanonAddrSigCheckProofInputsMethod;
 
 export type SnapRpcRequestHandlerArgs = {
   origin: string;
