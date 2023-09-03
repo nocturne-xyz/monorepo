@@ -18,6 +18,17 @@ export interface TrmData {
   addressRiskIndicators: AddressRiskIndicator[];
 }
 
+export interface MisttrackData {
+  balance: number;
+  txs_count: number;
+  first_seen: number;
+  last_seen: number;
+  total_received: number;
+  total_spent: number;
+  received_txs_count: number;
+  spent_txs_count: number;
+}
+
 export interface DummyTrmData {
   risk: number;
 }
@@ -28,8 +39,9 @@ export interface DummyMisttrackData {
 export type Data = DummyTrmData | DummyMisttrackData;
 
 const TRM_BASE_URL = "https://api.trmlabs.com/public/v2";
-const TRM_SCREENING_ADDRESSES_ENDPOINT = `${TRM_BASE_URL}/screening/addresses`;
+const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";
 const TRM_API_KEY = "TODO";
+const MISTTRACK_API_KEY = "YourApiKey";
 
 export const API_CALLS = {
   TRM_SCREENING_ADDRESSES: async (
@@ -39,7 +51,7 @@ export const API_CALLS = {
       address: deposit.spender,
       chain: "ethereum",
     });
-    const response = await fetch(TRM_SCREENING_ADDRESSES_ENDPOINT, {
+    const response = await fetch(`${TRM_BASE_URL}/screening/addresses`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -53,6 +65,18 @@ export const API_CALLS = {
     console.log(data);
     return data;
   },
+  MISTTRACK_ADDRESS_RISK_SCORE: async (
+    deposit: ScreeningDepositRequest,
+    token = "ETH"
+  ): Promise<MisttrackData> => {
+    const response = await fetch(
+      `${MISTTRACK_BASE_URL}/address_overview?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+    );
+    const data = (await response.json()) as MisttrackData;
+    console.log(data);
+    return data;
+  },
+
   DUMMY_TRM_SCREENING_ADDRESSES: async (deposit: ScreeningDepositRequest) => {
     console.log(deposit);
     return await Promise.resolve({ risk: 0.5 });
