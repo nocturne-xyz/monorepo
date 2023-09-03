@@ -17,3 +17,5 @@ export { signOperation } from "./signOperation";
 export { proveOperation } from "./proveOperation";
 export { NocturneDB } from "./NocturneDB";
 export { SparseMerkleProver } from "./SparseMerkleProver";
+
+export * as __test from "../test/utils";

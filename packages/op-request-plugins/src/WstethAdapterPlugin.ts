@@ -1,9 +1,10 @@
 import {
+  Address,
+  AssetTrait,
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
-} from "../builder";
-import { Address, AssetTrait } from "../../primitives";
+} from "@nocturne-xyz/core";
 import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
 
 export interface WstethAdapterPluginMethods {
