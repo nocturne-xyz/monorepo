@@ -10,7 +10,7 @@ ifeq ($(shell uname),Linux)
 	NASM=nasm -felf64
 endif
 	
-all: canonAddrOwnership
+all: canonAddrSigCheck
 	
 %.o: %.cpp $(DEPS_HPP)
 	$(CC) -c $< $(CFLAGS)
@@ -18,5 +18,5 @@ all: canonAddrOwnership
 fr_asm.o: fr.asm
 	$(NASM) fr.asm -o fr_asm.o
 	
-canonAddrOwnership: $(DEPS_O) canonAddrOwnership.o
-	$(CC) -o canonAddrOwnership *.o -lgmp 
+canonAddrSigCheck: $(DEPS_O) canonAddrSigCheck.o
+	$(CC) -o canonAddrSigCheck *.o -lgmp 

@@ -1,5 +1,5 @@
 #!/bin/bash
-CIRCUIT_NAME=canonAddrOwnership
+CIRCUIT_NAME=canonAddrSigCheck
 SCRIPT_DIR=$(dirname "$0")
 ROOT_SCRIPT_DIR="$SCRIPT_DIR/../"
 ROOT_DIR="$SCRIPT_DIR/../../../../"

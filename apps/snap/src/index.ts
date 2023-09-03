@@ -8,6 +8,7 @@ import {
   parseObjectValues,
   signOperation,
   assertAllRpcMethodsHandled,
+  CANON_ADDR_SIG_CHECK_MSG,
 } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
@@ -78,6 +79,17 @@ async function handleRpcRequest({
       return {
         vk: viewer.vk,
         vkNonce: viewer.vkNonce,
+      };
+    case "nocturne_getCanonAddrSigCheckProofInputs":
+      const sig = signer.sign(CANON_ADDR_SIG_CHECK_MSG);
+      const vkNonce = signer.vkNonce;
+      const spendPubkey = signer.spendPk;
+      const canonAddr = signer.canonicalAddress();
+      return {
+        canonAddr,
+        sig,
+        spendPubkey,
+        vkNonce,
       };
     case "nocturne_signOperation":
       console.log("Request params: ", request.params);

@@ -19,6 +19,11 @@ struct SubtreeUpdateProofWithPublicSignals {
     BaseProof proof;
 }
 
+struct CanonAddrSigCheckProofWithPublicSignals {
+    uint256[2] publicSignals;
+    BaseProof proof;
+}
+
 struct SignedDepositRequestFixture {
     address contractAddress;
     string contractName;
@@ -252,6 +257,33 @@ contract JsonDecodings is Test {
 
         return
             SubtreeUpdateProofWithPublicSignals({
+                publicSignals: publicSignals,
+                proof: proof
+            });
+    }
+
+    function loadCanonAddrSigCheckFromFixture(
+        string memory path
+    ) public returns (CanonAddrSigCheckProofWithPublicSignals memory) {
+        string memory json = loadFixtureJson(path);
+        bytes memory proofBytes = json.parseRaw(".proof");
+        BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
+
+        uint256[2] memory publicSignals;
+        for (uint256 i = 0; i < 2; i++) {
+            bytes memory jsonSelector = abi.encodePacked(
+                bytes(".publicSignals["),
+                Strings.toString(i)
+            );
+            jsonSelector = abi.encodePacked(jsonSelector, bytes("]"));
+
+            bytes memory signalBytes = json.parseRaw(string(jsonSelector));
+            string memory signal = abi.decode(signalBytes, (string));
+            publicSignals[i] = ParseUtils.parseInt(signal);
+        }
+
+        return
+            CanonAddrSigCheckProofWithPublicSignals({
                 publicSignals: publicSignals,
                 proof: proof
             });

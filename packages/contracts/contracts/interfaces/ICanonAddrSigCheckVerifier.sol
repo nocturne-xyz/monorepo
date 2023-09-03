@@ -5,6 +5,6 @@ import {IVerifier} from "./IVerifier.sol";
 
 /// @title Verifier interface.
 /// @dev Interface of Verifier contract.
-interface ISubtreeUpdateVerifier is IVerifier {
+interface ICanonAddrSigCheckVerifier is IVerifier {
 
 }

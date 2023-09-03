@@ -20,4 +20,11 @@ export {
   SubtreeUpdateProver,
   subtreeUpdateInputsFromBatch,
 } from "./subtreeUpdate";
+export {
+  CanonAddrSigCheckInputs,
+  CanonAddrSigCheckPublicSignals,
+  CanonAddrSigCheckProofWithPublicSignals,
+  CanonAddrSigCheckProver,
+  CANON_ADDR_SIG_CHECK_MSG,
+} from "./canonAddrSigCheck";
 export { packToSolidityProof, unpackFromSolidityProof } from "./utils";
