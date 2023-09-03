@@ -1,21 +1,23 @@
 import "mocha";
 import { expect } from "chai";
-import { __test } from "@nocturne-xyz/core";
+import { Erc20Plugin, WstethAdapterPlugin } from "../src";
 import {
   newOpRequestBuilder,
   NocturneSigner,
   generateRandomSpendingKey,
-  Erc20Plugin,
   OperationRequestWithMetadata,
-  WstethAdapterPlugin,
   AssetTrait,
 } from "@nocturne-xyz/core";
 import { ethers } from "ethers";
 import ERC20_ABI from "../src/abis/ERC20.json";
 import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
-import { WETH_ADDRESS, WSTETH_ADAPTER_ADDRESS, WSTETH_ADDRESS } from "./utils";
-
-const { DUMMY_CONTRACT_ADDR, shitcoin } = __test;
+import {
+  DUMMY_CONTRACT_ADDR,
+  WETH_ADDRESS,
+  WSTETH_ADAPTER_ADDRESS,
+  WSTETH_ADDRESS,
+  shitcoin,
+} from "./utils";
 
 describe("OpRequestBuilder", () => {
   it("uses plugins", () => {

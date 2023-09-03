@@ -22,11 +22,6 @@ import {
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import randomBytes from "randombytes";
 
-export const WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
-export const WSTETH_ADAPTER_ADDRESS =
-  "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"; // TODO: fill with real address
-export const WSTETH_ADDRESS = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0";
-
 export const DUMMY_ROOT_KEY = Uint8Array.from(range(32));
 
 export function randomBigInt(): bigint {

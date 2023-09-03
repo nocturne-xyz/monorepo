@@ -23,6 +23,8 @@
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",
     "@types/randombytes": "^2.0.0",
+    "@uniswap/sdk-core": "^4.0.6",
+    "@uniswap/v3-sdk": "^3.10.0",
     "big-integer": "^1.6.42",
     "bigint-json-serialization": "^1.0.1",
     "ethers": "^5.7.2",
