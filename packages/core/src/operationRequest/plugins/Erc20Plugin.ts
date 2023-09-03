@@ -3,9 +3,9 @@ import {
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
-} from "./builder";
-import { Address, AssetTrait } from "../primitives";
-import ERC20_ABI from "./ERC20.json";
+} from "../builder";
+import { Address, AssetTrait } from "../../primitives";
+import ERC20_ABI from "../../abis/ERC20.json";
 
 export interface Erc20PluginMethods {
   // adds an ERC20 transfer to the operation

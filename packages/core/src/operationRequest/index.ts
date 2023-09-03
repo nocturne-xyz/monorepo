@@ -4,4 +4,4 @@ export {
   OperationRequestWithMetadata,
 } from "./operationRequest";
 export { OpRequestBuilder, newOpRequestBuilder } from "./builder";
-export { Erc20Plugin } from "./Erc20Plugin";
+export { Erc20Plugin } from "./plugins/Erc20Plugin";
