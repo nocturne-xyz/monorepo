@@ -20,6 +20,8 @@ export type { Versioned } from './src/Versioned';
 export type { WETH9 } from './src/WETH9';
 
 export type { WstethAdapter } from './src/WstethAdapter';
+export type { IUniswapV3 } from './src/IUniswapV3';
+export type { IBalancer } from './src/IBalancer';
 
 export { DepositManager__factory } from './src/factories/DepositManager__factory';
 export { Teller__factory } from './src/factories/Teller__factory';
@@ -37,6 +39,8 @@ export { SimpleERC1155Token__factory } from './src/factories/SimpleERC1155Token_
 export { WETH9__factory } from './src/factories/WETH9__factory';
 
 export { WstethAdapter__factory } from './src/factories/WstethAdapter__factory';
+export { IUniswapV3__factory } from './src/factories/IUniswapV3__factory';
+export { IBalancer__factory } from './src/factories/IBalancer__factory';
 
 export { TransparentUpgradeableProxy__factory } from './src/factories/TransparentUpgradeableProxy__factory';
 export { ProxyAdmin__factory } from './src/factories/ProxyAdmin__factory';
