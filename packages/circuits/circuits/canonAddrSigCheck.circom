@@ -29,7 +29,7 @@ template CanonAddrSigCheck() {
 
 	//@lemma(1) prover knows the spending key corresponding to `spendPubkey`
 	//@argument `SigVerify.requires(1)` is guaranteed by checks above. Therefore `SigVerify.ensures(1)` is true
-	// in which case the prover must know the underlying spending key for spengPubkey (otherwise they can't produce valid sig)
+	// in which case the prover must know the underlying spending key for spendPubkey (otherwise they can't produce valid sig)
 	SigVerify()(spendPubkey, CANONICAL_ADDRESS_REGISTRY_MSG, sig);
 
 

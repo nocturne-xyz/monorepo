@@ -101,9 +101,8 @@ const JOINSPLIT_WASM_PATH =
 const JOINSPLIT_ZKEY_PATH =
   "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.zkey";
 
-// TODO
-const CANON_ADDR_SIG_CHECK_WASM_PATH = "TODO";
-const CANON_ADDR_SIG_CHECK_ZKEY_PATH = "TODO";
+const CANON_ADDR_SIG_CHECK_WASM_PATH = "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.wasm";
+const CANON_ADDR_SIG_CHECK_ZKEY_PATH = "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey";
 
 export interface NocturneSdkOptions {
   networkName?: SupportedNetwork;
