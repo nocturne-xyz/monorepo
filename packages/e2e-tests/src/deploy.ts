@@ -146,7 +146,7 @@ const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "tellerAddress"> = {
   startBlock: 0,
 };
 
-const DEFAULT_INSERITON_WRITER_CONFIG: InsertionWriterConfig = {
+const DEFAULT_INSERTION_WRITER_CONFIG: InsertionWriterConfig = {
   subgraphUrl: SUBGRAPH_URL,
 };
 
@@ -250,7 +250,7 @@ export async function setupTestDeployment(
 
     const startUpdaterAndInsertionWriter = async () => {
       const teardownInsertionWriter = await startInsertionWriter(
-        DEFAULT_INSERITON_WRITER_CONFIG
+        DEFAULT_INSERTION_WRITER_CONFIG
       );
       const teardownSubtreeUpdater = await startSubtreeUpdater(
         subtreeUpdaterConfig
