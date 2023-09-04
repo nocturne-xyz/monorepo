@@ -17,6 +17,8 @@ export type { ProxyAdmin } from './src/ProxyAdmin';
 export type { Versioned } from './src/Versioned';
 export type { WETH9 } from './src/WETH9';
 
+export type { WstethAdapter } from './src/WstethAdapter';
+
 export { DepositManager__factory } from './src/factories/DepositManager__factory';
 export { Teller__factory } from './src/factories/Teller__factory';
 export { Handler__factory } from './src/factories/Handler__factory';
@@ -29,6 +31,8 @@ export { SimpleERC20Token__factory } from './src/factories/SimpleERC20Token__fac
 export { SimpleERC721Token__factory } from './src/factories/SimpleERC721Token__factory';
 export { SimpleERC1155Token__factory } from './src/factories/SimpleERC1155Token__factory';
 export { WETH9__factory } from './src/factories/WETH9__factory';
+
+export { WstethAdapter__factory } from './src/factories/WstethAdapter__factory';
 
 export { TransparentUpgradeableProxy__factory } from './src/factories/TransparentUpgradeableProxy__factory';
 export { ProxyAdmin__factory } from './src/factories/ProxyAdmin__factory';

@@ -31,7 +31,6 @@ contract BalanceManagerTest is Test {
     uint256 constant NOT_ENTERED = 1;
 
     uint256 constant DEFAULT_GAS_LIMIT = 500_000;
-    uint256 constant ERC20_ID = 0;
 
     address constant ALICE = address(1);
     address constant BOB = address(2);
