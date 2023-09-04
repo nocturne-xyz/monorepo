@@ -108,7 +108,6 @@ export class SubgraphTreeInsertionSyncAdapter
               const batch = range(0, insertion.numZeros).map((i) => ({
                 noteCommitment: TreeConstants.ZERO_VALUE,
                 merkleIndex: startIndex + i,
-                // HACK: add `i` to `totalEntityIndex` to ensure all of the zeros have unique `totalEntityIndex`s
               }));
 
               yield batch;
