@@ -6,6 +6,14 @@ SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 ROOT_DIR="$SCRIPT_DIR/../.."
 cd "$ROOT_DIR"
 
+# check foundry version
+forge_version_output=$(forge --version)
+commit_hash=$(echo "$forge_version_output" | awk '{print $3}' | tr -d '()')
+if [ "$commit_hash" != "e15e33a" ]; then
+  # if foundry version is wrong, install the correct one
+  foundryup -C e15e33a
+fi
+
 echo "Installing forge deps..."
 if [ -d "./lib/forge-std" ]; then
   if [ "$(ls -A ./lib/forge-std)" ]; then

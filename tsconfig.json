@@ -75,6 +75,9 @@
     },
     {
       "path": "./packages/idb-kv-store"
+    },
+    {
+      "path": "./packages/persistent-log"
     }
   ]
 }
