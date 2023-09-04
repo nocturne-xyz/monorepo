@@ -1,8 +1,8 @@
 import { ScreeningDepositRequest } from "../src";
-import { RuleParams, RuleSet } from "../src/screening/checks/RuleSet";
+import { Rule, RuleSet } from "../src/screening/checks/RuleSet";
 import {
-  MisttrackData,
   MisttrackRiskItem,
+  MisttrackRiskScoreData,
 } from "../src/screening/checks/apiCalls";
 
 const SAMPLE_DEPOSIT_REQUEST: ScreeningDepositRequest = {
@@ -11,28 +11,27 @@ const SAMPLE_DEPOSIT_REQUEST: ScreeningDepositRequest = {
   value: 0n,
 };
 
-const MISTTRACK_REJECT_SCORE_OVER_80_AND_PHISHING_THEFT_NONZERO: RuleParams<MisttrackData> =
-  {
-    name: "MISTTRACK_REJECT_SCORE_OVER_80_AND_PHISHING_THEFT_NONZERO",
-    call: "MISTTRACK_ADDRESS_RISK_SCORE",
-    threshold: (data: MisttrackData) => {
-      const banlist: MisttrackRiskItem[] = [
-        "Involved Theft Activity",
-        "Involved Phishing Activity",
-        "Involved Ransom Activity",
-        "Malicious Address",
-        "Interact With Malicious Address",
-      ];
-      const riskDetailContainsBanlistWords = data.detail_list.some((item) =>
-        banlist.includes(item)
-      );
-      return data.score > 80 && riskDetailContainsBanlistWords;
-    },
-    action: {
-      type: "Rejection",
-      reason: "Score > 80 AND phishing/theft has > 0 attributions",
-    },
-  };
+const MISTTRACK_REJECT_SCORE_OVER_80_AND_PHISHING_THEFT_NONZERO = Rule.create({
+  name: "MISTTRACK_REJECT_SCORE_OVER_80_AND_PHISHING_THEFT_NONZERO",
+  call: "MISTTRACK_ADDRESS_RISK_SCORE",
+  threshold: (data: MisttrackRiskScoreData) => {
+    const banlist: MisttrackRiskItem[] = [
+      "Involved Theft Activity",
+      "Involved Phishing Activity",
+      "Involved Ransom Activity",
+      "Malicious Address",
+      "Interact With Malicious Address",
+    ];
+    const riskDetailContainsBanlistWords = data.detail_list.some((item) =>
+      banlist.includes(item)
+    );
+    return data.score > 80 && riskDetailContainsBanlistWords;
+  },
+  action: {
+    type: "Rejection",
+    reason: "Score > 80 AND phishing/theft has > 0 attributions",
+  },
+});
 
 (async () => {
   const DUMMY_RULESET = new RuleSet().add(

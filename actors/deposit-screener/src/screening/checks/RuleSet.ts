@@ -1,5 +1,5 @@
 import { ScreeningDepositRequest } from "..";
-import { API_CALLS, Data } from "./apiCalls";
+import { API_CALLS, ApiMap, Data } from "./apiCalls";
 export interface Rejection {
   type: "Rejection";
   reason: string;
@@ -34,21 +34,25 @@ const ACTION_NOT_TRIGGERED = {
   type: "ActionNotTriggered",
 } as const;
 
-export interface RuleParams<T extends Data> {
+export interface RuleParams<K extends keyof ApiMap> {
   name: string;
-  call: keyof typeof API_CALLS;
-  threshold: (data: T) => boolean;
+  call: K;
+  threshold: (data: ApiMap[K]) => boolean;
   action: Rejection | DelayAction;
 }
 
-export class Rule<T extends Data> {
+export class Rule<K extends keyof ApiMap> {
   public next: Rule<any> | null;
-  public readonly name: string;
-  private threshold: (data: T) => boolean;
-  private call: keyof typeof API_CALLS;
-  private action: Rejection | DelayAction;
+  public readonly name: RuleParams<K>["name"];
+  private threshold: RuleParams<K>["threshold"];
+  private call: RuleParams<K>["call"];
+  private action: RuleParams<K>["action"];
 
-  constructor({ name, call, threshold, action }: RuleParams<T>) {
+  static create<K extends keyof ApiMap>(ruleParams: RuleParams<K>): Rule<K> {
+    return new Rule<K>(ruleParams);
+  }
+
+  private constructor({ name, call, threshold, action }: RuleParams<K>) {
     this.next = null;
     this.name = name;
     this.call = call;
@@ -58,12 +62,12 @@ export class Rule<T extends Data> {
 
   async check(
     deposit: ScreeningDepositRequest,
-    cache: Record<string, Data>
+    cache: Record<K, ApiMap[K]>
   ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
     if (!cache[this.call]) {
-      cache[this.call] = await API_CALLS[this.call](deposit);
+      cache[this.call] = (await API_CALLS[this.call](deposit)) as ApiMap[K];
     }
-    const data = cache[this.call] as T;
+    const data = cache[this.call];
     return this.threshold(data) ? this.action : ACTION_NOT_TRIGGERED;
   }
 }
@@ -71,10 +75,13 @@ export class Rule<T extends Data> {
 export class RuleSet {
   private head: Rule<any> | null = null;
   private tail: Rule<any> | null = null;
-  private delay = 0;
+  private delaySeconds;
 
-  add<T extends Data>(ruleParams: RuleParams<T>): RuleSet {
-    const rule = new Rule<T>(ruleParams);
+  constructor({ baseDelaySeconds = 0 }: { baseDelaySeconds?: number } = {}) {
+    this.delaySeconds = baseDelaySeconds;
+  }
+
+  add<K extends keyof ApiMap>(rule: Rule<K>): RuleSet {
     if (!this.head) {
       this.head = rule;
     } else {
@@ -101,14 +108,14 @@ export class RuleSet {
         console.log(rulesLogList);
         return result;
       } else if (result.type === "Delay") {
-        this.delay = APPLY_DELAY_OPERATION[result.operation](
-          this.delay,
+        this.delaySeconds = APPLY_DELAY_OPERATION[result.operation](
+          this.delaySeconds,
           result.value
         );
       }
       currRule = currRule.next;
     }
     console.log(`Screener results for deposit:`, deposit, rulesLogList);
-    return { type: "Delay", timeSeconds: this.delay };
+    return { type: "Delay", timeSeconds: this.delaySeconds };
   }
 }

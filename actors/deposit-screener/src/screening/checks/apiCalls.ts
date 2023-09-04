@@ -4,10 +4,16 @@ export interface TrmAddressRiskIndicator {
   category: string;
   categoryId: string;
   categoryRiskScoreLevel: number;
-  categoryRiskScoreLevelLabel: string;
+  categoryRiskScoreLevelLabel:
+    | null
+    | "Unknown"
+    | "Low"
+    | "Medium"
+    | "High"
+    | "Severe";
   incomingVolumeUsd: string;
   outgoingVolumeUsd: string;
-  riskType: string;
+  riskType: "COUNTERPARTY" | "OWNERSHIP" | "INDIRECT";
   totalVolumeUsd: string;
 }
 export interface TrmData {
@@ -42,21 +48,35 @@ export type MisttrackRiskItem =
   | "Interact With High-risk Tag Address"
   | "Interact With Medium-risk Tag Addresses";
 
-export interface MisttrackData {
+type UnixTimestamp = number;
+
+export interface MisttrackAddressOverviewData {
+  balance: number;
+  txs_count: number;
+  first_seen: UnixTimestamp;
+  last_seen: UnixTimestamp;
+  total_received: number;
+  total_spent: number;
+  received_txs_count: number;
+  spent_txs_count: number;
+}
+export interface MisttrackRiskScoreData {
   score: number;
   hacking_event: string;
   detail_list: MisttrackRiskItem[];
   risk_level: "Low" | "Moderate" | "High" | "Severe";
   risk_detail: MisttrackRiskDetail[];
 }
-export type MisttrackApiResponse =
+type MisttrackData = MisttrackRiskScoreData | MisttrackAddressOverviewData;
+
+export type MisttrackApiResponse<T extends MisttrackData> =
   | {
       success: false;
       msg: string;
     }
   | {
       success: true;
-      data: MisttrackData;
+      data: T;
     };
 
 export interface DummyTrmData {
@@ -66,11 +86,16 @@ export interface DummyMisttrackData {
   misttrackRisk: number;
 }
 
-export type Data = TrmData | MisttrackData | DummyTrmData | DummyMisttrackData;
+export type Data =
+  | TrmData
+  | MisttrackData
+  | DummyTrmData
+  | DummyMisttrackData
+  | ScreeningDepositRequest;
 
 const TRM_BASE_URL = "https://api.trmlabs.com/public/v2";
 const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";
-const TRM_API_KEY = "TODO";
+const TRM_API_KEY = ""; // TODO get from env, once we start paying for TRM
 const MISTTRACK_API_KEY = "YourApiKey";
 
 export const API_CALLS = {
@@ -95,14 +120,16 @@ export const API_CALLS = {
     console.log(data);
     return data;
   },
-  MISTTRACK_ADDRESS_RISK_SCORE: async (
+  // TODO deal with copypasta code
+  MISTTRACK_ADDRESS_OVERVIEW: async (
     deposit: ScreeningDepositRequest,
     token = "ETH"
-  ): Promise<MisttrackData> => {
+  ): Promise<MisttrackAddressOverviewData> => {
     const response = await fetch(
-      `${MISTTRACK_BASE_URL}/risk_score?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+      `${MISTTRACK_BASE_URL}/address_overview?coin=${token}address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
     );
-    const misttrackResponse = (await response.json()) as MisttrackApiResponse;
+    const misttrackResponse =
+      (await response.json()) as MisttrackApiResponse<MisttrackAddressOverviewData>;
     if (!misttrackResponse.success) {
       throw new Error(
         `Call to misttrack failed with message: ${misttrackResponse.msg}`
@@ -112,15 +139,37 @@ export const API_CALLS = {
     return misttrackResponse.data;
   },
 
+  MISTTRACK_ADDRESS_RISK_SCORE: async (
+    deposit: ScreeningDepositRequest,
+    token = "ETH"
+  ): Promise<MisttrackRiskScoreData> => {
+    const response = await fetch(
+      `${MISTTRACK_BASE_URL}/risk_score?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+    );
+    const misttrackResponse =
+      (await response.json()) as MisttrackApiResponse<MisttrackRiskScoreData>;
+    if (!misttrackResponse.success) {
+      throw new Error(
+        `Call to misttrack failed with message: ${misttrackResponse.msg}`
+      );
+    }
+    console.log(misttrackResponse.data);
+    return misttrackResponse.data;
+  },
   DUMMY_TRM_SCREENING_ADDRESSES: async (deposit: ScreeningDepositRequest) => {
     console.log(deposit);
     return await Promise.resolve({ risk: 0.5 });
   },
-  // {{MISTTRACK_BASE_URL}}/risk_score
   DUMMY_MISTTRACK_ADDRESS_RISK_SCORE: async (
     deposit: ScreeningDepositRequest
   ) => {
     console.log(deposit);
     return await Promise.resolve({ misttrackRisk: 0.5 });
   },
+  NOOP: async (deposit: ScreeningDepositRequest) => deposit,
 } as const;
+
+type ApiCallKeys = keyof typeof API_CALLS;
+export type ApiMap = {
+  [K in ApiCallKeys]: Awaited<ReturnType<(typeof API_CALLS)[K]>>;
+};
