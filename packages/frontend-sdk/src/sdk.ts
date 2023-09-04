@@ -16,7 +16,6 @@ import {
   AssetWithBalance,
   ClosableAsyncIterator,
   DepositQuoteResponse,
-  DepositRequest,
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
   newOpRequestBuilder,
@@ -61,7 +60,7 @@ import {
 } from "@urql/core";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
-import { ContractTransaction, ethers } from "ethers";
+import { BigNumber, ContractTransaction, ethers } from "ethers";
 import vkey from "../circuit-artifacts/joinsplit/joinsplitVkey.json";
 import { NocturneSdkApi, SnapStateApi } from "./api";
 import {
@@ -77,7 +76,8 @@ import {
   DepositHandle,
   DepositHandleWithReceipt,
   DepositRequestStatusWithMetadata,
-  DepositRequestWithMetadata,
+  DisplayDepositRequest,
+  DisplayDepositRequestWithMetadata,
   Endpoints,
   GetBalanceOpts,
   NocturneSdkConfig,
@@ -90,6 +90,7 @@ import {
   flattenDepositRequestStatus,
   getNocturneSdkConfig,
   getTokenContract,
+  toDepositRequest,
   toDepositRequestWithMetadata,
 } from "./utils";
 
@@ -166,7 +167,6 @@ export class NocturneSdk implements NocturneSdkApi {
       url: this.endpoints.subgraphEndpoint,
       exchanges: [fetchExchange],
     });
-
     // TODO: add IdbKVStore + make this actually persistent 
     const kv = new IdbKvStore(`nocturne-fe-sdk-${networkName}`);
     this.db = new NocturneDB(kv);
@@ -189,6 +189,7 @@ export class NocturneSdk implements NocturneSdkApi {
       );
     });
   }
+
   protected get wethAddress(): string | undefined {
     return this.config.config.erc20s.get("weth")?.address;
   }
@@ -363,14 +364,15 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   async retrievePendingDeposit(
-    req: DepositRequest,
+    displayRequest: DisplayDepositRequest,
     retrieveEthDepositsAs: "ETH" | "WETH" = "ETH"
   ): Promise<ContractTransaction> {
     const signer = await this.getWindowSigner();
     const signerAddress = await signer.getAddress();
-    if (signerAddress.toLowerCase() !== req.spender.toLowerCase()) {
+    if (signerAddress.toLowerCase() !== displayRequest.spender.toLowerCase()) {
       throw new Error("Spender and signer addresses do not match");
     }
+    const req = toDepositRequest(displayRequest);
     const depositManagerContract = await this.depositManagerContractThunk();
     const isOutstandingDeposit =
       await depositManagerContract._outstandingDepositHashes(
@@ -379,10 +381,9 @@ export class NocturneSdk implements NocturneSdkApi {
     if (!isOutstandingDeposit) {
       throw new Error("Deposit request does not exist");
     }
-    const asset = AssetTrait.decode(req.encodedAsset);
     if (
       retrieveEthDepositsAs === "ETH" &&
-      asset.assetAddr === this.wethAddress
+      displayRequest.asset.assetAddr === this.wethAddress
     ) {
       return depositManagerContract.retrieveETHDeposit(req);
     } else {
@@ -445,14 +446,16 @@ export class NocturneSdk implements NocturneSdkApi {
    * @param operationRequest Operation request
    */
   async signOperationRequest(
-    operationRequest: OperationRequestWithMetadata,
+    operationRequest: OperationRequestWithMetadata
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", operationRequest.meta);
     const client = await this.clientThunk();
 
     // NOTE: we should never end up in situation where this is called before normal nocturne_sync, otherwise there will be long delay
     const warnTimeout = setTimeout(() => {
-      console.warn("[fe-sdk] the SDK has not yet been synced. This may cause a long delay until `signOperation` returns. It's strongly reccomended to explicitly use `sync` or `syncWithProgress` to ensure the SDK is fully synced before calling `signOperation`");
+      console.warn(
+        "[fe-sdk] the SDK has not yet been synced. This may cause a long delay until `signOperation` returns. It's strongly reccomended to explicitly use `sync` or `syncWithProgress` to ensure the SDK is fully synced before calling `signOperation`"
+      );
     }, 5000);
     await this.syncMutex.runExclusive(async () => await client.sync());
     clearTimeout(warnTimeout);
@@ -602,7 +605,7 @@ export class NocturneSdk implements NocturneSdkApi {
   async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
     console.log("[fe-sdk] getAllBalances with params:", opts);
     const client = await this.clientThunk();
-  
+
     await this.syncMutex.runExclusive(async () => await client.sync());
     return await client.getAllAssetBalances(opts);
   }
@@ -621,7 +624,8 @@ export class NocturneSdk implements NocturneSdkApi {
 
   async getInFlightOperations(): Promise<OperationHandle[]> {
     const client = await this.clientThunk();
-    const opDigestsWithMetadata = await client.getAllOptimisticOpDigestsWithMetadata();
+    const opDigestsWithMetadata =
+      await client.getAllOptimisticOpDigestsWithMetadata();
     const operationHandles = opDigestsWithMetadata.map(
       ({ opDigest: digest, metadata }) => {
         return {
@@ -651,7 +655,10 @@ export class NocturneSdk implements NocturneSdkApi {
     );
 
     let closed = false;
-    const generator = async function* (sdk: NocturneSdk, client: NocturneClient) {
+    const generator = async function* (
+      sdk: NocturneSdk,
+      client: NocturneClient
+    ) {
       let count = 0;
       while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
         latestSyncedMerkleIndex = (await client.sync(syncOpts)) ?? 0;
@@ -689,13 +696,18 @@ export class NocturneSdk implements NocturneSdkApi {
     let latestSyncedMerkleIndex: number | undefined;
     try {
       const client = await this.clientThunk();
-      latestSyncedMerkleIndex = await this.syncMutex.runExclusive(async () => await client.sync(syncOpts));
+      latestSyncedMerkleIndex = await this.syncMutex.runExclusive(
+        async () => await client.sync(syncOpts)
+      );
       await client.updateOptimisticNullifiers();
     } catch (e) {
       console.log("Error syncing notes: ", e);
       throw e;
     }
-    console.log("[sync] FE-sdk latestSyncedMerkleIndex, ", latestSyncedMerkleIndex);
+    console.log(
+      "[sync] FE-sdk latestSyncedMerkleIndex, ",
+      latestSyncedMerkleIndex
+    );
     return latestSyncedMerkleIndex;
   }
 
@@ -783,7 +795,7 @@ export class NocturneSdk implements NocturneSdkApi {
     return Promise.all(
       events.map(async (event) => {
         const {
-          encodedAsset,
+          encodedAsset: _encodedAsset,
           value,
           nonce,
           depositAddr,
@@ -791,21 +803,25 @@ export class NocturneSdk implements NocturneSdkApi {
           spender,
         } = event.args;
 
-        const request: DepositRequestWithMetadata & {
+        const encodedAsset = {
+          encodedAssetAddr: _encodedAsset.encodedAssetAddr.toBigInt(),
+          encodedAssetId: _encodedAsset.encodedAssetId.toBigInt(),
+        };
+        const asset = AssetTrait.decode(encodedAsset);
+
+        const request: DisplayDepositRequestWithMetadata & {
           subgraphStatus?: GqlDepositRequestStatus;
         } = {
           spender,
-          encodedAsset: {
-            encodedAssetAddr: encodedAsset.encodedAssetAddr.toBigInt(),
-            encodedAssetId: encodedAsset.encodedAssetId.toBigInt(),
+          asset: {
+            assetAddr: asset.assetAddr,
+            assetType: asset.assetType,
+            id: BigNumber.from(asset.id),
           },
-          value: value.toBigInt(),
-          depositAddr: {
-            h1: depositAddr.h1.toBigInt(),
-            h2: depositAddr.h2.toBigInt(),
-          },
-          nonce: nonce.toBigInt(),
-          gasCompensation: gasCompensation.toBigInt(),
+          value,
+          depositAddr,
+          nonce,
+          gasCompensation,
           createdAtBlock: tx.blockNumber,
           subgraphStatus: GqlDepositRequestStatus.Pending,
         };
@@ -819,12 +835,12 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   private async makeDepositHandle(
-    requestWithStatus: DepositRequestWithMetadata & {
+    requestWithStatus: DisplayDepositRequestWithMetadata & {
       subgraphStatus?: GqlDepositRequestStatus;
     }
   ): Promise<DepositHandle> {
     const { subgraphStatus, ...request } = requestWithStatus;
-    const depositRequestHash = hashDepositRequest(request);
+    const depositRequestHash = hashDepositRequest(toDepositRequest(request));
     const getStatus = async () =>
       await getDepositRequestStatus(
         this.endpoints.screenerEndpoint,
