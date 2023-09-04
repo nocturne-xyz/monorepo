@@ -31,12 +31,11 @@ contract BalanceManagerTest is Test {
     uint256 constant NOT_ENTERED = 1;
 
     uint256 constant DEFAULT_GAS_LIMIT = 500_000;
-    uint256 constant ERC20_ID = 0;
 
     address constant ALICE = address(1);
     address constant BOB = address(2);
     address constant BUNDLER = address(3);
-    uint256 constant PER_NOTE_AMOUNT = uint256(50_000_000);
+    uint256 constant PER_NOTE_AMOUNT = uint256(500_000_000);
 
     uint256 constant DEFAULT_PER_JOINSPLIT_VERIFY_GAS = 170_000;
 
@@ -121,12 +120,12 @@ contract BalanceManagerTest is Test {
     function testProcessJoinSplitsGasPriceZeroSuccess() public {
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposits 100M of token
+        // Reserves + deposits 2 notes worth of tokens
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Unwrap 100M of token (alice has sufficient balance)
+        // Unwrap 2 notes worth of tokens (alice has sufficient balance)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
@@ -152,7 +151,7 @@ contract BalanceManagerTest is Test {
             })
         );
 
-        // Balance manager took up 100M of token
+        // Balance manager took up 2 notes of tokens
         assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
@@ -167,12 +166,11 @@ contract BalanceManagerTest is Test {
     function testProcessJoinSplitsReservingFeeSingleFeeNoteSuccess() public {
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposits 100M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Unwrap 100M of token with gas price of 50 (see total
+        // Unwrap both notes with gas price of 50 (see total
         // fee below)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -199,14 +197,12 @@ contract BalanceManagerTest is Test {
             })
         );
 
-        // gasPrice * (providedExecutionGas + gasPerJoinSplit + gasPerRefund)
-        // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
         uint256 totalFeeReserved = balanceManager.calculateOpMaxGasAssetCost(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
 
-        // Balance manager took up 50M, left 50M for bundler
+        // Balance manager took up both notes minus the amount to reserve
         assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
@@ -226,10 +222,10 @@ contract BalanceManagerTest is Test {
         SimpleERC20Token token2 = ERC20s[1];
         SimpleERC20Token token3 = ERC20s[2];
 
-        // Reserves + deposits 150M of token
-        reserveAndDepositFunds(ALICE, token1, PER_NOTE_AMOUNT * 3);
-        reserveAndDepositFunds(ALICE, token2, PER_NOTE_AMOUNT * 3);
-        reserveAndDepositFunds(ALICE, token3, PER_NOTE_AMOUNT * 3);
+        // Reserves + deposits 4 notes worth of each token
+        reserveAndDepositFunds(ALICE, token1, PER_NOTE_AMOUNT * 4);
+        reserveAndDepositFunds(ALICE, token2, PER_NOTE_AMOUNT * 4);
+        reserveAndDepositFunds(ALICE, token3, PER_NOTE_AMOUNT * 4);
 
         address[] memory tokens = new address[](3);
         tokens[0] = address(token1);
@@ -240,12 +236,11 @@ contract BalanceManagerTest is Test {
         for (uint256 i = 0; i < 3; i++) {
             joinSplitsPublicSpends[i] = NocturneUtils.fillJoinSplitPublicSpends(
                 PER_NOTE_AMOUNT,
-                3
+                4
             );
         }
 
-        // Unwrap 150M and setting gas price to 50. 2 joinsplits needed for
-        // calculated fee (see below)
+        // Unwrap all 4 notes worth for each token and setting gas price to 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: tokens,
@@ -263,14 +258,14 @@ contract BalanceManagerTest is Test {
             })
         );
 
-        // gasPrice * (executionGas + joinSplitGas + refundGas)
-        // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
         uint256 totalFeeReserved = balanceManager.calculateOpMaxGasAssetCost(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
+        console.log("totalFeeReserved", totalFeeReserved);
 
-        // Balance manager took up 150M - 62.5M
+        // Balance manager took up 4 notes worth for each token but for token1 4 notes worth minus
+        // the amount to reserve
         assertEq(token1.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
@@ -278,83 +273,28 @@ contract BalanceManagerTest is Test {
         );
         assertEq(
             token1.balanceOf(address(balanceManager)),
-            (3 * PER_NOTE_AMOUNT) - totalFeeReserved + 1
+            (4 * PER_NOTE_AMOUNT) - totalFeeReserved + 1
         );
         assertEq(
             token2.balanceOf(address(balanceManager)),
-            (3 * PER_NOTE_AMOUNT) + 1
+            (4 * PER_NOTE_AMOUNT) + 1
         );
         assertEq(
             token3.balanceOf(address(balanceManager)),
-            (3 * PER_NOTE_AMOUNT) + 1
+            (4 * PER_NOTE_AMOUNT) + 1
         );
         assertEq(token1.balanceOf(address(teller)), totalFeeReserved);
-    }
-
-    function testProcessJoinSplitsReservingFeeTwoFeeNotesSuccess() public {
-        SimpleERC20Token token = ERC20s[0];
-
-        // Reserves + deposits 150M of token
-        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 3);
-
-        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
-
-        // Unwrap 150M and setting gas price to 50. 2 joinsplits needed for
-        // calculated fee (see below)
-        Operation memory op = NocturneUtils.formatOperation(
-            FormatOperationArgs({
-                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    address(token)
-                ),
-                joinSplitRefundValues: new uint256[](1),
-                gasToken: address(token),
-                root: balanceManager.root(),
-                joinSplitsPublicSpends: NocturneUtils
-                    ._publicSpendsArrayOfOnePublicSpendArray(
-                        NocturneUtils.fillJoinSplitPublicSpends(
-                            PER_NOTE_AMOUNT,
-                            3
-                        )
-                    ),
-                trackedRefundAssets: trackedRefundAssets,
-                gasAssetRefundThreshold: 0,
-                executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
-                gasPrice: 50,
-                actions: new Action[](0),
-                atomicActions: false,
-                operationFailureType: OperationFailureType.NONE
-            })
-        );
-
-        // gasPrice * (executionGas + joinSplitGas + refundGas)
-        // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
-        uint256 totalFeeReserved = balanceManager.calculateOpMaxGasAssetCost(
-            op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
-        );
-
-        // Balance manager took up 150M - 62.5M
-        assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
-        balanceManager.processJoinSplitsReservingFee(
-            op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
-        );
-        assertEq(
-            token.balanceOf(address(balanceManager)),
-            (3 * PER_NOTE_AMOUNT) - totalFeeReserved + 1
-        );
-        assertEq(token.balanceOf(address(teller)), totalFeeReserved);
     }
 
     function testGatherReservedGasAssetAndPayBundlerSuccess() public {
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposits 100M of token
+        // Reserves + deposits 2 notes worth of tokens
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Unwrap 100M and set gas price to 50
+        // Unwrap 2 notes worth of tokens and set gas price to 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
@@ -380,14 +320,12 @@ contract BalanceManagerTest is Test {
             })
         );
 
-        // 50 * (executionGas + (2 * joinSplitGas) + (2 * refundGas))
-        // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
         uint256 totalFeeReserved = balanceManager.calculateOpMaxGasAssetCost(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
 
-        // Take up 50M tokens (50M reserved)
+        // Take up 2 notes worth minus fee
         assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
@@ -398,9 +336,7 @@ contract BalanceManagerTest is Test {
             (2 * PER_NOTE_AMOUNT) - totalFeeReserved + 1
         );
 
-        // Only bundler fee: 50 * (executionGas + verificationGas + handleJoinSplitGas + handleRefundGas)
-        // 50 * (500k + (2 * 170k) + (2 * 50k)) = 47M
-        // NOTE: verification gas defaults to numJoinSplits * GAS_PER_JOINSPLIT_VERIFY formatDummyOperationResult defaults to this to ensure bundler fee is not whole reserved amnt
+        // Calculate payout to bundler based on dummy op
         OperationResult memory opResult = NocturneUtils
             .formatDummyOperationResult(op);
         uint256 onlyBundlerFee = balanceManager.calculateBundlerGasAssetPayout(
@@ -408,6 +344,8 @@ contract BalanceManagerTest is Test {
             opResult
         );
 
+        // Gather reserved gas asset and pay bundler
+        // Ensure bundler gets the calculated payout amount
         balanceManager.gatherReservedGasAssetAndPayBundler(
             op,
             opResult,
@@ -426,12 +364,12 @@ contract BalanceManagerTest is Test {
     {
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposits 100M of token
+        // Reserves + deposits 2 notes worth of tokens
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Unwrap 100M and set gas price to 50
+        // Unwrap 2 notes worth of tokens and set gas price to 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
@@ -458,14 +396,13 @@ contract BalanceManagerTest is Test {
             })
         );
 
-        // 50 * (executionGas + (2 * joinSplitGas) + (2 * refundGas))
-        // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
+        // Calculate amount to reserve
         uint256 totalFeeReserved = balanceManager.calculateOpMaxGasAssetCost(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
 
-        // Take up 50M tokens, reserving 50M
+        // Take up 2 notes worth minus reserve amount
         assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
@@ -476,9 +413,7 @@ contract BalanceManagerTest is Test {
             (2 * PER_NOTE_AMOUNT) - totalFeeReserved + 1
         );
 
-        // Only bundler fee: 50 * (executionGas + verificationGas + handleJoinSplitGas + handleRefundGas)
-        // 50 * (500k + (2 * 170k) + (2 * 50k)) = 47M
-        // NOTE: verification gas defaults to numJoinSplits * GAS_PER_JOINSPLIT_VERIFY formatDummyOperationResult defaults to this
+        // Calculate payout to bundler based on dummy op
         OperationResult memory opResult = NocturneUtils
             .formatDummyOperationResult(op);
         uint256 onlyBundlerFee = balanceManager.calculateBundlerGasAssetPayout(
@@ -486,7 +421,8 @@ contract BalanceManagerTest is Test {
             opResult
         );
 
-        // What the bundler would've been paid is less than totalFeeReserved (special case now because of gasAssetRefundThreshold)
+        // What the bundler would've been paid is less than totalFeeReserved but gets whole
+        // reserved amount due to low threshold
         assertLt(onlyBundlerFee, totalFeeReserved);
 
         balanceManager.gatherReservedGasAssetAndPayBundler(
@@ -507,13 +443,12 @@ contract BalanceManagerTest is Test {
     function testProcessJoinSplitsNotEnoughForFeeFailure() public {
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposit only 50M tokens (we will see gas comp is 62.5M)
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Unwrap 50M, not enough for bundler comp with 3 joinsplits and gas
-        // price of 50
+        // Unwrap whole note across 50 joinsplits, not enough for bundler comp with 50 joinsplits
+        // and gas price of 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
@@ -525,13 +460,13 @@ contract BalanceManagerTest is Test {
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
                         NocturneUtils.fillJoinSplitPublicSpends(
-                            PER_NOTE_AMOUNT / 3,
-                            3
+                            PER_NOTE_AMOUNT / 50,
+                            50
                         )
                     ),
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
-                executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
+                executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
                 actions: new Action[](0),
                 atomicActions: false,
@@ -539,9 +474,8 @@ contract BalanceManagerTest is Test {
             })
         );
 
-        // gasPrice * (executionGas + joinSplitGas + refundGas)
-        // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
-        // NOTE: we only deposited 50M
+        // Will be too large number given there are 50 joinsplits (total fee to reserve >
+        // publicSpend in the 50 joinsplits)
         uint256 totalFeeReserved = balanceManager.calculateOpMaxGasAssetCost(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
@@ -559,12 +493,12 @@ contract BalanceManagerTest is Test {
     function testProcessJoinSplitsNotEnoughFundsForUnwrapFailure() public {
         SimpleERC20Token token = ERC20s[0];
 
-        // Only reserves + deposits 50M of token
+        // Only reserves + deposits 1 note worth of tokens
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Attempts to unwrap 100M of token (we only deposited 50M)
+        // Attempts to unwrap 2 notes worth of token (we only deposited 1 note worth)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
@@ -601,7 +535,7 @@ contract BalanceManagerTest is Test {
     function testProcessJoinSplitsBadRootFailure() public {
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposits 50M of token
+        // Reserves + deposits 1 note worth of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
@@ -643,7 +577,7 @@ contract BalanceManagerTest is Test {
     function testProcessJoinSplitsAlreadyUsedNullifierFailure() public {
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposits 50M of token
+        // Reserves + deposits 1 note worth of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
@@ -687,7 +621,7 @@ contract BalanceManagerTest is Test {
     function testProcessJoinSplitsMatchingNullifiersFailure() public {
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposits 50M of token
+        // Reserves + deposits 1 note worth of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
@@ -729,12 +663,12 @@ contract BalanceManagerTest is Test {
     function testHandleRefundsJoinSplitsSingleAssetSuccess() public {
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposits 100M of token
+        // Reserves + deposits 2 notes worth of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Unwrap 100M of token
+        // Unwrap 2 notes worth of token
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
@@ -760,7 +694,7 @@ contract BalanceManagerTest is Test {
             })
         );
 
-        // Take up 100M tokens
+        // Take up 2 notes worth tokens
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
@@ -771,7 +705,7 @@ contract BalanceManagerTest is Test {
         );
         assertEq(token.balanceOf(address(teller)), 0);
 
-        // Expect all 100M to be refunded to teller
+        // Expect all 2 notes worth to be refunded to teller
         balanceManager.handleAllRefunds(op);
         assertEq(token.balanceOf(address(balanceManager)), 1);
         assertEq(token.balanceOf(address(teller)), (2 * PER_NOTE_AMOUNT));

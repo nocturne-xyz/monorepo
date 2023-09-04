@@ -40,3 +40,6 @@ jobs:
       - name: yarn test:unit
         run: |
           yarn test:unit
+      - name: yarn test:fork
+        run: |
+          yarn test:fork

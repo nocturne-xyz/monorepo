@@ -26,6 +26,7 @@
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",
+    "@nocturne-xyz/idb-kv-store": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
     "@urql/core": "^4.1.1",
     "async-mutex": "^0.4.0",

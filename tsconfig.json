@@ -72,6 +72,9 @@
     },
     {
       "path": "./packages/offchain-utils"
+    },
+    {
+      "path": "./packages/idb-kv-store"
     }
   ]
 }

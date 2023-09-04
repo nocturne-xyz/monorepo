@@ -45,7 +45,6 @@ struct GeneratedOperationMetadata {
 }
 
 contract OperationGenerator is InvariantUtils {
-    uint256 constant ERC20_ID = 0;
     uint256 constant DEFAULT_EXECUTION_GAS_LIMIT = 2_000_000;
     uint256 constant DEFAULT_PER_JOINSPLIT_VERIFY_GAS = 220_000;
     uint256 constant DEFAULT_MAX_NUM_REFUNDS = 9;
@@ -378,7 +377,7 @@ contract OperationGenerator is InvariantUtils {
             executionGasLimit +
             ((perJoinSplitVerifyGas + GAS_PER_JOINSPLIT_HANDLE) *
                 numJoinSplits) +
-            ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) *
+            ((GAS_PER_INSERTION_SUBTREE_UPDATE + GAS_PER_INSERTION_ENQUEUE) *
                 DEFAULT_MAX_NUM_REFUNDS);
     }
 }

@@ -5,6 +5,7 @@ import {
   Handler,
   Handler__factory,
 } from "@nocturne-xyz/contracts";
+import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
 import { Mutex } from "async-mutex";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
@@ -50,7 +51,6 @@ import {
   MockEthToTokenConverter,
   BundlerOpTracker,
   PreSignOperation,
-  InMemoryKVStore,
 } from "@nocturne-xyz/core";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
@@ -114,7 +114,6 @@ export class NocturneSdk implements NocturneSdkApi {
   protected urqlClient: UrqlClient;
   protected syncMutex: Mutex;
 
-  protected merkleProver: SparseMerkleProver;
   protected db: NocturneDB;
 
   protected signerThunk: Thunk<ethers.Signer>;
@@ -168,10 +167,8 @@ export class NocturneSdk implements NocturneSdkApi {
       url: this.endpoints.subgraphEndpoint,
       exchanges: [fetchExchange],
     });
-
-    // TODO: add IdbKVStore + make this actually persistent
-    const kv = new InMemoryKVStore();
-    this.merkleProver = new SparseMerkleProver(kv);
+    // TODO: add IdbKVStore + make this actually persistent 
+    const kv = new IdbKvStore(`nocturne-fe-sdk-${networkName}`);
     this.db = new NocturneDB(kv);
 
     this.clientThunk = thunk(async () => {
@@ -184,7 +181,7 @@ export class NocturneSdk implements NocturneSdkApi {
         new NocturneViewer(vk, vkNonce),
         this.provider,
         this.config.config,
-        this.merkleProver,
+        await SparseMerkleProver.loadFromKV(kv),
         this.db,
         new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
         new MockEthToTokenConverter(),
@@ -698,7 +695,6 @@ export class NocturneSdk implements NocturneSdkApi {
   async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
     let latestSyncedMerkleIndex: number | undefined;
     try {
-      // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
       const client = await this.clientThunk();
       latestSyncedMerkleIndex = await this.syncMutex.runExclusive(
         async () => await client.sync(syncOpts)

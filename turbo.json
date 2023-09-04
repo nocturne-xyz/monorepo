@@ -5,7 +5,7 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "dependsOn": ["build", "//#deploy-and-deposit", "//#deploy-subgraph"] 
+      "dependsOn": ["build", "//#deploy-and-deposit", "//#deploy-subgraph"]
     },
     "//#deploy-subgraph": {
       "cache": false
@@ -21,6 +21,9 @@
       "outputs": []
     },
     "test:unit": {
+      "dependsOn": ["build"]
+    },
+    "test:fork": {
       "dependsOn": ["build"]
     },
     "@nocturne-xyz/subtree-updater#test:unit": {

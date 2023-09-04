@@ -38,7 +38,6 @@ struct TransferRequest {
 }
 
 library NocturneUtils {
-    uint256 constant ERC20_ID = 0;
     uint256 constant DEADLINE_BUFFER = 1000;
 
     function defaultStealthAddress()

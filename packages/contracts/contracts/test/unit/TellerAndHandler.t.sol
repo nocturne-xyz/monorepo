@@ -35,18 +35,17 @@ import "../../libs/Types.sol";
 
 contract TellerAndHandlerTest is Test, PoseidonDeployer {
     using LibOffchainMerkleTree for OffchainMerkleTree;
-    uint256 public constant BN254_SCALAR_FIELD_MODULUS =
-        21888242871839275222246405745257275088548364400416034343698204186575808495617;
-
     using stdJson for string;
     using TreeTestLib for TreeTest;
+
+    uint256 public constant BN254_SCALAR_FIELD_MODULUS =
+        21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
     // Check storage layout file
     uint256 constant OPERATION_STAGE_STORAGE_SLOT = 278;
     uint256 constant ENTERED_EXECUTE_ACTIONS = 3;
 
     uint256 constant DEFAULT_GAS_LIMIT = 500_000;
-    uint256 constant ERC20_ID = 0;
 
     address constant ALICE = address(1);
     address constant BOB = address(2);
@@ -436,7 +435,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         SimpleERC20Token token = new SimpleERC20Token();
         token.reserveTokens(ALICE, PER_NOTE_AMOUNT);
 
-        // Approve 50M tokens for deposit
+        // Approve 1 notes worth of tokens for deposit
         vm.prank(ALICE);
         token.approve(address(teller), PER_NOTE_AMOUNT);
 
@@ -444,7 +443,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             ALICE,
             address(token),
             PER_NOTE_AMOUNT,
-            NocturneUtils.ERC20_ID,
+            ERC20_ID,
             NocturneUtils.defaultStealthAddress()
         );
 
@@ -461,7 +460,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, Validation.MAX_NOTE_VALUE + PER_NOTE_AMOUNT);
 
-        // Approve 50M tokens for deposit
+        // Approve 1 notes worth of tokens for deposit
         vm.prank(ALICE);
         token.approve(
             address(teller),
@@ -473,7 +472,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             ALICE,
             address(token),
             PER_NOTE_AMOUNT,
-            NocturneUtils.ERC20_ID,
+            ERC20_ID,
             NocturneUtils.defaultStealthAddress()
         );
         vm.prank(ALICE);
@@ -502,7 +501,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     }
 
     function testProcessBundleTransferSingleJoinSplitWithBundlerComp() public {
-        // Alice starts with 50M tokens in teller
+        // Alice starts with 1 notes worth of tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
@@ -510,7 +509,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Create operation to transfer 25M tokens to bob of 50M note
+        // Create operation to transfer half of tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -559,8 +558,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
         assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
-        // Expect BOB to have the 25M sent by alice
-        // Expect teller to have alice's remaining 25M - gasComp
+        // Expect BOB to have the the 1/2 notes worth sent by alice
+        // Expect teller to have alice's remaining 1/2 notes worth - gasComp
         // Expect BUNDLER to have > 0 gas tokens
         assertLt(
             token.balanceOf(address(teller)),
@@ -573,7 +572,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     }
 
     function testProcessBundleTransferThreeJoinSplit() public {
-        // Alice starts with 3 * 50M in teller
+        // Alice starts with 3 notes worth of tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 3 * PER_NOTE_AMOUNT);
 
@@ -581,7 +580,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Create operation to transfer 50M tokens to bob
+        // Create operation to transfer 1 notes worth of tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -632,8 +631,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
         assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 7);
 
-        // Expect BOB to have the 50M sent by alice
-        // Expect teller to have alice's remaining 100M
+        // Expect BOB to have the 1 note worth sent by alice
+        // Expect teller to have alice's remaining 2 notes worth
         assertEq(
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
@@ -644,7 +643,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     }
 
     function testProcessBundleTransferSixJoinSplit() public {
-        // Alice starts with 6 * 50M in teller
+        // Alice starts with 6 notes worth of tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 6 * PER_NOTE_AMOUNT);
 
@@ -652,7 +651,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Create operation to transfer 4 * 50M tokens to bob
+        // Create operation to transfer 4 * 1 notes worth of tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -703,8 +702,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
         assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 13);
 
-        // Expect BOB to have the 200M sent by alice
-        // Expect teller to have alice's remaining 100M
+        // Expect BOB to have the 4 notes worth of tokens sent by alice
+        // Expect teller to have alice's remaining 2 notes worth
         assertEq(
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
@@ -715,7 +714,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     }
 
     function testProcessBundleFailureBadRoot() public {
-        // Alice starts with 2 * 50M in teller
+        // Alice starts with 2 notes worth of tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -784,7 +783,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     }
 
     function testProcessBundleFailureAlreadyUsedNullifier() public {
-        // Alice starts with 2 * 50M in teller
+        // Alice starts with 2 notes worth of tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -853,7 +852,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     }
 
     function testProcessBundleFailureMatchingNullifiers() public {
-        // Alice starts with 2 * 50M in teller
+        // Alice starts with 2 notes worth of tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -921,7 +920,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     }
 
     function testProcessBundleFailureReentrancyProcessBundleIndirect() public {
-        // Alice starts with 2 * 50M tokens in teller
+        // Alice starts with 2 notes worth of tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -1011,7 +1010,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     }
 
     function testProcessBundleFailureReentrancyProcessBundleDirect() public {
-        // Alice starts with 2 * 50M tokens in teller
+        // Alice starts with 2 notes worth of tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -1114,7 +1113,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     function testProcessBundleFailureReentrancyHandleOperationHandlerCaller()
         public
     {
-        // Alice starts with 2 * 50M tokens in teller
+        // Alice starts with 2 notes worth of tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -1234,7 +1233,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     function testProcessBundleFailureReentrancyExecuteActionsHandlerCaller()
         public
     {
-        // Alice starts with 2 * 50M tokens in teller
+        // Alice starts with 2 notes worth of tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -1360,8 +1359,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Create transaction to send 3 * 50M even though only 2 * 50M is being
-        // taken up by teller
+        // Create transaction to send 3 notes worth even though only 2 notes worth of tokens is
+        // being taken up by teller
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -1442,8 +1441,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Create transaction to send 3 * 50M even though only 2 * 50M is being
-        // taken up by teller
+        // Create transaction to send 3 notes worth of tokens even though only 2 notes worth of
+        // tokens is being taken up by teller
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -1588,7 +1587,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             })
         );
 
-        // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
+        // Ensure 1 notes worth of tokensIn in teller and nothing else, swapper has 0 erc20In tokens
         assertEq(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
@@ -1684,7 +1683,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             })
         );
 
-        // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
+        // Ensure 1 notes worth of tokensIn in teller and nothing else, swapper has 0 erc20In tokens
         assertEq(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
@@ -1795,7 +1794,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             })
         );
 
-        // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
+        // Ensure 1 notes worth of tokensIn in teller and nothing else, swapper has 0 erc20In tokens
         assertEq(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
@@ -1895,7 +1894,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             })
         );
 
-        // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
+        // Ensure 1 notes worth of tokensIn in teller and nothing else, swapper has 0 erc20In tokens
         assertEq(erc20In.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1)); // +1 from prefill
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
@@ -1920,7 +1919,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
         assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
-        // Ensure 50M tokensIn in swapper, and all types of refund tokens back
+        // Ensure 1 notes worth of tokensIn in swapper, and all types of refund tokens back
         // in teller
         assertEq(erc20In.balanceOf(address(handler)), uint256(1));
         assertEq(erc20Out.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
@@ -1978,7 +1977,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             })
         );
 
-        // Ensure 100M joinSplitToken in teller and nothing else
+        // Ensure 2 notes worth of joinSplitToken in teller and nothing else
         assertEq(
             joinSplitToken.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
@@ -2338,7 +2337,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             })
         );
 
-        // Ensure 100M joinSplitToken in teller and nothing else
+        // Ensure 2 notes worth of joinSplitToken in teller and nothing else
         assertEq(
             joinSplitToken.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
@@ -2374,15 +2373,16 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     function testProcessBundleFailureNotEnoughBundlerComp() public {
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposit only 50M tokens
+        // Reserves + deposit only 1 notes worth of tokens
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
         TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-        // Unwrap 50M, not enough for bundler comp due to there being
-        // 20 joinsplits.
+        // Unwrap 1 notes worth of tokens, not enough for bundler comp due to there being 20
+        // joinsplits.
         // 20 joinsplits handles (no proof verification) equates to at least below gas tokens:
-        //    gasPrice * (3 * joinSplitGas) = 300 * (3 * 80k) = 72M
+        //    gasPrice * joinSplit handle cost = 300 * 110k = 33M per joinsplit
+        //    20 joinsplits would be 660M gwei despite one note only being 50M
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -2438,7 +2438,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     }
 
     function testProcessBundleFailureOOG() public {
-        // Alice starts with 2 * 50M tokens in teller
+        // Alice starts with 2 notes worth of tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 

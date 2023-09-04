@@ -256,10 +256,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     });
   });
 
-  const ALICE_UNWRAP_VAL = PER_NOTE_AMOUNT * 2n + (PER_NOTE_AMOUNT * 3n) / 4n; // 2.75 notes
-  const ALICE_TO_BOB_PUB_VAL = PER_NOTE_AMOUNT * 2n + PER_NOTE_AMOUNT / 2n; // 2.5 notes
-  const ALICE_TO_BOB_PRIV_VAL = PER_NOTE_AMOUNT / 4n; // 0.25 notes
-  it(`alice deposits four ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately`, async () => {
+  it(`alice deposits four notes, public ERC20 transfers some to Bob, privately pays some to Bob`, async () => {
+    const ALICE_UNWRAP_VAL = PER_NOTE_AMOUNT * 2n + (PER_NOTE_AMOUNT * 3n) / 4n; // 2.75 notes
+    const ALICE_TO_BOB_PUB_VAL = PER_NOTE_AMOUNT * 2n + PER_NOTE_AMOUNT / 2n; // 2.5 notes
+    const ALICE_TO_BOB_PRIV_VAL = PER_NOTE_AMOUNT / 4n; // 0.25 notes
+
     console.log("deposit funds and commit note commitments");
     await depositFundsMultiToken(
       depositManager,
@@ -368,6 +369,120 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
       // That one note should contain the tokens sent privately from alice
       expect(nonZeroNotesBob[0].value).to.equal(ALICE_TO_BOB_PRIV_VAL);
+
+      // check that bundler got compensated for gas, at least enough that it breaks even
+      const bundlerBalanceAfter = (
+        await gasToken.balanceOf(await bundlerEoa.getAddress())
+      ).toBigInt();
+
+      console.log("bundler gas asset balance after op:", bundlerBalanceAfter);
+      // for some reason, mocha `.gte` doesn't work here
+      expect(bundlerBalanceAfter > bundlerBalanceBefore).to.be.true;
+    };
+
+    await testE2E({
+      opRequestWithMetadata,
+      contractChecks,
+      offchainChecks,
+      expectedResult: {
+        type: "success",
+        expectedBundlerStatus: OperationStatus.EXECUTED_SUCCESS,
+      },
+    });
+  });
+
+  it(`alice deposits ten ${PER_NOTE_AMOUNT} and can submit op with 5 joinsplits`, async () => {
+    const ALICE_UNWRAP_VAL = PER_NOTE_AMOUNT * 10n; // 10 notes
+    const ALICE_TO_BOB_PUB_VAL = ALICE_UNWRAP_VAL; // 10 notes
+
+    console.log("deposit funds and commit note commitments");
+    await depositFundsMultiToken(
+      depositManager,
+      [
+        [
+          erc20,
+          [
+            PER_NOTE_AMOUNT,
+            PER_NOTE_AMOUNT,
+            PER_NOTE_AMOUNT,
+            PER_NOTE_AMOUNT,
+            PER_NOTE_AMOUNT,
+            PER_NOTE_AMOUNT,
+            PER_NOTE_AMOUNT,
+            PER_NOTE_AMOUNT,
+            PER_NOTE_AMOUNT,
+            PER_NOTE_AMOUNT,
+          ],
+        ],
+        [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
+      ],
+      aliceEoa,
+      nocturneSignerAlice.generateRandomStealthAddress()
+    );
+    await fillSubtreeBatch();
+
+    console.log("encode transfer erc20 action");
+    const encodedFunction =
+      SimpleERC20Token__factory.createInterface().encodeFunctionData(
+        "transfer",
+        [await bobEoa.getAddress(), ALICE_TO_BOB_PUB_VAL] // transfer 2.5 notes
+      );
+
+    const chainId = BigInt((await provider.getNetwork()).chainId);
+    const opRequestWithMetadata = newOpRequestBuilder({
+      chainId,
+      tellerContract: teller.address,
+    })
+      .unwrap(erc20Asset, ALICE_UNWRAP_VAL) // unwrap total 9.5
+      .action(erc20.address, encodedFunction)
+      .gasPrice(GAS_PRICE)
+      .deadline(
+        BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
+      )
+      .build(); // NOTE: alice spends all 4 notes because its 2.75 unwrapped + 0.25 conf pay + gas
+
+    const bundlerBalanceBefore = (
+      await gasToken.balanceOf(await bundlerEoa.getAddress())
+    ).toBigInt();
+    console.log("bundler gas asset balance before op:", bundlerBalanceBefore);
+
+    const contractChecks = async () => {
+      console.log("check for OperationProcessed event");
+      const latestBlock = await provider.getBlockNumber();
+      const events: OperationProcessedEvent[] = await queryEvents(
+        teller,
+        teller.filters.OperationProcessed(),
+        0,
+        latestBlock
+      );
+      expect(events.length).to.equal(1);
+      expect(events[0].args.opProcessed).to.equal(true);
+      expect(events[0].args.callSuccesses[0]).to.equal(true);
+
+      expect(
+        (await erc20.balanceOf(await aliceEoa.getAddress())).toBigInt()
+      ).to.equal(0n);
+      expect(
+        (await erc20.balanceOf(await bobEoa.getAddress())).toBigInt()
+      ).to.equal(ALICE_TO_BOB_PUB_VAL);
+      expect((await erc20.balanceOf(teller.address)).toBigInt()).to.equal(
+        10n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
+      );
+      expect((await erc20.balanceOf(handler.address)).toBigInt()).to.equal(1n);
+    };
+
+    const offchainChecks = async () => {
+      console.log("alice: Sync SDK post-operation");
+      await nocturneClientAlice.sync();
+      const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
+        erc20Asset,
+        { includeUncommitted: true }
+      )!;
+      const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
+      // alice should have 2 nonzero notes total, since all 4 notes spent, alice gets 1 output
+      // note from JSs and 1 refund note (all in same token)
+      expect(nonZeroNotesAlice.length).to.equal(0);
+      console.log("alice post-op notes:", nonZeroNotesAlice);
 
       // check that bundler got compensated for gas, at least enough that it breaks even
       const bundlerBalanceAfter = (
