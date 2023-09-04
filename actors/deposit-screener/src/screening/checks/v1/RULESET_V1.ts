@@ -1,5 +1,5 @@
 import { ScreeningDepositRequest } from "../..";
-import { Rule, RuleParams, RuleSet } from "../RuleSet";
+import { RuleParams, RuleSet } from "../RuleSet";
 import {
   MisttrackAddressOverviewData,
   MisttrackRiskItem,
