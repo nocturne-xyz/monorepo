@@ -1,7 +1,7 @@
 name: Build and Test Packages
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, closed]
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
