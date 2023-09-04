@@ -6,9 +6,9 @@ import {
 import {
   InsertionLogOptions,
   PersistentLog,
-  RedisStreamId,
   ScanOptions,
 } from "./persistentLog";
+import { RedisStreamId } from "./redisStreamId";
 import IORedis from "ioredis";
 
 export type Insertion = IncludedNote | IncludedNoteCommitment;
