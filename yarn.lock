@@ -4135,6 +4135,7 @@ __metadata:
     "@nocturne-xyz/insertion-writer": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
+    "@nocturne-xyz/persistent-log": "workspace:^"
     "@nocturne-xyz/subtree-updater": "workspace:^"
     "@types/chai": ^4.3.3
     "@types/dockerode": ^3.3.14
