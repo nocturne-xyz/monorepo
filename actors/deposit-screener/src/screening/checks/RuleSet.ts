@@ -48,11 +48,7 @@ export class Rule<K extends keyof ApiMap> {
   private call: RuleParams<K>["call"];
   private action: RuleParams<K>["action"];
 
-  static create<K extends keyof ApiMap>(ruleParams: RuleParams<K>): Rule<K> {
-    return new Rule<K>(ruleParams);
-  }
-
-  private constructor({ name, call, threshold, action }: RuleParams<K>) {
+  constructor({ name, call, threshold, action }: RuleParams<K>) {
     this.next = null;
     this.name = name;
     this.call = call;
@@ -81,7 +77,8 @@ export class RuleSet {
     this.delaySeconds = baseDelaySeconds;
   }
 
-  add<K extends keyof ApiMap>(rule: Rule<K>): RuleSet {
+  add<K extends keyof ApiMap>(ruleParams: RuleParams<K>): RuleSet {
+    const rule = new Rule(ruleParams);
     if (!this.head) {
       this.head = rule;
     } else {

@@ -1,5 +1,5 @@
 import { ScreeningDepositRequest } from "../..";
-import { Rule, RuleSet } from "../RuleSet";
+import { Rule, RuleParams, RuleSet } from "../RuleSet";
 import {
   MisttrackAddressOverviewData,
   MisttrackRiskItem,
@@ -19,7 +19,7 @@ const BASE_DELAY_SECONDS = 60 * 60 * 2; // 2 hours
 //     - > $5k of counterparty exposure to high risk categories (NOTE that mixer is medium risk)
 //     - > 20k of indirect exposure to high risk categories
 
-const TRM_SEVERE_OWNERSHIP_REJECT = Rule.create({
+const TRM_SEVERE_OWNERSHIP_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
   name: "TRM_SEVERE_OWNERSHIP_REJECT",
   call: "TRM_SCREENING_ADDRESSES",
   threshold: (data: TrmData) => {
@@ -34,9 +34,9 @@ const TRM_SEVERE_OWNERSHIP_REJECT = Rule.create({
     type: "Rejection",
     reason: "Ownership exposure to severe risk categories > $0",
   },
-});
+};
 
-const TRM_HIGH_COUNTERPARTY_REJECT = Rule.create({
+const TRM_HIGH_COUNTERPARTY_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
   name: "TRM_HIGH_COUNTERPARTY_REJECT",
   call: "TRM_SCREENING_ADDRESSES",
   threshold: (data: TrmData) => {
@@ -51,9 +51,9 @@ const TRM_HIGH_COUNTERPARTY_REJECT = Rule.create({
     type: "Rejection",
     reason: "Counterparty exposure to high risk categories > $5k",
   },
-});
+};
 
-const TRM_HIGH_INDIRECT_REJECT = Rule.create({
+const TRM_HIGH_INDIRECT_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
   name: "TRM_HIGH_INDIRECT_REJECT",
   call: "TRM_SCREENING_ADDRESSES",
   threshold: (data: TrmData) => {
@@ -68,13 +68,13 @@ const TRM_HIGH_INDIRECT_REJECT = Rule.create({
     type: "Rejection",
     reason: "Indirect exposure to high risk categories > $20k",
   },
-});
+};
 
 // - MistTrack rejects if
 //     - Score > 80 AND phishing/theft has > 0 attributions
 //         - If `risk_detail` contains keywords “theft” or “phish” or “rug” or “hack” or “exploit” or “scam”
 
-const MISTTRACK_RISK_REJECT = Rule.create({
+const MISTTRACK_RISK_REJECT: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
   name: "MISTTRACK_RISK_REJECT",
   call: "MISTTRACK_ADDRESS_RISK_SCORE",
   threshold: (data: MisttrackRiskScoreData) => {
@@ -94,13 +94,13 @@ const MISTTRACK_RISK_REJECT = Rule.create({
     type: "Rejection",
     reason: "Score > 80 AND phishing/theft has > 0 attributions",
   },
-});
+};
 
 // - Short wallet history (< 1 month activity) → 2x delay (4h)
 //     - && high value wallet (> $300k balance) → 4x delay (8h)
 //     - && origin from Tornado Cash post-sanctions → 4x delay (maxes out at 24h)
 
-const SHORT_WALLET_HISTORY_DELAY = Rule.create({
+const SHORT_WALLET_HISTORY_DELAY: RuleParams<"MISTTRACK_ADDRESS_OVERVIEW"> = {
   name: "SHORT_WALLET_HISTORY_DELAY",
   call: "MISTTRACK_ADDRESS_OVERVIEW",
   threshold: (data: MisttrackAddressOverviewData) => {
@@ -110,9 +110,9 @@ const SHORT_WALLET_HISTORY_DELAY = Rule.create({
     return oneMonth > now - data.first_seen;
   },
   action: { type: "Delay", operation: "Add", value: BASE_DELAY_SECONDS * 2 },
-});
+};
 
-const HIGH_VALUE_WALLET_DELAY = Rule.create({
+const HIGH_VALUE_WALLET_DELAY: RuleParams<"MISTTRACK_ADDRESS_OVERVIEW"> = {
   name: "HIGH_VALUE_WALLET_DELAY",
   call: "MISTTRACK_ADDRESS_OVERVIEW",
   threshold: (data: MisttrackAddressOverviewData) => {
@@ -121,12 +121,12 @@ const HIGH_VALUE_WALLET_DELAY = Rule.create({
     return data.balance > BALANCE_THRESHOLD; // balance calculated in dollars
   },
   action: { type: "Delay", operation: "Add", value: BASE_DELAY_SECONDS * 4 },
-});
+};
 
 // - Origin from Tornado Cash post-sanctions → 3x delay (6h)
 //     - Check TRM for indirect or counterparty TC risk over certain amount (say 20k?)
 
-const TC_POST_SANCTIONS_DELAY = Rule.create({
+const TC_POST_SANCTIONS_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
   name: "TC_POST_SANCTIONS_DELAY",
   call: "MISTTRACK_ADDRESS_RISK_SCORE",
   threshold: (data: MisttrackRiskScoreData) => {
@@ -135,11 +135,11 @@ const TC_POST_SANCTIONS_DELAY = Rule.create({
     return false;
   },
   action: { type: "Delay", operation: "Add", value: BASE_DELAY_SECONDS * 4 },
-});
+};
 
 // - Large volume of deposits coming from same address (large multideposit) → 3x delay (6h)
 
-const LARGE_MULTIDEP_DELAY = Rule.create({
+const LARGE_MULTIDEP_DELAY: RuleParams<"NOOP"> = {
   name: "LARGE_MULTIDEP_DELAY",
   call: "NOOP",
   threshold: (deposit: ScreeningDepositRequest) => {
@@ -147,11 +147,11 @@ const LARGE_MULTIDEP_DELAY = Rule.create({
     return false;
   },
   action: { type: "Delay", operation: "Add", value: BASE_DELAY_SECONDS * 3 },
-});
+};
 
 // - Funds originated from Nocturne → 0.25*(base) + (2 * proportion of funds not previously coming from Nocturne)(base) delay (example, 100% of initial coming in: 30m + 2*2h = 4.5h)
 
-const FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY = Rule.create({
+const FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY: RuleParams<"NOOP"> = {
   name: "FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY",
   call: "NOOP",
   threshold: (deposit: ScreeningDepositRequest) => {
@@ -159,7 +159,7 @@ const FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY = Rule.create({
     return false;
   },
   action: { type: "Delay", operation: "Add", value: BASE_DELAY_SECONDS * 3 },
-});
+};
 
 export const RULESET_V1 = new RuleSet({
   baseDelaySeconds: BASE_DELAY_SECONDS,
