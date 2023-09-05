@@ -25,10 +25,8 @@ describe("OpRequestBuilder", () => {
     const signer = new NocturneSigner(sk);
     const refundAddr = signer.generateRandomStealthAddress();
 
-    const builder = await newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
     const recipient = ethers.utils.getAddress(
       "0x1E2cD78882b12d3954a049Fd82FFD691565dC0A5"
     );
