@@ -5,7 +5,7 @@ include "include/babyjub.circom";
 
 //@ensures(1) `compressedCanonAddr` and the sign bit from `nonceAndSignBit` are a valid canonical address
 //@ensures(2) the prover can produce a valid signature of the message
-//  `CANONICAL_ADDRESS_REGISTRY_DOMAIN_PREFIX | nonce` using the
+//  `CANONICAL_ADDRESS_REGISTRY_PREFIX | nonce` using the
 //   spending key corresponding the canonical address given in public inputs
 template CanonAddrSigCheck() {
     // *** PUBLIC INPUTS ***
@@ -22,14 +22,14 @@ template CanonAddrSigCheck() {
 	signal signBit <== nonceAndSignBitBits[64];
 	signal nonce <== nonceAndSignBit - (1 << 64) * signBit;
 
-    BabyCheck()(spendPubkey[0], spendPubkey[1]);
-    IsOrderL()(spendPubkey[0], spendPubkey[1]);
+	BabyCheck()(spendPubkey[0], spendPubkey[1]);
+	IsOrderL()(spendPubkey[0], spendPubkey[1]);
 
 	// keccak256("nocturne-canonical-address-registry") % l (baby jubjub scalar field order)
-	var CANONICAL_ADDRESS_REGISTRY_DOMAIN_PREFIX = 116601516046334945492116181810016234440204750152070409904129749171886331002;
-	signal msg <== Poseidon(2)([CANONICAL_ADDRESS_REGISTRY_DOMAIN_PREFIX, nonce]);
+	var CANONICAL_ADDRESS_REGISTRY_PREFIX = 116601516046334945492116181810016234440204750152070409904129749171886331002;
+	signal msg <== Poseidon(2)([CANONICAL_ADDRESS_REGISTRY_PREFIX, nonce]);
 
-	//@lemma(1) prover can generate valid sig for `CANONICAL_ADDRESS_REGISTRY_DOMAIN_PREFIX | nonce` against spendPubkey
+	//@lemma(1) prover can generate valid sig for `CANONICAL_ADDRESS_REGISTRY_PREFIX | nonce` against spendPubkey
 	//@argument `SigVerify.requires(1)` is guaranteed by checks above. lemma follows from `SigVerify.ensures(1)` 
 	SigVerify()(spendPubkey, msg, sig);
 
