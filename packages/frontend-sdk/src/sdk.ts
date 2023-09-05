@@ -53,7 +53,6 @@ import {
   BundlerOpTracker,
   PreSignOperation,
   CanonAddrSigCheckProofWithPublicSignals,
-  GetCanonAddrSigCheckProofInputsMethod,
 } from "@nocturne-xyz/core";
 import { WasmCanonAddrSigCheckProver, WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
@@ -705,16 +704,17 @@ export class NocturneSdk implements NocturneSdkApi {
    * generate a ZKP proving knowledge of the spending key for the user's canonical address
    */
   async proveCanonAddrOwnership(): Promise<CanonAddrSigCheckProofWithPublicSignals> {
-    const inputs = await this.invokeSnap<GetCanonAddrSigCheckProofInputsMethod>({
-      method: "nocturne_getCanonAddrSigCheckProofInputs",
-      params: {
-        // TODO when contracts are written: get nonce
-        nonce: 12345n,
-      },
-    });
+    throw new Error("FIXME");
+    // const inputs = await this.invokeSnap<GetCanonAddrSigCheckProofInputsMethod>({
+    //   method: "nocturne_getCanonAddrSigCheckProofInputs",
+    //   params: {
+    //     // TODO when contracts are written: get nonce
+    //     nonce: 12345n,
+    //   },
+    // });
 
-    const prover = await this.canonAddrSigCheckProverThunk();
-    return await prover.proveCanonAddrSigCheck(inputs);
+    // const prover = await this.canonAddrSigCheckProverThunk();
+    // return await prover.proveCanonAddrSigCheck(inputs);
   }
 
   /**

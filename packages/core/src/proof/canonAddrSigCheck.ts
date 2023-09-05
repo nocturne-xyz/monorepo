@@ -6,16 +6,6 @@ import {
   decomposeCompressedPoint,
 } from "../crypto";
 import { BaseProof } from "./types";
-import * as ethers from "ethers";
-import { BabyJubJubScalarField } from "@nocturne-xyz/crypto-utils";
-
-export const CANON_ADDR_SIG_CHECK_PREFIX = BabyJubJubScalarField.reduce(
-  BigInt(
-    ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes("nocturne-canonical-address-registry")
-    )
-  )
-);
 
 export interface CanonAddrSigCheckProver {
   proveCanonAddrSigCheck(
@@ -35,7 +25,7 @@ export interface CanonAddrSigCheckProofWithPublicSignals {
 
 export interface CanonAddrSigCheckInputs {
   canonAddr: CanonAddress;
-  nonce: bigint;
+  msg: bigint;
   sig: NocturneSignature;
   spendPubkey: SpendPk;
   vkNonce: bigint;
@@ -43,7 +33,7 @@ export interface CanonAddrSigCheckInputs {
 
 export interface CanonAddrSigCheckPublicSignals {
   compressedCanonAddrY: bigint;
-  nonceAndSignBit: bigint;
+  msgAndSignBit: bigint;
 }
 
 export function canonAddrSigCheckPublicSignalsfromArray(
@@ -51,22 +41,22 @@ export function canonAddrSigCheckPublicSignalsfromArray(
 ): CanonAddrSigCheckPublicSignals {
   return {
     compressedCanonAddrY: publicSignals[0],
-    nonceAndSignBit: publicSignals[1],
+    msgAndSignBit: publicSignals[1],
   };
 }
 
 export function canonAddrPublicSignalsToArray(
   publicSignals: CanonAddrSigCheckPublicSignals
 ): [bigint, bigint] {
-  return [publicSignals.compressedCanonAddrY, publicSignals.nonceAndSignBit];
+  return [publicSignals.compressedCanonAddrY, publicSignals.msgAndSignBit];
 }
 
 export function encodeCanonAddrSigCheckPis(
   canonAddr: CanonAddress,
-  nonce: bigint
+  msg: bigint
 ): CanonAddrSigCheckPublicSignals {
-  if (nonce < 0 || nonce >= 1n << 64n) {
-    throw new Error("Nonce must be a 64-bit unsigned integer");
+  if (msg < 0 || msg >= 1n << 252n) {
+    throw new Error("msg must be a 252-bit unsigned integer");
   }
 
   const compressed = compressPoint(canonAddr);
@@ -74,6 +64,6 @@ export function encodeCanonAddrSigCheckPis(
   const signBit = sign ? 1n : 0n;
   return {
     compressedCanonAddrY: y,
-    nonceAndSignBit: nonce | (signBit << 65n),
+    msgAndSignBit: msg | (signBit << 252n),
   };
 }
