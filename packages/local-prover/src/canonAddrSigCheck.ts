@@ -5,6 +5,7 @@ import {
   CanonAddrSigCheckProofWithPublicSignals,
   CanonAddrSigCheckProver,
   VerifyingKey,
+  encodeCanonAddrSigCheckPis,
 } from "@nocturne-xyz/core";
 
 export class WasmCanonAddrSigCheckProver implements CanonAddrSigCheckProver {
@@ -21,11 +22,14 @@ export class WasmCanonAddrSigCheckProver implements CanonAddrSigCheckProver {
   async proveCanonAddrSigCheck(
     inputs: CanonAddrSigCheckInputs
   ): Promise<CanonAddrSigCheckProofWithPublicSignals> {
-    const { canonAddr, sig, spendPubkey, vkNonce } = inputs;
+    const { canonAddr, nonce, sig, spendPubkey, vkNonce } = inputs;
+
+    const { compressedCanonAddrY, nonceAndSignBit } =
+      encodeCanonAddrSigCheckPis(canonAddr, nonce);
 
     const signals = {
-      canonAddrX: canonAddr.x,
-      canonAddrY: canonAddr.y,
+      compressedCanonAddrY,
+      nonceAndSignBit,
       sig: [sig.c, sig.z],
       spendPubkey: [spendPubkey.x, spendPubkey.y],
       vkNonce,

@@ -25,6 +25,7 @@ export {
   CanonAddrSigCheckPublicSignals,
   CanonAddrSigCheckProofWithPublicSignals,
   CanonAddrSigCheckProver,
-  CANON_ADDR_SIG_CHECK_MSG,
+  CANON_ADDR_SIG_CHECK_PREFIX,
+  encodeCanonAddrSigCheckPis,
 } from "./canonAddrSigCheck";
 export { packToSolidityProof, unpackFromSolidityProof } from "./utils";

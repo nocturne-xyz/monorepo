@@ -24,9 +24,13 @@ export interface RequestViewingKeyMethod {
   return: RequestViewingKeyMethodResponse;
 }
 
+export interface GetCanonAddrSigCheckProofInputsParams {
+  nonce: bigint;
+}
+
 export interface GetCanonAddrSigCheckProofInputsMethod {
   method: "nocturne_getCanonAddrSigCheckProofInputs";
-  params: undefined;
+  params: GetCanonAddrSigCheckProofInputsParams;
   return: CanonAddrSigCheckInputs;
 }
 

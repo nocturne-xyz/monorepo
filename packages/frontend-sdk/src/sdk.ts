@@ -707,7 +707,10 @@ export class NocturneSdk implements NocturneSdkApi {
   async proveCanonAddrOwnership(): Promise<CanonAddrSigCheckProofWithPublicSignals> {
     const inputs = await this.invokeSnap<GetCanonAddrSigCheckProofInputsMethod>({
       method: "nocturne_getCanonAddrSigCheckProofInputs",
-      params: undefined,
+      params: {
+        // TODO when contracts are written: get nonce
+        nonce: 12345n,
+      },
     });
 
     const prover = await this.canonAddrSigCheckProverThunk();
