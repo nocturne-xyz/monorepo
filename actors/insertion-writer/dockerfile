@@ -16,10 +16,10 @@ COPY . .
 
 # install deps & build
 RUN yarn install
-RUN yarn turbo run build --filter="@nocturne-xyz/test-actor..."
+RUN yarn turbo run build --filter="@nocturne-xyz/insertion-writer..."
 
 # setup CLI
-WORKDIR /app/actors/test-actor
+WORKDIR /app/actors/insertion-writer
 RUN npm i -g 
 
-ENTRYPOINT ["test-actor-cli"]
+ENTRYPOINT ["insertion-writer-cli"]

@@ -9,9 +9,11 @@ WORKDIR /app
 RUN corepack enable
 
 # install foundry
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="$PATH:/root/.cargo/bin"
 RUN curl -L https://foundry.paradigm.xyz | bash
 ENV PATH="$PATH:/root/.foundry/bin"
-RUN foundryup
+RUN foundryup -C e15e33a
 
 # copy over entire monorepo
 COPY . .

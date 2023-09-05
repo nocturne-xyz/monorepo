@@ -12,7 +12,7 @@ COMMIT_HASH=$(git rev-parse --short HEAD)
 #   -p (optional): prover mode for subtree updater, 'mock' or 'rapidsnark'. If not given, defaults to 'mock'.
 #   -o (optional): build only the indiciated actor. can be one of `subtree-updater`, `bundler`, `deposit-screener`, or `test-actor`
 
-usage() { echo "usage: $0 [-p <'mock' | 'rapidsnark'> -o <'subtree-updater' | 'bundler' | 'deposit-screener' | 'test-actor'>]" 1>&2; }
+usage() { echo "usage: $0 [-p <'mock' | 'rapidsnark'> -o <'subtree-updater' | 'bundler' | 'deposit-screener' | 'test-actor' | 'insertion-writer'>]" 1>&2; }
 
 while getopts ":p:o:" o; do
     case "${o}" in
@@ -69,11 +69,14 @@ elif [ "$BUILD_ONLY" == "deposit-screener" ]; then
     BUILD_DEPOSIT_SCREENER=true
 elif [ "$BUILD_ONLY" == "test-actor" ]; then
     BUILD_TEST_ACTOR=true
+elif [ "$BUILD_ONLY" == "insertion-writer" ]; then
+    BUILD_INSERTION_WRITER=true
 else
     BUILD_SUBTREE_UPDATER=true
     BUILD_BUNDLER=true
     BUILD_DEPOSIT_SCREENER=true
     BUILD_TEST_ACTOR=true
+    BUILD_INSERTION_WRITER=true
 fi
 
 # build subtree updater
@@ -105,4 +108,12 @@ if [ "$BUILD_TEST_ACTOR" == "true" ]; then
     docker build -f actors/test-actor/Dockerfile -t nocturnelabs/test-actor:$COMMIT_HASH .
 else
     echo "skipping test-actor..."
+fi
+
+# build insertion-writer
+if [ "$BUILD_INSERTION_WRITER" == "true" ]; then
+    echo "building insertion-writer..."
+    docker build -f actors/insertion-writer/Dockerfile -t nocturnelabs/insertion-writer:$COMMIT_HASH .
+else
+    echo "skipping insertion-writer..."
 fi
