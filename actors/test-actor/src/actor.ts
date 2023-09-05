@@ -398,10 +398,7 @@ export class TestActor {
 
     const chainId = this._chainId ?? BigInt(await this.txSigner.getChainId());
 
-    return newOpRequestBuilder({
-      chainId,
-      tellerContract: this.teller.address,
-    })
+    return newOpRequestBuilder(this.provider, chainId)
       .unwrap(asset, value)
       .action(simpleErc20.address, transferData)
       .deadline(
