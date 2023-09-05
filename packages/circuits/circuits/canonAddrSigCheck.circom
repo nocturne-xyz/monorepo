@@ -13,7 +13,7 @@ template CanonAddrSigCheck() {
 	signal input nonceAndSignBit;
 
 	// *** WITNESS ***
-	// signature on fixed message used to prove knowledge of viewing key
+	// signature used to prove knowledge of spending key
 	signal input sig[2];
 	signal input spendPubkey[2];
 	signal input vkNonce;
