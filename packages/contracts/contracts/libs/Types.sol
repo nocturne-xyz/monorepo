@@ -118,6 +118,11 @@ struct Bundle {
     Operation[] operations;
 }
 
+struct CanonAddrRegistryEntry {
+    address ethAddress;
+    uint256 perCanonAddrNonce;
+}
+
 library OperationLib {
     function maxGasLimit(
         Operation calldata self,
