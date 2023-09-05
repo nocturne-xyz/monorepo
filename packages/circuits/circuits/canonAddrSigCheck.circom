@@ -17,8 +17,8 @@ template CanonAddrSigCheck() {
 	signal input vkNonce;
 
 	signal msgAndSignBitBits[253] <== Num2Bits(253)(msgAndSignBit);
-	signal signBit <== msgAndSignBitBits[64];
-	signal msg <== msgAndSignBit - (1 << 253) * signBit;
+	signal signBit <== msgAndSignBitBits[252];
+	signal msg <== msgAndSignBit - (1 << 252) * signBit;
 
 	BabyCheck()(spendPubkey[0], spendPubkey[1]);
 	IsOrderL()(spendPubkey[0], spendPubkey[1]);
