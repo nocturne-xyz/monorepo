@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 COMMIT_HASH=$(git rev-parse --short HEAD)
 
 # pushes docker containers for offchain actors
