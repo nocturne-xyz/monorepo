@@ -7,6 +7,7 @@ export interface ScreeningDepositRequest {
   assetAddr: Address;
   value: bigint;
 }
+
 export interface ScreeningCheckerApi {
   checkDeposit(
     depositInfo: ScreeningDepositRequest

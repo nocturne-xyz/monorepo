@@ -6,6 +6,7 @@ import {
   MisttrackRiskScoreData,
   TrmData,
 } from "../apiCalls";
+import { isLessThanOneMonthAgo } from "./utils";
 
 /**
  * Ruleset V1 Specification
@@ -78,17 +79,23 @@ const MISTTRACK_RISK_REJECT: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
   name: "MISTTRACK_RISK_REJECT",
   call: "MISTTRACK_ADDRESS_RISK_SCORE",
   threshold: (data: MisttrackRiskScoreData) => {
-    const banlist: MisttrackRiskItem[] = [
+    const banlistItems: MisttrackRiskItem[] = [
       "Involved Theft Activity",
       "Involved Phishing Activity",
       "Involved Ransom Activity",
       "Malicious Address",
-      "Interact With Malicious Address",
     ];
-    const riskDetailContainsBanlistWords = data.detail_list.some((item) =>
-      banlist.includes(item)
+    const detailListContainsBanlistItems = data.detail_list.some((item) =>
+      banlistItems.includes(item)
     );
-    return data.score > 80 && riskDetailContainsBanlistWords;
+    const banlistWords = ["theft", "phish", "rug", "hack", "exploit", "scam"];
+    const riskDetailContainsBanlistWords = data.risk_detail.some((item) =>
+      banlistWords.some((word) => item.label.toLowerCase().includes(word))
+    );
+    return (
+      data.score > 80 &&
+      (detailListContainsBanlistItems || riskDetailContainsBanlistWords)
+    );
   },
   action: {
     type: "Rejection",
@@ -103,63 +110,78 @@ const MISTTRACK_RISK_REJECT: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
 const SHORT_WALLET_HISTORY_DELAY: RuleParams<"MISTTRACK_ADDRESS_OVERVIEW"> = {
   name: "SHORT_WALLET_HISTORY_DELAY",
   call: "MISTTRACK_ADDRESS_OVERVIEW",
-  threshold: (data: MisttrackAddressOverviewData) => {
-    // checks if first_seen is less than one month ago
-    const now = Math.floor(Date.now() / 1000);
-    const oneMonth = 60 * 60 * 24 * 30;
-    return oneMonth > now - data.first_seen;
-  },
-  action: { type: "Delay", operation: "Add", value: BASE_DELAY_SECONDS * 2 },
+  threshold: (data: MisttrackAddressOverviewData) =>
+    isLessThanOneMonthAgo(data.first_seen),
+  action: { type: "Delay", operation: "Add", value: 2 * BASE_DELAY_SECONDS },
 };
 
-const HIGH_VALUE_WALLET_DELAY: RuleParams<"MISTTRACK_ADDRESS_OVERVIEW"> = {
-  name: "HIGH_VALUE_WALLET_DELAY",
-  call: "MISTTRACK_ADDRESS_OVERVIEW",
-  threshold: (data: MisttrackAddressOverviewData) => {
-    // checks if balance is greater than $300k
-    const BALANCE_THRESHOLD = 300_000;
-    return data.balance > BALANCE_THRESHOLD; // balance calculated in dollars
-  },
-  action: { type: "Delay", operation: "Add", value: BASE_DELAY_SECONDS * 4 },
-};
+const SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY: RuleParams<"MISTTRACK_ADDRESS_OVERVIEW"> =
+  {
+    name: "SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY",
+    call: "MISTTRACK_ADDRESS_OVERVIEW",
+    threshold: (data: MisttrackAddressOverviewData) => {
+      const BALANCE_THRESHOLD = 300_000;
+      return (
+        isLessThanOneMonthAgo(data.first_seen) &&
+        data.balance > BALANCE_THRESHOLD
+      );
+    },
+    action: { type: "Delay", operation: "Add", value: 4 * BASE_DELAY_SECONDS },
+  };
 
-// - Origin from Tornado Cash post-sanctions → 3x delay (6h)
-//     - Check TRM for indirect or counterparty TC risk over certain amount (say 20k?)
+const SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> =
+  {
+    name: "SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY",
+    call: "MISTTRACK_ADDRESS_RISK_SCORE",
+    threshold: (data: MisttrackRiskScoreData) => {
+      return false; // ! TODO need ability for multiple calls in a rule
+    },
+    action: { type: "Delay", operation: "Add", value: 2 * BASE_DELAY_SECONDS },
+  };
 
-const TC_POST_SANCTIONS_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
-  name: "TC_POST_SANCTIONS_DELAY",
+// - Usage of mixer → 2x delay (4h)
+
+const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
+  name: "MIXER_USAGE_DELAY",
   call: "MISTTRACK_ADDRESS_RISK_SCORE",
   threshold: (data: MisttrackRiskScoreData) => {
-    // TODO clarify delay calculation (add or multiply), and whether we intend to factor in origin from TC post-sanctions twice
-    // also confirm how we want to define definitions in code
-    return false;
+    return (
+      data.detail_list.includes("Mixer") ||
+      data.risk_detail.some((item) =>
+        item.label.toLowerCase().includes("tornado.cash")
+      )
+    );
   },
-  action: { type: "Delay", operation: "Add", value: BASE_DELAY_SECONDS * 4 },
+  action: { type: "Delay", operation: "Add", value: 2 * BASE_DELAY_SECONDS },
 };
 
-// - Large volume of deposits coming from same address (large multideposit) → 3x delay (6h)
+// // - Large volume of deposits coming from same address (large multideposit) → 3x delay (6h)
 
-const LARGE_MULTIDEP_DELAY: RuleParams<"NOOP"> = {
-  name: "LARGE_MULTIDEP_DELAY",
-  call: "NOOP",
-  threshold: (deposit: ScreeningDepositRequest) => {
-    // TODO clarify how we want to define large multideposit
-    return false;
-  },
-  action: { type: "Delay", operation: "Add", value: BASE_DELAY_SECONDS * 3 },
-};
+// const LARGE_MULTIDEPOSIT_DELAY: RuleParams<"NOOP"> = {
+//   name: "LARGE_MULTIDEPOSIT_DELAY",
+//   call: "NOOP",
+//   threshold: (deposit: ScreeningDepositRequest) => {
+//     // TODO codeify large multideposit
+//     return false;
+//   },
+//   action: { type: "Delay", operation: "Add", value: BASE_DELAY_SECONDS * 3 },
+// };
 
-// - Funds originated from Nocturne → 0.25*(base) + (2 * proportion of funds not previously coming from Nocturne)(base) delay (example, 100% of initial coming in: 30m + 2*2h = 4.5h)
+// // - Funds originated from Nocturne → 0.25*(base) + (2 * proportion of funds not previously coming from Nocturne)(base) delay (example, 100% of initial coming in: 30m + 2*2h = 4.5h)
 
-const FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY: RuleParams<"NOOP"> = {
-  name: "FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY",
-  call: "NOOP",
-  threshold: (deposit: ScreeningDepositRequest) => {
-    // TODO how do we check if funds originated from Nocturne?
-    return false;
-  },
-  action: { type: "Delay", operation: "Add", value: BASE_DELAY_SECONDS * 3 },
-};
+// const FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY: RuleParams<"NOOP"> = {
+//   name: "FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY",
+//   call: "NOOP",
+//   threshold: (deposit: ScreeningDepositRequest) => {
+//     // TODO codeify funds originating from Nocturne
+//     return false;
+//   },
+//   action: {
+//     type: "Delay",
+//     operation: "Multiply",
+//     value: (BASE_DELAY_SECONDS * 1) / 2,
+//   }, // todo fill this value in with above
+// };
 
 export const RULESET_V1 = new RuleSet({
   baseDelaySeconds: BASE_DELAY_SECONDS,
@@ -170,6 +192,4 @@ export const RULESET_V1 = new RuleSet({
   .add(MISTTRACK_RISK_REJECT)
   .add(SHORT_WALLET_HISTORY_DELAY)
   .add(HIGH_VALUE_WALLET_DELAY)
-  .add(TC_POST_SANCTIONS_DELAY)
-  .add(LARGE_MULTIDEP_DELAY)
-  .add(FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY);
+  .add(MIXER_USAGE_DELAY);
