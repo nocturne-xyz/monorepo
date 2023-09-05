@@ -52,8 +52,10 @@ import {
   MockEthToTokenConverter,
   BundlerOpTracker,
   PreSignOperation,
+  CanonAddrSigCheckProofWithPublicSignals,
+  GetCanonAddrSigCheckProofInputsMethod,
 } from "@nocturne-xyz/core";
-import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
+import { WasmCanonAddrSigCheckProver, WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import {
   OperationResult,
   Client as UrqlClient,
@@ -62,7 +64,8 @@ import {
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { ContractTransaction, ethers } from "ethers";
-import vkey from "../circuit-artifacts/joinsplit/joinsplitVkey.json";
+import JOINSPLIT_VKEY from "../circuit-artifacts/joinsplit/joinsplitVkey.json";
+import CANON_ADDR_SIG_CHECK_VKEY from "../circuit-artifacts/canonAddrSigCheck/canonAddrSigCheckVkey.json";
 import { NocturneSdkApi, SnapStateApi } from "./api";
 import {
   FetchDepositRequestQuery,
@@ -93,10 +96,13 @@ import {
   toDepositRequestWithMetadata,
 } from "./utils";
 
-const WASM_PATH =
+const JOINSPLIT_WASM_PATH =
   "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.wasm";
-const ZKEY_PATH =
+const JOINSPLIT_ZKEY_PATH =
   "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.zkey";
+
+const CANON_ADDR_SIG_CHECK_WASM_PATH = "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.wasm";
+const CANON_ADDR_SIG_CHECK_ZKEY_PATH = "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey";
 
 export interface NocturneSdkOptions {
   networkName?: SupportedNetwork;
@@ -106,6 +112,7 @@ export interface NocturneSdkOptions {
 
 export class NocturneSdk implements NocturneSdkApi {
   protected joinSplitProverThunk: Thunk<WasmJoinSplitProver>;
+  protected canonAddrSigCheckProverThunk: Thunk<WasmCanonAddrSigCheckProver>;
   protected endpoints: Endpoints;
   protected config: NocturneSdkConfig;
   protected _provider?: SupportedProvider;
@@ -132,9 +139,21 @@ export class NocturneSdk implements NocturneSdkApi {
         "@nocturne-xyz/local-prover"
       );
       return new WasmJoinSplitProver(
-        WASM_PATH,
-        ZKEY_PATH,
-        vkey as VerifyingKey
+        JOINSPLIT_WASM_PATH,
+        JOINSPLIT_ZKEY_PATH,
+        JOINSPLIT_VKEY as VerifyingKey
+      );
+    });
+
+    this.canonAddrSigCheckProverThunk = thunk(async () => {
+      const { WasmCanonAddrSigCheckProver } = await import(
+        "@nocturne-xyz/local-prover"
+      );
+
+      return new WasmCanonAddrSigCheckProver(
+        CANON_ADDR_SIG_CHECK_WASM_PATH,
+        CANON_ADDR_SIG_CHECK_ZKEY_PATH,
+        CANON_ADDR_SIG_CHECK_VKEY as VerifyingKey
       );
     });
 
@@ -680,6 +699,22 @@ export class NocturneSdk implements NocturneSdkApi {
       latestMerkleIndexOnChain,
       progressIter,
     };
+  }
+
+  /**
+   * generate a ZKP proving knowledge of the spending key for the user's canonical address
+   */
+  async proveCanonAddrOwnership(): Promise<CanonAddrSigCheckProofWithPublicSignals> {
+    const inputs = await this.invokeSnap<GetCanonAddrSigCheckProofInputsMethod>({
+      method: "nocturne_getCanonAddrSigCheckProofInputs",
+      params: {
+        // TODO when contracts are written: get nonce
+        nonce: 12345n,
+      },
+    });
+
+    const prover = await this.canonAddrSigCheckProverThunk();
+    return await prover.proveCanonAddrSigCheck(inputs);
   }
 
   /**

@@ -5,6 +5,7 @@ import {
   SignedOperation,
 } from "./primitives";
 import { ViewingKey } from "./crypto";
+import { CanonAddrSigCheckInputs } from "./proof";
 
 export interface SignOperationMethod {
   method: "nocturne_signOperation";
@@ -23,7 +24,20 @@ export interface RequestViewingKeyMethod {
   return: RequestViewingKeyMethodResponse;
 }
 
-export type RpcRequestMethod = SignOperationMethod | RequestViewingKeyMethod;
+export interface GetCanonAddrSigCheckProofInputsParams {
+  nonce: bigint;
+}
+
+export interface GetCanonAddrSigCheckProofInputsMethod {
+  method: "nocturne_getCanonAddrSigCheckProofInputs";
+  params: GetCanonAddrSigCheckProofInputsParams;
+  return: CanonAddrSigCheckInputs;
+}
+
+export type RpcRequestMethod =
+  | SignOperationMethod
+  | RequestViewingKeyMethod
+  | GetCanonAddrSigCheckProofInputsMethod;
 
 export type SnapRpcRequestHandlerArgs = {
   origin: string;

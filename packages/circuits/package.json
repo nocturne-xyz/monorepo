@@ -11,6 +11,7 @@
     "build:deps": "../../scripts/install_base_deps.sh && ./scripts/install_deps.sh",
     "build:joinsplit": "scripts/joinsplit/build.sh",
     "build:subtreeupdate": "scripts/subtreeupdate/build.sh",
+    "build:canonAddrSigCheck": "scripts/canonAddrSigCheck/build.sh",
     "clean": "",
     "download-big-ptau": "scripts/download_big_ptau.sh",
     "lint": "",
