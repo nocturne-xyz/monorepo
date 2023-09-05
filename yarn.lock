@@ -4790,6 +4790,31 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nocturne-xyz/persistent-log@workspace:packages/persistent-log":
+  version: 0.0.0-use.local
+  resolution: "@nocturne-xyz/persistent-log@workspace:packages/persistent-log"
+  dependencies:
+    "@nocturne-xyz/core": "workspace:^"
+    "@types/chai": ^4.3.3
+    "@types/chai-as-promised": ^7.1.5
+    "@types/mocha": ^10.0.0
+    "@types/node": ^18.8.0
+    "@typescript-eslint/eslint-plugin": ^5.20.0
+    "@typescript-eslint/parser": ^5.20.0
+    bigint-json-serialization: ^1.0.1
+    chai: ^4.3.6
+    chai-as-promised: ^7.1.1
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.8.0
+    ioredis: ^5.3.2
+    mocha: ^10.1.0
+    prettier: ^2.8.8
+    ts-node: ^10.9.1
+    typescript: ^4.8.4
+    winston: ^3.10.0
+  languageName: unknown
+  linkType: soft
+
 "@nocturne-xyz/snap@workspace:apps/snap":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/snap@workspace:apps/snap"
@@ -15108,6 +15133,23 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
+"ioredis@npm:^5.3.2":
+  version: 5.3.2
+  resolution: "ioredis@npm:5.3.2"
+  dependencies:
+    "@ioredis/commands": ^1.1.1
+    cluster-key-slot: ^1.1.0
+    debug: ^4.3.4
+    denque: ^2.1.0
+    lodash.defaults: ^4.2.0
+    lodash.isarguments: ^3.1.0
+    redis-errors: ^1.2.0
+    redis-parser: ^3.0.0
+    standard-as-callback: ^2.1.0
+  checksum: 9a23559133e862a768778301efb68ae8c2af3c33562174b54a4c2d6574b976e85c75a4c34857991af733e35c48faf4c356e7daa8fb0a3543d85ff1768c8754bc
+  languageName: node
+  linkType: hard
+
 "ip@npm:^2.0.0":
   version: 2.0.0
   resolution: "ip@npm:2.0.0"
@@ -24028,6 +24070,25 @@ circomlibjs@nocturne-xyz/circomlibjs:
     readable-stream: ^3.6.0
     triple-beam: ^1.3.0
   checksum: a56e5678a80b88a73e77ed998fc6e19d0db19c989a356b137ec236782f2bf58ae4511b11c29163f99391fa4dc12102c7bc5738dcb6543f28877fa2819adc3ee9
+  languageName: node
+  linkType: hard
+
+"winston@npm:^3.10.0":
+  version: 3.10.0
+  resolution: "winston@npm:3.10.0"
+  dependencies:
+    "@colors/colors": 1.5.0
+    "@dabh/diagnostics": ^2.0.2
+    async: ^3.2.3
+    is-stream: ^2.0.0
+    logform: ^2.4.0
+    one-time: ^1.0.0
+    readable-stream: ^3.4.0
+    safe-stable-stringify: ^2.3.1
+    stack-trace: 0.0.x
+    triple-beam: ^1.3.0
+    winston-transport: ^4.5.0
+  checksum: 47df0361220d12b46d1b3c98a1c380a3718321739d527a182ce7984fc20715e5b0b55db0bcd3fd076d1b1d3261903b890b053851cfd4bc028bda7951fa8ca2e0
   languageName: node
   linkType: hard
 

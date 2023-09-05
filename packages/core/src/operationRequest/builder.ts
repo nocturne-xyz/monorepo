@@ -19,6 +19,17 @@ import { groupByArr } from "../utils";
 
 export type OpRequestBuilder = OpRequestBuilderExt<BaseOpRequestBuilder>;
 
+export interface UnwrapRequest {
+  asset: Asset;
+  amount: bigint;
+}
+
+export interface PluginFnResult {
+  unwraps: UnwrapRequest[];
+  refundAssets: Asset[];
+  actions: Action[];
+}
+
 // generic type for an `OpRequestBuilder` that can be "extended" via plugins
 export type OpRequestBuilderExt<E extends BaseOpRequestBuilder> = E & {
   // "extend" the builder's functionality by applying a `plugin`
@@ -32,8 +43,13 @@ export interface BaseOpRequestBuilder {
   _op: OperationRequest;
   _metadata: OperationMetadata;
   _joinSplitsAndPaymentsByAsset: Map<Asset, JoinSplitsAndPaymentsForAsset>;
+  _pluginFnPromises: Promise<PluginFnResult>[];
 
-  build(): OperationRequestWithMetadata;
+  build(): Promise<OperationRequestWithMetadata>;
+
+  // add a plugin promise to await, resolves to unwraps, refunds, and actions to enqueue
+  // returns `this` so it's chainable
+  plugin(pluginPromise: Promise<PluginFnResult>): this;
 
   // add an action  to the operation
   // returns `this` so it's chainable
@@ -120,15 +136,23 @@ export function newOpRequestBuilder(
 
   const _joinSplitsAndPaymentsByAsset = new Map();
 
+  const _pluginFnPromises: Promise<PluginFnResult>[] = [];
+
   return {
     _op,
     _metadata,
     _joinSplitsAndPaymentsByAsset,
+    _pluginFnPromises,
 
     use<E2 extends BaseOpRequestBuilder>(
       plugin: OpRequestBuilderPlugin<BaseOpRequestBuilder, E2>
     ): OpRequestBuilderExt<E2> {
       return plugin(this);
+    },
+
+    plugin(pluginPromise: Promise<PluginFnResult>) {
+      this._pluginFnPromises.push(pluginPromise);
+      return this;
     },
 
     action(contractAddress: Address, encodedFunction: string) {
@@ -207,8 +231,23 @@ export function newOpRequestBuilder(
       return this;
     },
 
-    build(): OperationRequestWithMetadata {
+    async build(): Promise<OperationRequestWithMetadata> {
       const joinSplitRequests = [];
+
+      // Await plugin promises and update op
+      for (const prom of this._pluginFnPromises) {
+        const result = await prom;
+
+        for (const unwrap of result.unwraps) {
+          this.unwrap(unwrap.asset, unwrap.amount);
+        }
+        for (const action of result.actions) {
+          this.action(action.contractAddress, action.encodedFunction);
+        }
+        for (const refundAsset of result.refundAssets) {
+          this.refundAsset(refundAsset);
+        }
+      }
 
       // consolidate joinSplits and payments for each asset
       for (const [
@@ -265,10 +304,10 @@ export function newOpRequestBuilder(
         throw new Error("No joinSplits or payments specified");
       }
 
-      return {
+      return Promise.resolve({
         request: this._op,
         meta: this._metadata,
-      };
+      });
     },
   };
 }
