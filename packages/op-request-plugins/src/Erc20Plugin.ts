@@ -46,14 +46,14 @@ export function Erc20Plugin<EInner extends BaseOpRequestBuilder>(
       amount: bigint
     ) {
       const prom = new Promise<PluginFnResult>((resolve) => {
+        const encodedErc20 =
+          AssetTrait.erc20AddressToAsset(tokenContractAddress);
+
         const contract = new ethers.Contract(tokenContractAddress, ERC20_ABI);
         const encodedFunction = contract.interface.encodeFunctionData(
           "transfer",
           [recipient, amount]
         );
-
-        const encodedErc20 =
-          AssetTrait.erc20AddressToAsset(tokenContractAddress);
 
         const unwrap: UnwrapRequest = {
           asset: encodedErc20,
