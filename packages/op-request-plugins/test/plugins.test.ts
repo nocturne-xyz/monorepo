@@ -25,7 +25,7 @@ describe("OpRequestBuilder", () => {
     const signer = new NocturneSigner(sk);
     const refundAddr = signer.generateRandomStealthAddress();
 
-    const builder = newOpRequestBuilder({
+    const builder = await newOpRequestBuilder({
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });

@@ -101,6 +101,7 @@ import {
   getTokenContract,
   toDepositRequestWithMetadata,
 } from "./utils";
+import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
 
 const JOINSPLIT_WASM_PATH =
   "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.wasm";
@@ -131,6 +132,7 @@ export class NocturneSdk implements NocturneSdkApi {
   protected db: NocturneDB;
 
   protected signerThunk: Thunk<ethers.Signer>;
+  protected chainIdThunk: Thunk<bigint>;
   protected depositManagerContractThunk: Thunk<DepositManager>;
   protected handlerContractThunk: Thunk<Handler>;
   protected canonAddrRegistryThunk: Thunk<CanonicalAddressRegistry>;
@@ -177,6 +179,9 @@ export class NocturneSdk implements NocturneSdkApi {
     this.syncMutex = new Mutex();
 
     this.signerThunk = thunk(() => this.getWindowSigner());
+    this.chainIdThunk = thunk(() =>
+      this.provider.getNetwork().then((n) => BigInt(n.chainId))
+    );
     this.depositManagerContractThunk = thunk(async () =>
       DepositManager__factory.connect(
         this.config.config.depositManagerAddress(),
@@ -388,32 +393,10 @@ export class NocturneSdk implements NocturneSdkApi {
     amount: bigint,
     recipientAddress: Address
   ): Promise<OperationHandle> {
-    const signer = await this.getWindowSigner();
-    const provider = signer.provider;
-
-    if (!provider) {
-      throw new Error("Signer is not connected");
-    }
-
-    const erc20Contract = getTokenContract(
-      AssetType.ERC20,
-      erc20Address,
-      provider
-    );
-
-    const encodedFunction = erc20Contract.interface.encodeFunctionData(
-      "transfer",
-      [recipientAddress, amount]
-    );
-
-    const encodedErc20 = AssetTrait.erc20AddressToAsset(erc20Address);
-
-    const operationRequest = await newOpRequestBuilder({
-      chainId: BigInt(this.config.config.contracts.network.chainId),
-      tellerContract: this.config.config.tellerAddress(),
-    })
-      .unwrap(encodedErc20, amount)
-      .action(erc20Address, encodedFunction)
+    const chainId = BigInt((await this.provider.getNetwork()).chainId);
+    const operationRequest = await newOpRequestBuilder(this.provider, chainId)
+      .use(Erc20Plugin)
+      .erc20Transfer(erc20Address, recipientAddress, amount)
       .gas({ executionGasLimit: 500_000n })
       .build();
 

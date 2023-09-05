@@ -1,4 +1,5 @@
 import "mocha";
+import { ethers } from "ethers";
 import {
   DUMMY_CONTRACT_ADDR,
   getDummyHex,
@@ -32,10 +33,8 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
       tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 130n)
