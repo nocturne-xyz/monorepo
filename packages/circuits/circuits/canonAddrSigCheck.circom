@@ -31,7 +31,7 @@ template CanonAddrSigCheck() {
 	//@argument `VKDerivation.requires(1)` is guranteed by checks above.
 	// `VKDerivation.ensures(3, 1)` => vkBits is the LE repr of the correct VK derived from spendPubkey and vkNonce
 	// => `CanonAddr.requires(1)` is satisfied. Then, (2) follows from `CanonAddr.ensures(2)`, `@lemma(1)`, and compression checks below
-	//@satisfies(2) follows from (2) and `CanonAddr.ensures(1)`
+	//@satisfies(1) follows from (2) and `CanonAddr.ensures(1)`
 	component vkDerivation = VKDerivation();	
 	vkDerivation.spendPubkey <== spendPubkey;
 	vkDerivation.vkNonce <== vkNonce;
