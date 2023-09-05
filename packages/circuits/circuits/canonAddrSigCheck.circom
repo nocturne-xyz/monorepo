@@ -23,7 +23,7 @@ template CanonAddrSigCheck() {
 	BabyCheck()(spendPubkey[0], spendPubkey[1]);
 	IsOrderL()(spendPubkey[0], spendPubkey[1]);
 
-	//@lemma(1) prover can generate valid sig againstspendPubkey
+	//@lemma(1) prover can generate valid sig against spendPubkey
 	//@argument `SigVerify.requires(1)` is guaranteed by checks above. lemma follows from `SigVerify.ensures(1)` 
 	SigVerify()(spendPubkey, msg, sig);
 
