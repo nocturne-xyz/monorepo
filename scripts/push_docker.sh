@@ -6,7 +6,7 @@ COMMIT_HASH=$(git rev-parse --short HEAD)
 # takes one option:
 #   -o (optional): push only the indiciated actor. can be one of `subtree-updater`, `bundler`, `deposit-screener`, or `test-actor`
 
-usage() { echo "usage: $0 [-p <'mock' | 'rapidsnark'> -o <'subtree-updater' | 'bundler' | 'deposit-screener' | 'test-actor' | 'insertion-writer'>]" 1>&2; }
+usage() { echo "usage: $0 [-o <'subtree-updater' | 'bundler' | 'deposit-screener' | 'test-actor' | 'insertion-writer'>]" 1>&2; }
 
 while getopts ":p:o:" o; do
     case "${o}" in
