@@ -172,7 +172,7 @@ describe("prepareOperation", async () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -226,7 +226,7 @@ describe("prepareOperation", async () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -278,7 +278,7 @@ describe("prepareOperation", async () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -339,7 +339,7 @@ describe("prepareOperation", async () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(stablescam, 2n, receivers[1])
       .gas({
@@ -390,7 +390,7 @@ describe("prepareOperation", async () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 3n)
@@ -460,7 +460,7 @@ describe("prepareOperation", async () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 4000n)
@@ -502,7 +502,7 @@ describe("prepareOperation", async () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 1000n)

@@ -408,7 +408,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
     const encodedErc20 = AssetTrait.erc20AddressToAsset(erc20Address);
 
-    const operationRequest = newOpRequestBuilder({
+    const operationRequest = await newOpRequestBuilder({
       chainId: BigInt(this.config.config.contracts.network.chainId),
       tellerContract: this.config.config.tellerAddress(),
     })

@@ -20,7 +20,7 @@ import {
 } from "./utils";
 
 describe("OpRequestBuilder", () => {
-  it("uses plugins", () => {
+  it("uses plugins", async () => {
     const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const refundAddr = signer.generateRandomStealthAddress();
@@ -33,7 +33,7 @@ describe("OpRequestBuilder", () => {
       "0x1E2cD78882b12d3954a049Fd82FFD691565dC0A5"
     );
 
-    const opRequest = builder
+    const opRequest = await builder
       .use(Erc20Plugin)
       .use(WstethAdapterPlugin)
       .erc20Transfer(shitcoin.assetAddr, recipient, 100n)

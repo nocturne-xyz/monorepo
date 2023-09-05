@@ -18,7 +18,7 @@ import {
 } from "./utils";
 
 describe("OpRequestBuilder", () => {
-  it("builds OperationRequest with 1 action, 1 unwrap, 0 payments, no params set", () => {
+  it("builds OperationRequest with 1 action, 1 unwrap, 0 payments, no params set", async () => {
     const expected: OperationRequest = {
       joinSplitRequests: [
         {
@@ -42,7 +42,7 @@ describe("OpRequestBuilder", () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -52,7 +52,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("builds OperaionRequest with 1 action, 1 unwrap, 1 payment, no params set", () => {
+  it("builds OperaionRequest with 1 action, 1 unwrap, 1 payment, no params set", async () => {
     const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const receiver = signer.canonicalAddress();
@@ -84,7 +84,7 @@ describe("OpRequestBuilder", () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -95,7 +95,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("builds OperationRuqestion with 1 action, 1 unwrap, 0 payments, all params set", () => {
+  it("builds OperationRuqestion with 1 action, 1 unwrap, 0 payments, all params set", async () => {
     const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const refundAddr = signer.generateRandomStealthAddress();
@@ -126,7 +126,7 @@ describe("OpRequestBuilder", () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -141,7 +141,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("builds operation with 0 actions, 0 unwraps, 2 payments, no params set", () => {
+  it("builds operation with 0 actions, 0 unwraps, 2 payments, no params set", async () => {
     const receivers = range(2)
       .map((_) => generateRandomSpendingKey())
       .map((sk) => new NocturneSigner(sk))
@@ -177,7 +177,7 @@ describe("OpRequestBuilder", () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(stablescam, 2n, receivers[1])
       .deadline(2n)
@@ -194,7 +194,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("builds OperaionRequest with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", () => {
+  it("builds OperaionRequest with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", async () => {
     const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const refundAddr = signer.generateRandomStealthAddress();
@@ -255,7 +255,7 @@ describe("OpRequestBuilder", () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 3n)
@@ -285,7 +285,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("combines requests of same asset when no conf payments", () => {
+  it("combines requests of same asset when no conf payments", async () => {
     const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const refundAddr = signer.generateRandomStealthAddress();
@@ -317,7 +317,7 @@ describe("OpRequestBuilder", () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 100n)

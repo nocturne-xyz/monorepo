@@ -1,9 +1,14 @@
 import {
+  Action,
   Address,
+  Asset,
   AssetTrait,
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
+  OperationMetadataItem,
+  PluginFnResult,
+  UnwrapRequest,
 } from "@nocturne-xyz/core";
 import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
 
@@ -32,40 +37,57 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
     ...inner,
     use: use,
     convertWethToWsteth(amount: bigint) {
-      const chainId = this._op.chainId;
+      const prom = new Promise<PluginFnResult>((resolve) => {
+        const chainId = this._op.chainId;
 
-      let wethAddress: Address;
-      let wstethAdapterAddress: Address;
-      let wstethAddress: Address;
-      if (chainId === 1n) {
-        // mainnet
-        wethAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
-        wstethAdapterAddress = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"; // TODO: fill with real address
-        wstethAddress = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0";
-      } else {
-        throw new Error(`wsteth not supported on chain with id: ${chainId}`);
-      }
+        let wethAddress: Address;
+        let wstethAdapterAddress: Address;
+        let wstethAddress: Address;
+        if (chainId === 1n) {
+          // mainnet
+          wethAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+          wstethAdapterAddress = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"; // TODO: fill with real address
+          wstethAddress = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0";
+        } else {
+          throw new Error(`wsteth not supported on chain with id: ${chainId}`);
+        }
 
-      const encodedWeth = AssetTrait.erc20AddressToAsset(wethAddress);
-      const encodedWsteth = AssetTrait.erc20AddressToAsset(wstethAddress);
+        const encodedWeth = AssetTrait.erc20AddressToAsset(wethAddress);
+        const encodedWsteth = AssetTrait.erc20AddressToAsset(wstethAddress);
 
-      const encodedFunction =
-        WstethAdapter__factory.createInterface().encodeFunctionData("convert", [
+        const encodedFunction =
+          WstethAdapter__factory.createInterface().encodeFunctionData(
+            "convert",
+            [amount]
+          );
+
+        const unwrap: UnwrapRequest = {
+          asset: encodedWeth,
+          unwrapValue: amount,
+        };
+
+        const action: Action = {
+          contractAddress: wstethAdapterAddress,
+          encodedFunction,
+        };
+
+        const refundAsset: Asset = encodedWsteth;
+
+        const metadata: OperationMetadataItem = {
+          type: "Action",
+          actionType: "Weth To Wsteth",
           amount,
-        ]);
+        };
 
-      this.unwrap(encodedWeth, amount).action(
-        wstethAdapterAddress,
-        encodedFunction
-      );
-
-      this._metadata.items.push({
-        type: "Action",
-        actionType: "Weth To Wsteth",
-        amount,
+        resolve({
+          unwraps: [unwrap],
+          actions: [action],
+          refundAssets: [refundAsset],
+          metadatas: [metadata],
+        });
       });
 
-      this.refundAsset(encodedWsteth);
+      this.pluginFn(prom);
 
       return this;
     },

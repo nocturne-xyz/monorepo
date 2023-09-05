@@ -5,10 +5,13 @@ import { Action, Address, Asset, OperationMetadata } from "../primitives";
 const ONE_DAY_SECONDS = 24 * 60 * 60;
 
 // A joinsplit request is an unwrapRequest plus an optional payment
-export interface JoinSplitRequest {
+export interface JoinSplitRequest extends UnwrapRequest {
+  payment?: ConfidentialPayment;
+}
+
+export interface UnwrapRequest {
   asset: Asset;
   unwrapValue: bigint;
-  payment?: ConfidentialPayment;
 }
 
 export interface OperationRequest {

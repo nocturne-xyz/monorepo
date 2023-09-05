@@ -170,7 +170,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         chainId,
         tellerContract: teller.address,
       });
-      const opRequest = builder
+      const opRequest = await builder
         .unwrap(asset, 80n)
         .action(token.address, transfer)
         .gasPrice(GAS_PRICE)

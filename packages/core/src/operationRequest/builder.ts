@@ -6,6 +6,7 @@ import {
   OperationGasParams,
   OperationRequestWithMetadata,
   OperationRequest,
+  UnwrapRequest,
 } from "./operationRequest";
 import {
   Action,
@@ -13,21 +14,18 @@ import {
   Asset,
   NetworkInfo,
   OperationMetadata,
+  OperationMetadataItem,
 } from "../primitives";
 import { ethers } from "ethers";
 import { groupByArr } from "../utils";
 
 export type OpRequestBuilder = OpRequestBuilderExt<BaseOpRequestBuilder>;
 
-export interface UnwrapRequest {
-  asset: Asset;
-  amount: bigint;
-}
-
 export interface PluginFnResult {
   unwraps: UnwrapRequest[];
   refundAssets: Asset[];
   actions: Action[];
+  metadatas: OperationMetadataItem[];
 }
 
 // generic type for an `OpRequestBuilder` that can be "extended" via plugins
@@ -49,7 +47,7 @@ export interface BaseOpRequestBuilder {
 
   // add a plugin promise to await, resolves to unwraps, refunds, and actions to enqueue
   // returns `this` so it's chainable
-  plugin(pluginPromise: Promise<PluginFnResult>): this;
+  pluginFn(pluginPromise: Promise<PluginFnResult>): this;
 
   // add an action  to the operation
   // returns `this` so it's chainable
@@ -150,7 +148,7 @@ export function newOpRequestBuilder(
       return plugin(this);
     },
 
-    plugin(pluginPromise: Promise<PluginFnResult>) {
+    pluginFn(pluginPromise: Promise<PluginFnResult>) {
       this._pluginFnPromises.push(pluginPromise);
       return this;
     },
@@ -239,13 +237,16 @@ export function newOpRequestBuilder(
         const result = await prom;
 
         for (const unwrap of result.unwraps) {
-          this.unwrap(unwrap.asset, unwrap.amount);
+          this.unwrap(unwrap.asset, unwrap.unwrapValue);
         }
         for (const action of result.actions) {
           this.action(action.contractAddress, action.encodedFunction);
         }
         for (const refundAsset of result.refundAssets) {
           this.refundAsset(refundAsset);
+        }
+        for (const metadata of result.metadatas) {
+          this._metadata.items.push(metadata);
         }
       }
 
