@@ -19,7 +19,8 @@ RUN foundryup -C e15e33a
 COPY . .
 
 # copy over subtree update artifacts
-COPY --from=circuit-artifacts ./subtreeupdate ./circuits-artifacts/subtreeupdate
+COPY --from=circuit-artifacts ./subtreeupdate ./circuit-artifacts/subtreeupdate
+
 
 # install deps & build
 RUN yarn install
