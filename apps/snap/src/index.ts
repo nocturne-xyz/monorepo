@@ -80,7 +80,7 @@ async function handleRpcRequest({
         vk: viewer.vk,
         vkNonce: viewer.vkNonce,
       };
-    case "nocturne_getCanonAddrSigCheckProofInputs":
+    case "nocturne_signCanonAddrRegistryEntry":
       throw new Error("TODO");
     //   const sig = signer.sign(msg);
     //   const vkNonce = signer.vkNonce;
