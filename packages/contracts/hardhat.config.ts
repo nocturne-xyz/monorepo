@@ -87,6 +87,7 @@ module.exports = {
       'DepositManager',
       'Teller',
       'Handler',
+      'CanonicalAddressRegistry',
       'CommitmentTreeManager',
       'BalanceManager',
       'JoinSplitVerifier',

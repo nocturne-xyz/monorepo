@@ -87,6 +87,26 @@ async function checkNocturneContracts(
     "handler proxy admin incorrectly set"
   );
 
+  // Deposit manager proxy admin matches deployment proxy admin
+  const depositManagerProxyAdmin = await proxyAdmin(
+    provider,
+    deployment.depositManagerProxy.proxy
+  );
+  assertOrErr(
+    depositManagerProxyAdmin === deployment.proxyAdmin,
+    "deposit manager proxy admin incorrectly set"
+  );
+
+  // Canonical address registry proxy admin matches deployment proxy admin
+  const canonicalAddressRegistryProxyAdmin = await proxyAdmin(
+    provider,
+    deployment.canonicalAddressRegistryProxy.proxy
+  );
+  assertOrErr(
+    canonicalAddressRegistryProxyAdmin === deployment.proxyAdmin,
+    "canonical address registry proxy admin incorrectly set"
+  );
+
   // Teller proxy implementation matches deployment
   const tellerProxyImplementation = await proxyImplementation(
     provider,
@@ -105,6 +125,29 @@ async function checkNocturneContracts(
   assertOrErr(
     handlerProxyImplementation === deployment.handlerProxy.implementation,
     "handler proxy implementation does not match deployment"
+  );
+
+  // Deposit manager proxy implementation matches deployment
+  const depositManagerProxyImplementation = await proxyImplementation(
+    provider,
+    deployment.depositManagerProxy.proxy
+  );
+  assertOrErr(
+    depositManagerProxyImplementation ===
+      deployment.depositManagerProxy.implementation,
+    "deposit manager proxy implementation does not match deployment"
+  );
+
+  // Canonical address registry proxy implementation matches deployment
+  const canonicalAddressRegistryProxyImplementation = await proxyImplementation(
+    provider,
+    deployment.canonicalAddressRegistryProxy.proxy
+  );
+
+  assertOrErr(
+    canonicalAddressRegistryProxyImplementation ===
+      deployment.canonicalAddressRegistryProxy.implementation,
+    "canonical address registry proxy implementation does not match deployment"
   );
 
   // Teller joinsplit verifier matches deployment

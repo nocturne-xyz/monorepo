@@ -9,6 +9,8 @@ import {
   DepositManager__factory,
   WETH9__factory,
   SimpleERC20Token__factory,
+  CanonicalAddressRegistry,
+  CanonicalAddressRegistry__factory,
 } from "@nocturne-xyz/contracts";
 
 import {
@@ -94,12 +96,14 @@ export interface TestContracts {
   teller: Teller;
   handler: Handler;
   depositManager: DepositManager;
+  canonAddrRegistry: CanonicalAddressRegistry;
 }
 
 export interface TestDeployment {
   depositManager: DepositManager;
   teller: Teller;
   handler: Handler;
+  canonAddrRegistry: CanonicalAddressRegistry;
   config: NocturneConfig;
   tokens: TestDeploymentTokens;
   provider: ethers.providers.JsonRpcProvider;
@@ -179,11 +183,14 @@ export async function setupTestDeployment(
     screenerEoa,
   ] = KEYS_TO_WALLETS(provider);
   console.log("deploying contracts...");
-  const [deployment, tokens, { teller, handler, depositManager }] =
-    await deployContractsWithDummyConfig(deployerEoa, {
-      screeners: [screenerEoa.address],
-      subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
-    });
+  const [
+    deployment,
+    tokens,
+    { teller, handler, depositManager, canonAddrRegistry },
+  ] = await deployContractsWithDummyConfig(deployerEoa, {
+    screeners: [screenerEoa.address],
+    subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
+  });
 
   console.log("erc20s:", deployment.erc20s);
   // Deploy subgraph first, as other services depend on it
@@ -305,6 +312,7 @@ export async function setupTestDeployment(
     depositManager,
     teller,
     handler,
+    canonAddrRegistry,
     tokens,
     config: deployment,
     provider,
@@ -383,21 +391,38 @@ export async function deployContractsWithDummyConfig(
   await prefillErc20s(connectedSigner, config);
 
   // Log for dev site script
-  const { depositManagerProxy, tellerProxy, handlerProxy } = config.contracts;
+  const {
+    depositManagerProxy,
+    tellerProxy,
+    handlerProxy,
+    canonicalAddressRegistryProxy,
+  } = config.contracts;
   console.log("Teller address:", tellerProxy.proxy);
   console.log("Handler address:", handlerProxy.proxy);
   console.log("DepositManager address:", depositManagerProxy.proxy);
+  console.log(
+    "CanonicalAddressRegistry address:",
+    canonicalAddressRegistryProxy.proxy
+  );
 
   // Also log for dev site script
   const erc20s = Array.from(config.erc20s);
   console.log(`ERC20 token 1 deployed at:`, erc20s[0][1].address);
   console.log(`ERC20 token 2 deployed at:`, erc20s[1][1].address);
 
-  const [depositManager, teller, handler] = await Promise.all([
-    DepositManager__factory.connect(depositManagerProxy.proxy, connectedSigner),
-    Teller__factory.connect(tellerProxy.proxy, connectedSigner),
-    Handler__factory.connect(handlerProxy.proxy, connectedSigner),
-  ]);
+  const [depositManager, teller, handler, canonAddrRegistry] =
+    await Promise.all([
+      DepositManager__factory.connect(
+        depositManagerProxy.proxy,
+        connectedSigner
+      ),
+      Teller__factory.connect(tellerProxy.proxy, connectedSigner),
+      Handler__factory.connect(handlerProxy.proxy, connectedSigner),
+      CanonicalAddressRegistry__factory.connect(
+        canonicalAddressRegistryProxy.proxy,
+        connectedSigner
+      ),
+    ]);
 
   return [
     config,
@@ -406,7 +431,7 @@ export async function deployContractsWithDummyConfig(
       erc20s[0][1].address,
       erc20s[1][1].address
     ),
-    { teller, handler, depositManager },
+    { teller, handler, depositManager, canonAddrRegistry },
   ];
 }
 
