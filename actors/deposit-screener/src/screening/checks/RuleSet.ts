@@ -1,5 +1,5 @@
 import { ScreeningDepositRequest } from "..";
-import { API_CALLS, ApiMap, Data } from "./apiCalls";
+import { API_CALLS, ApiCallKeys, ApiMap, Data } from "./apiCalls";
 export interface Rejection {
   type: "Rejection";
   reason: string;
@@ -41,15 +41,34 @@ export interface RuleParams<K extends keyof ApiMap> {
   action: Rejection | DelayAction;
 }
 
-export class Rule<K extends keyof ApiMap> {
-  public next: Rule<any> | null;
+export type PartialRuleParams<K extends keyof ApiMap> = Omit<
+  RuleParams<K>,
+  "action"
+>;
+
+export interface CombinedRulesParams<T extends ReadonlyArray<keyof ApiMap>> {
+  partials: { readonly [K in keyof T]: PartialRuleParams<T[K]> };
+  action: Rejection | DelayAction;
+  applyIf: "Any" | "All";
+}
+
+export interface RuleLike {
+  next: RuleLike | null;
+  name: string;
+  check: (
+    deposit: ScreeningDepositRequest,
+    cache: Record<ApiCallKeys, ApiMap[ApiCallKeys]>
+  ) => Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED>;
+}
+
+export class Rule<K extends keyof ApiMap> implements RuleLike {
+  public next: RuleLike | null = null;
   public readonly name: RuleParams<K>["name"];
   private threshold: RuleParams<K>["threshold"];
   private call: RuleParams<K>["call"];
   private action: RuleParams<K>["action"];
 
   constructor({ name, call, threshold, action }: RuleParams<K>) {
-    this.next = null;
     this.name = name;
     this.call = call;
     this.threshold = threshold;
@@ -58,33 +77,76 @@ export class Rule<K extends keyof ApiMap> {
 
   async check(
     deposit: ScreeningDepositRequest,
-    cache: Record<K, ApiMap[K]>
+    cache: Record<ApiCallKeys, ApiMap[ApiCallKeys]>
   ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
     if (!cache[this.call]) {
-      cache[this.call] = (await API_CALLS[this.call](deposit)) as ApiMap[K];
+      cache[this.call] = await API_CALLS[this.call](deposit);
     }
-    const data = cache[this.call];
+    const data = cache[this.call] as ApiMap[K];
     return this.threshold(data) ? this.action : ACTION_NOT_TRIGGERED;
   }
 }
 
+export class CompositeRule<T extends ReadonlyArray<keyof ApiMap>>
+  implements RuleLike
+{
+  public next: RuleLike | null = null;
+  public readonly name: string;
+  private partials: CombinedRulesParams<T>["partials"];
+  private action: CombinedRulesParams<T>["action"];
+  private predicateFn: "some" | "every";
+
+  constructor(params: CombinedRulesParams<T>) {
+    this.name = `Composite(${params.partials.map((r) => r.name).join(", ")})`;
+    this.partials = params.partials;
+    this.action = params.action;
+    this.predicateFn = params.applyIf === "Any" ? "some" : "every";
+  }
+
+  async check(
+    deposit: ScreeningDepositRequest,
+    cache: Record<ApiCallKeys, Data>
+  ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
+    const shouldApply = this.partials[this.predicateFn](async (partial) => {
+      if (!cache[partial.call]) {
+        cache[partial.call] = await API_CALLS[partial.call](deposit);
+      }
+      const data = cache[partial.call] as ApiMap[typeof partial.call];
+      return partial.threshold(data);
+    });
+    return shouldApply ? this.action : ACTION_NOT_TRIGGERED;
+  }
+}
+
 export class RuleSet {
-  private head: Rule<any> | null = null;
-  private tail: Rule<any> | null = null;
+  private head: RuleLike | null = null;
+  private tail: RuleLike | null = null;
   private delaySeconds;
 
   constructor({ baseDelaySeconds = 0 }: { baseDelaySeconds?: number } = {}) {
     this.delaySeconds = baseDelaySeconds;
   }
 
+  private _add(ruleLike: RuleLike) {
+    if (!this.head) {
+      this.head = ruleLike;
+    } else {
+      this.tail!.next = ruleLike;
+    }
+    this.tail = ruleLike;
+  }
+
   add<K extends keyof ApiMap>(ruleParams: RuleParams<K>): RuleSet {
     const rule = new Rule(ruleParams);
-    if (!this.head) {
-      this.head = rule;
-    } else {
-      this.tail!.next = rule;
-    }
-    this.tail = rule;
+    this._add(rule);
+    return this;
+  }
+
+  combineAndAdd<T extends ReadonlyArray<keyof ApiMap>>(
+    compositeParams: CombinedRulesParams<T>
+  ): RuleSet {
+    const composite = new CompositeRule(compositeParams);
+    this._add(composite);
     return this;
   }
 
@@ -93,7 +155,7 @@ export class RuleSet {
     const cache: Record<string, Data> = {};
     const rulesLogList: {
       ruleName: string;
-      result: Awaited<ReturnType<Rule<any>["check"]>>;
+      result: Awaited<ReturnType<RuleLike["check"]>>;
     }[] = [];
     while (currRule !== null) {
       const result = await currRule.check(deposit, cache);

@@ -1,12 +1,11 @@
-import { ScreeningDepositRequest } from "../..";
-import { RuleParams, RuleSet } from "../RuleSet";
+import { CombinedRulesParams, RuleParams, RuleSet } from "../RuleSet";
 import {
   MisttrackAddressOverviewData,
   MisttrackRiskItem,
   MisttrackRiskScoreData,
   TrmData,
 } from "../apiCalls";
-import { isLessThanOneMonthAgo } from "./utils";
+import { includesMixerUsage, isLessThanOneMonthAgo } from "./utils";
 
 /**
  * Ruleset V1 Specification
@@ -107,11 +106,15 @@ const MISTTRACK_RISK_REJECT: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
 //     - && high value wallet (> $300k balance) → 4x delay (8h)
 //     - && origin from Tornado Cash post-sanctions → 4x delay (maxes out at 24h)
 
-const SHORT_WALLET_HISTORY_DELAY: RuleParams<"MISTTRACK_ADDRESS_OVERVIEW"> = {
+const shortWalletHistoryPartial = {
   name: "SHORT_WALLET_HISTORY_DELAY",
   call: "MISTTRACK_ADDRESS_OVERVIEW",
   threshold: (data: MisttrackAddressOverviewData) =>
     isLessThanOneMonthAgo(data.first_seen),
+} as const;
+
+const SHORT_WALLET_HISTORY_DELAY: RuleParams<"MISTTRACK_ADDRESS_OVERVIEW"> = {
+  ...shortWalletHistoryPartial,
   action: { type: "Delay", operation: "Add", value: 2 * BASE_DELAY_SECONDS },
 };
 
@@ -129,29 +132,31 @@ const SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY: RuleParams<"MISTTRACK_AD
     action: { type: "Delay", operation: "Add", value: 4 * BASE_DELAY_SECONDS },
   };
 
-const SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> =
-  {
-    name: "SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY",
-    call: "MISTTRACK_ADDRESS_RISK_SCORE",
-    threshold: (data: MisttrackRiskScoreData) => {
-      return false; // ! TODO need ability for multiple calls in a rule
+const SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY: CombinedRulesParams<
+  ["MISTTRACK_ADDRESS_OVERVIEW", "MISTTRACK_ADDRESS_RISK_SCORE"]
+> = {
+  partials: [
+    shortWalletHistoryPartial,
+    {
+      name: "SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY",
+      call: "MISTTRACK_ADDRESS_RISK_SCORE",
+      threshold: (data: MisttrackRiskScoreData) => includesMixerUsage(data),
     },
-    action: { type: "Delay", operation: "Add", value: 2 * BASE_DELAY_SECONDS },
-  };
+  ],
+  action: {
+    type: "Delay",
+    operation: "Add",
+    value: 2 * BASE_DELAY_SECONDS,
+  },
+  applyIf: "Any",
+};
 
 // - Usage of mixer → 2x delay (4h)
 
 const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
   name: "MIXER_USAGE_DELAY",
   call: "MISTTRACK_ADDRESS_RISK_SCORE",
-  threshold: (data: MisttrackRiskScoreData) => {
-    return (
-      data.detail_list.includes("Mixer") ||
-      data.risk_detail.some((item) =>
-        item.label.toLowerCase().includes("tornado.cash")
-      )
-    );
-  },
+  threshold: (data: MisttrackRiskScoreData) => includesMixerUsage(data),
   action: { type: "Delay", operation: "Add", value: 2 * BASE_DELAY_SECONDS },
 };
 
@@ -167,7 +172,7 @@ const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
 //   action: { type: "Delay", operation: "Add", value: BASE_DELAY_SECONDS * 3 },
 // };
 
-// // - Funds originated from Nocturne → 0.25*(base) + (2 * proportion of funds not previously coming from Nocturne)(base) delay (example, 100% of initial coming in: 30m + 2*2h = 4.5h)
+// - Funds originated from Nocturne → 0.25*(base) + (2 * proportion of funds not previously coming from Nocturne)(base) delay (example, 100% of initial coming in: 30m + 2*2h = 4.5h)
 
 // const FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY: RuleParams<"NOOP"> = {
 //   name: "FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY",
@@ -179,8 +184,8 @@ const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
 //   action: {
 //     type: "Delay",
 //     operation: "Multiply",
-//     value: (BASE_DELAY_SECONDS * 1) / 2,
-//   }, // todo fill this value in with above
+//     value: 0.25 * BASE_DELAY_SECONDS,
+//   },
 // };
 
 export const RULESET_V1 = new RuleSet({
@@ -191,5 +196,6 @@ export const RULESET_V1 = new RuleSet({
   .add(TRM_HIGH_INDIRECT_REJECT)
   .add(MISTTRACK_RISK_REJECT)
   .add(SHORT_WALLET_HISTORY_DELAY)
-  .add(HIGH_VALUE_WALLET_DELAY)
+  .add(SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY)
+  .combineAndAdd(SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY)
   .add(MIXER_USAGE_DELAY);

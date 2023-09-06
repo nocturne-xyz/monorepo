@@ -169,7 +169,7 @@ export const API_CALLS = {
   NOOP: async (deposit: ScreeningDepositRequest) => deposit,
 } as const;
 
-type ApiCallKeys = keyof typeof API_CALLS;
+export type ApiCallKeys = keyof typeof API_CALLS;
 export type ApiMap = {
   [K in ApiCallKeys]: Awaited<ReturnType<(typeof API_CALLS)[K]>>;
 };
