@@ -18,6 +18,9 @@ RUN foundryup -C e15e33a
 # copy over entire monorepo
 COPY . .
 
+# copy over subtree update artifacts
+COPY --from=circuit-artifacts ./subtreeupdate ./circuits-artifacts/subtreeupdate
+
 # install deps & build
 RUN yarn install
 
