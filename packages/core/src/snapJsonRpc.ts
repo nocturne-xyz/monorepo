@@ -5,7 +5,7 @@ import {
   PreSignOperation,
   SignedOperation,
 } from "./primitives";
-import { NocturneSignature, ViewingKey } from "./crypto";
+import { CanonAddress, NocturneSignature, SpendPk, ViewingKey } from "./crypto";
 
 export interface SignCanonAddrRegistryEntry {
   method: "nocturne_signCanonAddrRegistryEntry";
@@ -14,7 +14,13 @@ export interface SignCanonAddrRegistryEntry {
     chainId: bigint;
     registryAddress: string;
   };
-  return: NocturneSignature;
+  return: {
+    canonAddr: CanonAddress;
+    digest: bigint;
+    sig: NocturneSignature;
+    spendPubkey: SpendPk;
+    vkNonce: bigint;
+  };
 }
 
 export interface SignOperationMethod {
@@ -32,10 +38,6 @@ export interface RequestViewingKeyMethod {
   method: "nocturne_requestViewingKey";
   params: undefined;
   return: RequestViewingKeyMethodResponse;
-}
-
-export interface GetCanonAddrSigCheckProofInputsParams {
-  nonce: bigint;
 }
 
 export type RpcRequestMethod =

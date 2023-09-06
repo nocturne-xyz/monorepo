@@ -105,8 +105,18 @@ async function handleRpcRequest({
         chainId,
         registryAddress
       );
+
+      const canonAddr = signer.canonicalAddress();
       const registrySig = signer.sign(registryDigest);
-      return registrySig;
+      const spendPubkey = signer.spendPk;
+      const vkNonce = signer.vkNonce;
+      return {
+        canonAddr,
+        digest: registryDigest,
+        sig: registrySig,
+        spendPubkey,
+        vkNonce,
+      };
     case "nocturne_signOperation":
       console.log("Request params: ", request.params);
 

@@ -1,5 +1,7 @@
 import { Erc20Config } from "@nocturne-xyz/config";
 import {
+  CanonicalAddressRegistry,
+  CanonicalAddressRegistry__factory,
   DepositManager,
   DepositManager__factory,
   Handler,
@@ -53,8 +55,14 @@ import {
   BundlerOpTracker,
   PreSignOperation,
   CanonAddrSigCheckProofWithPublicSignals,
+  compressPoint,
+  SignCanonAddrRegistryEntry,
+  packToSolidityProof,
 } from "@nocturne-xyz/core";
-import { WasmCanonAddrSigCheckProver, WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
+import {
+  WasmCanonAddrSigCheckProver,
+  WasmJoinSplitProver,
+} from "@nocturne-xyz/local-prover";
 import {
   OperationResult,
   Client as UrqlClient,
@@ -100,8 +108,10 @@ const JOINSPLIT_WASM_PATH =
 const JOINSPLIT_ZKEY_PATH =
   "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.zkey";
 
-const CANON_ADDR_SIG_CHECK_WASM_PATH = "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.wasm";
-const CANON_ADDR_SIG_CHECK_ZKEY_PATH = "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey";
+const CANON_ADDR_SIG_CHECK_WASM_PATH =
+  "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.wasm";
+const CANON_ADDR_SIG_CHECK_ZKEY_PATH =
+  "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey";
 
 export interface NocturneSdkOptions {
   networkName?: SupportedNetwork;
@@ -124,6 +134,7 @@ export class NocturneSdk implements NocturneSdkApi {
   protected signerThunk: Thunk<ethers.Signer>;
   protected depositManagerContractThunk: Thunk<DepositManager>;
   protected handlerContractThunk: Thunk<Handler>;
+  protected canonAddrRegistryThunk: Thunk<CanonicalAddressRegistry>;
   protected clientThunk: Thunk<NocturneClient>;
 
   // Caller MUST conform to EIP-1193 spec (window.ethereum) https://eips.ethereum.org/EIPS/eip-1193
@@ -179,13 +190,18 @@ export class NocturneSdk implements NocturneSdkApi {
         await this.signerThunk()
       )
     );
+    this.canonAddrRegistryThunk = thunk(async () =>
+      CanonicalAddressRegistry__factory.connect(
+        this.config.config.canonicalAddressRegistryAddress(),
+        await this.signerThunk()
+      )
+    );
 
     this.urqlClient = new UrqlClient({
       url: this.endpoints.subgraphEndpoint,
       exchanges: [fetchExchange],
     });
 
-    // TODO: add IdbKVStore + make this actually persistent 
     const kv = new IdbKvStore(`nocturne-fe-sdk-${networkName}`);
     this.db = new NocturneDB(kv);
 
@@ -281,6 +297,46 @@ export class NocturneSdk implements NocturneSdkApi {
       data.depositRequests
         .map(toDepositRequestWithMetadata)
         .map(async (req) => this.makeDepositHandle(req))
+    );
+  }
+
+  // TODO: use this method in interface
+  async registerCanonicalAddress(): Promise<ethers.ContractTransaction> {
+    const ethSigner = await this.getWindowSigner();
+    const client = await this.clientThunk();
+    const registry = await this.canonAddrRegistryThunk();
+    const prover = await this.canonAddrSigCheckProverThunk();
+
+    const canonAddr = client.viewer.canonicalAddress();
+    const compressedCanonAddr = compressPoint(canonAddr);
+    const nonce = (
+      await registry._compressedCanonAddrToNonce(compressedCanonAddr)
+    ).toBigInt();
+
+    const { digest, sig, spendPubkey, vkNonce } =
+      await this.invokeSnap<SignCanonAddrRegistryEntry>({
+        method: "nocturne_signCanonAddrRegistryEntry",
+        params: {
+          entry: {
+            ethAddress: await ethSigner.getAddress(),
+            perCanonAddrNonce: nonce,
+          },
+          chainId: BigInt(this.config.config.contracts.network.chainId),
+          registryAddress: registry.address,
+        },
+      });
+
+    const { proof } = await prover.proveCanonAddrSigCheck({
+      canonAddr,
+      msg: digest,
+      sig,
+      spendPubkey,
+      vkNonce,
+    });
+
+    return registry.setCanonAddr(
+      compressedCanonAddr,
+      packToSolidityProof(proof)
     );
   }
 
@@ -463,14 +519,16 @@ export class NocturneSdk implements NocturneSdkApi {
    * @param operationRequest Operation request
    */
   async signOperationRequest(
-    operationRequest: OperationRequestWithMetadata,
+    operationRequest: OperationRequestWithMetadata
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", operationRequest.meta);
     const client = await this.clientThunk();
 
     // NOTE: we should never end up in situation where this is called before normal nocturne_sync, otherwise there will be long delay
     const warnTimeout = setTimeout(() => {
-      console.warn("[fe-sdk] the SDK has not yet been synced. This may cause a long delay until `signOperation` returns. It's strongly reccomended to explicitly use `sync` or `syncWithProgress` to ensure the SDK is fully synced before calling `signOperation`");
+      console.warn(
+        "[fe-sdk] the SDK has not yet been synced. This may cause a long delay until `signOperation` returns. It's strongly reccomended to explicitly use `sync` or `syncWithProgress` to ensure the SDK is fully synced before calling `signOperation`"
+      );
     }, 5000);
     await this.syncMutex.runExclusive(async () => await client.sync());
     clearTimeout(warnTimeout);
@@ -620,7 +678,7 @@ export class NocturneSdk implements NocturneSdkApi {
   async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
     console.log("[fe-sdk] getAllBalances with params:", opts);
     const client = await this.clientThunk();
-  
+
     await this.syncMutex.runExclusive(async () => await client.sync());
     return await client.getAllAssetBalances(opts);
   }
@@ -639,7 +697,8 @@ export class NocturneSdk implements NocturneSdkApi {
 
   async getInFlightOperations(): Promise<OperationHandle[]> {
     const client = await this.clientThunk();
-    const opDigestsWithMetadata = await client.getAllOptimisticOpDigestsWithMetadata();
+    const opDigestsWithMetadata =
+      await client.getAllOptimisticOpDigestsWithMetadata();
     const operationHandles = opDigestsWithMetadata.map(
       ({ opDigest: digest, metadata }) => {
         return {
@@ -669,7 +728,10 @@ export class NocturneSdk implements NocturneSdkApi {
     );
 
     let closed = false;
-    const generator = async function* (sdk: NocturneSdk, client: NocturneClient) {
+    const generator = async function* (
+      sdk: NocturneSdk,
+      client: NocturneClient
+    ) {
       let count = 0;
       while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
         latestSyncedMerkleIndex = (await client.sync(syncOpts)) ?? 0;
@@ -724,13 +786,18 @@ export class NocturneSdk implements NocturneSdkApi {
     let latestSyncedMerkleIndex: number | undefined;
     try {
       const client = await this.clientThunk();
-      latestSyncedMerkleIndex = await this.syncMutex.runExclusive(async () => await client.sync(syncOpts));
+      latestSyncedMerkleIndex = await this.syncMutex.runExclusive(
+        async () => await client.sync(syncOpts)
+      );
       await client.updateOptimisticNullifiers();
     } catch (e) {
       console.log("Error syncing notes: ", e);
       throw e;
     }
-    console.log("[sync] FE-sdk latestSyncedMerkleIndex, ", latestSyncedMerkleIndex);
+    console.log(
+      "[sync] FE-sdk latestSyncedMerkleIndex, ",
+      latestSyncedMerkleIndex
+    );
     return latestSyncedMerkleIndex;
   }
 
