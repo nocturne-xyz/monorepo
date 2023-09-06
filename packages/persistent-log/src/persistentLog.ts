@@ -148,7 +148,7 @@ export class PersistentLog<T> {
     const generator = async function* () {
       while (!closed) {
         const entries = await poll(lowerBound);
-        logger && logger.debug(`got ${entries?.length} entries`);
+        logger && logger.debug(`polled - got ${entries?.length ?? 0} entries`);
 
         // if there's no data and `options.terminateOnEmpty` is `false`, then we
         // should simply poll again, neither yielding nor terminating
