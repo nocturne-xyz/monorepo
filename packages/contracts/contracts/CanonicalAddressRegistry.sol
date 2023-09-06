@@ -70,8 +70,8 @@ contract CanonicalAddressRegistry is CanonAddrRegistryEntryEIP712 {
                 })
             );
 
-        // Verify
-        _sigCheckVerifier.verifyProof(proof, pis);
+        // Verify sig proof
+        require(_sigCheckVerifier.verifyProof(proof, pis), "!proof");
 
         // Update state if verification passed
         _ethAddressToCompressedCanonAddr[msg.sender] = compressedCanonAddr;

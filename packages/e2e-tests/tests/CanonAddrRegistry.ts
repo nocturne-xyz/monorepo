@@ -156,22 +156,13 @@ describe("Canonical Address Registry", async () => {
   });
 
   it("reverts if msg.sender !match digest", async () => {
-    console.log("aliceEoa.address", aliceEoa.address);
-    console.log("bobEoa.address", bobEoa.address);
-
     const [compressedCanonAddr, proof] = await generateRegisterInputs(
       aliceEoa,
       nocturneSignerAlice
     );
 
-    expect(
-      (
-        await canonAddrRegistry._ethAddressToCompressedCanonAddr(bobEoa.address)
-      ).toBigInt()
-    ).to.equal(0n);
-
-    const tx = await register(bobEoa, compressedCanonAddr, proof); // send from bobEoa
-    console.log("tx", await tx.wait());
+    await expect(register(bobEoa, compressedCanonAddr, proof)).to.eventually.be
+      .rejected;
 
     expect(
       (
@@ -187,18 +178,8 @@ describe("Canonical Address Registry", async () => {
     );
     proof[0] += 1n; // invalid proof
 
-    expect(
-      (
-        await canonAddrRegistry._ethAddressToCompressedCanonAddr(
-          aliceEoa.address
-        )
-      ).toBigInt()
-    ).to.equal(0n);
-
-    try {
-      await register(aliceEoa, compressedCanonAddr, proof);
-      throw new Error("invalid proof, should have reverted");
-    } catch {}
+    expect(register(aliceEoa, compressedCanonAddr, proof)).to.eventually.be
+      .rejected;
 
     expect(
       (
@@ -243,20 +224,11 @@ describe("Canonical Address Registry", async () => {
       proofInputs
     );
 
-    expect(
-      (
-        await canonAddrRegistry._ethAddressToCompressedCanonAddr(
-          aliceEoa.address
-        )
-      ).toBigInt()
-    ).to.equal(0n);
-
-    try {
-      await canonAddrRegistry
+    await expect(
+      canonAddrRegistry
         .connect(aliceEoa)
-        .setCanonAddr(compressedCanonAddr, packToSolidityProof(proof));
-      throw new Error("invalid digest, should have reverted");
-    } catch {}
+        .setCanonAddr(compressedCanonAddr, packToSolidityProof(proof))
+    ).to.eventually.be.rejected;
 
     expect(
       (
