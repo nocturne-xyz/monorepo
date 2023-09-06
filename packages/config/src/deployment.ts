@@ -24,6 +24,7 @@ export interface NocturneContractDeployment {
   handlerProxy: ProxyAddresses<any>;
   joinSplitVerifierAddress: Address;
   subtreeUpdateVerifierAddress: Address;
+  canonAddrSigCheckVerifierAddress: Address;
   depositSources: Address[];
   screeners: Address[];
 }

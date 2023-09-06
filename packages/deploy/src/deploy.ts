@@ -14,6 +14,7 @@ import {
   SimpleERC20Token__factory,
   DepositManager,
   Handler,
+  CanonAddrSigCheckVerifier__factory,
 } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { ProxiedContract } from "./proxy";
@@ -157,9 +158,8 @@ export async function deployNocturneCoreContracts(
   );
 
   console.log("\ndeploying sig check verifier...");
-  const canonAddrSigCheckVerifier = await new CanonicalAddressRegistry__factory(
-    connectedSigner
-  ).deploy();
+  const canonAddrSigCheckVerifier =
+    await new CanonAddrSigCheckVerifier__factory(connectedSigner).deploy();
   await canonAddrSigCheckVerifier.deployTransaction.wait(opts?.confirmations);
 
   console.log("\ndeploying canonical address registry...");
@@ -220,6 +220,7 @@ export async function deployNocturneCoreContracts(
     handlerProxy: proxiedHandler.proxyAddresses,
     joinSplitVerifierAddress: joinSplitVerifier.address,
     subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
+    canonAddrSigCheckVerifierAddress: canonAddrSigCheckVerifier.address,
     screeners: config.screeners,
     depositSources: [proxiedDepositManager.address],
   };
