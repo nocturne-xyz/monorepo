@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
-pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
@@ -10,7 +9,7 @@ import {ParseUtils} from "../utils/ParseUtils.sol";
 import "../harnesses/TestCanonAddrRegistryEntryEIP712.sol";
 import "../../libs/Types.sol";
 
-contract anonAddrRegistryEntryEIP712 is Test {
+contract CanonAddrRegistryEntryEIP712 is Test {
     TestCanonAddrRegistryEntryEIP712 public entryEip712;
 
     function testEntryHashMatchesOffchainImpl() public {
