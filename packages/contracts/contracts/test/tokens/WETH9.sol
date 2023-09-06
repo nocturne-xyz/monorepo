@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
 // Forked/modified from https://github.com/gnosis/canonical-weth/blob/master/contracts/WETH9.sol
