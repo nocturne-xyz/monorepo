@@ -1,4 +1,4 @@
-import chai from "chai";
+import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { setupTestDeployment, setupTestClient } from "../src/deploy";
 import { ethers } from "ethers";
@@ -92,10 +92,39 @@ describe("Canonical Address Registry", async () => {
       proofInputs
     );
 
+    expect(
+      (
+        await canonAddrRegistry._compressedCanonAddrToNonce(
+          aliceCanonAddrCompressed
+        )
+      ).toBigInt()
+    ).to.equal(0n);
+    expect(
+      (
+        await canonAddrRegistry._ethAddressToCompressedCanonAddr(
+          aliceEoa.address
+        )
+      ).toBigInt()
+    ).to.equal(0n);
+
     console.log("submitting call...");
-    const tx = await canonAddrRegistry
+    await canonAddrRegistry
       .connect(aliceEoa)
       .setCanonAddr(aliceCanonAddrCompressed, packToSolidityProof(proof));
-    console.log("tx hash: ", tx.hash);
+
+    expect(
+      (
+        await canonAddrRegistry._compressedCanonAddrToNonce(
+          aliceCanonAddrCompressed
+        )
+      ).toBigInt()
+    ).to.equal(1n);
+    expect(
+      (
+        await canonAddrRegistry._ethAddressToCompressedCanonAddr(
+          aliceEoa.address
+        )
+      ).toBigInt()
+    ).to.equal(aliceCanonAddrCompressed);
   });
 });
