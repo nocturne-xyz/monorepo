@@ -19,6 +19,7 @@ contract CanonAddrRegistryEntryEIP712Test is Test {
 
         CanonAddrRegistryEntry memory entry = CanonAddrRegistryEntry({
             ethAddress: address(0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4),
+            compressedCanonAddr: 1,
             perCanonAddrNonce: 1
         });
 
@@ -31,7 +32,7 @@ contract CanonAddrRegistryEntryEIP712Test is Test {
         assertEq(
             entryHash,
             bytes32(
-                0x7055b2b569bf9e4db9211fb121d28388ffed4fa2a6d71649b0bd0c50f59d2c60
+                0x5c58842a9c209f6fdf21749872c86fde5a6b4953007ffe9a30a18a87c84da835
             )
         );
 
@@ -63,7 +64,7 @@ contract CanonAddrRegistryEntryEIP712Test is Test {
         assertEq(
             entryDigest,
             uint256(
-                0x5B79549489E20D9F9CC4D940DF00F0369250A97331C05330D5F0150394E94DE
+                0x719ED49026196B7029BEA55136BF1DA304F1450FDAA3640E0B171467AF779B9
             )
         );
     }

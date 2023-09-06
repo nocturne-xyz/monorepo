@@ -17,7 +17,7 @@ contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
     bytes32 public constant CANON_ADDR_REGISTRY_ENTRY_TYPEHASH =
         keccak256(
             bytes(
-                "CanonAddrRegistryEntry(address ethAddress,uint256 perCanonAddrNonce)"
+                "CanonAddrRegistryEntry(address ethAddress,uint256 compressedCanonAddr,uint256 perCanonAddrNonce)"
             )
         );
 
@@ -60,6 +60,7 @@ contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
                 abi.encode(
                     CANON_ADDR_REGISTRY_ENTRY_TYPEHASH,
                     entry.ethAddress,
+                    entry.compressedCanonAddr,
                     entry.perCanonAddrNonce
                 )
             );

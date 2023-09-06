@@ -61,6 +61,7 @@ contract CanonicalAddressRegistry is CanonAddrRegistryEntryEIP712 {
             _computeDigest(
                 CanonAddrRegistryEntry(
                     msg.sender,
+                    compressedCanonAddr,
                     _compressedCanonAddrToNonce[compressedCanonAddr]
                 )
             );

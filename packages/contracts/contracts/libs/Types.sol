@@ -120,6 +120,7 @@ struct Bundle {
 
 struct CanonAddrRegistryEntry {
     address ethAddress;
+    uint256 compressedCanonAddr;
     uint256 perCanonAddrNonce;
 }
 

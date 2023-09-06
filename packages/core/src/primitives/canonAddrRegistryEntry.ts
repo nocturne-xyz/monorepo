@@ -11,6 +11,7 @@ export const REGISTRY_CONTRACT_VERSION = "v1";
 export const CANON_ADDR_REGISTRY_ENTRY_TYPES = {
   CanonAddrRegistryEntry: [
     { name: "ethAddress", type: "address" },
+    { name: "compressedCanonAddr", type: "uint256" },
     { name: "perCanonAddrNonce", type: "uint256" },
   ],
 };
