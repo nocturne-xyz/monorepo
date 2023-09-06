@@ -9,8 +9,11 @@ import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/crypt
 import {Utils} from "./libs/Utils.sol";
 import "./libs/Types.sol";
 
+/// @title CanonAddrRegistryEntryEIP712
+/// @author Nocturne Labs
+/// @notice Base contract for CanonicalAddressRegistry containing EIP712 signing logic for canon
+///         addr registry entries
 contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
-    uint256 constant MODULUS_252 = 2 ** 252;
     bytes32 public constant CANON_ADDR_REGISTRY_ENTRY_TYPEHASH =
         keccak256(
             bytes(
@@ -18,6 +21,11 @@ contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
             )
         );
 
+    uint256 constant MODULUS_252 = 2 ** 252;
+
+    /// @notice Internal initializer
+    /// @param contractName Name of the contract
+    /// @param contractVersion Version of the contract
     function __OperationEIP712_init(
         string memory contractName,
         string memory contractVersion
@@ -25,8 +33,10 @@ contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
         __EIP712_init(contractName, contractVersion);
     }
 
+    /// @notice Computes EIP712 digest of canon addr registry entry
+    /// @param entry Canon addr registry entry
     function _computeDigest(
-        CanonAddrRegistryEntry calldata entry
+        CanonAddrRegistryEntry memory entry
     ) public view returns (uint256) {
         bytes32 domainSeparator = _domainSeparatorV4();
         bytes32 structHash = _hashCanonAddrRegistryEntry(entry);
@@ -40,8 +50,10 @@ contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
         return uint256(digest) % MODULUS_252;
     }
 
+    /// @notice Hashes canon addr registry entry
+    /// @param entry Canon addr registry entry
     function _hashCanonAddrRegistryEntry(
-        CanonAddrRegistryEntry calldata entry
+        CanonAddrRegistryEntry memory entry
     ) internal pure returns (bytes32) {
         return
             keccak256(
