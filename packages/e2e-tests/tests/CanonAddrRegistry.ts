@@ -188,7 +188,7 @@ describe("Canonical Address Registry", async () => {
       {
         ethAddress: aliceEoa.address,
         compressedCanonAddr,
-        perCanonAddrNonce: nonce + 1n,
+        perCanonAddrNonce: nonce + 1n, // make nonce incorrect
       },
       31337n,
       canonAddrRegistry.address

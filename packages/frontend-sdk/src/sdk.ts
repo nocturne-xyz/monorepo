@@ -54,7 +54,6 @@ import {
   MockEthToTokenConverter,
   BundlerOpTracker,
   PreSignOperation,
-  CanonAddrSigCheckProofWithPublicSignals,
   compressPoint,
   SignCanonAddrRegistryEntry,
   packToSolidityProof,
@@ -761,23 +760,6 @@ export class NocturneSdk implements NocturneSdkApi {
       latestMerkleIndexOnChain,
       progressIter,
     };
-  }
-
-  /**
-   * generate a ZKP proving knowledge of the spending key for the user's canonical address
-   */
-  async proveCanonAddrOwnership(): Promise<CanonAddrSigCheckProofWithPublicSignals> {
-    throw new Error("FIXME");
-    // const inputs = await this.invokeSnap<GetCanonAddrSigCheckProofInputsMethod>({
-    //   method: "nocturne_getCanonAddrSigCheckProofInputs",
-    //   params: {
-    //     // TODO when contracts are written: get nonce
-    //     nonce: 12345n,
-    //   },
-    // });
-
-    // const prover = await this.canonAddrSigCheckProverThunk();
-    // return await prover.proveCanonAddrSigCheck(inputs);
   }
 
   /**

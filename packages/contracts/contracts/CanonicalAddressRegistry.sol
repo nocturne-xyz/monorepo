@@ -14,6 +14,8 @@ import "./libs/Types.sol";
 ///         of mapping names to phone numbers, it maps eth addresses to canon addresses. Someone who
 ///         wants to privately send funds to another user would look up the recipient's Nocturne
 ///         canon address in this contract and then deposit funds to that canon address.
+/// @dev We use a circuit verifier for the signature check due to prohibitive cost of verifying
+///      schnorr sigs over BJJ on-chain.
 contract CanonicalAddressRegistry is CanonAddrRegistryEntryEIP712 {
     // Sig check verifier
     ICanonAddrSigCheckVerifier public _sigCheckVerifier;
