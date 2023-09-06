@@ -227,3 +227,8 @@ export interface OperationWithMetadata<T extends Operation> {
   op: T;
   metadata?: OperationMetadata;
 }
+
+export interface CanonAddrRegistryEntry {
+  ethAddress: Address;
+  perCanonAddrNonce: bigint;
+}
