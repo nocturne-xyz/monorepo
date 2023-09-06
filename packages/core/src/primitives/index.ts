@@ -18,10 +18,14 @@ export {
   AssetTrait,
   ERC20_ID,
 } from "./asset";
-export { hashDepositRequest } from "./depositHash";
+export { hashDepositRequest } from "./depositRequest";
 export {
   hashOperation,
   computeOperationDigest,
   toSignableOperation,
   toSubmittableOperation,
 } from "./operation";
+export {
+  hashCanonAddrRegistryEntry,
+  computeCanonAddrRegistryEntryDigest,
+} from "./canonAddrRegistryEntry";
