@@ -4250,6 +4250,8 @@ __metadata:
     typescript: ^4.9.3
     winston: ^3.8.2
     wtfnode: ^0.9.1
+  bin:
+    insertion-writer-cli: dist/src/cli/index.js
   languageName: unknown
   linkType: soft
 
