@@ -1,6 +1,5 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.17;
-pragma abicoder v2;
 
 import "../libs/Types.sol";
 
