@@ -145,6 +145,7 @@ export class SubtreeUpdater {
     });
 
     for await (const insertions of previousInsertions.iter) {
+      logger.debug(`recovering batch of ${insertions.length} insertions`);
       const includes = new Array(insertions.length).fill(false);
       const { leaves, subtreeBatchOffset } =
         batchInfoFromInsertions(insertions);
@@ -164,7 +165,7 @@ export class SubtreeUpdater {
       // recover in-memory tree from insertion log up to and including the latest committed subtree
       await this.recoverTree(
         this.logger.child({ function: "recoverTree" }),
-        latestCommittedMerkleIndexAtStart ?? 0
+        latestCommittedMerkleIndexAtStart
       );
     }
 
