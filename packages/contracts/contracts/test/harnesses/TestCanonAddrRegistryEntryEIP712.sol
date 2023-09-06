@@ -25,7 +25,7 @@ contract TestCanonAddrRegistryEntryEIP712 is
         string memory contractName,
         string memory contractVersion
     ) external initializer {
-        __OperationEIP712_init(contractName, contractVersion);
+        __CanonAddrRegistryEntryEIP712_init(contractName, contractVersion);
     }
 
     function computeDigest(

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT OR Apache-2.0 OR Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
 uint256 constant GAS_PER_JOINSPLIT_HANDLE = 110_000; // two 20k SSTOREs from NF insertions, ~70k for merkle tree checks + NF mapping checks + processing joinsplits not including tree insertions

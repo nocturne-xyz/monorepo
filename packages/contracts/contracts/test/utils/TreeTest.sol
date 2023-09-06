@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT OR Apache-2.0 OR Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {TreeUtils} from "../../libs/TreeUtils.sol";

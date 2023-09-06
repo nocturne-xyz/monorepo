@@ -55,7 +55,7 @@ import {
   BundlerOpTracker,
   PreSignOperation,
   compressPoint,
-  SignCanonAddrRegistryEntry,
+  SignCanonAddrRegistryEntryMethod,
   packToSolidityProof,
 } from "@nocturne-xyz/core";
 import {
@@ -313,7 +313,7 @@ export class NocturneSdk implements NocturneSdkApi {
     ).toBigInt();
 
     const { digest, sig, spendPubkey, vkNonce } =
-      await this.invokeSnap<SignCanonAddrRegistryEntry>({
+      await this.invokeSnap<SignCanonAddrRegistryEntryMethod>({
         method: "nocturne_signCanonAddrRegistryEntry",
         params: {
           entry: {

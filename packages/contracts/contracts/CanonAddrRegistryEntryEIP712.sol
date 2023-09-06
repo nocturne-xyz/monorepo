@@ -26,7 +26,7 @@ contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
     /// @notice Internal initializer
     /// @param contractName Name of the contract
     /// @param contractVersion Version of the contract
-    function __OperationEIP712_init(
+    function __CanonAddrRegistryEntryEIP712_init(
         string memory contractName,
         string memory contractVersion
     ) internal onlyInitializing {
@@ -35,6 +35,9 @@ contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
 
     /// @notice Computes EIP712 digest of canon addr registry entry
     /// @param entry Canon addr registry entry
+    /// @dev The returned uint256 is the digest mod 2^252, so the top 4 MSBs are 0. The top 3 MSBs
+    ///      are 0 because the circuit verifier must take elems <= 253 bits. The 4th MSB is 0 to
+    ///      leave space for the sign bit of the compressed canon addr.
     function _computeDigest(
         CanonAddrRegistryEntry memory entry
     ) public view returns (uint256) {

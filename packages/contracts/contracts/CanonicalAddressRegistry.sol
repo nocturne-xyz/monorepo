@@ -39,7 +39,7 @@ contract CanonicalAddressRegistry is CanonAddrRegistryEntryEIP712 {
         string memory contractVersion,
         address sigCheckVerifier
     ) external initializer {
-        __OperationEIP712_init(contractName, contractVersion);
+        __CanonAddrRegistryEntryEIP712_init(contractName, contractVersion);
         _sigCheckVerifier = ICanonAddrSigCheckVerifier(sigCheckVerifier);
     }
 
@@ -61,11 +61,13 @@ contract CanonicalAddressRegistry is CanonAddrRegistryEntryEIP712 {
         pis[1] =
             (canonAddrSignBit << 252) |
             _computeDigest(
-                CanonAddrRegistryEntry(
-                    msg.sender,
-                    compressedCanonAddr,
-                    _compressedCanonAddrToNonce[compressedCanonAddr]
-                )
+                CanonAddrRegistryEntry({
+                    ethAddress: msg.sender,
+                    compressedCanonAddr: compressedCanonAddr,
+                    perCanonAddrNonce: _compressedCanonAddrToNonce[
+                        compressedCanonAddr
+                    ]
+                })
             );
 
         // Verify

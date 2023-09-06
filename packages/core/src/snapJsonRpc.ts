@@ -7,7 +7,7 @@ import {
 } from "./primitives";
 import { CanonAddress, NocturneSignature, SpendPk, ViewingKey } from "./crypto";
 
-export interface SignCanonAddrRegistryEntry {
+export interface SignCanonAddrRegistryEntryMethod {
   method: "nocturne_signCanonAddrRegistryEntry";
   params: {
     entry: CanonAddrRegistryEntry;
@@ -41,7 +41,7 @@ export interface RequestViewingKeyMethod {
 }
 
 export type RpcRequestMethod =
-  | SignCanonAddrRegistryEntry
+  | SignCanonAddrRegistryEntryMethod
   | SignOperationMethod
   | RequestViewingKeyMethod;
 
