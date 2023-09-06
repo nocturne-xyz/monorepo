@@ -69,6 +69,7 @@ describe("Canonical Address Registry", async () => {
     const digest = computeCanonAddrRegistryEntryDigest(
       {
         ethAddress: eoa.address,
+        compressedCanonAddr,
         perCanonAddrNonce: nonce,
       },
       31337n,
@@ -186,6 +187,7 @@ describe("Canonical Address Registry", async () => {
     const digest = computeCanonAddrRegistryEntryDigest(
       {
         ethAddress: aliceEoa.address,
+        compressedCanonAddr,
         perCanonAddrNonce: nonce + 1n,
       },
       31337n,
