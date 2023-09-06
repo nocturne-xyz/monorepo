@@ -26,7 +26,7 @@
     "prettier:check": "prettier --check ./src",
     "prettier:write": "prettier --write ./src",
     "screener-cli": "npx ts-node src/cli/index.ts",
-    "test:unit": ""
+    "test:unit": "mocha --require ts-node/register test/**"
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",

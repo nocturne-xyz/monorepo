@@ -97,7 +97,9 @@ export class CompositeRule<T extends ReadonlyArray<keyof ApiMap>>
   private predicateFn: "some" | "every";
 
   constructor(params: CombinedRulesParams<T>) {
-    this.name = `Composite(${params.partials.map((r) => r.name).join(", ")})`;
+    this.name = `Composite(${params.partials.map((r) => r.name).join(", ")}):${
+      params.applyIf
+    }`;
     this.partials = params.partials;
     this.action = params.action;
     this.predicateFn = params.applyIf === "Any" ? "some" : "every";
@@ -107,14 +109,18 @@ export class CompositeRule<T extends ReadonlyArray<keyof ApiMap>>
     deposit: ScreeningDepositRequest,
     cache: Record<ApiCallKeys, Data>
   ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
-    const shouldApply = this.partials[this.predicateFn](async (partial) => {
-      if (!cache[partial.call]) {
-        cache[partial.call] = await API_CALLS[partial.call](deposit);
-      }
-      const data = cache[partial.call] as ApiMap[typeof partial.call];
-      return partial.threshold(data);
-    });
-    return shouldApply ? this.action : ACTION_NOT_TRIGGERED;
+    const results = await Promise.all(
+      this.partials.map(async (partial) => {
+        if (!cache[partial.call]) {
+          cache[partial.call] = await API_CALLS[partial.call](deposit);
+        }
+        const data = cache[partial.call] as ApiMap[typeof partial.call];
+
+        return partial.threshold(data);
+      })
+    );
+    const shouldApplyRule = results[this.predicateFn]((_) => _);
+    return shouldApplyRule ? this.action : ACTION_NOT_TRIGGERED;
   }
 }
 
