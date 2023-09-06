@@ -7,6 +7,7 @@ import {
   TestSubtreeUpdateVerifier,
   TestSubtreeUpdateVerifier__factory,
   TransparentUpgradeableProxy__factory,
+  CanonicalAddressRegistry__factory,
   Handler__factory,
   Teller__factory,
   DepositManager__factory,
@@ -155,6 +156,23 @@ export async function deployNocturneCoreContracts(
     proxiedDepositManager.proxyAddresses
   );
 
+  console.log("\ndeploying sig check verifier...");
+  const canonAddrSigCheckVerifier = await new CanonicalAddressRegistry__factory(
+    connectedSigner
+  ).deploy();
+  await canonAddrSigCheckVerifier.deployTransaction.wait(opts?.confirmations);
+
+  console.log("\ndeploying canonical address registry...");
+  const proxiedCanonAddrRegistry = await deployProxiedContract(
+    new CanonicalAddressRegistry__factory(connectedSigner),
+    proxyAdmin,
+    [
+      "NocturneCanonicalAddressRegistry",
+      "v1",
+      canonAddrSigCheckVerifier.address,
+    ]
+  );
+
   console.log("\nsetting deposit manager screeners...");
   for (const screener of config.screeners) {
     const tx = await proxiedDepositManager.contract.setScreenerPermission(
@@ -196,6 +214,7 @@ export async function deployNocturneCoreContracts(
       depositManagerOwner: config.proxyAdminOwner,
     },
     proxyAdmin: proxyAdmin.address,
+    canonicalAddressRegistryProxy: proxiedCanonAddrRegistry.proxyAddresses,
     depositManagerProxy: proxiedDepositManager.proxyAddresses,
     tellerProxy: proxiedTeller.proxyAddresses,
     handlerProxy: proxiedHandler.proxyAddresses,

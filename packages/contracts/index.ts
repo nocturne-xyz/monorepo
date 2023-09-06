@@ -7,6 +7,7 @@ export type { JoinSplitVerifier } from './src/JoinSplitVerifier';
 export type { SubtreeUpdateVerifier } from './src/SubtreeUpdateVerifier';
 export type { TestSubtreeUpdateVerifier } from './src/TestSubtreeUpdateVerifier';
 export type { CommitmentTreeManager } from './src/CommitmentTreeManager';
+export type { CanonicalAddressRegistry } from './src/CanonicalAddressRegistry';
 
 export type { IERC20Interface } from './src/IERC20';
 export type { IERC721Interface } from './src/IERC721';
@@ -26,6 +27,7 @@ export { JoinSplitVerifier__factory } from './src/factories/JoinSplitVerifier__f
 export { SubtreeUpdateVerifier__factory } from './src/factories/SubtreeUpdateVerifier__factory';
 export { TestSubtreeUpdateVerifier__factory } from './src/factories/TestSubtreeUpdateVerifier__factory';
 export { CommitmentTreeManager__factory } from './src/factories/CommitmentTreeManager__factory';
+export { CanonicalAddressRegistry__factory } from './src/factories/CanonicalAddressRegistry__factory';
 
 export { SimpleERC20Token__factory } from './src/factories/SimpleERC20Token__factory';
 export { SimpleERC721Token__factory } from './src/factories/SimpleERC721Token__factory';

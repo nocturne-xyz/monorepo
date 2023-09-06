@@ -8,12 +8,12 @@ import {
   parseObjectValues,
   signOperation,
   assertAllRpcMethodsHandled,
+  // computeCanonAddrRegistryEntryDigest,
 } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
 import { makeSignOperationContent } from "./utils/display";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
-import { poseidonBN } from "@nocturne-xyz/crypto-utils";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Sepolia
@@ -81,18 +81,17 @@ async function handleRpcRequest({
         vkNonce: viewer.vkNonce,
       };
     case "nocturne_getCanonAddrSigCheckProofInputs":
-      throw new Error("FIXME");
-    // const msg = poseidonBN([69620n, params.nonce]);
-    // const sig = signer.sign(msg);
-    // const vkNonce = signer.vkNonce;
-    // const spendPubkey = signer.spendPk;
-    // const canonAddr = signer.canonicalAddress();
-    // return {
-    //   canonAddr,
-    //   sig,
-    //   spendPubkey,
-    //   vkNonce,
-    // };
+      throw new Error("TODO");
+    //   const sig = signer.sign(msg);
+    //   const vkNonce = signer.vkNonce;
+    //   const spendPubkey = signer.spendPk;
+    //   const canonAddr = signer.canonicalAddress();
+    //   return {
+    //     canonAddr,
+    //     sig,
+    //     spendPubkey,
+    //     vkNonce,
+    //   };
     case "nocturne_signOperation":
       console.log("Request params: ", request.params);
 
