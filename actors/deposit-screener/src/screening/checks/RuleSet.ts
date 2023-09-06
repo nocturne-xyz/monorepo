@@ -164,7 +164,7 @@ export class RuleSet {
         result,
       });
       if (result.type === "Rejection") {
-        console.log(rulesLogList);
+        console.log(`Screener execution for deposit:`, deposit, rulesLogList);
         return result;
       } else if (result.type === "Delay") {
         this.delaySeconds = APPLY_DELAY_OPERATION[result.operation](
@@ -174,7 +174,7 @@ export class RuleSet {
       }
       currRule = currRule.next;
     }
-    console.log(`Screener results for deposit:`, deposit, rulesLogList);
+    console.log(`Screener execution for deposit:`, deposit, rulesLogList);
     return { type: "Delay", timeSeconds: this.delaySeconds };
   }
 }
