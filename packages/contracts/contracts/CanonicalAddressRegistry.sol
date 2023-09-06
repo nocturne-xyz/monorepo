@@ -19,11 +19,11 @@ contract CanonicalAddressRegistry is CanonAddrRegistryEntryEIP712 {
     ICanonAddrSigCheckVerifier public _sigCheckVerifier;
 
     // Mapping of canon address to nonce (for replay protection)
-    mapping(uint256 => uint256) _compressedCanonAddrToNonce;
+    mapping(uint256 => uint256) public _compressedCanonAddrToNonce;
 
     // Mapping of eth address to canon address where owner of eth address must have
     // proven they own the spend key corresponding to the canon address
-    mapping(address => uint256) _ethAddressToCompressedCanonAddr;
+    mapping(address => uint256) public _ethAddressToCompressedCanonAddr;
 
     /// @notice Emitted when a new canon address is set in the eth address to canon address mapping
     event CanonAddressSet(address ethAddress, uint256 compressedCanonAddr);

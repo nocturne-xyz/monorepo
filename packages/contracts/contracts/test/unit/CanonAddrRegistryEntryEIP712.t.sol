@@ -9,7 +9,7 @@ import {ParseUtils} from "../utils/ParseUtils.sol";
 import "../harnesses/TestCanonAddrRegistryEntryEIP712.sol";
 import "../../libs/Types.sol";
 
-contract CanonAddrRegistryEntryEIP712 is Test {
+contract CanonAddrRegistryEntryEIP712Test is Test {
     TestCanonAddrRegistryEntryEIP712 public entryEip712;
 
     function testEntryHashMatchesOffchainImpl() public {
