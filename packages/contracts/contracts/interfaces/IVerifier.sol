@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: GPL-3.0
+//SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 import {Groth16} from "../libs/Groth16.sol";
 
