@@ -9,7 +9,7 @@ import {
 (async () => {
   const entry: CanonAddrRegistryEntry = {
     ethAddress: "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
-    perCanonAddrNonce: 123n,
+    perCanonAddrNonce: 1n,
   };
 
   const entryHash = hashCanonAddrRegistryEntry(entry);

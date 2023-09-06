@@ -9,8 +9,8 @@ import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/crypt
 import {Utils} from "./libs/Utils.sol";
 import "./libs/Types.sol";
 
-contract CanonicalAddressRegistryEIP712 is EIP712Upgradeable {
-    uint256 constant MODULUS_252 = 2 ^ 252;
+contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
+    uint256 constant MODULUS_252 = 2 ** 252;
     bytes32 public constant CANON_ADDR_REGISTRY_ENTRY_TYPEHASH =
         keccak256(
             bytes(
