@@ -36,7 +36,7 @@ contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
             structHash
         );
 
-        // mod digest by BN254 since this is PI to joinsplit circuit
+        // mod digest by 2^252 to fit compressed addr sign bit in 253rd PI bit
         return uint256(digest) % MODULUS_252;
     }
 
