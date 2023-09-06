@@ -169,15 +169,14 @@ export class SubtreeUpdater {
     }
 
     // construct infinite iterator over all new and future insertions from the log
-    const startMerkleIndex = latestCommittedMerkleIndexAtStart
-      ? latestCommittedMerkleIndexAtStart + 1
-      : undefined;
     logger.info(
-      `scanning over insertion log starting from merkle index ${startMerkleIndex}`
+      `scanning over insertion log starting from merkle index ${latestCommittedMerkleIndexAtStart}`
     );
     const allInsertions = ClosableAsyncIterator.flatten(
       this.insertionLog.scan({
-        startMerkleIndex,
+        // if `undefined`, will start at the beginning
+        // note: the `+ 1` is missing because the iterator lower bound is exclusive
+        startMerkleIndex: latestCommittedMerkleIndexAtStart,
         terminateOnEmpty: false,
       })
     );
