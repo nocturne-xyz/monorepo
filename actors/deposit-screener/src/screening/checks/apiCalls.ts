@@ -120,7 +120,6 @@ export const API_CALLS = {
     console.log(data);
     return data;
   },
-  // TODO deal with copypasta code
   MISTTRACK_ADDRESS_OVERVIEW: async (
     deposit: ScreeningDepositRequest,
     token = "ETH"
