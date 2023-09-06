@@ -31,6 +31,7 @@ import {
   RPCSDKSyncAdapter,
   BundlerOpTracker,
   range,
+  CanonAddrSigCheckProver,
 } from "@nocturne-xyz/core";
 
 import {
@@ -41,7 +42,10 @@ import {
 
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
-import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
+import {
+  WasmCanonAddrSigCheckProver,
+  WasmJoinSplitProver,
+} from "@nocturne-xyz/local-prover";
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { startHardhat } from "./hardhat";
 import { BundlerConfig, startBundler } from "./bundler";
@@ -56,10 +60,20 @@ import { BUNDLER_ENDPOINT } from "./utils";
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
-const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
-const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
-const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
-const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
+
+const JOINSPLIT_WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
+const JOINSPLIT_ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
+const JOINSPLIT_VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
+const JOINSPLIT_VKEY = JSON.parse(
+  fs.readFileSync(JOINSPLIT_VKEY_PATH).toString()
+);
+
+const SIG_CHECK_WASM_PATH = `${ARTIFACTS_DIR}/canonAddrSigCheck/canonAddrSigCheck_js/canonAddrSigCheck.wasm`;
+const SIG_CHECK_ZKEY_PATH = `${ARTIFACTS_DIR}/canonAddrSigCheck/canonAddrSigCheck_cpp/canonAddrSigCheck.zkey`;
+const SIG_CHECK_VKEY_PATH = `${ARTIFACTS_DIR}/canonAddrSigCheck/canonAddrSigCheck_cpp/vkey.json`;
+const SIG_CHECK_VKEY = JSON.parse(
+  fs.readFileSync(SIG_CHECK_VKEY_PATH).toString()
+);
 
 export interface TestDeployArgs {
   screeners: Address[];
@@ -501,6 +515,7 @@ export interface ClientSetup {
   nocturneDBBob: NocturneDB;
   nocturneClientBob: NocturneClient;
   joinSplitProver: JoinSplitProver;
+  canonAddrSigCheckProver: CanonAddrSigCheckProver;
 }
 
 export async function setupTestClient(
@@ -547,7 +562,17 @@ export async function setupTestClient(
     syncAdapter
   );
 
-  const joinSplitProver = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
+  const joinSplitProver = new WasmJoinSplitProver(
+    JOINSPLIT_WASM_PATH,
+    JOINSPLIT_ZKEY_PATH,
+    JOINSPLIT_VKEY
+  );
+
+  const canonAddrSigCheckProver = new WasmCanonAddrSigCheckProver(
+    SIG_CHECK_WASM_PATH,
+    SIG_CHECK_ZKEY_PATH,
+    SIG_CHECK_VKEY
+  );
 
   return {
     nocturneDBAlice,
@@ -557,6 +582,7 @@ export async function setupTestClient(
     nocturneSignerBob,
     nocturneClientBob,
     joinSplitProver,
+    canonAddrSigCheckProver,
   };
 }
 
