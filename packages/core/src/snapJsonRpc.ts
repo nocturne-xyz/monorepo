@@ -1,17 +1,20 @@
 import * as JSON from "bigint-json-serialization";
 import {
+  CanonAddrRegistryEntry,
   OperationWithMetadata,
   PreSignOperation,
   SignedOperation,
 } from "./primitives";
-import { ViewingKey } from "./crypto";
+import { NocturneSignature, ViewingKey } from "./crypto";
 
 export interface SignCanonAddrRegistryEntry {
   method: "nocturne_signCanonAddrRegistryEntry";
   params: {
-    digest: bigint
+    entry: CanonAddrRegistryEntry;
+    chainId: bigint;
+    registryAddress: string;
   };
-  return: string;
+  return: NocturneSignature;
 }
 
 export interface SignOperationMethod {

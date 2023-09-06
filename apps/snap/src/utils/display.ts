@@ -21,14 +21,14 @@ const lookupTickerByAddress = (
 
 export const makeSignCanonAddrRegistryEntryContent = (
   entry: CanonAddrRegistryEntry,
-  _chainId: bigint,
-  _registryAddress: Address
+  chainId: bigint,
+  registryAddress: Address
 ): {
   heading: string;
   text: string;
 } => {
   const heading = "Confirm signature to register canonical address";
-  const text = `Ethereum Address: ${entry.ethAddress}. Nocturne Canonical Address: ${entry.perCanonAddrNonce}`;
+  const text = `Ethereum Address: ${entry.ethAddress}. Nocturne Canonical Address Nonce: ${entry.perCanonAddrNonce}. Chain id: ${chainId}. Registry address: ${registryAddress}`;
 
   return {
     heading,
