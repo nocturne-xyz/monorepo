@@ -319,6 +319,7 @@ export class NocturneSdk implements NocturneSdkApi {
         params: {
           entry: {
             ethAddress: await ethSigner.getAddress(),
+            compressedCanonAddr,
             perCanonAddrNonce: nonce,
           },
           chainId: BigInt(this.config.config.contracts.network.chainId),
