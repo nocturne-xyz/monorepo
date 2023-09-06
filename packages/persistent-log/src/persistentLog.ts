@@ -169,7 +169,7 @@ export class PersistentLog<T> {
         // filter out all data >= `options.endId` if given
         if (options?.endId !== undefined) {
           const endId = options.endId;
-          batch = batch.filter(({ id }) => id < endId);
+          batch = batch.filter(({ id }) => RedisStreamIdTrait.lt(id, endId));
           // if there's no more data after filtering, terminate
           if (batch.length == 0) {
             break;
