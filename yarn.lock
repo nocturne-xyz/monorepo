@@ -4613,8 +4613,10 @@ __metadata:
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/deploy": "workspace:^"
     "@nocturne-xyz/deposit-screener": "workspace:^"
+    "@nocturne-xyz/insertion-writer": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
+    "@nocturne-xyz/persistent-log": "workspace:^"
     "@nocturne-xyz/subtree-updater": "workspace:^"
     "@types/chai": ^4.3.3
     "@types/dockerode": ^3.3.14
@@ -4698,6 +4700,42 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nocturne-xyz/insertion-writer@workspace:^, @nocturne-xyz/insertion-writer@workspace:actors/insertion-writer":
+  version: 0.0.0-use.local
+  resolution: "@nocturne-xyz/insertion-writer@workspace:actors/insertion-writer"
+  dependencies:
+    "@nocturne-xyz/config": "workspace:^"
+    "@nocturne-xyz/core": "workspace:^"
+    "@nocturne-xyz/offchain-utils": "workspace:^"
+    "@nocturne-xyz/persistent-log": "workspace:^"
+    "@types/bn.js": ^5.1.1
+    "@types/chai": ^4.3.4
+    "@types/commander": ^2.12.2
+    "@types/mocha": ^10.0.0
+    "@types/node": ^18.8.0
+    "@typescript-eslint/eslint-plugin": ^5.45.0
+    "@typescript-eslint/parser": ^5.44.0
+    chai: ^4.3.7
+    commander: ^9.4.1
+    concurrently: ^8.2.0
+    dotenv: ^16.0.3
+    eslint: ^8.28.0
+    eslint-config-prettier: ^8.5.0
+    find-yarn-workspace-root: ^2.0.0
+    ioredis: ^5.3.2
+    mocha: ^10.1.0
+    nodemon: ^3.0.1
+    prettier: ^2.8.8
+    redis-memory-server: ^0.6.0
+    ts-node: ^10.9.1
+    typescript: ^4.9.3
+    winston: ^3.8.2
+    wtfnode: ^0.9.1
+  bin:
+    insertion-writer-cli: dist/src/cli/index.js
+  languageName: unknown
+  linkType: soft
+
 "@nocturne-xyz/local-prover@workspace:^, @nocturne-xyz/local-prover@workspace:packages/local-prover":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/local-prover@workspace:packages/local-prover"
@@ -4729,6 +4767,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/offchain-utils@workspace:packages/offchain-utils"
   dependencies:
+    "@nocturne-xyz/persistent-log": "workspace:^"
     "@opentelemetry/api": ^1.4.1
     "@opentelemetry/exporter-metrics-otlp-http": ^0.40.0
     "@opentelemetry/instrumentation": ^0.40.0
@@ -4790,7 +4829,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/persistent-log@workspace:packages/persistent-log":
+"@nocturne-xyz/persistent-log@workspace:^, @nocturne-xyz/persistent-log@workspace:packages/persistent-log":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/persistent-log@workspace:packages/persistent-log"
   dependencies:
@@ -4861,6 +4900,7 @@ __metadata:
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/crypto-utils": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
+    "@nocturne-xyz/persistent-log": "workspace:^"
     "@openzeppelin/defender-relay-client": 1.47.1
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
