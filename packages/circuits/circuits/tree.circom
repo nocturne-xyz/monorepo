@@ -10,6 +10,7 @@ include "lib.circom";
 // inclusion proof for a quaternary merkle tree instantiated over the Poseidon hash function
 //@requires(1) nLevels > 0
 //@ensures(1) `siblings` and `pathIndices` comprise a valid merkle inclusion proof for `leaf` against `root
+//@ensures(2) `pathIndices` are all valid 2-bit numbers
 template MerkleTreeInclusionProof(nLevels) {
     signal input leaf;
     signal input pathIndices[nLevels];
