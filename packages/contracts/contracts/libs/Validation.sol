@@ -6,7 +6,7 @@ import "./Utils.sol";
 import {AssetUtils} from "./AssetUtils.sol";
 
 library Validation {
-    uint256 constant MAX_NOTE_VALUE = (1 << 252) - 1; // value must fit in 2^252 bits
+    uint256 constant MAX_NOTE_VALUE = (1 << 126) - 1; // value must fit in 126 bits
     uint256 constant ENCODED_ASSET_ADDR_MASK = ((1 << 163) - 1) | (7 << 249);
     uint256 constant MAX_ASSET_ID = (1 << 253) - 1;
 
