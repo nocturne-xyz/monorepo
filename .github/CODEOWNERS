@@ -12,10 +12,11 @@ packages/snap @luketchang @Sladuca
 
 # actors 
 
-packages/bundler @luketchang @Sladuca
-packages/subtree-updater @Sladuca
-packages/deposit-screener @Sladuca @luketchang
-packages/test-actor @Sladuca @luketchang
+actors/bundler @luketchang @Sladuca
+actors/subtree-updater @Sladuca
+actors/deposit-screener @Sladuca @luketchang
+actors/test-actor @Sladuca @luketchang
+actors/insertion-log @Sladuca
 
 # SDKs
 
@@ -29,3 +30,4 @@ packages/deploy @luketchang
 packages/e2e-tests @luketchang @Sladuca
 packages/local-prover @Sladuca
 packages/crypto-utils @Sladuca
+packages/persistent-log @Sladuca
