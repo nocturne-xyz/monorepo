@@ -31,9 +31,13 @@ export class InsertionWriter {
     this.logger.debug(`current log tip: ${logTip}`);
 
     this.logger.debug("starting iterator");
-    const newInsertionBatches = this.adapter.iterInsertions(logTip ?? 0, {
-      throttleMs: queryThrottleMs,
-    });
+    // start a logTip + 1 because we want to start at the next merkle index
+    const newInsertionBatches = this.adapter.iterInsertions(
+      logTip ? logTip + 1 : 0,
+      {
+        throttleMs: queryThrottleMs,
+      }
+    );
 
     const runProm = (async () => {
       this.logger.debug("starting main loop");
@@ -43,7 +47,10 @@ export class InsertionWriter {
           endMerkleIndex: insertions[insertions.length - 1].merkleIndex,
         };
 
-        this.logger.info(`got batch of ${insertions.length} insertions`, meta);
+        this.logger.info(
+          `got batch of ${insertions.length} insertions starting at merkle index ${meta.startMerkleIndex}`,
+          meta
+        );
         await this.insertionLog.push(insertions);
         this.logger.info(
           `pushed batch of ${insertions.length} into insertion log`,

@@ -99,10 +99,13 @@ export class SubgraphTreeInsertionSyncAdapter
                 numZeros: insertion.numZeros,
               };
               logger &&
-                logger.debug("yielding zeros", {
-                  insertionKind: "zeros",
-                  insertion: meta,
-                });
+                logger.debug(
+                  `yielding ${insertion.numZeros} zeros starting at merkle index ${insertion.merkleIndex}`,
+                  {
+                    insertionKind: "zeros",
+                    insertion: meta,
+                  }
+                );
 
               const batch = range(0, insertion.numZeros).map((i) => ({
                 noteCommitment: TreeConstants.ZERO_VALUE,
@@ -120,10 +123,13 @@ export class SubgraphTreeInsertionSyncAdapter
               };
 
               logger &&
-                logger.debug("yielding encrypted note", {
-                  insertionKind: "encrypted note",
-                  meta,
-                });
+                logger.debug(
+                  `yielding encrypted note at merkle index ${insertion.merkleIndex}`,
+                  {
+                    insertionKind: "encrypted note",
+                    meta,
+                  }
+                );
 
               const res = {
                 noteCommitment,
@@ -138,10 +144,13 @@ export class SubgraphTreeInsertionSyncAdapter
                 note: insertion,
               };
               logger &&
-                logger.debug("yielding note", {
-                  insertionKind: "note",
-                  meta,
-                });
+                logger.debug(
+                  `yielding note at merkle index ${insertion.merkleIndex}`,
+                  {
+                    insertionKind: "note",
+                    meta,
+                  }
+                );
 
               yield [insertion as IncludedNote];
             }
