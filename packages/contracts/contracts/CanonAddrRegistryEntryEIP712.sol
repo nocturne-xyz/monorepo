@@ -14,6 +14,8 @@ import "./libs/Types.sol";
 /// @notice Base contract for CanonicalAddressRegistry containing EIP712 signing logic for canon
 ///         addr registry entries
 contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
+    uint256 constant BOTTOM_252_MASK = (1 << 252) - 1;
+
     bytes32 public constant CANON_ADDR_REGISTRY_ENTRY_TYPEHASH =
         keccak256(
             bytes(
@@ -35,7 +37,7 @@ contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
 
     /// @notice Computes EIP712 digest of canon addr registry entry
     /// @param entry Canon addr registry entry
-    /// @dev The returned uint256 is the digest mod 2^252, so the top 4 MSBs are 0. The top 3 MSBs
+    /// @dev The returned uint256 is masked to zero out the top 4 MSBs. The top 3 MSBs
     ///      are 0 because the circuit verifier must take elems <= 253 bits. The 4th MSB is 0 to
     ///      leave space for the sign bit of the compressed canon addr.
     function _computeDigest(
@@ -49,8 +51,8 @@ contract CanonAddrRegistryEntryEIP712 is EIP712Upgradeable {
             structHash
         );
 
-        // mod digest by 2^252 to fit compressed addr sign bit in 253rd PI bit
-        return uint256(digest) % MODULUS_252;
+        // Only take bottom 252 bits to fit compressed addr sign bit in 253rd PI bit
+        return uint256(digest) & BOTTOM_252_MASK;
     }
 
     /// @notice Hashes canon addr registry entry

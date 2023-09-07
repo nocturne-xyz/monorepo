@@ -3,7 +3,7 @@ import { ethers, TypedDataDomain } from "ethers";
 
 const { _TypedDataEncoder } = ethers.utils;
 
-const MODULUS_252 = BigInt(2) ** BigInt(252);
+const BOTTOM_252_MASK = (1n << 252n) - 1n;
 
 export const REGISTRY_CONTRACT_NAME = "NocturneCanonicalAddressRegistry";
 export const REGISTRY_CONTRACT_VERSION = "v1";
@@ -33,7 +33,7 @@ export function computeCanonAddrRegistryEntryDigest(
     CANON_ADDR_REGISTRY_ENTRY_TYPES,
     entry
   );
-  return BigInt(digest) % MODULUS_252;
+  return BigInt(digest) & BOTTOM_252_MASK;
 }
 
 export function hashCanonAddrRegistryEntry(
