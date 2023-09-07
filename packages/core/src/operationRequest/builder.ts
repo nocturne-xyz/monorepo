@@ -13,12 +13,12 @@ import {
   Action,
   Address,
   Asset,
-  NetworkInfo,
   OperationMetadata,
   OperationMetadataItem,
 } from "../primitives";
 import { ethers } from "ethers";
 import { groupByArr } from "../utils";
+import { chainIdToNetworkName } from "../utils/constants";
 
 export type OpRequestBuilder = OpRequestBuilderExt<BaseOpRequestBuilder>;
 
@@ -40,6 +40,7 @@ export type OpRequestBuilderExt<E extends BaseOpRequestBuilder> = E & {
 
 // methods that are available by default on any implementor of `OpRequestBuilderExt`
 export interface BaseOpRequestBuilder {
+  provider: ethers.providers.Provider;
   _op: OperationRequest;
   _builderItemsToProcess: Promise<BuilderItemToProcess>[];
 
@@ -106,17 +107,14 @@ export type JoinSplitsAndPaymentsForAsset = [
 // the base OpRequestBuilder. This is the only thing users should explicitly construct.
 // to add functionality (erc20s, protocol integrations, etc), user should call `.use(plugin)` with the relevant plugin
 export function newOpRequestBuilder(
-  network: string | NetworkInfo
+  provider: ethers.providers.Provider,
+  chainId: bigint,
+  tellerContract?: Address // for testing purposes in case there is no config for test network
 ): OpRequestBuilderExt<BaseOpRequestBuilder> {
-  let chainId: bigint;
-  let tellerContract: Address;
-  if (typeof network === "string") {
-    const config = loadNocturneConfigBuiltin(network);
-    chainId = BigInt(config.contracts.network.chainId);
+  if (!tellerContract) {
+    const networkName = chainIdToNetworkName(chainId);
+    const config = loadNocturneConfigBuiltin(networkName);
     tellerContract = config.tellerAddress();
-  } else {
-    chainId = network.chainId;
-    tellerContract = network.tellerContract;
   }
 
   const _op = {
@@ -131,6 +129,7 @@ export function newOpRequestBuilder(
   const _builderItemsToProcess: Promise<BuilderItemToProcess>[] = [];
 
   return {
+    provider,
     _op,
     _builderItemsToProcess,
 

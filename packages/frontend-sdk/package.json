@@ -28,6 +28,7 @@
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/idb-kv-store": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
+    "@nocturne-xyz/op-request-plugins": "workspace:^",
     "@urql/core": "^4.1.1",
     "async-mutex": "^0.4.0",
     "async-retry": "^1.3.3",
