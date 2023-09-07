@@ -1,4 +1,5 @@
 import { ScreeningDepositRequest } from "..";
+import * as SNAPSHOT from "../../../test/apiCallsTestsSnapshot.json";
 
 export interface TrmAddressRiskIndicator {
   category: string;
@@ -79,19 +80,7 @@ export type MisttrackApiResponse<T extends MisttrackData> =
       data: T;
     };
 
-export interface DummyTrmData {
-  risk: number;
-}
-export interface DummyMisttrackData {
-  misttrackRisk: number;
-}
-
-export type CallReturnData =
-  | TrmData
-  | MisttrackData
-  | DummyTrmData
-  | DummyMisttrackData
-  | ScreeningDepositRequest;
+export type Data = TrmData | MisttrackData | ScreeningDepositRequest;
 
 const TRM_BASE_URL = "https://api.trmlabs.com/public/v2";
 const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";
@@ -156,14 +145,21 @@ export const API_CALLS = {
     return misttrackResponse.data;
   },
   DUMMY_TRM_SCREENING_ADDRESSES: async (deposit: ScreeningDepositRequest) => {
-    console.log(deposit);
-    return await Promise.resolve({ risk: 0.5 });
+    // todo figure out how to check address object membership from json import
+    const data = {} as TrmData; // ! TODO
+    return await Promise.resolve(data);
   },
   DUMMY_MISTTRACK_ADDRESS_RISK_SCORE: async (
     deposit: ScreeningDepositRequest
   ) => {
-    console.log(deposit);
-    return await Promise.resolve({ misttrackRisk: 0.5 });
+    const data = {} as MisttrackRiskScoreData; // ! TODO
+    return await Promise.resolve(data);
+  },
+  DUMMY_MISTTRACK_ADDRESS_OVERVIEW: async (
+    deposit: ScreeningDepositRequest
+  ) => {
+    const data = {} as MisttrackAddressOverviewData; // ! TODO
+    return await Promise.resolve(data);
   },
   IDENTITY: async (deposit: ScreeningDepositRequest) => deposit,
 } as const;
