@@ -8,7 +8,6 @@ import {
 import { DepositManager, Teller } from "@nocturne-xyz/contracts";
 import {
   Asset,
-  Erc20Plugin,
   JoinSplitProver,
   NocturneClient,
   NocturneSigner,
@@ -32,6 +31,7 @@ import {
 import IORedis from "ioredis";
 import * as ethers from "ethers";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
+import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
 
 chai.use(chaiAsPromised);
 
@@ -151,7 +151,7 @@ describe("InsertionWriter", () => {
 
     // do an op
     const eoaAddr = await eoa.getAddress();
-    const opRequest = newOpRequestBuilder({
+    const opRequest = await newOpRequestBuilder({
       chainId: 31337n,
       tellerContract: teller.address,
     })

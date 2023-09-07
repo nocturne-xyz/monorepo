@@ -103,7 +103,7 @@ describe("Optimistic nullifier tracking", () => {
 
     // make op request spending 200 tokens
     const amountToSpend = 200n;
-    const opRequest = newOpRequestBuilder({
+    const opRequest = await newOpRequestBuilder({
       chainId: 31337n,
       tellerContract: teller.address,
     })
@@ -225,7 +225,7 @@ describe("Optimistic nullifier tracking", () => {
 
     // make op request spending 200 tokens
     const amountToSpend = 200n;
-    const opRequest = newOpRequestBuilder({
+    const opRequest = await newOpRequestBuilder({
       chainId: 31337n,
       tellerContract: teller.address,
     })

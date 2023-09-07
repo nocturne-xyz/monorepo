@@ -36,7 +36,7 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
       chainId: 1n,
       tellerContract: DUMMY_CONTRACT_ADDR,
     });
-    const opRequest = builder
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 130n)
       .refundAsset(shitcoin)

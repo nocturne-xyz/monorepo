@@ -31,7 +31,7 @@
     "@nocturne-xyz/persistent-log": "workspace:^",
     "commander": "^9.4.1",
     "dotenv": "^16.0.3",
-    "ioredis": "^5.3.2",
+    "ioredis": "^5.3.1",
     "winston": "^3.8.2"
   },
   "devDependencies": {

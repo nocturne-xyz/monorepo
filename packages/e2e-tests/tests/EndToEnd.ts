@@ -188,7 +188,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     // HH's default gas price seems to be somewhere around 1 gwei experimentally
     // unfortunately it doesn't have a way to set it in the chain itself, only in hre
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = newOpRequestBuilder({
+    const opRequestWithMetadata = await newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -231,7 +231,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = newOpRequestBuilder({
+    const opRequestWithMetadata = await newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -284,7 +284,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = newOpRequestBuilder({
+    const opRequestWithMetadata = await newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -429,7 +429,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = newOpRequestBuilder({
+    const opRequestWithMetadata = await newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })
@@ -522,7 +522,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const PAYMENT_AMOUNT = (PER_NOTE_AMOUNT * 2n * 3n) / 4n; // 3/4 of total deposit amount
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = newOpRequestBuilder({
+    const opRequestWithMetadata = await newOpRequestBuilder({
       chainId,
       tellerContract: teller.address,
     })

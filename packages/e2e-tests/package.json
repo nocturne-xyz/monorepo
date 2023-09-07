@@ -28,6 +28,7 @@
     "@nocturne-xyz/deposit-screener": "workspace:^",
     "@nocturne-xyz/insertion-writer": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
+    "@nocturne-xyz/op-request-plugins": "workspace:^",
     "@nocturne-xyz/persistent-log": "workspace:^",
     "@nocturne-xyz/subtree-updater": "workspace:^",
     "@types/chai": "^4.3.3",

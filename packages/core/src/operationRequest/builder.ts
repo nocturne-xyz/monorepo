@@ -6,6 +6,8 @@ import {
   OperationGasParams,
   OperationRequestWithMetadata,
   OperationRequest,
+  UnwrapRequest,
+  ConfidentialPaymentRequest,
 } from "./operationRequest";
 import {
   Action,
@@ -13,11 +15,20 @@ import {
   Asset,
   NetworkInfo,
   OperationMetadata,
+  OperationMetadataItem,
 } from "../primitives";
 import { ethers } from "ethers";
 import { groupByArr } from "../utils";
 
 export type OpRequestBuilder = OpRequestBuilderExt<BaseOpRequestBuilder>;
+
+export interface BuilderItemToProcess {
+  unwraps: UnwrapRequest[];
+  confidentialPayments: ConfidentialPaymentRequest[];
+  refundAssets: Asset[];
+  actions: Action[];
+  metadatas: OperationMetadataItem[];
+}
 
 // generic type for an `OpRequestBuilder` that can be "extended" via plugins
 export type OpRequestBuilderExt<E extends BaseOpRequestBuilder> = E & {
@@ -30,10 +41,13 @@ export type OpRequestBuilderExt<E extends BaseOpRequestBuilder> = E & {
 // methods that are available by default on any implementor of `OpRequestBuilderExt`
 export interface BaseOpRequestBuilder {
   _op: OperationRequest;
-  _metadata: OperationMetadata;
-  _joinSplitsAndPaymentsByAsset: Map<Asset, JoinSplitsAndPaymentsForAsset>;
+  _builderItemsToProcess: Promise<BuilderItemToProcess>[];
 
-  build(): OperationRequestWithMetadata;
+  build(): Promise<OperationRequestWithMetadata>;
+
+  // add a plugin promise to await, resolves to unwraps, refunds, and actions to enqueue
+  // returns `this` so it's chainable
+  pluginFn(pluginPromise: Promise<BuilderItemToProcess>): this;
 
   // add an action  to the operation
   // returns `this` so it's chainable
@@ -114,16 +128,11 @@ export function newOpRequestBuilder(
     deadline: 0n,
   };
 
-  const _metadata = {
-    items: [],
-  };
-
-  const _joinSplitsAndPaymentsByAsset = new Map();
+  const _builderItemsToProcess: Promise<BuilderItemToProcess>[] = [];
 
   return {
     _op,
-    _metadata,
-    _joinSplitsAndPaymentsByAsset,
+    _builderItemsToProcess,
 
     use<E2 extends BaseOpRequestBuilder>(
       plugin: OpRequestBuilderPlugin<BaseOpRequestBuilder, E2>
@@ -131,26 +140,45 @@ export function newOpRequestBuilder(
       return plugin(this);
     },
 
+    pluginFn(pluginPromise: Promise<BuilderItemToProcess>) {
+      this._builderItemsToProcess.push(pluginPromise);
+      return this;
+    },
+
     action(contractAddress: Address, encodedFunction: string) {
       const action: Action = {
         contractAddress: ethers.utils.getAddress(contractAddress),
         encodedFunction,
       };
-      this._op.actions.push(action);
+
+      this._builderItemsToProcess.push(
+        Promise.resolve({
+          unwraps: [],
+          confidentialPayments: [],
+          refundAssets: [],
+          actions: [action],
+          metadatas: [],
+        })
+      );
+
       return this;
     },
 
     unwrap(asset: Asset, amountUnits: bigint) {
-      const joinSplit: JoinSplitRequest = {
+      const unwrap: UnwrapRequest = {
         asset,
         unwrapValue: amountUnits,
       };
 
-      const [joinSplits, payments] = this._joinSplitsAndPaymentsByAsset.get(
-        asset
-      ) ?? [[], []];
-      joinSplits.push(joinSplit);
-      this._joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+      this._builderItemsToProcess.push(
+        Promise.resolve({
+          unwraps: [unwrap],
+          confidentialPayments: [],
+          refundAssets: [],
+          actions: [],
+          metadatas: [],
+        })
+      );
 
       return this;
     },
@@ -160,28 +188,35 @@ export function newOpRequestBuilder(
       amountUnits: bigint,
       receiver: CanonAddress
     ) {
-      const payment: ConfidentialPayment = {
+      const payment: ConfidentialPaymentRequest = {
         value: amountUnits,
         receiver,
+        asset,
       };
 
-      const [joinSplits, payments] = this._joinSplitsAndPaymentsByAsset.get(
-        asset
-      ) ?? [[], []];
-      payments.push(payment);
-      this._joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+      this._builderItemsToProcess.push(
+        Promise.resolve({
+          unwraps: [],
+          confidentialPayments: [payment],
+          refundAssets: [],
+          actions: [],
+          metadatas: [],
+        })
+      );
 
-      this._metadata.items.push({
-        type: "ConfidentialPayment",
-        recipient: receiver,
-        asset,
-        amount: amountUnits,
-      });
       return this;
     },
 
     refundAsset(asset: Asset) {
-      this._op.refundAssets.push(asset);
+      this._builderItemsToProcess.push(
+        Promise.resolve({
+          unwraps: [],
+          confidentialPayments: [],
+          refundAssets: [asset],
+          actions: [],
+          metadatas: [],
+        })
+      );
       return this;
     },
 
@@ -207,14 +242,71 @@ export function newOpRequestBuilder(
       return this;
     },
 
-    build(): OperationRequestWithMetadata {
-      const joinSplitRequests = [];
+    async build(): Promise<OperationRequestWithMetadata> {
+      const joinSplitsAndPaymentsByAsset: Map<
+        Asset,
+        JoinSplitsAndPaymentsForAsset
+      > = new Map();
+      const metadata: OperationMetadata = {
+        items: [],
+      };
+
+      // Await any promises resolving to items to process, then process items
+      for (const prom of this._builderItemsToProcess) {
+        const result = await prom;
+
+        for (const { asset, unwrapValue } of result.unwraps) {
+          const joinSplit: JoinSplitRequest = {
+            asset,
+            unwrapValue,
+          };
+
+          const [joinSplits, payments] = joinSplitsAndPaymentsByAsset.get(
+            asset
+          ) ?? [[], []];
+          joinSplits.push(joinSplit);
+          joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+        }
+        for (const { asset, value, receiver } of result.confidentialPayments) {
+          const payment: ConfidentialPayment = {
+            value,
+            receiver,
+          };
+
+          const [joinSplits, payments] = joinSplitsAndPaymentsByAsset.get(
+            asset
+          ) ?? [[], []];
+          payments.push(payment);
+          joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+
+          metadata.items.push({
+            type: "ConfidentialPayment",
+            recipient: receiver,
+            asset,
+            amount: value,
+          });
+        }
+        for (const { contractAddress, encodedFunction } of result.actions) {
+          const action: Action = {
+            contractAddress: ethers.utils.getAddress(contractAddress),
+            encodedFunction,
+          };
+          this._op.actions.push(action);
+        }
+        for (const asset of result.refundAssets) {
+          this._op.refundAssets.push(asset);
+        }
+        for (const metadataItem of result.metadatas) {
+          metadata.items.push(metadataItem);
+        }
+      }
 
       // consolidate joinSplits and payments for each asset
+      const joinSplitRequests = [];
       for (const [
         asset,
         [joinSplits, payments],
-      ] of this._joinSplitsAndPaymentsByAsset.entries()) {
+      ] of joinSplitsAndPaymentsByAsset.entries()) {
         // consolidate payments to the same receiver
         const paymentsByReceiver = groupByArr(payments, (p) =>
           p.receiver.toString()
@@ -267,7 +359,7 @@ export function newOpRequestBuilder(
 
       return {
         request: this._op,
-        meta: this._metadata,
+        meta: metadata,
       };
     },
   };

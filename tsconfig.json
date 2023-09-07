@@ -59,6 +59,9 @@
       "path": "./packages/core"
     },
     {
+      "path": "./packages/op-request-plugins"
+    },
+    {
       "path": "./packages/crypto-utils"
     },
     {
