@@ -81,7 +81,6 @@ const MISTTRACK_RISK_REJECT: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
     const banlistItems: MisttrackRiskItem[] = [
       "Involved Theft Activity",
       "Involved Phishing Activity",
-      "Involved Ransom Activity",
       "Malicious Address",
     ];
     const detailListContainsBanlistItems = data.detail_list.some((item) =>
@@ -115,22 +114,37 @@ const shortWalletHistoryPartial = {
 
 const SHORT_WALLET_HISTORY_DELAY: RuleParams<"MISTTRACK_ADDRESS_OVERVIEW"> = {
   ...shortWalletHistoryPartial,
-  action: { type: "Delay", operation: "Add", value: 2 * BASE_DELAY_SECONDS },
+  action: {
+    type: "Delay",
+    operation: "Add",
+    valueSeconds: 2 * BASE_DELAY_SECONDS,
+  },
 };
 
-const SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY: RuleParams<"MISTTRACK_ADDRESS_OVERVIEW"> =
-  {
-    name: "SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY",
-    call: "MISTTRACK_ADDRESS_OVERVIEW",
-    threshold: (data: MisttrackAddressOverviewData) => {
-      const BALANCE_THRESHOLD = 300_000;
-      return (
-        isLessThanOneMonthAgo(data.first_seen) &&
-        data.balance > BALANCE_THRESHOLD
-      );
-    },
-    action: { type: "Delay", operation: "Add", value: 4 * BASE_DELAY_SECONDS },
-  };
+const SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY: CombinedRulesParams<
+  ["MISTTRACK_ADDRESS_OVERVIEW", "MISTTRACK_ADDRESS_OVERVIEW"]
+> = {
+  partials: [
+    shortWalletHistoryPartial,
+    {
+      name: "SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY",
+      call: "MISTTRACK_ADDRESS_OVERVIEW",
+      threshold: (data: MisttrackAddressOverviewData) => {
+        const BALANCE_THRESHOLD = 300_000;
+        return (
+          isLessThanOneMonthAgo(data.first_seen) &&
+          data.balance > BALANCE_THRESHOLD
+        );
+      },
+    } as const,
+  ],
+  action: {
+    type: "Delay",
+    operation: "Add",
+    valueSeconds: 2 * BASE_DELAY_SECONDS,
+  },
+  applyIf: "All",
+};
 
 const SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY: CombinedRulesParams<
   ["MISTTRACK_ADDRESS_OVERVIEW", "MISTTRACK_ADDRESS_RISK_SCORE"]
@@ -146,9 +160,9 @@ const SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY: CombinedRulesParams<
   action: {
     type: "Delay",
     operation: "Add",
-    value: 2 * BASE_DELAY_SECONDS,
+    valueSeconds: 2 * BASE_DELAY_SECONDS,
   },
-  applyIf: "Any",
+  applyIf: "All",
 };
 
 // - Usage of mixer → 2x delay (4h)
@@ -157,7 +171,11 @@ const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
   name: "MIXER_USAGE_DELAY",
   call: "MISTTRACK_ADDRESS_RISK_SCORE",
   threshold: (data: MisttrackRiskScoreData) => includesMixerUsage(data),
-  action: { type: "Delay", operation: "Add", value: 2 * BASE_DELAY_SECONDS },
+  action: {
+    type: "Delay",
+    operation: "Add",
+    valueSeconds: 2 * BASE_DELAY_SECONDS,
+  },
 };
 
 // // - Large volume of deposits coming from same address (large multideposit) → 3x delay (6h)

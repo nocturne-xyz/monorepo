@@ -19,7 +19,6 @@ const MISTTRACK_REJECT_SCORE_OVER_80_AND_PHISHING_THEFT_NONZERO: RuleParams<"MIS
       const banlist: MisttrackRiskItem[] = [
         "Involved Theft Activity",
         "Involved Phishing Activity",
-        "Involved Ransom Activity",
         "Malicious Address",
         "Interact With Malicious Address",
       ];

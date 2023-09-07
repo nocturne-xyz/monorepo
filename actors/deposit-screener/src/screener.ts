@@ -292,7 +292,6 @@ export class DepositScreenerScreener {
   async scheduleSecondScreeningPhase(
     logger: Logger,
     depositRequest: DepositRequest,
-    assetAddr: Address,
     delay: Delay
   ): Promise<void> {
     logger.debug(`calculating delay until second phase of screening`);
@@ -316,6 +315,7 @@ export class DepositScreenerScreener {
       },
     });
 
+    const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
     logger.info("[histogram] delaySeconds", {
       delaySeconds: delay.timeSeconds,
     });
@@ -380,6 +380,10 @@ export class DepositScreenerScreener {
         if (checkResult.type === "Rejection") {
           childLogger.warn(
             `deposit failed second screening screening with reason ${checkResult.reason}`
+          );
+          await this.db.setDepositRequestStatus(
+            depositRequest,
+            DepositRequestStatus.FailedScreen
           );
           return;
         }

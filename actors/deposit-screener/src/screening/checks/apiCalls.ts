@@ -86,7 +86,7 @@ export interface DummyMisttrackData {
   misttrackRisk: number;
 }
 
-export type Data =
+export type ApiData =
   | TrmData
   | MisttrackData
   | DummyTrmData

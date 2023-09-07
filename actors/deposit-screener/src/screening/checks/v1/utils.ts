@@ -11,7 +11,7 @@ export function includesMixerUsage(data: MisttrackRiskScoreData): boolean {
   return (
     data.detail_list.includes("Mixer") ||
     data.risk_detail.some((item) =>
-      item.label.toLowerCase().includes("tornado.cash")
+      item.label.toLowerCase().includes("tornado")
     )
   );
 }

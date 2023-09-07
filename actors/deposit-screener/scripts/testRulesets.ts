@@ -6,7 +6,7 @@ const DELAY_50_ALWAYS: RuleParams<"NOOP"> = {
   name: "DELAY_50_ALWAYS",
   call: "NOOP",
   threshold: () => true,
-  action: { type: "Delay", operation: "Add", value: 50 },
+  action: { type: "Delay", operation: "Add", valueSeconds: 50 },
 };
 
 const REJECT_IF_RISK_OVER_POINT_5: RuleParams<"DUMMY_TRM_SCREENING_ADDRESSES"> =
@@ -36,7 +36,7 @@ const DELAY_100_IF_RISK_IS_POINT_FIVE: RuleParams<"DUMMY_TRM_SCREENING_ADDRESSES
     threshold: (data: DummyTrmData) => {
       return data.risk === 0.5;
     },
-    action: { type: "Delay", operation: "Add", value: 100 },
+    action: { type: "Delay", operation: "Add", valueSeconds: 100 },
   };
 
 const DELAY_BY_FACTOR_OF_2_IF_RISK_IS_POINT_FIVE: RuleParams<"DUMMY_TRM_SCREENING_ADDRESSES"> =
@@ -46,14 +46,14 @@ const DELAY_BY_FACTOR_OF_2_IF_RISK_IS_POINT_FIVE: RuleParams<"DUMMY_TRM_SCREENIN
     threshold: (data: DummyTrmData) => {
       return data.risk === 0.5;
     },
-    action: { type: "Delay", operation: "Multiply", value: 2 },
+    action: { type: "Delay", operation: "Multiply", factor: 2 },
   };
 
 const DELAY_10000000_NEVER: RuleParams<"NOOP"> = {
   name: "DELAY_10000000_NEVER",
   call: "NOOP",
   threshold: () => false,
-  action: { type: "Delay", operation: "Add", value: 10000000 },
+  action: { type: "Delay", operation: "Add", valueSeconds: 10000000 },
 };
 
 (async () => {

@@ -1,5 +1,5 @@
 import { ScreeningDepositRequest } from "..";
-import { API_CALLS, ApiCallKeys, ApiMap, Data } from "./apiCalls";
+import { API_CALLS, ApiCallKeys, ApiMap, ApiData } from "./apiCalls";
 export interface Rejection {
   type: "Rejection";
   reason: string;
@@ -7,12 +7,12 @@ export interface Rejection {
 
 export interface AddDelay {
   operation: "Add";
-  value: number;
+  valueSeconds: number;
 }
 
 export interface MultiplyDelay {
   operation: "Multiply";
-  value: number;
+  factor: number;
 }
 
 export type DelayAction = (AddDelay | MultiplyDelay) & { type: "Delay" };
@@ -105,7 +105,7 @@ export class CompositeRule<T extends ReadonlyArray<keyof ApiMap>>
 
   async check(
     deposit: ScreeningDepositRequest,
-    cache: Record<ApiCallKeys, Data>
+    cache: Record<ApiCallKeys, ApiData>
   ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
     const shouldApply = this.partials[this.predicateFn](async (partial) => {
       if (!cache[partial.call]) {
@@ -152,7 +152,7 @@ export class RuleSet {
 
   async check(deposit: ScreeningDepositRequest): Promise<Rejection | Delay> {
     let currRule = this.head;
-    const cache: Record<string, Data> = {};
+    const cache: Record<string, ApiData> = {};
     const rulesLogList: {
       ruleName: string;
       result: Awaited<ReturnType<RuleLike["check"]>>;
@@ -169,7 +169,7 @@ export class RuleSet {
       } else if (result.type === "Delay") {
         this.delaySeconds = APPLY_DELAY_OPERATION[result.operation](
           this.delaySeconds,
-          result.value
+          result.operation === "Add" ? result.valueSeconds : result.factor
         );
       }
       currRule = currRule.next;
