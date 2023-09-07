@@ -151,10 +151,11 @@ describe("InsertionWriter", () => {
 
     // do an op
     const eoaAddr = await eoa.getAddress();
-    const opRequest = await newOpRequestBuilder({
-      chainId: 31337n,
-      tellerContract: teller.address,
-    })
+    const opRequest = await newOpRequestBuilder(
+      eoa.provider,
+      31337n,
+      teller.address
+    )
       .use(Erc20Plugin)
       .gasPrice(0n)
       .erc20Transfer(asset.assetAddr, eoaAddr, 1n)
