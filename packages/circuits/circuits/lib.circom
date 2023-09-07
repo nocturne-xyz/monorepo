@@ -256,6 +256,7 @@ template Encrypt(n) {
 // takes `2n` bits and outputs n 2-bit limbs
 // interpreted in little-endian order
 //@requires(1) n < 127
+//@requires(2) each element of `bits` is a bit
 //@ensures(1) for all i in 0..n: limbs[i] == bits[i*2] + 2*bits[i*2 + 1]
 template BitsToTwoBitLimbs(n) {
     signal input bits[2*n];
@@ -264,6 +265,21 @@ template BitsToTwoBitLimbs(n) {
     for (var i = 0; i < n; i++) {
         limbs[i] <== bits[i*2] + 2*bits[i*2 + 1];
     }
+}
+
+// takes n 2-bit limbs and outputs 2n bits interpreted in little-endian order
+//@requires(1) `limbs` are all 2-bit numbers
+//@requires(2) `n < 127`
+template TwoBitLimbsToBits(n) {
+    signal input limbs[n];
+    signal output bits[2*n];
+
+    for (var i = 0; i < n; i++) {
+        bits[i*2] <-- limbs[i] & 1;
+        bits[i*2 + 1] <-- limbs[i] & 2;
+        
+        limbs[i] === bits[i*2] + 2*bits[i*2 + 1];
+    } 
 }
 
 // slices first k elements out of an array of n elements

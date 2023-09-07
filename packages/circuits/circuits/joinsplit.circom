@@ -57,6 +57,13 @@ include "lib.circom";
 //@ensures(12.1) the sender's canonical address used in `senderCommitment` is the canonical address derived from `vk`
 //@ensures(12.2) `senderCommitment` is computed correctly as `Poseidon(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce"))`
 //@ensures(13) the recipient is a valid canonical address (on curve, order-l)
+//@ensures(14) `joinSplitInfoCommitment` is computed correctly as `Poseidon(keccak256("JOINSPLIT_INFO_COMMITMENT") % p, ...encodedJoinSplitInfo)` where `encodedJoinSplitInfo` is an array consisting of the following:
+// - `compressedSenderCanonAddrY`
+// - `compressedReceiverCanonAddrY`
+// - `oldMerkleIndicesAndNonceEncoded`, defined as `u32(oldNoteAIndex) || u32(oldNoteBIndex) << 32 || senderSignBit << 64 || receiverSignBit << 65 || joinSplitInfoNonce << 66`
+//      where `joinSplitInfoNonce` is passed as a private input and is at most 128 bits
+// - `newNoteValuesEncoded`, defined as u126(newNoteAValue) || u126(newNoteBValue) << 126
+// - `newNoteANonce
 template JoinSplit(levels) {
     // *** PUBLIC INPUTS ***
     // digest of the operation this JoinSplit is a part of
@@ -252,7 +259,7 @@ template JoinSplit(levels) {
     // check that the sum of old and new note values are in range [0, 2**126)
     // this can't overflow because all four note values are in range [0, 2**126) and field is 254 bits
     //@satisfies(10.1) 
-    //@argument follows from `RangeCheckNBits.ensures(1)`, and `RangeCheckNBits.requires(1)` is satisfied since `n = 252
+    //@argument follows from `Num2Bits` and `RangeCheckNBits.ensures(1)`, and `RangeCheckNBits.requires(1)` is satisfied since `n < 254`
     //@satisfies(10.2)
     //@satisfies(10.3)
     //@argument same as (10.1)
@@ -264,8 +271,8 @@ template JoinSplit(levels) {
     //@argument same as (10.1)
     signal valInput <== oldNoteAValue + oldNoteBValue;
     signal valOutput <== newNoteAValue + newNoteBValue;
-    RangeCheckNBits(126)(newNoteAValue);
-    RangeCheckNBits(126)(newNoteBValue);
+    signal newNoteAValueBits <== Num2Bits(126)(newNoteAValue);
+    signal newNoteBValueBits <== Num2Bits(126)(newNoteBValue);
     RangeCheckNBits(126)(oldNoteAValue);
     RangeCheckNBits(126)(oldNoteBValue);
     RangeCheckNBits(126)(valInput);
@@ -453,6 +460,13 @@ template JoinSplit(levels) {
     //@argument correct by definition (exactly what the code does)
     var SENDER_COMMITMENT_DOMAIN_SEPARATOR = 5680996188676417870015190585682285899130949254168256752199352013418366665222;
     senderCommitment <== Poseidon(4)([SENDER_COMMITMENT_DOMAIN_SEPARATOR, senderCanonAddr[0], senderCanonAddr[1], newNoteBNonce]);
+
+    // compute joinSplitInfoCommitment
+    //@satisfies(14)
+    //@argument TODO
+    signal pathABits = TwoBitLimbsToBits(nLevels)(pathA);
+    signal pathBBits = TwoBitLimbsToBits(nLevels)(pathB);
+    signal encoded = 
 }
 
 component main { public [pubEncodedAssetAddrWithSignBits, pubEncodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit(16);
