@@ -7,7 +7,7 @@ import {
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
   OperationMetadataItem,
-  PluginFnResult,
+  BuilderItemToProcess,
   UnwrapRequest,
 } from "@nocturne-xyz/core";
 import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
@@ -37,7 +37,7 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
     ...inner,
     use: use,
     convertWethToWsteth(amount: bigint) {
-      const prom = new Promise<PluginFnResult>((resolve) => {
+      const prom = new Promise<BuilderItemToProcess>((resolve) => {
         const chainId = this._op.chainId;
 
         let wethAddress: Address;
@@ -81,6 +81,7 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
 
         resolve({
           unwraps: [unwrap],
+          confidentialPayments: [],
           actions: [action],
           refundAssets: [refundAsset],
           metadatas: [metadata],

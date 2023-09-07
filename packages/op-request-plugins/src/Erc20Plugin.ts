@@ -7,7 +7,7 @@ import {
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
   OperationMetadataItem,
-  PluginFnResult,
+  BuilderItemToProcess,
   UnwrapRequest,
 } from "@nocturne-xyz/core";
 import ERC20_ABI from "./abis/ERC20.json";
@@ -45,7 +45,7 @@ export function Erc20Plugin<EInner extends BaseOpRequestBuilder>(
       recipient: Address,
       amount: bigint
     ) {
-      const prom = new Promise<PluginFnResult>((resolve) => {
+      const prom = new Promise<BuilderItemToProcess>((resolve) => {
         const encodedErc20 =
           AssetTrait.erc20AddressToAsset(tokenContractAddress);
 
@@ -75,6 +75,7 @@ export function Erc20Plugin<EInner extends BaseOpRequestBuilder>(
 
         resolve({
           unwraps: [unwrap],
+          confidentialPayments: [],
           actions: [action],
           refundAssets: [],
           metadatas: [metadata],

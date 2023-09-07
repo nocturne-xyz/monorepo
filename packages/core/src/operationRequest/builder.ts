@@ -7,6 +7,7 @@ import {
   OperationRequestWithMetadata,
   OperationRequest,
   UnwrapRequest,
+  ConfidentialPaymentRequest,
 } from "./operationRequest";
 import {
   Action,
@@ -21,8 +22,9 @@ import { groupByArr } from "../utils";
 
 export type OpRequestBuilder = OpRequestBuilderExt<BaseOpRequestBuilder>;
 
-export interface PluginFnResult {
+export interface BuilderItemToProcess {
   unwraps: UnwrapRequest[];
+  confidentialPayments: ConfidentialPaymentRequest[];
   refundAssets: Asset[];
   actions: Action[];
   metadatas: OperationMetadataItem[];
@@ -41,23 +43,29 @@ export interface BaseOpRequestBuilder {
   _op: OperationRequest;
   _metadata: OperationMetadata;
   _joinSplitsAndPaymentsByAsset: Map<Asset, JoinSplitsAndPaymentsForAsset>;
-  _pluginFnPromises: Promise<PluginFnResult>[];
+  _builderItemsToProcess: Promise<BuilderItemToProcess>[];
 
   build(): Promise<OperationRequestWithMetadata>;
 
   // add a plugin promise to await, resolves to unwraps, refunds, and actions to enqueue
   // returns `this` so it's chainable
-  pluginFn(pluginPromise: Promise<PluginFnResult>): this;
+  pluginFn(pluginPromise: Promise<BuilderItemToProcess>): this;
 
   // add an action  to the operation
   // returns `this` so it's chainable
   action(contractAddress: Address, encodedFunction: string): this;
+
+  // Internal action method
+  _pushAction(contractAddress: Address, encodedFunction: string): this;
 
   // specify the operation should unwrap `amountUnits` of `asset`
   // `ammountUnits` is the amount in EVM (uint256) representation. It is up to
   // the caller to handle decimal conversions
   // returns `this` so it's chainable
   unwrap(asset: Asset, amountUnits: bigint): this;
+
+  // Internal unwrap method
+  _pushUnwrap(asset: Asset, amountUnits: bigint): this;
 
   // add a confidential payment to the operation
   // returns `this` so it's chainable
@@ -67,8 +75,18 @@ export interface BaseOpRequestBuilder {
     receiver: CanonAddress
   ): this;
 
+  // Internal confidential payment method
+  _pushConfidentialPayment(
+    asset: Asset,
+    amountUnits: bigint,
+    receiver: CanonAddress
+  ): this;
+
   // indicates that the operation expects a refund of asset `Asset`.
   refundAsset(asset: Asset): this;
+
+  // Internal refund asset method
+  _pushRefundAsset(asset: Asset): this;
 
   // set the operation's `refundAddr` stealth address up-front.
   // if this is not set, the wallet will generate a new one
@@ -134,13 +152,13 @@ export function newOpRequestBuilder(
 
   const _joinSplitsAndPaymentsByAsset = new Map();
 
-  const _pluginFnPromises: Promise<PluginFnResult>[] = [];
+  const _builderItemsToProcess: Promise<BuilderItemToProcess>[] = [];
 
   return {
     _op,
     _metadata,
     _joinSplitsAndPaymentsByAsset,
-    _pluginFnPromises,
+    _builderItemsToProcess,
 
     use<E2 extends BaseOpRequestBuilder>(
       plugin: OpRequestBuilderPlugin<BaseOpRequestBuilder, E2>
@@ -148,12 +166,31 @@ export function newOpRequestBuilder(
       return plugin(this);
     },
 
-    pluginFn(pluginPromise: Promise<PluginFnResult>) {
-      this._pluginFnPromises.push(pluginPromise);
+    pluginFn(pluginPromise: Promise<BuilderItemToProcess>) {
+      this._builderItemsToProcess.push(pluginPromise);
       return this;
     },
 
     action(contractAddress: Address, encodedFunction: string) {
+      const action: Action = {
+        contractAddress: ethers.utils.getAddress(contractAddress),
+        encodedFunction,
+      };
+
+      this._builderItemsToProcess.push(
+        Promise.resolve({
+          unwraps: [],
+          confidentialPayments: [],
+          refundAssets: [],
+          actions: [action],
+          metadatas: [],
+        })
+      );
+
+      return this;
+    },
+
+    _pushAction(contractAddress: Address, encodedFunction: string) {
       const action: Action = {
         contractAddress: ethers.utils.getAddress(contractAddress),
         encodedFunction,
@@ -163,6 +200,25 @@ export function newOpRequestBuilder(
     },
 
     unwrap(asset: Asset, amountUnits: bigint) {
+      const unwrap: UnwrapRequest = {
+        asset,
+        unwrapValue: amountUnits,
+      };
+
+      this._builderItemsToProcess.push(
+        Promise.resolve({
+          unwraps: [unwrap],
+          confidentialPayments: [],
+          refundAssets: [],
+          actions: [],
+          metadatas: [],
+        })
+      );
+
+      return this;
+    },
+
+    _pushUnwrap(asset: Asset, amountUnits: bigint) {
       const joinSplit: JoinSplitRequest = {
         asset,
         unwrapValue: amountUnits,
@@ -178,6 +234,30 @@ export function newOpRequestBuilder(
     },
 
     confidentialPayment(
+      asset: Asset,
+      amountUnits: bigint,
+      receiver: CanonAddress
+    ) {
+      const payment: ConfidentialPaymentRequest = {
+        value: amountUnits,
+        receiver,
+        asset,
+      };
+
+      this._builderItemsToProcess.push(
+        Promise.resolve({
+          unwraps: [],
+          confidentialPayments: [payment],
+          refundAssets: [],
+          actions: [],
+          metadatas: [],
+        })
+      );
+
+      return this;
+    },
+
+    _pushConfidentialPayment(
       asset: Asset,
       amountUnits: bigint,
       receiver: CanonAddress
@@ -199,10 +279,24 @@ export function newOpRequestBuilder(
         asset,
         amount: amountUnits,
       });
+
       return this;
     },
 
     refundAsset(asset: Asset) {
+      this._builderItemsToProcess.push(
+        Promise.resolve({
+          unwraps: [],
+          confidentialPayments: [],
+          refundAssets: [asset],
+          actions: [],
+          metadatas: [],
+        })
+      );
+      return this;
+    },
+
+    _pushRefundAsset(asset: Asset) {
       this._op.refundAssets.push(asset);
       return this;
     },
@@ -233,17 +327,24 @@ export function newOpRequestBuilder(
       const joinSplitRequests = [];
 
       // Await plugin promises and update op
-      for (const prom of this._pluginFnPromises) {
+      for (const prom of this._builderItemsToProcess) {
         const result = await prom;
 
         for (const unwrap of result.unwraps) {
-          this.unwrap(unwrap.asset, unwrap.unwrapValue);
+          this._pushUnwrap(unwrap.asset, unwrap.unwrapValue);
+        }
+        for (const payment of result.confidentialPayments) {
+          this._pushConfidentialPayment(
+            payment.asset,
+            payment.value,
+            payment.receiver
+          );
         }
         for (const action of result.actions) {
-          this.action(action.contractAddress, action.encodedFunction);
+          this._pushAction(action.contractAddress, action.encodedFunction);
         }
         for (const refundAsset of result.refundAssets) {
-          this.refundAsset(refundAsset);
+          this._pushRefundAsset(refundAsset);
         }
         for (const metadata of result.metadatas) {
           this._metadata.items.push(metadata);

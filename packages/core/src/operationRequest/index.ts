@@ -9,6 +9,6 @@ export {
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
-  PluginFnResult,
+  BuilderItemToProcess,
   newOpRequestBuilder,
 } from "./builder";

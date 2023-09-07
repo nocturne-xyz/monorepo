@@ -13,6 +13,10 @@ export interface JoinSplitRequest {
 
 export type UnwrapRequest = Omit<JoinSplitRequest, "payment">;
 
+export interface ConfidentialPaymentRequest extends ConfidentialPayment {
+  asset: Asset;
+}
+
 export interface OperationRequest {
   joinSplitRequests: JoinSplitRequest[];
   refundAssets: Asset[];
