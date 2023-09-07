@@ -40,7 +40,7 @@ export type OpRequestBuilderExt<E extends BaseOpRequestBuilder> = E & {
 
 // methods that are available by default on any implementor of `OpRequestBuilderExt`
 export interface BaseOpRequestBuilder {
-  _provider: ethers.providers.Provider;
+  provider: ethers.providers.Provider;
   _op: OperationRequest;
   _builderItemsToProcess: Promise<BuilderItemToProcess>[];
 
@@ -129,7 +129,7 @@ export function newOpRequestBuilder(
   const _builderItemsToProcess: Promise<BuilderItemToProcess>[] = [];
 
   return {
-    _provider: provider,
+    provider,
     _op,
     _builderItemsToProcess,
 
