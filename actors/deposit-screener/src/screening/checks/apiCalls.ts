@@ -95,7 +95,7 @@ export type Data =
 
 const TRM_BASE_URL = "https://api.trmlabs.com/public/v2";
 const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";
-const TRM_API_KEY = ""; // TODO get from env, once we start paying for TRM
+const TRM_API_KEY = process.env.TRM_API_KEY ?? "";
 const MISTTRACK_API_KEY = "YourApiKey";
 
 export const API_CALLS = {
