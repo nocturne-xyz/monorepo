@@ -307,6 +307,20 @@ template SliceLastK(n, k) {
     }
 }
 
+// concatenates two arrays
+template Concat(n, k) {
+    signal input a[n];
+    signal input b[k];
+    signal output c[n + k];
+
+    for (var i = 0; i < n; i++) {
+        c[i] <== a[i];
+    }
+    for (var i = 0; i < k; i++) {
+        c[n + i] <== b[i];
+    }
+}
+
 
 // same as `Point2Bits_strict` (https://github.com/iden3/circomlib/blob/cff5ab6288b55ef23602221694a6a38a0239dcc0/circuits/pointbits.circom#L136),
 // but returns the result as y cordinate and x coordinate's sign bit in two field elements instead of as a bit array

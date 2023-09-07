@@ -46,12 +46,12 @@ include "lib.circom";
 //@ensures(9.2) `nullifierB` was correctly derived from the note commitment of `oldNoteB` and the viewing key `vk`
 //@ensures(9.3) `nullifierA` is the only possible nullifier that can be derived for `oldNoteA`
 //@ensures(9.4) `nullifierB` is the only possible nullifier that can be derived for `oldNoteB`
-//@ensures(10.1) `oldNoteAValue` is in the range [0, 2**126)
-//@ensures(10.2) `oldNoteBValue` is in the range [0, 2**126)
-//@ensures(10.3) `newNoteAValue` is in the range [0, 2**126)
-//@ensures(10.4) `newNoteBValue` is in the range [0, 2**126)
-//@ensures(10.5) `oldNoteAValue + oldNoteBValue` is in the range [0, 2**126)
-//@ensures(10.6) `newNoteAValue + newNoteBValue` is in the range [0, 2**126)
+//@ensures(10.1) `oldNoteAValue` is in the range [0, 2**252)
+//@ensures(10.2) `oldNoteBValue` is in the range [0, 2**252)
+//@ensures(10.3) `newNoteAValue` is in the range [0, 2**252)
+//@ensures(10.4) `newNoteBValue` is in the range [0, 2**252)
+//@ensures(10.5) `oldNoteAValue + oldNoteBValue` is in the range [0, 2**252)
+//@ensures(10.6) `newNoteAValue + newNoteBValue` is in the range [0, 2**252)
 //@ensures(11.1) `oldNoteAValue + oldNoteBValue >= newNoteAValue + newNoteBValue`
 //@ensures(11.2) `publicSpend == oldNoteAValue + oldNoteBValue - newNoteAValue - newNoteBValue`
 //@ensures(12.1) the sender's canonical address used in `senderCommitment` is the canonical address derived from `vk`
@@ -60,10 +60,10 @@ include "lib.circom";
 //@ensures(14) `joinSplitInfoCommitment` is computed correctly as `Poseidon(keccak256("JOINSPLIT_INFO_COMMITMENT") % p, ...encodedJoinSplitInfo)` where `encodedJoinSplitInfo` is an array consisting of the following:
 // - `compressedSenderCanonAddrY`
 // - `compressedReceiverCanonAddrY`
-// - `oldMerkleIndicesAndNonceEncoded`, defined as `u32(oldNoteAIndex) || u32(oldNoteBIndex) << 32 || senderSignBit << 64 || receiverSignBit << 65 || joinSplitInfoNonce << 66`
-//      where `joinSplitInfoNonce` is passed as a private input and is at most 128 bits
-// - `newNoteValuesEncoded`, defined as u126(newNoteAValue) || u126(newNoteBValue) << 126
-// - `newNoteANonce
+// - `oldMerkleIndicesAndWithBits`, defined as `u32(oldNoteAIndex) || u32(oldNoteBIndex) << 32 || senderSignBit << 64 || receiverSignBit << 65
+// - `newNoteAValue`
+// - `newNoteBValue`
+// - `joinSplitInfoNonce`, defined as `Poseidon(keccak256("JOINSPLIT_INFO_NONCE") % p, nullifierA, vk)`
 template JoinSplit(levels) {
     // *** PUBLIC INPUTS ***
     // digest of the operation this JoinSplit is a part of
@@ -101,7 +101,7 @@ template JoinSplit(levels) {
     // the root of the commitment tree root in the Nocturne Handler contract
     signal output commitmentTreeRoot;
     // the amount of the asset to be spent publicly by withdrawing it from the Teller contract. This is the difference between the sum of the old note values and the sum of the new note values.
-    // as per the protocol, this must be in the range [0, 2**126)
+    // as per the protocol, this must be in the range [0, 2**252)
     signal output publicSpend;
 
     // nullifiers for the two notes being spent via this JoinSplit
@@ -111,6 +111,8 @@ template JoinSplit(levels) {
     // blinded commitment to the sender's canonical address so that the recipient can verify the sender.
     // defined as Poseidon(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce"))
     signal output senderCommitment;
+
+    signal output joinSplitInfoCommitment;
 
     // *** WITNESS ***
 
@@ -256,8 +258,8 @@ template JoinSplit(levels) {
     //@argument same as (6.5), but with @lemma(6) instead of @lemma(5)
     StealthAddrOwnership()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, vkBits);
 
-    // check that the sum of old and new note values are in range [0, 2**126)
-    // this can't overflow because all four note values are in range [0, 2**126) and field is 254 bits
+    // check that the sum of old and new note values are in range [0, 2**252)
+    // this can't overflow because all four note values are in range [0, 2**252) and field is 254 bits
     //@satisfies(10.1) 
     //@argument follows from `Num2Bits` and `RangeCheckNBits.ensures(1)`, and `RangeCheckNBits.requires(1)` is satisfied since `n < 254`
     //@satisfies(10.2)
@@ -271,16 +273,16 @@ template JoinSplit(levels) {
     //@argument same as (10.1)
     signal valInput <== oldNoteAValue + oldNoteBValue;
     signal valOutput <== newNoteAValue + newNoteBValue;
-    signal newNoteAValueBits <== Num2Bits(126)(newNoteAValue);
-    signal newNoteBValueBits <== Num2Bits(126)(newNoteBValue);
-    RangeCheckNBits(126)(oldNoteAValue);
-    RangeCheckNBits(126)(oldNoteBValue);
-    RangeCheckNBits(126)(valInput);
-    RangeCheckNBits(126)(valOutput);
+    RangeCheckNBits(252)(newNoteAValue);
+    RangeCheckNBits(252)(newNoteBValue);
+    RangeCheckNBits(252)(oldNoteAValue);
+    RangeCheckNBits(252)(oldNoteBValue);
+    RangeCheckNBits(252)(valInput);
+    RangeCheckNBits(252)(valOutput);
 
     // check that old note values hold at least as much value as new note values
     //@satisfies(11.1)
-    //@argument this is what `LessEqThan` does, and we've already RC'd the values to be in range [0, 2**126)
+    //@argument this is what `LessEqThan` does, and we've already RC'd the values to be in range [0, 2**252)
     signal compOut <== LessEqThan(252)([valOutput, valInput]);
     compOut === 1;
 
@@ -461,12 +463,31 @@ template JoinSplit(levels) {
     var SENDER_COMMITMENT_DOMAIN_SEPARATOR = 5680996188676417870015190585682285899130949254168256752199352013418366665222;
     senderCommitment <== Poseidon(4)([SENDER_COMMITMENT_DOMAIN_SEPARATOR, senderCanonAddr[0], senderCanonAddr[1], newNoteBNonce]);
 
-    // compute joinSplitInfoCommitment
+    // compress sender and receiver
     //@satisfies(14)
-    //@argument TODO
-    signal pathABits = TwoBitLimbsToBits(nLevels)(pathA);
-    signal pathBBits = TwoBitLimbsToBits(nLevels)(pathB);
-    signal encoded = 
+    // ! TODO write a better argument than this
+    //@argument correct by construction (exactly what code does) 
+    component canonAddrCompressors[2];
+    canonAddrCompressors[0] = CompressPoint();
+    canonAddrCompressors[0].in[0] <== senderCanonAddr[0];
+    canonAddrCompressors[0].in[1] <== senderCanonAddr[1];
+    signal compressedSenderCanonAddrY <== canonAddrCompressors[0].y;
+    signal senderSignBit <== canonAddrCompressors[0].sign;
+
+    canonAddrCompressors[1] = CompressPoint();
+    canonAddrCompressors[1].in[0] <== receiverCanonAddr[0];
+    canonAddrCompressors[1].in[1] <== receiverCanonAddr[1];
+    signal compressedReceiverCanonAddrY <== canonAddrCompressors[1].y;
+    signal receiverSignBit <== canonAddrCompressors[1].sign;
+
+    signal pathABits[2*levels] <== TwoBitLimbsToBits(levels)(pathA);
+    signal pathBBits[2*levels] <== TwoBitLimbsToBits(levels)(pathB);
+    signal oldNoteMerkleIndicesBits[4*levels] <== Concat(2*levels, 2*levels)(pathABits, pathBBits);
+    signal oldNoteMerkleIndices <== Bits2Num(4*levels)(oldNoteMerkleIndicesBits);
+    signal oldNoteMerkleIndicesWithSignBits <== oldNoteMerkleIndices + (1 << 64) * senderSignBit + (1 << 65) * receiverSignBit;
+
+    signal joinSplitInfoNonce <== Poseidon(3)([1234, nullifierA, vk]);
+    joinSplitInfoCommitment <== Poseidon(7)([5678, compressedSenderCanonAddrY, compressedReceiverCanonAddrY, oldNoteMerkleIndicesWithSignBits, newNoteAValue, newNoteBValue, joinSplitInfoNonce]);
 }
 
 component main { public [pubEncodedAssetAddrWithSignBits, pubEncodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit(16);
