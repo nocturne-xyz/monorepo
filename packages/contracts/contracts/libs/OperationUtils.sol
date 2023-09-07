@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 import {Groth16} from "../libs/Groth16.sol";
+import {Utils} from "../libs/Utils.sol";
 import "../libs/Types.sol";
 
 // Helpers for extracting data / formatting operations
 library OperationUtils {
-    uint256 constant COMPRESSED_POINT_SIGN_MASK = 1 << 254;
-
     function extractJoinSplitProofsAndPis(
         Operation[] calldata ops,
         uint256[] memory digests
@@ -58,14 +57,10 @@ library OperationUtils {
         proofs = new uint256[8][](numJoinSplitsForOp);
         allPis = new uint256[][](numJoinSplitsForOp);
 
-        (
-            uint256 refundAddrH1SignBit,
-            uint256 refundAddrH1YCoordinate
-        ) = decomposeCompressedPoint(op.refundAddr.h1);
-        (
-            uint256 refundAddrH2SignBit,
-            uint256 refundAddrH2YCoordinate
-        ) = decomposeCompressedPoint(op.refundAddr.h2);
+        (uint256 refundAddrH1SignBit, uint256 refundAddrH1YCoordinate) = Utils
+            .decomposeCompressedPoint(op.refundAddr.h1);
+        (uint256 refundAddrH2SignBit, uint256 refundAddrH2YCoordinate) = Utils
+            .decomposeCompressedPoint(op.refundAddr.h2);
 
         for (uint256 i = 0; i < numJoinSplitsForOp; i++) {
             bool isPublicJoinSplit = i < op.pubJoinSplits.length;
@@ -100,16 +95,6 @@ library OperationUtils {
             allPis[i][10] = refundAddrH1YCoordinate;
             allPis[i][11] = refundAddrH2YCoordinate;
         }
-    }
-
-    // takes a compressed point and extracts the sign bit and y coordinate
-    // returns (sign, y)
-    function decomposeCompressedPoint(
-        uint256 compressedPoint
-    ) internal pure returns (uint256 sign, uint256 y) {
-        sign = (compressedPoint & COMPRESSED_POINT_SIGN_MASK) >> 254;
-        y = compressedPoint & (COMPRESSED_POINT_SIGN_MASK - 1);
-        return (sign, y);
     }
 
     function encodeEncodedAssetAddrWithSignBitsPI(

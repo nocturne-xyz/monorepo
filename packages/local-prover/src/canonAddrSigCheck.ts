@@ -22,14 +22,16 @@ export class WasmCanonAddrSigCheckProver implements CanonAddrSigCheckProver {
   async proveCanonAddrSigCheck(
     inputs: CanonAddrSigCheckInputs
   ): Promise<CanonAddrSigCheckProofWithPublicSignals> {
-    const { canonAddr, nonce, sig, spendPubkey, vkNonce } = inputs;
+    const { canonAddr, msg, sig, spendPubkey, vkNonce } = inputs;
 
-    const { compressedCanonAddrY, nonceAndSignBit } =
-      encodeCanonAddrSigCheckPis(canonAddr, nonce);
+    const { compressedCanonAddrY, msgAndSignBit } = encodeCanonAddrSigCheckPis(
+      canonAddr,
+      msg
+    );
 
     const signals = {
       compressedCanonAddrY,
-      nonceAndSignBit,
+      msgAndSignBit,
       sig: [sig.c, sig.z],
       spendPubkey: [spendPubkey.x, spendPubkey.y],
       vkNonce,

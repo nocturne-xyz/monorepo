@@ -8,13 +8,15 @@ import {
   parseObjectValues,
   signOperation,
   assertAllRpcMethodsHandled,
-  CANON_ADDR_SIG_CHECK_PREFIX,
+  computeCanonAddrRegistryEntryDigest,
 } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
-import { makeSignOperationContent } from "./utils/display";
+import {
+  makeSignCanonAddrRegistryEntryContent,
+  makeSignOperationContent,
+} from "./utils/display";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
-import { poseidonBN } from "@nocturne-xyz/crypto-utils";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Sepolia
@@ -81,15 +83,37 @@ async function handleRpcRequest({
         vk: viewer.vk,
         vkNonce: viewer.vkNonce,
       };
-    case "nocturne_getCanonAddrSigCheckProofInputs":
-      const msg = poseidonBN([CANON_ADDR_SIG_CHECK_PREFIX, params.nonce]);
-      const sig = signer.sign(msg);
-      const vkNonce = signer.vkNonce;
-      const spendPubkey = signer.spendPk;
+    case "nocturne_signCanonAddrRegistryEntry":
+      const { entry, chainId, registryAddress } = request.params;
+
+      const { heading: registryHeading, text: registryText } =
+        makeSignCanonAddrRegistryEntryContent(entry, chainId, registryAddress);
+      const registryConfirmRes = await snap.request({
+        method: "snap_dialog",
+        params: {
+          type: "confirmation",
+          content: panel([heading(registryHeading), text(registryText)]),
+        },
+      });
+
+      if (!registryConfirmRes) {
+        throw new Error("snap request rejected by user");
+      }
+
+      const registryDigest = computeCanonAddrRegistryEntryDigest(
+        entry,
+        chainId,
+        registryAddress
+      );
+
       const canonAddr = signer.canonicalAddress();
+      const registrySig = signer.sign(registryDigest);
+      const spendPubkey = signer.spendPk;
+      const vkNonce = signer.vkNonce;
       return {
         canonAddr,
-        sig,
+        digest: registryDigest,
+        sig: registrySig,
         spendPubkey,
         vkNonce,
       };
@@ -105,7 +129,7 @@ async function handleRpcRequest({
         return [heading(item.heading), text(item.text)];
       });
       // Confirm spend sig auth
-      const res = await snap.request({
+      const opConfirmRes = await snap.request({
         method: "snap_dialog",
         params: {
           type: "confirmation",
@@ -113,13 +137,13 @@ async function handleRpcRequest({
         },
       });
 
-      if (!res) {
+      if (!opConfirmRes) {
         throw new Error("snap request rejected by user");
       }
 
       console.log("signing operation:", op);
       try {
-        const signedOp = await signOperation(signer, op);
+        const signedOp = signOperation(signer, op);
         console.log(
           "PreProofOperationInputsAndProofInputs: ",
           JSON.stringify(signedOp)

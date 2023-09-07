@@ -1,11 +1,27 @@
 import * as JSON from "bigint-json-serialization";
 import {
+  CanonAddrRegistryEntry,
   OperationWithMetadata,
   PreSignOperation,
   SignedOperation,
 } from "./primitives";
-import { ViewingKey } from "./crypto";
-import { CanonAddrSigCheckInputs } from "./proof";
+import { CanonAddress, NocturneSignature, SpendPk, ViewingKey } from "./crypto";
+
+export interface SignCanonAddrRegistryEntryMethod {
+  method: "nocturne_signCanonAddrRegistryEntry";
+  params: {
+    entry: CanonAddrRegistryEntry;
+    chainId: bigint;
+    registryAddress: string;
+  };
+  return: {
+    canonAddr: CanonAddress;
+    digest: bigint;
+    sig: NocturneSignature;
+    spendPubkey: SpendPk;
+    vkNonce: bigint;
+  };
+}
 
 export interface SignOperationMethod {
   method: "nocturne_signOperation";
@@ -24,20 +40,10 @@ export interface RequestViewingKeyMethod {
   return: RequestViewingKeyMethodResponse;
 }
 
-export interface GetCanonAddrSigCheckProofInputsParams {
-  nonce: bigint;
-}
-
-export interface GetCanonAddrSigCheckProofInputsMethod {
-  method: "nocturne_getCanonAddrSigCheckProofInputs";
-  params: GetCanonAddrSigCheckProofInputsParams;
-  return: CanonAddrSigCheckInputs;
-}
-
 export type RpcRequestMethod =
+  | SignCanonAddrRegistryEntryMethod
   | SignOperationMethod
-  | RequestViewingKeyMethod
-  | GetCanonAddrSigCheckProofInputsMethod;
+  | RequestViewingKeyMethod;
 
 export type SnapRpcRequestHandlerArgs = {
   origin: string;
