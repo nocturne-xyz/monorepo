@@ -46,14 +46,14 @@ build_subtree_updater() {
         fi
 
         if [[ $(uname -m) == 'arm64' ]]; then
-            echo "dected arm64, building for x86 using docker buildx..."
+            echo "dected arm64, building for x86..."
 
-            docker buildx build --platform linux/amd64 -t rapidsnark ./rapidsnark
-            docker buildx build -f actors/subtree-updater/Dockerfile --platform linux/amd64 -t nocturnelabs/subtree-updater:$COMMIT_HASH .
+            docker build --platform linux/amd64 -t rapidsnark ./rapidsnark
+            docker buildx build --build-context circuit-artifacts=circuit-artifacts -f actors/subtree-updater/Dockerfile --platform linux/amd64 -t nocturnelabs/subtree-updater:$COMMIT_HASH .
         else
-            echo "deceting x86, building for x86 using docker build..."
+            echo "deceting x86, building for x86..."
             docker build -t rapidsnark ./rapidsnark
-            docker build -f actors/subtree-updater/Dockerfile -t nocturnelabs/subtree-updater:$COMMIT_HASH .
+            docker buildx build --build-context circuit-artifacts=circuit-artifacts -f actors/subtree-updater/Dockerfile -t nocturnelabs/subtree-updater:$COMMIT_HASH .
         fi
     else 
         docker build -f actors/subtree-updater/Mock.Dockerfile -t nocturnelabs/subtree-updater:$COMMIT_HASH .

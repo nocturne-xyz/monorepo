@@ -148,6 +148,8 @@ export class PersistentLog<T> {
     const generator = async function* () {
       while (!closed) {
         const entries = await poll(lowerBound);
+        logger && logger.debug(`polled - got ${entries?.length ?? 0} entries`);
+
         // if there's no data and `options.terminateOnEmpty` is `false`, then we
         // should simply poll again, neither yielding nor terminating
         // if there's no data and `options.terminateOnEmpty` is `true`, then
@@ -167,7 +169,7 @@ export class PersistentLog<T> {
         // filter out all data >= `options.endId` if given
         if (options?.endId !== undefined) {
           const endId = options.endId;
-          batch = batch.filter(({ id }) => id < endId);
+          batch = batch.filter(({ id }) => RedisStreamIdTrait.lt(id, endId));
           // if there's no more data after filtering, terminate
           if (batch.length == 0) {
             break;

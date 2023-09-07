@@ -45,6 +45,7 @@ import { startHardhat } from "./hardhat";
 import { BundlerConfig, startBundler } from "./bundler";
 import { DepositScreenerConfig, startDepositScreener } from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
+import { InsertionWriterConfig, startInsertionWriter } from "./insertionWriter";
 import { startSubgraph, SubgraphConfig } from "./subgraph";
 import { KEYS_TO_WALLETS } from "./keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
@@ -145,6 +146,10 @@ const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "tellerAddress"> = {
   startBlock: 0,
 };
 
+const DEFAULT_INSERTION_WRITER_CONFIG: InsertionWriterConfig = {
+  subgraphUrl: SUBGRAPH_URL,
+};
+
 // we want to only start anvil once, so we wrap `startAnvil` in a thunk
 const hhThunk = thunk(() => startHardhat());
 
@@ -217,20 +222,6 @@ export async function setupTestDeployment(
     proms.push(startBundler(bundlerConfig));
   }
 
-  // deploy subtree updater if requested
-  if (config.include.subtreeUpdater) {
-    const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
-    const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
-      ...DEFAULT_SUBTREE_UPDATER_CONFIG,
-      ...givenSubtreeUpdaterConfig,
-      handlerAddress: handler.address,
-      txSignerKey: subtreeUpdaterEoa.privateKey,
-    };
-    actorConfig.configs.subtreeUpdater = subtreeUpdaterConfig;
-
-    proms.push(startSubtreeUpdater(subtreeUpdaterConfig));
-  }
-
   if (config.include.depositScreener) {
     const givenDepositScreenerConfig = config.configs?.depositScreener ?? {};
     const depositScreenerConfig: DepositScreenerConfig = {
@@ -243,6 +234,35 @@ export async function setupTestDeployment(
     actorConfig.configs.depositScreener = depositScreenerConfig;
 
     proms.push(startDepositScreener(depositScreenerConfig, deployment.erc20s));
+  }
+
+  // deploy subtree updater & insertion writer if requested
+  if (config.include.subtreeUpdater) {
+    // subtree updater
+    const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
+    const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
+      ...DEFAULT_SUBTREE_UPDATER_CONFIG,
+      ...givenSubtreeUpdaterConfig,
+      handlerAddress: handler.address,
+      txSignerKey: subtreeUpdaterEoa.privateKey,
+    };
+    actorConfig.configs.subtreeUpdater = subtreeUpdaterConfig;
+
+    const startUpdaterAndInsertionWriter = async () => {
+      const teardownInsertionWriter = await startInsertionWriter(
+        DEFAULT_INSERTION_WRITER_CONFIG
+      );
+      const teardownSubtreeUpdater = await startSubtreeUpdater(
+        subtreeUpdaterConfig
+      );
+
+      return async () => {
+        await teardownInsertionWriter();
+        await teardownSubtreeUpdater();
+      };
+    };
+
+    proms.push(startUpdaterAndInsertionWriter());
   }
 
   const actorTeardownFns = await Promise.all(proms);

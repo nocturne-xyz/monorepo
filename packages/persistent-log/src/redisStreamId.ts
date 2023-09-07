@@ -40,6 +40,17 @@ export class RedisStreamIdTrait {
     }
     return `${Number(lhs)}-${Number(rhs)}`;
   }
+
+  static lt(lhs: RedisStreamId, rhs: RedisStreamId): boolean {
+    const [lhsL, lhsR] = RedisStreamIdTrait.toComponents(lhs);
+    const [rhsL, rhsR] = RedisStreamIdTrait.toComponents(rhs);
+
+    if (lhsL === rhsL) {
+      return lhsR < rhsR;
+    }
+
+    return lhsL < rhsL;
+  }
 }
 
 export interface WithRedisStreamId<T> {

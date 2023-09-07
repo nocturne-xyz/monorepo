@@ -6,6 +6,8 @@ import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 export * from "./sync";
 
+const INSERTION_LOG_STREAM_NAME = "insertion-log";
+
 export class InsertionWriter {
   adapter: TreeInsertionSyncAdapter;
   logger: Logger;
@@ -19,7 +21,7 @@ export class InsertionWriter {
   ) {
     this.adapter = syncAdapter;
     this.logger = logger;
-    this.insertionLog = new TreeInsertionLog(redis, "insertion-log", {
+    this.insertionLog = new TreeInsertionLog(redis, INSERTION_LOG_STREAM_NAME, {
       logger: logger.child({ function: "insertion log" }),
     });
   }
