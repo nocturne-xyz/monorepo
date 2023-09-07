@@ -4616,6 +4616,7 @@ __metadata:
     "@nocturne-xyz/insertion-writer": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
+    "@nocturne-xyz/op-request-plugins": "workspace:^"
     "@nocturne-xyz/persistent-log": "workspace:^"
     "@nocturne-xyz/subtree-updater": "workspace:^"
     "@types/chai": ^4.3.3
@@ -4790,7 +4791,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/op-request-plugins@workspace:packages/op-request-plugins":
+"@nocturne-xyz/op-request-plugins@workspace:^, @nocturne-xyz/op-request-plugins@workspace:packages/op-request-plugins":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/op-request-plugins@workspace:packages/op-request-plugins"
   dependencies:
