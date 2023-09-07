@@ -46,12 +46,12 @@ include "lib.circom";
 //@ensures(9.2) `nullifierB` was correctly derived from the note commitment of `oldNoteB` and the viewing key `vk`
 //@ensures(9.3) `nullifierA` is the only possible nullifier that can be derived for `oldNoteA`
 //@ensures(9.4) `nullifierB` is the only possible nullifier that can be derived for `oldNoteB`
-//@ensures(10.1) `oldNoteAValue` is in the range [0, 2**252)
-//@ensures(10.2) `oldNoteBValue` is in the range [0, 2**252)
-//@ensures(10.3) `newNoteAValue` is in the range [0, 2**252)
-//@ensures(10.4) `newNoteBValue` is in the range [0, 2**252)
-//@ensures(10.5) `oldNoteAValue + oldNoteBValue` is in the range [0, 2**252)
-//@ensures(10.6) `newNoteAValue + newNoteBValue` is in the range [0, 2**252)
+//@ensures(10.1) `oldNoteAValue` is in the range [0, 2**126)
+//@ensures(10.2) `oldNoteBValue` is in the range [0, 2**126)
+//@ensures(10.3) `newNoteAValue` is in the range [0, 2**126)
+//@ensures(10.4) `newNoteBValue` is in the range [0, 2**126)
+//@ensures(10.5) `oldNoteAValue + oldNoteBValue` is in the range [0, 2**126)
+//@ensures(10.6) `newNoteAValue + newNoteBValue` is in the range [0, 2**126)
 //@ensures(11.1) `oldNoteAValue + oldNoteBValue >= newNoteAValue + newNoteBValue`
 //@ensures(11.2) `publicSpend == oldNoteAValue + oldNoteBValue - newNoteAValue - newNoteBValue`
 //@ensures(12.1) the sender's canonical address used in `senderCommitment` is the canonical address derived from `vk`
@@ -94,7 +94,7 @@ template JoinSplit(levels) {
     // the root of the commitment tree root in the Nocturne Handler contract
     signal output commitmentTreeRoot;
     // the amount of the asset to be spent publicly by withdrawing it from the Teller contract. This is the difference between the sum of the old note values and the sum of the new note values.
-    // as per the protocol, this must be in the range [0, 2**252)
+    // as per the protocol, this must be in the range [0, 2**126)
     signal output publicSpend;
 
     // nullifiers for the two notes being spent via this JoinSplit
@@ -249,8 +249,8 @@ template JoinSplit(levels) {
     //@argument same as (6.5), but with @lemma(6) instead of @lemma(5)
     StealthAddrOwnership()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, vkBits);
 
-    // check that the sum of old and new note values are in range [0, 2**252)
-    // this can't overflow because all four note values are in range [0, 2**252) and field is 254 bits
+    // check that the sum of old and new note values are in range [0, 2**126)
+    // this can't overflow because all four note values are in range [0, 2**126) and field is 254 bits
     //@satisfies(10.1) 
     //@argument follows from `RangeCheckNBits.ensures(1)`, and `RangeCheckNBits.requires(1)` is satisfied since `n = 252
     //@satisfies(10.2)
@@ -264,16 +264,16 @@ template JoinSplit(levels) {
     //@argument same as (10.1)
     signal valInput <== oldNoteAValue + oldNoteBValue;
     signal valOutput <== newNoteAValue + newNoteBValue;
-    RangeCheckNBits(252)(newNoteAValue);
-    RangeCheckNBits(252)(newNoteBValue);
-    RangeCheckNBits(252)(oldNoteAValue);
-    RangeCheckNBits(252)(oldNoteBValue);
-    RangeCheckNBits(252)(valInput);
-    RangeCheckNBits(252)(valOutput);
+    RangeCheckNBits(126)(newNoteAValue);
+    RangeCheckNBits(126)(newNoteBValue);
+    RangeCheckNBits(126)(oldNoteAValue);
+    RangeCheckNBits(126)(oldNoteBValue);
+    RangeCheckNBits(126)(valInput);
+    RangeCheckNBits(126)(valOutput);
 
     // check that old note values hold at least as much value as new note values
     //@satisfies(11.1)
-    //@argument this is what `LessEqThan` does, and we've already RC'd the values to be in range [0, 2**252)
+    //@argument this is what `LessEqThan` does, and we've already RC'd the values to be in range [0, 2**126)
     signal compOut <== LessEqThan(252)([valOutput, valInput]);
     compOut === 1;
 
