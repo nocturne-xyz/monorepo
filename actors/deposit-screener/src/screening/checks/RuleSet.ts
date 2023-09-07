@@ -1,5 +1,5 @@
 import { ScreeningDepositRequest } from "..";
-import { API_CALLS, ApiCallKeys, ApiMap, ApiData } from "./apiCalls";
+import { API_CALLS, ApiCallKeys, ApiMap, CallReturnData } from "./apiCalls";
 export interface Rejection {
   type: "Rejection";
   reason: string;
@@ -105,7 +105,7 @@ export class CompositeRule<T extends ReadonlyArray<keyof ApiMap>>
 
   async check(
     deposit: ScreeningDepositRequest,
-    cache: Record<ApiCallKeys, ApiData>
+    cache: Record<ApiCallKeys, CallReturnData>
   ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
     const shouldApply = this.partials[this.predicateFn](async (partial) => {
       if (!cache[partial.call]) {
@@ -152,7 +152,7 @@ export class RuleSet {
 
   async check(deposit: ScreeningDepositRequest): Promise<Rejection | Delay> {
     let currRule = this.head;
-    const cache: Record<string, ApiData> = {};
+    const cache: Record<string, CallReturnData> = {};
     const rulesLogList: {
       ruleName: string;
       result: Awaited<ReturnType<RuleLike["check"]>>;
