@@ -41,8 +41,6 @@ export type OpRequestBuilderExt<E extends BaseOpRequestBuilder> = E & {
 // methods that are available by default on any implementor of `OpRequestBuilderExt`
 export interface BaseOpRequestBuilder {
   _op: OperationRequest;
-  _metadata: OperationMetadata;
-  _joinSplitsAndPaymentsByAsset: Map<Asset, JoinSplitsAndPaymentsForAsset>;
   _builderItemsToProcess: Promise<BuilderItemToProcess>[];
 
   build(): Promise<OperationRequestWithMetadata>;
@@ -55,17 +53,11 @@ export interface BaseOpRequestBuilder {
   // returns `this` so it's chainable
   action(contractAddress: Address, encodedFunction: string): this;
 
-  // Internal action method
-  _pushAction(contractAddress: Address, encodedFunction: string): this;
-
   // specify the operation should unwrap `amountUnits` of `asset`
   // `ammountUnits` is the amount in EVM (uint256) representation. It is up to
   // the caller to handle decimal conversions
   // returns `this` so it's chainable
   unwrap(asset: Asset, amountUnits: bigint): this;
-
-  // Internal unwrap method
-  _pushUnwrap(asset: Asset, amountUnits: bigint): this;
 
   // add a confidential payment to the operation
   // returns `this` so it's chainable
@@ -75,18 +67,8 @@ export interface BaseOpRequestBuilder {
     receiver: CanonAddress
   ): this;
 
-  // Internal confidential payment method
-  _pushConfidentialPayment(
-    asset: Asset,
-    amountUnits: bigint,
-    receiver: CanonAddress
-  ): this;
-
   // indicates that the operation expects a refund of asset `Asset`.
   refundAsset(asset: Asset): this;
-
-  // Internal refund asset method
-  _pushRefundAsset(asset: Asset): this;
 
   // set the operation's `refundAddr` stealth address up-front.
   // if this is not set, the wallet will generate a new one
@@ -146,18 +128,10 @@ export function newOpRequestBuilder(
     deadline: 0n,
   };
 
-  const _metadata = {
-    items: [],
-  };
-
-  const _joinSplitsAndPaymentsByAsset = new Map();
-
   const _builderItemsToProcess: Promise<BuilderItemToProcess>[] = [];
 
   return {
     _op,
-    _metadata,
-    _joinSplitsAndPaymentsByAsset,
     _builderItemsToProcess,
 
     use<E2 extends BaseOpRequestBuilder>(
@@ -190,15 +164,6 @@ export function newOpRequestBuilder(
       return this;
     },
 
-    _pushAction(contractAddress: Address, encodedFunction: string) {
-      const action: Action = {
-        contractAddress: ethers.utils.getAddress(contractAddress),
-        encodedFunction,
-      };
-      this._op.actions.push(action);
-      return this;
-    },
-
     unwrap(asset: Asset, amountUnits: bigint) {
       const unwrap: UnwrapRequest = {
         asset,
@@ -214,21 +179,6 @@ export function newOpRequestBuilder(
           metadatas: [],
         })
       );
-
-      return this;
-    },
-
-    _pushUnwrap(asset: Asset, amountUnits: bigint) {
-      const joinSplit: JoinSplitRequest = {
-        asset,
-        unwrapValue: amountUnits,
-      };
-
-      const [joinSplits, payments] = this._joinSplitsAndPaymentsByAsset.get(
-        asset
-      ) ?? [[], []];
-      joinSplits.push(joinSplit);
-      this._joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
 
       return this;
     },
@@ -257,32 +207,6 @@ export function newOpRequestBuilder(
       return this;
     },
 
-    _pushConfidentialPayment(
-      asset: Asset,
-      amountUnits: bigint,
-      receiver: CanonAddress
-    ) {
-      const payment: ConfidentialPayment = {
-        value: amountUnits,
-        receiver,
-      };
-
-      const [joinSplits, payments] = this._joinSplitsAndPaymentsByAsset.get(
-        asset
-      ) ?? [[], []];
-      payments.push(payment);
-      this._joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
-
-      this._metadata.items.push({
-        type: "ConfidentialPayment",
-        recipient: receiver,
-        asset,
-        amount: amountUnits,
-      });
-
-      return this;
-    },
-
     refundAsset(asset: Asset) {
       this._builderItemsToProcess.push(
         Promise.resolve({
@@ -293,11 +217,6 @@ export function newOpRequestBuilder(
           metadatas: [],
         })
       );
-      return this;
-    },
-
-    _pushRefundAsset(asset: Asset) {
-      this._op.refundAssets.push(asset);
       return this;
     },
 
@@ -324,38 +243,70 @@ export function newOpRequestBuilder(
     },
 
     async build(): Promise<OperationRequestWithMetadata> {
-      const joinSplitRequests = [];
+      const joinSplitsAndPaymentsByAsset: Map<
+        Asset,
+        JoinSplitsAndPaymentsForAsset
+      > = new Map();
+      const metadata: OperationMetadata = {
+        items: [],
+      };
 
-      // Await plugin promises and update op
+      // Await any promises resolving to items to process, then process items
       for (const prom of this._builderItemsToProcess) {
         const result = await prom;
 
-        for (const unwrap of result.unwraps) {
-          this._pushUnwrap(unwrap.asset, unwrap.unwrapValue);
+        for (const { asset, unwrapValue } of result.unwraps) {
+          const joinSplit: JoinSplitRequest = {
+            asset,
+            unwrapValue,
+          };
+
+          const [joinSplits, payments] = joinSplitsAndPaymentsByAsset.get(
+            asset
+          ) ?? [[], []];
+          joinSplits.push(joinSplit);
+          joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
         }
-        for (const payment of result.confidentialPayments) {
-          this._pushConfidentialPayment(
-            payment.asset,
-            payment.value,
-            payment.receiver
-          );
+        for (const { asset, value, receiver } of result.confidentialPayments) {
+          const payment: ConfidentialPayment = {
+            value,
+            receiver,
+          };
+
+          const [joinSplits, payments] = joinSplitsAndPaymentsByAsset.get(
+            asset
+          ) ?? [[], []];
+          payments.push(payment);
+          joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+
+          metadata.items.push({
+            type: "ConfidentialPayment",
+            recipient: receiver,
+            asset,
+            amount: value,
+          });
         }
-        for (const action of result.actions) {
-          this._pushAction(action.contractAddress, action.encodedFunction);
+        for (const { contractAddress, encodedFunction } of result.actions) {
+          const action: Action = {
+            contractAddress: ethers.utils.getAddress(contractAddress),
+            encodedFunction,
+          };
+          this._op.actions.push(action);
         }
-        for (const refundAsset of result.refundAssets) {
-          this._pushRefundAsset(refundAsset);
+        for (const asset of result.refundAssets) {
+          this._op.refundAssets.push(asset);
         }
-        for (const metadata of result.metadatas) {
-          this._metadata.items.push(metadata);
+        for (const metadataItem of result.metadatas) {
+          metadata.items.push(metadataItem);
         }
       }
 
       // consolidate joinSplits and payments for each asset
+      const joinSplitRequests = [];
       for (const [
         asset,
         [joinSplits, payments],
-      ] of this._joinSplitsAndPaymentsByAsset.entries()) {
+      ] of joinSplitsAndPaymentsByAsset.entries()) {
         // consolidate payments to the same receiver
         const paymentsByReceiver = groupByArr(payments, (p) =>
           p.receiver.toString()
@@ -406,10 +357,10 @@ export function newOpRequestBuilder(
         throw new Error("No joinSplits or payments specified");
       }
 
-      return Promise.resolve({
+      return {
         request: this._op,
-        meta: this._metadata,
-      });
+        meta: metadata,
+      };
     },
   };
 }
