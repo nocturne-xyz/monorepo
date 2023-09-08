@@ -20,6 +20,8 @@ import {
   encryptNote,
   randomFr,
   CompressedStealthAddress,
+  compressPoint,
+  decomposeCompressedPoint,
 } from "./crypto";
 import { MerkleProofInput } from "./proof";
 import {
@@ -31,6 +33,11 @@ import {
 } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { poseidonBN } from "@nocturne-xyz/crypto-utils";
+import {
+  JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR,
+  JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR,
+  encodeOldNoteMerkleIndicesWithSignBits,
+} from "./proof/joinsplit";
 
 export const __private = {
   gatherNotes,
@@ -337,6 +344,35 @@ async function makeJoinSplit(
     newNoteB.nonce,
   ]);
 
+  // compute nonce to blind joinsplit info commitment
+  const joinSplitInfoNonce = poseidonBN([
+    JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR,
+    nullifierA,
+    viewer.vk,
+  ]);
+
+  // compute joinsplit info commitment
+  const [senderSign, senderY] = decomposeCompressedPoint(
+    compressPoint(senderCanonAddr)
+  );
+  const [receiverSign, receiverY] = decomposeCompressedPoint(
+    compressPoint(receiver)
+  );
+  const joinSplitInfoCommitment = poseidonBN([
+    JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR,
+    senderY,
+    receiverY,
+    encodeOldNoteMerkleIndicesWithSignBits(
+      oldNoteA.merkleIndex,
+      oldNoteB.merkleIndex,
+      senderSign,
+      receiverSign
+    ),
+    newNoteA.value,
+    newNoteB.value,
+    joinSplitInfoNonce,
+  ]);
+
   return {
     receiver,
     encodedAsset,
@@ -359,6 +395,7 @@ async function makeJoinSplit(
     merkleProofB,
 
     senderCommitment,
+    joinSplitInfoCommitment,
     refundAddr,
   };
 }

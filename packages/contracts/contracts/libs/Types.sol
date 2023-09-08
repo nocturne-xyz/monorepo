@@ -42,6 +42,7 @@ struct JoinSplit {
     uint256 newNoteACommitment;
     uint256 newNoteBCommitment;
     uint256 senderCommitment;
+    uint256 joinSplitInfoCommitment;
     uint256[8] proof;
     EncryptedNote newNoteAEncrypted;
     EncryptedNote newNoteBEncrypted;

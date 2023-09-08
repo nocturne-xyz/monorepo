@@ -81,7 +81,7 @@ library OperationUtils {
                 );
 
             proofs[i] = joinSplit.proof;
-            allPis[i] = new uint256[](12);
+            allPis[i] = new uint256[](13);
             allPis[i][0] = joinSplit.newNoteACommitment;
             allPis[i][1] = joinSplit.newNoteBCommitment;
             allPis[i][2] = joinSplit.commitmentTreeRoot;
@@ -89,11 +89,12 @@ library OperationUtils {
             allPis[i][4] = joinSplit.nullifierA;
             allPis[i][5] = joinSplit.nullifierB;
             allPis[i][6] = joinSplit.senderCommitment;
-            allPis[i][7] = opDigest;
-            allPis[i][8] = encodedAsset.encodedAssetId;
-            allPis[i][9] = encodedAssetAddrWithSignBits;
-            allPis[i][10] = refundAddrH1YCoordinate;
-            allPis[i][11] = refundAddrH2YCoordinate;
+            allPis[i][7] = joinSplit.joinSplitInfoCommitment;
+            allPis[i][8] = opDigest;
+            allPis[i][9] = encodedAsset.encodedAssetId;
+            allPis[i][10] = encodedAssetAddrWithSignBits;
+            allPis[i][11] = refundAddrH1YCoordinate;
+            allPis[i][12] = refundAddrH2YCoordinate;
         }
     }
 

@@ -51,6 +51,7 @@ export interface BaseJoinSplit {
   newNoteACommitment: bigint;
   newNoteBCommitment: bigint;
   senderCommitment: bigint;
+  joinSplitInfoCommitment: bigint;
   encodedAsset: EncodedAsset;
   publicSpend: bigint;
   newNoteAEncrypted: EncryptedNote;
