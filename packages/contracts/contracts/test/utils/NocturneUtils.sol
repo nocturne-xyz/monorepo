@@ -197,6 +197,7 @@ library NocturneUtils {
                                 newNoteBCommitment: uint256(pubIndex),
                                 newNoteBEncrypted: newNoteEncrypted,
                                 senderCommitment: uint256(pubIndex),
+                                joinSplitInfoCommitment: uint256(pubIndex),
                                 proof: dummyProof()
                             }),
                             assetIndex: uint8(i),
@@ -213,6 +214,7 @@ library NocturneUtils {
                             newNoteBCommitment: uint256(confIndex),
                             newNoteBEncrypted: newNoteEncrypted,
                             senderCommitment: uint256(confIndex),
+                            joinSplitInfoCommitment: uint256(confIndex),
                             proof: dummyProof()
                         });
                         confIndex++;

@@ -486,8 +486,11 @@ template JoinSplit(levels) {
     signal oldNoteMerkleIndices <== Bits2Num(4*levels)(oldNoteMerkleIndicesBits);
     signal oldNoteMerkleIndicesWithSignBits <== oldNoteMerkleIndices + (1 << 64) * senderSignBit + (1 << 65) * receiverSignBit;
 
-    signal joinSplitInfoNonce <== Poseidon(3)([1234, nullifierA, vk]);
-    joinSplitInfoCommitment <== Poseidon(7)([5678, compressedSenderCanonAddrY, compressedReceiverCanonAddrY, oldNoteMerkleIndicesWithSignBits, newNoteAValue, newNoteBValue, joinSplitInfoNonce]);
+    var JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = 8641380568873709859334930917483971124167266522634964152243775747603865574453;
+    var JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR = 9902041836430008087134187177357348214750696281851093507858998440354218646130;
+
+    signal joinSplitInfoNonce <== Poseidon(3)([JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR, nullifierA, vk]);
+    joinSplitInfoCommitment <== Poseidon(7)([JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR, compressedSenderCanonAddrY, compressedReceiverCanonAddrY, oldNoteMerkleIndicesWithSignBits, newNoteAValue, newNoteBValue, joinSplitInfoNonce]);
 }
 
 component main { public [pubEncodedAssetAddrWithSignBits, pubEncodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit(16);

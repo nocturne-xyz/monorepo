@@ -26,6 +26,7 @@ contract OperationEIP712Test is Test {
             newNoteACommitment: 1,
             newNoteBCommitment: 1,
             senderCommitment: 1,
+            joinSplitInfoCommitment: 1,
             proof: dummyProof,
             newNoteAEncrypted: EncryptedNote({
                 ciphertextBytes: bytes(""),

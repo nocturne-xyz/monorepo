@@ -76,6 +76,7 @@ contract CommitmentTreeManagerInvariants is Test {
                 ,
                 ,
                 ,
+                ,
 
             ) = commitmentTreeManagerHandler.joinSplitFromLastCall();
             assertEq(

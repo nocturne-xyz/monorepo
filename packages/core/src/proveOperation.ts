@@ -46,6 +46,7 @@ async function proveJoinSplit(
     proofInputs,
     refundAddr,
     senderCommitment,
+    joinSplitInfoCommitment,
     ...baseJoinSplit
   } = signedJoinSplit;
   console.log("proving joinSplit", { proofInputs });
@@ -67,7 +68,8 @@ async function proveJoinSplit(
     opDigest !== publicSignals.opDigest ||
     refundAddrH1CompressedY !== publicSignals.refundAddrH1CompressedY ||
     refundAddrH2CompressedY !== publicSignals.refundAddrH2CompressedY ||
-    senderCommitment !== publicSignals.senderCommitment
+    senderCommitment !== publicSignals.senderCommitment ||
+    joinSplitInfoCommitment !== publicSignals.joinSplitInfoCommitment
   ) {
     console.error("successfully generated proof, but PIs don't match", {
       publicSignalsFromProof: publicSignals,
@@ -79,6 +81,7 @@ async function proveJoinSplit(
         nullifierA: baseJoinSplit.nullifierA,
         nullifierB: baseJoinSplit.nullifierB,
         senderCommitment,
+        joinSplitInfoCommitment,
         opDigest,
         pubEncododedAssetAddrWithSignBits:
           proofInputs.pubEncodedAssetAddrWithSignBits,
@@ -101,6 +104,7 @@ async function proveJoinSplit(
   return {
     proof: solidityProof,
     senderCommitment,
+    joinSplitInfoCommitment,
     ...baseJoinSplit,
   };
 }

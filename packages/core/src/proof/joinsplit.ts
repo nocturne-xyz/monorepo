@@ -1,7 +1,24 @@
+import { BN254ScalarField } from "@nocturne-xyz/crypto-utils";
 import { decomposeCompressedPoint } from "../crypto";
 import { CompressedStealthAddress } from "../crypto/address";
 import { EncodedNote } from "../primitives";
 import { BaseProof, MerkleProofInput } from "./types";
+import * as ethers from "ethers";
+
+export const JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
+  BigInt(
+    ethers.utils.keccak256(
+      ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_COMMITMENT")
+    )
+  )
+);
+
+export const JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
+  BN254ScalarField.reduce(
+    BigInt(
+      ethers.utils.keccak256(ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_NONCE"))
+    )
+  );
 
 export interface JoinSplitProver {
   proveJoinSplit(
@@ -129,4 +146,20 @@ export function encodeEncodedAssetAddrWithSignBitsPI(
   const [sign1] = decomposeCompressedPoint(refundAddr.h1);
   const [sign2] = decomposeCompressedPoint(refundAddr.h2);
   return encodedAssetAddr | (BigInt(sign1) << 248n) | (BigInt(sign2) << 249n);
+}
+
+export function encodeOldNoteMerkleIndicesWithSignBits(
+  oldNoteAIndex: number,
+  oldNoteBIndex: number,
+  senderSign: boolean,
+  receiverSign: boolean
+): bigint {
+  const receiverSignBit = receiverSign ? 1n : 0n;
+  const senderSignBit = senderSign ? 1n : 0n;
+  return (
+    (receiverSignBit << 65n) |
+    (senderSignBit << 64n) |
+    (BigInt(oldNoteBIndex) << 32n) |
+    BigInt(oldNoteAIndex)
+  );
 }
