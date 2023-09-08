@@ -23,6 +23,7 @@ const REJECT_ADDRESSES = {
   EARNING_FARM: "0xee4b3dd20902Fa3539706F25005fa51D3b7bDF1b",
   SUS_TC_USER: "0x5f1237bb7c14d4b4ae0026a186abc9c27a4b1224",
   SWIRLEND: "0x26f6d954c4132fae4efe389b947c8cc4b4ce5ce7",
+  AZTEC_4: "0x8C9555D210C9019f952b0cCF57f8E65D542281F2",
 };
 
 const APPROVE_ADDRESSES = {
@@ -42,7 +43,6 @@ const ADDRESSES = {
   AZTEC_1: "0x7c3171A6eabc8fc95077762ACF4B04eE1eAEF465",
   AZTEC_2: "0xd81A68F256985452E82297b43A465DE4F2a6Fd24",
   AZTEC_3: "0xa0bE23dB857262c8ff29763930fCD04Cc621FcCA",
-  AZTEC_4: "0x8C9555D210C9019f952b0cCF57f8E65D542281F2",
 };
 
 describe("RULESET_V1", () => {
@@ -94,6 +94,14 @@ describe("RULESET_V1", () => {
         formDepositInfo(REJECT_ADDRESSES.SWIRLEND)
       );
       expect(result.type).to.equal("Rejection");
+    });
+
+    it("should reject Aztec user 4 due to TRM_HIGH_INDIRECT_REJECT", async () => {
+      const result = await RULESET_V1.check(formDepositInfo(ADDRESSES.AZTEC_4));
+      expect(result).to.deep.equal({
+        type: "Rejection",
+        reason: "Indirect exposure to high risk categories > $20k",
+      });
     });
   });
 
@@ -171,12 +179,6 @@ describe("RULESET_V1", () => {
     });
     it("", async () => {
       const result = await RULESET_V1.check(formDepositInfo(ADDRESSES.AZTEC_3));
-      expect(result).to.deep.equal({
-        RESULT: "RESULT!",
-      });
-    });
-    it("", async () => {
-      const result = await RULESET_V1.check(formDepositInfo(ADDRESSES.AZTEC_4));
       expect(result).to.deep.equal({
         RESULT: "RESULT!",
       });

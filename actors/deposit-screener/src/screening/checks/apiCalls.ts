@@ -1,5 +1,6 @@
 import { ScreeningDepositRequest } from "..";
-import * as SNAPSHOT from "../../../test/apiCallsTestsSnapshot.json";
+// import * as SNAPSHOT from "../../../test/apiCallsTestsSnapshot.json";
+import "dotenv/config";
 
 export interface TrmAddressRiskIndicator {
   category: string;
@@ -91,10 +92,12 @@ export const API_CALLS = {
   TRM_SCREENING_ADDRESSES: async (
     deposit: ScreeningDepositRequest
   ): Promise<TrmData> => {
-    const body = JSON.stringify({
-      address: deposit.spender,
-      chain: "ethereum",
-    });
+    const body = JSON.stringify([
+      {
+        address: deposit.spender,
+        chain: "ethereum",
+      },
+    ]);
     const response = await fetch(`${TRM_BASE_URL}/screening/addresses`, {
       method: "POST",
       headers: {
@@ -105,16 +108,21 @@ export const API_CALLS = {
       },
       body,
     });
-    const data = (await response.json())[0] as TrmData;
+    const jsonResponse = await response.json();
+    console.log("JSON RESPONSE", jsonResponse);
+    if (jsonResponse["code"] === 400) {
+      throw new Error(`Bad Request: ${jsonResponse["errors"]}`);
+    }
+    const data = jsonResponse[0] as TrmData;
     console.log(data);
     return data;
   },
   MISTTRACK_ADDRESS_OVERVIEW: async (
-    deposit: ScreeningDepositRequest,
-    token = "ETH"
+    deposit: ScreeningDepositRequest
   ): Promise<MisttrackAddressOverviewData> => {
+    const token = "ETH";
     const response = await fetch(
-      `${MISTTRACK_BASE_URL}/address_overview?coin=${token}address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+      `${MISTTRACK_BASE_URL}/address_overview?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
     );
     const misttrackResponse =
       (await response.json()) as MisttrackApiResponse<MisttrackAddressOverviewData>;
