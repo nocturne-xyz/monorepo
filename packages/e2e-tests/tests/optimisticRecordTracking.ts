@@ -1,7 +1,6 @@
 import {
   DepositManager,
   SimpleERC20Token__factory,
-  Teller,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
@@ -22,6 +21,7 @@ import { ethers } from "ethers";
 import { setupTestClient, setupTestDeployment } from "../src/deploy";
 import { depositFundsSingleToken } from "../src/deposit";
 import { ONE_DAY_SECONDS, submitAndProcessOperation } from "../src/utils";
+import { NocturneConfig } from "@nocturne-xyz/config";
 
 chai.use(chaiAsPromised);
 
@@ -32,7 +32,7 @@ describe("Optimistic nullifier tracking", () => {
   let signer: NocturneSigner;
   let client: NocturneClient;
   let db: NocturneDB;
-  let teller: Teller;
+  let config: NocturneConfig;
   let depositManager: DepositManager;
   let eoa: ethers.Wallet;
 
@@ -55,7 +55,7 @@ describe("Optimistic nullifier tracking", () => {
       },
     });
 
-    ({ teardown, fillSubtreeBatch, depositManager, teller } = testDeployment);
+    ({ teardown, fillSubtreeBatch, config, depositManager } = testDeployment);
 
     eoa = testDeployment.aliceEoa;
 
@@ -103,11 +103,7 @@ describe("Optimistic nullifier tracking", () => {
 
     // make op request spending 200 tokens
     const amountToSpend = 200n;
-    const opRequest = await newOpRequestBuilder(
-      eoa.provider,
-      31337n,
-      teller.address
-    )
+    const opRequest = await newOpRequestBuilder(eoa.provider, 31337n, config)
       .unwrap(erc20Asset, amountToSpend)
       .action(erc20.address, encodedTransfer)
       .gasPrice(0n)

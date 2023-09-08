@@ -5,7 +5,7 @@ import {
   setupTestClient,
   setupTestDeployment,
 } from "../src/deploy";
-import { DepositManager, Teller } from "@nocturne-xyz/contracts";
+import { DepositManager } from "@nocturne-xyz/contracts";
 import {
   Asset,
   JoinSplitProver,
@@ -32,6 +32,7 @@ import IORedis from "ioredis";
 import * as ethers from "ethers";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
+import { NocturneConfig } from "@nocturne-xyz/config";
 
 chai.use(chaiAsPromised);
 
@@ -41,7 +42,7 @@ describe("InsertionWriter", () => {
   let fillSubtreeBatch: () => Promise<void>;
   let teardown: () => Promise<void>;
   let prover: JoinSplitProver;
-  let teller: Teller;
+  let config: NocturneConfig;
   let depositManager: DepositManager;
   let signer: NocturneSigner;
   let client: NocturneClient;
@@ -67,7 +68,7 @@ describe("InsertionWriter", () => {
 
     fillSubtreeBatch = testDeployment.fillSubtreeBatch;
     teardown = testDeployment.teardown;
-    teller = testDeployment.teller;
+    config = testDeployment.config;
     depositManager = testDeployment.depositManager;
     token = testDeployment.tokens.gasToken;
     eoa = testDeployment.aliceEoa;
@@ -151,11 +152,7 @@ describe("InsertionWriter", () => {
 
     // do an op
     const eoaAddr = await eoa.getAddress();
-    const opRequest = await newOpRequestBuilder(
-      eoa.provider,
-      31337n,
-      teller.address
-    )
+    const opRequest = await newOpRequestBuilder(eoa.provider, 31337n, config)
       .use(Erc20Plugin)
       .gasPrice(0n)
       .erc20Transfer(asset.assetAddr, eoaAddr, 1n)

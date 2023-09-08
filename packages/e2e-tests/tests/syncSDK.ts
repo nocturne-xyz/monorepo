@@ -3,7 +3,6 @@ import { ethers } from "ethers";
 import {
   DepositManager,
   SimpleERC20Token__factory,
-  Teller,
 } from "@nocturne-xyz/contracts";
 import {
   AssetType,
@@ -28,6 +27,7 @@ import {
 import { sleep, submitAndProcessOperation } from "../src/utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { KEYS_TO_WALLETS } from "../src/keys";
+import { NocturneConfig } from "@nocturne-xyz/config";
 
 // 10^9 (e.g. 10 gwei if this was eth)
 const GAS_PRICE = 10n * 10n ** 9n;
@@ -53,7 +53,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
     let aliceEoa: ethers.Wallet;
 
-    let teller: Teller;
+    let config: NocturneConfig;
     let depositManager: DepositManager;
     let token: SimpleERC20Token;
     let gasToken: SimpleERC20Token;
@@ -72,7 +72,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         },
       });
 
-      ({ teardown, provider, depositManager, teller, fillSubtreeBatch } =
+      ({ teardown, provider, config, depositManager, fillSubtreeBatch } =
         testDeployment);
 
       const [_aliceEoa] = KEYS_TO_WALLETS(provider);
@@ -166,7 +166,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         );
 
       const chainId = BigInt((await provider.getNetwork()).chainId);
-      const builder = newOpRequestBuilder(provider, chainId, teller.address);
+      const builder = newOpRequestBuilder(provider, chainId, config);
       const opRequest = await builder
         .unwrap(asset, 80n)
         .action(token.address, transfer)
