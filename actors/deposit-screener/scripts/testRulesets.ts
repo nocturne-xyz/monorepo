@@ -2,9 +2,9 @@ import { ScreeningDepositRequest } from "../src";
 import { RuleParams, RuleSet } from "../src/screening/checks/RuleSet";
 import { DummyTrmData } from "../src/screening/checks/apiCalls";
 
-const DELAY_50_ALWAYS: RuleParams<"NOOP"> = {
+const DELAY_50_ALWAYS: RuleParams<"IDENTITY"> = {
   name: "DELAY_50_ALWAYS",
-  call: "NOOP",
+  call: "IDENTITY",
   threshold: () => true,
   action: { type: "Delay", operation: "Add", valueSeconds: 50 },
 };
@@ -19,9 +19,9 @@ const REJECT_IF_RISK_OVER_POINT_5: RuleParams<"DUMMY_TRM_SCREENING_ADDRESSES"> =
     action: { type: "Rejection", reason: "This should not fire" },
   };
 
-const REJECT_ALWAYS: RuleParams<"NOOP"> = {
+const REJECT_ALWAYS: RuleParams<"IDENTITY"> = {
   name: "REJECT_ALWAYS",
-  call: "NOOP",
+  call: "IDENTITY",
   threshold: () => true,
   action: {
     type: "Rejection",
@@ -49,9 +49,9 @@ const DELAY_BY_FACTOR_OF_2_IF_RISK_IS_POINT_FIVE: RuleParams<"DUMMY_TRM_SCREENIN
     action: { type: "Delay", operation: "Multiply", factor: 2 },
   };
 
-const DELAY_10000000_NEVER: RuleParams<"NOOP"> = {
+const DELAY_10000000_NEVER: RuleParams<"IDENTITY"> = {
   name: "DELAY_10000000_NEVER",
-  call: "NOOP",
+  call: "IDENTITY",
   threshold: () => false,
   action: { type: "Delay", operation: "Add", valueSeconds: 10000000 },
 };

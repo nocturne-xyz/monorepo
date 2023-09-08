@@ -166,7 +166,7 @@ export const API_CALLS = {
     console.log(deposit);
     return await Promise.resolve({ misttrackRisk: 0.5 });
   },
-  NOOP: async (deposit: ScreeningDepositRequest) => deposit,
+  IDENTITY: async (deposit: ScreeningDepositRequest) => deposit,
 } as const;
 
 export type ApiCallKeys = keyof typeof API_CALLS;

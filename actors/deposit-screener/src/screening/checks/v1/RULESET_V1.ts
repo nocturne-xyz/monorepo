@@ -180,9 +180,9 @@ const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
 
 // // - Large volume of deposits coming from same address (large multideposit) → 3x delay (6h)
 
-// const LARGE_MULTIDEPOSIT_DELAY: RuleParams<"NOOP"> = {
+// const LARGE_MULTIDEPOSIT_DELAY: RuleParams<"IDENTITY"> = {
 //   name: "LARGE_MULTIDEPOSIT_DELAY",
-//   call: "NOOP",
+//   call: "IDENTITY",
 //   threshold: (deposit: ScreeningDepositRequest) => {
 //     // TODO codeify large multideposit
 //     return false;
@@ -192,9 +192,9 @@ const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
 
 // - Funds originated from Nocturne → 0.25*(base) + (2 * proportion of funds not previously coming from Nocturne)(base) delay (example, 100% of initial coming in: 30m + 2*2h = 4.5h)
 
-// const FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY: RuleParams<"NOOP"> = {
+// const FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY: RuleParams<"IDENTITY"> = {
 //   name: "FUNDS_ORIGINATING_FROM_NOCTURNE_DELAY",
-//   call: "NOOP",
+//   call: "IDENTITY",
 //   threshold: (deposit: ScreeningDepositRequest) => {
 //     // TODO codeify funds originating from Nocturne
 //     return false;
