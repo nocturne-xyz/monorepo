@@ -270,7 +270,6 @@ export class DepositScreenerScreener {
           await this.scheduleSecondScreeningPhase(
             childLogger,
             depositRequest,
-            assetAddr,
             checkResult
           );
           await this.db.setDepositRequestStatus(
