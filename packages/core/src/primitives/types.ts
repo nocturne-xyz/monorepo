@@ -216,6 +216,13 @@ export type ActionMetadata =
       type: "Action";
       actionType: "Weth To Wsteth";
       amount: bigint;
+    }
+  | {
+      type: "Action";
+      actionType: "UniswapV3 Swap";
+      tokenIn: Address;
+      inAmount: bigint;
+      tokenOut: Address;
     };
 
 export interface ConfidentialPaymentMetadata {

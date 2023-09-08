@@ -23,8 +23,8 @@
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",
     "@types/randombytes": "^2.0.0",
-    "@uniswap/sdk-core": "^4.0.6",
-    "@uniswap/smart-order-router": "^3.16.21",
+    "@uniswap/sdk-core": "^4.0.3",
+    "@uniswap/smart-order-router": "^3.15.0",
     "@uniswap/v3-sdk": "^3.10.0",
     "big-integer": "^1.6.42",
     "bigint-json-serialization": "^1.0.1",
@@ -36,6 +36,7 @@
   "devDependencies": {
     "@types/async-retry": "^1.4.5",
     "@types/bn.js": "^5.1.1",
+    "@types/bunyan": "^1.8.8",
     "@types/chai": "^4.3.3",
     "@types/chai-as-promised": "^7.1.5",
     "@types/mocha": "^10.0.0",

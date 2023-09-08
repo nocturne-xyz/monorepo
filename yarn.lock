@@ -4801,6 +4801,7 @@ __metadata:
     "@nocturne-xyz/core": "workspace:^"
     "@types/async-retry": ^1.4.5
     "@types/bn.js": ^5.1.1
+    "@types/bunyan": ^1.8.8
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
     "@types/mocha": ^10.0.0
@@ -4810,8 +4811,8 @@ __metadata:
     "@types/sinon-chai": ^3.2.9
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
-    "@uniswap/sdk-core": ^4.0.6
-    "@uniswap/smart-order-router": ^3.16.21
+    "@uniswap/sdk-core": ^4.0.3
+    "@uniswap/smart-order-router": ^3.15.0
     "@uniswap/v3-sdk": ^3.10.0
     big-integer: ^1.6.42
     bigint-json-serialization: ^1.0.1
@@ -6459,6 +6460,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/bunyan@npm:^1.8.8":
+  version: 1.8.8
+  resolution: "@types/bunyan@npm:1.8.8"
+  dependencies:
+    "@types/node": "*"
+  checksum: b28966c13579b281ae75560d8c99ee4149348818cd4c4d6424afeee9fdab1039db2a0c06f1ab62fbf8c71f99dcebb70551bb45f2110d6a1fc3e3f891355b6b4b
+  languageName: node
+  linkType: hard
+
 "@types/cacheable-request@npm:^6.0.1":
   version: 6.0.3
   resolution: "@types/cacheable-request@npm:6.0.3"
@@ -7163,21 +7173,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uniswap/sdk-core@npm:^4, @uniswap/sdk-core@npm:^4.0.6":
-  version: 4.0.6
-  resolution: "@uniswap/sdk-core@npm:4.0.6"
-  dependencies:
-    "@ethersproject/address": ^5.0.2
-    big.js: ^5.2.2
-    decimal.js-light: ^2.5.0
-    jsbi: ^3.1.4
-    tiny-invariant: ^1.1.0
-    toformat: ^2.0.0
-  checksum: 0dd876d117c2d359a09047fafb5e80e8312b4db2cb0078a968d0ebbdb0a294558e8a0ea13678b113a9c2026f7c394193eb56650a250fd0c52ec51680c8aed3bc
-  languageName: node
-  linkType: hard
-
-"@uniswap/sdk-core@npm:^4.0.0, @uniswap/sdk-core@npm:^4.0.2":
+"@uniswap/sdk-core@npm:^4.0.3":
   version: 4.0.7
   resolution: "@uniswap/sdk-core@npm:4.0.7"
   dependencies:
@@ -7191,7 +7187,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uniswap/smart-order-router@npm:^3.16.21":
+"@uniswap/smart-order-router@npm:^3.15.0":
   version: 3.16.21
   resolution: "@uniswap/smart-order-router@npm:3.16.21"
   dependencies:
