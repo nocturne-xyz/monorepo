@@ -26,7 +26,7 @@
     "prettier:check": "prettier --check ./src",
     "prettier:write": "prettier --write ./src",
     "screener-cli": "npx ts-node src/cli/index.ts",
-    "test:unit": "mocha --require ts-node/register test/**"
+    "test:unit": "yarn dev:env && mocha --timeout 10000 -r ts-node/register test/** -r dotenv/config"
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
@@ -51,7 +51,7 @@
     "bullmq": "^3.10.1",
     "commander": "^10.0.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.3.1",
     "ethers": "^5.7.2",
     "express": "^4.18.2",
     "ioredis": "^5.3.1",
