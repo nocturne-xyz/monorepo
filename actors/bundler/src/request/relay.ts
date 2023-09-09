@@ -88,6 +88,7 @@ const joinSplitType = {
   required: [
     "proof",
     "senderCommitment",
+    "joinSplitInfoCommitment",
     "commitmentTreeRoot",
     "nullifierA",
     "nullifierB",
@@ -99,6 +100,7 @@ const joinSplitType = {
   properties: {
     proof: solidityProofType,
     senderCommitment: bigintType,
+    joinSplitInfoCommitment: bigintType,
     commitmentTreeRoot: bigintType,
     nullifierA: bigintType,
     nullifierB: bigintType,

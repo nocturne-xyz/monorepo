@@ -1,6 +1,7 @@
 const JOINSPLIT = {
   proof: ["0n", "0n", "0n", "0n", "0n", "0n", "0n", "0n"],
   senderCommitment: "0n",
+  joinSplitInfoCommitment: "0n",
   commitmentTreeRoot: "0n",
   nullifierA: "0n",
   nullifierB: "0n",
