@@ -49,7 +49,11 @@ async function proveJoinSplit(
     joinSplitInfoCommitment,
     ...baseJoinSplit
   } = signedJoinSplit;
-  console.log("proving joinSplit", { proofInputs });
+  console.log("proving joinSplit", {
+    proofInputs,
+    merkleProofA: proofInputs.merkleProofA,
+    merkleProofB: proofInputs.merkleProofB,
+  });
 
   const proof = await prover.proveJoinSplit(proofInputs);
 

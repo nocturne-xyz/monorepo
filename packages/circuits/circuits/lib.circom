@@ -267,19 +267,19 @@ template BitsToTwoBitLimbs(n) {
     }
 }
 
-// takes n 2-bit limbs and outputs 2n bits interpreted in little-endian order
+// takes n 2-bit limbs and outputs 2n-bit number when interpreted in little-endian order
 //@requires(1) `limbs` are all 2-bit numbers
 //@requires(2) `n < 127`
-template TwoBitLimbsToBits(n) {
+template TwoBitLimbsToNum(n) {
     signal input limbs[n];
-    signal output bits[2*n];
+    signal output num;
 
+    var sum = 0;
     for (var i = 0; i < n; i++) {
-        bits[i*2] <-- limbs[i] & 1;
-        bits[i*2 + 1] <-- limbs[i] & 2;
-        
-        limbs[i] === bits[i*2] + 2*bits[i*2 + 1];
-    } 
+        sum += (1 << 2*i) * limbs[i];
+    }
+
+    num <== sum;
 }
 
 // slices first k elements out of an array of n elements
