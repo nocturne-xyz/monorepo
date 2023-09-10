@@ -119,8 +119,6 @@ export function newOpRequestBuilder(
   if (!config) {
     const networkName = chainIdToNetworkName(chainId);
     config = loadNocturneConfigBuiltin(networkName);
-  } else {
-    config = config;
   }
 
   const tellerContract = config.tellerAddress();

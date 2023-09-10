@@ -529,7 +529,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const PAYMENT_AMOUNT = (PER_NOTE_AMOUNT * 2n * 3n) / 4n; // 3/4 of total deposit amount
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = await newOpRequestBuilder(provider, chainId)
+    const opRequestWithMetadata = await newOpRequestBuilder(
+      provider,
+      chainId,
+      config
+    )
       .confidentialPayment(
         erc20Asset,
         PAYMENT_AMOUNT, // Spend 3/4 of deposit amount for conf payment

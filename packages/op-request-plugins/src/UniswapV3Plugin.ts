@@ -19,9 +19,12 @@ import {
 import { ethers } from "ethers";
 import ERC20_ABI from "./abis/ERC20.json";
 
+// Deterministic, same address across all chains
 const V3_SWAP_ROUTER_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
 
 export interface UniswapV3PluginMethods {
+  getSwapRouter(): AlphaRouter;
+
   swap(
     tokenIn: Address,
     inAmount: bigint,
@@ -48,6 +51,18 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
   return {
     ...inner,
     use: use,
+
+    getSwapRouter(): AlphaRouter {
+      const chainId = chainIdToUniswapChainIdType(this._op.chainId);
+      const baseProvider = new ethers.providers.BaseProvider(
+        this.provider.getNetwork()
+      );
+      return new AlphaRouter({
+        provider: baseProvider,
+        chainId,
+      });
+    },
+
     swap(
       tokenIn: Address,
       inAmount: bigint,
@@ -55,14 +70,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
       maxSlippageBps?: number
     ) {
       const prom = new Promise<BuilderItemToProcess>(async (resolve) => {
-        const chainId = chainIdToUniswapChainIdType(this._op.chainId);
-        const baseProvider = new ethers.providers.BaseProvider(
-          this.provider.getNetwork()
-        );
-        const router = new AlphaRouter({
-          provider: baseProvider,
-          chainId,
-        });
+        const router = this.getSwapRouter();
 
         const erc20InContract = new ethers.Contract(tokenIn, ERC20_ABI);
         const tokenInDecimals: number = Number(
@@ -84,6 +92,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
           deadline: Date.now() + 3_600,
           type: SwapType.SWAP_ROUTER_02,
         };
+        const chainId = chainIdToUniswapChainIdType(this._op.chainId);
         const route = await router.route(
           CurrencyAmount.fromRawAmount(
             new Token(
