@@ -4,6 +4,7 @@
     "project": ["./tsconfig.json"]
   },
   "rules": {
-    "no-constant-condition": "warn"
+    "no-constant-condition": "warn",
+    "no-async-promise-executor": "warn"
   }
 }
