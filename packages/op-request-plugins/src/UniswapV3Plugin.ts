@@ -13,14 +13,15 @@ import { ChainId, Percent, Token, TradeType } from "@uniswap/sdk-core";
 import {
   AlphaRouter,
   CurrencyAmount,
-  SwapOptionsSwapRouter02,
+  SwapOptionsUniversalRouter,
   SwapType,
 } from "@uniswap/smart-order-router";
 import { ethers } from "ethers";
 import ERC20_ABI from "./abis/ERC20.json";
 
-// Deterministic, same address across all chains
-const V3_SWAP_ROUTER_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
+const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+const UNIVERSAL_SWAP_ROUTER_ADDRESS =
+  "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD";
 
 export interface UniswapV3PluginMethods {
   getSwapRouter(): AlphaRouter;
@@ -71,6 +72,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
     ) {
       const prom = new Promise<BuilderItemToProcess>(async (resolve) => {
         const router = this.getSwapRouter();
+        const handlerAddress = this.config.handlerAddress();
 
         const erc20InContract = new ethers.Contract(tokenIn, ERC20_ABI);
         const tokenInDecimals: number = Number(
@@ -86,11 +88,14 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
         const tokenOutSymbol: string = await erc20OutContract.symbol();
         const tokenOutName: string = await erc20OutContract.name();
 
-        const swapOpts: SwapOptionsSwapRouter02 = {
-          recipient: this.config.handlerAddress(),
+        const swapOpts: SwapOptionsUniversalRouter = {
+          type: SwapType.UNIVERSAL_ROUTER,
+          simulate: {
+            fromAddress: handlerAddress,
+          },
           slippageTolerance: new Percent(maxSlippageBps ?? 50, 10_000),
-          deadline: Date.now() + 3_600,
-          type: SwapType.SWAP_ROUTER_02,
+          recipient: handlerAddress,
+          deadlineOrPreviousBlockhash: Date.now() + 3_600,
         };
         const chainId = chainIdToUniswapChainIdType(this._op.chainId);
         const route = await router.route(
@@ -126,8 +131,8 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
           unwrapValue: inAmount,
         };
 
-        const action: Action = {
-          contractAddress: V3_SWAP_ROUTER_ADDRESS,
+        const swapAction: Action = {
+          contractAddress: UNIVERSAL_SWAP_ROUTER_ADDRESS,
           encodedFunction: route.methodParameters!.calldata,
         };
 
@@ -141,13 +146,35 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
           tokenOut,
         };
 
-        resolve({
-          unwraps: [unwrap],
-          confidentialPayments: [],
-          actions: [action],
-          refundAssets: [refundAsset],
-          metadatas: [metadata],
-        });
+        // If permit2 contract doesn't have high enough allowance, set to max for handler -> router
+        if (
+          (await erc20InContract.allowance(PERMIT2_ADDRESS)).toBigInt() <
+          inAmount
+        ) {
+          const approveAction: Action = {
+            contractAddress: tokenIn,
+            encodedFunction: erc20InContract.interface.encodeFunctionData(
+              "approve",
+              [PERMIT2_ADDRESS, ethers.constants.MaxUint256]
+            ),
+          };
+
+          resolve({
+            unwraps: [unwrap],
+            confidentialPayments: [],
+            actions: [approveAction, swapAction], // enqueue approve + swap
+            refundAssets: [refundAsset],
+            metadatas: [metadata],
+          });
+        } else {
+          resolve({
+            unwraps: [unwrap],
+            confidentialPayments: [],
+            actions: [swapAction],
+            refundAssets: [refundAsset],
+            metadatas: [metadata],
+          });
+        }
       });
 
       this.pluginFn(prom);
