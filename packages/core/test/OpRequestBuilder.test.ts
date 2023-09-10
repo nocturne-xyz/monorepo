@@ -15,6 +15,7 @@ import {
   plutocracy,
   getDummyHex,
   DUMMY_CONTRACT_ADDR,
+  DUMMY_CONFIG,
 } from "./utils";
 import { ethers } from "ethers";
 
@@ -35,12 +36,12 @@ describe("OpRequestBuilder", () => {
         },
       ],
       chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
+      tellerContract: DUMMY_CONFIG.tellerAddress(),
       deadline: 2n,
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -75,12 +76,12 @@ describe("OpRequestBuilder", () => {
         },
       ],
       chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
+      tellerContract: DUMMY_CONFIG.tellerAddress(),
       deadline: 2n,
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -115,12 +116,12 @@ describe("OpRequestBuilder", () => {
       executionGasLimit: 20n,
       gasPrice: 30n,
       chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
+      tellerContract: DUMMY_CONFIG.tellerAddress(),
       deadline: 2n,
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -164,16 +165,12 @@ describe("OpRequestBuilder", () => {
       refundAssets: [],
       actions: [],
       chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
+      tellerContract: DUMMY_CONFIG.tellerAddress(),
       deadline: 2n,
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = await newOpRequestBuilder(
-      provider,
-      1n,
-      DUMMY_CONTRACT_ADDR
-    );
+    const builder = await newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(stablescam, 2n, receivers[1])
@@ -244,12 +241,12 @@ describe("OpRequestBuilder", () => {
       refundAddr: refundAddr,
       actions,
       chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
+      tellerContract: DUMMY_CONFIG.tellerAddress(),
       deadline: 2n,
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
@@ -304,12 +301,12 @@ describe("OpRequestBuilder", () => {
       refundAddr: refundAddr,
       actions,
       chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
+      tellerContract: DUMMY_CONFIG.tellerAddress(),
       deadline: 2n,
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))

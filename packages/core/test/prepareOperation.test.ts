@@ -25,6 +25,7 @@ import {
   getDummyHex,
   testGasAssets,
   DUMMY_CONTRACT_ADDR,
+  DUMMY_CONFIG,
 } from "./utils";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { MockEthToTokenConverter } from "../src/conversion";
@@ -170,7 +171,7 @@ describe("prepareOperation", async () => {
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -222,7 +223,7 @@ describe("prepareOperation", async () => {
     const receiver = receiverSigner.canonicalAddress();
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -272,7 +273,7 @@ describe("prepareOperation", async () => {
     const refundAddr = signer.generateRandomStealthAddress();
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -331,7 +332,7 @@ describe("prepareOperation", async () => {
       .map((signer) => signer.canonicalAddress());
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(stablescam, 2n, receivers[1])
@@ -380,7 +381,7 @@ describe("prepareOperation", async () => {
     const refundAddr = signer.generateRandomStealthAddress();
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
@@ -448,7 +449,7 @@ describe("prepareOperation", async () => {
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
@@ -488,7 +489,7 @@ describe("prepareOperation", async () => {
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))

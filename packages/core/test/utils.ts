@@ -21,6 +21,7 @@ import {
 } from "../src";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import randomBytes from "randombytes";
+import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 
 export const DUMMY_ROOT_KEY = Uint8Array.from(range(32));
 
@@ -28,6 +29,8 @@ export function randomBigInt(): bigint {
   const rand = randomBytes(32);
   return BigInt("0x" + rand.toString("hex"));
 }
+
+export const DUMMY_CONFIG = loadNocturneConfigBuiltin("example-network");
 
 export const DUMMY_CONTRACT_ADDR = ethers.utils.getAddress(
   "0x67f8f9a5d4290325506b119980660624dc7d3ba9"

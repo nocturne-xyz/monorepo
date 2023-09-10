@@ -11,6 +11,7 @@ import {
   getDummyHex,
   testGasAssets,
   DUMMY_CONTRACT_ADDR,
+  DUMMY_CONFIG,
 } from "./utils";
 import { newOpRequestBuilder } from "../src";
 import { prepareOperation } from "../src/prepareOperation";
@@ -40,7 +41,7 @@ describe("signOperation", () => {
 
     // make operation request and prepare it
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
