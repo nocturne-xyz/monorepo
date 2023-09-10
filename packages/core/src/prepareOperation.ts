@@ -315,9 +315,12 @@ async function makeJoinSplit(
   // noteB could have been a dummy note. If it is, we simply duplicate the merkle proof for noteA
   // the circuit will ignore the merkle proof for noteB if it has a value of 0
   const noteBIsDummy = oldNoteB.value === 0n;
+  const oldNoteAIndex = oldNoteA.merkleIndex;
+  let oldNoteBIndex = oldNoteB.merkleIndex;
   let merkleProofB: MerkleProofInput;
   if (noteBIsDummy) {
     merkleProofB = merkleProofA;
+    oldNoteBIndex = oldNoteAIndex;
   } else {
     const membershipProof = merkle.getProof(oldNoteB.merkleIndex);
 
@@ -363,8 +366,8 @@ async function makeJoinSplit(
     senderY,
     receiverY,
     encodeOldNoteMerkleIndicesWithSignBits(
-      oldNoteA.merkleIndex,
-      oldNoteB.merkleIndex,
+      oldNoteAIndex,
+      oldNoteBIndex,
       senderSign,
       receiverSign
     ),

@@ -63,6 +63,7 @@ contract CommitmentTreeManager is
         uint256 newNoteACommitment,
         uint256 newNoteBCommitment,
         uint256 senderCommitment,
+        uint256 joinSplitInfoCommitment,
         EncryptedNote newNoteAEncrypted,
         EncryptedNote newNoteBEncrypted
     );
@@ -222,6 +223,7 @@ contract CommitmentTreeManager is
                 joinSplit.newNoteACommitment,
                 joinSplit.newNoteBCommitment,
                 joinSplit.senderCommitment,
+                joinSplit.joinSplitInfoCommitment,
                 joinSplit.newNoteAEncrypted,
                 joinSplit.newNoteBEncrypted
             );

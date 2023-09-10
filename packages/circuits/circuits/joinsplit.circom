@@ -64,7 +64,7 @@ include "lib.circom";
 // - `newNoteAValue`
 // - `newNoteBValue`
 // - `joinSplitInfoNonce`, defined as `Poseidon(keccak256("JOINSPLIT_INFO_NONCE") % p, nullifierA, vk)`
-template JoinSplit(levels) {
+template JoinSplit() {
     // *** PUBLIC INPUTS ***
     // digest of the operation this JoinSplit is a part of
     // this is used to bind each JoinSplit to an operation and as the message for the signature
@@ -148,8 +148,8 @@ template JoinSplit(levels) {
     signal input oldNoteAValue;
 
     // Path to old note A
-    signal input pathA[levels];
-    signal input siblingsA[levels][3];
+    signal input pathA[16];
+    signal input siblingsA[16][3];
 
     // Old note B
     signal input oldNoteBOwnerH1X;
@@ -160,8 +160,8 @@ template JoinSplit(levels) {
     signal input oldNoteBValue;
 
     // Path to old note B
-    signal input pathB[levels];
-    signal input siblingsB[levels][3];
+    signal input pathB[16];
+    signal input siblingsB[16][3];
 
     // New note A
     signal input newNoteAValue;
@@ -359,7 +359,7 @@ template JoinSplit(levels) {
     //@argument MerkleTreeInclusionProof.requires(1) is satisfied by definition (exactly what code does).
     //  since we set `leaf` to `oldNoteACommitment` and `root` to `commitmentTreeRoot`
     //  (8.1) follows from MerkleTreeInclusionProof.ensures(1)
-    commitmentTreeRoot <== MerkleTreeInclusionProof(levels)(oldNoteACommitment, pathA, siblingsA);
+    commitmentTreeRoot <== MerkleTreeInclusionProof(16)(oldNoteACommitment, pathA, siblingsA);
 
     // check merkle tree inclusion proof for oldNoteBCommitment only if oldNoteBValue is nonzero
     //@satisfies(8.2)
@@ -369,7 +369,7 @@ template JoinSplit(levels) {
     // 2. oldNoteBValue is nonzero. In this case (8.2) follows from the fact that the constraint below
     //    will only be satisfied if `commitmentTreeRootB == commitmentTreeRoot`, which can only be the case
     //    if there exists a valid merkle membership proof for `oldNoteBCommitment` in the tree
-    signal commitmentTreeRootB <== MerkleTreeInclusionProof(levels)(oldNoteBCommitment, pathB, siblingsB);
+    signal commitmentTreeRootB <== MerkleTreeInclusionProof(16)(oldNoteBCommitment, pathB, siblingsB);
     oldNoteBValue * (commitmentTreeRoot - commitmentTreeRootB) === 0;
 
     // derive nullifier for oldNoteA
@@ -480,10 +480,9 @@ template JoinSplit(levels) {
     signal compressedReceiverCanonAddrY <== canonAddrCompressors[1].y;
     signal receiverSignBit <== canonAddrCompressors[1].sign;
 
-    signal pathABits[2*levels] <== TwoBitLimbsToBits(levels)(pathA);
-    signal pathBBits[2*levels] <== TwoBitLimbsToBits(levels)(pathB);
-    signal oldNoteMerkleIndicesBits[4*levels] <== Concat(2*levels, 2*levels)(pathABits, pathBBits);
-    signal oldNoteMerkleIndices <== Bits2Num(4*levels)(oldNoteMerkleIndicesBits);
+    signal oldNoteAIndex <== TwoBitLimbsToNum(16)(pathA);
+    signal oldNoteBIndex <== TwoBitLimbsToNum(16)(pathB);
+    signal oldNoteMerkleIndices <== oldNoteAIndex + (1 << 32) * oldNoteBIndex;
     signal oldNoteMerkleIndicesWithSignBits <== oldNoteMerkleIndices + (1 << 64) * senderSignBit + (1 << 65) * receiverSignBit;
 
     var JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = 8641380568873709859334930917483971124167266522634964152243775747603865574453;
@@ -493,4 +492,4 @@ template JoinSplit(levels) {
     joinSplitInfoCommitment <== Poseidon(7)([JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR, compressedSenderCanonAddrY, compressedReceiverCanonAddrY, oldNoteMerkleIndicesWithSignBits, newNoteAValue, newNoteBValue, joinSplitInfoNonce]);
 }
 
-component main { public [pubEncodedAssetAddrWithSignBits, pubEncodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit(16);
+component main { public [pubEncodedAssetAddrWithSignBits, pubEncodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit();
