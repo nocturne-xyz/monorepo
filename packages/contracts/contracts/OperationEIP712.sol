@@ -185,6 +185,7 @@ contract OperationEIP712 is EIP712Upgradeable {
                     joinSplit.newNoteACommitment,
                     joinSplit.newNoteBCommitment,
                     joinSplit.senderCommitment,
+                    joinSplit.joinSplitInfoCommitment,
                     _hashEncryptedNote(joinSplit.newNoteAEncrypted),
                     _hashEncryptedNote(joinSplit.newNoteBEncrypted)
                 )
