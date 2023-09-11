@@ -1,6 +1,9 @@
+import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "@nocturne-xyz/core";
 import { AssetType } from "@nocturne-xyz/core/src";
 import { ethers } from "ethers";
+
+export const DUMMY_CONFIG = loadNocturneConfigBuiltin("example-network");
 
 export const WETH_ADDRESS = ethers.utils.getAddress(
   "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
