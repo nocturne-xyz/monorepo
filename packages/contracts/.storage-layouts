@@ -23,6 +23,35 @@
 | _leftoverTokensHolder | address                   | 276  | 0      | 20    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 | __GAP                 | uint256[50]               | 277  | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 =======================
+ ➡ CanonAddrRegistryEntryEIP712
+| Name           | Type        | Slot | Offset | Bytes | Contract                                                                                   |
+|----------------|-------------|------|--------|-------|--------------------------------------------------------------------------------------------|
+| _initialized   | uint8       | 0    | 0      | 1     | packages/contracts/contracts/CanonAddrRegistryEntryEIP712.sol:CanonAddrRegistryEntryEIP712 |
+| _initializing  | bool        | 0    | 1      | 1     | packages/contracts/contracts/CanonAddrRegistryEntryEIP712.sol:CanonAddrRegistryEntryEIP712 |
+| _hashedName    | bytes32     | 1    | 0      | 32    | packages/contracts/contracts/CanonAddrRegistryEntryEIP712.sol:CanonAddrRegistryEntryEIP712 |
+| _hashedVersion | bytes32     | 2    | 0      | 32    | packages/contracts/contracts/CanonAddrRegistryEntryEIP712.sol:CanonAddrRegistryEntryEIP712 |
+| _name          | string      | 3    | 0      | 32    | packages/contracts/contracts/CanonAddrRegistryEntryEIP712.sol:CanonAddrRegistryEntryEIP712 |
+| _version       | string      | 4    | 0      | 32    | packages/contracts/contracts/CanonAddrRegistryEntryEIP712.sol:CanonAddrRegistryEntryEIP712 |
+| __gap          | uint256[48] | 5    | 0      | 1536  | packages/contracts/contracts/CanonAddrRegistryEntryEIP712.sol:CanonAddrRegistryEntryEIP712 |
+=======================
+ ➡ CanonAddrSigCheckVerifier
+| Name | Type | Slot | Offset | Bytes | Contract |
+|------|------|------|--------|-------|----------|
+=======================
+ ➡ CanonicalAddressRegistry
+| Name                             | Type                                | Slot | Offset | Bytes | Contract                                                                           |
+|----------------------------------|-------------------------------------|------|--------|-------|------------------------------------------------------------------------------------|
+| _initialized                     | uint8                               | 0    | 0      | 1     | packages/contracts/contracts/CanonicalAddressRegistry.sol:CanonicalAddressRegistry |
+| _initializing                    | bool                                | 0    | 1      | 1     | packages/contracts/contracts/CanonicalAddressRegistry.sol:CanonicalAddressRegistry |
+| _hashedName                      | bytes32                             | 1    | 0      | 32    | packages/contracts/contracts/CanonicalAddressRegistry.sol:CanonicalAddressRegistry |
+| _hashedVersion                   | bytes32                             | 2    | 0      | 32    | packages/contracts/contracts/CanonicalAddressRegistry.sol:CanonicalAddressRegistry |
+| _name                            | string                              | 3    | 0      | 32    | packages/contracts/contracts/CanonicalAddressRegistry.sol:CanonicalAddressRegistry |
+| _version                         | string                              | 4    | 0      | 32    | packages/contracts/contracts/CanonicalAddressRegistry.sol:CanonicalAddressRegistry |
+| __gap                            | uint256[48]                         | 5    | 0      | 1536  | packages/contracts/contracts/CanonicalAddressRegistry.sol:CanonicalAddressRegistry |
+| _sigCheckVerifier                | contract ICanonAddrSigCheckVerifier | 53   | 0      | 20    | packages/contracts/contracts/CanonicalAddressRegistry.sol:CanonicalAddressRegistry |
+| _compressedCanonAddrToNonce      | mapping(uint256 => uint256)         | 54   | 0      | 32    | packages/contracts/contracts/CanonicalAddressRegistry.sol:CanonicalAddressRegistry |
+| _ethAddressToCompressedCanonAddr | mapping(address => uint256)         | 55   | 0      | 32    | packages/contracts/contracts/CanonicalAddressRegistry.sol:CanonicalAddressRegistry |
+=======================
  ➡ CommitmentTreeManager
 | Name                 | Type                      | Slot | Offset | Bytes | Contract                                                                     |
 |----------------------|---------------------------|------|--------|-------|------------------------------------------------------------------------------|
