@@ -13,15 +13,13 @@ import { ChainId, Percent, Token, TradeType } from "@uniswap/sdk-core";
 import {
   AlphaRouter,
   CurrencyAmount,
-  SwapOptionsUniversalRouter,
+  SwapOptionsSwapRouter02,
   SwapType,
 } from "@uniswap/smart-order-router";
 import { ethers } from "ethers";
 import ERC20_ABI from "./abis/ERC20.json";
 
-const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
-const UNIVERSAL_SWAP_ROUTER_ADDRESS =
-  "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD";
+const SWAP_ROUTER_ADDRESS = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
 
 export interface UniswapV3PluginMethods {
   getSwapRouter(): AlphaRouter;
@@ -86,14 +84,14 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             const tokenOutSymbol: string = await erc20OutContract.symbol();
             const tokenOutName: string = await erc20OutContract.name();
 
-            const swapOpts: SwapOptionsUniversalRouter = {
-              type: SwapType.UNIVERSAL_ROUTER,
+            const swapOpts: SwapOptionsSwapRouter02 = {
+              type: SwapType.SWAP_ROUTER_02,
               simulate: {
                 fromAddress: handlerAddress,
               },
-              slippageTolerance: new Percent(maxSlippageBps ?? 50, 10_000),
               recipient: handlerAddress,
-              deadlineOrPreviousBlockhash: Date.now() + 3_600,
+              slippageTolerance: new Percent(maxSlippageBps ?? 50, 10_000),
+              deadline: Date.now() + 3_600,
             };
             const chainId = chainIdToUniswapChainIdType(this._op.chainId);
             const route = await router.route(
@@ -130,7 +128,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             };
 
             const swapAction: Action = {
-              contractAddress: UNIVERSAL_SWAP_ROUTER_ADDRESS,
+              contractAddress: SWAP_ROUTER_ADDRESS,
               encodedFunction: route.methodParameters!.calldata,
             };
 
@@ -144,16 +142,18 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               tokenOut,
             };
 
-            // If permit2 contract doesn't have high enough allowance, set to max for handler -> router
+            // If router contract doesn't have high enough allowance, set to max for handler ->
+            // router. Anyone can set allowance on handler so might as well set to max.
             if (
-              (await erc20InContract.allowance(PERMIT2_ADDRESS)).toBigInt() <
-              inAmount
+              (
+                await erc20InContract.allowance(SWAP_ROUTER_ADDRESS)
+              ).toBigInt() < inAmount
             ) {
               const approveAction: Action = {
                 contractAddress: tokenIn,
                 encodedFunction: erc20InContract.interface.encodeFunctionData(
                   "approve",
-                  [PERMIT2_ADDRESS, ethers.constants.MaxUint256]
+                  [SWAP_ROUTER_ADDRESS, ethers.constants.MaxUint256]
                 ),
               };
 
