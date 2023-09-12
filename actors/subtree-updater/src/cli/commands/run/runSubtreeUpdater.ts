@@ -1,7 +1,6 @@
 import { Command } from "commander";
 import { ethers } from "ethers";
 import { SubtreeUpdater } from "../../../subtreeUpdater";
-import { SubgraphSubtreeUpdaterSyncAdapter } from "../../../sync/subgraph/adapter";
 import { getRedis } from "../utils";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
@@ -48,11 +47,6 @@ export const runSubtreeUpdater = new Command("subtree-updater")
     parseInt
   )
   .option(
-    "--throttle-ms <number>",
-    "maximum period of time to wait before pulling new insertions",
-    parseInt
-  )
-  .option(
     "--log-dir <string>",
     "directory to write logs to",
     "./logs/subtree-updater"
@@ -65,7 +59,6 @@ export const runSubtreeUpdater = new Command("subtree-updater")
     const {
       configNameOrPath,
       logDir,
-      throttleMs,
       useMockProver,
       fillBatchLatencyMs,
       rapidsnarkExecutablePath,
@@ -91,10 +84,6 @@ export const runSubtreeUpdater = new Command("subtree-updater")
     if (!subgraphEndpoint) {
       throw new Error("missing SUBGRAPH_URL");
     }
-    const adapter = new SubgraphSubtreeUpdaterSyncAdapter(
-      subgraphEndpoint,
-      logger.child({ function: "SubgraphSubtreeUpdaterSyncAdapter" })
-    );
 
     const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
     const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
@@ -163,13 +152,13 @@ export const runSubtreeUpdater = new Command("subtree-updater")
 
     const updater = new SubtreeUpdater(
       handlerContract,
-      adapter,
       logger,
       getRedis(),
       prover,
+      subgraphEndpoint,
       { fillBatchLatency }
     );
 
-    const { promise } = await updater.start(throttleMs);
+    const { promise } = await updater.start();
     await promise;
   });

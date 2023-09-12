@@ -188,10 +188,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     // HH's default gas price seems to be somewhere around 1 gwei experimentally
     // unfortunately it doesn't have a way to set it in the chain itself, only in hre
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = newOpRequestBuilder({
+    const opRequestWithMetadata = await newOpRequestBuilder(
+      provider,
       chainId,
-      tellerContract: teller.address,
-    })
+      teller.address
+    )
       .unwrap(erc20Asset, PER_NOTE_AMOUNT)
       .gasPrice(1n)
       .deadline(
@@ -231,10 +232,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = newOpRequestBuilder({
+    const opRequestWithMetadata = await newOpRequestBuilder(
+      provider,
       chainId,
-      tellerContract: teller.address,
-    })
+      teller.address
+    )
       .unwrap(erc20Asset, (PER_NOTE_AMOUNT * 3n) / 2n)
       .action(erc20.address, encodedFunction)
       .gas({
@@ -284,10 +286,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = newOpRequestBuilder({
+    const opRequestWithMetadata = await newOpRequestBuilder(
+      provider,
       chainId,
-      tellerContract: teller.address,
-    })
+      teller.address
+    )
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL) // unwrap total 2.75 notes
       .confidentialPayment(
         erc20Asset,
@@ -429,10 +432,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       );
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = newOpRequestBuilder({
+    const opRequestWithMetadata = await newOpRequestBuilder(
+      provider,
       chainId,
-      tellerContract: teller.address,
-    })
+      teller.address
+    )
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL) // unwrap total 9.5
       .action(erc20.address, encodedFunction)
       .gasPrice(GAS_PRICE)
@@ -522,10 +526,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const PAYMENT_AMOUNT = (PER_NOTE_AMOUNT * 2n * 3n) / 4n; // 3/4 of total deposit amount
 
     const chainId = BigInt((await provider.getNetwork()).chainId);
-    const opRequestWithMetadata = newOpRequestBuilder({
+    const opRequestWithMetadata = await newOpRequestBuilder(
+      provider,
       chainId,
-      tellerContract: teller.address,
-    })
+      teller.address
+    )
       .confidentialPayment(
         erc20Asset,
         PAYMENT_AMOUNT, // Spend 3/4 of deposit amount for conf payment

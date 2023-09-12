@@ -166,11 +166,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         );
 
       const chainId = BigInt((await provider.getNetwork()).chainId);
-      const builder = newOpRequestBuilder({
-        chainId,
-        tellerContract: teller.address,
-      });
-      const opRequest = builder
+      const builder = newOpRequestBuilder(provider, chainId, teller.address);
+      const opRequest = await builder
         .unwrap(asset, 80n)
         .action(token.address, transfer)
         .gasPrice(GAS_PRICE)

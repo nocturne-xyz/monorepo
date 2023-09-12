@@ -17,6 +17,7 @@ import { prepareOperation } from "../src/prepareOperation";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { signOperation } from "../src/signOperation";
 import { MockEthToTokenConverter } from "../src/conversion";
+import { ethers } from "ethers";
 
 describe("signOperation", () => {
   it("signs an operation with 1 action, 1 unwrap, 1 payment", async () => {
@@ -38,11 +39,9 @@ describe("signOperation", () => {
     const receiver = receiverSigner.canonicalAddress();
 
     // make operation request and prepare it
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)

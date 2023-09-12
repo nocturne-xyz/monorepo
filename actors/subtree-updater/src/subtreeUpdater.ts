@@ -1,5 +1,4 @@
 import { Logger } from "winston";
-import { SubtreeUpdaterSyncAdapter } from "./sync";
 import {
   ClosableAsyncIterator,
   InMemoryKVStore,
@@ -13,28 +12,21 @@ import {
   TreeConstants,
   IncludedNote,
   IncludedNoteCommitment,
-  TotalEntityIndex,
-  merkleIndexToSubtreeIndex,
   BaseProof,
   SubtreeUpdateInputs,
+  fetchlatestCommittedMerkleIndex,
 } from "@nocturne-xyz/core";
 import IORedis from "ioredis";
 import { Handler } from "@nocturne-xyz/contracts";
 import { ActorHandle, makeCreateCounterFn } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
-import { Insertion } from "./sync/syncAdapter";
-import { PersistentLog } from "./persistentLog";
+import { TreeInsertionLog, Insertion } from "@nocturne-xyz/persistent-log";
 import { Mutex } from "async-mutex";
 import { ACTOR_NAME, COMPONENT_NAME } from "./constants";
 
 const { BATCH_SIZE } = TreeConstants;
-const RECOVERY_BATCH_SIZE = BATCH_SIZE * 16;
-const RECOVER_INCLUDE_ARRAY = [
-  true,
-  ...range(RECOVERY_BATCH_SIZE - 1).map(() => false),
-];
-
 const SUBTREE_INCLUDE_ARRAY = [true, ...range(BATCH_SIZE - 1).map(() => false)];
+const INSERTION_LOG_STREAM_NAME = "insertion-log";
 
 export interface SubtreeUpdaterOpts {
   fillBatchLatency?: number;
@@ -62,14 +54,14 @@ export interface ProofInputData {
 export class SubtreeUpdater {
   handlerMutex: Mutex;
   handlerContract: Handler;
-  adapter: SubtreeUpdaterSyncAdapter;
   logger: Logger;
 
   redis: IORedis;
   tree: SparseMerkleProver;
   prover: SubtreeUpdateProver;
+  subgraphEndpoint: string;
 
-  insertionLog: PersistentLog<Insertion>;
+  insertionLog: TreeInsertionLog;
 
   fillBatchTimeout: NodeJS.Timeout | undefined;
   fillBatchLatency: number | undefined;
@@ -77,16 +69,16 @@ export class SubtreeUpdater {
 
   constructor(
     handlerContract: Handler,
-    syncAdapter: SubtreeUpdaterSyncAdapter,
     logger: Logger,
     redis: IORedis,
     prover: SubtreeUpdateProver,
+    subgraphEndpoint: string,
     opts?: SubtreeUpdaterOpts
   ) {
     this.handlerContract = handlerContract;
-    this.adapter = syncAdapter;
     this.logger = logger;
     this.prover = prover;
+    this.subgraphEndpoint = subgraphEndpoint;
 
     this.fillBatchLatency = opts?.fillBatchLatency;
     this.fillBatchTimeout = undefined;
@@ -105,9 +97,12 @@ export class SubtreeUpdater {
       COMPONENT_NAME
     );
 
-    this.insertionLog = new PersistentLog<Insertion>(
+    this.insertionLog = new TreeInsertionLog(
       this.redis,
-      logger.child({ function: "PersistentLog" })
+      INSERTION_LOG_STREAM_NAME,
+      {
+        logger: logger.child({ function: "PersistentLog" }),
+      }
     );
 
     this.metrics = {
@@ -132,114 +127,97 @@ export class SubtreeUpdater {
 
   async recoverTree(
     logger: Logger,
-    latestCommittedSubtreeIndex: number
-  ): Promise<TotalEntityIndex | undefined> {
+    latestCommittedMerkleIndex: number
+  ): Promise<void> {
     if (this.tree.count() > 0) {
       throw new Error("canont recover non-empty tree");
     }
 
     logger.info("recovering tree from fresh state");
-    const previousInsertions = ClosableAsyncIterator.flatten(
-      this.insertionLog.scan()
-    ).batches(RECOVERY_BATCH_SIZE, true);
+    // scan over the insertion in large batches, starting from the beginning
+    // stop when we've recovered up to the latest committed merkle index
+    const previousInsertions = this.insertionLog.scan({
+      // end is exclusive, so we add 1 to get everything up to and through the latest committed merkle index
+      endMerkleIndex: latestCommittedMerkleIndex + 1,
+      // we want to ensure we get all of the insertions up to `endId` even if insertion writer is behind,
+      // se we set `terminateOnEmpty` to `false so we block until we get all of the committed insertions
+      terminateOnEmpty: false,
+    });
 
-    let endTEI = undefined;
-    for await (const wrappedInsertions of previousInsertions.iter) {
-      if (
-        Math.floor((this.tree.count() + RECOVERY_BATCH_SIZE) / BATCH_SIZE) >=
-        latestCommittedSubtreeIndex
-      ) {
-        break;
-      }
-      endTEI = wrappedInsertions[wrappedInsertions.length - 1].totalEntityIndex;
-      const insertions = wrappedInsertions.map(({ inner }) => inner);
+    for await (const insertions of previousInsertions.iter) {
+      logger.debug(`recovering batch of ${insertions.length} insertions`);
+      const includes = new Array(insertions.length).fill(false);
       const { leaves, subtreeBatchOffset } =
         batchInfoFromInsertions(insertions);
-
-      this.tree.insertBatch(subtreeBatchOffset, leaves, RECOVER_INCLUDE_ARRAY);
+      this.tree.insertBatch(subtreeBatchOffset, leaves, includes);
       logger.debug(`recovered up to merkleIndex ${this.tree.count() - 1}`);
     }
-    await previousInsertions.close();
-
-    return endTEI;
   }
 
-  async start(queryThrottleMs?: number): Promise<ActorHandle> {
+  async start(): Promise<ActorHandle> {
     const logger = this.logger.child({ function: "start" });
+    logger.info("starting subtree updater");
 
-    const latestCommittedSubtreeIndexAtStart =
-      await this.adapter.fetchLatestSubtreeIndex();
+    const latestCommittedMerkleIndexAtStart =
+      await fetchlatestCommittedMerkleIndex(this.subgraphEndpoint);
 
-    // recover tree in-memory from insertion log
-    // syncs in multiples of 256 insertions, up to the latest full-committed batch of 256 insertions
-    // returns the latest total entity index of any insertion that was recovered
-    const recoveryTEI = await this.recoverTree(
-      this.logger.child({ function: "recoverTree" }),
-      latestCommittedSubtreeIndexAtStart ?? 0
-    );
-
-    // goal: get an infinite iterator of all proof inputs starting from the point to which we recovered (which must be a multiple of 16)
-    // main idea: use two iterators, and chain them together:
-    //   (1) iterator over the remaining insertions in the log that we didn't scan over during recovery. That is, insertions with TEI > `recoveryTEI`
-    //   (2) iterator over new insertions from the sync adapter that aren't yet in the log.
-    //   (3) chain them together and chunk into 16-insertion batches
-    //   (4) filter out batches that are already committed and make proof inputs for the rest
-
-    // (1) start the first iterator at `startTEI`, defined as `recoveryTEI + 1` or 0 if the log was empty
-    const startTEI = recoveryTEI ? recoveryTEI + 1n : 0n;
-    const newInsertionsFromLog = this.insertionLog.scan(startTEI);
-
-    // (2) get latest total entity index from insertion log and start the sync adapter's iterator at the TEI after this one,
-    // or 0 if it's undefined
-    const latestTEIFromLog =
-      await this.insertionLog.getLatestTotalEntityIndex();
-    const newInsertionsFromAdapter = this.insertionLog.syncAndPipe(
-      this.adapter.iterInsertions(
-        latestTEIFromLog ? latestTEIFromLog + 1n : 0n,
-        {
-          throttleMs: queryThrottleMs,
-        }
-      )
-    );
-
-    // (3) construct iterator of all new 16-insertion batches, and insert them into the tree
-    const batches = ClosableAsyncIterator.flatMap(
-      newInsertionsFromLog.chain(newInsertionsFromAdapter),
-      ({ inner }) => inner
-    )
-      // log + count insertion
-      .tap((insertion) => {
-        logger.debug(`got insertion at merkleIndex ${insertion.merkleIndex}`, {
-          insertion,
-        });
-
-        const noteOrCommitment = NoteTrait.isCommitment(insertion)
-          ? "commitment"
-          : "note";
-        this.metrics.insertionsReceivedCounter.add(1, { noteOrCommitment });
-      })
-      .tap((insertion) => this.maybeScheduleFillBatch(insertion.merkleIndex))
-      .batches(BATCH_SIZE, true)
-      .map(batchInfoFromInsertions)
-      .tap(({ leaves, subtreeBatchOffset }) =>
-        this.tree.insertBatch(subtreeBatchOffset, leaves, SUBTREE_INCLUDE_ARRAY)
+    if (latestCommittedMerkleIndexAtStart !== undefined) {
+      // recover in-memory tree from insertion log up to and including the latest committed subtree
+      await this.recoverTree(
+        this.logger.child({ function: "recoverTree" }),
+        latestCommittedMerkleIndexAtStart
       );
+    }
 
-    // (4) construct an iterator of proof inputs for uncommitted batches
-    const proofInputInfos: ClosableAsyncIterator<ProofInputData> = batches
-      // filterout batches that are already committed
-      .filter(
-        ({ subtreeBatchOffset }) =>
-          !latestCommittedSubtreeIndexAtStart ||
-          merkleIndexToSubtreeIndex(subtreeBatchOffset) >
-            latestCommittedSubtreeIndexAtStart
-      )
+    // construct infinite iterator over all new and future insertions from the log
+    logger.info(
+      `scanning over insertion log starting from merkle index ${latestCommittedMerkleIndexAtStart}`
+    );
+    const allInsertions = ClosableAsyncIterator.flatten(
+      this.insertionLog.scan({
+        // if `undefined`, will start at the beginning
+        // note: the `+ 1` is missing because the iterator lower bound is exclusive
+        startMerkleIndex: latestCommittedMerkleIndexAtStart,
+        terminateOnEmpty: false,
+      })
+    );
+
+    const proofInputInfos = allInsertions
+      // update fill batch timer if necessary
+      .tap(({ merkleIndex }) => {
+        this.maybeScheduleFillBatch(merkleIndex);
+      })
+      // make batches
+      .batches(BATCH_SIZE, true)
+      // metrics
+      .tap((batch) => {
+        for (const insertion of batch) {
+          logger.info(`got insertion at merkleIndex ${insertion.merkleIndex}`, {
+            insertion,
+          });
+
+          const noteOrCommitment = NoteTrait.isCommitment(insertion)
+            ? "commitment"
+            : "note";
+
+          this.metrics.insertionsReceivedCounter.add(1, { noteOrCommitment });
+        }
+      })
+      // flatten batch into leaves + additional info needed for proof gen
+      .map(batchInfoFromInsertions)
+      // insert batches into in-memory tree
+      .tap(({ leaves, subtreeBatchOffset }) => {
+        this.tree.insertBatch(
+          subtreeBatchOffset,
+          leaves,
+          SUBTREE_INCLUDE_ARRAY
+        );
+      })
       // make proof inputs
       .map(({ batch, subtreeBatchOffset }) => {
         const merkleProof = this.tree.getProof(subtreeBatchOffset);
         const proofInputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
 
-        // logging only
         const newRoot = this.tree.getRoot();
         const subtreeIndex = subtreeBatchOffset / BATCH_SIZE;
         logger.info(`created proof inputs for subtree index ${subtreeIndex}`, {
@@ -283,7 +261,7 @@ export class SubtreeUpdater {
     const teardown = async () => {
       await proofInputInfos.close();
       await runProm;
-      this.logger.debug("teardown completed");
+      this.logger.info("teardown completed");
     };
 
     const promise = (async () => {

@@ -1,5 +1,9 @@
 import { Erc20Config } from "@nocturne-xyz/config";
-import { OperationMetadata } from "@nocturne-xyz/core";
+import {
+  Address,
+  CanonAddrRegistryEntry,
+  OperationMetadata,
+} from "@nocturne-xyz/core";
 import { formatUnits } from "ethers/lib/utils";
 
 const lookupTickerByAddress = (
@@ -13,6 +17,23 @@ const lookupTickerByAddress = (
   );
 
   return addressToTicker.get(address.toLowerCase());
+};
+
+export const makeSignCanonAddrRegistryEntryContent = (
+  entry: CanonAddrRegistryEntry,
+  chainId: bigint,
+  registryAddress: Address
+): {
+  heading: string;
+  text: string;
+} => {
+  const heading = "Confirm signature to register canonical address";
+  const text = `Ethereum Address: ${entry.ethAddress}. Nocturne Canonical Address Nonce: ${entry.perCanonAddrNonce}. Chain id: ${chainId}. Registry address: ${registryAddress}`;
+
+  return {
+    heading,
+    text,
+  };
 };
 
 export const makeSignOperationContent = (

@@ -12,12 +12,13 @@
     "build": "yarn clean; tsc --build",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
+    "gen-test-cases:operationhash": "npx ts-node ./scripts/genOperationHashTestCase.ts",
+    "gen-test-cases:registryentry": "npx ts-node ./scripts/genCanonAddrRegistryEntryHashTestCase.ts",
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test",
-    "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit",
     "publish": "yarn build; yarn npm publish --access public",
-    "gen-test-cases:operationhash": "npx ts-node ./scripts/genOperationHashTestCase.ts"
+    "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit"
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",

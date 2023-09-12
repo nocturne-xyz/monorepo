@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
 import {CommonBase} from "forge-std/Base.sol";
@@ -45,7 +45,6 @@ struct GeneratedOperationMetadata {
 }
 
 contract OperationGenerator is InvariantUtils {
-    uint256 constant ERC20_ID = 0;
     uint256 constant DEFAULT_EXECUTION_GAS_LIMIT = 2_000_000;
     uint256 constant DEFAULT_PER_JOINSPLIT_VERIFY_GAS = 220_000;
     uint256 constant DEFAULT_MAX_NUM_REFUNDS = 9;

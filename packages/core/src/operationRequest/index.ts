@@ -2,6 +2,13 @@ export {
   OperationRequest,
   OperationGasParams,
   OperationRequestWithMetadata,
+  UnwrapRequest,
 } from "./operationRequest";
-export { OpRequestBuilder, newOpRequestBuilder } from "./builder";
-export { Erc20Plugin } from "./Erc20Plugin";
+export {
+  OpRequestBuilder,
+  BaseOpRequestBuilder,
+  OpRequestBuilderExt,
+  OpRequestBuilderPlugin,
+  BuilderItemToProcess,
+  newOpRequestBuilder,
+} from "./builder";

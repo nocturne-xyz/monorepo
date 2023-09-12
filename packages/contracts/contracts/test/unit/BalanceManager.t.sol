@@ -1,6 +1,5 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
-pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
@@ -31,7 +30,6 @@ contract BalanceManagerTest is Test {
     uint256 constant NOT_ENTERED = 1;
 
     uint256 constant DEFAULT_GAS_LIMIT = 500_000;
-    uint256 constant ERC20_ID = 0;
 
     address constant ALICE = address(1);
     address constant BOB = address(2);

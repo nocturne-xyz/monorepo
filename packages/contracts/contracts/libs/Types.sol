@@ -6,6 +6,8 @@ uint256 constant GAS_PER_INSERTION_SUBTREE_UPDATE = 25_000; // Full 16 leaf non-
 uint256 constant GAS_PER_INSERTION_ENQUEUE = 25_000; // 20k for enqueueing note commitment not including subtree update cost (+5k buffer)
 uint256 constant GAS_PER_OPERATION_MISC = 100_000; // remaining gas cost for operation including  miscellaneous costs such as sending gas tokens to bundler, requesting assets from teller, sending tokens back for refunds, calldata, event, etc.
 
+uint256 constant ERC20_ID = 0;
+
 enum AssetType {
     ERC20,
     ERC721,
@@ -114,6 +116,12 @@ struct OperationResult {
 
 struct Bundle {
     Operation[] operations;
+}
+
+struct CanonAddrRegistryEntry {
+    address ethAddress;
+    uint256 compressedCanonAddr;
+    uint256 perCanonAddrNonce;
 }
 
 library OperationLib {

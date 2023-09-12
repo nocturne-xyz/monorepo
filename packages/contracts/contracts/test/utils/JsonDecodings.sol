@@ -1,6 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
-pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
@@ -16,6 +15,11 @@ struct JoinSplitProofWithPublicSignals {
 
 struct SubtreeUpdateProofWithPublicSignals {
     uint256[4] publicSignals;
+    BaseProof proof;
+}
+
+struct CanonAddrSigCheckProofWithPublicSignals {
+    uint256[2] publicSignals;
     BaseProof proof;
 }
 
@@ -252,6 +256,33 @@ contract JsonDecodings is Test {
 
         return
             SubtreeUpdateProofWithPublicSignals({
+                publicSignals: publicSignals,
+                proof: proof
+            });
+    }
+
+    function loadCanonAddrSigCheckFromFixture(
+        string memory path
+    ) public returns (CanonAddrSigCheckProofWithPublicSignals memory) {
+        string memory json = loadFixtureJson(path);
+        bytes memory proofBytes = json.parseRaw(".proof");
+        BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
+
+        uint256[2] memory publicSignals;
+        for (uint256 i = 0; i < 2; i++) {
+            bytes memory jsonSelector = abi.encodePacked(
+                bytes(".publicSignals["),
+                Strings.toString(i)
+            );
+            jsonSelector = abi.encodePacked(jsonSelector, bytes("]"));
+
+            bytes memory signalBytes = json.parseRaw(string(jsonSelector));
+            string memory signal = abi.decode(signalBytes, (string));
+            publicSignals[i] = ParseUtils.parseInt(signal);
+        }
+
+        return
+            CanonAddrSigCheckProofWithPublicSignals({
                 publicSignals: publicSignals,
                 proof: proof
             });

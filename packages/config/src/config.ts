@@ -67,6 +67,10 @@ export class NocturneConfig {
     });
   }
 
+  canonicalAddressRegistryAddress(): Address {
+    return this.contracts.canonicalAddressRegistryProxy.proxy;
+  }
+
   tellerAddress(): Address {
     return this.contracts.tellerProxy.proxy;
   }

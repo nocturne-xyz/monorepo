@@ -15,6 +15,7 @@
     "gen-test-cases": "yarn gen-test-cases:joinsplit && yarn gen-test-cases:subtreeupdate",
     "gen-test-cases:joinsplit": "npx ts-node ./scripts/genJoinSplitTestCase.ts --writeFixture",
     "gen-test-cases:subtreeupdate": "npx ts-node ./scripts/genSubtreeUpdateTestCase.ts --writeFixture",
+    "gen-test-cases:canonAddrSigCheck": "npx ts-node ./scripts/genCanonAddrSigCheckTestCase.ts --writeFixture",
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./scripts",
     "prettier:write": "prettier --write ./src ./scripts",

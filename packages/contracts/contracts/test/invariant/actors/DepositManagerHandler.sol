@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
 import {CommonBase} from "forge-std/Base.sol";
@@ -23,8 +23,6 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     using LibAddressSet for AddressSet;
     using LibDepositRequestArray for DepositRequest[];
     using LibActorSumSet for ActorSumSet;
-
-    uint256 constant ERC20_ID = 0;
 
     string constant CONTRACT_NAME = "NocturneDepositManager";
     string constant CONTRACT_VERSION = "v1";
@@ -200,7 +198,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
                 _currentActor,
                 address(depositManager._weth()),
                 depositAmounts[i],
-                NocturneUtils.ERC20_ID,
+                ERC20_ID,
                 depositAddr,
                 depositManager._nonce() + i,
                 gasCompPerDeposit
@@ -273,7 +271,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
                     _currentActor,
                     address(erc20),
                     depositAmounts[i],
-                    NocturneUtils.ERC20_ID,
+                    ERC20_ID,
                     depositAddr,
                     depositManager._nonce() + i,
                     gasCompPerDeposit

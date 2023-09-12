@@ -44,6 +44,9 @@
       "path": "./actors/test-actor"
     },
     {
+      "path": "./actors/insertion-writer"
+    },
+    {
       "path": "./packages/contracts"
     },
     {
@@ -54,6 +57,9 @@
     },
     {
       "path": "./packages/core"
+    },
+    {
+      "path": "./packages/op-request-plugins"
     },
     {
       "path": "./packages/crypto-utils"
@@ -75,6 +81,9 @@
     },
     {
       "path": "./packages/idb-kv-store"
+    },
+    {
+      "path": "./packages/persistent-log"
     }
   ]
 }

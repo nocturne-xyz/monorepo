@@ -15,6 +15,7 @@ import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { ERC20_ID } from "../src/primitives/asset";
 import { JoinSplitRequest } from "../src/operationRequest/operationRequest";
 import { MockEthToTokenConverter } from "../src/conversion";
+import { ethers } from "ethers";
 
 chai.use(chaiAsPromised);
 
@@ -39,11 +40,9 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -77,11 +76,9 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 100_000n)
       .refundAsset(shitcoin)
@@ -122,11 +119,9 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 1_000_000n)
       .refundAsset(shitcoin)
@@ -176,11 +171,9 @@ describe("handleGasForOperationRequest", async () => {
       db: nocturneDB,
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 100_000n)
       .refundAsset(shitcoin)

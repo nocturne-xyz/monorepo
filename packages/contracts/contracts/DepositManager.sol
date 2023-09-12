@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
 // External
@@ -44,8 +44,6 @@ contract DepositManager is
         uint8 precision;
     }
 
-    // ERC20 ID
-    uint256 constant ERC20_ID = 0;
     // Gas cost of two ETH transfers
     uint256 constant TWO_ETH_TRANSFERS_GAS = 50_000;
     // Seconds in an hour

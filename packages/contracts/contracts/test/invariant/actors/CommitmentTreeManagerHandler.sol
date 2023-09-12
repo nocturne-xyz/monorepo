@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
@@ -19,8 +19,6 @@ import "../../utils/NocturneUtils.sol";
 import "../../../libs/Types.sol";
 
 contract CommitmentTreeManagerHandler is InvariantUtils {
-    uint256 constant ERC20_ID = 0;
-
     using LibIncrementalTree for IncrementalTree;
 
     // ______PUBLIC______

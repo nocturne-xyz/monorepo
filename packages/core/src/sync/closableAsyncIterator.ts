@@ -15,6 +15,16 @@ export class ClosableAsyncIterator<T> {
     };
   }
 
+  static fromArray<T>(items: T[]): ClosableAsyncIterator<T> {
+    const iter = items[Symbol.iterator]();
+    const asyncIter = {
+      next: async () => iter.next(),
+      [Symbol.asyncIterator]: () => asyncIter,
+    };
+
+    return new ClosableAsyncIterator(asyncIter, async () => {});
+  }
+
   // map all of `this`'s items to items of type `U` via mapper fn `f`
   map<U>(f: (item: T) => U): ClosableAsyncIterator<U> {
     const thisIter = this.iter;

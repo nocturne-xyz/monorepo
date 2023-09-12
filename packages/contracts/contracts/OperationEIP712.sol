@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
 // External
@@ -9,6 +9,9 @@ import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/crypt
 import {Utils} from "./libs/Utils.sol";
 import "./libs/Types.sol";
 
+/// @title OperationEIP712
+/// @author Nocturne Labs
+/// @notice Base contract for Teller containing EIP712 signing logic for operation
 contract OperationEIP712 is EIP712Upgradeable {
     bytes32 public constant OPERATION_TYPEHASH =
         keccak256(

@@ -28,6 +28,7 @@ import {
 } from "./utils";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { MockEthToTokenConverter } from "../src/conversion";
+import { ethers } from "ethers";
 
 const { gatherNotes } = __private;
 
@@ -168,11 +169,9 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -222,11 +221,9 @@ describe("prepareOperation", async () => {
     const receiverSigner = new NocturneSigner(receiverRk);
     const receiver = receiverSigner.canonicalAddress();
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -274,11 +271,9 @@ describe("prepareOperation", async () => {
     };
     const refundAddr = signer.generateRandomStealthAddress();
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -335,11 +330,9 @@ describe("prepareOperation", async () => {
       .map((sk) => new NocturneSigner(sk))
       .map((signer) => signer.canonicalAddress());
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(stablescam, 2n, receivers[1])
       .gas({
@@ -386,11 +379,9 @@ describe("prepareOperation", async () => {
 
     const refundAddr = signer.generateRandomStealthAddress();
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 3n)
@@ -456,11 +447,9 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 4000n)
@@ -498,11 +487,9 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 1000n)
