@@ -2,7 +2,6 @@ import { Erc20Config } from "@nocturne-xyz/config";
 import {
   Address,
   AssetWithBalance,
-  DepositRequest,
   DepositQuoteResponse,
   OperationRequestWithMetadata,
   ProvenOperation,
@@ -16,6 +15,7 @@ import { GetSnapsResponse, Snap } from "./metamask/types";
 import {
   DepositHandle,
   DepositHandleWithReceipt,
+  DisplayDepositRequest,
   GetBalanceOpts,
   OperationHandle,
   SyncWithProgressOutput,
@@ -64,7 +64,9 @@ export interface NocturneSdkApi {
   /**
    * Initiates a deposit retrieval from the deposit manager contract.
    */
-  retrievePendingDeposit(req: DepositRequest): Promise<ContractTransaction>;
+  retrievePendingDeposit(
+    displayRequest: DisplayDepositRequest
+  ): Promise<ContractTransaction>;
 
   // *** OPERATION METHODS *** //
 

@@ -1,12 +1,12 @@
 import { NocturneConfig } from "@nocturne-xyz/config";
 
 import {
+  AssetType,
   ClosableAsyncIterator,
-  DepositRequest,
   OperationMetadata,
   OperationStatusResponse,
 } from "@nocturne-xyz/core";
-import { ContractReceipt, ethers } from "ethers";
+import { BigNumber, ContractReceipt, ethers } from "ethers";
 
 export interface Endpoints {
   screenerEndpoint: string;
@@ -46,13 +46,6 @@ export interface DepositHandleWithReceipt {
   handle: DepositHandle;
 }
 
-export interface DepositRequestWithMetadata extends DepositRequest {
-  createdAtBlock?: number;
-  txHashInstantiated?: string;
-  txHashCompleted?: string;
-  txHashRetrieved?: string;
-}
-
 export enum DepositRequestStatus {
   // deposit has been initiated on-chain
   // and funds are in escrow, but
@@ -89,7 +82,7 @@ export interface DepositRequestStatusWithMetadata {
 
 export interface DepositHandle {
   depositRequestHash: string;
-  request: DepositRequestWithMetadata;
+  request: DisplayDepositRequestWithMetadata;
   currentStatus: DepositRequestStatusWithMetadata;
   getStatus: () => Promise<DepositRequestStatusWithMetadata>;
 }
@@ -108,3 +101,31 @@ export interface TokenDetails {
 export type SupportedProvider =
   | ethers.providers.JsonRpcProvider
   | ethers.providers.Web3Provider;
+
+// *** CONVERTED TYPES *** //
+
+export interface ConvertedAsset {
+  assetType: AssetType;
+  assetAddr: string;
+  id: BigNumber;
+}
+export interface ConvertedCompressedStealthAddress {
+  h1: BigNumber;
+  h2: BigNumber;
+}
+export interface DisplayDepositRequest {
+  spender: string;
+  asset: ConvertedAsset;
+  value: BigNumber;
+  depositAddr: ConvertedCompressedStealthAddress;
+  nonce: BigNumber;
+  gasCompensation: BigNumber;
+}
+
+export interface DisplayDepositRequestWithMetadata
+  extends DisplayDepositRequest {
+  createdAtBlock?: number;
+  txHashInstantiated?: string;
+  txHashCompleted?: string;
+  txHashRetrieved?: string;
+}
