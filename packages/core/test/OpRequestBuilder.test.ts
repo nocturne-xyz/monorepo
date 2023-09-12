@@ -6,8 +6,6 @@ import {
   range,
   NocturneSigner,
   generateRandomSpendingKey,
-  Erc20Plugin,
-  OperationRequestWithMetadata,
 } from "../src";
 import {
   shitcoin,
@@ -19,10 +17,9 @@ import {
   DUMMY_CONTRACT_ADDR,
 } from "./utils";
 import { ethers } from "ethers";
-import ERC20_ABI from "../src/operationRequest/ERC20.json";
 
 describe("OpRequestBuilder", () => {
-  it("builds OperationRequest with 1 action, 1 unwrap, 0 payments, no params set", () => {
+  it("builds OperationRequest with 1 action, 1 unwrap, 0 payments, no params set", async () => {
     const expected: OperationRequest = {
       joinSplitRequests: [
         {
@@ -42,11 +39,9 @@ describe("OpRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -56,7 +51,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("builds OperaionRequest with 1 action, 1 unwrap, 1 payment, no params set", () => {
+  it("builds OperaionRequest with 1 action, 1 unwrap, 1 payment, no params set", async () => {
     const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const receiver = signer.canonicalAddress();
@@ -84,11 +79,9 @@ describe("OpRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -99,7 +92,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("builds OperationRuqestion with 1 action, 1 unwrap, 0 payments, all params set", () => {
+  it("builds OperationRuqestion with 1 action, 1 unwrap, 0 payments, all params set", async () => {
     const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const refundAddr = signer.generateRandomStealthAddress();
@@ -126,11 +119,9 @@ describe("OpRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
@@ -145,7 +136,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("builds operation with 0 actions, 0 unwraps, 2 payments, no params set", () => {
+  it("builds operation with 0 actions, 0 unwraps, 2 payments, no params set", async () => {
     const receivers = range(2)
       .map((_) => generateRandomSpendingKey())
       .map((sk) => new NocturneSigner(sk))
@@ -177,11 +168,13 @@ describe("OpRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = await newOpRequestBuilder(
+      provider,
+      1n,
+      DUMMY_CONTRACT_ADDR
+    );
+    const opRequest = await builder
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(stablescam, 2n, receivers[1])
       .deadline(2n)
@@ -198,7 +191,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("builds OperaionRequest with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", () => {
+  it("builds OperaionRequest with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", async () => {
     const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const refundAddr = signer.generateRandomStealthAddress();
@@ -255,11 +248,9 @@ describe("OpRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 3n)
@@ -289,7 +280,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("combines requests of same asset when no conf payments", () => {
+  it("combines requests of same asset when no conf payments", async () => {
     const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const refundAddr = signer.generateRandomStealthAddress();
@@ -317,11 +308,9 @@ describe("OpRequestBuilder", () => {
       deadline: 2n,
     };
 
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const opRequest = builder
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 100n)
@@ -335,66 +324,5 @@ describe("OpRequestBuilder", () => {
       .build();
 
     expect(opRequest.request).to.eql(expected);
-  });
-
-  it("uses Erc20Plugin", () => {
-    const sk = generateRandomSpendingKey();
-    const signer = new NocturneSigner(sk);
-    const refundAddr = signer.generateRandomStealthAddress();
-
-    const builder = newOpRequestBuilder({
-      chainId: 1n,
-      tellerContract: DUMMY_CONTRACT_ADDR,
-    });
-    const recipient = ethers.utils.getAddress(
-      "0x1E2cD78882b12d3954a049Fd82FFD691565dC0A5"
-    );
-
-    const opRequest = builder
-      .use(Erc20Plugin)
-      .erc20Transfer(shitcoin.assetAddr, recipient, 100n)
-      .refundAddr(refundAddr)
-      .deadline(2n)
-      .build();
-
-    const contract = new ethers.Contract(shitcoin.assetAddr, ERC20_ABI);
-    const encodedFunction = contract.interface.encodeFunctionData("transfer", [
-      recipient,
-      100n,
-    ]);
-    const expected: OperationRequestWithMetadata = {
-      request: {
-        joinSplitRequests: [
-          {
-            asset: shitcoin,
-            unwrapValue: 100n,
-          },
-        ],
-        refundAssets: [],
-        refundAddr: refundAddr,
-        actions: [
-          {
-            contractAddress: shitcoin.assetAddr,
-            encodedFunction,
-          },
-        ],
-        chainId: 1n,
-        tellerContract: DUMMY_CONTRACT_ADDR,
-        deadline: 2n,
-      },
-      meta: {
-        items: [
-          {
-            type: "Action",
-            actionType: "Transfer",
-            recipientAddress: recipient,
-            erc20Address: shitcoin.assetAddr,
-            amount: 100n,
-          },
-        ],
-      },
-    };
-
-    expect(opRequest).to.eql(expected);
   });
 });

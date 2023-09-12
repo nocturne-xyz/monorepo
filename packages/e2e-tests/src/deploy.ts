@@ -9,6 +9,8 @@ import {
   DepositManager__factory,
   WETH9__factory,
   SimpleERC20Token__factory,
+  CanonicalAddressRegistry,
+  CanonicalAddressRegistry__factory,
 } from "@nocturne-xyz/contracts";
 
 import {
@@ -29,6 +31,7 @@ import {
   RPCSDKSyncAdapter,
   BundlerOpTracker,
   range,
+  CanonAddrSigCheckProver,
 } from "@nocturne-xyz/core";
 
 import {
@@ -39,12 +42,16 @@ import {
 
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
-import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
+import {
+  WasmCanonAddrSigCheckProver,
+  WasmJoinSplitProver,
+} from "@nocturne-xyz/local-prover";
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { startHardhat } from "./hardhat";
 import { BundlerConfig, startBundler } from "./bundler";
 import { DepositScreenerConfig, startDepositScreener } from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
+import { InsertionWriterConfig, startInsertionWriter } from "./insertionWriter";
 import { startSubgraph, SubgraphConfig } from "./subgraph";
 import { KEYS_TO_WALLETS } from "./keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
@@ -53,10 +60,20 @@ import { BUNDLER_ENDPOINT } from "./utils";
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
-const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
-const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
-const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
-const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
+
+const JOINSPLIT_WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
+const JOINSPLIT_ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
+const JOINSPLIT_VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
+const JOINSPLIT_VKEY = JSON.parse(
+  fs.readFileSync(JOINSPLIT_VKEY_PATH).toString()
+);
+
+const SIG_CHECK_WASM_PATH = `${ARTIFACTS_DIR}/canonAddrSigCheck/canonAddrSigCheck_js/canonAddrSigCheck.wasm`;
+const SIG_CHECK_ZKEY_PATH = `${ARTIFACTS_DIR}/canonAddrSigCheck/canonAddrSigCheck_cpp/canonAddrSigCheck.zkey`;
+const SIG_CHECK_VKEY_PATH = `${ARTIFACTS_DIR}/canonAddrSigCheck/canonAddrSigCheck_cpp/vkey.json`;
+const SIG_CHECK_VKEY = JSON.parse(
+  fs.readFileSync(SIG_CHECK_VKEY_PATH).toString()
+);
 
 export interface TestDeployArgs {
   screeners: Address[];
@@ -94,12 +111,14 @@ export interface TestContracts {
   teller: Teller;
   handler: Handler;
   depositManager: DepositManager;
+  canonAddrRegistry: CanonicalAddressRegistry;
 }
 
 export interface TestDeployment {
   depositManager: DepositManager;
   teller: Teller;
   handler: Handler;
+  canonAddrRegistry: CanonicalAddressRegistry;
   config: NocturneConfig;
   tokens: TestDeploymentTokens;
   provider: ethers.providers.JsonRpcProvider;
@@ -145,6 +164,10 @@ const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "tellerAddress"> = {
   startBlock: 0,
 };
 
+const DEFAULT_INSERTION_WRITER_CONFIG: InsertionWriterConfig = {
+  subgraphUrl: SUBGRAPH_URL,
+};
+
 // we want to only start anvil once, so we wrap `startAnvil` in a thunk
 const hhThunk = thunk(() => startHardhat());
 
@@ -179,11 +202,14 @@ export async function setupTestDeployment(
     screenerEoa,
   ] = KEYS_TO_WALLETS(provider);
   console.log("deploying contracts...");
-  const [deployment, tokens, { teller, handler, depositManager }] =
-    await deployContractsWithDummyConfig(deployerEoa, {
-      screeners: [screenerEoa.address],
-      subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
-    });
+  const [
+    deployment,
+    tokens,
+    { teller, handler, depositManager, canonAddrRegistry },
+  ] = await deployContractsWithDummyConfig(deployerEoa, {
+    screeners: [screenerEoa.address],
+    subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
+  });
 
   console.log("erc20s:", deployment.erc20s);
   // Deploy subgraph first, as other services depend on it
@@ -217,20 +243,6 @@ export async function setupTestDeployment(
     proms.push(startBundler(bundlerConfig));
   }
 
-  // deploy subtree updater if requested
-  if (config.include.subtreeUpdater) {
-    const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
-    const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
-      ...DEFAULT_SUBTREE_UPDATER_CONFIG,
-      ...givenSubtreeUpdaterConfig,
-      handlerAddress: handler.address,
-      txSignerKey: subtreeUpdaterEoa.privateKey,
-    };
-    actorConfig.configs.subtreeUpdater = subtreeUpdaterConfig;
-
-    proms.push(startSubtreeUpdater(subtreeUpdaterConfig));
-  }
-
   if (config.include.depositScreener) {
     const givenDepositScreenerConfig = config.configs?.depositScreener ?? {};
     const depositScreenerConfig: DepositScreenerConfig = {
@@ -243,6 +255,35 @@ export async function setupTestDeployment(
     actorConfig.configs.depositScreener = depositScreenerConfig;
 
     proms.push(startDepositScreener(depositScreenerConfig, deployment.erc20s));
+  }
+
+  // deploy subtree updater & insertion writer if requested
+  if (config.include.subtreeUpdater) {
+    // subtree updater
+    const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
+    const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
+      ...DEFAULT_SUBTREE_UPDATER_CONFIG,
+      ...givenSubtreeUpdaterConfig,
+      handlerAddress: handler.address,
+      txSignerKey: subtreeUpdaterEoa.privateKey,
+    };
+    actorConfig.configs.subtreeUpdater = subtreeUpdaterConfig;
+
+    const startUpdaterAndInsertionWriter = async () => {
+      const teardownInsertionWriter = await startInsertionWriter(
+        DEFAULT_INSERTION_WRITER_CONFIG
+      );
+      const teardownSubtreeUpdater = await startSubtreeUpdater(
+        subtreeUpdaterConfig
+      );
+
+      return async () => {
+        await teardownInsertionWriter();
+        await teardownSubtreeUpdater();
+      };
+    };
+
+    proms.push(startUpdaterAndInsertionWriter());
   }
 
   const actorTeardownFns = await Promise.all(proms);
@@ -305,6 +346,7 @@ export async function setupTestDeployment(
     depositManager,
     teller,
     handler,
+    canonAddrRegistry,
     tokens,
     config: deployment,
     provider,
@@ -383,21 +425,38 @@ export async function deployContractsWithDummyConfig(
   await prefillErc20s(connectedSigner, config);
 
   // Log for dev site script
-  const { depositManagerProxy, tellerProxy, handlerProxy } = config.contracts;
+  const {
+    depositManagerProxy,
+    tellerProxy,
+    handlerProxy,
+    canonicalAddressRegistryProxy,
+  } = config.contracts;
   console.log("Teller address:", tellerProxy.proxy);
   console.log("Handler address:", handlerProxy.proxy);
   console.log("DepositManager address:", depositManagerProxy.proxy);
+  console.log(
+    "CanonicalAddressRegistry address:",
+    canonicalAddressRegistryProxy.proxy
+  );
 
   // Also log for dev site script
   const erc20s = Array.from(config.erc20s);
   console.log(`ERC20 token 1 deployed at:`, erc20s[0][1].address);
   console.log(`ERC20 token 2 deployed at:`, erc20s[1][1].address);
 
-  const [depositManager, teller, handler] = await Promise.all([
-    DepositManager__factory.connect(depositManagerProxy.proxy, connectedSigner),
-    Teller__factory.connect(tellerProxy.proxy, connectedSigner),
-    Handler__factory.connect(handlerProxy.proxy, connectedSigner),
-  ]);
+  const [depositManager, teller, handler, canonAddrRegistry] =
+    await Promise.all([
+      DepositManager__factory.connect(
+        depositManagerProxy.proxy,
+        connectedSigner
+      ),
+      Teller__factory.connect(tellerProxy.proxy, connectedSigner),
+      Handler__factory.connect(handlerProxy.proxy, connectedSigner),
+      CanonicalAddressRegistry__factory.connect(
+        canonicalAddressRegistryProxy.proxy,
+        connectedSigner
+      ),
+    ]);
 
   return [
     config,
@@ -406,7 +465,7 @@ export async function deployContractsWithDummyConfig(
       erc20s[0][1].address,
       erc20s[1][1].address
     ),
-    { teller, handler, depositManager },
+    { teller, handler, depositManager, canonAddrRegistry },
   ];
 }
 
@@ -456,6 +515,7 @@ export interface ClientSetup {
   nocturneDBBob: NocturneDB;
   nocturneClientBob: NocturneClient;
   joinSplitProver: JoinSplitProver;
+  canonAddrSigCheckProver: CanonAddrSigCheckProver;
 }
 
 export async function setupTestClient(
@@ -502,7 +562,17 @@ export async function setupTestClient(
     syncAdapter
   );
 
-  const joinSplitProver = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
+  const joinSplitProver = new WasmJoinSplitProver(
+    JOINSPLIT_WASM_PATH,
+    JOINSPLIT_ZKEY_PATH,
+    JOINSPLIT_VKEY
+  );
+
+  const canonAddrSigCheckProver = new WasmCanonAddrSigCheckProver(
+    SIG_CHECK_WASM_PATH,
+    SIG_CHECK_ZKEY_PATH,
+    SIG_CHECK_VKEY
+  );
 
   return {
     nocturneDBAlice,
@@ -512,6 +582,7 @@ export async function setupTestClient(
     nocturneSignerBob,
     nocturneClientBob,
     joinSplitProver,
+    canonAddrSigCheckProver,
   };
 }
 

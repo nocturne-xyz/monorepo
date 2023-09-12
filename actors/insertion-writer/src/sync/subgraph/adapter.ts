@@ -6,22 +6,21 @@ import {
   IncludedEncryptedNote,
   NoteTrait,
   TreeConstants,
-  TotalEntityIndex,
   maxArray,
   SubgraphUtils,
   TotalEntityIndexTrait,
   max,
-  WithTotalEntityIndex,
   range,
 } from "@nocturne-xyz/core";
-import { Insertion, SubtreeUpdaterSyncAdapter } from "../syncAdapter";
-import { fetchTreeInsertions, fetchLatestSubtreeIndex } from "./fetch";
+import { TreeInsertionSyncAdapter } from "../syncAdapter";
+import { fetchTreeInsertions, fetchTeiFromMerkleIndex } from "./fetch";
 import { Logger } from "winston";
+import { Insertion } from "@nocturne-xyz/persistent-log";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
-export class SubgraphSubtreeUpdaterSyncAdapter
-  implements SubtreeUpdaterSyncAdapter
+export class SubgraphTreeInsertionSyncAdapter
+  implements TreeInsertionSyncAdapter
 {
   private readonly graphqlEndpoint: string;
   private readonly logger?: Logger;
@@ -32,17 +31,33 @@ export class SubgraphSubtreeUpdaterSyncAdapter
   }
 
   iterInsertions(
-    startTotalEntityIndex: TotalEntityIndex,
+    startMerkleIndex: number,
     opts?: IterSyncOpts
-  ): ClosableAsyncIterator<WithTotalEntityIndex<Insertion>[]> {
+  ): ClosableAsyncIterator<Insertion[]> {
     const endpoint = this.graphqlEndpoint;
     const logger = this.logger;
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
 
     let closed = false;
     const generator = async function* () {
-      let from = startTotalEntityIndex;
+      // figure out what TEI to start polling the subggraph at
+      const _from =
+        startMerkleIndex === 0
+          ? 0n
+          : await fetchTeiFromMerkleIndex(endpoint, startMerkleIndex);
+      // if `fetchTeiFromMerkleIndex returned undefined, either an error occurred or `startMerkleIndex` is in the future
+      // the latter case is an edge case that's not worth the complexity to handle, so we'll just throw an error
+      if (_from === undefined) {
+        throw new Error("invalid start merkle index");
+      }
 
+      // hack to get typescript to recognize that `_from` can't be `undefined` at this point
+      let from = _from;
+
+      // function for throttling subgraph queries so that we don't bludgeon it to death:
+      // - if we're caught up, sleep for 5 seconds, because we're basically waiting for another block
+      // - if we're not caught up and `opts.throttleMs` was given sleep for `opts.throttleMs`
+      // - otherwise, sleep for 0 milliseconds
       const maybeApplyThrottle = async (currentBlock: number) => {
         const isCaughtUp =
           from >=
@@ -70,11 +85,14 @@ export class SubgraphSubtreeUpdaterSyncAdapter
         );
 
         // if we got insertions, get the greatest total entity index we saw and set from to that plus one
+        // then yield them in order
         if (insertions.length > 0) {
           from = maxArray(sorted.map((i) => i.totalEntityIndex)) + 1n;
 
-          for (const { inner: insertion, totalEntityIndex } of sorted) {
+          for (const { inner: insertion } of sorted) {
+            // case on the kind of insertion event
             if ("numZeros" in insertion) {
+              // if it's a `FilledBatchWithZerosEvent`, yield a batch of ZERO_VALUEs
               const startIndex = insertion.merkleIndex;
               const meta = {
                 startIndex: startIndex,
@@ -87,16 +105,13 @@ export class SubgraphSubtreeUpdaterSyncAdapter
                 });
 
               const batch = range(0, insertion.numZeros).map((i) => ({
-                inner: {
-                  noteCommitment: TreeConstants.ZERO_VALUE,
-                  merkleIndex: startIndex + i,
-                },
-                // HACK: add `i` to `totalEntityIndex` to ensure all of the zeros have unique `totalEntityIndex`s
-                totalEntityIndex: totalEntityIndex + BigInt(i),
+                noteCommitment: TreeConstants.ZERO_VALUE,
+                merkleIndex: startIndex + i,
               }));
 
               yield batch;
             } else if (NoteTrait.isEncryptedNote(insertion)) {
+              // if it's an `EncryptedNote`, yield the note's commitment
               const noteCommitment = (insertion as IncludedEncryptedNote)
                 .commitment;
               const meta = {
@@ -111,15 +126,13 @@ export class SubgraphSubtreeUpdaterSyncAdapter
                 });
 
               const res = {
-                inner: {
-                  noteCommitment,
-                  merkleIndex: insertion.merkleIndex,
-                },
-                totalEntityIndex,
+                noteCommitment,
+                merkleIndex: insertion.merkleIndex,
               };
 
               yield [res];
             } else {
+              // otherwise, it's an `EncodedNote` - yield the note itself
               const meta = {
                 merkleIndex: insertion.merkleIndex,
                 note: insertion,
@@ -130,12 +143,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
                   meta,
                 });
 
-              const res = {
-                inner: insertion as IncludedNote,
-                totalEntityIndex,
-              };
-
-              yield [res];
+              yield [insertion as IncludedNote];
             }
           }
         } else {
@@ -157,9 +165,5 @@ export class SubgraphSubtreeUpdaterSyncAdapter
     return new ClosableAsyncIterator(generator(), async () => {
       closed = true;
     });
-  }
-
-  async fetchLatestSubtreeIndex(): Promise<number | undefined> {
-    return fetchLatestSubtreeIndex(this.graphqlEndpoint);
   }
 }

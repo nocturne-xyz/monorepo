@@ -1,10 +1,27 @@
 import * as JSON from "bigint-json-serialization";
 import {
+  CanonAddrRegistryEntry,
   OperationWithMetadata,
   PreSignOperation,
   SignedOperation,
 } from "./primitives";
-import { ViewingKey } from "./crypto";
+import { CanonAddress, NocturneSignature, SpendPk, ViewingKey } from "./crypto";
+
+export interface SignCanonAddrRegistryEntryMethod {
+  method: "nocturne_signCanonAddrRegistryEntry";
+  params: {
+    entry: CanonAddrRegistryEntry;
+    chainId: bigint;
+    registryAddress: string;
+  };
+  return: {
+    canonAddr: CanonAddress;
+    digest: bigint;
+    sig: NocturneSignature;
+    spendPubkey: SpendPk;
+    vkNonce: bigint;
+  };
+}
 
 export interface SignOperationMethod {
   method: "nocturne_signOperation";
@@ -23,7 +40,10 @@ export interface RequestViewingKeyMethod {
   return: RequestViewingKeyMethodResponse;
 }
 
-export type RpcRequestMethod = SignOperationMethod | RequestViewingKeyMethod;
+export type RpcRequestMethod =
+  | SignCanonAddrRegistryEntryMethod
+  | SignOperationMethod
+  | RequestViewingKeyMethod;
 
 export type SnapRpcRequestHandlerArgs = {
   origin: string;

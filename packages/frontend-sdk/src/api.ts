@@ -35,6 +35,11 @@ export interface NocturneSdkApi {
   ): Promise<DepositQuoteResponse>;
 
   /**
+   * Register the user's canonical address from the snap instance against the current signer EOA.
+   */
+  registerCanonicalAddress(): Promise<ContractTransaction>;
+
+  /**
    * @param values Asset amounts
    * @param gasCompensationPerDeposit Gas compensation per deposit
    */

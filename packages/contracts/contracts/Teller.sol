@@ -1,6 +1,5 @@
-//SPDX-License-Identifier: Unlicense
+//SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
-pragma abicoder v2;
 
 // External
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";

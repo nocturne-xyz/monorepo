@@ -26,7 +26,9 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
         p.includes('SimpleERC20Token') ||
         p.includes('SimpleERC721Token') ||
         p.includes('SimpleERC1155Token') ||
-        p.includes('WETH9'),
+        p.includes('WETH9') ||
+        p.includes('IBalancer') ||
+        p.includes('IUniswapV3'),
     );
   },
 );
@@ -81,20 +83,25 @@ module.exports = {
       'IERC1155',
       'IJoinSplitVerifier',
       'ISubtreeUpdateVerifier',
+      'ICanonAddrSigCheckVerifier',
       'ITeller',
       'IHandler',
       'DepositManager',
       'Teller',
       'Handler',
+      'CanonicalAddressRegistry',
       'CommitmentTreeManager',
       'BalanceManager',
       'JoinSplitVerifier',
       'SubtreeUpdateVerifier',
       'WstethAdapter',
+      'CanonAddrSigCheckVerifier',
       'SimpleERC20Token',
       'SimpleERC721Token',
       'SimpleERC1155Token',
       'WETH9',
+      'IBalancer',
+      'IUniswapV3',
       'TestSubtreeUpdateVerifier',
       'TransparentUpgradeableProxy',
       'ProxyAdmin',

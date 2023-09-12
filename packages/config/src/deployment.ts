@@ -18,11 +18,13 @@ export interface NocturneContractDeployment {
     depositManagerOwner: Address;
   };
   proxyAdmin: Address;
+  canonicalAddressRegistryProxy: ProxyAddresses<any>;
   depositManagerProxy: ProxyAddresses<any>;
   tellerProxy: ProxyAddresses<any>;
   handlerProxy: ProxyAddresses<any>;
   joinSplitVerifierAddress: Address;
   subtreeUpdateVerifierAddress: Address;
+  canonAddrSigCheckVerifierAddress: Address;
   depositSources: Address[];
   screeners: Address[];
 }
