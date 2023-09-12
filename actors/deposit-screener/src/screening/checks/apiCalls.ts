@@ -108,7 +108,6 @@ export const API_CALLS = {
       body,
     });
     const jsonResponse = await response.json();
-    console.log("JSON RESPONSE", jsonResponse);
     if (jsonResponse["code"] === 400) {
       throw new Error(`Bad Request: ${jsonResponse["errors"]}`);
     }
