@@ -60,7 +60,8 @@ include "lib.circom";
 //@ensures(14) `joinSplitInfoCommitment` is computed correctly as `Poseidon(keccak256("JOINSPLIT_INFO_COMMITMENT") % p, ...encodedJoinSplitInfo)` where `encodedJoinSplitInfo` is an array consisting of the following:
 // - `compressedSenderCanonAddrY`
 // - `compressedReceiverCanonAddrY`
-// - `oldMerkleIndicesAndWithBits`, defined as `u32(oldNoteAIndex) || u32(oldNoteBIndex) << 32 || senderSignBit << 64 || receiverSignBit << 65
+// - `oldMerkleIndicesAndWithBits`, defined as `u32(oldNoteAIndex) || u32(oldNoteBIndex) << 32 || senderSignBit << 64 || receiverSignBit << 65 || noteBIsDummy << 66`
+//      where `oldNoteAIndex` and `oldNoteBIndex` are computed from `pathA` and `pathB`,and `noteBIsDummy` is a single bit that's a `1` if note B is a dummy note and `0` otherwise
 // - `newNoteAValue`
 // - `newNoteBValue`
 // - `joinSplitInfoNonce`, defined as `Poseidon(keccak256("JOINSPLIT_INFO_NONCE") % p, nullifierA, vk)`
@@ -261,7 +262,7 @@ template JoinSplit() {
     // check that the sum of old and new note values are in range [0, 2**252)
     // this can't overflow because all four note values are in range [0, 2**252) and field is 254 bits
     //@satisfies(10.1) 
-    //@argument follows from `Num2Bits` and `RangeCheckNBits.ensures(1)`, and `RangeCheckNBits.requires(1)` is satisfied since `n < 254`
+    //@argument follows from `RangeCheckNBits` and `RangeCheckNBits.ensures(1)`, and `RangeCheckNBits.requires(1)` is satisfied since `n < 254`
     //@satisfies(10.2)
     //@satisfies(10.3)
     //@argument same as (10.1)
@@ -297,7 +298,7 @@ template JoinSplit() {
     //@argument follows from encoding defn and Num2Bits(253), which can't overflow because it's 253 bits 
     //@lemma(8) `refundAddrH2Sign` is the sign bit of `refundAddrH2CompressedY` as specified in `pubEncodedAssetAddrWithSignBits`
     //@argument same as @lemma(7) 
-    signal pubEncodedAssetAddrWithSignBitsBits[253] <==  Num2Bits(253)(pubEncodedAssetAddrWithSignBits);
+    signal pubEncodedAssetAddrWithSignBitsBits[253] <== Num2Bits(253)(pubEncodedAssetAddrWithSignBits);
     signal refundAddrH1Sign <== pubEncodedAssetAddrWithSignBitsBits[248];
     signal refundAddrH2Sign <== pubEncodedAssetAddrWithSignBitsBits[249];
 
@@ -465,8 +466,14 @@ template JoinSplit() {
 
     // compress sender and receiver
     //@satisfies(14)
-    // ! TODO write a better argument than this
-    //@argument correct by construction (exactly what code does) 
+    //@argument
+    // 1. `compressedSenderCanonAddrY`, `senderSignBit` is correct decomposition of `senderCanonAddr` due to @lemma(2) and `CompressPoint.ensures(1)`
+    //    and `CompressPoint.requires(1)` is guaranteed by `CanonAddr` derivation above
+    // 2. `compressedReceiverCanonAddrY`, `receiverSignBit` is correct decomposition of `receiverCanonAddr` due to @lemma(13) and `CompressPoint.ensures(1)`
+    // 3. `oldNoteMerkleIndicesWithSignBits` is encoded correctly by construction
+    // 4. `joinSplitInfoNonce` is computed correctly by construction
+    // 5. `joinSplitInfoCommitment` is computed correctly by construction given the above
+    // therefore (14) holds 
     component canonAddrCompressors[2];
     canonAddrCompressors[0] = CompressPoint();
     canonAddrCompressors[0].in[0] <== senderCanonAddr[0];
@@ -483,7 +490,8 @@ template JoinSplit() {
     signal oldNoteAIndex <== TwoBitLimbsToNum(16)(pathA);
     signal oldNoteBIndex <== TwoBitLimbsToNum(16)(pathB);
     signal oldNoteMerkleIndices <== oldNoteAIndex + (1 << 32) * oldNoteBIndex;
-    signal oldNoteMerkleIndicesWithSignBits <== oldNoteMerkleIndices + (1 << 64) * senderSignBit + (1 << 65) * receiverSignBit;
+    signal oldNoteBIsDummy <== IsZero()(oldNoteBValue);
+    signal oldNoteMerkleIndicesWithSignBits <== oldNoteMerkleIndices + (1 << 64) * senderSignBit + (1 << 65) * receiverSignBit + (1 << 66) * oldNoteBIsDummy;
 
     var JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = 8641380568873709859334930917483971124167266522634964152243775747603865574453;
     var JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR = 9902041836430008087134187177357348214750696281851093507858998440354218646130;

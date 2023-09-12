@@ -152,11 +152,14 @@ export function encodeOldNoteMerkleIndicesWithSignBits(
   oldNoteAIndex: number,
   oldNoteBIndex: number,
   senderSign: boolean,
-  receiverSign: boolean
+  receiverSign: boolean,
+  oldNoteBIsDummy: boolean
 ): bigint {
   const receiverSignBit = receiverSign ? 1n : 0n;
   const senderSignBit = senderSign ? 1n : 0n;
+  const oldNoteBIsDummyBit = oldNoteBIsDummy ? 1n : 0n;
   return (
+    (oldNoteBIsDummyBit << 66n) |
     (receiverSignBit << 65n) |
     (senderSignBit << 64n) |
     (BigInt(oldNoteBIndex) << 32n) |

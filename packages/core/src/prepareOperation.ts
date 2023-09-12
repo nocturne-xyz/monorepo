@@ -369,7 +369,8 @@ async function makeJoinSplit(
       oldNoteAIndex,
       oldNoteBIndex,
       senderSign,
-      receiverSign
+      receiverSign,
+      noteBIsDummy
     ),
     newNoteA.value,
     newNoteB.value,
