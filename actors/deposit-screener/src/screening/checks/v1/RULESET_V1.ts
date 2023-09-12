@@ -152,7 +152,7 @@ const SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY: CombinedRulesParams<
   partials: [
     shortWalletHistoryPartial,
     {
-      name: "SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY",
+      name: "MIXER_USAGE_DELAY",
       call: "MISTTRACK_ADDRESS_RISK_SCORE",
       threshold: (data: MisttrackRiskScoreData) => includesMixerUsage(data),
     },
