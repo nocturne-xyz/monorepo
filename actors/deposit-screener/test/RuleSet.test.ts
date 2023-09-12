@@ -2,16 +2,16 @@ import { ScreeningDepositRequest } from "../src";
 import { RuleParams, RuleSet } from "../src/screening/checks/RuleSet";
 import { expect } from "chai";
 
-const DELAY_50_ALWAYS: RuleParams<"NOOP"> = {
+const DELAY_50_ALWAYS: RuleParams<"IDENTITY"> = {
   name: "DELAY_50_ALWAYS",
-  call: "NOOP",
+  call: "IDENTITY",
   threshold: () => true,
-  action: { type: "Delay", operation: "Add", value: 50 },
+  action: { type: "Delay", operation: "Add", valueSeconds: 50 },
 };
 
-const REJECT_ALWAYS: RuleParams<"NOOP"> = {
+const REJECT_ALWAYS: RuleParams<"IDENTITY"> = {
   name: "REJECT_ALWAYS",
-  call: "NOOP",
+  call: "IDENTITY",
   threshold: () => true,
   action: {
     type: "Rejection",
@@ -19,35 +19,35 @@ const REJECT_ALWAYS: RuleParams<"NOOP"> = {
   },
 };
 
-const DELAY_10000000_NEVER: RuleParams<"NOOP"> = {
+const DELAY_10000000_NEVER: RuleParams<"IDENTITY"> = {
   name: "DELAY_10000000_NEVER",
-  call: "NOOP",
+  call: "IDENTITY",
   threshold: () => false,
-  action: { type: "Delay", operation: "Add", value: 10000000 },
+  action: { type: "Delay", operation: "Add", valueSeconds: 10000000 },
 };
 
 const COMBINED_RULE_ANY = {
   partials: [
     {
       name: "NEVER_TRUE",
-      call: "NOOP",
+      call: "IDENTITY",
       threshold: () => false,
     },
     {
       name: "ALWAYS_TRUE",
-      call: "NOOP",
+      call: "IDENTITY",
       threshold: () => true,
     },
     {
       name: "SOMETIMES_TRUE",
-      call: "NOOP",
+      call: "IDENTITY",
       threshold: () => Math.random() > 0.5,
     },
   ],
   action: {
     type: "Delay",
     operation: "Add",
-    value: 50,
+    valueSeconds: 50,
   },
   applyIf: "Any",
 } as const;

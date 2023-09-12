@@ -80,7 +80,7 @@ export type MisttrackApiResponse<T extends MisttrackData> =
       data: T;
     };
 
-export type Data = TrmData | MisttrackData | ScreeningDepositRequest;
+export type CallReturnData = TrmData | MisttrackData | ScreeningDepositRequest;
 
 const TRM_BASE_URL = "https://api.trmlabs.com/public/v2";
 const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ScreeningDepositRequest } from "../src";
 import { RULESET_V1 } from "../src/screening/checks/v1/RULESET_V1";
 import apiCallsSnapshot from "./snapshots/apiCallsSnapshot.json";
-import { ApiCallKeys, Data } from "../src/screening/checks/apiCalls";
+import { ApiCallKeys, CallReturnData } from "../src/screening/checks/apiCalls";
 
 // Address contexts provided in: notion.so/nocturnelabs/Compliance-Provider-Evaluation-9ffe8bbf698f420498eba9e782e93b6d
 
@@ -49,7 +49,7 @@ type Addresses =
 
 const MOCK_API_CALLS = apiCallsSnapshot as Record<
   Addresses,
-  Partial<Record<ApiCallKeys, Data>>
+  Partial<Record<ApiCallKeys, CallReturnData>>
 >;
 
 describe("RULESET_V1", () => {
@@ -188,7 +188,7 @@ describe("RULESET_V1", () => {
       );
       expect(result).to.deep.equal({
         type: "Delay",
-        timeSeconds: 36000,
+        timeSeconds: 21600,
       });
     });
     it("should approve TC user 3", async () => {
@@ -198,7 +198,7 @@ describe("RULESET_V1", () => {
       );
       expect(result).to.deep.equal({
         type: "Delay",
-        timeSeconds: 36000,
+        timeSeconds: 21600,
       });
     });
 
@@ -209,7 +209,7 @@ describe("RULESET_V1", () => {
       );
       expect(result).to.deep.equal({
         type: "Delay",
-        timeSeconds: 36000,
+        timeSeconds: 21600,
       });
     });
     it("should approve Aztec user 1", async () => {
@@ -218,7 +218,7 @@ describe("RULESET_V1", () => {
         MOCK_API_CALLS[APPROVE_ADDRESSES.AZTEC_1]
       );
       expect(result).to.deep.equal({
-        timeSeconds: 36000,
+        timeSeconds: 21600,
         type: "Delay",
       });
     });
