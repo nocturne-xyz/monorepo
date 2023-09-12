@@ -1,17 +1,16 @@
-import { ethers } from "ethers";
-import { TeardownFn, makeRedisInstance } from "./utils";
-import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
+import { Erc20Config } from "@nocturne-xyz/config";
+import { Address } from "@nocturne-xyz/core";
 import {
-  DepositScreenerScreener,
   DepositScreenerFulfiller,
-  SubgraphScreenerSyncAdapter,
+  DepositScreenerScreener,
   DepositScreenerServer,
   DummyScreeningApi,
+  SubgraphScreenerSyncAdapter,
 } from "@nocturne-xyz/deposit-screener";
-import { Erc20Config } from "@nocturne-xyz/config";
+import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
+import { ethers } from "ethers";
 import IORedis from "ioredis";
-import { Address } from "@nocturne-xyz/core";
-import { DummyScreenerDelayCalculator } from "@nocturne-xyz/deposit-screener/dist/src/screenerDelay";
+import { TeardownFn, makeRedisInstance } from "./utils";
 
 export interface DepositScreenerConfig {
   depositManagerAddress: string;
@@ -80,8 +79,7 @@ async function startDepositScreenerScreener(
     provider,
     redis,
     logger,
-    new DummyScreeningApi(),
-    new DummyScreenerDelayCalculator(config.dummyScreeningDelaySeconds ?? 5),
+    new DummyScreeningApi(config.dummyScreeningDelaySeconds ?? 5),
     supportedAssets
   );
 
@@ -133,8 +131,7 @@ function startDepositScreenerServer(
   const server = new DepositScreenerServer(
     logger,
     redis,
-    new DummyScreeningApi(),
-    new DummyScreenerDelayCalculator(config.dummyScreeningDelaySeconds ?? 5),
+    new DummyScreeningApi(config.dummyScreeningDelaySeconds ?? 5),
     supportedAssetRateLimits
   );
 

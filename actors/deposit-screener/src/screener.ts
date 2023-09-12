@@ -6,36 +6,36 @@ import {
   Address,
   AssetTrait,
   ClosableAsyncIterator,
+  DepositEventType,
   DepositRequest,
   DepositRequestStatus,
-  hashDepositRequest,
-  DepositEventType,
   TotalEntityIndexTrait,
+  hashDepositRequest,
 } from "@nocturne-xyz/core";
-import { Job, Queue, Worker } from "bullmq";
-import { ethers } from "ethers";
-import { DepositScreenerDB } from "./db";
-import { ScreeningApi } from "./screening";
-import { DepositEventsBatch, ScreenerSyncAdapter } from "./sync/syncAdapter";
-import {
-  SCREENER_DELAY_QUEUE,
-  DepositRequestJobData,
-  DELAYED_DEPOSIT_JOB_TAG,
-  getFulfillmentJobTag,
-  getFulfillmentQueueName,
-  ACTOR_NAME,
-} from "./types";
-import IORedis from "ioredis";
-import { ScreenerDelayCalculator } from "./screenerDelay";
-import * as JSON from "bigint-json-serialization";
-import { secsToMillis } from "./utils";
-import { Logger } from "winston";
 import {
   ActorHandle,
   makeCreateCounterFn,
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
+import * as JSON from "bigint-json-serialization";
+import { Job, Queue, Worker } from "bullmq";
+import { ethers } from "ethers";
+import IORedis from "ioredis";
+import { Logger } from "winston";
+import { DepositScreenerDB } from "./db";
+import { ScreeningCheckerApi } from "./screening";
+import { Delay } from "./screening/checks/RuleSet";
+import { DepositEventsBatch, ScreenerSyncAdapter } from "./sync/syncAdapter";
+import {
+  ACTOR_NAME,
+  DELAYED_DEPOSIT_JOB_TAG,
+  DepositRequestJobData,
+  SCREENER_DELAY_QUEUE,
+  getFulfillmentJobTag,
+  getFulfillmentQueueName,
+} from "./types";
+import { secsToMillis } from "./utils";
 
 const COMPONENT_NAME = "screener";
 
@@ -52,8 +52,7 @@ interface DepositScreenerScreenerMetrics {
 export class DepositScreenerScreener {
   adapter: ScreenerSyncAdapter;
   depositManagerContract: DepositManager;
-  screeningApi: ScreeningApi;
-  delayCalculator: ScreenerDelayCalculator;
+  screeningApi: ScreeningCheckerApi;
   screenerDelayQueue: Queue<DepositRequestJobData>;
   db: DepositScreenerDB;
   redis: IORedis;
@@ -68,8 +67,7 @@ export class DepositScreenerScreener {
     provider: ethers.providers.Provider,
     redis: IORedis,
     logger: Logger,
-    screeningApi: ScreeningApi,
-    screenerDelayCalculator: ScreenerDelayCalculator,
+    screeningApi: ScreeningCheckerApi,
     supportedAssets: Set<Address>,
     startBlock?: number
   ) {
@@ -91,8 +89,6 @@ export class DepositScreenerScreener {
     });
 
     this.screeningApi = screeningApi;
-    this.delayCalculator = screenerDelayCalculator;
-
     this.supportedAssets = supportedAssets;
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
@@ -253,17 +249,29 @@ export class DepositScreenerScreener {
         }
 
         childLogger.debug(`checking deposit request`);
-        const isSafe = await this.screeningApi.isSafeDepositRequest(
-          depositRequest.spender,
+        const checkResult = await this.screeningApi.checkDeposit({
+          spender: depositRequest.spender,
           assetAddr,
-          depositRequest.value
-        );
+          value: depositRequest.value,
+        });
 
-        if (isSafe) {
+        if (checkResult.type === "Rejection") {
+          childLogger.warn(
+            `deposit failed first screening stage with reason: ${checkResult.reason}`
+          );
+          await this.db.setDepositRequestStatus(
+            depositRequest,
+            DepositRequestStatus.FailedScreen
+          );
+        } else {
           childLogger.info(
             "deposit passed first screening stage. pushing to delay queue"
           );
-          await this.scheduleSecondScreeningPhase(childLogger, depositRequest);
+          await this.scheduleSecondScreeningPhase(
+            childLogger,
+            depositRequest,
+            checkResult
+          );
           await this.db.setDepositRequestStatus(
             depositRequest,
             DepositRequestStatus.PassedFirstScreen
@@ -274,14 +282,6 @@ export class DepositScreenerScreener {
             Number(depositRequest.value),
             attributes
           );
-        } else {
-          childLogger.warn(
-            `deposit failed first screening stage with reason <TODO>`
-          );
-          await this.db.setDepositRequestStatus(
-            depositRequest,
-            DepositRequestStatus.FailedScreen
-          );
         }
       }
       await this.db.setCurrentTotalEntityIndex(batch.totalEntityIndex);
@@ -290,27 +290,21 @@ export class DepositScreenerScreener {
 
   async scheduleSecondScreeningPhase(
     logger: Logger,
-    depositRequest: DepositRequest
+    depositRequest: DepositRequest,
+    delay: Delay
   ): Promise<void> {
     logger.debug(`calculating delay until second phase of screening`);
-    const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
-    const delaySeconds = await this.delayCalculator.calculateDelaySeconds(
-      depositRequest.spender,
-      assetAddr,
-      depositRequest.value
-    );
-
     const depositRequestJson = JSON.stringify(depositRequest);
     const jobData: DepositRequestJobData = {
       depositRequestJson,
     };
 
     logger.info(
-      `scheduling second phase of screening to start in ${delaySeconds} seconds`
+      `scheduling second phase of screening to start in ${delay.timeSeconds} seconds`
     );
     await this.screenerDelayQueue.add(DELAYED_DEPOSIT_JOB_TAG, jobData, {
       jobId: hashDepositRequest(depositRequest),
-      delay: secsToMillis(delaySeconds),
+      delay: secsToMillis(delay.timeSeconds),
       // TODO: do we need retries?
       // if the job fails, re-try it at most 5x with exponential backoff (1s, 2s, 4s)
       attempts: 5,
@@ -320,11 +314,14 @@ export class DepositScreenerScreener {
       },
     });
 
-    logger.info("[histogram] delaySeconds", { delaySeconds });
+    const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
+    logger.info("[histogram] delaySeconds", {
+      delaySeconds: delay.timeSeconds,
+    });
     logger.info("[histogram] spender tag", { spender: depositRequest.spender });
     logger.info("[histogram] assetAddr tag", { assetAddr });
 
-    this.metrics.screeningDelayHistogram.record(delaySeconds, {
+    this.metrics.screeningDelayHistogram.record(delay.timeSeconds, {
       spender: depositRequest.spender,
       assetAddr: assetAddr,
     });
@@ -373,13 +370,20 @@ export class DepositScreenerScreener {
         childLogger.debug(
           `checking if deposit request passed second screening`
         );
-        const valid = await this.screeningApi.isSafeDepositRequest(
-          depositRequest.spender,
+        const checkResult = await this.screeningApi.checkDeposit({
+          spender: depositRequest.spender,
           assetAddr,
-          depositRequest.value
-        );
-        if (!valid) {
-          childLogger.warn(`deposit failed second screening screening`);
+          value: depositRequest.value,
+        });
+
+        if (checkResult.type === "Rejection") {
+          childLogger.warn(
+            `deposit failed second screening screening with reason ${checkResult.reason}`
+          );
+          await this.db.setDepositRequestStatus(
+            depositRequest,
+            DepositRequestStatus.FailedScreen
+          );
           return;
         }
 
