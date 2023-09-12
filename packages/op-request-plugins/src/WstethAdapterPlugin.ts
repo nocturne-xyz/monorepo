@@ -1,6 +1,5 @@
 import {
   Action,
-  Asset,
   AssetTrait,
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
@@ -8,6 +7,7 @@ import {
   OperationMetadataItem,
   BuilderItemToProcess,
   UnwrapRequest,
+  RefundRequest,
 } from "@nocturne-xyz/core";
 import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
 
@@ -63,8 +63,8 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           );
         }
 
-        const encodedWeth = AssetTrait.erc20AddressToAsset(wethAddress);
-        const encodedWsteth = AssetTrait.erc20AddressToAsset(wstethAddress);
+        const wethAsset = AssetTrait.erc20AddressToAsset(wethAddress);
+        const wstethAsset = AssetTrait.erc20AddressToAsset(wstethAddress);
 
         const encodedFunction =
           WstethAdapter__factory.createInterface().encodeFunctionData(
@@ -73,7 +73,7 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           );
 
         const unwrap: UnwrapRequest = {
-          asset: encodedWeth,
+          asset: wethAsset,
           unwrapValue: amount,
         };
 
@@ -82,7 +82,10 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           encodedFunction,
         };
 
-        const refundAsset: Asset = encodedWsteth;
+        const refund: RefundRequest = {
+          asset: wstethAsset,
+          minRefundValue: amount, // TODO: should there be some buffer for some kind of slippage?
+        };
 
         const metadata: OperationMetadataItem = {
           type: "Action",
@@ -94,7 +97,7 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           unwraps: [unwrap],
           confidentialPayments: [],
           actions: [action],
-          refundAssets: [refundAsset],
+          refunds: [refund],
           metadatas: [metadata],
         });
       });

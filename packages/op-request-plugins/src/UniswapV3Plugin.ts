@@ -8,6 +8,7 @@ import {
   OperationMetadataItem,
   BuilderItemToProcess,
   UnwrapRequest,
+  RefundRequest,
 } from "@nocturne-xyz/core";
 import { ChainId, Percent, Token, TradeType } from "@uniswap/sdk-core";
 import {
@@ -18,6 +19,7 @@ import {
 } from "@uniswap/smart-order-router";
 import { ethers } from "ethers";
 import ERC20_ABI from "./abis/ERC20.json";
+import JSBI from "jsbi";
 
 const UniswapV3_NAME = "uniswapV3";
 
@@ -140,7 +142,15 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               encodedFunction: route.methodParameters!.calldata,
             };
 
-            const refundAsset = AssetTrait.erc20AddressToAsset(tokenOut);
+            const refund: RefundRequest = {
+              asset: AssetTrait.erc20AddressToAsset(tokenOut),
+              minRefundValue: BigInt(
+                JSBI.divide(
+                  route.quote.numerator,
+                  route.quote.numerator
+                ).toString()
+              ), // TODO: this may not be forgiving accounting for slippage, may cause swap reverts
+            };
 
             const metadata: OperationMetadataItem = {
               type: "Action",
@@ -168,7 +178,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 unwraps: [unwrap],
                 confidentialPayments: [],
                 actions: [approveAction, swapAction], // enqueue approve + swap
-                refundAssets: [refundAsset],
+                refunds: [refund],
                 metadatas: [metadata],
               });
             } else {
@@ -176,7 +186,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 unwraps: [unwrap],
                 confidentialPayments: [],
                 actions: [swapAction],
-                refundAssets: [refundAsset],
+                refunds: [refund],
                 metadatas: [metadata],
               });
             }

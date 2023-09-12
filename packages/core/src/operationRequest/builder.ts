@@ -11,11 +11,13 @@ import {
   OperationRequest,
   UnwrapRequest,
   ConfidentialPaymentRequest,
+  RefundRequest,
 } from "./operationRequest";
 import {
   Action,
   Address,
   Asset,
+  AssetTrait,
   OperationMetadata,
   OperationMetadataItem,
 } from "../primitives";
@@ -28,7 +30,7 @@ export type OpRequestBuilder = OpRequestBuilderExt<BaseOpRequestBuilder>;
 export interface BuilderItemToProcess {
   unwraps: UnwrapRequest[];
   confidentialPayments: ConfidentialPaymentRequest[];
-  refundAssets: Asset[];
+  refunds: RefundRequest[];
   actions: Action[];
   metadatas: OperationMetadataItem[];
 }
@@ -57,13 +59,15 @@ export interface BaseOpRequestBuilder {
 
   // add an action  to the operation
   // returns `this` so it's chainable
-  action(contractAddress: Address, encodedFunction: string): this;
+  /// CAUTION: this is a low-level method that should only be used by plugins
+  __action(contractAddress: Address, encodedFunction: string): this;
 
   // specify the operation should unwrap `amountUnits` of `asset`
   // `ammountUnits` is the amount in EVM (uint256) representation. It is up to
   // the caller to handle decimal conversions
   // returns `this` so it's chainable
-  unwrap(asset: Asset, amountUnits: bigint): this;
+  /// CAUTION: this is a low-level method that should only be used by plugins
+  __unwrap(asset: Asset, amountUnits: bigint): this;
 
   // add a confidential payment to the operation
   // returns `this` so it's chainable
@@ -74,7 +78,8 @@ export interface BaseOpRequestBuilder {
   ): this;
 
   // indicates that the operation expects a refund of asset `Asset`.
-  refundAsset(asset: Asset): this;
+  /// CAUTION: this is a low-level method that should only be used by plugins
+  __refund(refund: RefundRequest): this;
 
   // set the operation's `refundAddr` stealth address up-front.
   // if this is not set, the wallet will generate a new one
@@ -122,11 +127,11 @@ export function newOpRequestBuilder(
   }
 
   const tellerContract = config.tellerAddress();
-  const _op = {
+  const _op: OperationRequest = {
     chainId,
     tellerContract,
     joinSplitRequests: [],
-    refundAssets: [],
+    refunds: [],
     actions: [],
     deadline: 0n,
   };
@@ -150,7 +155,7 @@ export function newOpRequestBuilder(
       return this;
     },
 
-    action(contractAddress: Address, encodedFunction: string) {
+    __action(contractAddress: Address, encodedFunction: string) {
       const action: Action = {
         contractAddress: ethers.utils.getAddress(contractAddress),
         encodedFunction,
@@ -160,7 +165,7 @@ export function newOpRequestBuilder(
         Promise.resolve({
           unwraps: [],
           confidentialPayments: [],
-          refundAssets: [],
+          refunds: [],
           actions: [action],
           metadatas: [],
         })
@@ -169,7 +174,7 @@ export function newOpRequestBuilder(
       return this;
     },
 
-    unwrap(asset: Asset, amountUnits: bigint) {
+    __unwrap(asset: Asset, amountUnits: bigint) {
       const unwrap: UnwrapRequest = {
         asset,
         unwrapValue: amountUnits,
@@ -179,7 +184,7 @@ export function newOpRequestBuilder(
         Promise.resolve({
           unwraps: [unwrap],
           confidentialPayments: [],
-          refundAssets: [],
+          refunds: [],
           actions: [],
           metadatas: [],
         })
@@ -203,7 +208,7 @@ export function newOpRequestBuilder(
         Promise.resolve({
           unwraps: [],
           confidentialPayments: [payment],
-          refundAssets: [],
+          refunds: [],
           actions: [],
           metadatas: [],
         })
@@ -212,12 +217,12 @@ export function newOpRequestBuilder(
       return this;
     },
 
-    refundAsset(asset: Asset) {
+    __refund(refund: RefundRequest) {
       this._builderItemsToProcess.push(
         Promise.resolve({
           unwraps: [],
           confidentialPayments: [],
-          refundAssets: [asset],
+          refunds: [refund],
           actions: [],
           metadatas: [],
         })
@@ -298,8 +303,11 @@ export function newOpRequestBuilder(
           };
           this._op.actions.push(action);
         }
-        for (const asset of result.refundAssets) {
-          this._op.refundAssets.push(asset);
+        for (const refund of result.refunds) {
+          this._op.refunds.push({
+            encodedAsset: AssetTrait.encode(refund.asset),
+            minRefundValue: refund.minRefundValue,
+          });
         }
         for (const metadataItem of result.metadatas) {
           metadata.items.push(metadataItem);

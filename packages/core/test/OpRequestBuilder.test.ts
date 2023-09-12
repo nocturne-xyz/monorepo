@@ -18,6 +18,7 @@ import {
   DUMMY_CONFIG,
 } from "./utils";
 import { ethers } from "ethers";
+import { AssetTrait } from "../dist";
 
 describe("OpRequestBuilder", () => {
   it("builds OperationRequest with 1 action, 1 unwrap, 0 payments, no params set", async () => {
@@ -28,7 +29,9 @@ describe("OpRequestBuilder", () => {
           unwrapValue: 3n,
         },
       ],
-      refundAssets: [shitcoin],
+      refunds: [
+        { encodedAsset: AssetTrait.encode(shitcoin), minRefundValue: 1n },
+      ],
       actions: [
         {
           contractAddress: DUMMY_CONTRACT_ADDR,
@@ -43,9 +46,9 @@ describe("OpRequestBuilder", () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .unwrap(shitcoin, 3n)
-      .refundAsset(shitcoin)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__unwrap(shitcoin, 3n)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
       .deadline(2n)
       .build();
 
@@ -68,7 +71,9 @@ describe("OpRequestBuilder", () => {
           },
         },
       ],
-      refundAssets: [shitcoin],
+      refunds: [
+        { encodedAsset: AssetTrait.encode(shitcoin), minRefundValue: 1n },
+      ],
       actions: [
         {
           contractAddress: DUMMY_CONTRACT_ADDR,
@@ -83,9 +88,9 @@ describe("OpRequestBuilder", () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .unwrap(shitcoin, 3n)
-      .refundAsset(shitcoin)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__unwrap(shitcoin, 3n)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
       .confidentialPayment(shitcoin, 1n, receiver)
       .deadline(2n)
       .build();
@@ -105,7 +110,9 @@ describe("OpRequestBuilder", () => {
           unwrapValue: 3n,
         },
       ],
-      refundAssets: [shitcoin],
+      refunds: [
+        { encodedAsset: AssetTrait.encode(shitcoin), minRefundValue: 1n },
+      ],
       actions: [
         {
           contractAddress: DUMMY_CONTRACT_ADDR,
@@ -123,9 +130,9 @@ describe("OpRequestBuilder", () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .unwrap(shitcoin, 3n)
-      .refundAsset(shitcoin)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__unwrap(shitcoin, 3n)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
       .refundAddr(refundAddr)
       .gas({
         executionGasLimit: 20n,
@@ -162,7 +169,7 @@ describe("OpRequestBuilder", () => {
           },
         },
       ],
-      refundAssets: [],
+      refunds: [],
       actions: [],
       chainId: 1n,
       tellerContract: DUMMY_CONFIG.tellerAddress(),
@@ -237,7 +244,12 @@ describe("OpRequestBuilder", () => {
           unwrapValue: 100n,
         },
       ],
-      refundAssets: [shitcoin, ponzi, stablescam, plutocracy],
+      refunds: [
+        { encodedAsset: AssetTrait.encode(shitcoin), minRefundValue: 1n },
+        { encodedAsset: AssetTrait.encode(ponzi), minRefundValue: 1n },
+        { encodedAsset: AssetTrait.encode(stablescam), minRefundValue: 1n },
+        { encodedAsset: AssetTrait.encode(plutocracy), minRefundValue: 1n },
+      ],
       refundAddr: refundAddr,
       actions,
       chainId: 1n,
@@ -248,20 +260,20 @@ describe("OpRequestBuilder", () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
-      .unwrap(shitcoin, 3n)
-      .unwrap(ponzi, 69n)
-      .unwrap(stablescam, 420n)
-      .unwrap(monkey, 1n)
-      .unwrap(plutocracy, 100n)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
+      .__unwrap(shitcoin, 3n)
+      .__unwrap(ponzi, 69n)
+      .__unwrap(stablescam, 420n)
+      .__unwrap(monkey, 1n)
+      .__unwrap(plutocracy, 100n)
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(ponzi, 2n, receivers[1])
       .confidentialPayment(monkey, 1n, receivers[2])
-      .refundAsset(shitcoin)
-      .refundAsset(ponzi)
-      .refundAsset(stablescam)
-      .refundAsset(plutocracy)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
+      .__refund({ asset: ponzi, minRefundValue: 1n })
+      .__refund({ asset: stablescam, minRefundValue: 1n })
+      .__refund({ asset: plutocracy, minRefundValue: 1n })
       .refundAddr(refundAddr)
       .deadline(2n)
       .build();
@@ -297,7 +309,7 @@ describe("OpRequestBuilder", () => {
           unwrapValue: 300n,
         },
       ],
-      refundAssets: [],
+      refunds: [],
       refundAddr: refundAddr,
       actions,
       chainId: 1n,
@@ -308,14 +320,14 @@ describe("OpRequestBuilder", () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
-      .unwrap(shitcoin, 100n)
-      .unwrap(ponzi, 100n)
-      .unwrap(shitcoin, 100n)
-      .unwrap(ponzi, 100n)
-      .unwrap(shitcoin, 100n)
-      .unwrap(ponzi, 100n)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
+      .__unwrap(shitcoin, 100n)
+      .__unwrap(ponzi, 100n)
+      .__unwrap(shitcoin, 100n)
+      .__unwrap(ponzi, 100n)
+      .__unwrap(shitcoin, 100n)
+      .__unwrap(ponzi, 100n)
       .refundAddr(refundAddr)
       .deadline(2n)
       .build();

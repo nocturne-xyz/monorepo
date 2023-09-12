@@ -47,8 +47,8 @@ describe("OpRequestBuilder", () => {
       [recipient, 100n]
     );
 
-    const encodedWeth = AssetTrait.erc20AddressToAsset(WETH_ADDRESS);
-    const encodedWsteth = AssetTrait.erc20AddressToAsset(WSTETH_ADDRESS);
+    const wethAsset = AssetTrait.erc20AddressToAsset(WETH_ADDRESS);
+    const wstethAsset = AssetTrait.erc20AddressToAsset(WSTETH_ADDRESS);
     const encodedWstethConvertFunction =
       WstethAdapter__factory.createInterface().encodeFunctionData("convert", [
         100n,
@@ -62,11 +62,16 @@ describe("OpRequestBuilder", () => {
             unwrapValue: 100n,
           },
           {
-            asset: encodedWeth,
+            asset: wethAsset,
             unwrapValue: 100n,
           },
         ],
-        refundAssets: [encodedWsteth],
+        refunds: [
+          {
+            encodedAsset: AssetTrait.encode(wstethAsset),
+            minRefundValue: 100n,
+          },
+        ],
         refundAddr: refundAddr,
         actions: [
           {

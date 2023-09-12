@@ -30,6 +30,7 @@
     "bigint-json-serialization": "^1.0.1",
     "ethers": "^5.7.2",
     "js-sha256": "^0.9.0",
+    "jsbi": "^3.1.4",
     "randombytes": "^2.1.0",
     "winston": "^3.9.0"
   },

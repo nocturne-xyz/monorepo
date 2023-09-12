@@ -43,9 +43,9 @@ describe("signOperation", () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .unwrap(shitcoin, 3n)
-      .refundAsset(shitcoin)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__unwrap(shitcoin, 3n)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
       .confidentialPayment(shitcoin, 1n, receiver)
       .gas({
         executionGasLimit: 1_000_000n,

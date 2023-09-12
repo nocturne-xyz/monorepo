@@ -44,9 +44,9 @@ describe("handleGasForOperationRequest", async () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .unwrap(shitcoin, 3n)
-      .refundAsset(shitcoin)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__unwrap(shitcoin, 3n)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
@@ -80,9 +80,9 @@ describe("handleGasForOperationRequest", async () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .unwrap(shitcoin, 100_000n)
-      .refundAsset(shitcoin)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__unwrap(shitcoin, 100_000n)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 1n,
@@ -123,9 +123,9 @@ describe("handleGasForOperationRequest", async () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .unwrap(shitcoin, 1_000_000n)
-      .refundAsset(shitcoin)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__unwrap(shitcoin, 1_000_000n)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
       .gas({
         executionGasLimit: 500_000n, // WTF
         gasPrice: 1n,
@@ -175,9 +175,9 @@ describe("handleGasForOperationRequest", async () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .unwrap(shitcoin, 100_000n)
-      .refundAsset(shitcoin)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__unwrap(shitcoin, 100_000n)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
       .gas({
         // Exceeds shitcoin balance, forces us to use stablescam
         executionGasLimit: 1_500_000n,

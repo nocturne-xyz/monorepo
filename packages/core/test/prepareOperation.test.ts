@@ -173,9 +173,9 @@ describe("prepareOperation", async () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .unwrap(shitcoin, 3n)
-      .refundAsset(shitcoin)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__unwrap(shitcoin, 3n)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
@@ -191,8 +191,11 @@ describe("prepareOperation", async () => {
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
-    expect(op.encodedRefundAssets.length).to.equal(1);
-    expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
+    expect(op.refunds.length).to.equal(1);
+    expect(op.refunds[0]).to.eql({
+      encodedAsset: encodedShitcoin,
+      minRefundValue: 1n,
+    });
 
     expect(op.actions.length).to.equal(1);
     expect(op.actions[0]).to.eql({
@@ -225,9 +228,9 @@ describe("prepareOperation", async () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .unwrap(shitcoin, 3n)
-      .refundAsset(shitcoin)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__unwrap(shitcoin, 3n)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
       .confidentialPayment(shitcoin, 1n, receiver)
       .gas({
         executionGasLimit: 1_000_00n,
@@ -244,8 +247,11 @@ describe("prepareOperation", async () => {
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
-    expect(op.encodedRefundAssets.length).to.equal(1);
-    expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
+    expect(op.refunds.length).to.equal(1);
+    expect(op.refunds[0]).to.eql({
+      encodedAsset: encodedShitcoin,
+      minRefundValue: 1n,
+    });
 
     expect(op.actions.length).to.equal(1);
     expect(op.actions[0]).to.eql({
@@ -275,9 +281,9 @@ describe("prepareOperation", async () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .unwrap(shitcoin, 3n)
-      .refundAsset(shitcoin)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__unwrap(shitcoin, 3n)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
       .refundAddr(refundAddr)
       .gas({
         executionGasLimit: 20n,
@@ -299,8 +305,11 @@ describe("prepareOperation", async () => {
     expect(op.executionGasLimit).to.equal(20n);
     expect(op.gasPrice).to.equal(0n);
 
-    expect(op.encodedRefundAssets.length).to.equal(1);
-    expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
+    expect(op.refunds.length).to.equal(1);
+    expect(op.refunds[0]).to.eql({
+      encodedAsset: encodedShitcoin,
+      minRefundValue: 1n,
+    });
 
     expect(op.actions.length).to.equal(1);
     expect(op.actions[0]).to.eql({
@@ -352,7 +361,7 @@ describe("prepareOperation", async () => {
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
-    expect(op.encodedRefundAssets.length).to.equal(0);
+    expect(op.refunds.length).to.equal(0);
     expect(op.actions.length).to.equal(0);
 
     // expect to have 2 joinsplits bc we have 2 payments for 2 different assets
@@ -383,19 +392,19 @@ describe("prepareOperation", async () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
-      .unwrap(shitcoin, 3n)
-      .unwrap(ponzi, 69n)
-      .unwrap(stablescam, 420n)
-      .unwrap(plutocracy, 100n)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
+      .__unwrap(shitcoin, 3n)
+      .__unwrap(ponzi, 69n)
+      .__unwrap(stablescam, 420n)
+      .__unwrap(plutocracy, 100n)
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(ponzi, 2n, receivers[1])
       .confidentialPayment(monkey, 1n, receivers[2])
-      .refundAsset(shitcoin)
-      .refundAsset(ponzi)
-      .refundAsset(stablescam)
-      .refundAsset(plutocracy)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
+      .__refund({ asset: ponzi, minRefundValue: 1n })
+      .__refund({ asset: stablescam, minRefundValue: 1n })
+      .__refund({ asset: plutocracy, minRefundValue: 1n })
       .refundAddr(refundAddr)
       .gas({
         executionGasLimit: 1_000_000n,
@@ -413,11 +422,23 @@ describe("prepareOperation", async () => {
     expect(op).to.not.be.undefined;
 
     expect(op.refundAddr).to.eql(StealthAddressTrait.compress(refundAddr));
-    expect(op.encodedRefundAssets.length).to.equal(4);
-    expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
-    expect(op.encodedRefundAssets[1]).to.eql(encodedPonzi);
-    expect(op.encodedRefundAssets[2]).to.eql(encodedStablescam);
-    expect(op.encodedRefundAssets[3]).to.eql(encodedPlutocracy);
+    expect(op.refunds.length).to.equal(4);
+    expect(op.refunds[0]).to.eql({
+      encodedAsset: encodedShitcoin,
+      minRefundValue: 1n,
+    });
+    expect(op.refunds[1]).to.eql({
+      encodedAsset: encodedPonzi,
+      minRefundValue: 1n,
+    });
+    expect(op.refunds[2]).to.eql({
+      encodedAsset: encodedStablescam,
+      minRefundValue: 1n,
+    });
+    expect(op.refunds[3]).to.eql({
+      encodedAsset: encodedPlutocracy,
+      minRefundValue: 1n,
+    });
 
     expect(op.actions.length).to.equal(2);
     expect(op.actions[0]).to.eql({
@@ -451,10 +472,10 @@ describe("prepareOperation", async () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
-      .unwrap(shitcoin, 4000n)
-      .unwrap(ponzi, 4000n)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
+      .__unwrap(shitcoin, 4000n)
+      .__unwrap(ponzi, 4000n)
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
@@ -491,9 +512,9 @@ describe("prepareOperation", async () => {
     const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-      .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
-      .unwrap(shitcoin, 1000n)
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
+      .__unwrap(shitcoin, 1000n)
 
       .gas({
         executionGasLimit: 1_000_000n,

@@ -262,15 +262,15 @@ export function toSubmittableOperation(
 export function getTrackedAssets(
   op: PreSignOperation | SignedOperation | ProvenOperation
 ): TrackedAsset[] {
-  const { joinSplits, encodedRefundAssets } = op;
+  const { joinSplits, refunds } = op;
   const assets: TrackedAsset[] = [
     ...joinSplits.map(({ encodedAsset }) => ({
       encodedAsset,
-      minRefundValue: 0n, // TODO: placeholder, we need to figure out how to set this
+      minRefundValue: 0n, // TODO: this should be OK so long as users don't unwrap more tokens than they intend to spend, this is why we do not expose unwraps directly to end users, only plugins fns
     })),
-    ...encodedRefundAssets.map((encodedAsset) => ({
+    ...refunds.map(({ encodedAsset, minRefundValue }) => ({
       encodedAsset,
-      minRefundValue: 0n, // TODO: placeholder, we need to figure out how to set this
+      minRefundValue,
     })),
   ];
 

@@ -365,7 +365,7 @@ function fakeProvenOperation(
     joinSplits: provenJoinSplits,
     refundAddr: op.refundAddr,
     actions: op.actions,
-    encodedRefundAssets: op.encodedRefundAssets,
+    refunds: op.refunds,
     encodedGasAsset: op.encodedGasAsset,
     gasAssetRefundThreshold: op.gasAssetRefundThreshold,
     executionGasLimit: op.executionGasLimit,

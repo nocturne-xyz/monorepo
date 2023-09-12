@@ -48,9 +48,8 @@ export async function prepareOperation(
   deps: PrepareOperationDeps,
   opRequest: GasAccountedOperationRequest
 ): Promise<PreSignOperation> {
-  const { refundAssets, joinSplitRequests, chainId, tellerContract, deadline } =
+  const { refunds, joinSplitRequests, chainId, tellerContract, deadline } =
     opRequest;
-  const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
   const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
 
   // if refundAddr is not set, generate a random one
@@ -92,7 +91,7 @@ export async function prepareOperation(
     networkInfo: { chainId, tellerContract },
     refundAddr,
     joinSplits,
-    encodedRefundAssets,
+    refunds,
     encodedGasAsset,
     deadline,
     atomicActions: true, // always default to atomic until we find reason not to
