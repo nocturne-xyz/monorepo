@@ -1,5 +1,4 @@
 import { ScreeningDepositRequest } from "..";
-// import * as SNAPSHOT from "../../../test/apiCallsTestsSnapshot.json";
 import "dotenv/config";
 
 export interface TrmAddressRiskIndicator {
@@ -19,7 +18,7 @@ export interface TrmAddressRiskIndicator {
   totalVolumeUsd: string;
 }
 export interface TrmData {
-  externalId: string;
+  externalId: string | null;
   addressIncomingVolumeUsd: string;
   addressOutgoingVolumeUsd: string;
   addressTotalVolumeUsd: string;

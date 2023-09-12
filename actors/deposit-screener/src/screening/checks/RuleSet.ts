@@ -57,7 +57,7 @@ export interface RuleLike {
   name: string;
   check: (
     deposit: ScreeningDepositRequest,
-    cache: Record<ApiCallKeys, ApiMap[ApiCallKeys]>
+    cache: Partial<Record<ApiCallKeys, CallReturnData>>
   ) => Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED>;
 }
 
@@ -77,12 +77,13 @@ export class Rule<K extends keyof ApiMap> implements RuleLike {
 
   async check(
     deposit: ScreeningDepositRequest,
-    cache: Record<ApiCallKeys, ApiMap[ApiCallKeys]>
+    cache: Partial<Record<ApiCallKeys, CallReturnData>>
   ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
     if (!cache[this.call]) {
       cache[this.call] = await API_CALLS[this.call](deposit);
     }
     const data = cache[this.call] as ApiMap[K];
+
     return this.threshold(data) ? this.action : ACTION_NOT_TRIGGERED;
   }
 }
@@ -107,7 +108,7 @@ export class CompositeRule<T extends ReadonlyArray<keyof ApiMap>>
 
   async check(
     deposit: ScreeningDepositRequest,
-    cache: Record<ApiCallKeys, CallReturnData>
+    cache: Partial<Record<ApiCallKeys, CallReturnData>>
   ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
     const results = await Promise.all(
       this.partials.map(async (partial) => {
@@ -127,10 +128,10 @@ export class CompositeRule<T extends ReadonlyArray<keyof ApiMap>>
 export class RuleSet {
   private head: RuleLike | null = null;
   private tail: RuleLike | null = null;
-  private delaySeconds;
+  private readonly baseDelaySeconds;
 
   constructor({ baseDelaySeconds = 0 }: { baseDelaySeconds?: number } = {}) {
-    this.delaySeconds = baseDelaySeconds;
+    this.baseDelaySeconds = baseDelaySeconds;
   }
 
   private _add(ruleLike: RuleLike) {
@@ -156,13 +157,17 @@ export class RuleSet {
     return this;
   }
 
-  async check(deposit: ScreeningDepositRequest): Promise<Rejection | Delay> {
+  async check(
+    deposit: ScreeningDepositRequest,
+    cache: Partial<Record<ApiCallKeys, CallReturnData>> = {}
+  ): Promise<Rejection | Delay> {
+    let delaySeconds = this.baseDelaySeconds;
     let currRule = this.head;
-    const cache: Record<string, CallReturnData> = {};
     const rulesLogList: {
       ruleName: string;
       result: Awaited<ReturnType<RuleLike["check"]>>;
     }[] = [];
+
     while (currRule !== null) {
       const result = await currRule.check(deposit, cache);
       rulesLogList.push({
@@ -173,14 +178,14 @@ export class RuleSet {
         console.log(`Screener execution for deposit:`, deposit, rulesLogList);
         return result;
       } else if (result.type === "Delay") {
-        this.delaySeconds = APPLY_DELAY_OPERATION[result.operation](
-          this.delaySeconds,
+        delaySeconds = APPLY_DELAY_OPERATION[result.operation](
+          delaySeconds,
           result.operation === "Add" ? result.valueSeconds : result.factor
         );
       }
       currRule = currRule.next;
     }
     console.log(`Screener execution for deposit:`, deposit, rulesLogList);
-    return { type: "Delay", timeSeconds: this.delaySeconds };
+    return { type: "Delay", timeSeconds: delaySeconds };
   }
 }
