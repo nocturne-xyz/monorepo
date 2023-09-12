@@ -1,24 +1,23 @@
-import { Job, Queue } from "bullmq";
-import { DepositScreenerDB } from "../db";
-import { DepositRequestJobData } from "../types";
 import {
   Address,
   AssetTrait,
   DepositRequest,
   DepositRequestStatus,
 } from "@nocturne-xyz/core";
-import { ScreenerDelayCalculator } from "../screenerDelay";
-import { ScreeningApi } from "../screening";
+import * as JSON from "bigint-json-serialization";
+import { Job, Queue } from "bullmq";
+import { DepositScreenerDB } from "../db";
+import { ScreeningCheckerApi } from "../screening";
+import { DepositRequestJobData } from "../types";
+import {
+  calculateSecondsLeftInJobDelay,
+  convertAssetTotalToDelaySeconds,
+} from "./time";
 import {
   totalValueAheadInFulfillerQueueInclusive,
   totalValueAheadInScreenerQueueInclusive,
   totalValueInFulfillerQueue,
 } from "./valueAhead";
-import {
-  calculateSecondsLeftInJobDelay,
-  convertAssetTotalToDelaySeconds,
-} from "./time";
-import * as JSON from "bigint-json-serialization";
 
 export interface EstimateExistingWaitDeps {
   db: DepositScreenerDB;
@@ -105,8 +104,7 @@ export async function estimateSecondsUntilDepositCompletion(
 }
 
 export interface EstimateProspectiveWaitDeps {
-  screeningApi: ScreeningApi;
-  screenerDelayCalculator: ScreenerDelayCalculator;
+  screeningApi: ScreeningCheckerApi;
   rateLimits: Map<Address, bigint>;
   screenerQueue: Queue<DepositRequestJobData>;
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
@@ -116,7 +114,6 @@ export interface EstimateProspectiveWaitDeps {
 export async function estimateSecondsUntilCompletionForProspectiveDeposit(
   {
     screeningApi,
-    screenerDelayCalculator,
     screenerQueue,
     fulfillerQueues,
     rateLimits,
@@ -128,14 +125,15 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
   // ensure passes screen
   console.log("in estimateSecondsUntilCompletionForProspectiveDeposit");
 
-  const passesScreen = await screeningApi.isSafeDepositRequest(
+  const checkResult = await screeningApi.checkDeposit({
     spender,
     assetAddr,
-    value
-  );
-  if (!passesScreen) {
+    value,
+  });
+
+  if (checkResult.type === "Rejection") {
     throw new Error(
-      `Prospective deposit request failed screening. spender: ${spender}. assetAddr: ${assetAddr}, value: ${value}`
+      `Prospective deposit request failed screening. reason: ${checkResult.reason} spender: ${spender}. assetAddr: ${assetAddr}, value: ${value}`
     );
   }
 
@@ -144,18 +142,11 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
     throw new Error(`No fulfiller queue for asset ${assetAddr}`);
   }
 
-  // calculate hypothetical screener delay
-  const screenerDelay = await screenerDelayCalculator.calculateDelaySeconds(
-    spender,
-    assetAddr,
-    value
-  );
-
   // find closest job in screener queue to hypothetical job
   const closestJob = await findScreenerQueueJobClosestInDelay(
     screenerQueue,
     assetAddr,
-    screenerDelay
+    checkResult.timeSeconds
   );
   console.log("closestJob", closestJob);
 
@@ -185,9 +176,9 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
     rateLimits
   );
 
-  console.log("screenerDelay", screenerDelay);
+  console.log("screenerDelay", checkResult.timeSeconds);
   console.log("delaySeconds", delaySeconds);
-  return screenerDelay + delaySeconds;
+  return checkResult.timeSeconds + delaySeconds;
 }
 
 async function findScreenerQueueJobClosestInDelay(
