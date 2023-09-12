@@ -19,7 +19,7 @@ import {
 import { ethers } from "ethers";
 import ERC20_ABI from "./abis/ERC20.json";
 
-const SWAP_ROUTER_ADDRESS = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
+const UniswapV3_NAME = "uniswapV3";
 
 export interface UniswapV3PluginMethods {
   getSwapRouter(): AlphaRouter;
@@ -71,6 +71,14 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
       const prom = new Promise<BuilderItemToProcess>(
         async (resolve, reject) => {
           try {
+            const swapRouterAddress =
+              this.config.protocolAllowlist.get(UniswapV3_NAME)?.address;
+            if (!swapRouterAddress) {
+              throw new Error(
+                `UniswapV3 not supported on chain with id: ${this._op.chainId}`
+              );
+            }
+
             const router = this.getSwapRouter();
             const handlerAddress = this.config.handlerAddress();
 
@@ -128,7 +136,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             };
 
             const swapAction: Action = {
-              contractAddress: SWAP_ROUTER_ADDRESS,
+              contractAddress: swapRouterAddress,
               encodedFunction: route.methodParameters!.calldata,
             };
 
@@ -145,15 +153,14 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             // If router contract doesn't have high enough allowance, set to max for handler ->
             // router. Anyone can set allowance on handler so might as well set to max.
             if (
-              (
-                await erc20InContract.allowance(SWAP_ROUTER_ADDRESS)
-              ).toBigInt() < inAmount
+              (await erc20InContract.allowance(swapRouterAddress)).toBigInt() <
+              inAmount
             ) {
               const approveAction: Action = {
                 contractAddress: tokenIn,
                 encodedFunction: erc20InContract.interface.encodeFunctionData(
                   "approve",
-                  [SWAP_ROUTER_ADDRESS, ethers.constants.MaxUint256]
+                  [swapRouterAddress, ethers.constants.MaxUint256]
                 ),
               };
 
