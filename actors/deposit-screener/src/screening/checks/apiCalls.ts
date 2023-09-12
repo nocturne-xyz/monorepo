@@ -151,23 +151,6 @@ export const API_CALLS = {
     console.log(misttrackResponse.data);
     return misttrackResponse.data;
   },
-  DUMMY_TRM_SCREENING_ADDRESSES: async (deposit: ScreeningDepositRequest) => {
-    // todo figure out how to check address object membership from json import
-    const data = {} as TrmData; // ! TODO
-    return await Promise.resolve(data);
-  },
-  DUMMY_MISTTRACK_ADDRESS_RISK_SCORE: async (
-    deposit: ScreeningDepositRequest
-  ) => {
-    const data = {} as MisttrackRiskScoreData; // ! TODO
-    return await Promise.resolve(data);
-  },
-  DUMMY_MISTTRACK_ADDRESS_OVERVIEW: async (
-    deposit: ScreeningDepositRequest
-  ) => {
-    const data = {} as MisttrackAddressOverviewData; // ! TODO
-    return await Promise.resolve(data);
-  },
   IDENTITY: async (deposit: ScreeningDepositRequest) => deposit,
 } as const;
 
