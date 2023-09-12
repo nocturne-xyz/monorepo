@@ -94,7 +94,7 @@ export class CompositeRule<T extends ReadonlyArray<keyof ApiMap>>
   public readonly name: string;
   private partials: CombinedRulesParams<T>["partials"];
   private action: CombinedRulesParams<T>["action"];
-  private predicateFn: "some" | "every"; //
+  private predicateFn: "some" | "every"; // corresponds to Array.prototype's `some` and `every`
 
   constructor(params: CombinedRulesParams<T>) {
     this.name = `Composite(${params.partials.map((r) => r.name).join(", ")}):${

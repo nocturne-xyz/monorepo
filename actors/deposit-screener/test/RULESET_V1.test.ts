@@ -152,13 +152,13 @@ describe("RULESET_V1", () => {
     //     reason: "Score > 80 AND phishing/theft has > 0 attributions",
     //   });
     // });
-    // it("", async () => {
-    //   const result = await RULESET_V1.check(formDepositInfo(ADDRESSES.TC_5));
-    //   expect(result).to.deep.equal({
-    //     type: "Delay",
-    //     timeSeconds: 36000,
-    //   });
-    // });
+    it("", async () => {
+      const result = await RULESET_V1.check(formDepositInfo(ADDRESSES.TC_5));
+      expect(result).to.deep.equal({
+        type: "Delay",
+        timeSeconds: 36000,
+      });
+    });
     // it("", async () => {
     //   const result = await RULESET_V1.check(formDepositInfo(ADDRESSES.TC_6));
     //   expect(result).to.deep.equal({
@@ -173,20 +173,21 @@ describe("RULESET_V1", () => {
     //     reason: "Score > 80 AND phishing/theft has > 0 attributions",
     //   });
     // });
+
     // it("", async () => {
     //   const result = await RULESET_V1.check(formDepositInfo(ADDRESSES.AZTEC_1));
     //   expect(result).to.deep.equal({
     //     RESULT: "RESULT!",
     //   });
     // });
-    // it("", async () => {
-    //   const result = await RULESET_V1.check(formDepositInfo(ADDRESSES.AZTEC_2));
-    //   console.log("AZTEC 2", result);
-    //   expect(result).to.deep.equal({
-    //     type: "Delay",
-    //     timeSeconds: 36000,
-    //   });
-    // });
+    it("", async () => {
+      const result = await RULESET_V1.check(formDepositInfo(ADDRESSES.AZTEC_2));
+      console.log("AZTEC 2", result);
+      expect(result).to.deep.equal({
+        type: "Delay",
+        timeSeconds: 36000,
+      });
+    });
     // it("", async () => {
     //   const result = await RULESET_V1.check(formDepositInfo(ADDRESSES.AZTEC_3));
     //   expect(result).to.deep.equal({
