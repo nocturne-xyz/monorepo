@@ -1,21 +1,20 @@
-import { Request, RequestHandler, Response } from "express";
-import { tryParseQuoteRequest } from "./request";
-import { Logger } from "winston";
-import {
-  estimateSecondsUntilDepositCompletion,
-  estimateSecondsUntilCompletionForProspectiveDeposit,
-} from "./waitEstimation";
-import { ScreenerDelayCalculator } from "./screenerDelay";
 import {
   Address,
-  DepositStatusResponse,
   DepositQuoteResponse,
   DepositRequestStatus,
+  DepositStatusResponse,
 } from "@nocturne-xyz/core";
-import { ScreeningApi } from "./screening";
-import { DepositScreenerDB } from "./db";
 import { Queue } from "bullmq";
+import { Request, RequestHandler, Response } from "express";
+import { Logger } from "winston";
+import { DepositScreenerDB } from "./db";
+import { tryParseQuoteRequest } from "./request";
+import { ScreeningCheckerApi } from "./screening";
 import { DepositRequestJobData } from "./types";
+import {
+  estimateSecondsUntilCompletionForProspectiveDeposit,
+  estimateSecondsUntilDepositCompletion,
+} from "./waitEstimation";
 
 export interface DepositStatusHandlerDeps {
   db: DepositScreenerDB;
@@ -67,8 +66,7 @@ export function makeDepositStatusHandler({
 
 export interface QuoteHandlerDeps {
   logger: Logger;
-  screeningApi: ScreeningApi;
-  screenerDelayCalculator: ScreenerDelayCalculator;
+  screeningApi: ScreeningCheckerApi;
   screenerQueue: Queue<DepositRequestJobData>;
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
   rateLimits: Map<Address, bigint>;
@@ -77,7 +75,6 @@ export interface QuoteHandlerDeps {
 export function makeQuoteHandler({
   logger,
   screeningApi,
-  screenerDelayCalculator,
   screenerQueue,
   fulfillerQueues,
   rateLimits,
@@ -107,7 +104,6 @@ export function makeQuoteHandler({
       quote = await estimateSecondsUntilCompletionForProspectiveDeposit(
         {
           screeningApi,
-          screenerDelayCalculator,
           screenerQueue,
           fulfillerQueues,
           rateLimits,
