@@ -137,8 +137,8 @@ export function toSignableOperation(
   const confJoinSplits: SignableJoinSplit[] = [];
   for (const js of joinSplits) {
     if (js.publicSpend > 0n) {
-      const assetIndex = trackedAssets.findIndex((a) =>
-        AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
+      const assetIndex = trackedAssets.findIndex((tracked) =>
+        AssetTrait.isSameEncodedAsset(tracked.encodedAsset, js.encodedAsset)
       );
       pubJoinSplits.push({
         joinSplit: {
@@ -208,8 +208,8 @@ export function toSubmittableOperation(
   const confJoinSplits: SubmittableJoinSplit[] = [];
   for (const js of joinSplits) {
     if (js.publicSpend > 0n) {
-      const assetIndex = trackedAssets.findIndex((a) =>
-        AssetTrait.isSameEncodedAsset(a.encodedAsset, js.encodedAsset)
+      const assetIndex = trackedAssets.findIndex((tracked) =>
+        AssetTrait.isSameEncodedAsset(tracked.encodedAsset, js.encodedAsset)
       );
       pubJoinSplits.push({
         joinSplit: {
@@ -266,7 +266,7 @@ export function getTrackedAssets(
   const assets: TrackedAsset[] = [
     ...joinSplits.map(({ encodedAsset }) => ({
       encodedAsset,
-      minRefundValue: 0n, // TODO: this should be OK so long as users don't unwrap more tokens than they intend to spend, this is why we do not expose unwraps directly to end users, only plugins fns
+      minRefundValue: 0n, // NOTE: this should be OK so long as users don't unwrap more tokens than they intend to spend, this is why we do not expose unwraps directly to end consumers, only plugins fns which ensure just the minimum amount is unwrapped
     })),
     ...refunds.map(({ encodedAsset, minRefundValue }) => ({
       encodedAsset,
