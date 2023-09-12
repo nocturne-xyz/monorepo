@@ -1,6 +1,5 @@
 import { ScreeningDepositRequest } from "../src";
 import { RuleParams, RuleSet } from "../src/screening/checks/RuleSet";
-
 import { expect } from "chai";
 
 const DELAY_50_ALWAYS: RuleParams<"NOOP"> = {

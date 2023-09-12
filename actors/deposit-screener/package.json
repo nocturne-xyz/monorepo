@@ -26,7 +26,7 @@
     "prettier:check": "prettier --check ./src",
     "prettier:write": "prettier --write ./src",
     "screener-cli": "npx ts-node src/cli/index.ts",
-    "test:unit": "yarn dev:env && mocha --timeout 20000 -r ts-node/register test/** -r dotenv/config"
+    "test:unit": "yarn dev:env && mocha --timeout 20000 -r ts-node/register test/** --exclude test/snapshots/** -r dotenv/config"
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
