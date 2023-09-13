@@ -17,6 +17,7 @@ export interface TrmAddressRiskIndicator {
   riskType: "COUNTERPARTY" | "OWNERSHIP" | "INDIRECT";
   totalVolumeUsd: string;
 }
+
 export interface TrmData {
   externalId: string | null;
   addressIncomingVolumeUsd: string;
@@ -87,7 +88,7 @@ const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";
 const TRM_API_KEY = process.env.TRM_API_KEY ?? "";
 const MISTTRACK_API_KEY = process.env.MISTTRACK_API_KEY ?? "";
 
-export const API_CALLS = {
+export const API_CALL_MAP = {
   TRM_SCREENING_ADDRESSES: async (
     deposit: ScreeningDepositRequest
   ): Promise<TrmData> => {
@@ -153,7 +154,7 @@ export const API_CALLS = {
   IDENTITY: async (deposit: ScreeningDepositRequest) => deposit,
 } as const;
 
-export type ApiCallKeys = keyof typeof API_CALLS;
-export type ApiMap = {
-  [K in ApiCallKeys]: Awaited<ReturnType<(typeof API_CALLS)[K]>>;
+export type ApiCallNames = keyof typeof API_CALL_MAP;
+export type ApiCallToReturnType = {
+  [K in ApiCallNames]: Awaited<ReturnType<(typeof API_CALL_MAP)[K]>>;
 };

@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import { ScreeningDepositRequest } from "../src";
+import { CachedApiCallData } from "../src/screening/checks/RuleSet";
 import { RULESET_V1 } from "../src/screening/checks/v1/RULESET_V1";
-import apiCallsSnapshot from "./snapshots/apiCallsSnapshot.json";
-import { ApiCallKeys, CallReturnData } from "../src/screening/checks/apiCalls";
+import apiCallsSnapshot from "./snapshots/apiCallsSnapshot09-13-2023.json";
 
 // Address contexts provided in: notion.so/nocturnelabs/Compliance-Provider-Evaluation-9ffe8bbf698f420498eba9e782e93b6d
 
@@ -43,13 +43,13 @@ export const APPROVE_ADDRESSES = {
   AZTEC_3: "0xa0bE23dB857262c8ff29763930fCD04Cc621FcCA",
 } as const;
 
-type Addresses =
+type ScreeningTestCaseAddresses =
   | (typeof REJECT_ADDRESSES)[keyof typeof REJECT_ADDRESSES]
   | (typeof APPROVE_ADDRESSES)[keyof typeof APPROVE_ADDRESSES];
 
 const MOCK_API_CALLS = apiCallsSnapshot as Record<
-  Addresses,
-  Partial<Record<ApiCallKeys, CallReturnData>>
+  ScreeningTestCaseAddresses,
+  CachedApiCallData
 >;
 
 describe("RULESET_V1", () => {

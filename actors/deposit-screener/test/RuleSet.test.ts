@@ -1,5 +1,9 @@
 import { ScreeningDepositRequest } from "../src";
-import { RuleParams, RuleSet } from "../src/screening/checks/RuleSet";
+import {
+  CombinedRulesParams,
+  RuleParams,
+  RuleSet,
+} from "../src/screening/checks/RuleSet";
 import { expect } from "chai";
 
 const DELAY_50_ALWAYS: RuleParams<"IDENTITY"> = {
@@ -26,8 +30,10 @@ const DELAY_10000000_NEVER: RuleParams<"IDENTITY"> = {
   action: { type: "Delay", operation: "Add", valueSeconds: 10000000 },
 };
 
-const COMBINED_RULE_ANY = {
-  partials: [
+const COMBINED_RULE_ANY: CombinedRulesParams<
+  ["IDENTITY", "IDENTITY", "IDENTITY"]
+> = {
+  partialRules: [
     {
       name: "NEVER_TRUE",
       call: "IDENTITY",
