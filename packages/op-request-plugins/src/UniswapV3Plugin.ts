@@ -147,7 +147,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               minRefundValue: BigInt(
                 JSBI.divide(
                   route.quote.numerator,
-                  route.quote.numerator
+                  route.quote.denominator
                 ).toString()
               ), // TODO: this may not be forgiving accounting for slippage, may cause swap reverts
             };
