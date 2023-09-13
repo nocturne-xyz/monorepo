@@ -1,4 +1,5 @@
 import { ScreeningDepositRequest } from "..";
+import "dotenv/config";
 
 export interface TrmAddressRiskIndicator {
   category: string;
@@ -16,8 +17,9 @@ export interface TrmAddressRiskIndicator {
   riskType: "COUNTERPARTY" | "OWNERSHIP" | "INDIRECT";
   totalVolumeUsd: string;
 }
+
 export interface TrmData {
-  externalId: string;
+  externalId: string | null;
   addressIncomingVolumeUsd: string;
   addressOutgoingVolumeUsd: string;
   addressTotalVolumeUsd: string;
@@ -79,33 +81,23 @@ export type MisttrackApiResponse<T extends MisttrackData> =
       data: T;
     };
 
-export interface DummyTrmData {
-  risk: number;
-}
-export interface DummyMisttrackData {
-  misttrackRisk: number;
-}
-
-export type CallReturnData =
-  | TrmData
-  | MisttrackData
-  | DummyTrmData
-  | DummyMisttrackData
-  | ScreeningDepositRequest;
+export type CallReturnData = TrmData | MisttrackData | ScreeningDepositRequest;
 
 const TRM_BASE_URL = "https://api.trmlabs.com/public/v2";
 const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";
-const TRM_API_KEY = ""; // TODO get from env, once we start paying for TRM
-const MISTTRACK_API_KEY = "YourApiKey";
+const TRM_API_KEY = process.env.TRM_API_KEY ?? "";
+const MISTTRACK_API_KEY = process.env.MISTTRACK_API_KEY ?? "";
 
-export const API_CALLS = {
+export const API_CALL_MAP = {
   TRM_SCREENING_ADDRESSES: async (
     deposit: ScreeningDepositRequest
   ): Promise<TrmData> => {
-    const body = JSON.stringify({
-      address: deposit.spender,
-      chain: "ethereum",
-    });
+    const body = JSON.stringify([
+      {
+        address: deposit.spender,
+        chain: "ethereum",
+      },
+    ]);
     const response = await fetch(`${TRM_BASE_URL}/screening/addresses`, {
       method: "POST",
       headers: {
@@ -116,17 +108,20 @@ export const API_CALLS = {
       },
       body,
     });
-    const data = (await response.json())[0] as TrmData;
+    const jsonResponse = await response.json();
+    if (jsonResponse["code"] === 400) {
+      throw new Error(`Bad Request: ${jsonResponse["errors"]}`);
+    }
+    const data = jsonResponse[0] as TrmData;
     console.log(data);
     return data;
   },
-  // TODO deal with copypasta code
   MISTTRACK_ADDRESS_OVERVIEW: async (
-    deposit: ScreeningDepositRequest,
-    token = "ETH"
+    deposit: ScreeningDepositRequest
   ): Promise<MisttrackAddressOverviewData> => {
+    const token = "ETH";
     const response = await fetch(
-      `${MISTTRACK_BASE_URL}/address_overview?coin=${token}address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+      `${MISTTRACK_BASE_URL}/address_overview?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
     );
     const misttrackResponse =
       (await response.json()) as MisttrackApiResponse<MisttrackAddressOverviewData>;
@@ -156,20 +151,10 @@ export const API_CALLS = {
     console.log(misttrackResponse.data);
     return misttrackResponse.data;
   },
-  DUMMY_TRM_SCREENING_ADDRESSES: async (deposit: ScreeningDepositRequest) => {
-    console.log(deposit);
-    return await Promise.resolve({ risk: 0.5 });
-  },
-  DUMMY_MISTTRACK_ADDRESS_RISK_SCORE: async (
-    deposit: ScreeningDepositRequest
-  ) => {
-    console.log(deposit);
-    return await Promise.resolve({ misttrackRisk: 0.5 });
-  },
   IDENTITY: async (deposit: ScreeningDepositRequest) => deposit,
 } as const;
 
-export type ApiCallKeys = keyof typeof API_CALLS;
-export type ApiMap = {
-  [K in ApiCallKeys]: Awaited<ReturnType<(typeof API_CALLS)[K]>>;
+export type ApiCallNames = keyof typeof API_CALL_MAP;
+export type ApiCallToReturnType = {
+  [K in ApiCallNames]: Awaited<ReturnType<(typeof API_CALL_MAP)[K]>>;
 };

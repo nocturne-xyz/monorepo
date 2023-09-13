@@ -124,7 +124,7 @@ const SHORT_WALLET_HISTORY_DELAY: RuleParams<"MISTTRACK_ADDRESS_OVERVIEW"> = {
 const SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY: CombinedRulesParams<
   ["MISTTRACK_ADDRESS_OVERVIEW", "MISTTRACK_ADDRESS_OVERVIEW"]
 > = {
-  partials: [
+  partialRules: [
     shortWalletHistoryPartial,
     {
       name: "SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY",
@@ -149,12 +149,12 @@ const SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY: CombinedRulesParams<
 const SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY: CombinedRulesParams<
   ["MISTTRACK_ADDRESS_OVERVIEW", "MISTTRACK_ADDRESS_RISK_SCORE"]
 > = {
-  partials: [
+  partialRules: [
     shortWalletHistoryPartial,
     {
-      name: "SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY",
+      name: "MIXER_USAGE_DELAY",
       call: "MISTTRACK_ADDRESS_RISK_SCORE",
-      threshold: (data: MisttrackRiskScoreData) => includesMixerUsage(data),
+      threshold: (data) => includesMixerUsage(data),
     },
   ],
   action: {
