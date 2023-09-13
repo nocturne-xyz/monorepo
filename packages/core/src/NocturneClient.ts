@@ -21,7 +21,11 @@ import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
 import { SDKSyncAdapter, TotalEntityIndexTrait } from "./sync";
 import { SyncOpts, syncSDK } from "./syncSDK";
-import { getJoinSplitRequestTotalValue, unzip } from "./utils";
+import {
+  MapWithObjectKeys,
+  getJoinSplitRequestTotalValue,
+  unzip,
+} from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
 import { getMerkleIndicesAndNfsFromOp } from "./utils/misc";
@@ -144,7 +148,7 @@ export class NocturneClient {
   async hasEnoughBalanceForOperationRequest(
     opRequest: OperationRequest
   ): Promise<boolean> {
-    const assetRequestedAmounts = new Map<Asset, bigint>();
+    const assetRequestedAmounts = new MapWithObjectKeys<Asset, bigint>();
     for (const joinSplitRequest of opRequest.joinSplitRequests) {
       const asset = joinSplitRequest.asset;
       let currentAmount = assetRequestedAmounts.get(asset) || 0n;

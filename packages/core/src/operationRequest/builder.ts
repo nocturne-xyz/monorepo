@@ -23,7 +23,7 @@ import {
   OperationMetadataItem,
 } from "../primitives";
 import { ethers } from "ethers";
-import { groupByArr } from "../utils";
+import { MapWithObjectKeys, groupByArr } from "../utils";
 import { chainIdToNetworkName } from "../utils/constants";
 import * as JSON from "bigint-json-serialization";
 
@@ -255,15 +255,16 @@ export function newOpRequestBuilder(
     },
 
     async build(): Promise<OperationRequestWithMetadata> {
-      const joinSplitsAndPaymentsByAsset: Map<
+      const joinSplitsAndPaymentsByAsset: MapWithObjectKeys<
         Asset,
         JoinSplitsAndPaymentsForAsset
-      > = new Map();
+      > = new MapWithObjectKeys();
       const metadata: OperationMetadata = {
         items: [],
       };
 
       // Await any promises resolving to items to process, then process items
+      // const ioAmounts = new MapWithObjectKeys<Asset, bigint>(); // stringified asset ->
       for (const prom of this._builderItemsToProcess) {
         const result = await prom;
 
@@ -368,6 +369,7 @@ export function newOpRequestBuilder(
       this._op.joinSplitRequests = consolidatedJoinSplitRequests;
 
       // consolidate refunds by asset
+      // TODO: REMOVE
       const consolidatedRefunds: ExpectedRefund[] = groupByArr(
         this._op.refunds,
         (r) => JSON.stringify(r.encodedAsset)
