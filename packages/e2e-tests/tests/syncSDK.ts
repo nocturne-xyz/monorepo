@@ -168,8 +168,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       const chainId = BigInt((await provider.getNetwork()).chainId);
       const builder = newOpRequestBuilder(provider, chainId, config);
       const opRequest = await builder
-        .unwrap(asset, 80n)
-        .action(token.address, transfer)
+        .__unwrap(asset, 80n)
+        .__action(token.address, transfer)
         .gasPrice(GAS_PRICE)
         .deadline(
           BigInt((await provider.getBlock("latest")).timestamp) +

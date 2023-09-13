@@ -104,8 +104,8 @@ describe("Optimistic nullifier tracking", () => {
     // make op request spending 200 tokens
     const amountToSpend = 200n;
     const opRequest = await newOpRequestBuilder(eoa.provider, 31337n, config)
-      .unwrap(erc20Asset, amountToSpend)
-      .action(erc20.address, encodedTransfer)
+      .__unwrap(erc20Asset, amountToSpend)
+      .__action(erc20.address, encodedTransfer)
       .gasPrice(0n)
       .deadline(
         BigInt((await depositManager.provider.getBlock("latest")).timestamp) +
@@ -223,8 +223,8 @@ describe("Optimistic nullifier tracking", () => {
     // make op request spending 200 tokens
     const amountToSpend = 200n;
     const opRequest = await newOpRequestBuilder(eoa.provider, 31337n)
-      .unwrap(erc20Asset, amountToSpend)
-      .action(erc20.address, encodedTransfer)
+      .__unwrap(erc20Asset, amountToSpend)
+      .__action(erc20.address, encodedTransfer)
       .gasPrice(0n)
       .deadline(
         BigInt((await depositManager.provider.getBlock("latest")).timestamp) +
