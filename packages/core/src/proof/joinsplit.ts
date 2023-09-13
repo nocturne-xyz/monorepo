@@ -1,7 +1,7 @@
-import { BN254ScalarField } from "@nocturne-xyz/crypto-utils";
-import { decomposeCompressedPoint } from "../crypto";
-import { CompressedStealthAddress } from "../crypto/address";
-import { EncodedNote } from "../primitives";
+import { BN254ScalarField, poseidonBN } from "@nocturne-xyz/crypto-utils";
+import { compressPoint, decomposeCompressedPoint } from "../crypto";
+import { CanonAddress, CompressedStealthAddress } from "../crypto/address";
+import { EncodedNote, SENDER_COMMITMENT_DOMAIN_SEPARATOR } from "../primitives";
 import { BaseProof, MerkleProofInput } from "./types";
 import * as ethers from "ethers";
 
@@ -19,6 +19,14 @@ export const JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
       ethers.utils.keccak256(ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_NONCE"))
     )
   );
+
+export const NULLIFIER_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
+  BigInt(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("NULLIFIER")))
+);
+
+export const NEW_NOTE_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
+  BigInt(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("NEW_NOTE_NONCE")))
+);
 
 export interface JoinSplitProver {
   proveJoinSplit(
@@ -164,5 +172,59 @@ export function encodeOldNoteMerkleIndicesWithSignBits(
     (senderSignBit << 64n) |
     (BigInt(oldNoteBIndex) << 32n) |
     BigInt(oldNoteAIndex)
+  );
+}
+
+export function computeSenderCommitment(
+  senderCanonAddr: CanonAddress,
+  newNoteBNonce: bigint
+): bigint {
+  return poseidonBN(
+    [senderCanonAddr.x, senderCanonAddr.y, newNoteBNonce],
+    SENDER_COMMITMENT_DOMAIN_SEPARATOR
+  );
+}
+
+export function computeJoinSplitInfoNonce(
+  nullifierA: bigint,
+  vk: bigint
+): bigint {
+  return poseidonBN([vk, nullifierA], JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR);
+}
+
+export function computeJoinSplitInfoCommitment(
+  senderCanonAddr: CanonAddress,
+  receiverCanonAddr: CanonAddress,
+  oldNoteAIndex: number,
+  oldNoteBIndex: number,
+  noteBIsDummy: boolean,
+  newNoteAValue: bigint,
+  newNoteBValue: bigint,
+  nullifierA: bigint,
+  vk: bigint
+): bigint {
+  const [senderSign, senderY] = decomposeCompressedPoint(
+    compressPoint(senderCanonAddr)
+  );
+  const [receiverSign, receiverY] = decomposeCompressedPoint(
+    compressPoint(receiverCanonAddr)
+  );
+
+  return poseidonBN(
+    [
+      senderY,
+      receiverY,
+      encodeOldNoteMerkleIndicesWithSignBits(
+        oldNoteAIndex,
+        oldNoteBIndex,
+        senderSign,
+        receiverSign,
+        noteBIsDummy
+      ),
+      newNoteAValue,
+      newNoteBValue,
+      computeJoinSplitInfoNonce(nullifierA, vk),
+    ],
+    JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR
   );
 }

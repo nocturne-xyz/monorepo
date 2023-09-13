@@ -11,7 +11,6 @@ import {
   Asset,
   AssetTrait,
   PreSignOperation,
-  SENDER_COMMITMENT_DOMAIN_SEPARATOR,
 } from "./primitives";
 import {
   NocturneViewer,
@@ -20,8 +19,6 @@ import {
   encryptNote,
   randomFr,
   CompressedStealthAddress,
-  compressPoint,
-  decomposeCompressedPoint,
 } from "./crypto";
 import { MerkleProofInput } from "./proof";
 import {
@@ -32,11 +29,9 @@ import {
   groupByArr,
 } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
-import { poseidonBN } from "@nocturne-xyz/crypto-utils";
 import {
-  JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR,
-  JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR,
-  encodeOldNoteMerkleIndicesWithSignBits,
+  computeJoinSplitInfoCommitment,
+  computeSenderCommitment,
 } from "./proof/joinsplit";
 
 export const __private = {
@@ -340,42 +335,23 @@ async function makeJoinSplit(
 
   // commit to the sender's canonical address
   const senderCanonAddr = viewer.canonicalAddress();
-  const senderCommitment = poseidonBN([
-    SENDER_COMMITMENT_DOMAIN_SEPARATOR,
-    senderCanonAddr.x,
-    senderCanonAddr.y,
-    newNoteB.nonce,
-  ]);
-
-  // compute nonce to blind joinsplit info commitment
-  const joinSplitInfoNonce = poseidonBN([
-    JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR,
-    nullifierA,
-    viewer.vk,
-  ]);
+  const senderCommitment = computeSenderCommitment(
+    senderCanonAddr,
+    newNoteB.nonce
+  );
 
   // compute joinsplit info commitment
-  const [senderSign, senderY] = decomposeCompressedPoint(
-    compressPoint(senderCanonAddr)
-  );
-  const [receiverSign, receiverY] = decomposeCompressedPoint(
-    compressPoint(receiver)
-  );
-  const joinSplitInfoCommitment = poseidonBN([
-    JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR,
-    senderY,
-    receiverY,
-    encodeOldNoteMerkleIndicesWithSignBits(
-      oldNoteAIndex,
-      oldNoteBIndex,
-      senderSign,
-      receiverSign,
-      noteBIsDummy
-    ),
+  const joinSplitInfoCommitment = computeJoinSplitInfoCommitment(
+    senderCanonAddr,
+    receiver,
+    oldNoteAIndex,
+    oldNoteBIndex,
+    noteBIsDummy,
     newNoteA.value,
     newNoteB.value,
-    joinSplitInfoNonce,
-  ]);
+    nullifierA,
+    viewer.vk
+  );
 
   return {
     receiver,

@@ -23,7 +23,7 @@
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
-    "@nocturne-xyz/crypto-utils": "^0.3.0",
+    "@nocturne-xyz/crypto-utils": "workspace:^",
     "@types/randombytes": "^2.0.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "async-retry": "^1.3.3",

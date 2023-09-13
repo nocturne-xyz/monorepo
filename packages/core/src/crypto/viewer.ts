@@ -5,6 +5,10 @@ import { IncludedNote, Note, NoteTrait } from "../primitives/note";
 import { EncryptedNote } from "../primitives/types";
 import { decryptNote } from "./noteEncryption";
 import { randomFr } from "./utils";
+import {
+  NEW_NOTE_NONCE_DOMAIN_SEPARATOR,
+  NULLIFIER_DOMAIN_SEPARATOR,
+} from "../proof/joinsplit";
 
 export class NocturneViewer {
   vk: ViewingKey;
@@ -44,11 +48,14 @@ export class NocturneViewer {
       );
     }
 
-    return poseidonBN([NoteTrait.toCommitment(note), this.vk]);
+    return poseidonBN(
+      [NoteTrait.toCommitment(note), this.vk],
+      NULLIFIER_DOMAIN_SEPARATOR
+    );
   }
 
   generateNewNonce(oldNullifier: bigint): bigint {
-    return poseidonBN([this.vk, oldNullifier]);
+    return poseidonBN([this.vk, oldNullifier], NEW_NOTE_NONCE_DOMAIN_SEPARATOR);
   }
 
   isOwnAddress(addr: StealthAddress): boolean {
