@@ -18,6 +18,7 @@ import {
   Address,
   Asset,
   AssetTrait,
+  ExpectedRefund,
   OperationMetadata,
   OperationMetadataItem,
 } from "../primitives";
@@ -59,14 +60,14 @@ export interface BaseOpRequestBuilder {
 
   // add an action  to the operation
   // returns `this` so it's chainable
-  /// CAUTION: this is a low-level method that should only be used by plugins
+  // CAUTION: this is a low-level method that should only be used by plugins
   __action(contractAddress: Address, encodedFunction: string): this;
 
   // specify the operation should unwrap `amountUnits` of `asset`
   // `ammountUnits` is the amount in EVM (uint256) representation. It is up to
   // the caller to handle decimal conversions
   // returns `this` so it's chainable
-  /// CAUTION: this is a low-level method that should only be used by plugins
+  // CAUTION: this is a low-level method that should only be used by plugins
   __unwrap(asset: Asset, amountUnits: bigint): this;
 
   // add a confidential payment to the operation
@@ -78,7 +79,7 @@ export interface BaseOpRequestBuilder {
   ): this;
 
   // indicates that the operation expects a refund of asset `Asset`.
-  /// CAUTION: this is a low-level method that should only be used by plugins
+  // CAUTION: this is a low-level method that should only be used by plugins
   __refund(refund: RefundRequest): this;
 
   // set the operation's `refundAddr` stealth address up-front.
@@ -315,7 +316,7 @@ export function newOpRequestBuilder(
       }
 
       // consolidate joinSplits and payments for each asset
-      const joinSplitRequests = [];
+      const consolidatedJoinSplitRequests = [];
       for (const [
         asset,
         [joinSplits, payments],
@@ -341,9 +342,9 @@ export function newOpRequestBuilder(
           const joinSplit = joinSplits.pop();
           if (joinSplit) {
             joinSplit.payment = payment;
-            joinSplitRequests.push(joinSplit);
+            consolidatedJoinSplitRequests.push(joinSplit);
           } else {
-            joinSplitRequests.push({
+            consolidatedJoinSplitRequests.push({
               asset,
               unwrapValue: 0n,
               payment,
@@ -357,14 +358,30 @@ export function newOpRequestBuilder(
             (acc, joinSplit) => acc + joinSplit.unwrapValue,
             0n
           );
-          joinSplitRequests.push({
+          consolidatedJoinSplitRequests.push({
             asset,
             unwrapValue: value,
           });
         }
       }
+      this._op.joinSplitRequests = consolidatedJoinSplitRequests;
 
-      this._op.joinSplitRequests = joinSplitRequests;
+      // consolidate refunds by asset
+      const consolidatedRefunds: ExpectedRefund[] = groupByArr(
+        this._op.refunds,
+        (r) => r.encodedAsset.toString()
+      ).map((refundsForAsset) => {
+        const totalRefundValue = refundsForAsset.reduce(
+          (acc, refund) => acc + refund.minRefundValue,
+          0n
+        );
+
+        return {
+          encodedAsset: refundsForAsset[0].encodedAsset,
+          minRefundValue: totalRefundValue,
+        };
+      });
+      this._op.refunds = consolidatedRefunds;
 
       if (this._op.joinSplitRequests.length == 0) {
         throw new Error("No joinSplits or payments specified");

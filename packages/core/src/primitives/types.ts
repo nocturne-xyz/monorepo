@@ -109,10 +109,12 @@ export interface TrackedAsset {
   minRefundValue: bigint;
 }
 
+export type ExpectedRefund = TrackedAsset;
+
 export interface BaseOperation {
   networkInfo: NetworkInfo;
   refundAddr: CompressedStealthAddress;
-  refunds: TrackedAsset[];
+  refunds: ExpectedRefund[];
   actions: Action[];
   encodedGasAsset: EncodedAsset;
   gasAssetRefundThreshold: bigint;

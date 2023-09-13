@@ -4,8 +4,8 @@ import {
   Action,
   Address,
   Asset,
+  ExpectedRefund,
   OperationMetadata,
-  TrackedAsset,
 } from "../primitives";
 
 const ONE_DAY_SECONDS = 24 * 60 * 60;
@@ -19,7 +19,7 @@ export interface JoinSplitRequest {
 
 export type UnwrapRequest = Omit<JoinSplitRequest, "payment">;
 
-export interface RefundRequest extends Omit<TrackedAsset, "encodedAsset"> {
+export interface RefundRequest extends Omit<ExpectedRefund, "encodedAsset"> {
   asset: Asset;
 }
 
@@ -29,7 +29,7 @@ export interface ConfidentialPaymentRequest extends ConfidentialPayment {
 
 export interface OperationRequest {
   joinSplitRequests: JoinSplitRequest[];
-  refunds: TrackedAsset[];
+  refunds: ExpectedRefund[];
   actions: Action[];
   chainId: bigint;
   tellerContract: Address;
