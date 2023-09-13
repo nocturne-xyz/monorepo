@@ -289,7 +289,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("combines requests of same asset when no conf payments", async () => {
+  it("combines joinsplit requests of same asset when no conf payments", async () => {
     const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const refundAddr = signer.generateRandomStealthAddress();
@@ -328,6 +328,48 @@ describe("OpRequestBuilder", () => {
       .__unwrap(ponzi, 100n)
       .__unwrap(shitcoin, 100n)
       .__unwrap(ponzi, 100n)
+      .refundAddr(refundAddr)
+      .deadline(2n)
+      .build();
+
+    expect(opRequest.request).to.eql(expected);
+  });
+
+  it("combines refunds for same asset", async () => {
+    const sk = generateRandomSpendingKey();
+    const signer = new NocturneSigner(sk);
+    const refundAddr = signer.generateRandomStealthAddress();
+
+    const actions = range(2).map((i) => ({
+      contractAddress: DUMMY_CONTRACT_ADDR,
+      encodedFunction: getDummyHex(i),
+    }));
+    const expected: OperationRequest = {
+      joinSplitRequests: [
+        {
+          asset: shitcoin,
+          unwrapValue: 100n,
+        },
+      ],
+      refunds: [
+        { encodedAsset: AssetTrait.encode(ponzi), minRefundValue: 400n },
+      ],
+      refundAddr: refundAddr,
+      actions,
+      chainId: 1n,
+      tellerContract: DUMMY_CONFIG.tellerAddress(),
+      deadline: 2n,
+    };
+
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
+    const opRequest = await builder
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
+      .__unwrap(shitcoin, 100n)
+      .__refund({ asset: ponzi, minRefundValue: 100n })
+      .__refund({ asset: ponzi, minRefundValue: 100n })
+      .__refund({ asset: ponzi, minRefundValue: 200n })
       .refundAddr(refundAddr)
       .deadline(2n)
       .build();
