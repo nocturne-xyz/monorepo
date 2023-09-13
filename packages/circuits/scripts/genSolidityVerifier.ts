@@ -20,7 +20,7 @@ function generateSolidityContract(
   contractName: string
 ): string {
   const solidityTemplate = `
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
 import {Pairing} from "./libs/Pairing.sol";
