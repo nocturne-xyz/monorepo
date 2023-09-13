@@ -23,7 +23,6 @@ import {
 import { ethers } from "ethers";
 import { MapWithObjectKeys } from "../utils";
 import { chainIdToNetworkName } from "../utils/constants";
-// import * as JSON from "bigint-json-serialization";
 
 export type OpRequestBuilder = OpRequestBuilderExt<BaseOpRequestBuilder>;
 
