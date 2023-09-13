@@ -18,7 +18,18 @@
     [
       "weth",
       {
-        "address": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+        "address": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+        "globalCapWholeTokens": "1000n",
+        "maxDepositSizeWholeTokens": "100n",
+        "resetWindowHours": "4n",
+        "precision": "18n",
+        "isGasAsset": true
+      }
+    ],
+    [
+      "wsteth",
+      {
+        "address": "0x6320cd32aa674d2898a68ec82e869385fc5f7e2f",
         "globalCapWholeTokens": "1000n",
         "maxDepositSizeWholeTokens": "100n",
         "resetWindowHours": "4n",
@@ -29,7 +40,7 @@
     [
       "dai",
       {
-        "address": "0x3e622317f8c93f7328350cf0b56d9ed4c620c5d6",
+        "address": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844",
         "globalCapWholeTokens": "1000000n",
         "maxDepositSizeWholeTokens": "100000n",
         "resetWindowHours": "4n",
@@ -37,10 +48,25 @@
       }
     ]
   ],
-  "protocolAllowlist": [],
-  "leftoverTokenHolder": "0x0000000000000000000000000000000000000123",
+  "protocolAllowlist": [
+    [
+      "uniswapV3",
+      {
+        "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        "functionSignatures": [
+          "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))",
+          "exactInput((bytes,address,uint256,uint256,uint256))"
+        ]
+      }
+    ]
+  ],
+  "leftoverTokenHolder": "0x0000000000000000000000000000000000000000",
   "opts": {
     "useMockSubtreeUpdateVerifier": false,
+    "wstethAdapterDeployConfig": {
+      "wethAddress": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+      "wstethAddress": "0x6320cd32aa674d2898a68ec82e869385fc5f7e2f"
+    },
     "confirmations": 1
   }
 }
