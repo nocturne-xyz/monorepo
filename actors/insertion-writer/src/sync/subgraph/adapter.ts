@@ -1,23 +1,21 @@
 import {
   ClosableAsyncIterator,
-  IterSyncOpts,
   sleep,
   IncludedNote,
   IncludedEncryptedNote,
   NoteTrait,
   TreeConstants,
   maxArray,
-  SubgraphUtils,
   TotalEntityIndexTrait,
-  max,
   range,
 } from "@nocturne-xyz/core";
-import { TreeInsertionSyncAdapter } from "../syncAdapter";
+import {
+  TreeInsertionSyncAdapter,
+  TreeInsertionSyncOpts,
+} from "../syncAdapter";
 import { fetchTreeInsertions, fetchTeiFromMerkleIndex } from "./fetch";
 import { Logger } from "winston";
 import { Insertion } from "@nocturne-xyz/persistent-log";
-
-const { fetchLatestIndexedBlock } = SubgraphUtils;
 
 export class SubgraphTreeInsertionSyncAdapter
   implements TreeInsertionSyncAdapter
@@ -32,7 +30,7 @@ export class SubgraphTreeInsertionSyncAdapter
 
   iterInsertions(
     startMerkleIndex: number,
-    opts?: IterSyncOpts
+    opts?: TreeInsertionSyncOpts
   ): ClosableAsyncIterator<Insertion[]> {
     const endpoint = this.graphqlEndpoint;
     const logger = this.logger;
@@ -54,20 +52,6 @@ export class SubgraphTreeInsertionSyncAdapter
       // hack to get typescript to recognize that `_from` can't be `undefined` at this point
       let from = _from;
 
-      // function for throttling subgraph queries so that we don't bludgeon it to death:
-      // - if we're caught up, sleep for 5 seconds, because we're basically waiting for another block
-      // - if we're not caught up and `opts.throttleMs` was given sleep for `opts.throttleMs`
-      // - otherwise, sleep for 0 milliseconds
-      const maybeApplyThrottle = async (currentBlock: number) => {
-        const isCaughtUp =
-          from >=
-          TotalEntityIndexTrait.fromComponents({
-            blockNumber: BigInt(currentBlock),
-          });
-        const sleepDelay = max(opts?.throttleMs ?? 0, isCaughtUp ? 5000 : 0);
-        await sleep(sleepDelay);
-      };
-
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
         logger &&
           logger.info("fetching insertions", {
@@ -75,9 +59,7 @@ export class SubgraphTreeInsertionSyncAdapter
             fromBlock: TotalEntityIndexTrait.toComponents(from).blockNumber,
           });
 
-        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
-        await maybeApplyThrottle(latestIndexedBlock);
-
+        await sleep(opts?.throttleMs ?? 0);
         const insertions = await fetchTreeInsertions(endpoint, from);
 
         const sorted = insertions.sort(
@@ -148,16 +130,8 @@ export class SubgraphTreeInsertionSyncAdapter
           }
         } else {
           // otherwise, we've caught up and there's nothing more to fetch.
-          // set `from` to the entity index corresponding to the latest indexed block
-          // if it's greater than the current `from`.
-
-          // this is to prevent an busy loops in the case where the subgraph has indexed a block corresponding
-          // to a totalEntityIndex > `endTotalEntityIndex` but we haven't found any insertions in that block
-          const currentBlockTotalEntityIndex =
-            TotalEntityIndexTrait.fromBlockNumber(latestIndexedBlock);
-          if (currentBlockTotalEntityIndex > from) {
-            from = currentBlockTotalEntityIndex;
-          }
+          // sleep a bit longer and try again to avoid hammering the subgraph
+          await sleep(opts?.throttleOnEmptyMs ?? 0);
         }
       }
     };
