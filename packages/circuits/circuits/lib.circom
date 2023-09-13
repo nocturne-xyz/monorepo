@@ -325,3 +325,19 @@ template CompressPoint() {
     // get the "sign" bit by comparing x to (p-1)/2. If it's bigger, then we call it "negative"
     sign <== CompConstant(10944121435919637611123202872628637544274182200208017171849102093287904247808)(xBits);
 }
+
+// same as `Poseidon()`, but takes a constant as domain separator
+// and uses that as the initial sponge state
+// this is cheaper than using `Poseidon()` with an extra input
+template PoseidonWithDomainSeparator(nInputs, domainSeparator) {
+    signal input preimage[nInputs];
+    signal output out;
+
+    component sponge = PoseidonEx(nInputs, 1);
+    sponge.initialState <== domainSeparator;
+    for (var i = 0; i < nInputs; i++) {
+        sponge.inputs[i] <== preimage[i];
+    }
+
+    out <== sponge.out[0];
+}

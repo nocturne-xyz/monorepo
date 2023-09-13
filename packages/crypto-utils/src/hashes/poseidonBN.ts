@@ -23,7 +23,7 @@ const N_ROUNDS_P = [
 
 const pow5 = (a: bigint) => F.mul(a, F.square(F.square(a)));
 
-export function poseidonBN(inputs: bigint[]): bigint {
+export function poseidonBN(inputs: bigint[], initialState?: bigint): bigint {
   assert(inputs.length > 0);
   assert(inputs.length <= N_ROUNDS_P.length);
 
@@ -36,7 +36,7 @@ export function poseidonBN(inputs: bigint[]): bigint {
   const P = CONSTANTS_P[t - 2];
   const zero = F.Zero;
 
-  let state = [zero, ...inputs];
+  let state = [initialState ?? zero, ...inputs];
 
   state = state.map((a, i) => F.add(a, C[i]));
 

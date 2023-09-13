@@ -64,7 +64,7 @@ include "lib.circom";
 //      where `oldNoteAIndex` and `oldNoteBIndex` are computed from `pathA` and `pathB`,and `noteBIsDummy` is a single bit that's a `1` if note B is a dummy note and `0` otherwise
 // - `newNoteAValue`
 // - `newNoteBValue`
-// - `joinSplitInfoNonce`, defined as `Poseidon(keccak256("JOINSPLIT_INFO_NONCE") % p, nullifierA, vk)`
+// - `joinSplitInfoNonce`, defined as `Poseidon(keccak256("JOINSPLIT_INFO_NONCE") % p, vk, nullifierA)`
 template JoinSplit() {
     // *** PUBLIC INPUTS ***
     // digest of the operation this JoinSplit is a part of
@@ -373,6 +373,10 @@ template JoinSplit() {
     signal commitmentTreeRootB <== MerkleTreeInclusionProof(16)(oldNoteBCommitment, pathB, siblingsB);
     oldNoteBValue * (commitmentTreeRoot - commitmentTreeRootB) === 0;
 
+
+    // keccakk256("NULLIFIER") % p 
+    var NULLIFIER_DOMAIN_SEPARATOR = 624938365879860864124725276109956130503531086404788051782372112403658760742;
+
     // derive nullifier for oldNoteA
     //@satisfies(9.1)
     //@argument correct by definition of Nocturne's nullifier derivation
@@ -381,14 +385,14 @@ template JoinSplit() {
     // `vk` is the only possible viewing key that can be used to derive `nullifierA`.
     // therefore, by (9.3) and Poseidon collision resistance, `nullifierA` is the only possible nullifier that can be
     // derived for this note
-    nullifierA <== Poseidon(2)([oldNoteACommitment, vk]);
+    nullifierA <== PoseidonWithDomainSeparator(2, NULLIFIER_DOMAIN_SEPARATOR)([oldNoteACommitment, vk]);
 
     // derive nullifier for oldNoteB
     //@satisfies(9.2)
     //@argument correct by definition of Nocturne's nullifier derivation
     //@satsifes(9.4)
     //@argument same as (9.3)
-    nullifierB <== Poseidon(2)([oldNoteBCommitment, vk]);
+    nullifierB <== PoseidonWithDomainSeparator(2, NULLIFIER_DOMAIN_SEPARATOR)([oldNoteBCommitment, vk]);
 
 
     // check spend signature
@@ -396,8 +400,10 @@ template JoinSplit() {
     SigVerify()(spendPubkey, operationDigest, [c, z]);
 
     // deterministically derive nonce for outgoing notes
-    signal newNoteANonce <== Poseidon(2)([vk, nullifierA]);
-    signal newNoteBNonce <== Poseidon(2)([vk, nullifierB]);
+    // keccak256("NEW_NOTE_NONCE") % p
+    var NEW_NOTE_NONCE_DOMAIN_SEPARATOR = 10280686533006751903887122138624177312632532207046457339587660245394110285166;
+    signal newNoteANonce <== PoseidonWithDomainSeparator(2, NEW_NOTE_NONCE_DOMAIN_SEPARATOR)([vk, nullifierA]);
+    signal newNoteBNonce <== PoseidonWithDomainSeparator(2, NEW_NOTE_NONCE_DOMAIN_SEPARATOR)([vk, nullifierB]);
 
     // newNoteACommitment
     //@satisfies(3.1)
@@ -461,8 +467,10 @@ template JoinSplit() {
     //@argument @lemma(2) ensures `senderCanonAddr` is the correct canonical address derived from vk, and `senderCommitment` uses `senderCanonAddr` below
     //@satisfies(12.2)
     //@argument correct by definition (exactly what the code does)
+
+    // keccak256("SENDER_COMMITMENT") % p
     var SENDER_COMMITMENT_DOMAIN_SEPARATOR = 5680996188676417870015190585682285899130949254168256752199352013418366665222;
-    senderCommitment <== Poseidon(4)([SENDER_COMMITMENT_DOMAIN_SEPARATOR, senderCanonAddr[0], senderCanonAddr[1], newNoteBNonce]);
+    senderCommitment <== PoseidonWithDomainSeparator(3, SENDER_COMMITMENT_DOMAIN_SEPARATOR)([senderCanonAddr[0], senderCanonAddr[1], newNoteBNonce]);
 
     // compress sender and receiver
     //@satisfies(14)
@@ -493,11 +501,13 @@ template JoinSplit() {
     signal oldNoteBIsDummy <== IsZero()(oldNoteBValue);
     signal oldNoteMerkleIndicesWithSignBits <== oldNoteMerkleIndices + (1 << 64) * senderSignBit + (1 << 65) * receiverSignBit + (1 << 66) * oldNoteBIsDummy;
 
+    // keccak256("JOINSPLIT_INFO_NONCE") % p
     var JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = 8641380568873709859334930917483971124167266522634964152243775747603865574453;
+    // keccak256("JOINSPLIT_INFO_COMMITMENT") % p
     var JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR = 9902041836430008087134187177357348214750696281851093507858998440354218646130;
 
-    signal joinSplitInfoNonce <== Poseidon(3)([JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR, nullifierA, vk]);
-    joinSplitInfoCommitment <== Poseidon(7)([JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR, compressedSenderCanonAddrY, compressedReceiverCanonAddrY, oldNoteMerkleIndicesWithSignBits, newNoteAValue, newNoteBValue, joinSplitInfoNonce]);
+    signal joinSplitInfoNonce <== PoseidonWithDomainSeparator(2, JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR)([vk, nullifierA]);
+    joinSplitInfoCommitment <== PoseidonWithDomainSeparator(6, JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR)([compressedSenderCanonAddrY, compressedReceiverCanonAddrY, oldNoteMerkleIndicesWithSignBits, newNoteAValue, newNoteBValue, joinSplitInfoNonce]);
 }
 
 component main { public [pubEncodedAssetAddrWithSignBits, pubEncodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit();
