@@ -592,6 +592,7 @@ export class NocturneSdk implements NocturneSdkApi {
           refundAddrH1CompressedY,
           refundAddrH2CompressedY,
           senderCommitment: joinSplit.senderCommitment,
+          joinSplitInfoCommitment: joinSplit.joinSplitInfoCommitment,
         });
 
         const proof = unpackFromSolidityProof(joinSplit.proof);

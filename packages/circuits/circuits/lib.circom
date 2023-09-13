@@ -256,6 +256,7 @@ template Encrypt(n) {
 // takes `2n` bits and outputs n 2-bit limbs
 // interpreted in little-endian order
 //@requires(1) n < 127
+//@requires(2) each element of `bits` is a bit
 //@ensures(1) for all i in 0..n: limbs[i] == bits[i*2] + 2*bits[i*2 + 1]
 template BitsToTwoBitLimbs(n) {
     signal input bits[2*n];
@@ -264,6 +265,22 @@ template BitsToTwoBitLimbs(n) {
     for (var i = 0; i < n; i++) {
         limbs[i] <== bits[i*2] + 2*bits[i*2 + 1];
     }
+}
+
+// takes n 2-bit limbs and outputs 2n-bit number when interpreted in little-endian order
+//@requires(1) `limbs` are all 2-bit numbers
+//@requires(2) `n < 127`
+//@ensures(1) `num` is the 2n-bit number that result from performing the quaternary sum of `limbs` in little-endian order
+template TwoBitLimbsToNum(n) {
+    signal input limbs[n];
+    signal output num;
+
+    var sum = 0;
+    for (var i = 0; i < n; i++) {
+        sum += (1 << 2*i) * limbs[i];
+    }
+
+    num <== sum;
 }
 
 // slices first k elements out of an array of n elements
@@ -308,4 +325,20 @@ template CompressPoint() {
 
     // get the "sign" bit by comparing x to (p-1)/2. If it's bigger, then we call it "negative"
     sign <== CompConstant(10944121435919637611123202872628637544274182200208017171849102093287904247808)(xBits);
+}
+
+// same as `Poseidon()`, but takes a constant as domain separator
+// and uses that as the initial sponge state
+// this is cheaper than using `Poseidon()` with an extra input
+template PoseidonWithDomainSeparator(nInputs, domainSeparator) {
+    signal input preimage[nInputs];
+    signal output out;
+
+    component sponge = PoseidonEx(nInputs, 1);
+    sponge.initialState <== domainSeparator;
+    for (var i = 0; i < nInputs; i++) {
+        sponge.inputs[i] <== preimage[i];
+    }
+
+    out <== sponge.out[0];
 }

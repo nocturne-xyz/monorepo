@@ -1,7 +1,32 @@
-import { decomposeCompressedPoint } from "../crypto";
-import { CompressedStealthAddress } from "../crypto/address";
-import { EncodedNote } from "../primitives";
+import { BN254ScalarField, poseidonBN } from "@nocturne-xyz/crypto-utils";
+import { compressPoint, decomposeCompressedPoint } from "../crypto";
+import { CanonAddress, CompressedStealthAddress } from "../crypto/address";
+import { EncodedNote, SENDER_COMMITMENT_DOMAIN_SEPARATOR } from "../primitives";
 import { BaseProof, MerkleProofInput } from "./types";
+import * as ethers from "ethers";
+
+export const JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
+  BigInt(
+    ethers.utils.keccak256(
+      ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_COMMITMENT")
+    )
+  )
+);
+
+export const JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
+  BN254ScalarField.reduce(
+    BigInt(
+      ethers.utils.keccak256(ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_NONCE"))
+    )
+  );
+
+export const NULLIFIER_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
+  BigInt(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("NULLIFIER")))
+);
+
+export const NEW_NOTE_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
+  BigInt(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("NEW_NOTE_NONCE")))
+);
 
 export interface JoinSplitProver {
   proveJoinSplit(
@@ -24,6 +49,7 @@ export interface JoinSplitProofWithPublicSignals {
     bigint, // nullifierA
     bigint, // nullifierB
     bigint, // ssenderCommitment
+    bigint, // joinSplitInfoCommitment
     bigint, // operationDigest
     bigint, // pubEncodedAssetId
     bigint, // pubEncodedAssetAddrWithSignBits
@@ -45,6 +71,7 @@ export interface JoinSplitPublicSignals {
   refundAddrH1CompressedY: bigint;
   refundAddrH2CompressedY: bigint;
   senderCommitment: bigint;
+  joinSplitInfoCommitment: bigint;
 }
 
 export interface JoinSplitInputs {
@@ -76,17 +103,19 @@ export function joinSplitPublicSignalsFromArray(
     nullifierA: publicSignals[4],
     nullifierB: publicSignals[5],
     senderCommitment: publicSignals[6],
-    opDigest: publicSignals[7],
-    pubEncodedAssetId: publicSignals[8],
-    pubEncodedAssetAddrWithSignBits: publicSignals[9],
-    refundAddrH1CompressedY: publicSignals[10],
-    refundAddrH2CompressedY: publicSignals[11],
+    joinSplitInfoCommitment: publicSignals[7],
+    opDigest: publicSignals[8],
+    pubEncodedAssetId: publicSignals[9],
+    pubEncodedAssetAddrWithSignBits: publicSignals[10],
+    refundAddrH1CompressedY: publicSignals[11],
+    refundAddrH2CompressedY: publicSignals[12],
   };
 }
 
 export function joinSplitPublicSignalsToArray(
   publicSignals: JoinSplitPublicSignals
 ): [
+  bigint,
   bigint,
   bigint,
   bigint,
@@ -108,6 +137,7 @@ export function joinSplitPublicSignalsToArray(
     publicSignals.nullifierA,
     publicSignals.nullifierB,
     publicSignals.senderCommitment,
+    publicSignals.joinSplitInfoCommitment,
     publicSignals.opDigest,
     publicSignals.pubEncodedAssetId,
     publicSignals.pubEncodedAssetAddrWithSignBits,
@@ -124,4 +154,77 @@ export function encodeEncodedAssetAddrWithSignBitsPI(
   const [sign1] = decomposeCompressedPoint(refundAddr.h1);
   const [sign2] = decomposeCompressedPoint(refundAddr.h2);
   return encodedAssetAddr | (BigInt(sign1) << 248n) | (BigInt(sign2) << 249n);
+}
+
+export function encodeOldNoteMerkleIndicesWithSignBits(
+  oldNoteAIndex: number,
+  oldNoteBIndex: number,
+  senderSign: boolean,
+  receiverSign: boolean,
+  oldNoteBIsDummy: boolean
+): bigint {
+  const receiverSignBit = receiverSign ? 1n : 0n;
+  const senderSignBit = senderSign ? 1n : 0n;
+  const oldNoteBIsDummyBit = oldNoteBIsDummy ? 1n : 0n;
+  return (
+    (oldNoteBIsDummyBit << 66n) |
+    (receiverSignBit << 65n) |
+    (senderSignBit << 64n) |
+    (BigInt(oldNoteBIndex) << 32n) |
+    BigInt(oldNoteAIndex)
+  );
+}
+
+export function computeSenderCommitment(
+  senderCanonAddr: CanonAddress,
+  newNoteBNonce: bigint
+): bigint {
+  return poseidonBN(
+    [senderCanonAddr.x, senderCanonAddr.y, newNoteBNonce],
+    SENDER_COMMITMENT_DOMAIN_SEPARATOR
+  );
+}
+
+export function computeJoinSplitInfoNonce(
+  nullifierA: bigint,
+  vk: bigint
+): bigint {
+  return poseidonBN([vk, nullifierA], JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR);
+}
+
+export function computeJoinSplitInfoCommitment(
+  senderCanonAddr: CanonAddress,
+  receiverCanonAddr: CanonAddress,
+  oldNoteAIndex: number,
+  oldNoteBIndex: number,
+  noteBIsDummy: boolean,
+  newNoteAValue: bigint,
+  newNoteBValue: bigint,
+  nullifierA: bigint,
+  vk: bigint
+): bigint {
+  const [senderSign, senderY] = decomposeCompressedPoint(
+    compressPoint(senderCanonAddr)
+  );
+  const [receiverSign, receiverY] = decomposeCompressedPoint(
+    compressPoint(receiverCanonAddr)
+  );
+
+  return poseidonBN(
+    [
+      senderY,
+      receiverY,
+      encodeOldNoteMerkleIndicesWithSignBits(
+        oldNoteAIndex,
+        oldNoteBIndex,
+        senderSign,
+        receiverSign,
+        noteBIsDummy
+      ),
+      newNoteAValue,
+      newNoteBValue,
+      computeJoinSplitInfoNonce(nullifierA, vk),
+    ],
+    JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR
+  );
 }

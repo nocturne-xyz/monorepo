@@ -18,7 +18,7 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
         "/fixtures/joinsplit_0_publicSpend.json";
     string constant FIXTURE_PATH_100_PUBLIC_SPEND =
         "/fixtures/joinsplit_100_publicSpend.json";
-    uint256 constant NUM_PIS = 12;
+    uint256 constant NUM_PIS = 13;
 
     IJoinSplitVerifier joinSplitVerifier;
 

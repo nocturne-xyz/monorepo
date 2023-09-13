@@ -57,7 +57,15 @@ include "lib.circom";
 //@ensures(12.1) the sender's canonical address used in `senderCommitment` is the canonical address derived from `vk`
 //@ensures(12.2) `senderCommitment` is computed correctly as `Poseidon(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce"))`
 //@ensures(13) the recipient is a valid canonical address (on curve, order-l)
-template JoinSplit(levels) {
+//@ensures(14) `joinSplitInfoCommitment` is computed correctly as `Poseidon(keccak256("JOINSPLIT_INFO_COMMITMENT") % p, ...encodedJoinSplitInfo)` where `encodedJoinSplitInfo` is an array consisting of the following:
+// - `compressedSenderCanonAddrY`
+// - `compressedReceiverCanonAddrY`
+// - `oldMerkleIndicesAndWithBits`, defined as `u32(oldNoteAIndex) || u32(oldNoteBIndex) << 32 || senderSignBit << 64 || receiverSignBit << 65 || noteBIsDummy << 66`
+//      where `oldNoteAIndex` and `oldNoteBIndex` are computed from `pathA` and `pathB`,and `noteBIsDummy` is a single bit that's a `1` if note B is a dummy note and `0` otherwise
+// - `newNoteAValue`
+// - `newNoteBValue`
+// - `joinSplitInfoNonce`, defined as `Poseidon(keccak256("JOINSPLIT_INFO_NONCE") % p, vk, nullifierA)`
+template JoinSplit() {
     // *** PUBLIC INPUTS ***
     // digest of the operation this JoinSplit is a part of
     // this is used to bind each JoinSplit to an operation and as the message for the signature
@@ -105,6 +113,8 @@ template JoinSplit(levels) {
     // defined as Poseidon(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce"))
     signal output senderCommitment;
 
+    signal output joinSplitInfoCommitment;
+
     // *** WITNESS ***
 
     // viewing key 
@@ -139,8 +149,8 @@ template JoinSplit(levels) {
     signal input oldNoteAValue;
 
     // Path to old note A
-    signal input pathA[levels];
-    signal input siblingsA[levels][3];
+    signal input pathA[16];
+    signal input siblingsA[16][3];
 
     // Old note B
     signal input oldNoteBOwnerH1X;
@@ -151,8 +161,8 @@ template JoinSplit(levels) {
     signal input oldNoteBValue;
 
     // Path to old note B
-    signal input pathB[levels];
-    signal input siblingsB[levels][3];
+    signal input pathB[16];
+    signal input siblingsB[16][3];
 
     // New note A
     signal input newNoteAValue;
@@ -252,7 +262,7 @@ template JoinSplit(levels) {
     // check that the sum of old and new note values are in range [0, 2**252)
     // this can't overflow because all four note values are in range [0, 2**252) and field is 254 bits
     //@satisfies(10.1) 
-    //@argument follows from `RangeCheckNBits.ensures(1)`, and `RangeCheckNBits.requires(1)` is satisfied since `n = 252
+    //@argument follows from `RangeCheckNBits` and `RangeCheckNBits.ensures(1)`, and `RangeCheckNBits.requires(1)` is satisfied since `n < 254`
     //@satisfies(10.2)
     //@satisfies(10.3)
     //@argument same as (10.1)
@@ -288,7 +298,7 @@ template JoinSplit(levels) {
     //@argument follows from encoding defn and Num2Bits(253), which can't overflow because it's 253 bits 
     //@lemma(8) `refundAddrH2Sign` is the sign bit of `refundAddrH2CompressedY` as specified in `pubEncodedAssetAddrWithSignBits`
     //@argument same as @lemma(7) 
-    signal pubEncodedAssetAddrWithSignBitsBits[253] <==  Num2Bits(253)(pubEncodedAssetAddrWithSignBits);
+    signal pubEncodedAssetAddrWithSignBitsBits[253] <== Num2Bits(253)(pubEncodedAssetAddrWithSignBits);
     signal refundAddrH1Sign <== pubEncodedAssetAddrWithSignBitsBits[248];
     signal refundAddrH2Sign <== pubEncodedAssetAddrWithSignBitsBits[249];
 
@@ -350,7 +360,7 @@ template JoinSplit(levels) {
     //@argument MerkleTreeInclusionProof.requires(1) is satisfied by definition (exactly what code does).
     //  since we set `leaf` to `oldNoteACommitment` and `root` to `commitmentTreeRoot`
     //  (8.1) follows from MerkleTreeInclusionProof.ensures(1)
-    commitmentTreeRoot <== MerkleTreeInclusionProof(levels)(oldNoteACommitment, pathA, siblingsA);
+    commitmentTreeRoot <== MerkleTreeInclusionProof(16)(oldNoteACommitment, pathA, siblingsA);
 
     // check merkle tree inclusion proof for oldNoteBCommitment only if oldNoteBValue is nonzero
     //@satisfies(8.2)
@@ -360,8 +370,12 @@ template JoinSplit(levels) {
     // 2. oldNoteBValue is nonzero. In this case (8.2) follows from the fact that the constraint below
     //    will only be satisfied if `commitmentTreeRootB == commitmentTreeRoot`, which can only be the case
     //    if there exists a valid merkle membership proof for `oldNoteBCommitment` in the tree
-    signal commitmentTreeRootB <== MerkleTreeInclusionProof(levels)(oldNoteBCommitment, pathB, siblingsB);
+    signal commitmentTreeRootB <== MerkleTreeInclusionProof(16)(oldNoteBCommitment, pathB, siblingsB);
     oldNoteBValue * (commitmentTreeRoot - commitmentTreeRootB) === 0;
+
+
+    // keccakk256("NULLIFIER") % p 
+    var NULLIFIER_DOMAIN_SEPARATOR = 624938365879860864124725276109956130503531086404788051782372112403658760742;
 
     // derive nullifier for oldNoteA
     //@satisfies(9.1)
@@ -371,14 +385,14 @@ template JoinSplit(levels) {
     // `vk` is the only possible viewing key that can be used to derive `nullifierA`.
     // therefore, by (9.3) and Poseidon collision resistance, `nullifierA` is the only possible nullifier that can be
     // derived for this note
-    nullifierA <== Poseidon(2)([oldNoteACommitment, vk]);
+    nullifierA <== PoseidonWithDomainSeparator(2, NULLIFIER_DOMAIN_SEPARATOR)([oldNoteACommitment, vk]);
 
     // derive nullifier for oldNoteB
     //@satisfies(9.2)
     //@argument correct by definition of Nocturne's nullifier derivation
     //@satsifes(9.4)
     //@argument same as (9.3)
-    nullifierB <== Poseidon(2)([oldNoteBCommitment, vk]);
+    nullifierB <== PoseidonWithDomainSeparator(2, NULLIFIER_DOMAIN_SEPARATOR)([oldNoteBCommitment, vk]);
 
 
     // check spend signature
@@ -386,8 +400,10 @@ template JoinSplit(levels) {
     SigVerify()(spendPubkey, operationDigest, [c, z]);
 
     // deterministically derive nonce for outgoing notes
-    signal newNoteANonce <== Poseidon(2)([vk, nullifierA]);
-    signal newNoteBNonce <== Poseidon(2)([vk, nullifierB]);
+    // keccak256("NEW_NOTE_NONCE") % p
+    var NEW_NOTE_NONCE_DOMAIN_SEPARATOR = 10280686533006751903887122138624177312632532207046457339587660245394110285166;
+    signal newNoteANonce <== PoseidonWithDomainSeparator(2, NEW_NOTE_NONCE_DOMAIN_SEPARATOR)([vk, nullifierA]);
+    signal newNoteBNonce <== PoseidonWithDomainSeparator(2, NEW_NOTE_NONCE_DOMAIN_SEPARATOR)([vk, nullifierB]);
 
     // newNoteACommitment
     //@satisfies(3.1)
@@ -451,8 +467,57 @@ template JoinSplit(levels) {
     //@argument @lemma(2) ensures `senderCanonAddr` is the correct canonical address derived from vk, and `senderCommitment` uses `senderCanonAddr` below
     //@satisfies(12.2)
     //@argument correct by definition (exactly what the code does)
+
+    // keccak256("SENDER_COMMITMENT") % p
     var SENDER_COMMITMENT_DOMAIN_SEPARATOR = 5680996188676417870015190585682285899130949254168256752199352013418366665222;
-    senderCommitment <== Poseidon(4)([SENDER_COMMITMENT_DOMAIN_SEPARATOR, senderCanonAddr[0], senderCanonAddr[1], newNoteBNonce]);
+    senderCommitment <== PoseidonWithDomainSeparator(3, SENDER_COMMITMENT_DOMAIN_SEPARATOR)([senderCanonAddr[0], senderCanonAddr[1], newNoteBNonce]);
+
+    // compress sender and receiver
+    //@satisfies(14)
+    //@argument
+    // 1. `compressedSenderCanonAddrY`, `senderSignBit` is correct decomposition of `senderCanonAddr` due to @lemma(2) and `CompressPoint.ensures(1)`
+    //    and `CompressPoint.requires(1)` is guaranteed by `CanonAddr` derivation above
+    // 2. `compressedReceiverCanonAddrY`, `receiverSignBit` is correct decomposition of `receiverCanonAddr` due to @lemma(13) and `CompressPoint.ensures(1)`
+    // 3. `oldNoteMerkleIndicesWithSignBits` is encoded correctly by construction due to @lemma(12) and @lemma(13)
+    // 4. `joinSplitInfoNonce` is computed correctly by construction
+    // 5. `joinSplitInfoCommitment` is computed correctly by construction given the above
+    // therefore (14) holds 
+    component canonAddrCompressors[2];
+    canonAddrCompressors[0] = CompressPoint();
+    canonAddrCompressors[0].in[0] <== senderCanonAddr[0];
+    canonAddrCompressors[0].in[1] <== senderCanonAddr[1];
+    signal compressedSenderCanonAddrY <== canonAddrCompressors[0].y;
+    signal senderSignBit <== canonAddrCompressors[0].sign;
+
+    canonAddrCompressors[1] = CompressPoint();
+    canonAddrCompressors[1].in[0] <== receiverCanonAddr[0];
+    canonAddrCompressors[1].in[1] <== receiverCanonAddr[1];
+    signal compressedReceiverCanonAddrY <== canonAddrCompressors[1].y;
+    signal receiverSignBit <== canonAddrCompressors[1].sign;
+
+    //@lemma(12) oldNoteAIndex is the 32-bit index of the leaf in the tree that corresponds to pathA
+    //@argument `MerkleInclusionProof.ensures(2)` guarantees that each element of `pathA` is a 2-bit number.
+    // Therefore `TwoBitLimbsTonNum.requires(1)` is satisfied. The merkle index of a path in a merkle tree is equivalent to the base-b sum
+    // of the path indices from leaf to root, so `TwoBitLimbsToNum.ensures(1)` guarantees that `oldNoteAIndex` is the correct, 32-bit merkle index
+    signal oldNoteAIndex <== TwoBitLimbsToNum(16)(pathA);
+
+    //@lemma(13) oldNoteBIndex is the 32-bit index of the leaf in the tree that corresponds to pathB
+    //@argument same as @lemma(12).
+    // Note that `MerkleInclusionProof.ensures(2)` is still relevant in the case when oldNoteB is a dummy note
+    // because the second `MerkleInclusionProof` still has to be a valid inclusion proof against *some* root,
+    // so even if the prover can put in whatever root they want, `pathB` is still checked to consist only of 2-bit numbers
+    signal oldNoteBIndex <== TwoBitLimbsToNum(16)(pathB);
+    signal oldNoteMerkleIndices <== oldNoteAIndex + (1 << 32) * oldNoteBIndex;
+    signal oldNoteBIsDummy <== IsZero()(oldNoteBValue);
+    signal oldNoteMerkleIndicesWithSignBits <== oldNoteMerkleIndices + (1 << 64) * senderSignBit + (1 << 65) * receiverSignBit + (1 << 66) * oldNoteBIsDummy;
+
+    // keccak256("JOINSPLIT_INFO_NONCE") % p
+    var JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = 8641380568873709859334930917483971124167266522634964152243775747603865574453;
+    // keccak256("JOINSPLIT_INFO_COMMITMENT") % p
+    var JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR = 9902041836430008087134187177357348214750696281851093507858998440354218646130;
+
+    signal joinSplitInfoNonce <== PoseidonWithDomainSeparator(2, JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR)([vk, nullifierA]);
+    joinSplitInfoCommitment <== PoseidonWithDomainSeparator(6, JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR)([compressedSenderCanonAddrY, compressedReceiverCanonAddrY, oldNoteMerkleIndicesWithSignBits, newNoteAValue, newNoteBValue, joinSplitInfoNonce]);
 }
 
-component main { public [pubEncodedAssetAddrWithSignBits, pubEncodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit(16);
+component main { public [pubEncodedAssetAddrWithSignBits, pubEncodedAssetId, operationDigest, refundAddrH1CompressedY, refundAddrH2CompressedY] } = JoinSplit();

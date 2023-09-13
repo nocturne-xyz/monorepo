@@ -26,6 +26,7 @@ contract OperationEIP712Test is Test {
             newNoteACommitment: 1,
             newNoteBCommitment: 1,
             senderCommitment: 1,
+            joinSplitInfoCommitment: 1,
             proof: dummyProof,
             newNoteAEncrypted: EncryptedNote({
                 ciphertextBytes: bytes(""),
@@ -140,7 +141,7 @@ contract OperationEIP712Test is Test {
         assertEq(
             operationHash,
             bytes32(
-                0xd48b43d3583d7d4afecb8fdd8ffa70e5f0280927c627afb91d5f313b4120d86d
+                0xae90b3b9c7b0ad754addcd4c816c7afde5fab49dc0697fec6b800359c545a184
             )
         );
 
@@ -172,7 +173,7 @@ contract OperationEIP712Test is Test {
         assertEq(
             operationDigest,
             uint256(
-                0x5542656472b4c63f2699db47e8f8f2779645b1764d92c69281ad06641ef866a
+                0x5895882da277ba3b136eb8fade433ad3f07be081a24b1e34532930d7c3b9231
             )
         );
     }

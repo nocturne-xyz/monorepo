@@ -11,7 +11,6 @@ import {
   Asset,
   AssetTrait,
   PreSignOperation,
-  SENDER_COMMITMENT_DOMAIN_SEPARATOR,
 } from "./primitives";
 import {
   NocturneViewer,
@@ -30,7 +29,10 @@ import {
   groupByArr,
 } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
-import { poseidonBN } from "@nocturne-xyz/crypto-utils";
+import {
+  computeJoinSplitInfoCommitment,
+  computeSenderCommitment,
+} from "./proof/joinsplit";
 
 export const __private = {
   gatherNotes,
@@ -308,9 +310,12 @@ async function makeJoinSplit(
   // noteB could have been a dummy note. If it is, we simply duplicate the merkle proof for noteA
   // the circuit will ignore the merkle proof for noteB if it has a value of 0
   const noteBIsDummy = oldNoteB.value === 0n;
+  const oldNoteAIndex = oldNoteA.merkleIndex;
+  let oldNoteBIndex = oldNoteB.merkleIndex;
   let merkleProofB: MerkleProofInput;
   if (noteBIsDummy) {
     merkleProofB = merkleProofA;
+    oldNoteBIndex = oldNoteAIndex;
   } else {
     const membershipProof = merkle.getProof(oldNoteB.merkleIndex);
 
@@ -330,12 +335,23 @@ async function makeJoinSplit(
 
   // commit to the sender's canonical address
   const senderCanonAddr = viewer.canonicalAddress();
-  const senderCommitment = poseidonBN([
-    SENDER_COMMITMENT_DOMAIN_SEPARATOR,
-    senderCanonAddr.x,
-    senderCanonAddr.y,
-    newNoteB.nonce,
-  ]);
+  const senderCommitment = computeSenderCommitment(
+    senderCanonAddr,
+    newNoteB.nonce
+  );
+
+  // compute joinsplit info commitment
+  const joinSplitInfoCommitment = computeJoinSplitInfoCommitment(
+    senderCanonAddr,
+    receiver,
+    oldNoteAIndex,
+    oldNoteBIndex,
+    noteBIsDummy,
+    newNoteA.value,
+    newNoteB.value,
+    nullifierA,
+    viewer.vk
+  );
 
   return {
     receiver,
@@ -359,6 +375,7 @@ async function makeJoinSplit(
     merkleProofB,
 
     senderCommitment,
+    joinSplitInfoCommitment,
     refundAddr,
   };
 }

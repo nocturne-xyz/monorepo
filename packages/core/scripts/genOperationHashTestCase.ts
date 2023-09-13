@@ -15,6 +15,7 @@ import { OPERATION_TYPES } from "../src/primitives/operation";
     newNoteACommitment: 1n,
     newNoteBCommitment: 1n,
     senderCommitment: 1n,
+    joinSplitInfoCommitment: 1n,
     newNoteAEncrypted: {
       ciphertextBytes: [],
       encapsulatedSecretBytes: [],

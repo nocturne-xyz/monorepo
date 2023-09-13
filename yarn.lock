@@ -4457,7 +4457,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
-    "@nocturne-xyz/crypto-utils": ^0.3.0
+    "@nocturne-xyz/crypto-utils": "workspace:^"
     "@types/async-retry": ^1.4.5
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
