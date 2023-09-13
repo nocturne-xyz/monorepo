@@ -478,7 +478,7 @@ template JoinSplit() {
     // 1. `compressedSenderCanonAddrY`, `senderSignBit` is correct decomposition of `senderCanonAddr` due to @lemma(2) and `CompressPoint.ensures(1)`
     //    and `CompressPoint.requires(1)` is guaranteed by `CanonAddr` derivation above
     // 2. `compressedReceiverCanonAddrY`, `receiverSignBit` is correct decomposition of `receiverCanonAddr` due to @lemma(13) and `CompressPoint.ensures(1)`
-    // 3. `oldNoteMerkleIndicesWithSignBits` is encoded correctly by construction
+    // 3. `oldNoteMerkleIndicesWithSignBits` is encoded correctly by construction due to @lemma(12) and @lemma(13)
     // 4. `joinSplitInfoNonce` is computed correctly by construction
     // 5. `joinSplitInfoCommitment` is computed correctly by construction given the above
     // therefore (14) holds 
@@ -495,7 +495,17 @@ template JoinSplit() {
     signal compressedReceiverCanonAddrY <== canonAddrCompressors[1].y;
     signal receiverSignBit <== canonAddrCompressors[1].sign;
 
+    //@lemma(12) oldNoteAIndex is the 32-bit index of the leaf in the tree that corresponds to pathA
+    //@argument `MerkleInclusionProof.ensures(2)` guarantees that each element of `pathA` is a 2-bit number.
+    // Therefore `TwoBitLimbsTonNum.requires(1)` is satisfied. The merkle index of a path in a merkle tree is equivalent to the base-b sum
+    // of the path indices from leaf to root, so `TwoBitLimbsToNum.ensures(1)` guarantees that `oldNoteAIndex` is the correct, 32-bit merkle index
     signal oldNoteAIndex <== TwoBitLimbsToNum(16)(pathA);
+
+    //@lemma(13) oldNoteBIndex is the 32-bit index of the leaf in the tree that corresponds to pathB
+    //@argument same as @lemma(12).
+    // Note that `MerkleInclusionProof.ensures(2)` is still relevant in the case when oldNoteB is a dummy note
+    // because the second `MerkleInclusionProof` still has to be a valid inclusion proof against *some* root,
+    // so even if the prover can put in whatever root they want, `pathB` is still checked to consist only of 2-bit numbers
     signal oldNoteBIndex <== TwoBitLimbsToNum(16)(pathB);
     signal oldNoteMerkleIndices <== oldNoteAIndex + (1 << 32) * oldNoteBIndex;
     signal oldNoteBIsDummy <== IsZero()(oldNoteBValue);

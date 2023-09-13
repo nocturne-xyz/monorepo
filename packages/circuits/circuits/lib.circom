@@ -270,6 +270,7 @@ template BitsToTwoBitLimbs(n) {
 // takes n 2-bit limbs and outputs 2n-bit number when interpreted in little-endian order
 //@requires(1) `limbs` are all 2-bit numbers
 //@requires(2) `n < 127`
+//@ensures(1) `num` is the 2n-bit number that result from performing the quaternary sum of `limbs` in little-endian order
 template TwoBitLimbsToNum(n) {
     signal input limbs[n];
     signal output num;
