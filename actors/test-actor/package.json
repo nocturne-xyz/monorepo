@@ -27,6 +27,7 @@
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
     "@nocturne-xyz/offchain-utils": "workspace:^",
+    "@nocturne-xyz/op-request-plugins": "workspace:^",
     "@openzeppelin/defender-relay-client": "1.47.1",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",

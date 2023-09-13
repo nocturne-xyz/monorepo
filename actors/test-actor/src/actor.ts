@@ -31,6 +31,7 @@ import * as ot from "@opentelemetry/api";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
 import { Logger } from "winston";
+import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
 
 export const ACTOR_NAME = "test-actor";
 const COMPONENT_NAME = "main";
@@ -386,21 +387,11 @@ export class TestActor {
     asset: Asset,
     value: bigint
   ): Promise<OperationRequestWithMetadata> {
-    const simpleErc20 = SimpleERC20Token__factory.connect(
-      asset.assetAddr,
-      this.txSigner
-    );
-    const transferData =
-      SimpleERC20Token__factory.createInterface().encodeFunctionData(
-        "transfer",
-        [this._address!, value] // transfer funds back to self
-      );
-
     const chainId = this._chainId ?? BigInt(await this.txSigner.getChainId());
 
     return newOpRequestBuilder(this.provider, chainId)
-      .unwrap(asset, value)
-      .action(simpleErc20.address, transferData)
+      .use(Erc20Plugin)
+      .erc20Transfer(asset.assetAddr, this._address!, value)
       .deadline(
         BigInt((await this.provider.getBlock("latest")).timestamp) +
           ONE_DAY_SECONDS
