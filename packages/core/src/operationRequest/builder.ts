@@ -25,6 +25,7 @@ import {
 import { ethers } from "ethers";
 import { groupByArr } from "../utils";
 import { chainIdToNetworkName } from "../utils/constants";
+import * as JSON from "bigint-json-serialization";
 
 export type OpRequestBuilder = OpRequestBuilderExt<BaseOpRequestBuilder>;
 
@@ -323,7 +324,7 @@ export function newOpRequestBuilder(
       ] of joinSplitsAndPaymentsByAsset.entries()) {
         // consolidate payments to the same receiver
         const paymentsByReceiver = groupByArr(payments, (p) =>
-          p.receiver.toString()
+          JSON.stringify(p.receiver)
         );
         const consolidatedPayments = paymentsByReceiver.flatMap((payments) => {
           if (payments.length === 0) {
@@ -369,7 +370,7 @@ export function newOpRequestBuilder(
       // consolidate refunds by asset
       const consolidatedRefunds: ExpectedRefund[] = groupByArr(
         this._op.refunds,
-        (r) => r.encodedAsset.toString()
+        (r) => JSON.stringify(r.encodedAsset)
       ).map((refundsForAsset) => {
         const totalRefundValue = refundsForAsset.reduce(
           (acc, refund) => acc + refund.minRefundValue,

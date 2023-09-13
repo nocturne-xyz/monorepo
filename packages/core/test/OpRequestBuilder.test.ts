@@ -353,6 +353,7 @@ describe("OpRequestBuilder", () => {
       ],
       refunds: [
         { encodedAsset: AssetTrait.encode(ponzi), minRefundValue: 400n },
+        { encodedAsset: AssetTrait.encode(monkey), minRefundValue: 400n },
       ],
       refundAddr: refundAddr,
       actions,
@@ -370,6 +371,8 @@ describe("OpRequestBuilder", () => {
       .__refund({ asset: ponzi, minRefundValue: 100n })
       .__refund({ asset: ponzi, minRefundValue: 100n })
       .__refund({ asset: ponzi, minRefundValue: 200n })
+      .__refund({ asset: monkey, minRefundValue: 200n })
+      .__refund({ asset: monkey, minRefundValue: 200n })
       .refundAddr(refundAddr)
       .deadline(2n)
       .build();
