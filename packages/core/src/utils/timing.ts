@@ -44,14 +44,27 @@ export class Histogram {
       percentiles.every((p) => p >= 0),
       "percentiles must be >= 0"
     );
+    assertOrErr(
+      percentiles.every((p) => p <= 100),
+      "percentiles must be <= 100"
+    );
 
     if (this.needsSort) {
       this.values.sort();
       this.needsSort = false;
     }
 
+    if (this.values.length === 0) {
+      return new Array(percentiles.length).fill(NaN);
+    } else if (this.values.length == 1) {
+      return new Array(percentiles.length).fill(this.values[0]);
+    }
+
     return percentiles
-      .map((p) => [Math.floor(p), p - Math.floor(p)])
+      .map((p) => {
+        const r = (p / 100) * (this.values.length - 1);
+        return [Math.floor(r), r - Math.floor(r)];
+      })
       .map(
         ([ri, rf]) =>
           this.values[ri] + rf * (this.values[ri + 1] - this.values[ri])
