@@ -11,6 +11,8 @@ import {
 } from "@nocturne-xyz/core";
 import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
 
+const WETH_NAME = "weth";
+const WSTETH_NAME = "wsteth";
 const WSTETH_ADAPTER_NAME = "wstethAdapter";
 
 export interface WstethAdapterPluginMethods {
@@ -47,16 +49,14 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           );
         }
 
-        const wethAddress =
-          this.config.erc20s.get(WSTETH_ADAPTER_NAME)?.address;
+        const wethAddress = this.config.erc20s.get(WETH_NAME)?.address;
         if (!wethAddress) {
           throw new Error(
             `Weth not supported on chain with id: ${this._op.chainId}`
           );
         }
 
-        const wstethAddress =
-          this.config.erc20s.get(WSTETH_ADAPTER_NAME)?.address;
+        const wstethAddress = this.config.erc20s.get(WSTETH_NAME)?.address;
         if (!wstethAddress) {
           throw new Error(
             `Wsteth not supported on chain with id: ${this._op.chainId}`
