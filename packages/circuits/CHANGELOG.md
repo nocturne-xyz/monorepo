@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- 58b363a4: - add domain separators for nullifiers and new note nonces
+  - set domain separator in initial poseidon sponge state to reduce constraint count
+- 58b363a4: add `joinSplitInfoCommitment` PI to JoinSplitCircuit
+- 77c4063c: `CanonAddrSigCheck` circuit takes msg directly as PI instead of computing it from nonce
+- 589e0230: add new circuit `CanonAddrSigCheck` that can be used to prove knowledge of keys for given canonical address
+
 ## 0.3.0
 
 ### Minor Changes

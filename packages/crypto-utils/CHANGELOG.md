@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1
+
+### Patch Changes
+
+- 58b363a4: add optional argument `initialState` to `poseidonBN` allowing caller to override initial sponge state
+
 ## 0.3.0
 
 ### Minor Changes

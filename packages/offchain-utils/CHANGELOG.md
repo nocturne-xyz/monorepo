@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.11
+
+### Patch Changes
+
+- Updated dependencies [27cb1b5c]
+  - @nocturne-xyz/persistent-log@0.1.1
+
 ### Unreleased
 
 - move redis out to remove peer-dependency on `ioredis`

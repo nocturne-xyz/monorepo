@@ -1,5 +1,51 @@
 # Changelog
 
+## 1.0.0
+
+### Major Changes
+
+- 6abd69b9: Split out builder plugins from core, make op request builder build() async, collect array of plugin promises that resolve to unwraps, actions, refunds, and metadata
+- 0cb20e3d: Op request builder takes optional nocturne config instead of teller address
+- 9098e2c8: Op request builder takes provider, chainid, and optional teller address instead of chainid and networkinfo (plugins will need provider attached)
+- 003e7082: double underscore unwrap, refund, and action so these are only exposed to plugins
+
+### Minor Changes
+
+- 81598815: - remove `signOperation` from `NocturneWalletSDK`
+  - change `NocturneWalletSDK` to hold a `NocturneViewer` instead of a `NocturneSigner`
+  - add method `clearDb`
+  - rename `NocturneWalletSDK` to `NocturneClient`
+- fc364ae8: Integrating Ruleset usage into screener server
+- 77c4063c: Add functionality to snap/fe-sdk that supports signing a canon addr registry entry and returning necessary inputs for sig check proof gen
+- 58b363a4: - add domain separators for nullifiers and new note nonces
+  - set domain separator in initial poseidon sponge state to reduce constraint count
+- 77c4063c: `CanonAddrSigCheck` circuit takes msg directly as PI instead of computing it from nonce
+- 58b363a4: add `joinSplitInfoCommitment` PI to JoinSplitCircuit
+- 589e0230: add sdk support for generating CanonAddrSigCheck proofs
+
+### Patch Changes
+
+- 003e7082: Have op request builder use minRefundValues and simplify build() logic to unwrap as few assets as possible needed for calls, additionally fix all times in core that map uses object keys by adding designated obj key map and set impls
+- 1ffcf31f: update contract and sdk bundler gas comp estimate numbers
+- 86d484ad: - implement plugin system for `OperationRequestBuilder` and update APIs accordingly
+- 1ffcf31f: update gas calculation math in Types.sol and core op request gas to come within ~50k of actual gas spent by bundler
+- 35b0f76f: change deposit request hash calculation to use ethers builtins for eip712
+- 3be7d366: Strongly typed both sides of the JSON RPC boundary, between fe-sdk & snap. Shared in core
+- f8046431: - fix sync issue where subtree commits weren't being detected when there are no new notes or insertions
+- Updated dependencies [1ffcf31f]
+- Updated dependencies [589e0230]
+- Updated dependencies [6998bb7c]
+- Updated dependencies [1ffcf31f]
+- Updated dependencies [6998bb7c]
+- Updated dependencies [77c4063c]
+- Updated dependencies [58b363a4]
+- Updated dependencies [77c4063c]
+- Updated dependencies [de88d6f0]
+- Updated dependencies [58b363a4]
+  - @nocturne-xyz/contracts@0.4.0
+  - @nocturne-xyz/config@0.4.0
+  - @nocturne-xyz/crypto-utils@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,5 +1,45 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- 77c4063c: Add functionality to snap/fe-sdk that supports signing a canon addr registry entry and returning necessary inputs for sig check proof gen
+- 81598815: - remove all methods except for `nocturne_signOperation`
+  - add new method `nocturne_requestViewingKey`
+
+### Patch Changes
+
+- 1ffcf31f: update contract and sdk bundler gas comp estimate numbers
+- 86d484ad: - implement plugin system for `OperationRequestBuilder` and update APIs accordingly
+- 6998bb7c: add resetWindowHours to deploy config in config package and deploy package
+- 589e0230: add RPC method for generating canon addr sig
+- 3be7d366: Strongly typed both sides of the JSON RPC boundary, between fe-sdk & snap. Shared in core
+- Updated dependencies [6abd69b9]
+- Updated dependencies [81598815]
+- Updated dependencies [003e7082]
+- Updated dependencies [1ffcf31f]
+- Updated dependencies [fc364ae8]
+- Updated dependencies [0cb20e3d]
+- Updated dependencies [86d484ad]
+- Updated dependencies [1ffcf31f]
+- Updated dependencies [77c4063c]
+- Updated dependencies [6998bb7c]
+- Updated dependencies [58b363a4]
+- Updated dependencies [35b0f76f]
+- Updated dependencies [77c4063c]
+- Updated dependencies [589e0230]
+- Updated dependencies [3be7d366]
+- Updated dependencies [9098e2c8]
+- Updated dependencies [58b363a4]
+- Updated dependencies [003e7082]
+- Updated dependencies [77c4063c]
+- Updated dependencies [58b363a4]
+- Updated dependencies [f8046431]
+  - @nocturne-xyz/core@1.0.0
+  - @nocturne-xyz/config@0.4.0
+  - @nocturne-xyz/crypto-utils@0.3.1
+
 ## 0.3.2
 
 ### Patch Changes

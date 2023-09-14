@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- e2dfea9d: add goerli config before redeploy, fix regressions in sepolia config (`resetWindowHours` was not included in sepolia deploy config)
+- 6998bb7c: add resetWindowHours to deploy config in config package and deploy package
+- 77c4063c: Add CanonicalAddressRegistry and sig check verifier to deploy and config packages
+- e2dfea9d: deploy script conditionally deploys wsteth adapter, takes optional wsteth adapter deploy config in deploy config json
+
+### Patch Changes
+
+- Updated dependencies [6abd69b9]
+- Updated dependencies [81598815]
+- Updated dependencies [003e7082]
+- Updated dependencies [1ffcf31f]
+- Updated dependencies [fc364ae8]
+- Updated dependencies [0cb20e3d]
+- Updated dependencies [86d484ad]
+- Updated dependencies [589e0230]
+- Updated dependencies [6998bb7c]
+- Updated dependencies [1ffcf31f]
+- Updated dependencies [77c4063c]
+- Updated dependencies [6998bb7c]
+- Updated dependencies [77c4063c]
+- Updated dependencies [35b0f76f]
+- Updated dependencies [77c4063c]
+- Updated dependencies [589e0230]
+- Updated dependencies [3be7d366]
+- Updated dependencies [9098e2c8]
+- Updated dependencies [de88d6f0]
+- Updated dependencies [58b363a4]
+- Updated dependencies [003e7082]
+- Updated dependencies [77c4063c]
+- Updated dependencies [58b363a4]
+- Updated dependencies [f8046431]
+  - @nocturne-xyz/core@1.0.0
+  - @nocturne-xyz/contracts@0.4.0
+  - @nocturne-xyz/config@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes
