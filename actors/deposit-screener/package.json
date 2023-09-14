@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "screener-cli": "dist/src/cli/index.js"
+    "deposit-screener-cli": "dist/src/cli/index.js"
   },
   "files": [
     "dist/**/*",
