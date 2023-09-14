@@ -127,11 +127,11 @@ export class SetWithObjectKeys<T> {
   }
 
   forEach(
-    callbackfn: (value: T, value2: T, set: SetWithObjectKeys<T>) => void,
+    callbackfn: (value: T, set: SetWithObjectKeys<T>) => void,
     thisArg?: any
   ): void {
     for (const value of this.values()) {
-      callbackfn.call(thisArg, value, value, this);
+      callbackfn.call(thisArg, value, this);
     }
   }
 }

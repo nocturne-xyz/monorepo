@@ -274,7 +274,7 @@ export function newOpRequestBuilder(
             (netBalanceMap.get(asset) ?? 0n) - unwrapValue
           );
 
-          // If net amount is negative, must add value to unwrap amount to make unwrap possible
+          // If net amount is negative, must add value to unwrap amount to make action possible
           if ((netBalanceMap.get(asset) ?? 0n) < 0n) {
             unwrapAmountsByAsset.set(
               asset,
