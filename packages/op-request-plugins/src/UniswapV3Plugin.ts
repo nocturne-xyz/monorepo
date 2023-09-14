@@ -207,6 +207,8 @@ function chainIdToUniswapChainIdType(chainId: bigint): ChainId {
   switch (chainId) {
     case 1n:
       return ChainId.MAINNET;
+    case 5n:
+      return ChainId.GOERLI;
     case 11155111n:
       return ChainId.SEPOLIA;
     default:

@@ -26,10 +26,9 @@ import {
 } from "./types";
 
 const ENDPOINTS = {
-  sepolia: {
+  goerli: {
     screenerEndpoint: "https://screener.testnet.nocturnelabs.xyz",
     bundlerEndpoint: "https://bundler.testnet.nocturnelabs.xyz",
-    // HACK: temporary workaround to make iteration on site easier
     subgraphEndpoint:
       process.env.NEXT_PUBLIC_SUBGRAPH_URL ??
       "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.21-testnet/gn",
@@ -119,19 +118,21 @@ export interface CircuitArtifactUrls {
   canonAddrSigCheck: CircuitArtifactUrlsInner;
 }
 
-export function getCircuitArtifactUrls(networkName: SupportedNetwork): CircuitArtifactUrls {
+export function getCircuitArtifactUrls(
+  networkName: SupportedNetwork
+): CircuitArtifactUrls {
   switch (networkName) {
-    case "sepolia":
+    case "goerli":
       return {
         joinSplit: {
-          wasm: "https://nocturne-circuit-artifacts-sepolia.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.wasm",
-          zkey: "https://nocturne-circuit-artifacts-sepolia.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.zkey",
-          vkey: "https://nocturne-circuit-artifacts-sepolia.s3.us-east-2.amazonaws.com/joinsplit/joinsplitVkey.json",
+          wasm: "https://nocturne-circuit-artifacts-goerli.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.wasm",
+          zkey: "https://nocturne-circuit-artifacts-goerli.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.zkey",
+          vkey: "https://nocturne-circuit-artifacts-goerli.s3.us-east-2.amazonaws.com/joinsplit/joinsplitVkey.json",
         },
         canonAddrSigCheck: {
-          wasm: "https://nocturne-circuit-artifacts-sepolia.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.wasm",
-          zkey: "https://nocturne-circuit-artifacts-sepolia.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey",
-          vkey: "https://nocturne-circuit-artifacts-sepolia.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheckVkey.json",
+          wasm: "https://nocturne-circuit-artifacts-goerli.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.wasm",
+          zkey: "https://nocturne-circuit-artifacts-goerli.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey",
+          vkey: "https://nocturne-circuit-artifacts-goerli.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheckVkey.json",
         },
       };
     case "localhost":
@@ -159,8 +160,8 @@ export function getNocturneSdkConfig(
 
   let endpoints: Endpoints;
   switch (networkName) {
-    case "sepolia":
-      endpoints = ENDPOINTS.sepolia;
+    case "goerli":
+      endpoints = ENDPOINTS.goerli;
       break;
     case "localhost":
       endpoints = ENDPOINTS.localhost;
