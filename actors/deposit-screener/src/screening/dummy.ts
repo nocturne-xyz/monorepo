@@ -6,7 +6,7 @@ export const MAGIC_ZERO_DELAY_VALUE = 20202000000000000n; // 0.020202
 export const MAGIC_REJECTION_VALUE = 30303000000000000n; // 0.030303
 
 export class DummyScreeningApi implements ScreeningCheckerApi {
-  readonly baseDelaySeconds;
+  readonly baseDelaySeconds: number = 0;
 
   constructor(delaySeconds: number) {
     this.baseDelaySeconds = delaySeconds;
