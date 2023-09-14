@@ -15,10 +15,12 @@ import {
 } from "./primitives";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { consecutiveChunks } from "./utils/functional";
+import { Histogram } from "./utils/histogram";
 
 export interface SyncOpts {
   endBlock?: number;
   timeoutSeconds?: number;
+  timing?: boolean;
 }
 
 export interface SyncDeps {
@@ -59,9 +61,21 @@ export async function syncSDK(
   });
 
   // decrypt notes and compute nullifiers
-  const diffs: ClosableAsyncIterator<StateDiff> = newDiffs.map((diff) =>
-    decryptStateDiff(viewer, diff)
-  );
+  let diffs: ClosableAsyncIterator<StateDiff>;
+  let diffHistogram: Histogram | undefined;
+  if (opts?.timing) {
+    diffHistogram = new Histogram("decryptStateDiff time (ms) per note");
+    diffs = newDiffs.map((diff) => {
+      const startTime = Date.now();
+      const decrypted = decryptStateDiff(viewer, diff);
+      const endTime = Date.now();
+      diffHistogram!.sample((endTime - startTime) / diff.notes.length);
+
+      return decrypted;
+    });
+  } else {
+    diffs = newDiffs.map((diff) => decryptStateDiff(viewer, diff));
+  }
 
   let latestSyncedMerkleIndex: number | undefined =
     await db.latestSyncedMerkleIndex();
@@ -69,19 +83,48 @@ export async function syncSDK(
   if (opts?.timeoutSeconds) {
     setTimeout(() => diffs.close(), opts.timeoutSeconds * 1000);
   }
+
   // apply diffs
+  const applyStateDiffHistogram = opts?.timing
+    ? new Histogram("applyStateDiff time (ms) per note or commitment")
+    : undefined;
+  const updateMerkleHistogram = opts?.timing
+    ? new Histogram("updateMerkle time (ms) per note or commitment")
+    : undefined;
   for await (const diff of diffs.iter) {
     console.log(
       "[syncSDK] diff latestNewlySyncedMerkleIndex",
       diff.latestNewlySyncedMerkleIndex
     );
     // update notes in DB
-    const nfIndices = await db.applyStateDiff(diff);
+    let nfIndices: number[] = [];
+    if (opts?.timing) {
+      const startTime = Date.now();
+      nfIndices = await db.applyStateDiff(diff);
+      const endTime = Date.now();
+      applyStateDiffHistogram!.sample(
+        (endTime - startTime) / diff.notesAndCommitments.length
+      );
+    } else {
+      nfIndices = await db.applyStateDiff(diff);
+    }
     latestSyncedMerkleIndex = await db.latestSyncedMerkleIndex();
 
     // TODO: deal with case where we have failure between applying state diff to DB and merkle being persisted
 
-    if (diff.latestCommittedMerkleIndex) {
+    if (diff.latestCommittedMerkleIndex && opts?.timing) {
+      const startTime = Date.now();
+      await updateMerkle(
+        merkle,
+        diff.latestCommittedMerkleIndex,
+        diff.notesAndCommitments.map((n) => n.inner),
+        nfIndices
+      );
+      const endTime = Date.now();
+      updateMerkleHistogram!.sample(
+        (endTime - startTime) / diff.notesAndCommitments.length
+      );
+    } else if (diff.latestCommittedMerkleIndex) {
       await updateMerkle(
         merkle,
         diff.latestCommittedMerkleIndex,
@@ -90,6 +133,10 @@ export async function syncSDK(
       );
     }
   }
+
+  diffHistogram && diffHistogram.print();
+  applyStateDiffHistogram && applyStateDiffHistogram.print();
+  updateMerkleHistogram && updateMerkleHistogram.print();
 
   return latestSyncedMerkleIndex;
 }
