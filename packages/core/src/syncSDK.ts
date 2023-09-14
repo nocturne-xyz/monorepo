@@ -58,6 +58,7 @@ export async function syncSDK(
 
   const newDiffs = adapter.iterStateDiffs(startTotalEntityIndex, {
     endTotalEntityIndex,
+    timing: opts?.timing,
   });
 
   // decrypt notes and compute nullifiers
