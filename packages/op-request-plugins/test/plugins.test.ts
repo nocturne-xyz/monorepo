@@ -1,6 +1,6 @@
 import "mocha";
 import { expect } from "chai";
-import { Erc20Plugin, WstethAdapterPlugin } from "../src";
+import { Erc20Plugin, UniswapV3Plugin, WstethAdapterPlugin } from "../src";
 import {
   newOpRequestBuilder,
   NocturneSigner,
@@ -12,7 +12,7 @@ import { ethers } from "ethers";
 import ERC20_ABI from "../src/abis/ERC20.json";
 import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
 import {
-  DUMMY_CONTRACT_ADDR,
+  DUMMY_CONFIG,
   WETH_ADDRESS,
   WSTETH_ADAPTER_ADDRESS,
   WSTETH_ADDRESS,
@@ -26,7 +26,7 @@ describe("OpRequestBuilder", () => {
     const refundAddr = signer.generateRandomStealthAddress();
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const recipient = ethers.utils.getAddress(
       "0x1E2cD78882b12d3954a049Fd82FFD691565dC0A5"
     );
@@ -34,6 +34,7 @@ describe("OpRequestBuilder", () => {
     const opRequest = await builder
       .use(Erc20Plugin)
       .use(WstethAdapterPlugin)
+      .use(UniswapV3Plugin)
       .erc20Transfer(shitcoin.assetAddr, recipient, 100n)
       .convertWethToWsteth(100n)
       .refundAddr(refundAddr)
@@ -78,7 +79,7 @@ describe("OpRequestBuilder", () => {
           },
         ],
         chainId: 1n,
-        tellerContract: DUMMY_CONTRACT_ADDR,
+        tellerContract: DUMMY_CONFIG.tellerAddress(),
         deadline: 2n,
       },
       meta: {
@@ -101,4 +102,6 @@ describe("OpRequestBuilder", () => {
 
     expect(opRequest).to.eql(expected);
   });
+
+  // TODO: figure out how to unit test uniswap plugin if possible (network calls make it tough)
 });

@@ -1,4 +1,7 @@
-import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
+import {
+  NocturneConfig,
+  loadNocturneConfigBuiltin,
+} from "@nocturne-xyz/config";
 import { CanonAddress, StealthAddress } from "../crypto";
 import {
   ConfidentialPayment,
@@ -41,6 +44,8 @@ export type OpRequestBuilderExt<E extends BaseOpRequestBuilder> = E & {
 // methods that are available by default on any implementor of `OpRequestBuilderExt`
 export interface BaseOpRequestBuilder {
   provider: ethers.providers.Provider;
+  config: NocturneConfig;
+
   _op: OperationRequest;
   _builderItemsToProcess: Promise<BuilderItemToProcess>[];
 
@@ -109,14 +114,14 @@ export type JoinSplitsAndPaymentsForAsset = [
 export function newOpRequestBuilder(
   provider: ethers.providers.Provider,
   chainId: bigint,
-  tellerContract?: Address // for testing purposes in case there is no config for test network
+  config?: NocturneConfig // use override config instead of defaulting to builtin for chainid (for testing purposes)
 ): OpRequestBuilderExt<BaseOpRequestBuilder> {
-  if (!tellerContract) {
+  if (!config) {
     const networkName = chainIdToNetworkName(chainId);
-    const config = loadNocturneConfigBuiltin(networkName);
-    tellerContract = config.tellerAddress();
+    config = loadNocturneConfigBuiltin(networkName);
   }
 
+  const tellerContract = config.tellerAddress();
   const _op = {
     chainId,
     tellerContract,
@@ -130,6 +135,7 @@ export function newOpRequestBuilder(
 
   return {
     provider,
+    config,
     _op,
     _builderItemsToProcess,
 

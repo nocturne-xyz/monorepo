@@ -1,6 +1,5 @@
 import {
   Action,
-  Address,
   Asset,
   AssetTrait,
   BaseOpRequestBuilder,
@@ -11,6 +10,10 @@ import {
   UnwrapRequest,
 } from "@nocturne-xyz/core";
 import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
+
+const WETH_NAME = "weth";
+const WSTETH_NAME = "wsteth";
+const WSTETH_ADAPTER_NAME = "wstethAdapter";
 
 export interface WstethAdapterPluginMethods {
   // adds an ERC20 transfer to the operation
@@ -38,18 +41,26 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
     use: use,
     convertWethToWsteth(amount: bigint) {
       const prom = new Promise<BuilderItemToProcess>((resolve) => {
-        const chainId = this._op.chainId;
+        const wstethAdapterAddress =
+          this.config.protocolAllowlist.get(WSTETH_ADAPTER_NAME)?.address;
+        if (!wstethAdapterAddress) {
+          throw new Error(
+            `WstethAdapter not supported on chain with id: ${this._op.chainId}`
+          );
+        }
 
-        let wethAddress: Address;
-        let wstethAdapterAddress: Address;
-        let wstethAddress: Address;
-        if (chainId === 1n) {
-          // mainnet
-          wethAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
-          wstethAdapterAddress = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"; // TODO: fill with real address
-          wstethAddress = "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0";
-        } else {
-          throw new Error(`wsteth not supported on chain with id: ${chainId}`);
+        const wethAddress = this.config.erc20s.get(WETH_NAME)?.address;
+        if (!wethAddress) {
+          throw new Error(
+            `Weth not supported on chain with id: ${this._op.chainId}`
+          );
+        }
+
+        const wstethAddress = this.config.erc20s.get(WSTETH_NAME)?.address;
+        if (!wstethAddress) {
+          throw new Error(
+            `Wsteth not supported on chain with id: ${this._op.chainId}`
+          );
         }
 
         const encodedWeth = AssetTrait.erc20AddressToAsset(wethAddress);

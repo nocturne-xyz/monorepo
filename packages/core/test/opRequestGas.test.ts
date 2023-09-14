@@ -10,6 +10,7 @@ import {
   testGasAssets,
   stablescam,
   DUMMY_CONTRACT_ADDR,
+  DUMMY_CONFIG,
 } from "./utils";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { ERC20_ID } from "../src/primitives/asset";
@@ -41,7 +42,7 @@ describe("handleGasForOperationRequest", async () => {
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -77,7 +78,7 @@ describe("handleGasForOperationRequest", async () => {
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 100_000n)
@@ -120,7 +121,7 @@ describe("handleGasForOperationRequest", async () => {
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 1_000_000n)
@@ -172,7 +173,7 @@ describe("handleGasForOperationRequest", async () => {
     };
 
     const provider = ethers.getDefaultProvider();
-    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONTRACT_ADDR);
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 100_000n)

@@ -30,6 +30,7 @@ import {
 } from "../src/utils";
 import { depositFundsMultiToken } from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
+import { NocturneConfig } from "@nocturne-xyz/config";
 
 chai.use(chaiAsPromised);
 
@@ -65,6 +66,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
   let bobEoa: ethers.Wallet;
   let bundlerEoa: ethers.Wallet;
 
+  let config: NocturneConfig;
   let depositManager: DepositManager;
   let teller: Teller;
   let handler: Handler;
@@ -94,6 +96,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     ({
       provider,
       teardown,
+      config,
       teller,
       handler,
       aliceEoa,
@@ -191,7 +194,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const opRequestWithMetadata = await newOpRequestBuilder(
       provider,
       chainId,
-      teller.address
+      config
     )
       .unwrap(erc20Asset, PER_NOTE_AMOUNT)
       .gasPrice(1n)
@@ -235,7 +238,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const opRequestWithMetadata = await newOpRequestBuilder(
       provider,
       chainId,
-      teller.address
+      config
     )
       .unwrap(erc20Asset, (PER_NOTE_AMOUNT * 3n) / 2n)
       .action(erc20.address, encodedFunction)
@@ -289,7 +292,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const opRequestWithMetadata = await newOpRequestBuilder(
       provider,
       chainId,
-      teller.address
+      config
     )
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL) // unwrap total 2.75 notes
       .confidentialPayment(
@@ -435,7 +438,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const opRequestWithMetadata = await newOpRequestBuilder(
       provider,
       chainId,
-      teller.address
+      config
     )
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL) // unwrap total 9.5
       .action(erc20.address, encodedFunction)
@@ -529,7 +532,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const opRequestWithMetadata = await newOpRequestBuilder(
       provider,
       chainId,
-      teller.address
+      config
     )
       .confidentialPayment(
         erc20Asset,
