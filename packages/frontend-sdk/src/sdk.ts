@@ -69,8 +69,6 @@ import {
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
-import JOINSPLIT_VKEY from "../circuit-artifacts/joinsplit/joinsplitVkey.json";
-import CANON_ADDR_SIG_CHECK_VKEY from "../circuit-artifacts/canonAddrSigCheck/canonAddrSigCheckVkey.json";
 import { NocturneSdkApi, SnapStateApi } from "./api";
 import {
   FetchDepositRequestQuery,
@@ -97,22 +95,13 @@ import {
 } from "./types";
 import {
   flattenDepositRequestStatus,
+  getCircuitArtifactUrls,
   getNocturneSdkConfig,
   getTokenContract,
   toDepositRequest,
   toDepositRequestWithMetadata,
 } from "./utils";
 import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
-
-const JOINSPLIT_WASM_PATH =
-  "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.wasm";
-const JOINSPLIT_ZKEY_PATH =
-  "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.zkey";
-
-const CANON_ADDR_SIG_CHECK_WASM_PATH =
-  "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.wasm";
-const CANON_ADDR_SIG_CHECK_ZKEY_PATH =
-  "https://frontend-sdk-circuit-artifacts.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey";
 
 export interface NocturneSdkOptions {
   networkName?: SupportedNetwork;
@@ -150,10 +139,14 @@ export class NocturneSdk implements NocturneSdkApi {
       const { WasmJoinSplitProver } = await import(
         "@nocturne-xyz/local-prover"
       );
+
+      const urls = getCircuitArtifactUrls(networkName);
+      const vkey = await (await fetch(urls.joinSplit.vkey)).json() as VerifyingKey;
+      const { wasm, zkey } = urls.joinSplit;
       return new WasmJoinSplitProver(
-        JOINSPLIT_WASM_PATH,
-        JOINSPLIT_ZKEY_PATH,
-        JOINSPLIT_VKEY as VerifyingKey
+        wasm,
+        zkey, 
+        vkey
       );
     });
 
@@ -162,10 +155,13 @@ export class NocturneSdk implements NocturneSdkApi {
         "@nocturne-xyz/local-prover"
       );
 
+      const urls = getCircuitArtifactUrls(networkName);
+      const vkey = await (await fetch(urls.canonAddrSigCheck.vkey)).json() as VerifyingKey;
+      const { wasm, zkey } = urls.canonAddrSigCheck;
       return new WasmCanonAddrSigCheckProver(
-        CANON_ADDR_SIG_CHECK_WASM_PATH,
-        CANON_ADDR_SIG_CHECK_ZKEY_PATH,
-        CANON_ADDR_SIG_CHECK_VKEY as VerifyingKey
+        wasm,
+        zkey,
+        vkey
       );
     });
 

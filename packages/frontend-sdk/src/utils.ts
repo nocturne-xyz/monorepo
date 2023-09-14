@@ -108,6 +108,50 @@ export function formatAbbreviatedAddress(address: string): string {
   ).toLowerCase();
 }
 
+export interface CircuitArtifactUrlsInner {
+  wasm: string;
+  zkey: string;
+  vkey: string;
+}
+
+export interface CircuitArtifactUrls {
+  joinSplit: CircuitArtifactUrlsInner;
+  canonAddrSigCheck: CircuitArtifactUrlsInner;
+}
+
+export function getCircuitArtifactUrls(networkName: SupportedNetwork): CircuitArtifactUrls {
+  switch (networkName) {
+    case "sepolia":
+      return {
+        joinSplit: {
+          wasm: "https://nocturne-circuit-artifacts-sepolia.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.wasm",
+          zkey: "https://nocturne-circuit-artifacts-sepolia.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.zkey",
+          vkey: "https://nocturne-circuit-artifacts-sepolia.s3.us-east-2.amazonaws.com/joinsplit/joinsplitVkey.json",
+        },
+        canonAddrSigCheck: {
+          wasm: "https://nocturne-circuit-artifacts-sepolia.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.wasm",
+          zkey: "https://nocturne-circuit-artifacts-sepolia.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey",
+          vkey: "https://nocturne-circuit-artifacts-sepolia.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheckVkey.json",
+        },
+      };
+    case "localhost":
+      return {
+        joinSplit: {
+          wasm: "https://nocturne-circuit-artifacts-localhost.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.wasm",
+          zkey: "https://nocturne-circuit-artifacts-localhost.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.zkey",
+          vkey: "https://nocturne-circuit-artifacts-localhost.s3.us-east-2.amazonaws.com/joinsplit/joinsplitVkey.json",
+        },
+        canonAddrSigCheck: {
+          wasm: "https://nocturne-circuit-artifacts-localhost.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.wasm",
+          zkey: "https://nocturne-circuit-artifacts-localhost.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey",
+          vkey: "https://nocturne-circuit-artifacts-localhost.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheckVkey.json",
+        },
+      };
+    default:
+      throw new Error(`Network not supported: ${networkName}`);
+  }
+}
+
 export function getNocturneSdkConfig(
   networkName: SupportedNetwork
 ): NocturneSdkConfig {
