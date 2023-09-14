@@ -1,5 +1,5 @@
 {
-  "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+  "proxyAdminOwner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
   "screeners": ["0x1DAb396f790699de639cF22d0Ea7744469aCAB1a"],
   "subtreeBatchFillers": ["0xD20E7a8ADdCB5D983C064f8A184B7aa65ef23f10"],
   "wethAddress": "0xb16f35c0ae2912430dac15764477e179d9b9ebea",
@@ -10,6 +10,7 @@
         "address": "0x0000000000000000000000000000000000000000",
         "globalCapWholeTokens": "500n",
         "maxDepositSizeWholeTokens": "50n",
+        "resetWindowHours": "24n",
         "precision": "18n",
         "isGasAsset": true
       }
@@ -20,6 +21,7 @@
         "address": "0x0000000000000000000000000000000000000000",
         "globalCapWholeTokens": "500n",
         "maxDepositSizeWholeTokens": "50n",
+        "resetWindowHours": "24n",
         "precision": "18n",
         "isGasAsset": true
       }
@@ -40,6 +42,10 @@
   "leftoverTokenHolder": "0x0000000000000000000000000000000000000123",
   "opts": {
     "useMockSubtreeUpdateVerifier": true,
+    "wstethAdapterDeployConfig": {
+      "wethAddress": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+      "wstethAddress": "0x8b79995e5f793a07bc00c21412e50ecae098e710"
+    },
     "confirmations": 1
   }
 }
