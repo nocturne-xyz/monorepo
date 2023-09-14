@@ -76,6 +76,10 @@ export class MapWithObjectKeys<K, V> {
       callbackfn.call(thisArg, value, key, this);
     }
   }
+
+  [Symbol.iterator](): IterableIterator<[K, V]> {
+    return this.entries();
+  }
 }
 
 export class SetWithObjectKeys<T> {

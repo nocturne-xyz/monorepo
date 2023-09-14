@@ -5,7 +5,6 @@ import {
 import { CanonAddress, StealthAddress } from "../crypto";
 import {
   ConfidentialPayment,
-  JoinSplitRequest,
   OperationGasParams,
   OperationRequestWithMetadata,
   OperationRequest,
@@ -18,14 +17,13 @@ import {
   Address,
   Asset,
   AssetTrait,
-  ExpectedRefund,
   OperationMetadata,
   OperationMetadataItem,
 } from "../primitives";
 import { ethers } from "ethers";
-import { MapWithObjectKeys, groupByArr } from "../utils";
+import { MapWithObjectKeys } from "../utils";
 import { chainIdToNetworkName } from "../utils/constants";
-import * as JSON from "bigint-json-serialization";
+// import * as JSON from "bigint-json-serialization";
 
 export type OpRequestBuilder = OpRequestBuilderExt<BaseOpRequestBuilder>;
 
@@ -111,10 +109,10 @@ export type OpRequestBuilderPlugin<
 
 // utility type used in `OpRequestBuilder` to match together
 // conf payments and join split requests
-export type JoinSplitsAndPaymentsForAsset = [
-  JoinSplitRequest[],
-  ConfidentialPayment[]
-];
+export type UnwrapAmountAndPaymentsForAsset = {
+  unwrapAmount: bigint;
+  payments: ConfidentialPayment[];
+};
 
 // the base OpRequestBuilder. This is the only thing users should explicitly construct.
 // to add functionality (erc20s, protocol integrations, etc), user should call `.use(plugin)` with the relevant plugin
@@ -255,42 +253,42 @@ export function newOpRequestBuilder(
     },
 
     async build(): Promise<OperationRequestWithMetadata> {
-      const joinSplitsAndPaymentsByAsset: MapWithObjectKeys<
-        Asset,
-        JoinSplitsAndPaymentsForAsset
-      > = new MapWithObjectKeys();
       const metadata: OperationMetadata = {
         items: [],
       };
 
       // Await any promises resolving to items to process, then process items
-      // const ioAmounts = new MapWithObjectKeys<Asset, bigint>(); // stringified asset ->
+      const netBalanceMap = new MapWithObjectKeys<Asset, bigint>();
+      const unwrapAmountsByAsset = new MapWithObjectKeys<Asset, bigint>();
+      const confPaymentsByAsset = new MapWithObjectKeys<
+        Asset,
+        ConfidentialPayment[]
+      >();
       for (const prom of this._builderItemsToProcess) {
         const result = await prom;
 
         for (const { asset, unwrapValue } of result.unwraps) {
-          const joinSplit: JoinSplitRequest = {
+          // Subtract unwrap value from net amount (value being spent from teller)
+          netBalanceMap.set(
             asset,
-            unwrapValue,
-          };
+            (netBalanceMap.get(asset) ?? 0n) - unwrapValue
+          );
 
-          const [joinSplits, payments] = joinSplitsAndPaymentsByAsset.get(
-            asset
-          ) ?? [[], []];
-          joinSplits.push(joinSplit);
-          joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+          // If net amount is negative, must add value to unwrap amount to make unwrap possible
+          if ((netBalanceMap.get(asset) ?? 0n) < 0n) {
+            unwrapAmountsByAsset.set(
+              asset,
+              (unwrapAmountsByAsset.get(asset) ?? 0n) + unwrapValue
+            );
+            netBalanceMap.set(asset, 0n); // Reset net back to 0 now that we've added to unwrap amount
+          }
         }
         for (const { asset, value, receiver } of result.confidentialPayments) {
-          const payment: ConfidentialPayment = {
-            value,
-            receiver,
-          };
-
-          const [joinSplits, payments] = joinSplitsAndPaymentsByAsset.get(
-            asset
-          ) ?? [[], []];
-          payments.push(payment);
-          joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+          const existingConfPayments = confPaymentsByAsset.get(asset) ?? [];
+          confPaymentsByAsset.set(
+            asset,
+            existingConfPayments.concat({ value, receiver })
+          );
 
           metadata.items.push({
             type: "ConfidentialPayment",
@@ -306,88 +304,53 @@ export function newOpRequestBuilder(
           };
           this._op.actions.push(action);
         }
-        for (const refund of result.refunds) {
-          this._op.refunds.push({
-            encodedAsset: AssetTrait.encode(refund.asset),
-            minRefundValue: refund.minRefundValue,
-          });
+        for (const { asset, minRefundValue } of result.refunds) {
+          // Refund value adds funds to net balance (value being received to Handler able to spend
+          // in subsequent calls)
+          netBalanceMap.set(
+            asset,
+            (netBalanceMap.get(asset) ?? 0n) + minRefundValue
+          );
         }
         for (const metadataItem of result.metadatas) {
           metadata.items.push(metadataItem);
         }
       }
 
-      // consolidate joinSplits and payments for each asset
-      const consolidatedJoinSplitRequests = [];
-      for (const [
-        asset,
-        [joinSplits, payments],
-      ] of joinSplitsAndPaymentsByAsset.entries()) {
-        // consolidate payments to the same receiver
-        const paymentsByReceiver = groupByArr(payments, (p) =>
-          JSON.stringify(p.receiver)
-        );
-        const consolidatedPayments = paymentsByReceiver.flatMap((payments) => {
-          if (payments.length === 0) {
-            return [];
-          }
-          const value = payments.reduce(
-            (acc, payment) => acc + payment.value,
-            0n
-          );
-          const receiver = payments[0].receiver;
-          return [{ value, receiver }];
+      // Turn unwraps into joinsplit requests and attach payments
+      for (const [asset, unwrapAmount] of unwrapAmountsByAsset.entries()) {
+        this._op.joinSplitRequests.push({
+          asset,
+          unwrapValue: unwrapAmount,
         });
-
-        // assign each payment to a joinsplit request. If there are not enough joinsplit requests, create new ones
-        for (const payment of consolidatedPayments) {
-          const joinSplit = joinSplits.pop();
+      }
+      for (const [asset, payments] of confPaymentsByAsset.entries()) {
+        for (const payment of payments) {
+          const joinSplit = this._op.joinSplitRequests.find(
+            (js) =>
+              AssetTrait.isSameAsset(js.asset, asset) &&
+              js.payment === undefined
+          );
           if (joinSplit) {
             joinSplit.payment = payment;
-            consolidatedJoinSplitRequests.push(joinSplit);
           } else {
-            consolidatedJoinSplitRequests.push({
+            this._op.joinSplitRequests.push({
               asset,
               unwrapValue: 0n,
               payment,
             });
           }
         }
+      }
 
-        // consolidate any remaining unassigned joinsplit requests
-        if (joinSplits.length > 0) {
-          const value = joinSplits.reduce(
-            (acc, joinSplit) => acc + joinSplit.unwrapValue,
-            0n
-          );
-          consolidatedJoinSplitRequests.push({
-            asset,
-            unwrapValue: value,
+      // Add refunds for expected outstanding assets
+      for (const [asset, netBalance] of netBalanceMap.entries()) {
+        if (netBalance > 0n) {
+          this._op.refunds.push({
+            encodedAsset: AssetTrait.encode(asset),
+            minRefundValue: netBalance,
           });
         }
-      }
-      this._op.joinSplitRequests = consolidatedJoinSplitRequests;
-
-      // consolidate refunds by asset
-      // TODO: REMOVE
-      const consolidatedRefunds: ExpectedRefund[] = groupByArr(
-        this._op.refunds,
-        (r) => JSON.stringify(r.encodedAsset)
-      ).map((refundsForAsset) => {
-        const totalRefundValue = refundsForAsset.reduce(
-          (acc, refund) => acc + refund.minRefundValue,
-          0n
-        );
-
-        return {
-          encodedAsset: refundsForAsset[0].encodedAsset,
-          minRefundValue: totalRefundValue,
-        };
-      });
-      this._op.refunds = consolidatedRefunds;
-
-      if (this._op.joinSplitRequests.length == 0) {
-        throw new Error("No joinSplits or payments specified");
       }
 
       return {

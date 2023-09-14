@@ -55,7 +55,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("builds OperaionRequest with 1 action, 1 unwrap, 1 payment, no params set", async () => {
+  it("builds OperationRequest with 1 action, 1 unwrap, 1 payment, no params set", async () => {
     const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const receiver = signer.canonicalAddress();
@@ -195,7 +195,7 @@ describe("OpRequestBuilder", () => {
     expect(opRequest.request).to.eql(expected);
   });
 
-  it("builds OperaionRequest with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", async () => {
+  it("builds OperationRequest with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", async () => {
     const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const refundAddr = signer.generateRandomStealthAddress();
