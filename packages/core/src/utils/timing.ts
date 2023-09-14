@@ -72,3 +72,17 @@ export class Histogram {
     );
   }
 }
+
+export async function timedAsync<T>(f: () => Promise<T>): Promise<[T, number]> {
+  const startTime = Date.now();
+  const result = await f();
+  const endTime = Date.now();
+  return [result, endTime - startTime];
+}
+
+export function timed<T>(f: () => T): [T, number] {
+  const startTime = Date.now();
+  const result = f();
+  const endTime = Date.now();
+  return [result, endTime - startTime];
+}

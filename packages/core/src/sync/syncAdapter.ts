@@ -45,6 +45,11 @@ export interface IterSyncOpts {
   throttleMs?: number;
 }
 
+export interface SDKIterSyncOpts extends IterSyncOpts {
+  // if true, the adapter will record and print performance times
+  timing?: boolean;
+}
+
 export interface SDKSyncAdapter {
   // return an async iterator over state diffs in managably-sized chunks starting from `startTotalEntityIndex`
   // with notes / nfs when there's a lot of blocks to sync
@@ -56,7 +61,7 @@ export interface SDKSyncAdapter {
   // chunks.
   iterStateDiffs(
     startTotalEntityIndex: TotalEntityIndex,
-    opts?: IterSyncOpts
+    opts?: SDKIterSyncOpts
   ): ClosableAsyncIterator<EncryptedStateDiff>;
 
   // return the latest block the sync adapter can sync to

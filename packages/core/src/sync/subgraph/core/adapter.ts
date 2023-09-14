@@ -1,7 +1,7 @@
 import { maxArray, sleep, max } from "../../../utils";
 import {
   EncryptedStateDiff,
-  IterSyncOpts,
+  SDKIterSyncOpts,
   SDKSyncAdapter,
 } from "../../syncAdapter";
 import { fetchlatestCommittedMerkleIndex, fetchSDKEvents } from "./fetch";
@@ -18,6 +18,8 @@ import {
   Nullifier,
 } from "../../../primitives";
 import { Logger } from "winston";
+import { Histogram } from "../../../utils";
+import { timedAsync } from "../../../utils/timing";
 
 export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   private readonly graphqlEndpoint: string;
@@ -30,10 +32,14 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
 
   iterStateDiffs(
     startTotalEntityIndex: TotalEntityIndex,
-    opts?: IterSyncOpts
+    opts?: SDKIterSyncOpts
   ): ClosableAsyncIterator<EncryptedStateDiff> {
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
     const logger = this.logger;
+
+    const fetchHistogram = new Histogram(
+      "time to fetch SDK events for a diff (ms) per note"
+    );
     let closed = false;
 
     const endpoint = this.graphqlEndpoint;
@@ -76,7 +82,9 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         await maybeApplyThrottle(latestIndexedBlock);
 
         // fetch notes and nfs on or after `from`, will return at most 100 of each
-        const sdkEvents = await fetchSDKEvents(endpoint, from);
+        const [sdkEvents, fetchTime] = await timedAsync(() =>
+          fetchSDKEvents(endpoint, from)
+        );
 
         // if we have notes and/or mullifiers, update from and get the last committed merkle index as of the entity index we saw
         if (sdkEvents.length > 0) {
@@ -134,6 +142,10 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
             logger.info(yieldedLogMsg);
           } else {
             console.log(yieldedLogMsg);
+          }
+
+          if (opts?.timing) {
+            fetchHistogram.sample(fetchTime / stateDiff.notes.length);
           }
 
           yield stateDiff;
