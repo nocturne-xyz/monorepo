@@ -7,7 +7,6 @@ import {
 import { min, max } from "../../utils";
 import {
   EncryptedStateDiff,
-  IterSyncOpts,
   SDKIterSyncOpts,
   SDKSyncAdapter,
 } from "../syncAdapter";
