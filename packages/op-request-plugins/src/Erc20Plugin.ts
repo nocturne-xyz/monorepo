@@ -77,7 +77,7 @@ export function Erc20Plugin<EInner extends BaseOpRequestBuilder>(
           unwraps: [unwrap],
           confidentialPayments: [],
           actions: [action],
-          refundAssets: [],
+          refunds: [],
           metadatas: [metadata],
         });
       });

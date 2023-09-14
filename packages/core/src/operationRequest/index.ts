@@ -3,6 +3,7 @@ export {
   OperationGasParams,
   OperationRequestWithMetadata,
   UnwrapRequest,
+  RefundRequest,
 } from "./operationRequest";
 export {
   OpRequestBuilder,

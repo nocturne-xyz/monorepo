@@ -5,30 +5,32 @@ import {
 import { CanonAddress, StealthAddress } from "../crypto";
 import {
   ConfidentialPayment,
-  JoinSplitRequest,
   OperationGasParams,
   OperationRequestWithMetadata,
   OperationRequest,
   UnwrapRequest,
   ConfidentialPaymentRequest,
+  RefundRequest,
 } from "./operationRequest";
 import {
   Action,
   Address,
   Asset,
+  AssetTrait,
   OperationMetadata,
   OperationMetadataItem,
 } from "../primitives";
 import { ethers } from "ethers";
-import { groupByArr } from "../utils";
+import { MapWithObjectKeys } from "../utils";
 import { chainIdToNetworkName } from "../utils/constants";
+// import * as JSON from "bigint-json-serialization";
 
 export type OpRequestBuilder = OpRequestBuilderExt<BaseOpRequestBuilder>;
 
 export interface BuilderItemToProcess {
   unwraps: UnwrapRequest[];
   confidentialPayments: ConfidentialPaymentRequest[];
-  refundAssets: Asset[];
+  refunds: RefundRequest[];
   actions: Action[];
   metadatas: OperationMetadataItem[];
 }
@@ -57,13 +59,15 @@ export interface BaseOpRequestBuilder {
 
   // add an action  to the operation
   // returns `this` so it's chainable
-  action(contractAddress: Address, encodedFunction: string): this;
+  // CAUTION: this is a low-level method that should only be used by plugins
+  __action(contractAddress: Address, encodedFunction: string): this;
 
   // specify the operation should unwrap `amountUnits` of `asset`
   // `ammountUnits` is the amount in EVM (uint256) representation. It is up to
   // the caller to handle decimal conversions
   // returns `this` so it's chainable
-  unwrap(asset: Asset, amountUnits: bigint): this;
+  // CAUTION: this is a low-level method that should only be used by plugins
+  __unwrap(asset: Asset, amountUnits: bigint): this;
 
   // add a confidential payment to the operation
   // returns `this` so it's chainable
@@ -74,7 +78,8 @@ export interface BaseOpRequestBuilder {
   ): this;
 
   // indicates that the operation expects a refund of asset `Asset`.
-  refundAsset(asset: Asset): this;
+  // CAUTION: this is a low-level method that should only be used by plugins
+  __refund(refund: RefundRequest): this;
 
   // set the operation's `refundAddr` stealth address up-front.
   // if this is not set, the wallet will generate a new one
@@ -104,10 +109,10 @@ export type OpRequestBuilderPlugin<
 
 // utility type used in `OpRequestBuilder` to match together
 // conf payments and join split requests
-export type JoinSplitsAndPaymentsForAsset = [
-  JoinSplitRequest[],
-  ConfidentialPayment[]
-];
+export type UnwrapAmountAndPaymentsForAsset = {
+  unwrapAmount: bigint;
+  payments: ConfidentialPayment[];
+};
 
 // the base OpRequestBuilder. This is the only thing users should explicitly construct.
 // to add functionality (erc20s, protocol integrations, etc), user should call `.use(plugin)` with the relevant plugin
@@ -122,11 +127,11 @@ export function newOpRequestBuilder(
   }
 
   const tellerContract = config.tellerAddress();
-  const _op = {
+  const _op: OperationRequest = {
     chainId,
     tellerContract,
     joinSplitRequests: [],
-    refundAssets: [],
+    refunds: [],
     actions: [],
     deadline: 0n,
   };
@@ -150,7 +155,7 @@ export function newOpRequestBuilder(
       return this;
     },
 
-    action(contractAddress: Address, encodedFunction: string) {
+    __action(contractAddress: Address, encodedFunction: string) {
       const action: Action = {
         contractAddress: ethers.utils.getAddress(contractAddress),
         encodedFunction,
@@ -160,7 +165,7 @@ export function newOpRequestBuilder(
         Promise.resolve({
           unwraps: [],
           confidentialPayments: [],
-          refundAssets: [],
+          refunds: [],
           actions: [action],
           metadatas: [],
         })
@@ -169,7 +174,7 @@ export function newOpRequestBuilder(
       return this;
     },
 
-    unwrap(asset: Asset, amountUnits: bigint) {
+    __unwrap(asset: Asset, amountUnits: bigint) {
       const unwrap: UnwrapRequest = {
         asset,
         unwrapValue: amountUnits,
@@ -179,7 +184,7 @@ export function newOpRequestBuilder(
         Promise.resolve({
           unwraps: [unwrap],
           confidentialPayments: [],
-          refundAssets: [],
+          refunds: [],
           actions: [],
           metadatas: [],
         })
@@ -203,7 +208,7 @@ export function newOpRequestBuilder(
         Promise.resolve({
           unwraps: [],
           confidentialPayments: [payment],
-          refundAssets: [],
+          refunds: [],
           actions: [],
           metadatas: [],
         })
@@ -212,12 +217,12 @@ export function newOpRequestBuilder(
       return this;
     },
 
-    refundAsset(asset: Asset) {
+    __refund(refund: RefundRequest) {
       this._builderItemsToProcess.push(
         Promise.resolve({
           unwraps: [],
           confidentialPayments: [],
-          refundAssets: [asset],
+          refunds: [refund],
           actions: [],
           metadatas: [],
         })
@@ -248,41 +253,42 @@ export function newOpRequestBuilder(
     },
 
     async build(): Promise<OperationRequestWithMetadata> {
-      const joinSplitsAndPaymentsByAsset: Map<
-        Asset,
-        JoinSplitsAndPaymentsForAsset
-      > = new Map();
       const metadata: OperationMetadata = {
         items: [],
       };
 
       // Await any promises resolving to items to process, then process items
+      const netBalanceMap = new MapWithObjectKeys<Asset, bigint>();
+      const unwrapAmountsByAsset = new MapWithObjectKeys<Asset, bigint>();
+      const confPaymentsByAsset = new MapWithObjectKeys<
+        Asset,
+        ConfidentialPayment[]
+      >();
       for (const prom of this._builderItemsToProcess) {
         const result = await prom;
 
         for (const { asset, unwrapValue } of result.unwraps) {
-          const joinSplit: JoinSplitRequest = {
+          // Subtract unwrap value from net amount (value being spent from teller)
+          netBalanceMap.set(
             asset,
-            unwrapValue,
-          };
+            (netBalanceMap.get(asset) ?? 0n) - unwrapValue
+          );
 
-          const [joinSplits, payments] = joinSplitsAndPaymentsByAsset.get(
-            asset
-          ) ?? [[], []];
-          joinSplits.push(joinSplit);
-          joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+          // If net amount is negative, must add value to unwrap amount to make action possible
+          if ((netBalanceMap.get(asset) ?? 0n) < 0n) {
+            unwrapAmountsByAsset.set(
+              asset,
+              (unwrapAmountsByAsset.get(asset) ?? 0n) + unwrapValue
+            );
+            netBalanceMap.set(asset, 0n); // Reset net back to 0 now that we've added to unwrap amount
+          }
         }
         for (const { asset, value, receiver } of result.confidentialPayments) {
-          const payment: ConfidentialPayment = {
-            value,
-            receiver,
-          };
-
-          const [joinSplits, payments] = joinSplitsAndPaymentsByAsset.get(
-            asset
-          ) ?? [[], []];
-          payments.push(payment);
-          joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+          const existingConfPayments = confPaymentsByAsset.get(asset) ?? [];
+          confPaymentsByAsset.set(
+            asset,
+            existingConfPayments.concat({ value, receiver })
+          );
 
           metadata.items.push({
             type: "ConfidentialPayment",
@@ -298,68 +304,53 @@ export function newOpRequestBuilder(
           };
           this._op.actions.push(action);
         }
-        for (const asset of result.refundAssets) {
-          this._op.refundAssets.push(asset);
+        for (const { asset, minRefundValue } of result.refunds) {
+          // Refund value adds funds to net balance (value being received to Handler able to spend
+          // in subsequent calls)
+          netBalanceMap.set(
+            asset,
+            (netBalanceMap.get(asset) ?? 0n) + minRefundValue
+          );
         }
         for (const metadataItem of result.metadatas) {
           metadata.items.push(metadataItem);
         }
       }
 
-      // consolidate joinSplits and payments for each asset
-      const joinSplitRequests = [];
-      for (const [
-        asset,
-        [joinSplits, payments],
-      ] of joinSplitsAndPaymentsByAsset.entries()) {
-        // consolidate payments to the same receiver
-        const paymentsByReceiver = groupByArr(payments, (p) =>
-          p.receiver.toString()
-        );
-        const consolidatedPayments = paymentsByReceiver.flatMap((payments) => {
-          if (payments.length === 0) {
-            return [];
-          }
-          const value = payments.reduce(
-            (acc, payment) => acc + payment.value,
-            0n
-          );
-          const receiver = payments[0].receiver;
-          return [{ value, receiver }];
+      // Turn unwraps into joinsplit requests and attach payments
+      for (const [asset, unwrapAmount] of unwrapAmountsByAsset.entries()) {
+        this._op.joinSplitRequests.push({
+          asset,
+          unwrapValue: unwrapAmount,
         });
-
-        // assign each payment to a joinsplit request. If there are not enough joinsplit requests, create new ones
-        for (const payment of consolidatedPayments) {
-          const joinSplit = joinSplits.pop();
+      }
+      for (const [asset, payments] of confPaymentsByAsset.entries()) {
+        for (const payment of payments) {
+          const joinSplit = this._op.joinSplitRequests.find(
+            (js) =>
+              AssetTrait.isSameAsset(js.asset, asset) &&
+              js.payment === undefined
+          );
           if (joinSplit) {
             joinSplit.payment = payment;
-            joinSplitRequests.push(joinSplit);
           } else {
-            joinSplitRequests.push({
+            this._op.joinSplitRequests.push({
               asset,
               unwrapValue: 0n,
               payment,
             });
           }
         }
-
-        // consolidate any remaining unassigned joinsplit requests
-        if (joinSplits.length > 0) {
-          const value = joinSplits.reduce(
-            (acc, joinSplit) => acc + joinSplit.unwrapValue,
-            0n
-          );
-          joinSplitRequests.push({
-            asset,
-            unwrapValue: value,
-          });
-        }
       }
 
-      this._op.joinSplitRequests = joinSplitRequests;
-
-      if (this._op.joinSplitRequests.length == 0) {
-        throw new Error("No joinSplits or payments specified");
+      // Add refunds for expected outstanding assets
+      for (const [asset, netBalance] of netBalanceMap.entries()) {
+        if (netBalance > 0n) {
+          this._op.refunds.push({
+            encodedAsset: AssetTrait.encode(asset),
+            minRefundValue: netBalance,
+          });
+        }
       }
 
       return {

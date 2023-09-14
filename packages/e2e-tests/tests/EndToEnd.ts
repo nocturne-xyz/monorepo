@@ -196,7 +196,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       chainId,
       config
     )
-      .unwrap(erc20Asset, PER_NOTE_AMOUNT)
+      .__unwrap(erc20Asset, PER_NOTE_AMOUNT)
       .gasPrice(1n)
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
@@ -240,8 +240,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       chainId,
       config
     )
-      .unwrap(erc20Asset, (PER_NOTE_AMOUNT * 3n) / 2n)
-      .action(erc20.address, encodedFunction)
+      .__unwrap(erc20Asset, (PER_NOTE_AMOUNT * 3n) / 2n)
+      .__action(erc20.address, encodedFunction)
       .gas({
         executionGasLimit: 1n, // Intentionally too low
         gasPrice: GAS_PRICE,
@@ -294,13 +294,13 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       chainId,
       config
     )
-      .unwrap(erc20Asset, ALICE_UNWRAP_VAL) // unwrap total 2.75 notes
+      .__unwrap(erc20Asset, ALICE_UNWRAP_VAL) // unwrap total 2.75 notes
       .confidentialPayment(
         erc20Asset,
         ALICE_TO_BOB_PRIV_VAL, // conf pay 0.25 notes
         nocturneClientBob.viewer.canonicalAddress()
       )
-      .action(erc20.address, encodedFunction)
+      .__action(erc20.address, encodedFunction)
       .gasPrice(GAS_PRICE)
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
@@ -440,8 +440,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       chainId,
       config
     )
-      .unwrap(erc20Asset, ALICE_UNWRAP_VAL) // unwrap total 9.5
-      .action(erc20.address, encodedFunction)
+      .__unwrap(erc20Asset, ALICE_UNWRAP_VAL) // unwrap total 9.5
+      .__action(erc20.address, encodedFunction)
       .gasPrice(GAS_PRICE)
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS

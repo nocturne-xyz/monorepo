@@ -1,3 +1,4 @@
+import { SetWithObjectKeys } from "./collections";
 import { assertOrErr } from "./error";
 import * as JSON from "bigint-json-serialization";
 
@@ -157,6 +158,6 @@ export function consecutiveChunks<T>(
 }
 
 export function dedup<T>(arr: T[]): T[] {
-  const set = new Set(arr.map((t) => JSON.stringify(t)));
-  return Array.from(set.values()).map((t) => JSON.parse(t) as T);
+  const set = new SetWithObjectKeys(arr.map((t) => t));
+  return Array.from(set.values()).map((t) => t);
 }

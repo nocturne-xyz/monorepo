@@ -109,10 +109,12 @@ export interface TrackedAsset {
   minRefundValue: bigint;
 }
 
+export type ExpectedRefund = TrackedAsset;
+
 export interface BaseOperation {
   networkInfo: NetworkInfo;
   refundAddr: CompressedStealthAddress;
-  encodedRefundAssets: EncodedAsset[];
+  refunds: ExpectedRefund[];
   actions: Action[];
   encodedGasAsset: EncodedAsset;
   gasAssetRefundThreshold: bigint;
@@ -135,7 +137,7 @@ export interface ProvenOperation extends BaseOperation {
 }
 
 export interface SignableOperationWithNetworkInfo
-  extends Omit<BaseOperation, "encodedRefundAssets"> {
+  extends Omit<BaseOperation, "encodedRefundAssets" | "refunds"> {
   pubJoinSplits: SignablePublicJoinSplit[];
   confJoinSplits: SignableJoinSplit[];
   trackedAssets: TrackedAsset[];

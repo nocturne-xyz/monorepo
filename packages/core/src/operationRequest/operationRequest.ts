@@ -1,6 +1,12 @@
 import { ethers } from "ethers";
 import { CanonAddress, StealthAddress } from "../crypto";
-import { Action, Address, Asset, OperationMetadata } from "../primitives";
+import {
+  Action,
+  Address,
+  Asset,
+  ExpectedRefund,
+  OperationMetadata,
+} from "../primitives";
 
 const ONE_DAY_SECONDS = 24 * 60 * 60;
 
@@ -13,13 +19,17 @@ export interface JoinSplitRequest {
 
 export type UnwrapRequest = Omit<JoinSplitRequest, "payment">;
 
+export interface RefundRequest extends Omit<ExpectedRefund, "encodedAsset"> {
+  asset: Asset;
+}
+
 export interface ConfidentialPaymentRequest extends ConfidentialPayment {
   asset: Asset;
 }
 
 export interface OperationRequest {
   joinSplitRequests: JoinSplitRequest[];
-  refundAssets: Asset[];
+  refunds: ExpectedRefund[];
   actions: Action[];
   chainId: bigint;
   tellerContract: Address;

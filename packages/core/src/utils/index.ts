@@ -29,3 +29,4 @@ export {
   merkleIndexToSubtreeIndex,
   batchOffsetToLatestMerkleIndexInBatch,
 } from "./treeIndex";
+export { MapWithObjectKeys, SetWithObjectKeys } from "./collections";
