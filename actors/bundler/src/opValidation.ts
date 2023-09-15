@@ -72,7 +72,7 @@ export async function checkRevertError(
       operation,
       300_000, // upper bound on verification gas needed
       bundler,
-      { from: tellerContract.address } // hack to avoid simulation reverting, only teller can call handler
+      { from: tellerContract.address, gasLimit: est } // `from` hack to avoid simulation reverting, only teller can call handler
     );
 
     const { opProcessed, failureReason } = result;
