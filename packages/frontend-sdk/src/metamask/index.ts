@@ -1,5 +1,4 @@
 import { SnapStateApi } from "../api";
-import { SupportedNetwork } from "../types";
 import { GetSnapsResponse, Snap } from "./types";
 
 const NOCTURNE_SNAP_ORIGIN = "npm:@nocturne-xyz/snap";
@@ -7,8 +6,7 @@ const NOCTURNE_SNAP_ORIGIN = "npm:@nocturne-xyz/snap";
 export class SnapStateSdk implements SnapStateApi {
   constructor(
     readonly version?: string,
-    readonly snapId: string = NOCTURNE_SNAP_ORIGIN,
-    private env: SupportedNetwork = "mainnet"
+    readonly snapId: string = NOCTURNE_SNAP_ORIGIN
   ) {}
 
   async isFlask(): Promise<boolean> {

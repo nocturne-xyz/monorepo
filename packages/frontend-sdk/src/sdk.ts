@@ -164,11 +164,7 @@ export class NocturneSdk implements NocturneSdkApi {
     this.endpoints = config.endpoints;
     this.config = config;
     this._provider = options.provider;
-    this._snap = new SnapStateSdk(
-      snapOptions?.version,
-      snapOptions?.snapId,
-      networkName
-    );
+    this._snap = new SnapStateSdk(snapOptions?.version, snapOptions?.snapId);
     this.syncMutex = new Mutex();
 
     this.signerThunk = thunk(() => this.getWindowSigner());
