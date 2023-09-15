@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.0
+
+### Major Changes
+
+- 543af0b0: Replace sepolia with goerli everywhere now that we're migrating testnets
+
+### Patch Changes
+
+- Updated dependencies [9fccc32f]
+- Updated dependencies [543af0b0]
+- Updated dependencies [543af0b0]
+  - @nocturne-xyz/core@2.0.0
+  - @nocturne-xyz/idb-kv-store@0.4.1
+  - @nocturne-xyz/local-prover@0.4.1
+  - @nocturne-xyz/op-request-plugins@0.2.1
+
 ## 0.4.0
 
 ### Minor Changes

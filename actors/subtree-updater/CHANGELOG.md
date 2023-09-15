@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [9fccc32f]
+- Updated dependencies [543af0b0]
+- Updated dependencies [543af0b0]
+  - @nocturne-xyz/core@2.0.0
+  - @nocturne-xyz/persistent-log@0.1.2
+  - @nocturne-xyz/offchain-utils@0.1.12
+
 ## 0.4.0
 
 ### Minor Changes

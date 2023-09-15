@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.0
+
+### Major Changes
+
+- 543af0b0: Replace sepolia with goerli everywhere now that we're migrating testnets
+
+### Patch Changes
+
+- 9fccc32f: Update joinsplit verify base amount to 300k since we added joinsplit info PI
+- 543af0b0: Update try update JS requests to assume even same gas asset additions incur extra joinsplit (temp workaround)
+
 ## 1.0.0
 
 ### Major Changes
