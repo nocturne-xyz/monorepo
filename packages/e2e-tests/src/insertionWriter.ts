@@ -22,7 +22,9 @@ export async function startInsertionWriter(
   const client = new IORedis(await server.getPort(), await server.getHost());
   const insertionWriter = new InsertionWriter(syncAdapter, client, logger);
 
-  const { promise, teardown } = await insertionWriter.start();
+  const { promise, teardown } = await insertionWriter.start({
+    throttleOnEmptyMs: 3000,
+  });
 
   return async () => {
     await teardown();
