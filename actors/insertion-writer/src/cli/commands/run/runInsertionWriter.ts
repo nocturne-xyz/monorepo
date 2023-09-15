@@ -14,7 +14,12 @@ export const runInsertionWriter = new Command("insertion-writer")
   )
   .option(
     "--throttle-ms <number>",
-    "maximum period of time to wait before polling new insertions",
+    "maximum period of time to wait between calls to poll new insertions",
+    parseInt
+  )
+  .option(
+    "--throttle-on-empty-ms <number>",
+    "maximum period of time to wait between calls to poll new insertions after no new insertions are returned",
     parseInt
   )
   .option(
@@ -27,7 +32,13 @@ export const runInsertionWriter = new Command("insertion-writer")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
-    const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
+    const {
+      configNameOrPath,
+      logDir,
+      throttleMs,
+      throttleOnEmptyMs,
+      stdoutLogLevel,
+    } = options;
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
@@ -52,6 +63,10 @@ export const runInsertionWriter = new Command("insertion-writer")
 
     const writer = new InsertionWriter(adapter, getRedis(), logger);
 
-    const { promise } = await writer.start(throttleMs);
+    const { promise } = await writer.start({
+      throttleMs,
+      throttleOnEmptyMs,
+    });
+
     await promise;
   });
