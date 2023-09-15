@@ -3,6 +3,7 @@ import IORedis from "ioredis";
 import { Logger } from "winston";
 import { TreeInsertionSyncAdapter } from "./sync";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import { TreeInsertionSyncOpts } from "./sync/syncAdapter";
 
 export * from "./sync";
 
@@ -26,14 +27,15 @@ export class InsertionWriter {
     });
   }
 
-  async start(queryThrottleMs?: number): Promise<ActorHandle> {
+  async start(syncOpts?: TreeInsertionSyncOpts): Promise<ActorHandle> {
     const logTip = await this.insertionLog.getTip();
     this.logger.debug(`current log tip: ${logTip}`);
 
     this.logger.debug("starting iterator");
-    const newInsertionBatches = this.adapter.iterInsertions(logTip ?? 0, {
-      throttleMs: queryThrottleMs,
-    });
+    const newInsertionBatches = this.adapter.iterInsertions(
+      logTip ?? 0,
+      syncOpts
+    );
 
     const runProm = (async () => {
       this.logger.debug("starting main loop");
