@@ -134,6 +134,11 @@ export interface NocturneSdkApi {
 
   getRandomStealthAddress(): Promise<StealthAddress>;
 
+  /**
+   * Clears the sync DB, upon local dev restart or odd behavior in testnet.
+   */
+  clearSyncState(): Promise<void>;
+
   // *** ACCESSOR METHODS *** //
 
   snap: SnapStateApi;
