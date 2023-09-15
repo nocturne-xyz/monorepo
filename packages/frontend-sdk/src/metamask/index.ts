@@ -53,24 +53,6 @@ export class SnapStateSdk implements SnapStateApi {
     }
   }
 
-  async clearDb(): Promise<void> {
-    if (this.env !== "localhost" && this.env !== "sepolia") {
-      throw new Error(
-        "Method clearDb is only available in localhost and sepolia"
-      );
-    }
-    const snapId = this.snapId;
-    await window.ethereum.request({
-      method: "wallet_invokeSnap",
-      params: {
-        snapId,
-        request: {
-          method: "nocturne_clearDb",
-        },
-      },
-    });
-  }
-
   /**
    * Get the installed snaps in MetaMask.
    * https://docs.metamask.io/snaps/reference/rpc-api/#wallet_getsnaps

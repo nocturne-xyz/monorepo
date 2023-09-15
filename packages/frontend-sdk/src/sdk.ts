@@ -141,13 +141,11 @@ export class NocturneSdk implements NocturneSdkApi {
       );
 
       const urls = getCircuitArtifactUrls(networkName);
-      const vkey = await (await fetch(urls.joinSplit.vkey)).json() as VerifyingKey;
+      const vkey = (await (
+        await fetch(urls.joinSplit.vkey)
+      ).json()) as VerifyingKey;
       const { wasm, zkey } = urls.joinSplit;
-      return new WasmJoinSplitProver(
-        wasm,
-        zkey, 
-        vkey
-      );
+      return new WasmJoinSplitProver(wasm, zkey, vkey);
     });
 
     this.canonAddrSigCheckProverThunk = thunk(async () => {
@@ -156,13 +154,11 @@ export class NocturneSdk implements NocturneSdkApi {
       );
 
       const urls = getCircuitArtifactUrls(networkName);
-      const vkey = await (await fetch(urls.canonAddrSigCheck.vkey)).json() as VerifyingKey;
+      const vkey = (await (
+        await fetch(urls.canonAddrSigCheck.vkey)
+      ).json()) as VerifyingKey;
       const { wasm, zkey } = urls.canonAddrSigCheck;
-      return new WasmCanonAddrSigCheckProver(
-        wasm,
-        zkey,
-        vkey
-      );
+      return new WasmCanonAddrSigCheckProver(wasm, zkey, vkey);
     });
 
     this.endpoints = config.endpoints;
@@ -785,7 +781,7 @@ export class NocturneSdk implements NocturneSdkApi {
    */
   async getRandomStealthAddress(): Promise<StealthAddress> {
     const client = await this.clientThunk();
-    return await client.viewer.generateRandomStealthAddress();
+    return client.viewer.generateRandomStealthAddress();
   }
 
   // ! TODO this is an atrocious signature to hand consumers

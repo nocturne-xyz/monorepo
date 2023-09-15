@@ -174,9 +174,4 @@ export interface SnapStateApi {
    * @returns The snap object returned by the extension.
    */
   get(): Promise<Snap | undefined>;
-
-  /**
-   * Clear the Snap DB, upon local dev restart or odd behavior in testnet.
-   */
-  clearDb(): Promise<void>;
 }
