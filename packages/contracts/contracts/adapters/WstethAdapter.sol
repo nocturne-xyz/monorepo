@@ -26,6 +26,8 @@ contract WstethAdapter {
     // Receive eth when withdrawing weth to eth
     receive() external payable {}
 
+    // TODO: add weth and wsteth prefill function
+
     /// @notice Convert weth to wsteth for caller
     /// @param amount Amount of weth to convert
     /// @dev Transfers weth to self, unwraps to eth, converts to wsteth, then transfers wsteth back

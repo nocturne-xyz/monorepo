@@ -497,7 +497,11 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         // Deploy and dep manager whitelist new token but not in handler
         SimpleERC20Token token = ERC20s[0];
-        deal(address(token), address(ALICE), Validation.MAX_NOTE_VALUE + PER_NOTE_AMOUNT);
+        deal(
+            address(token),
+            address(ALICE),
+            Validation.MAX_NOTE_VALUE + PER_NOTE_AMOUNT
+        );
 
         // Approve 1 notes worth of tokens for deposit
         vm.prank(ALICE);
@@ -771,13 +775,13 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             )
         });
         actions[1] = Action({
-                    contractAddress: address(ethTransferAdapter),
-                    encodedFunction: abi.encodeWithSelector(
-                        ethTransferAdapter.transfer.selector,
-                        BOB,
-                        PER_NOTE_AMOUNT / 2
-                    )
-                });
+            contractAddress: address(ethTransferAdapter),
+            encodedFunction: abi.encodeWithSelector(
+                ethTransferAdapter.transfer.selector,
+                BOB,
+                PER_NOTE_AMOUNT / 2
+            )
+        });
 
         // Create operation to transfer half of tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});

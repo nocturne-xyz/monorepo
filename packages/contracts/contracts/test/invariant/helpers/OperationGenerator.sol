@@ -6,6 +6,7 @@ import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 import {console} from "forge-std/console.sol";
 
+import {EthTransferAdapter} from "../../../adapters/EthTransferAdapter.sol";
 import {TokenSwapper, SwapRequest} from "../../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../../utils/TreeTest.sol";
 import "../../utils/NocturneUtils.sol";
@@ -35,13 +36,26 @@ struct GenerateOperationArgs {
     SimpleERC20Token swapErc20;
 }
 
+struct EthTransferRequest {
+    address recipient;
+    uint256 amount;
+}
+
 struct GeneratedOperationMetadata {
-    TransferRequest[] transfers;
+    EthTransferRequest[] ethTransfers;
+    Erc20TransferRequest[] transfers;
     uint256[] transferTokenNumbers; // maps transfers[] to what token index in args.joinSplitTokens
     SwapRequest[] swaps;
     uint256[] swapTokenNumbers; // maps swaps[] to what token index in args.joinSplitTokens
-    bool[] isTransfer;
+    bool[] isErc20Transfer;
+    bool[] isEthTransfer;
     bool[] isSwap;
+}
+
+enum ActionType {
+    ETH_TRANSFER,
+    ERC20_TRANSFER,
+    SWAP
 }
 
 contract OperationGenerator is InvariantUtils {
@@ -50,12 +64,20 @@ contract OperationGenerator is InvariantUtils {
     uint256 constant DEFAULT_MAX_NUM_REFUNDS = 9;
 
     address public transferRecipientAddress;
+    address public weth;
+    address payable public ethTransferAdapter;
 
     uint256 nullifierCount = 0;
     uint256 nonErc20IdCounter = 0;
 
-    constructor(address _transferRecipientAddress) {
+    constructor(
+        address _transferRecipientAddress,
+        address _weth,
+        address _ethTransferAdapter
+    ) {
         transferRecipientAddress = _transferRecipientAddress;
+        weth = _weth;
+        ethTransferAdapter = payable(_ethTransferAdapter);
     }
 
     function _generateRandomOperation(
@@ -196,14 +218,16 @@ contract OperationGenerator is InvariantUtils {
         )
     {
         _actions = new Action[](numActions);
-        _meta.transfers = new TransferRequest[](numActions);
+        _meta.transfers = new Erc20TransferRequest[](numActions);
+        _meta.ethTransfers = new EthTransferRequest[](numActions);
         _meta.transferTokenNumbers = new uint256[](numActions);
         _meta.swaps = new SwapRequest[](numActions);
         _meta.swapTokenNumbers = new uint256[](numActions);
-        _meta.isTransfer = new bool[](numActions);
+        _meta.isErc20Transfer = new bool[](numActions);
+        _meta.isEthTransfer = new bool[](numActions);
         _meta.isSwap = new bool[](numActions);
 
-        // For each action of numActions, switch on transfer vs swap
+        // For each action of numActions, switch on erc20 transfer vs eth transfer vs swap
         for (uint256 i = 0; i < numActions; i++) {
             uint256 tokenToUseIndex = bound(
                 _rerandomize(args.seed),
@@ -212,7 +236,15 @@ contract OperationGenerator is InvariantUtils {
             );
             address token = args.joinSplitTokens[tokenToUseIndex];
 
-            bool isTransfer = bound(args.seed, 0, 1) == 0;
+            uint256 actionTypeSeed = bound(args.seed, 0, 2);
+            ActionType actionType;
+            if (actionTypeSeed == 0) {
+                actionType = ActionType.ERC20_TRANSFER;
+            } else if (actionTypeSeed == 1) {
+                actionType = ActionType.ETH_TRANSFER;
+            } else {
+                actionType = ActionType.SWAP;
+            }
 
             uint256 transferOrSwapBound;
             unchecked {
@@ -226,27 +258,56 @@ contract OperationGenerator is InvariantUtils {
                 transferOrSwapBound
             );
 
-            // Swap request requires two actions, if at end of array just fill with transfer and
-            // use the rest
+            // Swap request requires two actions, if at end of array just fill with eth transfer
+            // and use the rest
             if (i == numActions - 1) {
-                isTransfer = true;
+                actionType = ActionType.ERC20_TRANSFER;
             }
 
-            if (isTransfer) {
+            if (actionType == ActionType.ERC20_TRANSFER) {
                 {
                     console.log("filling tranfers meta");
-                    _meta.transfers[i] = TransferRequest({
+                    _meta.transfers[i] = Erc20TransferRequest({
                         token: token,
                         recipient: transferRecipientAddress,
                         amount: transferOrSwapAmount
                     });
                     _meta.transferTokenNumbers[i] = tokenToUseIndex;
-                    _meta.isTransfer[i] = true;
+                    _meta.isErc20Transfer[i] = true;
 
                     console.log("filling transfers action");
                     _actions[i] = NocturneUtils.formatTransferAction(
                         _meta.transfers[i]
                     );
+                }
+            } else if (actionType == ActionType.ETH_TRANSFER && token == weth) {
+                {
+                    console.log("filling eth transfers meta");
+                    _meta.ethTransfers[i] = EthTransferRequest({
+                        recipient: transferRecipientAddress,
+                        amount: transferOrSwapAmount
+                    });
+                    _meta.isEthTransfer[i] = true;
+
+                    console.log("filling eth transfers action");
+                    _actions[i] = Action({
+                        contractAddress: weth,
+                        encodedFunction: abi.encodeWithSelector(
+                            IERC20(weth).approve.selector,
+                            ethTransferAdapter,
+                            transferOrSwapAmount
+                        )
+                    });
+                    _actions[i + 1] = Action({
+                        contractAddress: ethTransferAdapter,
+                        encodedFunction: abi.encodeWithSelector(
+                            EthTransferAdapter(ethTransferAdapter)
+                                .transfer
+                                .selector,
+                            transferRecipientAddress,
+                            transferOrSwapAmount
+                        )
+                    });
                 }
             } else {
                 {

@@ -6,10 +6,10 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 /// @title EthTransferAdapter
 /// @author Nocturne Labs
-/// @notice Adapter contract for converting weth to eth and transfering eth to specified address. 
-///         The Handler contract does not support ETH value transfers directly, thus we need a thin 
+/// @notice Adapter contract for converting weth to eth and transfering eth to specified address.
+///         The Handler contract does not support ETH value transfers directly, thus we need a thin
 ///         adapter for handling the weth -> eth step then transferring the eth.
-/// @dev Note that we ensure the recipient is is an EOA to avoid reentrancy. Reentrancy would allow 
+/// @dev Note that we ensure the recipient is is an EOA to avoid reentrancy. Reentrancy would allow
 ///      a recipient to send back funds to the Handler and bypass deposit limits.
 contract EthTransferAdapter {
     // Weth contract
@@ -23,10 +23,12 @@ contract EthTransferAdapter {
     // Receive eth when withdrawing weth to eth
     receive() external payable {}
 
+    // TODO: add weth prefill function
+
     /// @notice Convert weth to eth and send to recipient
     /// @param to Recipient address
     /// @param value Amount of weth to convert and send
-    /// @dev We ensure recipient is EOA to avoid reentrancy (which could help attacker bypass 
+    /// @dev We ensure recipient is EOA to avoid reentrancy (which could help attacker bypass
     ///      deposit limits).
     function transfer(address to, uint256 value) external {
         require(to.code.length == 0, "!eoa");
