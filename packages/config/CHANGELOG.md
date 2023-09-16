@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- 6998bb7c: add resetWindowHours to deploy config in config package and deploy package
+- 77c4063c: Add CanonicalAddressRegistry and sig check verifier to deploy and config packages
+
 ## 0.3.0
 
 ### Minor Changes

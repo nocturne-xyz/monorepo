@@ -1,5 +1,5 @@
 import { Address, NocturneContractDeployment } from "./deployment";
-import * as sepolia from "../configs/sepolia.json";
+import * as goerli from "../configs/goerli.json";
 import * as localhost from "../configs/localhost.json";
 import * as exampleNetwork from "../configs/example-network.json";
 import * as fs from "fs";
@@ -107,8 +107,8 @@ export function loadNocturneConfig(
 
 export function loadNocturneConfigBuiltin(name: string): NocturneConfig {
   switch (name) {
-    case "sepolia":
-      return NocturneConfig.fromObject(sepolia as any);
+    case "goerli":
+      return NocturneConfig.fromObject(goerli as any);
     case "localhost":
       return NocturneConfig.fromObject(localhost as any);
     case "example-network":

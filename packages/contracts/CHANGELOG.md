@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- 6998bb7c: make deposit reset window configurable by adding `resetWindowHours` to erc20 cap struct
+- 77c4063c: Add CanonicalAddressRegistry contract which integrates canon addr sig check verifier, add unit tests as well for EIP712 hashing and registry state changes
+- de88d6f0: add wsteth adapter contract, add fork tests for wsteth, balancer, and uniswap for weth<>wsteth testing
+- 58b363a4: add `joinSplitInfoCommitment` PI to JoinSplitCircuit
+- 589e0230: add `CanonAddrSigCheckVerifier` contract
+
+### Patch Changes
+
+- 1ffcf31f: update contract and sdk bundler gas comp estimate numbers
+- 1ffcf31f: update gas calculation math in Types.sol and core op request gas to come within ~50k of actual gas spent by bundler
+
 ## 0.3.0
 
 ### Minor Changes

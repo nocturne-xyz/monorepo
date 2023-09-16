@@ -54,9 +54,9 @@ export class SnapStateSdk implements SnapStateApi {
   }
 
   async clearDb(): Promise<void> {
-    if (this.env !== "localhost" && this.env !== "sepolia") {
+    if (this.env !== "localhost" && this.env !== "goerli") {
       throw new Error(
-        "Method clearDb is only available in localhost and sepolia"
+        "Method clearDb is only available in localhost and goerli"
       );
     }
     const snapId = this.snapId;

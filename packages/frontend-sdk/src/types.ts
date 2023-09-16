@@ -34,7 +34,7 @@ export interface NocturneSdkConfig {
   endpoints: Endpoints;
 }
 
-export type SupportedNetwork = "sepolia" | "mainnet" | "localhost";
+export type SupportedNetwork = "goerli" | "mainnet" | "localhost";
 
 export interface GetBalanceOpts {
   includeUncommitted?: boolean;

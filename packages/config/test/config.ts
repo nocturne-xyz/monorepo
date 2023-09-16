@@ -26,8 +26,8 @@ describe("Config", async () => {
     expect(config.protocolAllowlist.size).to.be.greaterThan(0);
   });
 
-  it("loads sepolia config", () => {
-    const config = loadNocturneConfig("sepolia");
+  it("loads goerli config", () => {
+    const config = loadNocturneConfig("goerli");
 
     console.log(config);
     expect(config.contracts.network).to.not.be.undefined;

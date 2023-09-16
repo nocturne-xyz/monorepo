@@ -180,7 +180,10 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
       estimateInGasAsset + totalAmountInMatchingRequests
     ) {
       // Add enough to cover gas needed for existing joinsplits + gas for an extra joinsplit and refund
-      matchingJoinSplitRequests[0].unwrapValue += estimateInGasAsset;
+      // NOTE: we naively assume additional joinsplit is created, though this may not be case
+      // TODO: update op request, see if it creates another joinsplit, then add additional JS gas only if it does
+      matchingJoinSplitRequests[0].unwrapValue +=
+        estimateInGasAsset + maxGasForAdditionalJoinSplit() * gasPrice;
       joinSplitRequestsByAsset.set(
         gasAsset.assetAddr,
         matchingJoinSplitRequests
