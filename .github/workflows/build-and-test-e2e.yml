@@ -3,7 +3,7 @@ on:
   pull_request:
     types: [opened, synchronize]
 jobs:
-  build-and-test-e2e:
+  build-and-test-e2e-full-system:
     runs-on: ubuntu-latest
     steps:
       - name: checkout repo and get submodules
@@ -32,6 +32,207 @@ jobs:
       - name: yarn build
         run: |
           yarn build
-      - name: yarn test:e2e
+      - name: run full system test suite
+        working-directory: ./packages/e2e-tests
         run: |
-          yarn test:e2e
+          yarn test:e2e -g 'full system:'
+  build-and-test-e2e-canon-addr-registry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo and get submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "v18.12.1"
+          cache: "yarn"
+      - name: corepack enable
+        run: corepack enable
+      - name: install foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
+      - name: yarn install
+        run: |
+          yarn install --immutable
+      - name: yarn build
+        run: |
+          yarn build
+      - name: run canon addr registry test suite
+        working-directory: ./packages/e2e-tests
+        run: |
+          yarn test:e2e -g 'Canonical Address Registry'
+  build-and-test-e2e-insertion-writer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo and get submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "v18.12.1"
+          cache: "yarn"
+      - name: corepack enable
+        run: corepack enable
+      - name: install foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
+      - name: yarn install
+        run: |
+          yarn install --immutable
+      - name: yarn build
+        run: |
+          yarn build
+      - name: run insertion writer test suite
+        working-directory: ./packages/e2e-tests
+        run: |
+          yarn test:e2e -g 'InsertionWriter'
+  build-and-test-e2e-nf-tracking:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo and get submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "v18.12.1"
+          cache: "yarn"
+      - name: corepack enable
+        run: corepack enable
+      - name: install foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
+      - name: yarn install
+        run: |
+          yarn install --immutable
+      - name: yarn build
+        run: |
+          yarn build
+      - name: run optimistic nf tracking test suite
+        working-directory: ./packages/e2e-tests
+        run: |
+          yarn test:e2e -g 'Optimistic nullifier tracking'
+  build-and-test-e2e-deposit-fetching:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo and get submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "v18.12.1"
+          cache: "yarn"
+      - name: corepack enable
+        run: corepack enable
+      - name: install foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
+      - name: yarn install
+        run: |
+          yarn install --immutable
+      - name: yarn build
+        run: |
+          yarn build
+      - name: run deposit fetching test suite
+        working-directory: ./packages/e2e-tests
+        run: |
+          yarn test:e2e -g 'Fetching Deposit Events'
+  build-and-test-e2e-rpc-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo and get submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "v18.12.1"
+          cache: "yarn"
+      - name: corepack enable
+        run: corepack enable
+      - name: install foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
+      - name: yarn install
+        run: |
+          yarn install --immutable
+      - name: yarn build
+        run: |
+          yarn build
+      - name: run rpc sync test suite
+        working-directory: ./packages/e2e-tests
+        run: |
+          yarn test:e2e -g 'syncing NocturneClient with RPCSyncAdapter'
+  build-and-test-e2e-subgraph-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo and get submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "v18.12.1"
+          cache: "yarn"
+      - name: corepack enable
+        run: corepack enable
+      - name: install foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
+      - name: yarn install
+        run: |
+          yarn install --immutable
+      - name: yarn build
+        run: |
+          yarn build
+      - name: run subgraph sync test suite
+        working-directory: ./packages/e2e-tests
+        run: |
+          yarn test:e2e -g 'syncing NocturneClient with SubgraphSyncAdapter'
+
+      
