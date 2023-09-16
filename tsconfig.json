@@ -65,6 +65,9 @@
       "path": "./packages/crypto-utils"
     },
     {
+      "path": "./packages/crypto"
+    },
+    {
       "path": "./packages/deploy"
     },
     {
