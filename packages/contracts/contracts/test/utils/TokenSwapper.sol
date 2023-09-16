@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
+import "forge-std/Test.sol";
+
 import {Teller} from "../../Teller.sol";
 import "./NocturneUtils.sol";
 import "../../libs/Types.sol";
 import "../tokens/ISimpleToken.sol";
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
@@ -30,7 +33,7 @@ struct Erc721And1155SafeTransferFromRequest {
     uint256 erc1155OutAmount;
 }
 
-contract TokenSwapper is IERC721Receiver, IERC1155Receiver {
+contract TokenSwapper is IERC721Receiver, IERC1155Receiver, Test {
     function swap(SwapRequest memory request) public {
         AssetUtils.transferAssetFrom(
             request.encodedAssetIn,
@@ -39,17 +42,15 @@ contract TokenSwapper is IERC721Receiver, IERC1155Receiver {
         );
 
         if (address(request.erc20Out) != address(0x0)) {
-            ISimpleERC20Token(request.erc20Out).reserveTokens(
-                address(this),
-                request.erc20OutAmount
-            );
-            ISimpleERC20Token(request.erc20Out).transfer(
+            deal(request.erc20Out, address(this), request.erc20OutAmount);
+            IERC20(request.erc20Out).transfer(
                 msg.sender,
                 request.erc20OutAmount
             );
         }
     }
 
+    // NOTE: must be simple erc721 because foundry deal doesn't support erc721
     function transferFromErc721(
         Erc721TransferFromRequest memory request
     ) public {
@@ -64,6 +65,7 @@ contract TokenSwapper is IERC721Receiver, IERC1155Receiver {
         );
     }
 
+    // NOTE: must be simple erc721 because foundry deal doesn't support erc1155
     function safeTransferFromErc721And1155(
         Erc721And1155SafeTransferFromRequest memory request
     ) public {

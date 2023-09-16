@@ -132,7 +132,7 @@ contract TellerHandler is OperationGenerator {
         // Ensure swap erc20 always filled so we don't have to bother with prefill logic
         // TODO: remove and allow when we allow teller to transact with swap erc20
         if (swapErc20.balanceOf(address(handler)) == 0) {
-            swapErc20.reserveTokens(address(this), 1);
+            deal(address(swapErc20), address(this), 1);
             swapErc20.transfer(address(handler), 1);
         }
 
