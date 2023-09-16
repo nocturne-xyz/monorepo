@@ -92,8 +92,6 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         teller = new Teller();
         handler = new Handler();
-        weth = IWeth(address(new WETH9()));
-        ethTransferAdapter = new EthTransferAdapter(address(weth));
 
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
@@ -134,6 +132,34 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
                 true
             );
         }
+
+        // add weth contract
+        weth = IWeth(address(new WETH9()));
+        handler.setContractPermission(address(weth), true);
+        handler.setContractMethodPermission(
+            address(weth),
+            weth.approve.selector,
+            true
+        );
+        handler.setContractMethodPermission(
+            address(weth),
+            weth.transfer.selector,
+            true
+        );
+
+        // prefill with 1 weth
+        vm.deal(address(handler), 1);
+        vm.prank(address(handler));
+        weth.deposit{value: 1}();
+
+        // add eth transfer adapter
+        ethTransferAdapter = new EthTransferAdapter(address(weth));
+        handler.setContractPermission(address(ethTransferAdapter), true);
+        handler.setContractMethodPermission(
+            address(ethTransferAdapter),
+            ethTransferAdapter.transfer.selector,
+            true
+        );
     }
 
     function depositFunds(
@@ -166,7 +192,13 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         IERC20 token,
         uint256 amount
     ) internal {
-        deal(address(token), recipient, amount);
+        if (address(token) == address(weth)) {
+            vm.deal(address(recipient), amount);
+            vm.prank(recipient);
+            weth.deposit{value: amount}();
+        } else {
+            deal(address(token), address(recipient), amount);
+        }
 
         uint256[] memory batch = new uint256[](16);
 
@@ -720,75 +752,91 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(4 * PER_NOTE_AMOUNT));
     }
 
-    // function testProcessBundleEthTransfer() public {
-    //     // Alice starts with 1 note of weth
-    //     reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
+    function testProcessBundleEthTransfer() public {
+        // Alice starts with 1 note of weth
+        IERC20 token = IERC20(address(weth));
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
-    //     uint128 preOpMerkleCount = handler.totalCount();
+        uint128 preOpMerkleCount = handler.totalCount();
 
-    //     TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-    //     // Create operation to transfer half of tokens to bob
-    //     Bundle memory bundle = Bundle({operations: new Operation[](1)});
-    //     bundle.operations[0] = NocturneUtils.formatOperation(
-    //         FormatOperationArgs({
-    //             joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-    //                 address(token)
-    //             ),
-    //             joinSplitRefundValues: new uint256[](1),
-    //             gasToken: address(token),
-    //             root: handler.root(),
-    //             joinSplitsPublicSpends: NocturneUtils
-    //                 ._publicSpendsArrayOfOnePublicSpendArray(
-    //                     NocturneUtils.fillJoinSplitPublicSpends(
-    //                         PER_NOTE_AMOUNT,
-    //                         1
-    //                     )
-    //                 ),
-    //             trackedRefundAssets: trackedRefundAssets,
-    //             gasAssetRefundThreshold: 0,
-    //             executionGasLimit: DEFAULT_GAS_LIMIT,
-    //             gasPrice: 1,
-    //             actions: NocturneUtils.formatSingleTransferActionArray(
-    //                 address(token),
-    //                 BOB,
-    //                 PER_NOTE_AMOUNT / 2
-    //             ),
-    //             atomicActions: false,
-    //             operationFailureType: OperationFailureType.NONE
-    //         })
-    //     );
+        Action[] memory actions = new Action[](2);
+        actions[0] = Action({
+            contractAddress: address(weth),
+            encodedFunction: abi.encodeWithSelector(
+                weth.approve.selector,
+                address(ethTransferAdapter),
+                PER_NOTE_AMOUNT / 2
+            )
+        });
+        actions[1] = Action({
+                    contractAddress: address(ethTransferAdapter),
+                    encodedFunction: abi.encodeWithSelector(
+                        ethTransferAdapter.transfer.selector,
+                        BOB,
+                        PER_NOTE_AMOUNT / 2
+                    )
+                });
 
-    //     assertEq(token.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
-    //     assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 for prefill
-    //     assertEq(token.balanceOf(address(ALICE)), uint256(0));
-    //     assertEq(token.balanceOf(address(BOB)), uint256(0));
+        // Create operation to transfer half of tokens to bob
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
+                ),
+                joinSplitRefundValues: new uint256[](1),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 1,
+                actions: actions,
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
 
-    //     vm.prank(BUNDLER);
-    //     OperationResult[] memory opResults = teller.processBundle(bundle);
+        assertEq(token.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 for prefill
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertEq(BOB.balance, uint256(0));
 
-    //     // One op, processed = true, call[0] succeeded
-    //     assertEq(opResults.length, uint256(1));
-    //     assertEq(opResults[0].opProcessed, true);
-    //     assertEq(opResults[0].assetsUnwrapped, true);
-    //     assertEq(opResults[0].callSuccesses.length, uint256(1));
-    //     assertEq(opResults[0].callSuccesses[0], true);
-    //     assertEq(opResults[0].callResults.length, uint256(1));
-    //     assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
-    //     assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
-    //     // Expect BOB to have the the 1/2 notes worth sent by alice
-    //     // Expect teller to have alice's remaining 1/2 notes worth - gasComp
-    //     // Expect BUNDLER to have > 0 gas tokens
-    //     assertLt(
-    //         token.balanceOf(address(teller)),
-    //         uint256(PER_NOTE_AMOUNT / 2)
-    //     );
-    //     assertGt(token.balanceOf(BUNDLER), 0);
-    //     assertEq(token.balanceOf(address(handler)), uint256(1));
-    //     assertEq(token.balanceOf(ALICE), uint256(0));
-    //     assertEq(token.balanceOf(BOB), uint256(PER_NOTE_AMOUNT / 2));
-    // }
+        // One op, processed = true, call[0] succeeded
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(2));
+        assertEq(opResults[0].callSuccesses[0], true);
+        assertEq(opResults[0].callSuccesses[1], true);
+        assertEq(opResults[0].callResults.length, uint256(2));
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
+
+        // Expect BOB to have the the 1/2 notes worth sent by alice in ETH
+        // Expect teller to have alice's remaining 1/2 notes worth - gasComp
+        // Expect BUNDLER to have > 0 gas tokens
+        assertLt(
+            token.balanceOf(address(teller)),
+            uint256(PER_NOTE_AMOUNT / 2)
+        );
+        assertGt(token.balanceOf(BUNDLER), 0);
+        assertEq(token.balanceOf(address(handler)), uint256(1));
+        assertEq(token.balanceOf(ALICE), uint256(0));
+        assertEq(BOB.balance, uint256(PER_NOTE_AMOUNT / 2));
+    }
 
     function testProcessBundleFailureBadRoot() public {
         // Alice starts with 2 notes worth of tokens in teller
