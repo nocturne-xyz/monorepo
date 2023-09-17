@@ -28,7 +28,7 @@ describe("Poseidon", () => {
 
   it("matches circomlibjs with 3 inputs", () => {
     range(30)
-      .map((_) => range(3).map((_) => randomFp())) 
+      .map((_) => range(3).map((_) => randomFp()))
       .forEach((inputs) => {
         const c = poseidon(inputs);
         expect(poseidonBN(inputs)).to.equal(c);

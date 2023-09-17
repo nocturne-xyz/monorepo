@@ -1,13 +1,11 @@
 import * as JSON from "bigint-json-serialization";
 import { assert } from "./utils";
 import { ExtPointType, twistedEdwards } from "@noble/curves/abstract/edwards";
+import { AffinePoint } from "@noble/curves/abstract/curve";
 import { Field } from "@noble/curves/abstract/modular";
+import { sha256 } from "@noble/hashes/sha256";
 
-// noble's affine point type accepts extended points for some reason, so yeah
-export type AffinePoint<T> = {
-  x: T;
-  y: T;
-}
+export { AffinePoint } from "@noble/curves/abstract/curve";
 
 // HACK: noble doesn't export it's field type, so I have to infer and make an alias
 export type FpField = ReturnType<typeof Field>;
@@ -44,7 +42,7 @@ const ScalarField =
 const GeneratorPoint: AffinePoint<bigint> = {
   x: 995203441582195749578291179787384436505546430278305826713579947235728471134n,
   y: 5472060717959818805561601436314318772137091100104008585924551046643952123905n,
-}
+};
 const BasePoint: AffinePoint<bigint> = {
   x: 5299619240641551281634865583518297030282874472190772894086521144482721001553n,
   y: 16950150798460657717958625567821834550301663161624707787222815936182638968203n,
@@ -63,8 +61,8 @@ const babyJubJubFn = twistedEdwards({
   Gy: GeneratorPoint.y,
 
   // these should not be used. we only use the arithmetic from the curve
-  hash: (x) => new Uint8Array(0),
-  randomBytes: (n) => new Uint8Array(n ?? 0),
+  hash: sha256,
+  randomBytes: (n) => global.crypto.getRandomValues(new Uint8Array(n ?? 32)),
 });
 
 assert(babyJubJubFn.CURVE.n % babyJubJubFn.CURVE.h === 0n);
@@ -86,13 +84,57 @@ export const BabyJubJub = {
 
   ExtendedPoint: babyJubJubFn.ExtendedPoint,
 
-  toString(point: AffinePoint<bigint>): string {
-    return JSON.stringify(point);
+  toBytes({ x, y }: AffinePoint<bigint>): Uint8Array {
+    const xBytes = this.BaseField.toBytes(x);
+    const yBytes = this.BaseField.toBytes(y);
+
+    const res = new Uint8Array(this.BaseField.BYTES * 2);
+    res.set(xBytes);
+    res.set(yBytes, xBytes.length);
+
+    return res;
+  },
+
+  // retuns an extended point - can be converted back to affine with `toAffine`
+  // note that `ExtPointType` has getters for `x` and `y` that return field elements in affine coordinates
+  fromBytes(bytes: Uint8Array): ExtPointType {
+    assert(bytes.length === this.BaseField.BYTES * 2);
+
+    const xBytes = bytes.slice(0, this.BaseField.BYTES);
+    const yBytes = bytes.slice(this.BaseField.BYTES);
+
+    const x = this.BaseField.fromBytes(xBytes);
+    const y = this.BaseField.fromBytes(yBytes);
+
+    assert(
+      this.BaseField.isValid(x),
+      "x coordinate is not a valid field element"
+    );
+    assert(
+      this.BaseField.isValid(y),
+      "y coordinate is not a valid field element"
+    );
+
+    const point = { x, y };
+    const ext = babyJubJubFn.ExtendedPoint.fromAffine(point);
+    ext.assertValidity();
+    assert(ext.isTorsionFree(), "point is not in prime-order subgroup");
+
+    return ext;
+  },
+
+  toString({ x, y }: AffinePoint<bigint>): string {
+    // this is written like this because `ExtPointType` satisfies `AffinePoint` via its getters,
+    // but `AffinePoint` doesn't satisfy `ExtPointType` because it doesn't have all of the other stuff that it has,
+    // causing a different output depending on whether you plug in an extended point or an affine point
+    return JSON.stringify({ x, y });
   },
 
   // throws an error if encoding is invalid, point
   // isn't on curve, or point isn't in prime-order subgroup
-  fromString(s: string): AffinePoint<bigint> {
+  // returns an extended point - can be converted back to affine with `toAffine`
+  // note that `ExtPointType` has getters for `x` and `y` that return field elements in affine coordinates
+  fromString(s: string): ExtPointType {
     const res = JSON.parse(s);
     assert(res instanceof Object);
     assert(Object.hasOwn(res, "x"));
@@ -109,8 +151,8 @@ export const BabyJubJub = {
     const ext = babyJubJubFn.ExtendedPoint.fromAffine(point);
 
     ext.assertValidity();
-    assert(ext.isTorsionFree());
+    assert(ext.isTorsionFree(), "point is not in prime-order subgroup");
 
-    return point;
+    return ext;
   },
 };

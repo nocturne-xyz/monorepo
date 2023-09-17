@@ -44,7 +44,9 @@ describe("BabyJubJub", () => {
       const bCircom = [b.x, b.y];
 
       const expected = babyjub.addPoint(aCircom, bCircom);
-      const got = BabyJubJub.ExtendedPoint.fromAffine(a).add(BabyJubJub.ExtendedPoint.fromAffine(b)).toAffine();
+      const got = BabyJubJub.ExtendedPoint.fromAffine(a)
+        .add(BabyJubJub.ExtendedPoint.fromAffine(b))
+        .toAffine();
       expect(got.x).to.equal(expected[0]);
       expect(got.y).to.equal(expected[1]);
     });
@@ -56,7 +58,9 @@ describe("BabyJubJub", () => {
       const pointCircom = [point.x, point.y];
 
       const expected = babyjub.addPoint(pointCircom, pointCircom);
-      const got = BabyJubJub.ExtendedPoint.fromAffine(point).double().toAffine();
+      const got = BabyJubJub.ExtendedPoint.fromAffine(point)
+        .double()
+        .toAffine();
 
       expect(got.x).to.equal(expected[0]);
       expect(got.y).to.equal(expected[1]);
@@ -72,7 +76,9 @@ describe("BabyJubJub", () => {
 
       const expected = babyjub.mulPointEscalar(pointCircom, scalar);
 
-      const got = BabyJubJub.ExtendedPoint.fromAffine(point).multiply(scalar).toAffine();
+      const got = BabyJubJub.ExtendedPoint.fromAffine(point)
+        .multiply(scalar)
+        .toAffine();
 
       expect(got.x).to.equal(expected[0]);
       expect(got.y).to.equal(expected[1]);
@@ -87,7 +93,8 @@ describe("BabyJubJub", () => {
       const scalar = randomFr();
 
       const expected = babyjub.mulPointEscalar(pointCircom, scalar);
-      const got = BabyJubJub.ExtendedPoint.fromAffine(point).multiplyUnsafe(scalar);
+      const got =
+        BabyJubJub.ExtendedPoint.fromAffine(point).multiplyUnsafe(scalar);
 
       expect(got.x).to.equal(expected[0]);
       expect(got.y).to.equal(expected[1]);
