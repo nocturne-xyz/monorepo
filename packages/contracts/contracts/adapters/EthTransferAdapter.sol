@@ -23,13 +23,14 @@ contract EthTransferAdapter {
     // Receive eth when withdrawing weth to eth
     receive() external payable {}
 
-    // TODO: add weth prefill function
-
     /// @notice Convert weth to eth and send to recipient
     /// @param to Recipient address
     /// @param value Amount of weth to convert and send
     /// @dev We ensure recipient is EOA to avoid reentrancy (which could help attacker bypass
     ///      deposit limits).
+    /// @dev Gas optimization where we keep weth balance from resetting to 0 does not require any
+    ///      additional code. If weth is force-sent to this contract outside, it will be stuck 
+    ///      here forever.
     function transfer(address to, uint256 value) external {
         require(to.code.length == 0, "!eoa");
         _weth.transferFrom(msg.sender, address(this), value);

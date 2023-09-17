@@ -26,16 +26,21 @@ contract WstethAdapter {
     // Receive eth when withdrawing weth to eth
     receive() external payable {}
 
-    // TODO: add weth and wsteth prefill function
-
     /// @notice Convert weth to wsteth for caller
     /// @param amount Amount of weth to convert
     /// @dev Transfers weth to self, unwraps to eth, converts to wsteth, then transfers wsteth back
-    ///      to caller
+    ///      to caller.
+    /// @dev We attempt to withhold tokens previously force-sent to adapter so we can avoid wsteth 
+    ///      balance from resetting to 0 (gas optimization).
     function convert(uint256 amount) external {
         _weth.transferFrom(msg.sender, address(this), amount);
         _weth.withdraw(amount);
+
+        // Get balance of wsteth before conversion so we can attempt to withhold before sending 
+        // wsteth back (gas optimization to keep wsteth in balance from resetting to 0)
+        uint256 wstethBalancePre = _wsteth.balanceOf(address(this));
+
         Address.sendValue(payable(address(_wsteth)), amount);
-        _wsteth.transfer(msg.sender, _wsteth.balanceOf(address(this)));
+        _wsteth.transfer(msg.sender, _wsteth.balanceOf(address(this)) - wstethBalancePre);
     }
 }
