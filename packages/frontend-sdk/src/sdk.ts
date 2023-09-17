@@ -7,8 +7,6 @@ import {
   Handler,
   Handler__factory,
 } from "@nocturne-xyz/contracts";
-import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
-import { Mutex } from "async-mutex";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
   ActionMetadata,
@@ -16,56 +14,63 @@ import {
   AssetTrait,
   AssetType,
   AssetWithBalance,
+  BundlerOpTracker,
   ClosableAsyncIterator,
   DepositQuoteResponse,
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
-  newOpRequestBuilder,
+  MockEthToTokenConverter,
+  NocturneClient,
+  NocturneDB,
+  NocturneViewer,
   OperationRequestWithMetadata,
   OperationStatusResponse,
+  PreSignOperation,
   ProvenOperation,
   RelayRequest,
+  RequestViewingKeyMethod,
   RpcRequestMethod,
+  SignCanonAddrRegistryEntryMethod,
   SignOperationMethod,
   SignedOperation,
+  SparseMerkleProver,
   StealthAddress,
   StealthAddressTrait,
+  SubgraphSDKSyncAdapter,
   SubmittableOperationWithNetworkInfo,
   SyncOpts,
   Thunk,
   VerifyingKey,
+  compressPoint,
   computeOperationDigest,
   decomposeCompressedPoint,
   encodeEncodedAssetAddrWithSignBitsPI,
   hashDepositRequest,
   joinSplitPublicSignalsToArray,
+  newOpRequestBuilder,
+  packToSolidityProof,
   parseEventsFromContractReceipt,
   proveOperation,
   stringifyObjectValues,
   thunk,
   unpackFromSolidityProof,
-  NocturneClient,
-  RequestViewingKeyMethod,
-  NocturneViewer,
-  SparseMerkleProver,
-  NocturneDB,
-  SubgraphSDKSyncAdapter,
-  MockEthToTokenConverter,
-  BundlerOpTracker,
-  PreSignOperation,
-  compressPoint,
-  SignCanonAddrRegistryEntryMethod,
-  packToSolidityProof,
 } from "@nocturne-xyz/core";
+import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
 import {
   WasmCanonAddrSigCheckProver,
   WasmJoinSplitProver,
 } from "@nocturne-xyz/local-prover";
 import {
+  Erc20Plugin,
+  UniswapV3Plugin,
+  WstethAdapterPlugin,
+} from "@nocturne-xyz/op-request-plugins";
+import {
   OperationResult,
   Client as UrqlClient,
   fetchExchange,
 } from "@urql/core";
+import { Mutex } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
@@ -88,6 +93,7 @@ import {
   Endpoints,
   GetBalanceOpts,
   NocturneSdkConfig,
+  OpRequestParams,
   OperationHandle,
   SupportedNetwork,
   SupportedProvider,
@@ -101,7 +107,6 @@ import {
   toDepositRequest,
   toDepositRequestWithMetadata,
 } from "./utils";
-import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
 
 export interface NocturneSdkOptions {
   networkName?: SupportedNetwork;
@@ -220,8 +225,20 @@ export class NocturneSdk implements NocturneSdkApi {
     });
   }
 
-  protected get wethAddress(): string | undefined {
-    return this.config.config.erc20s.get("weth")?.address;
+  protected get wethAddress(): string {
+    const address = this.config.config.erc20s.get("weth")?.address;
+    if (!address) {
+      throw new Error("WETH address not found in Nocturne config");
+    }
+    return address;
+  }
+
+  protected get wstethAddress(): string {
+    const address = this.config.config.erc20s.get("wsteth")?.address;
+    if (!address) {
+      throw new Error(`Wsteth address not found in Nocturne config`);
+    }
+    return address;
   }
 
   protected get provider(): SupportedProvider {
@@ -273,9 +290,7 @@ export class NocturneSdk implements NocturneSdkApi {
     const tx = await (
       await this.depositManagerContractThunk()
     ).instantiateETHMultiDeposit(values, depositAddr, { value: totalValue });
-    if (!this.wethAddress) {
-      throw new Error("WETH address not found in Nocturne config");
-    }
+
     return this.formDepositHandlesWithTxReceipt(tx);
   }
 
@@ -386,29 +401,31 @@ export class NocturneSdk implements NocturneSdkApi {
     amount: bigint,
     recipientAddress: Address
   ): Promise<OperationHandle> {
-    const chainId = BigInt((await this.provider.getNetwork()).chainId);
-    const operationRequest = await newOpRequestBuilder(this.provider, chainId)
-      .use(Erc20Plugin)
-      .erc20Transfer(erc20Address, recipientAddress, amount)
-      .build();
-
-    const action: ActionMetadata = {
-      type: "Action",
-      actionType: "Transfer",
-      recipientAddress,
+    return this.createOpRequest({
+      type: "ANON_TRANSFER",
       erc20Address,
+      recipientAddress,
       amount,
-    };
-
-    const submittableOperation = await this.signAndProveOperation({
-      ...operationRequest,
-      meta: { items: [action] },
     });
-    const opHandleWithoutMetadata = this.submitOperation(submittableOperation);
-    return {
-      ...opHandleWithoutMetadata,
-      meta: { items: [action] },
-    };
+  }
+
+  // TODO add doc comment + add to API.ts
+  async initiateWethToWsteth(wethAmount: bigint): Promise<OperationHandle> {
+    return this.createOpRequest({
+      type: "WETH_TO_WSTETH",
+      wethAmount,
+    });
+  }
+
+  // TODO add doc comment + add to API.ts
+  async initiateWstethToWeth(
+    wstethAmount: bigint,
+    maxSlippageBps = 50
+  ): Promise<OperationHandle> {
+    return this.createOpRequest({
+      type: "WSTETH_TO_WETH",
+      wstethAmount,
+    });
   }
 
   async retrievePendingDeposit(
@@ -907,6 +924,77 @@ export class NocturneSdk implements NocturneSdkApi {
       request,
       currentStatus,
       getStatus,
+    };
+  }
+
+  private async createOpRequest(
+    params: OpRequestParams
+  ): Promise<OperationHandle> {
+    const chainId = BigInt((await this.provider.getNetwork()).chainId);
+    const builder = newOpRequestBuilder(this.provider, chainId);
+    let operationRequest: OperationRequestWithMetadata;
+    let action: ActionMetadata;
+    switch (params.type) {
+      case "ANON_TRANSFER": {
+        const { erc20Address, amount, recipientAddress } = params;
+
+        operationRequest = await builder
+          .use(Erc20Plugin)
+          .erc20Transfer(erc20Address, recipientAddress, amount)
+          .build();
+
+        action = {
+          type: "Action",
+          actionType: "Transfer",
+          recipientAddress,
+          erc20Address,
+          amount,
+        };
+        break;
+      }
+      case "WETH_TO_WSTETH": {
+        const { wethAmount } = params;
+        operationRequest = await builder
+          .use(WstethAdapterPlugin)
+          .convertWethToWsteth(wethAmount)
+          .build();
+        action = {
+          type: "Action",
+          actionType: "Weth To Wsteth",
+          amount: wethAmount,
+        };
+        break;
+      }
+      case "WSTETH_TO_WETH": {
+        const { wstethAmount, maxSlippageBps } = params;
+        const tokenIn = this.wstethAddress;
+        const tokenOut = this.wethAddress;
+
+        operationRequest = await builder
+          .use(UniswapV3Plugin)
+          .swap(tokenIn, wstethAmount, tokenOut, maxSlippageBps)
+          .build();
+        action = {
+          type: "Action",
+          actionType: "UniswapV3 Swap",
+          tokenIn,
+          inAmount: wstethAmount,
+          tokenOut,
+        };
+        break;
+      }
+    }
+    const meta = {
+      items: [action],
+    };
+    const submittableOperation = await this.signAndProveOperation({
+      ...operationRequest,
+      meta,
+    });
+    const opHandleWithoutMetadata = this.submitOperation(submittableOperation);
+    return {
+      ...opHandleWithoutMetadata,
+      meta,
     };
   }
 }

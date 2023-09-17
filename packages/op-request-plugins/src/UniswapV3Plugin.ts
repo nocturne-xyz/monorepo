@@ -68,7 +68,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
       tokenIn: Address,
       inAmount: bigint,
       tokenOut: Address,
-      maxSlippageBps?: number
+      maxSlippageBps = 50
     ) {
       const prom = new Promise<BuilderItemToProcess>(
         async (resolve, reject) => {
@@ -100,7 +100,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 fromAddress: handlerAddress,
               },
               recipient: handlerAddress,
-              slippageTolerance: new Percent(maxSlippageBps ?? 50, 10_000),
+              slippageTolerance: new Percent(maxSlippageBps, 10_000),
               deadline: Date.now() + 3_600,
             };
             const chainId = chainIdToUniswapChainIdType(this._op.chainId);

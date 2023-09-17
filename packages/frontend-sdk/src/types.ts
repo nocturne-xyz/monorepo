@@ -129,3 +129,26 @@ export interface DisplayDepositRequestWithMetadata
   txHashCompleted?: string;
   txHashRetrieved?: string;
 }
+
+export interface AnonTransferOpRequestParams {
+  type: "ANON_TRANSFER";
+  erc20Address: string;
+  recipientAddress: string;
+  amount: bigint;
+}
+
+export interface WethToWstethOpRequestParams {
+  type: "WETH_TO_WSTETH";
+  wethAmount: bigint;
+}
+
+export interface WstethToWethOpRequestParams {
+  type: "WSTETH_TO_WETH";
+  wstethAmount: bigint;
+  maxSlippageBps?: number;
+}
+
+export type OpRequestParams =
+  | AnonTransferOpRequestParams
+  | WethToWstethOpRequestParams
+  | WstethToWethOpRequestParams;
