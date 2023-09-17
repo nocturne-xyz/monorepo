@@ -7,10 +7,11 @@ import {
   Teller,
   DepositManager,
   DepositManager__factory,
-  WETH9__factory,
   SimpleERC20Token__factory,
   CanonicalAddressRegistry,
   CanonicalAddressRegistry__factory,
+  WETH9,
+  WETH9__factory,
 } from "@nocturne-xyz/contracts";
 
 import {
@@ -112,6 +113,7 @@ export interface TestContracts {
   handler: Handler;
   depositManager: DepositManager;
   canonAddrRegistry: CanonicalAddressRegistry;
+  weth: WETH9;
 }
 
 export interface TestDeployment {
@@ -120,6 +122,7 @@ export interface TestDeployment {
   handler: Handler;
   canonAddrRegistry: CanonicalAddressRegistry;
   config: NocturneConfig;
+  weth: WETH9;
   tokens: TestDeploymentTokens;
   provider: ethers.providers.JsonRpcProvider;
   deployerEoa: ethers.Wallet;
@@ -205,7 +208,7 @@ export async function setupTestDeployment(
   const [
     deployment,
     tokens,
-    { teller, handler, depositManager, canonAddrRegistry },
+    { teller, handler, depositManager, canonAddrRegistry, weth },
   ] = await deployContractsWithDummyConfig(deployerEoa, {
     screeners: [screenerEoa.address],
     subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
@@ -347,6 +350,7 @@ export async function setupTestDeployment(
     teller,
     handler,
     canonAddrRegistry,
+    weth,
     tokens,
     config: deployment,
     provider,
@@ -465,7 +469,7 @@ export async function deployContractsWithDummyConfig(
       erc20s[0][1].address,
       erc20s[1][1].address
     ),
-    { teller, handler, depositManager, canonAddrRegistry },
+    { teller, handler, depositManager, canonAddrRegistry, weth },
   ];
 }
 

@@ -7,6 +7,7 @@ import {
   Handler,
   SimpleERC20Token__factory,
   Teller,
+  WETH9,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
@@ -21,6 +22,7 @@ import {
   OperationRequestWithMetadata,
   NocturneSigner,
   signOperation,
+  AssetTrait,
 } from "@nocturne-xyz/core";
 import {
   GAS_FAUCET_DEFAULT_AMOUNT,
@@ -31,6 +33,7 @@ import {
 import { depositFundsMultiToken } from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
 import { NocturneConfig } from "@nocturne-xyz/config";
+import { EthTransferAdapterPlugin } from "@nocturne-xyz/op-request-plugins";
 
 chai.use(chaiAsPromised);
 
@@ -70,6 +73,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
   let depositManager: DepositManager;
   let teller: Teller;
   let handler: Handler;
+  let weth: WETH9;
   let nocturneSignerAlice: NocturneSigner;
   let nocturneDBAlice: NocturneDB;
   let nocturneClientAlice: NocturneClient;
@@ -99,6 +103,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       config,
       teller,
       handler,
+      weth,
       aliceEoa,
       bobEoa,
       bundlerEoa,
@@ -598,6 +603,100 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
       // That one note should contain the tokens sent privately from alice
       expect(nonZeroNotesBob[0].value).to.equal(PAYMENT_AMOUNT);
+
+      // check that bundler got compensated for gas, at least enough that it breaks even
+      const bundlerBalanceAfter = (
+        await gasToken.balanceOf(await bundlerEoa.getAddress())
+      ).toBigInt();
+
+      console.log("bundler gas asset balance after op:", bundlerBalanceAfter);
+      // for some reason, mocha `.gte` doesn't work here
+      expect(bundlerBalanceAfter > bundlerBalanceBefore).to.be.true;
+    };
+
+    await testE2E({
+      opRequestWithMetadata,
+      contractChecks,
+      offchainChecks,
+      expectedResult: {
+        type: "success",
+        expectedBundlerStatus: OperationStatus.EXECUTED_SUCCESS,
+      },
+    });
+  });
+
+  it("alice transfers 2 ETH to bob", async () => {
+    const TWO_ETH = ethers.utils.parseEther("2").toBigInt(); // 2 ETH
+
+    console.log("deposit funds and commit note commitments");
+    await depositFundsMultiToken(
+      depositManager,
+      [
+        [weth, [TWO_ETH]],
+        [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
+      ],
+      aliceEoa,
+      nocturneClientAlice.viewer.generateRandomStealthAddress()
+    );
+    await fillSubtreeBatch();
+
+    const chainId = BigInt((await provider.getNetwork()).chainId);
+    const opRequestWithMetadata = await newOpRequestBuilder(
+      provider,
+      chainId,
+      config
+    )
+      .use(EthTransferAdapterPlugin)
+      .transferEth(bobEoa.address, TWO_ETH)
+      .deadline(
+        BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
+      )
+      .build();
+
+    const bobEoaEthBalanceBefore = (await bobEoa.getBalance()).toBigInt();
+
+    const bundlerBalanceBefore = (
+      await gasToken.balanceOf(await bundlerEoa.getAddress())
+    ).toBigInt();
+    console.log("bundler gas asset balance before op:", bundlerBalanceBefore);
+
+    const contractChecks = async () => {
+      console.log("check for OperationProcessed event");
+      const latestBlock = await provider.getBlockNumber();
+      const events: OperationProcessedEvent[] = await queryEvents(
+        teller,
+        teller.filters.OperationProcessed(),
+        0,
+        latestBlock
+      );
+      expect(events.length).to.equal(1);
+      expect(events[0].args.opProcessed).to.equal(true);
+      expect(events[0].args.callSuccesses[0]).to.equal(true);
+      expect(events[0].args.callSuccesses[1]).to.equal(true);
+
+      // Expect bob to have 2 more ETH and teller to have 0 ETH
+      expect((await weth.balanceOf(teller.address)).toBigInt()).to.equal(0n);
+      expect((await bobEoa.getBalance()).toBigInt()).to.equal(
+        bobEoaEthBalanceBefore + TWO_ETH
+      );
+
+      // Ensure gas comp
+      expect(
+        (await gasToken.balanceOf(teller.address)).toBigInt() <
+          GAS_FAUCET_DEFAULT_AMOUNT
+      );
+    };
+
+    const offchainChecks = async () => {
+      console.log("alice: Sync SDK post-operation");
+      await nocturneClientAlice.sync();
+      const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
+        AssetTrait.erc20AddressToAsset(weth.address),
+        { includeUncommitted: true }
+      )!;
+      const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
+      // alice should have 1 nonzero note from joinsplit output
+      expect(nonZeroNotesAlice.length).to.equal(0);
 
       // check that bundler got compensated for gas, at least enough that it breaks even
       const bundlerBalanceAfter = (
