@@ -95,6 +95,7 @@ module.exports = {
       'JoinSplitVerifier',
       'SubtreeUpdateVerifier',
       'WstethAdapter',
+      'EthTransferAdapter',
       'CanonAddrSigCheckVerifier',
       'SimpleERC20Token',
       'SimpleERC721Token',
