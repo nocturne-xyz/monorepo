@@ -60,12 +60,6 @@ export function EthTransferAdapterPlugin<EInner extends BaseOpRequestBuilder>(
         const wethContract = new Contract(wethAddress, ERC20_ABI);
         const wethAsset = AssetTrait.erc20AddressToAsset(wethAddress);
 
-        const encodedFunction =
-          EthTransferAdapter__factory.createInterface().encodeFunctionData(
-            "transfer",
-            [to, value]
-          );
-
         const unwrap: UnwrapRequest = {
           asset: wethAsset,
           unwrapValue: value,
@@ -81,7 +75,11 @@ export function EthTransferAdapterPlugin<EInner extends BaseOpRequestBuilder>(
 
         const transferAction: Action = {
           contractAddress: ethTransferAdapterAddress,
-          encodedFunction,
+          encodedFunction:
+            EthTransferAdapter__factory.createInterface().encodeFunctionData(
+              "transfer",
+              [to, value]
+            ),
         };
 
         const metadata: OperationMetadataItem = {

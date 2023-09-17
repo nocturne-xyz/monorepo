@@ -170,7 +170,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 contractAddress: tokenIn,
                 encodedFunction: erc20InContract.interface.encodeFunctionData(
                   "approve",
-                  [swapRouterAddress, ethers.constants.MaxUint256]
+                  [swapRouterAddress, inAmount]
                 ),
               };
 

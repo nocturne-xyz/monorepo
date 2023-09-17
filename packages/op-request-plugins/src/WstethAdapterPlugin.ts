@@ -10,6 +10,8 @@ import {
   RefundRequest,
 } from "@nocturne-xyz/core";
 import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
+import { Contract } from "ethers";
+import ERC20_ABI from "./abis/ERC20.json";
 
 const WETH_NAME = "weth";
 const WSTETH_NAME = "wsteth";
@@ -63,23 +65,30 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           );
         }
 
+        const wethContract = new Contract(wethAddress, ERC20_ABI);
         const wethAsset = AssetTrait.erc20AddressToAsset(wethAddress);
         const wstethAsset = AssetTrait.erc20AddressToAsset(wstethAddress);
-
-        const encodedFunction =
-          WstethAdapter__factory.createInterface().encodeFunctionData(
-            "convert",
-            [amount]
-          );
 
         const unwrap: UnwrapRequest = {
           asset: wethAsset,
           unwrapValue: amount,
         };
 
-        const action: Action = {
+        const approveAction: Action = {
+          contractAddress: wethAddress,
+          encodedFunction: wethContract.interface.encodeFunctionData(
+            "approve",
+            [wstethAdapterAddress, amount]
+          ),
+        };
+
+        const convertAction: Action = {
           contractAddress: wstethAdapterAddress,
-          encodedFunction,
+          encodedFunction:
+            WstethAdapter__factory.createInterface().encodeFunctionData(
+              "convert",
+              [amount]
+            ),
         };
 
         const refund: RefundRequest = {
@@ -96,7 +105,7 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
         resolve({
           unwraps: [unwrap],
           confidentialPayments: [],
-          actions: [action],
+          actions: [approveAction, convertAction],
           refunds: [refund],
           metadatas: [metadata],
         });
