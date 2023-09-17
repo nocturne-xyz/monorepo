@@ -1,7 +1,7 @@
 import { BabyJubJub } from "./BabyJubJub";
 import { CanonAddress, StealthAddress, StealthAddressTrait } from "./address";
 import { ViewingKey } from "./keys";
-import { randomFr } from "./utils";
+import { randomFr } from "./rand";
 
 export class NocturneViewer {
   vk: ViewingKey;

@@ -2,7 +2,7 @@ import { AffinePoint, BabyJubJub } from "./BabyJubJub";
 import { poseidonBN } from "./hashes";
 import { assert } from "./utils";
 import * as JSON from "bigint-json-serialization";
-import { randomFr } from "./utils";
+import { randomFr } from "./rand";
 import {
   CompressedPoint,
   compressPoint,

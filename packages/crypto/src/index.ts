@@ -5,7 +5,6 @@ export {
   CompressedStealthAddress,
   EncryptedCanonAddress,
 } from "./address";
-export { encryptNote } from "./noteEncryption";
 export { NocturneSigner, NocturneSignature } from "./signer";
 export { NocturneViewer } from "./viewer";
 export {
@@ -16,7 +15,9 @@ export {
   SpendingKey,
   ViewingKey,
 } from "./keys";
-export { randomFr } from "./utils";
+export { randomFr, randomFp } from "./rand";
+export { poseidonBN } from "./hashes";
+export { BabyJubJub, AffinePoint } from "./BabyJubJub";
 export {
   compressPoint,
   decompressPoint,

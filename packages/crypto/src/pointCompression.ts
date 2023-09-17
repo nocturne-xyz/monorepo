@@ -34,8 +34,13 @@ export function decompressPoint(
   );
 
   // get X by computing square root
-  // circuit-utils sqrt returns undefined if sqrt DNE (i.e. legendre symbol is -1)
-  let x = F.sqrt(xSquared);
+  // noble sqrt throws an error if the input is not a square
+  let x: bigint | undefined;
+  try {
+    x = F.sqrt(xSquared);
+  } catch (err) {
+    x = undefined;
+  }
 
   // if sqrt does not exist, the encoding is invalid
   // if sqrt is 0 and sign is nonzero, the encoding is invalid
