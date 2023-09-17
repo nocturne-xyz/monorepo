@@ -29,7 +29,7 @@ contract EthTransferAdapter {
     /// @dev We ensure recipient is EOA to avoid reentrancy (which could help attacker bypass
     ///      deposit limits).
     /// @dev Gas optimization where we keep weth balance from resetting to 0 does not require any
-    ///      additional code. If weth is force-sent to this contract outside, it will be stuck 
+    ///      additional code. If weth is force-sent to this contract outside, it will be stuck
     ///      here forever.
     function transfer(address to, uint256 value) external {
         require(to.code.length == 0, "!eoa");

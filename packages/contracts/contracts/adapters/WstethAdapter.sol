@@ -30,17 +30,20 @@ contract WstethAdapter {
     /// @param amount Amount of weth to convert
     /// @dev Transfers weth to self, unwraps to eth, converts to wsteth, then transfers wsteth back
     ///      to caller.
-    /// @dev We attempt to withhold tokens previously force-sent to adapter so we can avoid wsteth 
+    /// @dev We attempt to withhold tokens previously force-sent to adapter so we can avoid wsteth
     ///      balance from resetting to 0 (gas optimization).
     function convert(uint256 amount) external {
         _weth.transferFrom(msg.sender, address(this), amount);
         _weth.withdraw(amount);
 
-        // Get balance of wsteth before conversion so we can attempt to withhold before sending 
+        // Get balance of wsteth before conversion so we can attempt to withhold before sending
         // wsteth back (gas optimization to keep wsteth in balance from resetting to 0)
         uint256 wstethBalancePre = _wsteth.balanceOf(address(this));
 
         Address.sendValue(payable(address(_wsteth)), amount);
-        _wsteth.transfer(msg.sender, _wsteth.balanceOf(address(this)) - wstethBalancePre);
+        _wsteth.transfer(
+            msg.sender,
+            _wsteth.balanceOf(address(this)) - wstethBalancePre
+        );
     }
 }
