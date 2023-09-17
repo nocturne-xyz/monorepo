@@ -783,7 +783,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             )
         });
 
-        // Create operation to transfer half of tokens to bob
+        // Create operation to transfer half of weth to bob as ETH
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -818,7 +818,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
-        // One op, processed = true, call[0] succeeded
+        // One op, processed = true, call 0 and 1 succeeded (approve and eth transfer)
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].assetsUnwrapped, true);
