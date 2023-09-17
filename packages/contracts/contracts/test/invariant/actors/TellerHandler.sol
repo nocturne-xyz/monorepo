@@ -257,9 +257,13 @@ contract TellerHandler is OperationGenerator {
         return total;
     }
 
-    function ghost_totalEthTransferredOutOfTeller() public view returns (uint256) {
+    function ghost_totalEthTransferredOutOfTeller()
+        public
+        view
+        returns (uint256)
+    {
         uint256 total = 0;
-        for(uint256 i = 0; i < _successfulEthTransfers.length; i++) {
+        for (uint256 i = 0; i < _successfulEthTransfers.length; i++) {
             total += _successfulEthTransfers[i].amount;
         }
 

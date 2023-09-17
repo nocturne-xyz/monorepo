@@ -282,7 +282,10 @@ contract OperationGenerator is InvariantUtils {
                 }
             } else if (actionType == ActionType.ETH_TRANSFER && token == weth) {
                 {
-                    console.log("filling eth transfers meta, amount", transferOrSwapAmount);
+                    console.log(
+                        "filling eth transfers meta, amount",
+                        transferOrSwapAmount
+                    );
                     _meta.ethTransfers[i + 1] = EthTransferRequest({
                         recipient: transferRecipientAddress,
                         amount: transferOrSwapAmount

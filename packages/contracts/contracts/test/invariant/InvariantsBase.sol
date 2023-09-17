@@ -63,7 +63,7 @@ contract InvariantsBase is Test {
             // Since taking prefills inflates ghost_totalTransferredOutOfTeller,
             // we need to add the number of times prefills are taken to make up for over subtraction
             // Similarly, refilling prefills takes funds from Teller (to put in handler), so we
-            // subtracted from expected teller balance for refills  
+            // subtracted from expected teller balance for refills
             uint256 expectedInTeller = depositManagerHandler
                 .ghost_completeDepositSumErc20ForToken(i) +
                 tellerHandler.ghost_numberOfTimesPrefillTakenForToken(i) -
