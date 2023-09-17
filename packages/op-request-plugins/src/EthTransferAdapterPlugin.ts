@@ -17,7 +17,7 @@ const WETH_NAME = "weth";
 const ETH_TRANSFER_ADAPTER_NAME = "ethTransferAdapter";
 
 export interface EthTransferAdapterPluginMethods {
-  transfer(to: Address, value: bigint): this;
+  transferEth(to: Address, value: bigint): this;
 }
 
 export type Erc20PluginExt<T extends BaseOpRequestBuilder> = T &
@@ -38,7 +38,7 @@ export function EthTransferAdapterPlugin<EInner extends BaseOpRequestBuilder>(
   return {
     ...inner,
     use: use,
-    transfer(to: Address, value: bigint) {
+    transferEth(to: Address, value: bigint) {
       const prom = new Promise<BuilderItemToProcess>((resolve) => {
         const ethTransferAdapterAddress = this.config.protocolAllowlist.get(
           ETH_TRANSFER_ADAPTER_NAME

@@ -101,7 +101,10 @@ import {
   toDepositRequest,
   toDepositRequestWithMetadata,
 } from "./utils";
-import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
+import {
+  Erc20Plugin,
+  EthTransferAdapterPlugin,
+} from "@nocturne-xyz/op-request-plugins";
 
 export interface NocturneSdkOptions {
   networkName?: SupportedNetwork;
@@ -376,7 +379,7 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   /**
-   * Format and submit a `ProvenOperation` to transfer funds out of Nocturne to a specified recipient address.
+   * Format and submit a proven operation to transfer funds out of Nocturne to a specified recipient address.
    * @param erc20Address Asset address
    * @param amount Asset amount
    * @param recipientAddress Recipient address
@@ -398,6 +401,41 @@ export class NocturneSdk implements NocturneSdkApi {
       recipientAddress,
       erc20Address,
       amount,
+    };
+
+    const submittableOperation = await this.signAndProveOperation({
+      ...operationRequest,
+      meta: { items: [action] },
+    });
+    const opHandleWithoutMetadata = this.submitOperation(submittableOperation);
+    return {
+      ...opHandleWithoutMetadata,
+      meta: { items: [action] },
+    };
+  }
+
+  /**
+   * Format and submit a proven operation to transfer WETH out of Nocturne to a specified
+   * recipient address as ETH.
+   * @param to Recipient address
+   * @param value ETH amount to transfer
+   * @returns Operation handle
+   */
+  async initiateAnonEthTransfer(
+    to: Address,
+    value: bigint
+  ): Promise<OperationHandle> {
+    const chainId = BigInt((await this.provider.getNetwork()).chainId);
+    const operationRequest = await newOpRequestBuilder(this.provider, chainId)
+      .use(EthTransferAdapterPlugin)
+      .transferEth(to, value)
+      .build();
+
+    const action: ActionMetadata = {
+      type: "Action",
+      actionType: "Transfer ETH",
+      to,
+      value,
     };
 
     const submittableOperation = await this.signAndProveOperation({
