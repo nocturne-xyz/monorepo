@@ -282,12 +282,12 @@ contract OperationGenerator is InvariantUtils {
                 }
             } else if (actionType == ActionType.ETH_TRANSFER && token == weth) {
                 {
-                    console.log("filling eth transfers meta");
-                    _meta.ethTransfers[i] = EthTransferRequest({
+                    console.log("filling eth transfers meta, amount", transferOrSwapAmount);
+                    _meta.ethTransfers[i + 1] = EthTransferRequest({
                         recipient: transferRecipientAddress,
                         amount: transferOrSwapAmount
                     });
-                    _meta.isEthTransfer[i] = true;
+                    _meta.isEthTransfer[i + 1] = true; // its 2nd action that actually makes transfer
 
                     console.log("filling eth transfers action");
                     _actions[i] = Action({
@@ -309,6 +309,8 @@ contract OperationGenerator is InvariantUtils {
                         )
                     });
                 }
+
+                i += 1; // additional +1 to skip past eth transfer action at i+1
             } else {
                 {
                     console.log("filling swaps meta");

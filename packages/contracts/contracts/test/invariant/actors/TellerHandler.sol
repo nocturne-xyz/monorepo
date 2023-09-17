@@ -102,9 +102,7 @@ contract TellerHandler is OperationGenerator {
 
         for (uint256 i = 0; i < joinSplitTokens.length; i++) {
             console.log(
-                "JoinSplit token",
-                i,
-                "balance",
+                "JoinSplit token balance in Handler",
                 IERC20(joinSplitTokens[i]).balanceOf(address(handler))
             );
         }
@@ -201,10 +199,10 @@ contract TellerHandler is OperationGenerator {
             if (opResult.callSuccesses[i]) {
                 if (meta.isErc20Transfer[i]) {
                     _successfulTransfers.push(meta.transfers[i]);
-                } else if (meta.isSwap[i]) {
-                    _successfulSwaps.push(meta.swaps[i]);
                 } else if (meta.isEthTransfer[i]) {
                     _successfulEthTransfers.push(meta.ethTransfers[i]);
+                } else if (meta.isSwap[i]) {
+                    _successfulSwaps.push(meta.swaps[i]);
                 }
                 _numSuccessfulActions += 1;
             }
@@ -256,6 +254,15 @@ contract TellerHandler is OperationGenerator {
                 total += _successfulSwaps[i].assetInAmount;
             }
         }
+        return total;
+    }
+
+    function ghost_totalEthTransferredOutOfTeller() public view returns (uint256) {
+        uint256 total = 0;
+        for(uint256 i = 0; i < _successfulEthTransfers.length; i++) {
+            total += _successfulEthTransfers[i].amount;
+        }
+
         return total;
     }
 

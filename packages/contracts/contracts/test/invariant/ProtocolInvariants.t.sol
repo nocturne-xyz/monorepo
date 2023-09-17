@@ -243,6 +243,10 @@ contract ProtocolInvariants is Test, InvariantsBase {
         assert_protocol_tellerWethBalanceConsistent();
     }
 
+    function invariant_protocol_ethTransferredOutBalance() external {
+        assert_protocol_ethTransferredOutBalance();
+    }
+
     function invariant_protocol_handlerErc20BalancesAlwaysZeroOrOne() external {
         assert_protocol_handlerErc20BalancesAlwaysZeroOrOne();
     }
