@@ -4386,7 +4386,7 @@ __metadata:
     morgan: ^1.10.0
     nodemon: ^3.0.1
     prettier: ^2.8.8
-    redis-memory-server: ^0.6.0
+    redis-memory-server: ^0.7.0
     ts-node: ^10.9.1
     typescript: ^4.8.4
     winston: ^3.8.2
@@ -4473,7 +4473,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
-    "@nocturne-xyz/crypto-utils": "workspace:^"
+    "@nocturne-xyz/crypto": "workspace:^"
     "@types/async-retry": ^1.4.5
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -4532,7 +4532,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/crypto-utils@npm:^0.3.1":
+"@nocturne-xyz/crypto-utils@npm:^0.3.0":
   version: 0.3.1
   resolution: "@nocturne-xyz/crypto-utils@npm:0.3.1"
   dependencies:
@@ -4542,7 +4542,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nocturne-xyz/crypto@workspace:packages/crypto":
+"@nocturne-xyz/crypto@workspace:^, @nocturne-xyz/crypto@workspace:packages/crypto":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/crypto@workspace:packages/crypto"
   dependencies:
@@ -4783,7 +4783,7 @@ __metadata:
     mocha: ^10.1.0
     nodemon: ^3.0.1
     prettier: ^2.8.8
-    redis-memory-server: ^0.6.0
+    redis-memory-server: ^0.7.0
     ts-node: ^10.9.1
     typescript: ^4.9.3
     winston: ^3.8.2
@@ -4798,7 +4798,8 @@ __metadata:
   resolution: "@nocturne-xyz/local-prover@workspace:packages/local-prover"
   dependencies:
     "@nocturne-xyz/core": "workspace:^"
-    "@nocturne-xyz/crypto-utils": ^0.3.1
+    "@nocturne-xyz/crypto": "workspace:^"
+    "@nocturne-xyz/crypto-utils": ^0.3.0
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/mocha": ^10.0.0
@@ -4984,7 +4985,7 @@ __metadata:
     mocha: ^10.1.0
     nodemon: ^3.0.1
     prettier: ^2.8.8
-    redis-memory-server: ^0.6.0
+    redis-memory-server: ^0.7.0
     snarkjs: ^0.7.0
     ts-node: ^10.9.1
     typescript: ^4.9.3
@@ -11066,7 +11067,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:4.3.4, debug@npm:^4.0.1, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.2.0, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
+"debug@npm:4, debug@npm:4.3.4, debug@npm:^4.0.1, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
   version: 4.3.4
   resolution: "debug@npm:4.3.4"
   dependencies:
@@ -12599,7 +12600,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
@@ -13422,7 +13423,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"find-cache-dir@npm:^3.3.1, find-cache-dir@npm:^3.3.2":
+"find-cache-dir@npm:^3.3.2":
   version: 3.3.2
   resolution: "find-cache-dir@npm:3.3.2"
   dependencies:
@@ -20116,30 +20117,6 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"redis-memory-server@npm:^0.6.0":
-  version: 0.6.0
-  resolution: "redis-memory-server@npm:0.6.0"
-  dependencies:
-    camelcase: ^6.0.0
-    cross-spawn: ^7.0.3
-    debug: ^4.2.0
-    extract-zip: ^2.0.1
-    find-cache-dir: ^3.3.1
-    find-package-json: ^1.2.0
-    get-port: ^5.1.1
-    https-proxy-agent: ^5.0.0
-    lockfile: ^1.0.4
-    lodash.defaultsdeep: ^4.6.1
-    mkdirp: ^1.0.4
-    rimraf: ^3.0.2
-    semver: ^7.3.2
-    tar: ^6.1.0
-    tmp: ^0.2.1
-    uuid: 8.3.0
-  checksum: 8fc2c9c6a580979c7a80228b1062508593d8fd921e787cc9f1c952df350fabf6b96b62c9c2555e61c6e215944d1ce1cd36a6b16c95850686d1adcf2640e183cc
-  languageName: node
-  linkType: hard
-
 "redis-memory-server@npm:^0.7.0":
   version: 0.7.0
   resolution: "redis-memory-server@npm:0.7.0"
@@ -22290,7 +22267,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"tar@npm:^6.0.2, tar@npm:^6.1.0, tar@npm:^6.1.11, tar@npm:^6.1.2":
+"tar@npm:^6.0.2, tar@npm:^6.1.11, tar@npm:^6.1.2":
   version: 6.1.13
   resolution: "tar@npm:6.1.13"
   dependencies:
@@ -23524,15 +23501,6 @@ circomlibjs@nocturne-xyz/circomlibjs:
   bin:
     uuid: ./bin/uuid
   checksum: 8793629d2799f500aeea9fcd0aec6c4e9fbcc4d62ed42159ad96be345c3fffac1bbf61a23e18e2782600884fee05e6d4012ce4b70d0037c8e987533ae6a77870
-  languageName: node
-  linkType: hard
-
-"uuid@npm:8.3.0":
-  version: 8.3.0
-  resolution: "uuid@npm:8.3.0"
-  bin:
-    uuid: dist/bin/uuid
-  checksum: b539886e6a532ba1efdcc7cee02fd561effef820e1c7b27dd3a13e55b893c6615f38dcf1e6909362c9b5af2a2f2ee8f73868ba284481d49feb820a0e17c8017b
   languageName: node
   linkType: hard
 

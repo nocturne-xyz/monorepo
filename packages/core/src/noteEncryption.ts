@@ -59,7 +59,7 @@ export function decryptNote(
   const senderBytes = msgBytes.slice(0, BabyJubJub.BYTES);
   const noteBytes = msgBytes.slice(BabyJubJub.BYTES);
 
-  const sender = BabyJubJub.fromBytes(senderBytes);
+  const sender = BabyJubJub.fromBytes(senderBytes).toAffine();
   if (!sender) throw new Error("Invalid sender");
   const note = NoteTrait.deserializeCompact(noteBytes);
 
