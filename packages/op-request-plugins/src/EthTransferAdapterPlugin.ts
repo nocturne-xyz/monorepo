@@ -11,7 +11,7 @@ import {
 } from "@nocturne-xyz/core";
 import { EthTransferAdapter__factory } from "@nocturne-xyz/contracts";
 import ERC20_ABI from "./abis/ERC20.json";
-import { Contract } from "ethers";
+import { ethers } from "ethers";
 
 const WETH_NAME = "weth";
 const ETH_TRANSFER_ADAPTER_NAME = "ethTransferAdapter";
@@ -20,13 +20,13 @@ export interface EthTransferAdapterPluginMethods {
   transferEth(to: Address, value: bigint): this;
 }
 
-export type Erc20PluginExt<T extends BaseOpRequestBuilder> = T &
+export type EthTransferAdapterPluginExt<T extends BaseOpRequestBuilder> = T &
   EthTransferAdapterPluginMethods;
 
 export function EthTransferAdapterPlugin<EInner extends BaseOpRequestBuilder>(
   inner: OpRequestBuilderExt<EInner>
-): OpRequestBuilderExt<Erc20PluginExt<EInner>> {
-  type E = Erc20PluginExt<EInner>;
+): OpRequestBuilderExt<EthTransferAdapterPluginExt<EInner>> {
+  type E = EthTransferAdapterPluginExt<EInner>;
 
   function use<E2 extends E>(
     this: OpRequestBuilderExt<E>,
@@ -57,7 +57,7 @@ export function EthTransferAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           );
         }
 
-        const wethContract = new Contract(wethAddress, ERC20_ABI);
+        const wethInterface = new ethers.utils.Interface(ERC20_ABI);
         const wethAsset = AssetTrait.erc20AddressToAsset(wethAddress);
 
         const unwrap: UnwrapRequest = {
@@ -67,10 +67,10 @@ export function EthTransferAdapterPlugin<EInner extends BaseOpRequestBuilder>(
 
         const approveAction: Action = {
           contractAddress: wethAddress,
-          encodedFunction: wethContract.interface.encodeFunctionData(
-            "approve",
-            [ethTransferAdapterAddress, value]
-          ),
+          encodedFunction: wethInterface.encodeFunctionData("approve", [
+            ethTransferAdapterAddress,
+            value,
+          ]),
         };
 
         const transferAction: Action = {

@@ -10,8 +10,8 @@ import {
   RefundRequest,
 } from "@nocturne-xyz/core";
 import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
-import { Contract } from "ethers";
 import ERC20_ABI from "./abis/ERC20.json";
+import { ethers } from "ethers";
 
 const WETH_NAME = "weth";
 const WSTETH_NAME = "wsteth";
@@ -23,13 +23,13 @@ export interface WstethAdapterPluginMethods {
   convertWethToWsteth(amount: bigint): this;
 }
 
-export type Erc20PluginExt<T extends BaseOpRequestBuilder> = T &
+export type WstethAdapterPluginExt<T extends BaseOpRequestBuilder> = T &
   WstethAdapterPluginMethods;
 
 export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
   inner: OpRequestBuilderExt<EInner>
-): OpRequestBuilderExt<Erc20PluginExt<EInner>> {
-  type E = Erc20PluginExt<EInner>;
+): OpRequestBuilderExt<WstethAdapterPluginExt<EInner>> {
+  type E = WstethAdapterPluginExt<EInner>;
 
   function use<E2 extends E>(
     this: OpRequestBuilderExt<E>,
@@ -65,7 +65,7 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           );
         }
 
-        const wethContract = new Contract(wethAddress, ERC20_ABI);
+        const wethInterface = new ethers.utils.Interface(ERC20_ABI);
         const wethAsset = AssetTrait.erc20AddressToAsset(wethAddress);
         const wstethAsset = AssetTrait.erc20AddressToAsset(wstethAddress);
 
@@ -76,10 +76,10 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
 
         const approveAction: Action = {
           contractAddress: wethAddress,
-          encodedFunction: wethContract.interface.encodeFunctionData(
-            "approve",
-            [wstethAdapterAddress, amount]
-          ),
+          encodedFunction: wethInterface.encodeFunctionData("approve", [
+            wstethAdapterAddress,
+            amount,
+          ]),
         };
 
         const convertAction: Action = {

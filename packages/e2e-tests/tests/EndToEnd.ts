@@ -381,7 +381,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       // That one note should contain the tokens sent privately from alice
       expect(nonZeroNotesBob[0].value).to.equal(ALICE_TO_BOB_PRIV_VAL);
 
-      // check that bundler got compensated for gas, at least enough that it breaks even
+      // check that bundler got compensated for gas
       const bundlerBalanceAfter = (
         await gasToken.balanceOf(await bundlerEoa.getAddress())
       ).toBigInt();
@@ -496,7 +496,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(nonZeroNotesAlice.length).to.equal(0);
       console.log("alice post-op notes:", nonZeroNotesAlice);
 
-      // check that bundler got compensated for gas, at least enough that it breaks even
+      // check that bundler got compensated for gas
       const bundlerBalanceAfter = (
         await gasToken.balanceOf(await bundlerEoa.getAddress())
       ).toBigInt();
@@ -604,7 +604,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       // That one note should contain the tokens sent privately from alice
       expect(nonZeroNotesBob[0].value).to.equal(PAYMENT_AMOUNT);
 
-      // check that bundler got compensated for gas, at least enough that it breaks even
+      // check that bundler got compensated for gas
       const bundlerBalanceAfter = (
         await gasToken.balanceOf(await bundlerEoa.getAddress())
       ).toBigInt();
@@ -625,7 +625,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     });
   });
 
-  it("alice transfers 2 ETH to bob", async () => {
+  it("alice transfers 2 ETH to bob via EthTransferAdapter", async () => {
     const TWO_ETH = ethers.utils.parseEther("2").toBigInt(); // 2 ETH
 
     console.log("deposit funds and commit note commitments");
@@ -684,7 +684,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(
         (await gasToken.balanceOf(teller.address)).toBigInt() <
           GAS_FAUCET_DEFAULT_AMOUNT
-      );
+      ).to.be.true;
     };
 
     const offchainChecks = async () => {
@@ -695,10 +695,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         { includeUncommitted: true }
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
-      // alice should have 1 nonzero note from joinsplit output
+
+      // alice should have 0 nonzero notes (all weth spent)
       expect(nonZeroNotesAlice.length).to.equal(0);
 
-      // check that bundler got compensated for gas, at least enough that it breaks even
+      // check that bundler got compensated for gas
       const bundlerBalanceAfter = (
         await gasToken.balanceOf(await bundlerEoa.getAddress())
       ).toBigInt();
