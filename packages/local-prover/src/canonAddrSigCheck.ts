@@ -4,8 +4,8 @@ import {
   CanonAddrSigCheckInputs,
   CanonAddrSigCheckProofWithPublicSignals,
   CanonAddrSigCheckProver,
-  VerifyingKey,
   encodeCanonAddrSigCheckPis,
+  VerifyingKey,
 } from "@nocturne-xyz/core";
 
 export class WasmCanonAddrSigCheckProver implements CanonAddrSigCheckProver {

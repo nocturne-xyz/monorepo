@@ -1,10 +1,19 @@
-import { StealthAddressTrait, StealthAddress, CanonAddress } from "../crypto";
+import {
+  StealthAddressTrait,
+  StealthAddress,
+  CanonAddress,
+  NocturneViewer,
+  poseidonBN,
+} from "@nocturne-xyz/crypto";
 import { Asset, AssetTrait, EncodedAsset } from "./asset";
-import { poseidonBN } from "@nocturne-xyz/crypto-utils";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "../utils";
 import { EncryptedNote } from "./types";
 import { bigintFromBEBytes } from "../utils/bits";
+import {
+  NEW_NOTE_NONCE_DOMAIN_SEPARATOR,
+  NULLIFIER_DOMAIN_SEPARATOR,
+} from "../proof/joinsplit";
 
 export interface Note {
   owner: StealthAddress;
@@ -148,6 +157,32 @@ export class NoteTrait {
 
   static toNote<N extends Note>({ owner, nonce, asset, value }: N): Note {
     return { owner, nonce, asset, value };
+  }
+
+  static createNullifier<N extends Note>(
+    viewer: NocturneViewer,
+    note: N
+  ): bigint {
+    if (!viewer.isOwnAddress(note.owner)) {
+      throw Error(
+        "attempted to create nullifier for a note that is not owned by signer"
+      );
+    }
+
+    return poseidonBN(
+      [NoteTrait.toCommitment(note), viewer.vk],
+      NULLIFIER_DOMAIN_SEPARATOR
+    );
+  }
+
+  static generateNewNonce(
+    viewer: NocturneViewer,
+    oldNullifier: bigint
+  ): bigint {
+    return poseidonBN(
+      [viewer.vk, oldNullifier],
+      NEW_NOTE_NONCE_DOMAIN_SEPARATOR
+    );
   }
 
   // see above for serialization format

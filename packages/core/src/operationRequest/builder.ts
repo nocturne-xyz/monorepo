@@ -2,7 +2,7 @@ import {
   NocturneConfig,
   loadNocturneConfigBuiltin,
 } from "@nocturne-xyz/config";
-import { CanonAddress, StealthAddress } from "../crypto";
+import { CanonAddress, StealthAddress } from "@nocturne-xyz/crypto";
 import {
   ConfidentialPayment,
   OperationGasParams,

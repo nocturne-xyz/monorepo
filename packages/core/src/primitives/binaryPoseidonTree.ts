@@ -3,7 +3,7 @@ import {
   Node,
   MerkleProof,
 } from "@zk-kit/incremental-merkle-tree";
-import { poseidonBN } from "@nocturne-xyz/crypto-utils";
+import { poseidonBN } from "@nocturne-xyz/crypto";
 
 export class BinaryPoseidonTree {
   static readonly R = 28;

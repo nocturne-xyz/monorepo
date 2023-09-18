@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { CanonAddress, StealthAddress } from "../crypto";
+import { CanonAddress, StealthAddress } from "@nocturne-xyz/crypto";
 import {
   Action,
   Address,

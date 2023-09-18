@@ -1,4 +1,4 @@
-import { StealthAddressTrait } from "../../../crypto";
+import { StealthAddressTrait } from "@nocturne-xyz/crypto";
 import {
   AssetTrait,
   IncludedEncryptedNote,

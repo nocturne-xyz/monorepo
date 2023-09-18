@@ -24,7 +24,8 @@
   },
   "dependencies": {
     "@nocturne-xyz/core": "workspace:^",
-    "@nocturne-xyz/crypto-utils": "^0.3.1",
+    "@nocturne-xyz/crypto": "workspace:^",
+    "@nocturne-xyz/crypto-utils": "^0.3.0",
     "bigint-conversion": "^2.3.0",
     "bigint-json-serialization": "^1.0.1",
     "snarkjs": "^0.7.0"

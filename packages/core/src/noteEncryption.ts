@@ -1,15 +1,16 @@
-import { CanonAddress } from "./address";
-import { NoteTrait } from "../primitives";
-import { EncryptedNote } from "../primitives/types";
+import { NoteTrait } from "./primitives";
+import { EncryptedNote } from "./primitives/types";
 import {
+  CanonAddress,
   BabyJubJub,
-  HybridCipher,
+  BabyJubJubHybridCipher,
   deserializeHybridCiphertext,
   serializeHybridCiphertext,
-} from "@nocturne-xyz/crypto-utils";
-import { NoteWithSender } from "../primitives/note";
+  NocturneViewer,
+} from "@nocturne-xyz/crypto";
+import { NoteWithSender } from "./primitives/note";
 
-const cipher = new HybridCipher(BabyJubJub, 64);
+const cipher = new BabyJubJubHybridCipher(64);
 
 /**
  * Encrypt a note to be decrypted by a given receiver
@@ -49,14 +50,14 @@ export function encryptNote(
  * will work as long as `encryptedNote` was encrypted with `vk`'s corresponding `CanonicalAddress`
  */
 export function decryptNote(
-  vk: bigint,
+  viewer: NocturneViewer,
   encryptedNote: EncryptedNote
 ): NoteWithSender {
   const ciphertext = deserializeHybridCiphertext(encryptedNote);
-  const msgBytes = cipher.decrypt(ciphertext, vk);
+  const msgBytes = cipher.decrypt(ciphertext, viewer.vk);
 
-  const senderBytes = msgBytes.slice(0, BabyJubJub.NumBytes);
-  const noteBytes = msgBytes.slice(BabyJubJub.NumBytes);
+  const senderBytes = msgBytes.slice(0, BabyJubJub.BYTES);
+  const noteBytes = msgBytes.slice(BabyJubJub.BYTES);
 
   const sender = BabyJubJub.fromBytes(senderBytes);
   if (!sender) throw new Error("Invalid sender");

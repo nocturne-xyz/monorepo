@@ -74,6 +74,7 @@ assert(babyJubJubFn.CURVE.n % babyJubJubFn.CURVE.h === 0n);
 export const BabyJubJub = {
   ORDER: babyJubJubFn.CURVE.n,
   PRIME_SUBGROUP_ORDER: babyJubJubFn.CURVE.n / babyJubJubFn.CURVE.h,
+  BYTES: BaseField.BYTES * 2,
 
   A,
   D,

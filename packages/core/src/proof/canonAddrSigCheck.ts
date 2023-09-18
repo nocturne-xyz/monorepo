@@ -4,7 +4,7 @@ import {
   SpendPk,
   compressPoint,
   decomposeCompressedPoint,
-} from "../crypto";
+} from "@nocturne-xyz/crypto";
 import { BaseProof } from "./types";
 
 export interface CanonAddrSigCheckProver {

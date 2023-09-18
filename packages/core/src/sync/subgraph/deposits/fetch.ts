@@ -1,5 +1,5 @@
 import { DepositRequest, EncodedAsset } from "../../../primitives";
-import { CompressedStealthAddress } from "../../../crypto";
+import { CompressedStealthAddress } from "@nocturne-xyz/crypto";
 import { SubgraphUtils } from "..";
 import {
   TotalEntityIndex,

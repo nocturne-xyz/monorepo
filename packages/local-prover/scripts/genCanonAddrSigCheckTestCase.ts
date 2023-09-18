@@ -3,7 +3,8 @@ import * as path from "path";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
 import { WasmCanonAddrSigCheckProver } from "../src/canonAddrSigCheck";
-import { NocturneSigner, range } from "@nocturne-xyz/core";
+import { range } from "@nocturne-xyz/core";
+import { NocturneSigner } from "@nocturne-xyz/crypto";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");

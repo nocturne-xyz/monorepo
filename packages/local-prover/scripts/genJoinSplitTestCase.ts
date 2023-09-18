@@ -6,17 +6,16 @@ import { poseidonBN } from "@nocturne-xyz/crypto-utils";
 import { WasmJoinSplitProver } from "../src/joinsplit";
 import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 import {
-  NocturneSigner,
   JoinSplitInputs,
   MerkleProofInput,
   EncodedNote,
-  StealthAddressTrait,
   encodeEncodedAssetAddrWithSignBitsPI,
   TreeConstants,
   EncodedAsset,
   JoinSplitProver,
   range,
 } from "@nocturne-xyz/core";
+import { NocturneSigner, StealthAddressTrait } from "@nocturne-xyz/crypto";
 
 const { ZERO_VALUE, ARITY, DEPTH } = TreeConstants;
 

@@ -2,7 +2,6 @@ export * from "./utils";
 export * from "./conversion";
 export * from "./primitives";
 export * from "./proof";
-export * from "./crypto";
 export * from "./store";
 export * from "./sync";
 export * from "./request";
