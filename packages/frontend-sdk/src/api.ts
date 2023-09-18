@@ -82,6 +82,13 @@ export interface NocturneSdkApi {
     recipientAddress: Address
   ): Promise<OperationHandle>;
 
+  initiateWethToWsteth(amount: bigint): Promise<OperationHandle>;
+
+  initiateWstethToWeth(
+    wstethAmount: bigint,
+    maxSlippageBps?: number
+  ): Promise<OperationHandle>;
+
   submitOperation(
     operation: SubmittableOperationWithNetworkInfo
   ): Promise<OperationHandle>;

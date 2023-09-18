@@ -409,7 +409,6 @@ export class NocturneSdk implements NocturneSdkApi {
     });
   }
 
-  // TODO add doc comment + add to API.ts
   async initiateWethToWsteth(wethAmount: bigint): Promise<OperationHandle> {
     return this.createOpRequest({
       type: "WETH_TO_WSTETH",
@@ -417,7 +416,6 @@ export class NocturneSdk implements NocturneSdkApi {
     });
   }
 
-  // TODO add doc comment + add to API.ts
   async initiateWstethToWeth(
     wstethAmount: bigint,
     maxSlippageBps = 50
@@ -425,6 +423,7 @@ export class NocturneSdk implements NocturneSdkApi {
     return this.createOpRequest({
       type: "WSTETH_TO_WETH",
       wstethAmount,
+      maxSlippageBps,
     });
   }
 
