@@ -111,7 +111,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
     }
 
     const handlerContract = Handler__factory.connect(
-      config.handlerAddress(),
+      config.handlerAddress,
       signer
     );
 

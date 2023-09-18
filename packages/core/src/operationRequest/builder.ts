@@ -125,10 +125,9 @@ export function newOpRequestBuilder(
     config = loadNocturneConfigBuiltin(networkName);
   }
 
-  const tellerContract = config.tellerAddress();
   const _op: OperationRequest = {
     chainId,
-    tellerContract,
+    tellerContract: config.tellerAddress,
     joinSplitRequests: [],
     refunds: [],
     actions: [],

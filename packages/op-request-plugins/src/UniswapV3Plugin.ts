@@ -82,7 +82,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             }
 
             const router = this.getSwapRouter();
-            const handlerAddress = this.config.handlerAddress();
+            const handlerAddress = this.config.handlerAddress;
 
             const erc20InContract = new ethers.Contract(tokenIn, ERC20_ABI);
             const tokenInDecimals = Number(await erc20InContract.decimals());
@@ -170,7 +170,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 contractAddress: tokenIn,
                 encodedFunction: erc20InContract.interface.encodeFunctionData(
                   "approve",
-                  [swapRouterAddress, ethers.constants.MaxUint256]
+                  [swapRouterAddress, inAmount]
                 ),
               };
 

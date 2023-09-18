@@ -221,6 +221,12 @@ export type ActionMetadata =
     }
   | {
       type: "Action";
+      actionType: "Transfer ETH";
+      to: Address;
+      value: bigint;
+    }
+  | {
+      type: "Action";
       actionType: "UniswapV3 Swap";
       tokenIn: Address;
       inAmount: bigint;
