@@ -4507,30 +4507,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/crypto-utils@0.3.1-alpha, @nocturne-xyz/crypto-utils@workspace:^, @nocturne-xyz/crypto-utils@workspace:packages/crypto-utils":
-  version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/crypto-utils@workspace:packages/crypto-utils"
+"@nocturne-xyz/crypto-utils@npm:0.3.1-alpha":
+  version: 0.3.1-alpha
+  resolution: "@nocturne-xyz/crypto-utils@npm:0.3.1-alpha"
   dependencies:
     "@noble/hashes": ^1.3.1
     "@stablelib/chacha20poly1305": ^1.0.1
-    "@types/bn.js": ^5.1.1
-    "@types/chai": ^4.3.3
-    "@types/mocha": ^10.0.0
-    "@types/node": ^18.8.0
-    "@typescript-eslint/eslint-plugin": ^5.20.0
-    "@typescript-eslint/parser": ^5.20.0
-    chai: ^4.3.6
-    chai-as-promised: ^7.1.1
-    circomlibjs: nocturne-xyz/circomlibjs
-    eslint: ^7.32.0
-    eslint-config-prettier: ^8.3.0
-    ffjavascript: 0.2.57
-    mocha: ^10.1.0
-    prettier: ^2.8.0
-    ts-node: ^10.9.1
-    typescript: ^4.8.4
-  languageName: unknown
-  linkType: soft
+  checksum: 07a9948d4b73a8e4e4a32adc9c387eb33088fb0ebe664740af9785e9d2aee0909a6b3e03a605bbe0fb07ee2cfe6447be0761833b8677393f0e0a4324d8b2a629
+  languageName: node
+  linkType: hard
 
 "@nocturne-xyz/crypto@workspace:^, @nocturne-xyz/crypto@workspace:packages/crypto":
   version: 0.0.0-use.local
@@ -4919,7 +4904,7 @@ __metadata:
     "@metamask/snaps-ui": ^0.32.2
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/core": "workspace:^"
-    "@nocturne-xyz/crypto-utils": "workspace:^"
+    "@nocturne-xyz/crypto": "workspace:^"
     "@typescript-eslint/eslint-plugin": ^5.33.0
     "@typescript-eslint/parser": ^5.20.0
     bigint-json-serialization: ^1.0.1
@@ -4948,7 +4933,6 @@ __metadata:
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/core": "workspace:^"
-    "@nocturne-xyz/crypto-utils": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
     "@nocturne-xyz/persistent-log": "workspace:^"
     "@openzeppelin/defender-relay-client": 1.47.1

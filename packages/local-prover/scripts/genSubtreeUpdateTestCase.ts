@@ -13,7 +13,7 @@ import {
   TreeConstants,
 } from "@nocturne-xyz/core";
 import { WasmSubtreeUpdateProver } from "../src/subtreeUpdate";
-import { poseidonBN } from "@nocturne-xyz/crypto-utils";
+import { poseidonBN } from "@nocturne-xyz/crypto";
 import { NocturneSigner } from "@nocturne-xyz/crypto";
 
 const ROOT_DIR = findWorkspaceRoot()!;

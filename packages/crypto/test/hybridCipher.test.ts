@@ -19,10 +19,6 @@ import {
 import { i2osp } from "../src/utils";
 import { unprefixedHexToUint8Array, range } from "./utils";
 import { randomBytes } from "crypto";
-import {
-  HybridCipher,
-  BabyJubJub as UtilsBabyJubJub,
-} from "@nocturne-xyz/crypto-utils";
 
 const BABYJUBJUB_WIDE_REDUCTION_ENTROPY = 64;
 
@@ -61,35 +57,6 @@ describe("BabyJubJubHybridCipher", () => {
     expect(() => cipher.decrypt(ciphertext, receiverPrivateKey)).to.throw(
       "failed to decrypt"
     );
-  });
-
-  it("matches @nocturne-xyz/crypto-utils", () => {
-    const utilsCipher = new HybridCipher(
-      UtilsBabyJubJub,
-      BABYJUBJUB_WIDE_REDUCTION_ENTROPY
-    );
-    const cipher = new BabyJubJubHybridCipher(
-      BABYJUBJUB_WIDE_REDUCTION_ENTROPY
-    );
-
-    const msg = "海賊王に、俺はなる！";
-    const msgBytes = new TextEncoder().encode(msg);
-
-    const sk = randomFr();
-
-    const pubkey = BabyJubJub.BasePointExtended.multiply(sk).toAffine();
-    const utilsPubkey = UtilsBabyJubJub.scalarMul(
-      UtilsBabyJubJub.BasePoint,
-      sk
-    );
-    expect(pubkey).to.eql(utilsPubkey);
-
-    const entropy = crypto.getRandomValues(
-      new Uint8Array(BABYJUBJUB_WIDE_REDUCTION_ENTROPY)
-    );
-    const ciphertext = cipher.encrypt(msgBytes, pubkey, entropy);
-    const utilsCiphertext = utilsCipher.encrypt(msgBytes, utilsPubkey, entropy);
-    expect(ciphertext).to.eql(utilsCiphertext);
   });
 });
 
