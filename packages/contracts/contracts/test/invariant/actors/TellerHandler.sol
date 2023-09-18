@@ -16,7 +16,7 @@ import {ParseUtils} from "../../utils/ParseUtils.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {WETH9} from "../../tokens/WETH9.sol";
 import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
-import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} from "../helpers/OperationGenerator.sol";
+import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata, EthTransferRequest} from "../helpers/OperationGenerator.sol";
 import {TokenIdSet, LibTokenIdSet} from "../helpers/TokenIdSet.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
@@ -51,7 +51,8 @@ contract TellerHandler is OperationGenerator {
     string[] internal _failureReasons;
     TestBalanceManager internal _testBalanceManager;
 
-    TransferRequest[] internal _successfulTransfers;
+    EthTransferRequest[] internal _successfulEthTransfers;
+    Erc20TransferRequest[] internal _successfulTransfers;
     SwapRequest[] internal _successfulSwaps;
 
     constructor(
@@ -61,8 +62,16 @@ contract TellerHandler is OperationGenerator {
         address[] memory _joinSplitTokens,
         SimpleERC20Token _swapErc20,
         address _bundlerAddress,
-        address _transferRecipientAddress
-    ) OperationGenerator(_transferRecipientAddress) {
+        address _transferRecipientAddress,
+        address _weth,
+        address payable _ethTransferAdapter
+    )
+        OperationGenerator(
+            _transferRecipientAddress,
+            _weth,
+            _ethTransferAdapter
+        )
+    {
         teller = _teller;
         handler = _handler;
         swapper = _swapper;
@@ -93,9 +102,7 @@ contract TellerHandler is OperationGenerator {
 
         for (uint256 i = 0; i < joinSplitTokens.length; i++) {
             console.log(
-                "JoinSplit token",
-                i,
-                "balance",
+                "JoinSplit token balance in Handler",
                 IERC20(joinSplitTokens[i]).balanceOf(address(handler))
             );
         }
@@ -109,10 +116,16 @@ contract TellerHandler is OperationGenerator {
         console.log("Metadata:");
         for (uint256 i = 0; i < _successfulTransfers.length; i++) {
             console.log(
-                "Transfer amount",
+                "Erc20 transfer amount",
                 _successfulTransfers[i].amount,
                 ". Token:",
                 _successfulTransfers[i].token
+            );
+        }
+        for (uint256 i = 0; i < _successfulEthTransfers.length; i++) {
+            console.log(
+                "Eth transfer amount",
+                _successfulEthTransfers[i].amount
             );
         }
         for (uint256 i = 0; i < _successfulSwaps.length; i++) {
@@ -132,7 +145,7 @@ contract TellerHandler is OperationGenerator {
         // Ensure swap erc20 always filled so we don't have to bother with prefill logic
         // TODO: remove and allow when we allow teller to transact with swap erc20
         if (swapErc20.balanceOf(address(handler)) == 0) {
-            swapErc20.reserveTokens(address(this), 1);
+            deal(address(swapErc20), address(this), 1);
             swapErc20.transfer(address(handler), 1);
         }
 
@@ -184,8 +197,10 @@ contract TellerHandler is OperationGenerator {
 
         for (uint256 i = 0; i < opResult.callSuccesses.length; i++) {
             if (opResult.callSuccesses[i]) {
-                if (meta.isTransfer[i]) {
+                if (meta.isErc20Transfer[i]) {
                     _successfulTransfers.push(meta.transfers[i]);
+                } else if (meta.isEthTransfer[i]) {
+                    _successfulEthTransfers.push(meta.ethTransfers[i]);
                 } else if (meta.isSwap[i]) {
                     _successfulSwaps.push(meta.swaps[i]);
                 }
@@ -239,6 +254,19 @@ contract TellerHandler is OperationGenerator {
                 total += _successfulSwaps[i].assetInAmount;
             }
         }
+        return total;
+    }
+
+    function ghost_totalEthTransferredOutOfTeller()
+        public
+        view
+        returns (uint256)
+    {
+        uint256 total = 0;
+        for (uint256 i = 0; i < _successfulEthTransfers.length; i++) {
+            total += _successfulEthTransfers[i].amount;
+        }
+
         return total;
     }
 

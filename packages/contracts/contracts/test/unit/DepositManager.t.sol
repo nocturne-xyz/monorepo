@@ -204,7 +204,7 @@ contract DepositManagerTest is Test {
 
     function testInstantiateDepositSuccess() public {
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+        deal(address(token), ALICE, RESERVE_AMOUNT);
 
         uint256 depositAmount = RESERVE_AMOUNT / 2;
 
@@ -322,7 +322,7 @@ contract DepositManagerTest is Test {
 
     function testInstantiateDepositFailureUnsupportedToken() public {
         SimpleERC20Token token = new SimpleERC20Token();
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+        deal(address(token), ALICE, RESERVE_AMOUNT);
 
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
@@ -344,7 +344,7 @@ contract DepositManagerTest is Test {
         uint256 overMaxSizeAmount = (uint256(MAX_DEPOSIT_SIZE) * (10 ** 18)) +
             1;
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, overMaxSizeAmount);
+        deal(address(token), ALICE, overMaxSizeAmount);
 
         vm.prank(ALICE);
         token.approve(address(depositManager), overMaxSizeAmount);
@@ -364,7 +364,7 @@ contract DepositManagerTest is Test {
 
     function testRetrieveDepositSuccess() public {
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+        deal(address(token), ALICE, RESERVE_AMOUNT);
 
         // Approve all 50M tokens for deposit
         vm.prank(ALICE);
@@ -488,7 +488,7 @@ contract DepositManagerTest is Test {
 
     function testRetrieveDepositFailureNotSpender() public {
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+        deal(address(token), ALICE, RESERVE_AMOUNT);
 
         // Approve all 50M tokens for deposit
         vm.prank(ALICE);
@@ -523,7 +523,7 @@ contract DepositManagerTest is Test {
 
     function testRetrieveDepositFailureNoDeposit() public {
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+        deal(address(token), ALICE, RESERVE_AMOUNT);
 
         // Create deposit request but never instantiate deposit with it
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
@@ -543,7 +543,7 @@ contract DepositManagerTest is Test {
 
     function testCompleteDepositSuccessSingle() public {
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+        deal(address(token), ALICE, RESERVE_AMOUNT);
 
         // Approve 50M tokens for deposit
         vm.prank(ALICE);
@@ -626,7 +626,7 @@ contract DepositManagerTest is Test {
             depositAmounts[i] = RESERVE_AMOUNT;
         }
 
-        token.reserveTokens(ALICE, RESERVE_AMOUNT * numDeposits);
+        deal(address(token), ALICE, RESERVE_AMOUNT * numDeposits);
 
         // Approve 50M tokens for deposit
         vm.prank(ALICE);
@@ -729,7 +729,7 @@ contract DepositManagerTest is Test {
         DepositRequest memory deposit;
         bytes memory signature;
         for (uint256 i = 0; i < 11; i++) {
-            token.reserveTokens(ALICE, chunkAmount);
+            deal(address(token), ALICE, chunkAmount);
 
             vm.prank(ALICE);
             token.approve(address(depositManager), chunkAmount);
@@ -777,7 +777,7 @@ contract DepositManagerTest is Test {
 
     function testCompleteDepositFailureBadSignature() public {
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+        deal(address(token), ALICE, RESERVE_AMOUNT);
 
         // Approve 50M tokens for deposit
         vm.prank(ALICE);
@@ -820,7 +820,7 @@ contract DepositManagerTest is Test {
 
     function testCompleteDepositFailureNonExistentDeposit() public {
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+        deal(address(token), ALICE, RESERVE_AMOUNT);
 
         // Approve 50M tokens for deposit
         vm.prank(ALICE);
