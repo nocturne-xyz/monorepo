@@ -280,7 +280,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
             // Reserve tokens
             uint256 totalDepositAmount = _sum(depositAmounts);
-            erc20.reserveTokens(_currentActor, totalDepositAmount);
+            deal(address(erc20), _currentActor, totalDepositAmount);
 
             // Deal gas compensation
             vm.deal(_currentActor, gasCompPerDeposit * numDeposits);

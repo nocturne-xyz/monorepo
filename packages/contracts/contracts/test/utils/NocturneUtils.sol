@@ -31,7 +31,7 @@ struct FormatOperationArgs {
     OperationFailureType operationFailureType;
 }
 
-struct TransferRequest {
+struct Erc20TransferRequest {
     address token;
     address recipient;
     uint256 amount;
@@ -124,7 +124,7 @@ library NocturneUtils {
     ) public pure returns (Action[] memory) {
         Action[] memory actions = new Action[](1);
         actions[0] = formatTransferAction(
-            TransferRequest({
+            Erc20TransferRequest({
                 token: token,
                 recipient: recipient,
                 amount: amount
@@ -134,7 +134,7 @@ library NocturneUtils {
     }
 
     function formatTransferAction(
-        TransferRequest memory transferRequest
+        Erc20TransferRequest memory transferRequest
     ) public pure returns (Action memory) {
         return
             Action({

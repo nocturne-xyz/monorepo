@@ -6,6 +6,7 @@ import {console} from "forge-std/console.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
 
 import {InvariantsBase} from "./InvariantsBase.sol";
+import {EthTransferAdapter} from "../../adapters/EthTransferAdapter.sol";
 import {DepositManagerHandler} from "./actors/DepositManagerHandler.sol";
 import {TellerHandler} from "./actors/TellerHandler.sol";
 import {HandlerHandler} from "./actors/HandlerHandler.sol";
@@ -30,6 +31,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
         depositManager = new TestDepositManager();
 
         WETH9 weth = new WETH9();
+        EthTransferAdapter ethTransferAdapter = new EthTransferAdapter(
+            address(weth)
+        );
 
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
@@ -76,7 +80,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
             depositErc20s,
             swapErc20,
             BUNDLER_ADDRESS,
-            TRANSFER_RECIPIENT_ADDRESS
+            TRANSFER_RECIPIENT_ADDRESS,
+            address(weth),
+            payable(address(ethTransferAdapter))
         );
 
         depositManager.setErc20Cap(
@@ -104,6 +110,13 @@ contract ProtocolInvariants is Test, InvariantsBase {
         handler.setContractMethodPermission(
             address(weth),
             weth.transfer.selector,
+            true
+        );
+
+        handler.setContractPermission(address(ethTransferAdapter), true);
+        handler.setContractMethodPermission(
+            address(ethTransferAdapter),
+            ethTransferAdapter.transfer.selector,
             true
         );
 
@@ -228,6 +241,10 @@ contract ProtocolInvariants is Test, InvariantsBase {
 
     function invariant_protocol_tellerWethBalanceConsistent() external {
         assert_protocol_tellerWethBalanceConsistent();
+    }
+
+    function invariant_protocol_ethTransferredOutBalance() external {
+        assert_protocol_ethTransferredOutBalance();
     }
 
     function invariant_protocol_handlerErc20BalancesAlwaysZeroOrOne() external {
