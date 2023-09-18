@@ -64,7 +64,7 @@ const runSubmitter = new Command("submitter")
       stdoutLogLevel
     );
     const submitter = new BundlerSubmitter(
-      config.tellerAddress(),
+      config.tellerAddress,
       signer,
       getRedis(),
       logger

@@ -76,7 +76,7 @@ export class NocturneClient {
 
     this.viewer = viewer;
     this.handlerContract = Handler__factory.connect(
-      this.config.handlerAddress(),
+      this.config.handlerAddress,
       provider
     );
     this.merkleProver = merkleProver;

@@ -56,6 +56,7 @@ import {
   compressPoint,
   SignCanonAddrRegistryEntryMethod,
   packToSolidityProof,
+  OpRequestBuilder,
 } from "@nocturne-xyz/core";
 import {
   WasmCanonAddrSigCheckProver,
@@ -125,7 +126,6 @@ export class NocturneSdk implements NocturneSdkApi {
   protected db: NocturneDB;
 
   protected signerThunk: Thunk<ethers.Signer>;
-  protected chainIdThunk: Thunk<bigint>;
   protected depositManagerContractThunk: Thunk<DepositManager>;
   protected handlerContractThunk: Thunk<Handler>;
   protected canonAddrRegistryThunk: Thunk<CanonicalAddressRegistry>;
@@ -175,24 +175,21 @@ export class NocturneSdk implements NocturneSdkApi {
     this.syncMutex = new Mutex();
 
     this.signerThunk = thunk(() => this.getWindowSigner());
-    this.chainIdThunk = thunk(() =>
-      this.provider.getNetwork().then((n) => BigInt(n.chainId))
-    );
     this.depositManagerContractThunk = thunk(async () =>
       DepositManager__factory.connect(
-        this.config.config.depositManagerAddress(),
+        this.config.config.depositManagerAddress,
         await this.signerThunk()
       )
     );
     this.handlerContractThunk = thunk(async () =>
       Handler__factory.connect(
-        this.config.config.handlerAddress(),
+        this.config.config.handlerAddress,
         await this.signerThunk()
       )
     );
     this.canonAddrRegistryThunk = thunk(async () =>
       CanonicalAddressRegistry__factory.connect(
-        this.config.config.canonicalAddressRegistryAddress(),
+        this.config.config.canonicalAddressRegistryAddress,
         await this.signerThunk()
       )
     );
@@ -239,6 +236,10 @@ export class NocturneSdk implements NocturneSdkApi {
 
   get snap(): SnapStateApi {
     return this._snap;
+  }
+
+  get opRequestBuilder(): OpRequestBuilder {
+    return newOpRequestBuilder(this.provider, this.config.config.chainId);
   }
 
   protected async getWindowSigner(): Promise<ethers.Signer> {
@@ -322,7 +323,7 @@ export class NocturneSdk implements NocturneSdkApi {
             compressedCanonAddr,
             perCanonAddrNonce: nonce,
           },
-          chainId: BigInt(this.config.config.contracts.network.chainId),
+          chainId: BigInt(this.config.config.chainId),
           registryAddress: registry.address,
         },
       });
@@ -389,13 +390,12 @@ export class NocturneSdk implements NocturneSdkApi {
     amount: bigint,
     recipientAddress: Address
   ): Promise<OperationHandle> {
-    const chainId = BigInt((await this.provider.getNetwork()).chainId);
-    const operationRequest = await newOpRequestBuilder(this.provider, chainId)
+    const operationRequest = await this.opRequestBuilder
       .use(Erc20Plugin)
       .erc20Transfer(erc20Address, recipientAddress, amount)
       .build();
 
-    const action: ActionMetadata = {
+    const actionMeta: ActionMetadata = {
       type: "Action",
       actionType: "Transfer",
       recipientAddress,
@@ -403,15 +403,7 @@ export class NocturneSdk implements NocturneSdkApi {
       amount,
     };
 
-    const submittableOperation = await this.signAndProveOperation({
-      ...operationRequest,
-      meta: { items: [action] },
-    });
-    const opHandleWithoutMetadata = this.submitOperation(submittableOperation);
-    return {
-      ...opHandleWithoutMetadata,
-      meta: { items: [action] },
-    };
+    return this.performOperation(operationRequest, [actionMeta]);
   }
 
   /**
@@ -425,27 +417,46 @@ export class NocturneSdk implements NocturneSdkApi {
     to: Address,
     value: bigint
   ): Promise<OperationHandle> {
-    const chainId = BigInt((await this.provider.getNetwork()).chainId);
-    const operationRequest = await newOpRequestBuilder(this.provider, chainId)
+    const operationRequest = await this.opRequestBuilder
       .use(EthTransferAdapterPlugin)
       .transferEth(to, value)
       .build();
 
-    const action: ActionMetadata = {
+    const actionMeta: ActionMetadata = {
       type: "Action",
       actionType: "Transfer ETH",
       to,
       value,
     };
 
-    const submittableOperation = await this.signAndProveOperation({
-      ...operationRequest,
-      meta: { items: [action] },
-    });
+    return this.performOperation(operationRequest, [actionMeta]);
+  }
+
+  /**
+   * Take an operation request OR submittable operation. If the former, sign and prove the operation
+   * and submit it to the bundler. If the latter, directly submit it to the bundler.
+   * @param opOrOpRequest Submittable operation or operation request
+   * @param actionsMetadata Metadata for each action in the operation
+   * @returns Operation handle
+   */
+  async performOperation(
+    opOrOpRequest:
+      | SubmittableOperationWithNetworkInfo
+      | OperationRequestWithMetadata,
+    actionsMetadata: ActionMetadata[]
+  ): Promise<OperationHandle> {
+    const submittableOperation =
+      "request" in opOrOpRequest
+        ? await this.signAndProveOperation({
+            ...opOrOpRequest,
+            meta: { items: actionsMetadata },
+          })
+        : opOrOpRequest;
+
     const opHandleWithoutMetadata = this.submitOperation(submittableOperation);
     return {
       ...opHandleWithoutMetadata,
-      meta: { items: [action] },
+      meta: { items: actionsMetadata },
     };
   }
 
@@ -476,6 +487,7 @@ export class NocturneSdk implements NocturneSdkApi {
       return depositManagerContract.retrieveDeposit(req);
     }
   }
+
   /**
    * Fetch status of existing deposit request given its hash.
    *

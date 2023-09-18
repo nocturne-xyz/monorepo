@@ -116,7 +116,7 @@ describe("OpRequestBuilder", () => {
           },
         ],
         chainId: 1n,
-        tellerContract: DUMMY_CONFIG.tellerAddress(),
+        tellerContract: DUMMY_CONFIG.tellerAddress,
         deadline: 2n,
       },
       meta: {

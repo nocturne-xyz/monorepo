@@ -42,8 +42,8 @@ const runServer = new Command("server")
       stdoutLogLevel
     );
     const server = new BundlerServer(
-      config.tellerAddress(),
-      config.handlerAddress(),
+      config.tellerAddress,
+      config.handlerAddress,
       provider,
       getRedis(),
       logger

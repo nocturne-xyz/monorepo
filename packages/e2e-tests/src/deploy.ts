@@ -321,7 +321,7 @@ export async function setupTestDeployment(
 
   const fillSubtreeBatch = async () => {
     const handler = Handler__factory.connect(
-      deployment.handlerAddress(),
+      deployment.handlerAddress,
       subtreeUpdaterEoa
     );
     try {

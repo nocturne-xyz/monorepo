@@ -67,28 +67,36 @@ export class NocturneConfig {
     });
   }
 
-  canonicalAddressRegistryAddress(): Address {
+  get networkName(): string {
+    return this.contracts.network.name;
+  }
+
+  get chainId(): bigint {
+    return BigInt(this.contracts.network.chainId);
+  }
+
+  get startBlock(): number {
+    return this.contracts.startBlock;
+  }
+
+  get canonicalAddressRegistryAddress(): Address {
     return this.contracts.canonicalAddressRegistryProxy.proxy;
   }
 
-  tellerAddress(): Address {
+  get tellerAddress(): Address {
     return this.contracts.tellerProxy.proxy;
   }
 
-  handlerAddress(): Address {
+  get handlerAddress(): Address {
     return this.contracts.handlerProxy.proxy;
   }
 
-  depositManagerAddress(): Address {
+  get depositManagerAddress(): Address {
     return this.contracts.depositManagerProxy.proxy;
   }
 
   erc20(ticker: string): Erc20Config | undefined {
     return this.erc20s.get(ticker);
-  }
-
-  startBlock(): number {
-    return this.contracts.startBlock;
   }
 }
 
