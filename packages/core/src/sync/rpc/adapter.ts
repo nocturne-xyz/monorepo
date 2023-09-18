@@ -7,7 +7,7 @@ import {
 import { min, max } from "../../utils";
 import {
   EncryptedStateDiff,
-  IterSyncOpts,
+  SDKIterSyncOpts,
   SDKSyncAdapter,
 } from "../syncAdapter";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
@@ -49,7 +49,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
   iterStateDiffs(
     startTotalEntityIndex: TotalEntityIndex,
-    opts?: IterSyncOpts
+    opts?: SDKIterSyncOpts
   ): ClosableAsyncIterator<EncryptedStateDiff> {
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
     const handlerContract = this.handlerContract;
