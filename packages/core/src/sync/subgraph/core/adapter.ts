@@ -37,9 +37,9 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
     const logger = this.logger;
 
-    const fetchHistogram = new Histogram(
-      "time to fetch SDK events for a diff (ms) per note"
-    );
+    const fetchHistogram = opts?.timing
+      ? new Histogram("time to fetch SDK events for a diff (ms) per note")
+      : undefined;
     let closed = false;
 
     const endpoint = this.graphqlEndpoint;
@@ -144,9 +144,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
             console.log(yieldedLogMsg);
           }
 
-          if (opts?.timing) {
-            fetchHistogram.sample(fetchTime / stateDiff.notes.length);
-          }
+          fetchHistogram?.sample(fetchTime / stateDiff.notes.length);
 
           yield stateDiff;
 

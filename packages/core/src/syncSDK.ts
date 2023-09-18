@@ -109,11 +109,9 @@ export async function syncSDK(
     }
   }
 
-  if (opts?.timing) {
-    diffHistogram?.print();
-    applyStateDiffHistogram?.print();
-    updateMerkleHistogram?.print();
-  }
+  diffHistogram?.print();
+  applyStateDiffHistogram?.print();
+  updateMerkleHistogram?.print();
 
   return latestSyncedMerkleIndex;
 }
