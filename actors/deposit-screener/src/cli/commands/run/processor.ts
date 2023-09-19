@@ -117,7 +117,7 @@ const runProcess = new Command("processor")
 
     const screener = new DepositScreenerScreener(
       adapter,
-      config.depositManagerAddress(),
+      config.depositManagerAddress,
       provider,
       getRedis(),
       logger,
@@ -129,7 +129,7 @@ const runProcess = new Command("processor")
 
     const fulfiller = new DepositScreenerFulfiller(
       logger,
-      config.depositManagerAddress(),
+      config.depositManagerAddress,
       signer,
       attestationSigner,
       getRedis(),

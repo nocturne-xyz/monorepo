@@ -33,7 +33,6 @@ export interface NocturneDeployOpts {
 }
 
 export interface WstethAdapterDeployConfig {
-  wethAddress: Address;
   wstethAddress: Address;
 }
 

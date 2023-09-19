@@ -9,8 +9,11 @@ import { ethers } from "ethers";
 export const WETH_ADDRESS = ethers.utils.getAddress(
   "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 );
+export const ETH_TRANSFER_ADAPTER_ADDRESS = ethers.utils.getAddress(
+  "0x388C818CA8B9251b393131C08a736A67ccB19297"
+);
 export const WSTETH_ADAPTER_ADDRESS = ethers.utils.getAddress(
-  "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
+  "0x1f9090aaE28b8a3dCeaDf281B0F12828e676c326"
 );
 export const WSTETH_ADDRESS = ethers.utils.getAddress(
   "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
@@ -45,6 +48,10 @@ config.erc20s.set("wsteth", {
   resetWindowHours: 24n,
   precision: 18n,
   isGasAsset: false,
+});
+config.protocolAllowlist.set("ethTransferAdapter", {
+  address: ETH_TRANSFER_ADAPTER_ADDRESS,
+  functionSignatures: ["transfer(address,uint256)"],
 });
 config.protocolAllowlist.set("wstethAdapter", {
   address: WSTETH_ADAPTER_ADDRESS,

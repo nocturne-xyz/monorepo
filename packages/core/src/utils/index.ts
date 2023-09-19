@@ -30,3 +30,4 @@ export {
   batchOffsetToLatestMerkleIndexInBatch,
 } from "./treeIndex";
 export { MapWithObjectKeys, SetWithObjectKeys } from "./collections";
+export { Histogram, timed, timedAsync } from "./timing";

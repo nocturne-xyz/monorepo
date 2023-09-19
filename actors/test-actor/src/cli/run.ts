@@ -140,9 +140,9 @@ export const run = new Command("run")
       );
     }
 
-    const teller = Teller__factory.connect(config.tellerAddress(), signer);
+    const teller = Teller__factory.connect(config.tellerAddress, signer);
     const depositManager = DepositManager__factory.connect(
-      config.depositManagerAddress(),
+      config.depositManagerAddress,
       signer
     );
 

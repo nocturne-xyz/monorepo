@@ -10,6 +10,8 @@ import {
   RefundRequest,
 } from "@nocturne-xyz/core";
 import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
+import ERC20_ABI from "./abis/ERC20.json";
+import { ethers } from "ethers";
 
 const WETH_NAME = "weth";
 const WSTETH_NAME = "wsteth";
@@ -21,13 +23,13 @@ export interface WstethAdapterPluginMethods {
   convertWethToWsteth(amount: bigint): this;
 }
 
-export type Erc20PluginExt<T extends BaseOpRequestBuilder> = T &
+export type WstethAdapterPluginExt<T extends BaseOpRequestBuilder> = T &
   WstethAdapterPluginMethods;
 
 export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
   inner: OpRequestBuilderExt<EInner>
-): OpRequestBuilderExt<Erc20PluginExt<EInner>> {
-  type E = Erc20PluginExt<EInner>;
+): OpRequestBuilderExt<WstethAdapterPluginExt<EInner>> {
+  type E = WstethAdapterPluginExt<EInner>;
 
   function use<E2 extends E>(
     this: OpRequestBuilderExt<E>,
@@ -63,23 +65,30 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           );
         }
 
+        const wethInterface = new ethers.utils.Interface(ERC20_ABI);
         const wethAsset = AssetTrait.erc20AddressToAsset(wethAddress);
         const wstethAsset = AssetTrait.erc20AddressToAsset(wstethAddress);
-
-        const encodedFunction =
-          WstethAdapter__factory.createInterface().encodeFunctionData(
-            "convert",
-            [amount]
-          );
 
         const unwrap: UnwrapRequest = {
           asset: wethAsset,
           unwrapValue: amount,
         };
 
-        const action: Action = {
+        const approveAction: Action = {
+          contractAddress: wethAddress,
+          encodedFunction: wethInterface.encodeFunctionData("approve", [
+            wstethAdapterAddress,
+            amount,
+          ]),
+        };
+
+        const convertAction: Action = {
           contractAddress: wstethAdapterAddress,
-          encodedFunction,
+          encodedFunction:
+            WstethAdapter__factory.createInterface().encodeFunctionData(
+              "convert",
+              [amount]
+            ),
         };
 
         const refund: RefundRequest = {
@@ -96,7 +105,7 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
         resolve({
           unwraps: [unwrap],
           confidentialPayments: [],
-          actions: [action],
+          actions: [approveAction, convertAction],
           refunds: [refund],
           metadatas: [metadata],
         });
