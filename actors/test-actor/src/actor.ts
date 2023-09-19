@@ -46,6 +46,7 @@ export class TestActorOpts {
   fullBundleEvery?: number;
   onlyDeposits?: boolean;
   onlyOperations?: boolean;
+  numConfirmations?: number;
 }
 
 export interface TestActorMetrics {
@@ -134,10 +135,14 @@ export class TestActor {
     }
   }
 
-  async runOps(interval: number, batchEvery?: number): Promise<void> {
+  async runOps(
+    interval: number,
+    batchEvery?: number,
+    numConfirmations?: number
+  ): Promise<void> {
     let i = 0;
     while (true) {
-      await this.client.sync();
+      await this.client.sync({ numConfirmations });
       const balances = await this.client.getAllAssetBalances();
       this.logger.info("balances: ", balances);
 
@@ -173,7 +178,11 @@ export class TestActor {
     } else {
       await Promise.all([
         this.runDeposits(depositIntervalSeconds * 1000),
-        this.runOps(opIntervalSeconds * 1000, opts?.fullBundleEvery),
+        this.runOps(
+          opIntervalSeconds * 1000,
+          opts?.fullBundleEvery,
+          opts?.numConfirmations
+        ),
       ]);
     }
   }

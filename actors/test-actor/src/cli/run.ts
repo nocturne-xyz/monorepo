@@ -54,6 +54,11 @@ export const run = new Command("run")
     "--full-bundle-every <number>",
     "perform 8 ops in rapid succession to fill a bundle every N iterations of the op loop"
   )
+  .option(
+    "num-confirmations <number>",
+    'number of confirmations to wait before considering new notes as "finalized"',
+    parseInt
+  )
   .option("--only-deposits", "only perform deposits")
   .option("--only-operations", "only perform operations")
   .option(
@@ -79,6 +84,7 @@ export const run = new Command("run")
       onlyOperations,
       logDir,
       stdoutLogLevel,
+      numConfirmations,
     } = options;
 
     const configName = extractConfigName(configNameOrPath);
@@ -195,5 +201,6 @@ export const run = new Command("run")
       fullBundleEvery: fullBundleEvery ? parseInt(fullBundleEvery) : undefined,
       onlyDeposits,
       onlyOperations,
+      numConfirmations,
     });
   });
