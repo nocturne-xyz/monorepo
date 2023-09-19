@@ -78,7 +78,16 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
           console.log(rangeLogMsg);
         }
 
-        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
+        // fetch the latest indexed block minus `numConfirmations`
+        // if `latestIndexedBlock < 0`, then we simply wait and try again - this can occurr if the chain is brand new (e.g. in tests)
+        const latestIndexedBlock =
+          (await fetchLatestIndexedBlock(endpoint)) -
+          (opts?.numConfirmations ?? 0);
+        if (latestIndexedBlock < 0) {
+          await sleep(5000);
+          continue;
+        }
+
         await maybeApplyThrottle(latestIndexedBlock);
 
         // fetch notes and nfs on or after `from`, will return at most 100 of each
