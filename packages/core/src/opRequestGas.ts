@@ -19,8 +19,11 @@ import {
 } from "./primitives";
 import { ERC20_ID } from "./primitives/asset";
 import { groupByMap, partition } from "./utils/functional";
-import { prepareOperation } from "./prepareOperation";
-import { getJoinSplitRequestTotalValue } from "./utils";
+import { gatherNotes, prepareOperation } from "./prepareOperation";
+import {
+  getJoinSplitRequestTotalValue,
+  getMerkleIndicesAndNfsFromOp,
+} from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
 import {
@@ -58,10 +61,11 @@ interface GasEstimatedOperationRequest
   gasPrice: bigint;
 }
 
-interface GasParams {
+interface OpRequestTraceParams {
   totalGasLimit: bigint;
   executionGasLimit: bigint;
   gasPrice: bigint;
+  usedMerkleIndices: Set<number>;
 }
 
 // VK corresponding to SK of 1 with minimum valid nonce
@@ -79,8 +83,8 @@ export async function handleGasForOperationRequest(
 ): Promise<GasAccountedOperationRequest> {
   // estimate gas params for opRequest
   console.log("estimating gas for op request");
-  const { totalGasLimit, executionGasLimit, gasPrice } =
-    await estimateGasForOperationRequest(deps, opRequest);
+  const { totalGasLimit, executionGasLimit, gasPrice, usedMerkleIndices } =
+    await getOperationRequestTrace(deps, opRequest);
 
   const gasEstimatedOpRequest: GasEstimatedOperationRequest = {
     ...opRequest,
@@ -109,7 +113,8 @@ export async function handleGasForOperationRequest(
         gasEstimatedOpRequest.joinSplitRequests,
         totalGasLimit,
         gasPrice,
-        deps.tokenConverter
+        deps.tokenConverter,
+        usedMerkleIndices
       );
 
     if (!gasAssetAndTicker) {
@@ -139,7 +144,8 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
   joinSplitRequests: JoinSplitRequest[],
   gasUnitsEstimate: bigint,
   gasPrice: bigint,
-  tokenConverter: EthToTokenConverter
+  tokenConverter: EthToTokenConverter,
+  alreadyUsedMerkleIndices: Set<number> = new Set()
 ): Promise<[JoinSplitRequest[], AssetAndTicker | undefined]> {
   // group joinSplitRequests by asset address
   const joinSplitRequestsByAsset = groupByMap(
@@ -179,11 +185,21 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
       totalOwnedGasAsset >=
       estimateInGasAsset + totalAmountInMatchingRequests
     ) {
-      // Add enough to cover gas needed for existing joinsplits + gas for an extra joinsplit and refund
-      // NOTE: we naively assume additional joinsplit is created, though this may not be case
-      // TODO: update op request, see if it creates another joinsplit, then add additional JS gas only if it does
+      // Add enough to cover gas needed for existing joinsplits + gas for an extra joinsplits
+      const extraNotes = await gatherNotes(
+        db,
+        estimateInGasAsset,
+        gasAsset,
+        alreadyUsedMerkleIndices
+      );
+      const numExtraJoinSplits = Math.ceil(extraNotes.length / 2);
+
+      console.log(
+        `adding ${numExtraJoinSplits} extra joinsplits for gas compensation`
+      );
       matchingJoinSplitRequests[0].unwrapValue +=
-        estimateInGasAsset + maxGasForAdditionalJoinSplit() * gasPrice;
+        estimateInGasAsset +
+        BigInt(numExtraJoinSplits) * maxGasForAdditionalJoinSplit() * gasPrice;
       joinSplitRequestsByAsset.set(
         gasAsset.assetAddr,
         matchingJoinSplitRequests
@@ -243,10 +259,10 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
 }
 
 // estimate gas params for opRequest
-async function estimateGasForOperationRequest(
+async function getOperationRequestTrace(
   { handlerContract, ...deps }: HandleOpRequestGasDeps,
   opRequest: OperationRequest
-): Promise<GasParams> {
+): Promise<OpRequestTraceParams> {
   let { executionGasLimit, gasPrice } = opRequest;
 
   // Simulate operation to get number of joinSplits
@@ -264,6 +280,9 @@ async function estimateGasForOperationRequest(
   const preparedOp = await prepareOperation(
     { viewer: DUMMY_VIEWER, ...deps },
     dummyOpRequest
+  );
+  const usedMerkleIndices = new Set(
+    getMerkleIndicesAndNfsFromOp(preparedOp).map((e) => Number(e.merkleIndex))
   );
 
   // simulate the operation
@@ -294,6 +313,7 @@ async function estimateGasForOperationRequest(
     totalGasLimit,
     executionGasLimit,
     gasPrice,
+    usedMerkleIndices,
   };
 }
 

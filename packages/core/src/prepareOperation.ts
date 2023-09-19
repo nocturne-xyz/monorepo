@@ -133,7 +133,7 @@ async function prepareJoinSplits(
   );
 }
 
-async function gatherNotes(
+export async function gatherNotes(
   db: NocturneDB,
   requestedAmount: bigint,
   asset: Asset,
