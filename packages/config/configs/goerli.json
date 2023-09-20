@@ -137,6 +137,13 @@
         "address": "0x779CFf9F408baD3Cb37AC0e4c66df33471f5F2FB",
         "functionSignatures": ["convert(uint256)"]
       }
+    ],
+    [
+      "ethTransferAdapter",
+      {
+        "address": "0xd5376FBB9a5fe1F541e48D11d00abf7cc7D619D7",
+        "functionSignatures": ["transfer(address,uint256)"]
+      }
     ]
   ]
 }
