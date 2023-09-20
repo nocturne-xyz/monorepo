@@ -17,6 +17,7 @@ import { ERC20_ID } from "../src/primitives/asset";
 import { JoinSplitRequest } from "../src/operationRequest/operationRequest";
 import { MockEthToTokenConverter } from "../src/conversion";
 import { ethers } from "ethers";
+import { maxGasForAdditionalJoinSplit } from "../src/primitives/gasCalculation";
 
 chai.use(chaiAsPromised);
 
@@ -207,5 +208,83 @@ describe("handleGasForOperationRequest", async () => {
     expect(joinSplitRequestForGas.asset).to.eql(stablescam);
     // exact amount depends
     expect(joinSplitRequestForGas.unwrapValue >= 1_000_000).to.be.true;
+  });
+
+  it("adds multiple joinsplit requests when gas compensation is high due to high gas price", async () => {
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+      [
+        500_000n,
+        500_000n,
+        2_000_000n,
+        2_000_000n,
+        2_000_000n,
+        2_000_000n,
+        2_000_000n,
+        2_000_000n,
+        2_000_000n,
+        2_000_000n,
+        2_000_000n,
+        2_000_000n,
+        2_000_000n,
+        2_000_000n,
+        2_000_000n,
+        2_000_000n,
+      ],
+      [
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+        shitcoin,
+      ]
+    );
+    const deps = {
+      db: nocturneDB,
+      handlerContract,
+      merkle: merkleProver,
+      viewer: signer,
+      gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
+    };
+
+    const provider = ethers.getDefaultProvider();
+    const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
+
+    // Need 1M tokens to unwrap + op gas estimate (860k * 10)
+    // 8.6M needed for gas incurs 3 more joinsplits (485k * 3 * 10)
+    const opRequest = await builder
+      .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .__unwrap(shitcoin, 1_000_000n)
+      .__refund({ asset: shitcoin, minRefundValue: 1n })
+      .gas({
+        executionGasLimit: 1n,
+        gasPrice: 10n,
+      })
+      .deadline(1n)
+      .build();
+
+    const gasCompAccountedOpRequest = await handleGasForOperationRequest(
+      deps,
+      opRequest.request
+    );
+
+    expect(gasCompAccountedOpRequest.gasPrice).to.eql(10n);
+    expect(gasCompAccountedOpRequest.gasAsset).to.eql(shitcoin);
+
+    expect(
+      gasCompAccountedOpRequest.joinSplitRequests[0].unwrapValue >
+        1_000_000n + 3n * maxGasForAdditionalJoinSplit()
+    ).to.be.true;
   });
 });
