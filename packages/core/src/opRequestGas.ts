@@ -26,7 +26,7 @@ import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
 import {
   maxGasForOperation,
-  maxGasForAdditionalJoinSplit,
+  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
 } from "./primitives/gasCalculation";
 import { getIncludedNotesFromOp } from "./primitives/typeHelpers";
 
@@ -206,7 +206,9 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
       );
       const numExtraJoinSplits = Math.ceil(extraNotes.length / 2);
       const extraJoinSplitGas =
-        BigInt(numExtraJoinSplits) * maxGasForAdditionalJoinSplit() * gasPrice;
+        BigInt(numExtraJoinSplits) *
+        MAX_GAS_FOR_ADDITIONAL_JOINSPLIT *
+        gasPrice;
 
       if (totalOwnedGasAsset < estimateInGasAsset + extraJoinSplitGas) {
         throw new Error(
@@ -248,7 +250,9 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
       const extraNotes = await gatherNotes(db, estimateInGasAsset, gasAsset);
       const numExtraJoinSplits = Math.ceil(extraNotes.length / 2);
       const additionaJoinSplitGas =
-        BigInt(numExtraJoinSplits) * maxGasForAdditionalJoinSplit() * gasPrice;
+        BigInt(numExtraJoinSplits) *
+        MAX_GAS_FOR_ADDITIONAL_JOINSPLIT *
+        gasPrice;
       const estimateInGasAssetIncludingNewJoinSplits =
         estimateInGasAsset + additionaJoinSplitGas;
 
