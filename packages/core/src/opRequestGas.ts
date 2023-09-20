@@ -197,7 +197,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
         estimateInGasAsset -
         totalValueInExistingJoinSplits;
 
-      let extraJoinSplitGas: bigint;
+      let extraJoinSplitsGas: bigint;
       let numExtraJoinSplits: number;
       if (remainingValueNeededInNewJoinSplits > 0n) {
         // Add enough to cover gas needed for existing joinsplits + gas for an extra joinsplits
@@ -208,27 +208,27 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
           usedMerkleIndicesForGasAsset
         );
         numExtraJoinSplits = Math.ceil(extraNotes.length / 2);
-        extraJoinSplitGas =
+        extraJoinSplitsGas =
           BigInt(numExtraJoinSplits) *
           MAX_GAS_FOR_ADDITIONAL_JOINSPLIT *
           gasPrice;
 
-        if (totalOwnedGasAsset < estimateInGasAsset + extraJoinSplitGas) {
+        if (totalOwnedGasAsset < estimateInGasAsset + extraJoinSplitsGas) {
           throw new Error(
-            `not enough owned gas tokens to pay for gas + extra joinsplit. required: ${estimateInGasAsset} + ${extraJoinSplitGas}. Owned: ${totalOwnedGasAsset}`
+            `not enough owned gas tokens to pay for gas + extra joinsplit. required: ${estimateInGasAsset} + ${extraJoinSplitsGas}. Owned: ${totalOwnedGasAsset}`
           );
         }
       } else {
         // otherwise we don't need any extra joinsplits because existing notes cover gas cost
-        extraJoinSplitGas = 0n;
+        extraJoinSplitsGas = 0n;
         numExtraJoinSplits = 0;
       }
 
       console.log(
-        `adding ${extraJoinSplitGas} tokens for ${numExtraJoinSplits} extra joinsplits for gas compensation`
+        `adding ${extraJoinSplitsGas} tokens for ${numExtraJoinSplits} extra joinsplits for gas compensation`
       );
       matchingJoinSplitRequests[0].unwrapValue +=
-        estimateInGasAsset + extraJoinSplitGas;
+        estimateInGasAsset + extraJoinSplitsGas;
       joinSplitRequestsByAsset.set(
         gasAsset.assetAddr,
         matchingJoinSplitRequests
