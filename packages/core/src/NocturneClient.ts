@@ -28,7 +28,7 @@ import {
 } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
-import { getMerkleIndicesAndNfsFromOp } from "./utils/misc";
+import { getMerkleIndicesAndNfsFromOp } from "./primitives/typeHelpers";
 import { OpTracker } from "./OpTracker";
 import { getTotalEntityIndexOfNewestNoteInOp } from "./totalEntityIndexOfNewestNoteInOp";
 

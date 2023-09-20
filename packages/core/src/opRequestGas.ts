@@ -16,20 +16,19 @@ import {
   ProvenJoinSplit,
   SubmittableOperationWithNetworkInfo,
   toSubmittableOperation,
+  IncludedNote,
 } from "./primitives";
 import { ERC20_ID } from "./primitives/asset";
 import { groupByMap, partition } from "./utils/functional";
 import { gatherNotes, prepareOperation } from "./prepareOperation";
-import {
-  getJoinSplitRequestTotalValue,
-  getMerkleIndicesAndNfsFromOp,
-} from "./utils";
+import { MapWithObjectKeys, getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
 import {
   maxGasForOperation,
   maxGasForAdditionalJoinSplit,
 } from "./primitives/gasCalculation";
+import { getIncludedNotesFromOp } from "./primitives/typeHelpers";
 
 // If gas asset refund is less than this amount * gasPrice denominated in the gas asset, refund will
 // not be processed and funds will be sent to bundler. This is because cost of processing would
@@ -65,7 +64,7 @@ interface OpRequestTraceParams {
   totalGasLimit: bigint;
   executionGasLimit: bigint;
   gasPrice: bigint;
-  usedMerkleIndices: Set<number>;
+  usedNotes: MapWithObjectKeys<Asset, IncludedNote[]>;
 }
 
 // VK corresponding to SK of 1 with minimum valid nonce
@@ -83,7 +82,7 @@ export async function handleGasForOperationRequest(
 ): Promise<GasAccountedOperationRequest> {
   // estimate gas params for opRequest
   console.log("estimating gas for op request");
-  const { totalGasLimit, executionGasLimit, gasPrice, usedMerkleIndices } =
+  const { totalGasLimit, executionGasLimit, gasPrice, usedNotes } =
     await getOperationRequestTrace(deps, opRequest);
 
   const gasEstimatedOpRequest: GasEstimatedOperationRequest = {
@@ -114,7 +113,7 @@ export async function handleGasForOperationRequest(
         totalGasLimit,
         gasPrice,
         deps.tokenConverter,
-        usedMerkleIndices
+        usedNotes
       );
 
     if (!gasAssetAndTicker) {
@@ -145,7 +144,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
   gasUnitsEstimate: bigint,
   gasPrice: bigint,
   tokenConverter: EthToTokenConverter,
-  alreadyUsedMerkleIndices: Set<number> = new Set()
+  usedNotes: MapWithObjectKeys<Asset, IncludedNote[]>
 ): Promise<[JoinSplitRequest[], AssetAndTicker | undefined]> {
   // group joinSplitRequests by asset address
   const joinSplitRequestsByAsset = groupByMap(
@@ -185,12 +184,25 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
       totalOwnedGasAsset >=
       estimateInGasAsset + totalAmountInMatchingRequests
     ) {
+      const usedNotesForGasAsset = usedNotes.get(gasAsset)!;
+      const usedMerkleIndicesForGasAsset = new Set(
+        usedNotesForGasAsset.map((note) => note.merkleIndex)
+      );
+      const totalValueInExistingJoinSplits = usedNotesForGasAsset.reduce(
+        (acc, note) => acc + note.value,
+        0n
+      );
+      const remainingValueNeededInNewJoinSplits =
+        totalAmountInMatchingRequests +
+        estimateInGasAsset -
+        totalValueInExistingJoinSplits;
+
       // Add enough to cover gas needed for existing joinsplits + gas for an extra joinsplits
       const extraNotes = await gatherNotes(
         db,
-        estimateInGasAsset,
+        remainingValueNeededInNewJoinSplits,
         gasAsset,
-        alreadyUsedMerkleIndices
+        usedMerkleIndicesForGasAsset
       );
       const numExtraJoinSplits = Math.ceil(extraNotes.length / 2);
       const extraJoinSplitGas =
@@ -224,7 +236,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
     }
   }
 
-  // if we couldn't find an existing joinsplit with a supported gas asset,
+  // if we couldn't find an existing joinsplit request with a supported gas asset,
   // attempt to make a new joinsplit request to include the gas comp
   // iterate through each gas asset
   for (const [ticker, gasAsset] of nonMatchingGasAssets) {
@@ -233,12 +245,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
 
     if (totalOwnedGasAsset >= estimateInGasAsset) {
       // Add enough to cover gas needed for existing joinsplits + gas for an extra joinsplits
-      const extraNotes = await gatherNotes(
-        db,
-        estimateInGasAsset,
-        gasAsset,
-        alreadyUsedMerkleIndices
-      );
+      const extraNotes = await gatherNotes(db, estimateInGasAsset, gasAsset);
       const numExtraJoinSplits = Math.ceil(extraNotes.length / 2);
       const additionaJoinSplitGas =
         BigInt(numExtraJoinSplits) * maxGasForAdditionalJoinSplit() * gasPrice;
@@ -296,9 +303,7 @@ async function getOperationRequestTrace(
     { viewer: DUMMY_VIEWER, ...deps },
     dummyOpRequest
   );
-  const usedMerkleIndices = new Set(
-    getMerkleIndicesAndNfsFromOp(preparedOp).map((e) => Number(e.merkleIndex))
-  );
+  const usedNotes = getIncludedNotesFromOp(preparedOp);
 
   // simulate the operation
   if (!executionGasLimit) {
@@ -328,7 +333,7 @@ async function getOperationRequestTrace(
     totalGasLimit,
     executionGasLimit,
     gasPrice,
-    usedMerkleIndices,
+    usedNotes,
   };
 }
 

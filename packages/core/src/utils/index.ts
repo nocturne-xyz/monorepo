@@ -4,7 +4,7 @@ export {
   sleep,
   merklePathToIndex,
   getMerkleIndicesAndNfsFromOp,
-} from "./misc";
+} from "../primitives/typeHelpers";
 export { bigInt256ToFieldElems, bigintToBEPadded } from "./bits";
 export { protocolWhitelistKey } from "./contract";
 export {
