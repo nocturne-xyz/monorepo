@@ -170,19 +170,17 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
       gasAsset.assetAddr
     )!;
 
-    const totalAmountInMatchingRequests = matchingJoinSplitRequests.reduce(
-      (acc, request) => {
+    const totalAmountInMatchingJoinSplitRequests =
+      matchingJoinSplitRequests.reduce((acc, request) => {
         return acc + getJoinSplitRequestTotalValue(request);
-      },
-      0n
-    );
+      }, 0n);
 
     // if they have enough for request + gas, modify one of the requests to include the gas, and
     // we're done
     const estimateInGasAsset = gasEstimatesInGasAssets.get(ticker)!;
     if (
       totalOwnedGasAsset >=
-      estimateInGasAsset + totalAmountInMatchingRequests
+      estimateInGasAsset + totalAmountInMatchingJoinSplitRequests
     ) {
       const usedNotesForGasAsset = usedNotes.get(gasAsset)!;
       const usedMerkleIndicesForGasAsset = new Set(
@@ -193,7 +191,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
         0n
       );
       const remainingValueNeededInNewJoinSplits =
-        totalAmountInMatchingRequests +
+        totalAmountInMatchingJoinSplitRequests +
         estimateInGasAsset -
         totalValueInExistingJoinSplits;
 
@@ -212,11 +210,12 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
           BigInt(numExtraJoinSplits) *
           MAX_GAS_FOR_ADDITIONAL_JOINSPLIT *
           gasPrice;
+        const estimateInGasAssetIncludingNewJoinSplits =
+          estimateInGasAsset + extraJoinSplitsGas;
 
-        if (totalOwnedGasAsset < estimateInGasAsset + extraJoinSplitsGas) {
-          throw new Error(
-            `not enough owned gas tokens to pay for gas + extra joinsplit. required: ${estimateInGasAsset} + ${extraJoinSplitsGas}. Owned: ${totalOwnedGasAsset}`
-          );
+        if (totalOwnedGasAsset < estimateInGasAssetIncludingNewJoinSplits) {
+          // Don't have enough for new joinsplits gas overhead, try new asset
+          continue;
         }
       } else {
         // otherwise we don't need any extra joinsplits because existing notes cover gas cost
@@ -265,9 +264,8 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
         estimateInGasAsset + additionaJoinSplitGas;
 
       if (totalOwnedGasAsset < estimateInGasAssetIncludingNewJoinSplits) {
-        throw new Error(
-          `not enough owned gas tokens to pay for gas + extra joinsplit. Required: ${estimateInGasAssetIncludingNewJoinSplits}. Owned: ${totalOwnedGasAsset}`
-        );
+        // Don't have enough for new joinsplits gas overhead, try new asset
+        continue;
       }
 
       const modifiedJoinSplitRequests = joinSplitRequests.concat({
