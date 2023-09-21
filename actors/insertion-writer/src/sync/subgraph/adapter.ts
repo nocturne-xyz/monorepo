@@ -16,6 +16,7 @@ import {
 import { fetchTreeInsertions, fetchTeiFromMerkleIndex } from "./fetch";
 import { Logger } from "winston";
 import { Insertion } from "@nocturne-xyz/persistent-log";
+import { fetchLatestIndexedBlock } from "@nocturne-xyz/core/dist/src/sync/subgraph/utils";
 
 export class SubgraphTreeInsertionSyncAdapter
   implements TreeInsertionSyncAdapter
@@ -51,7 +52,6 @@ export class SubgraphTreeInsertionSyncAdapter
 
       // hack to get typescript to recognize that `_from` can't be `undefined` at this point
       let from = _from;
-
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
         logger &&
           logger.info("fetching insertions", {
@@ -60,7 +60,28 @@ export class SubgraphTreeInsertionSyncAdapter
           });
 
         await sleep(opts?.throttleMs ?? 0);
-        const insertions = await fetchTreeInsertions(endpoint, from);
+
+        // fetch insertions from the subgraph, but filter out any that are from blocks that haven't been indexed yet
+        let insertions = await fetchTreeInsertions(endpoint, from);
+
+        // if `numConfirmations` is set and is non-zero, filter out any insertions from blocks that are too recent
+        if (opts?.numConfirmations && opts.numConfirmations > 0) {
+          const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
+          if (latestIndexedBlock === undefined) {
+            throw new Error("failed to fetch latest indexed block");
+          }
+
+          const tip = latestIndexedBlock - opts.numConfirmations;
+          if (tip < 0) {
+            await sleep(opts?.throttleOnEmptyMs ?? 0);
+            continue;
+          }
+
+          const tipTEI = TotalEntityIndexTrait.fromBlockNumber(tip, "THROUGH");
+          insertions = insertions.filter(
+            ({ totalEntityIndex }) => totalEntityIndex <= tipTEI
+          );
+        }
 
         const sorted = insertions.sort(
           ({ inner: a }, { inner: b }) => a.merkleIndex - b.merkleIndex

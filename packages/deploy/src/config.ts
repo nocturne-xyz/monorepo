@@ -30,6 +30,7 @@ export interface NocturneDeployOpts {
   wstethAdapterDeployConfig?: WstethAdapterDeployConfig;
   useMockSubtreeUpdateVerifier?: boolean;
   confirmations?: number;
+  reccomendedNumConfirmations?: number;
 }
 
 export interface WstethAdapterDeployConfig {

@@ -236,6 +236,7 @@ export async function deployNocturneCoreContracts(
     network: {
       name,
       chainId,
+      reccomendedNumConfirmations: config.opts?.reccomendedNumConfirmations,
     },
     startBlock,
     owners: {

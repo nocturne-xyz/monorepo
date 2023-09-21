@@ -5,6 +5,7 @@ export type Address = string;
 export interface Network {
   name: string;
   chainId: number;
+  reccomendedNumConfirmations?: number;
 }
 
 export interface NocturneContractDeployment {

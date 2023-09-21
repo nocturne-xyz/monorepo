@@ -28,6 +28,11 @@ export const runInsertionWriter = new Command("insertion-writer")
     "./logs/insertion-writer"
   )
   .option(
+    "--num-confirmations <number>",
+    "number of confirmations to wait before fetching new insertions",
+    parseInt
+  )
+  .option(
     "--stdout-log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
@@ -38,6 +43,7 @@ export const runInsertionWriter = new Command("insertion-writer")
       throttleMs,
       throttleOnEmptyMs,
       stdoutLogLevel,
+      numConfirmations,
     } = options;
 
     const configName = extractConfigName(configNameOrPath);
@@ -66,6 +72,7 @@ export const runInsertionWriter = new Command("insertion-writer")
     const { promise } = await writer.start({
       throttleMs,
       throttleOnEmptyMs,
+      numConfirmations,
     });
 
     await promise;

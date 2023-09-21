@@ -67,6 +67,7 @@
       "wethAddress": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
       "wstethAddress": "0x6320cd32aa674d2898a68ec82e869385fc5f7e2f"
     },
-    "confirmations": 1
+    "confirmations": 1,
+    "reccomendedNumConfirmations": 4
   }
 }
