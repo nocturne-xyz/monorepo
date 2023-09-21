@@ -201,6 +201,8 @@ export const run = new Command("run")
       fullBundleEvery: fullBundleEvery ? parseInt(fullBundleEvery) : undefined,
       onlyDeposits,
       onlyOperations,
-      numConfirmations,
+      numConfirmations:
+        numConfirmations ??
+        config.contracts.network.reccomendedNumConfirmations,
     });
   });
