@@ -72,6 +72,7 @@ export class SubgraphTreeInsertionSyncAdapter
           }
 
           const tip = latestIndexedBlock - opts.numConfirmations;
+          // edge case where tip is negative due to subtracting numConfirmations
           if (tip < 0) {
             await sleep(opts?.throttleOnEmptyMs ?? 0);
             continue;

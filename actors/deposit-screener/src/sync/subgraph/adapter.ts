@@ -55,7 +55,15 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
             fromBlock: TotalEntityIndexTrait.toComponents(from).blockNumber,
           });
 
-        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
+        const latestIndexedBlock =
+          (await fetchLatestIndexedBlock(endpoint)) -
+          (opts?.numConfirmations ?? 0);
+        // edge case where latest indexed block is negative due to subtracting numConfirmations
+        if (latestIndexedBlock < 0) {
+          await sleep(5000);
+          continue;
+        }
+
         await maybeApplyThrottle(latestIndexedBlock);
 
         // fetch deposit events with total entity index on or after `from`, will return at most 100

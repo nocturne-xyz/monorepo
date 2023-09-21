@@ -36,6 +36,11 @@ const runProcess = new Command("processor")
     parseInt
   )
   .option(
+    "--num-confirmations <number>",
+    "number of confirmations to wait before processing new deposit requests",
+    parseInt
+  )
+  .option(
     "--stdout-log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
@@ -136,7 +141,10 @@ const runProcess = new Command("processor")
       supportedAssets
     );
 
-    const screenerHandle = await screener.start(throttleMs);
+    const screenerHandle = await screener.start({
+      throttleMs,
+      numConfirmations: options.numConfirmations,
+    });
     const fulfillerHandle = await fulfiller.start();
 
     await Promise.all([screenerHandle.promise, fulfillerHandle.promise]);
