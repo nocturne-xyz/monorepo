@@ -7,7 +7,7 @@ const GAS_PER_JOINSPLIT_HANDLE = 110_000n;
 const GAS_PER_INSERTION_SUBTREE_UPDATE = 25_000n;
 const GAS_PER_INSERTION_ENQUEUE = 25_000n;
 const GAS_PER_OPERATION_MISC = 100_000n;
-const GAS_BUFFER = 200_000n;
+const GAS_BUFFER = 300_000n;
 
 interface GasCompensationParams {
   executionGasLimit: bigint;

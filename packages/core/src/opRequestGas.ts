@@ -27,6 +27,7 @@ import { MapWithObjectKeys, getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
 import { getIncludedNotesFromOp } from "./primitives/typeHelpers";
+import * as JSON from "bigint-json-serialization";
 
 // If gas asset refund is less than this amount * gasPrice denominated in the gas asset, refund will
 // not be processed and funds will be sent to bundler. This is because cost of processing would
@@ -203,9 +204,12 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
           gasAsset,
           usedMerkleIndicesForGasAsset
         );
+
+        console.log(`usedNotes: ${JSON.stringify(usedNotes)}`);
+        console.log(`need ${extraNotes.length} extra notes for gas comp`);
         numExtraJoinSplits =
-          Math.ceil((usedNotes.size() + extraNotes.length) / 2) -
-          Math.ceil(usedNotes.size() / 2);
+          Math.ceil((usedNotesForGasAsset.length + extraNotes.length) / 2) -
+          Math.ceil(usedNotesForGasAsset.length / 2);
         extraJoinSplitsGas =
           BigInt(numExtraJoinSplits) *
           MAX_GAS_FOR_ADDITIONAL_JOINSPLIT *
