@@ -17,6 +17,8 @@ import {
   SubmittableOperationWithNetworkInfo,
   toSubmittableOperation,
   IncludedNote,
+  maxGasForOperation,
+  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
 } from "./primitives";
 import { ERC20_ID } from "./primitives/asset";
 import { groupByMap, partition } from "./utils/functional";
@@ -24,10 +26,6 @@ import { gatherNotes, prepareOperation } from "./prepareOperation";
 import { MapWithObjectKeys, getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
-import {
-  maxGasForOperation,
-  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
-} from "./primitives/gasCalculation";
 import { getIncludedNotesFromOp } from "./primitives/typeHelpers";
 
 // If gas asset refund is less than this amount * gasPrice denominated in the gas asset, refund will
