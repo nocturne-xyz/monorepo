@@ -208,7 +208,12 @@ export class BundlerSubmitter {
       logger.info("pre-dispatch attempting tx submission");
       const tx = await this.tellerContract.processBundle(
         { operations },
-        { gasLimit: gasEst.toBigInt() * (15n / 10n) } // 50% gas buffer
+        {
+          gasLimit:
+            gasEst.toBigInt() * 3n > 30_000_000n
+              ? 30_000_000n
+              : gasEst.toBigInt() * 3n,
+        } // 200% gas buffer
       );
 
       logger.info(`post-dispatch awaiting tx receipt. txhash: ${tx.hash}`);
