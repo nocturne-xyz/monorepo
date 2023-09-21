@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.1.0
+
+### Minor Changes
+
+- 47a5f1e5: Add initiateAnonEthTransfer method that uses EthTransferAdapterPlugin
+- 47a5f1e5: Add getter for getting op request builder from fe sdk + expose performOperation function that prepares/submits op
+
+### Patch Changes
+
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [0ed9f872]
+- Updated dependencies [46e47762]
+- Updated dependencies [4d7147b6]
+- Updated dependencies [7d151856]
+- Updated dependencies [7d151856]
+- Updated dependencies [46e47762]
+  - @nocturne-xyz/op-request-plugins@0.3.0
+  - @nocturne-xyz/config@1.0.0
+  - @nocturne-xyz/core@2.0.1
+  - @nocturne-xyz/contracts@0.5.0
+  - @nocturne-xyz/idb-kv-store@0.4.2
+  - @nocturne-xyz/local-prover@0.4.2
+
 ## 1.0.0
 
 ### Major Changes

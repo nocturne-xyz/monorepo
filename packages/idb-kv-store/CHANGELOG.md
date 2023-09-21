@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [0ed9f872]
+- Updated dependencies [4d7147b6]
+  - @nocturne-xyz/core@2.0.1
+
 ## 0.4.1
 
 ### Patch Changes

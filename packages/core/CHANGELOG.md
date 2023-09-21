@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.1
+
+### Patch Changes
+
+- 0ed9f872: add instrumentation to give high level breakdowns on where sync overhead is
+- 4d7147b6: Op request gas prep checks how many joinsplits will be added for gas compensation and updates joinsplit requests accounting for new joinsplits
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [46e47762]
+- Updated dependencies [7d151856]
+- Updated dependencies [7d151856]
+- Updated dependencies [46e47762]
+  - @nocturne-xyz/config@1.0.0
+  - @nocturne-xyz/contracts@0.5.0
+
 ## 2.0.0
 
 ### Major Changes

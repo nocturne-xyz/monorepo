@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.3
+
+### Patch Changes
+
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [0ed9f872]
+- Updated dependencies [46e47762]
+- Updated dependencies [4d7147b6]
+- Updated dependencies [7d151856]
+- Updated dependencies [7d151856]
+- Updated dependencies [46e47762]
+  - @nocturne-xyz/op-request-plugins@0.3.0
+  - @nocturne-xyz/config@1.0.0
+  - @nocturne-xyz/core@2.0.1
+  - @nocturne-xyz/contracts@0.5.0
+  - @nocturne-xyz/local-prover@0.4.2
+  - @nocturne-xyz/offchain-utils@0.1.13
+
 ## 0.3.2
 
 ### Patch Changes

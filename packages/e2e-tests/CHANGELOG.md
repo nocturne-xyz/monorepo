@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- 47a5f1e5: Have e2e test deployment include weth, add eth transfer adapter test case in EndToEnd.ts
+
+### Patch Changes
+
+- @nocturne-xyz/offchain-utils@0.1.13
+
 ## 0.4.1
 
 ### Patch Changes

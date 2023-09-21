@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- 47a5f1e5: Add EthTransferAdapterPlugin and incorporate into plugins test
+
+### Patch Changes
+
+- 47a5f1e5: Fix wsteth adapter to weth.approve wstethAdapter first, also use ethers Interface instead of Contract where possible
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [0ed9f872]
+- Updated dependencies [46e47762]
+- Updated dependencies [4d7147b6]
+- Updated dependencies [7d151856]
+- Updated dependencies [7d151856]
+- Updated dependencies [46e47762]
+  - @nocturne-xyz/config@1.0.0
+  - @nocturne-xyz/core@2.0.1
+  - @nocturne-xyz/contracts@0.5.0
+
 ## 0.2.1
 
 ### Patch Changes
