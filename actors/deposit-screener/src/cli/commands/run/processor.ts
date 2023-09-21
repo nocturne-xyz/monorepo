@@ -121,7 +121,7 @@ const runProcess = new Command("processor")
     }
 
     const numConfirmations =
-      options.numConfirmations ?? config.reccomenedNumConfirmations;
+      options.numConfirmations ?? config.reccomendedNumConfirmations;
 
     const screener = new DepositScreenerScreener(
       adapter,
