@@ -53,13 +53,7 @@ const runProcess = new Command("processor")
       throw new Error(`ENVIRONMENT env var set to invalid value: ${env}`);
     }
 
-    const {
-      configNameOrPath,
-      logDir,
-      throttleMs,
-      stdoutLogLevel,
-      numConfirmations,
-    } = options;
+    const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
@@ -126,6 +120,9 @@ const runProcess = new Command("processor")
       throw new Error(`Not currently supporting non-dummy screening`);
     }
 
+    const numConfirmations =
+      options.numConfirmations ?? config.reccomenedNumConfirmations;
+
     const screener = new DepositScreenerScreener(
       adapter,
       config.depositManagerAddress,
@@ -144,12 +141,13 @@ const runProcess = new Command("processor")
       signer,
       attestationSigner,
       getRedis(),
-      supportedAssets
+      supportedAssets,
+      numConfirmations
     );
 
     const screenerHandle = await screener.start({
       throttleMs,
-      numConfirmations: numConfirmations ?? config.reccomendedNumConfirmations,
+      numConfirmations,
     });
     const fulfillerHandle = await fulfiller.start();
 

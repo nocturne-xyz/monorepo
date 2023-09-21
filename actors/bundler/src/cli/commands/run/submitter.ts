@@ -27,8 +27,14 @@ const runSubmitter = new Command("submitter")
     "--stdout-log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
+  .option(
+    "--num-confirmations <number>",
+    "number of confirmations to wait for before considering a submitted op finalized",
+    parseInt
+  )
   .action(async (options) => {
-    const { configNameOrPath, logDir, stdoutLogLevel } = options;
+    const { configNameOrPath, logDir, stdoutLogLevel, numConfirmations } =
+      options;
     const config = loadNocturneConfig(configNameOrPath);
 
     const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
@@ -67,7 +73,8 @@ const runSubmitter = new Command("submitter")
       config.tellerAddress,
       signer,
       getRedis(),
-      logger
+      logger,
+      numConfirmations ?? config.reccomendedNumConfirmations
     );
 
     const { promise } = submitter.start();
