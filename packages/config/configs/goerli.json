@@ -1,6 +1,10 @@
 {
   "contracts": {
-    "network": { "name": "goerli", "chainId": 5 },
+    "network": {
+      "name": "goerli",
+      "chainId": 5, 
+      "reccomendedNumConfirmations": 4
+    },
     "startBlock": 9694596,
     "owners": {
       "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",

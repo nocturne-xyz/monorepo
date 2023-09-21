@@ -53,7 +53,13 @@ const runProcess = new Command("processor")
       throw new Error(`ENVIRONMENT env var set to invalid value: ${env}`);
     }
 
-    const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
+    const {
+      configNameOrPath,
+      logDir,
+      throttleMs,
+      stdoutLogLevel,
+      numConfirmations,
+    } = options;
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
@@ -143,7 +149,9 @@ const runProcess = new Command("processor")
 
     const screenerHandle = await screener.start({
       throttleMs,
-      numConfirmations: options.numConfirmations,
+      numConfirmations:
+        numConfirmations ??
+        config.contracts.network.reccomendedNumConfirmations,
     });
     const fulfillerHandle = await fulfiller.start();
 
