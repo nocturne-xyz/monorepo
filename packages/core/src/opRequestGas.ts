@@ -205,7 +205,9 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
           gasAsset,
           usedMerkleIndicesForGasAsset
         );
-        numExtraJoinSplits = Math.ceil(extraNotes.length / 2);
+        numExtraJoinSplits =
+          Math.ceil((usedNotes.size() + extraNotes.length) / 2) -
+          Math.ceil(usedNotes.size() / 2);
         extraJoinSplitsGas =
           BigInt(numExtraJoinSplits) *
           MAX_GAS_FOR_ADDITIONAL_JOINSPLIT *
