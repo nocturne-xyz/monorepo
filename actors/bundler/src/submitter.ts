@@ -3,6 +3,7 @@ import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller
 import {
   Address,
   computeOperationDigest,
+  maxGasForOperation,
   OperationStatus,
   parseEventsFromContractReceipt,
   SubmittableOperationWithNetworkInfo,
@@ -195,20 +196,19 @@ export class BundlerSubmitter {
     operations: SubmittableOperationWithNetworkInfo[]
   ): Promise<ethers.ContractReceipt | undefined> {
     try {
-      // Estimate gas first
-      const data = this.tellerContract.interface.encodeFunctionData(
-        "processBundle",
-        [{ operations }]
-      );
-      const gasEst = await this.signingProvider.estimateGas({
-        to: this.tellerContract.address,
-        data,
-      });
-
       logger.info("pre-dispatch attempting tx submission");
+
+      // Calculate total gas limit based on op data because eth_estimateGas is not predictable for
+      // processBundle
+      const totalGasLimit = operations
+        .map((op) => maxGasForOperation(op))
+        .reduce((acc, gasForOp) => acc + gasForOp, 0n);
+
       const tx = await this.tellerContract.processBundle(
         { operations },
-        { gasLimit: gasEst.toBigInt() + 200_000n }
+        {
+          gasLimit: totalGasLimit * (15n / 10n),
+        } // 50% gas buffer
       );
 
       logger.info(`post-dispatch awaiting tx receipt. txhash: ${tx.hash}`);

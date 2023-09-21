@@ -2,7 +2,12 @@ import "mocha";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
-import { Asset, AssetType, newOpRequestBuilder } from "../src";
+import {
+  Asset,
+  AssetType,
+  gasCompensationForParams,
+  newOpRequestBuilder,
+} from "../src";
 import {
   setup,
   shitcoin,
@@ -17,7 +22,6 @@ import { ERC20_ID } from "../src/primitives/asset";
 import { JoinSplitRequest } from "../src/operationRequest/operationRequest";
 import { MockEthToTokenConverter } from "../src/conversion";
 import { ethers } from "ethers";
-import { gasCompensationForParams } from "../src/primitives/gasCalculation";
 
 chai.use(chaiAsPromised);
 
@@ -109,7 +113,7 @@ describe("handleGasForOperationRequest", async () => {
 
   it("adds a joinsplit request including gas comp when gas price is nonzero, there does not exist a joinsplit unwrapping a gasAsset, and user has enough of it", async () => {
     const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
-      [500_000n, 500_000n, 2_000_000n],
+      [500_000n, 500_000n, 3_000_000n],
       [shitcoin, shitcoin, stablescam]
     );
     const deps = {
@@ -161,7 +165,7 @@ describe("handleGasForOperationRequest", async () => {
 
   it("adds a joinsplit request for gasAssetB when gas price is nonzero, there exists a joinsplit unwrapping gasAssetA, user doesn't have enough gasAssetA, but user does have enough gasAssetB", async () => {
     const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
-      [500_000n, 500_000n, 500_000n, 3_000_000n],
+      [500_000n, 500_000n, 500_000n, 4_000_000n],
       [shitcoin, shitcoin, shitcoin, stablescam]
     );
     const deps = {

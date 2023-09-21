@@ -1,5 +1,5 @@
 import { getTrackedAssets } from "./operation";
-import { Operation } from "./types";
+import { Operation, SubmittableOperationWithNetworkInfo } from "./types";
 
 // Numbers and logic copied from contracts Types.sol
 const GAS_PER_JOINSPLIT_VERIFY_SINGLE = 300_000n;
@@ -7,7 +7,7 @@ const GAS_PER_JOINSPLIT_HANDLE = 110_000n;
 const GAS_PER_INSERTION_SUBTREE_UPDATE = 25_000n;
 const GAS_PER_INSERTION_ENQUEUE = 25_000n;
 const GAS_PER_OPERATION_MISC = 100_000n;
-const GAS_BUFFER = 200_000n;
+const GAS_BUFFER = 300_000n;
 
 interface GasCompensationParams {
   executionGasLimit: bigint;
@@ -15,9 +15,18 @@ interface GasCompensationParams {
   numUniqueAssets: number;
 }
 
-export function maxGasForOperation(op: Operation): bigint {
-  const numJoinSplits = op.joinSplits.length;
-  const numUniqueAssets = getTrackedAssets(op).length;
+export function maxGasForOperation(
+  op: Operation | SubmittableOperationWithNetworkInfo
+): bigint {
+  let numJoinSplits: number;
+  let numUniqueAssets: number;
+  if ("trackedAssets" in op) {
+    numJoinSplits = op.pubJoinSplits.length + op.confJoinSplits.length;
+    numUniqueAssets = op.trackedAssets.length;
+  } else {
+    numJoinSplits = op.joinSplits.length;
+    numUniqueAssets = getTrackedAssets(op).length;
+  }
 
   return gasCompensationForParams({
     executionGasLimit: op.executionGasLimit,

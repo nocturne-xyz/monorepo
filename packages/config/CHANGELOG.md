@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0
+
+### Major Changes
+
+- 47a5f1e5: Convert the address and network related fns to getters
+
+### Minor Changes
+
+- 46e47762: Add eth transfer adapter to goerli config after deploying via forge script
+
 ## 0.4.0
 
 ### Minor Changes
