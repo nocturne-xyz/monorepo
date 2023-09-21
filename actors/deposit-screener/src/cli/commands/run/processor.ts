@@ -149,9 +149,7 @@ const runProcess = new Command("processor")
 
     const screenerHandle = await screener.start({
       throttleMs,
-      numConfirmations:
-        numConfirmations ??
-        config.contracts.network.reccomendedNumConfirmations,
+      numConfirmations: numConfirmations ?? config.reccomendedNumConfirmations,
     });
     const fulfillerHandle = await fulfiller.start();
 

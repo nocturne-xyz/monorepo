@@ -72,9 +72,7 @@ export const runInsertionWriter = new Command("insertion-writer")
     const { promise } = await writer.start({
       throttleMs,
       throttleOnEmptyMs,
-      numConfirmations:
-        numConfirmations ??
-        config.contracts.network.reccomendedNumConfirmations,
+      numConfirmations: numConfirmations ?? config.reccomendedNumConfirmations,
     });
 
     await promise;

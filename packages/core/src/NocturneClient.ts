@@ -96,8 +96,7 @@ export class NocturneClient {
 
     // set `numConfirmations` to config's `reccomendedNumConfirmations` if not specified by the caller
     if (_opts && !_opts.numConfirmations) {
-      _opts.numConfirmations =
-        this.config.contracts.network.reccomendedNumConfirmations;
+      _opts.numConfirmations = this.config.reccomendedNumConfirmations;
     }
 
     const latestSyncedMerkleIndex = await syncSDK(
