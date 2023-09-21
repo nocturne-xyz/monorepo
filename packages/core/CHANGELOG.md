@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.2
+
+### Patch Changes
+
+- 16dfb275: Op request gas estimation existing joinsplit case uses the entries in gasAsset estimation mapping NOT the whole map (bug led to underestimation)
+- dcea2acb: Fix op request gas edge case where odd number of notes from existing joinsplits would not be accounted for in reducing num extra joinsplits by 1 (matching odd existing note with 1 new note does not increase num JSs)
+
 ## 2.0.1
 
 ### Patch Changes

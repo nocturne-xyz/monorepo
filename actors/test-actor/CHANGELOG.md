@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.4
+
+### Patch Changes
+
+- Updated dependencies [16dfb275]
+- Updated dependencies [dcea2acb]
+  - @nocturne-xyz/core@2.0.2
+  - @nocturne-xyz/local-prover@0.4.3
+  - @nocturne-xyz/op-request-plugins@0.3.1
+  - @nocturne-xyz/offchain-utils@0.1.14
+
 ## 0.3.3
 
 ### Patch Changes

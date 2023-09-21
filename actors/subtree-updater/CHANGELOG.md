@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies [16dfb275]
+- Updated dependencies [dcea2acb]
+  - @nocturne-xyz/core@2.0.2
+  - @nocturne-xyz/persistent-log@0.1.4
+  - @nocturne-xyz/offchain-utils@0.1.14
+
 ## 0.4.2
 
 ### Patch Changes

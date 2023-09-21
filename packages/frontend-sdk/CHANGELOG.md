@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [16dfb275]
+- Updated dependencies [dcea2acb]
+  - @nocturne-xyz/core@2.0.2
+  - @nocturne-xyz/idb-kv-store@0.4.3
+  - @nocturne-xyz/local-prover@0.4.3
+  - @nocturne-xyz/op-request-plugins@0.3.1
+
 ## 1.1.0
 
 ### Minor Changes
