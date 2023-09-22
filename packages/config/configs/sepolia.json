@@ -3,7 +3,7 @@
     "network": {
       "name": "sepolia",
       "chainId": 5, 
-      "reccomendedNumConfirmations": 2
+      "finalityBlocks": 2
     },
     "startBlock": 4058710,
     "owners": {

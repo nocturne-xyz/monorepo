@@ -17,7 +17,9 @@ import {
 import { fetchTreeInsertions, fetchTeiFromMerkleIndex } from "./fetch";
 import { Logger } from "winston";
 import { Insertion } from "@nocturne-xyz/persistent-log";
-import { fetchLatestIndexedBlock } from "@nocturne-xyz/core/dist/src/sync/subgraph/utils";
+import { SubgraphUtils } from "@nocturne-xyz/core";
+
+const { fetchLatestIndexedBlock } = SubgraphUtils;
 
 export class SubgraphTreeInsertionSyncAdapter
   implements TreeInsertionSyncAdapter
@@ -62,16 +64,12 @@ export class SubgraphTreeInsertionSyncAdapter
 
         await sleep(opts?.throttleMs ?? 0);
 
-        // if `numConfirmations` is set and is non-zero, only fetch insertions from blocks at least `numConfirmations` behind the tip
+        // if `finalityBlocks` is set and is non-zero, only fetch insertions from blocks at least `finalityBlocks` behind the tip
         let toTotalEntityIndex: TotalEntityIndex | undefined = undefined;
-        if (opts?.numConfirmations && opts.numConfirmations > 0) {
+        if (opts?.finalityBlocks && opts.finalityBlocks > 0) {
           const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
-          if (latestIndexedBlock === undefined) {
-            throw new Error("failed to fetch latest indexed block");
-          }
-
-          const tip = latestIndexedBlock - opts.numConfirmations;
-          // edge case where tip is negative due to subtracting numConfirmations
+          const tip = latestIndexedBlock - opts.finalityBlocks;
+          // edge case where tip is negative due to subtracting finalityBlocks
           if (tip < 0) {
             await sleep(opts?.throttleOnEmptyMs ?? 0);
             continue;

@@ -236,7 +236,6 @@ export async function deployNocturneCoreContracts(
     network: {
       name,
       chainId,
-      reccomendedNumConfirmations: config.opts?.reccomendedNumConfirmations,
     },
     startBlock,
     owners: {
@@ -248,6 +247,7 @@ export async function deployNocturneCoreContracts(
       depositManagerOwner: config.proxyAdminOwner,
     },
     proxyAdmin: proxyAdmin.address,
+    finalityBlocks: config.finalityBlocks,
     canonicalAddressRegistryProxy: proxiedCanonAddrRegistry.proxyAddresses,
     depositManagerProxy: proxiedDepositManager.proxyAddresses,
     tellerProxy: proxiedTeller.proxyAddresses,

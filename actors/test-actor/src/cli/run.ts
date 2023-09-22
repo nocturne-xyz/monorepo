@@ -84,7 +84,7 @@ export const run = new Command("run")
       onlyOperations,
       logDir,
       stdoutLogLevel,
-      numConfirmations,
+      finalityBlocks,
     } = options;
 
     const configName = extractConfigName(configNameOrPath);
@@ -201,6 +201,6 @@ export const run = new Command("run")
       fullBundleEvery: fullBundleEvery ? parseInt(fullBundleEvery) : undefined,
       onlyDeposits,
       onlyOperations,
-      numConfirmations: numConfirmations ?? config.reccomendedNumConfirmations,
+      finalityBlocks: finalityBlocks ?? config.finalityBlocks,
     });
   });

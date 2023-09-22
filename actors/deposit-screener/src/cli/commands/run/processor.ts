@@ -120,9 +120,6 @@ const runProcess = new Command("processor")
       throw new Error(`Not currently supporting non-dummy screening`);
     }
 
-    const numConfirmations =
-      options.numConfirmations ?? config.reccomendedNumConfirmations;
-
     const screener = new DepositScreenerScreener(
       adapter,
       config.depositManagerAddress,
@@ -135,6 +132,8 @@ const runProcess = new Command("processor")
       config.contracts.startBlock
     );
 
+    const finalityBlocks = options.finalityBlocks ?? config.finalityBlocks;
+
     const fulfiller = new DepositScreenerFulfiller(
       logger,
       config.depositManagerAddress,
@@ -142,12 +141,12 @@ const runProcess = new Command("processor")
       attestationSigner,
       getRedis(),
       supportedAssets,
-      numConfirmations
+      finalityBlocks
     );
 
     const screenerHandle = await screener.start({
       throttleMs,
-      numConfirmations,
+      finalityBlocks,
     });
     const fulfillerHandle = await fulfiller.start();
 

@@ -3,4 +3,4 @@
 "@nocturne-xyz/insertion-writer": minor
 ---
 
-add support for `numConfirmations` sync option
+add support for `finalityBlocks` sync option

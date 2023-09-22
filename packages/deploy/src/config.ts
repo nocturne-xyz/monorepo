@@ -11,6 +11,7 @@ export interface NocturneDeployConfigProperties {
   erc20s: [string, Erc20Config][];
   protocolAllowlist: [string, ProtocolAddressWithMethods][];
   leftoverTokenHolder: Address;
+  finalityBlocks: number;
   opts?: NocturneDeployOpts;
 }
 
@@ -22,6 +23,7 @@ export interface NocturneDeployConfig {
   erc20s: Map<string, Erc20Config>;
   protocolAllowlist: Map<string, ProtocolAddressWithMethods>;
   leftoverTokenHolder: Address;
+  finalityBlocks: number;
   opts?: NocturneDeployOpts;
 }
 
@@ -30,7 +32,6 @@ export interface NocturneDeployOpts {
   wstethAdapterDeployConfig?: WstethAdapterDeployConfig;
   useMockSubtreeUpdateVerifier?: boolean;
   confirmations?: number;
-  reccomendedNumConfirmations?: number;
 }
 
 export interface WstethAdapterDeployConfig {

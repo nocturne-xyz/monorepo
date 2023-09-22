@@ -43,7 +43,7 @@ export const runInsertionWriter = new Command("insertion-writer")
       throttleMs,
       throttleOnEmptyMs,
       stdoutLogLevel,
-      numConfirmations,
+      finalityBlocks,
     } = options;
 
     const configName = extractConfigName(configNameOrPath);
@@ -72,7 +72,7 @@ export const runInsertionWriter = new Command("insertion-writer")
     const { promise } = await writer.start({
       throttleMs,
       throttleOnEmptyMs,
-      numConfirmations: numConfirmations ?? config.reccomendedNumConfirmations,
+      finalityBlocks: finalityBlocks ?? config.finalityBlocks,
     });
 
     await promise;

@@ -92,19 +92,17 @@ export class NocturneClient {
 
   // Sync SDK, returning last synced merkle index of last state diff
   async sync(opts?: SyncOpts): Promise<number | undefined> {
-    const _opts = structuredClone(opts);
-
-    // set `numConfirmations` to config's `reccomendedNumConfirmations` if not specified by the caller
-    if (_opts && !_opts.numConfirmations) {
-      _opts.numConfirmations = this.config.reccomendedNumConfirmations;
-    }
-
     const latestSyncedMerkleIndex = await syncSDK(
       { viewer: this.viewer },
       this.syncAdapter,
       this.db,
       this.merkleProver,
-      _opts
+      opts
+        ? {
+            ...opts,
+            finalityBlocks: opts.finalityBlocks ?? this.config.finalityBlocks,
+          }
+        : undefined
     );
 
     return latestSyncedMerkleIndex;

@@ -33,7 +33,7 @@ const runSubmitter = new Command("submitter")
     parseInt
   )
   .action(async (options) => {
-    const { configNameOrPath, logDir, stdoutLogLevel, numConfirmations } =
+    const { configNameOrPath, logDir, stdoutLogLevel, finalityBlocks } =
       options;
     const config = loadNocturneConfig(configNameOrPath);
 
@@ -74,7 +74,7 @@ const runSubmitter = new Command("submitter")
       signer,
       getRedis(),
       logger,
-      numConfirmations ?? config.reccomendedNumConfirmations
+      finalityBlocks ?? config.finalityBlocks
     );
 
     const { promise } = submitter.start();

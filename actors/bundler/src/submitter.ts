@@ -42,7 +42,7 @@ export class BundlerSubmitter {
   nullifierDB: NullifierDB;
   logger: Logger;
   metrics: BundlerSubmitterMetrics;
-  numConfirmations: number;
+  finalityBlocks: number;
 
   readonly INTERVAL_SECONDS: number = 60;
   readonly BATCH_SIZE: number = 8;
@@ -52,7 +52,7 @@ export class BundlerSubmitter {
     signingProvider: ethers.Signer,
     redis: IORedis,
     logger: Logger,
-    numConfirmations = 1
+    finalityBlocks = 1
   ) {
     this.redis = redis;
     this.logger = logger;
@@ -63,7 +63,7 @@ export class BundlerSubmitter {
       tellerAddress,
       this.signingProvider
     );
-    this.numConfirmations = numConfirmations;
+    this.finalityBlocks = finalityBlocks;
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
     const createCounter = makeCreateCounterFn(
@@ -215,7 +215,7 @@ export class BundlerSubmitter {
       );
 
       logger.info(`post-dispatch awaiting tx receipt. txhash: ${tx.hash}`);
-      const receipt = await tx.wait(this.numConfirmations);
+      const receipt = await tx.wait(this.finalityBlocks);
       return receipt;
     } catch (err) {
       logger.error("failed to process bundle:", err);

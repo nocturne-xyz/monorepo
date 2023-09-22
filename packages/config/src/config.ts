@@ -75,8 +75,8 @@ export class NocturneConfig {
     return BigInt(this.contracts.network.chainId);
   }
 
-  get reccomendedNumConfirmations(): number | undefined {
-    return this.contracts.network.reccomendedNumConfirmations;
+  get finalityBlocks(): number | undefined {
+    return this.contracts.finalityBlocks;
   }
 
   get startBlock(): number {

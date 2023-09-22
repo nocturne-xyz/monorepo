@@ -59,7 +59,7 @@ export class DepositScreenerFulfiller {
   redis: IORedis;
   db: DepositScreenerDB;
   metrics: DepositScreenerFulfillerMetrics;
-  numConfirmations: number;
+  finalityBlocks: number;
 
   constructor(
     logger: Logger,
@@ -68,7 +68,7 @@ export class DepositScreenerFulfiller {
     attestationSigner: ethers.Wallet,
     redis: IORedis,
     supportedAssets: Set<Address>,
-    numConfirmations = 1
+    finalityBlocks = 1
   ) {
     this.logger = logger;
     this.redis = redis;
@@ -81,7 +81,7 @@ export class DepositScreenerFulfiller {
     this.attestationSigner = attestationSigner;
     this.signerMutex = new Mutex();
 
-    this.numConfirmations = numConfirmations;
+    this.finalityBlocks = finalityBlocks;
 
     this.depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
@@ -287,7 +287,7 @@ export class DepositScreenerFulfiller {
           logger.info(
             `post-dispatch awaiting tx receipt. nonce: ${depositRequest.nonce}. txhash: ${tx.hash}`
           );
-          const receipt = await tx.wait(this.numConfirmations);
+          const receipt = await tx.wait(this.finalityBlocks);
           return receipt;
         default:
           throw new Error("currently only supporting erc20 deposits");

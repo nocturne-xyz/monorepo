@@ -57,8 +57,8 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
 
         const latestIndexedBlock =
           (await fetchLatestIndexedBlock(endpoint)) -
-          (opts?.numConfirmations ?? 0);
-        // edge case where latest indexed block is negative due to subtracting numConfirmations
+          (opts?.finalityBlocks ?? 0);
+        // edge case where latest indexed block is negative due to subtracting finalityBlocks
         if (latestIndexedBlock < 0) {
           await sleep(5000);
           continue;

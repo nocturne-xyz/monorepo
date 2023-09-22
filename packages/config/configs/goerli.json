@@ -3,7 +3,7 @@
     "network": {
       "name": "goerli",
       "chainId": 5, 
-      "reccomendedNumConfirmations": 4
+      "finalityBlocks": 4
     },
     "startBlock": 9694596,
     "owners": {

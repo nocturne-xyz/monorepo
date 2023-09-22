@@ -47,7 +47,7 @@ interface FetchTreeInsertionsVars {
 
 function makeTreeInsertionsQuery(toIdx?: TotalEntityIndex) {
   const where = toIdx
-    ? `{ id_gte: $fromIdx, id_lt: ${toIdx} }`
+    ? `{ id_gte: $fromIdx, id_lt: "${toIdx.toString()}" }`
     : "{ id_gte: $fromIdx }";
   return `\
 query fetchTreeInsertionEvents($fromIdx: String!) {

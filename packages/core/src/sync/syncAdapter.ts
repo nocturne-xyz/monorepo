@@ -46,7 +46,7 @@ export interface IterSyncOpts {
 
   // if set, iterator will only emit state diffs containing
   // data in blocks with at least this many confirmations
-  numConfirmations?: number;
+  finalityBlocks?: number;
 }
 
 export interface SDKIterSyncOpts extends IterSyncOpts {

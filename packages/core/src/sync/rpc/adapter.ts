@@ -83,11 +83,11 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
           !currTotalEntityIndex ||
           currTotalEntityIndex < endTotalEntityIndex)
       ) {
-        // set `to` to be the min of `from` + `chunkSize` and the current block number minus `numConfirmations`
+        // set `to` to be the min of `from` + `chunkSize` and the current block number minus `finalityBlocks`
         // if `currentBlock < 0`, then we simply wait and try again - this can occurr if the chain is brand new (e.g. in tests)
         const currentBlock =
           (await handlerContract.provider.getBlockNumber()) -
-          (opts?.numConfirmations ?? 0);
+          (opts?.finalityBlocks ?? 0);
         if (currentBlock < 0) {
           await sleep(5000);
           continue;

@@ -5,7 +5,6 @@ export type Address = string;
 export interface Network {
   name: string;
   chainId: number;
-  reccomendedNumConfirmations?: number;
 }
 
 export interface NocturneContractDeployment {
@@ -19,6 +18,7 @@ export interface NocturneContractDeployment {
     depositManagerOwner: Address;
   };
   proxyAdmin: Address;
+  finalityBlocks: number;
   canonicalAddressRegistryProxy: ProxyAddresses<any>;
   depositManagerProxy: ProxyAddresses<any>;
   tellerProxy: ProxyAddresses<any>;

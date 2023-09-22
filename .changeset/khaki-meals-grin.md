@@ -3,4 +3,4 @@
 "@nocturne-xyz/deploy": minor
 ---
 
-add optional `reccomendedNumConfirmations` to config's `network` property that makes it easier to set `numConfirmations` in sync logic across the codebase
+add optional `finalityBlocks` to config's `network` property that makes it easier to set `finalityBlocks` in sync logic across the codebase

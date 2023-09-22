@@ -20,7 +20,7 @@ export interface SyncOpts {
   endBlock?: number;
   timeoutSeconds?: number;
   timing?: boolean;
-  numConfirmations?: number;
+  finalityBlocks?: number;
 }
 
 export interface SyncDeps {
@@ -59,7 +59,7 @@ export async function syncSDK(
   const newDiffs = adapter.iterStateDiffs(startTotalEntityIndex, {
     endTotalEntityIndex,
     timing: opts?.timing,
-    numConfirmations: opts?.numConfirmations,
+    finalityBlocks: opts?.finalityBlocks,
   });
 
   // decrypt notes and compute nullifiers

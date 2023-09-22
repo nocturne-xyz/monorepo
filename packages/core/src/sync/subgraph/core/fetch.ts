@@ -43,7 +43,7 @@ export interface FetchSDKEventsVars {
 
 export function makeSdkEventsQuery(toIdx?: TotalEntityIndex): string {
   const where = toIdx
-    ? `{ id_gte: $fromIdx, id_lt: ${toIdx} }`
+    ? `{ id_gte: $fromIdx, id_lt: "${toIdx.toString()}" }`
     : "{ id_gte: $fromIdx }";
   return `\
 query fetchSDKEvents($fromIdx: String!) {
