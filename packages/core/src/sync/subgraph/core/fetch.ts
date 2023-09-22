@@ -41,9 +41,13 @@ export interface FetchSDKEventsVars {
   fromIdx: string;
 }
 
-const sdkEventsQuery = `\
+export function makeSdkEventsQuery(toIdx?: TotalEntityIndex): string {
+  const where = toIdx
+    ? `{ id_gte: $fromIdx, id_lt: ${toIdx} }`
+    : "{ id_gte: $fromIdx }";
+  return `\
 query fetchSDKEvents($fromIdx: String!) {
-  sdkevents(where: { id_gte: $fromIdx }, first: 100) {
+  sdkevents(where: ${where}, first: 100) {
     id
     encodedOrEncryptedNote {
       merkleIndex
@@ -66,16 +70,17 @@ query fetchSDKEvents($fromIdx: String!) {
     }
     filledBatchWithZerosUpToMerkleIndex 
   }
+}`;
 }
-`;
 
 export async function fetchSDKEvents(
   endpoint: string,
-  fromTotalEntityIndex: TotalEntityIndex
+  fromTotalEntityIndex: TotalEntityIndex,
+  toTotalEntityIndex?: TotalEntityIndex
 ): Promise<WithTotalEntityIndex<SDKEvent>[]> {
   const query = makeSubgraphQuery<FetchSDKEventsVars, SDKEventsResponse>(
     endpoint,
-    sdkEventsQuery,
+    makeSdkEventsQuery(toTotalEntityIndex),
     "sdkEvents"
   );
 

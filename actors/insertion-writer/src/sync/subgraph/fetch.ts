@@ -45,9 +45,13 @@ interface FetchTreeInsertionsVars {
   fromIdx: string;
 }
 
-const treeInsertionsQuery = `\
+function makeTreeInsertionsQuery(toIdx?: TotalEntityIndex) {
+  const where = toIdx
+    ? `{ id_gte: $fromIdx, id_lt: ${toIdx} }`
+    : "{ id_gte: $fromIdx }";
+  return `\
 query fetchTreeInsertionEvents($fromIdx: String!) {
-  treeInsertionEvents(where: { id_gte: $fromIdx }) {
+  treeInsertionEvents(where: ${where}) {
     id
     encodedOrEncryptedNote {
       merkleIndex
@@ -71,15 +75,21 @@ query fetchTreeInsertionEvents($fromIdx: String!) {
     }
   }
 }`;
+}
 
 export async function fetchTreeInsertions(
   endpoint: string,
-  fromTotalEntityIndex: TotalEntityIndex
+  fromTotalEntityIndex: TotalEntityIndex,
+  toTotalEntityIndex?: TotalEntityIndex
 ): Promise<WithTotalEntityIndex<TreeInsertion>[]> {
   const query = makeSubgraphQuery<
     FetchTreeInsertionsVars,
     FetchTreeInsertionsResponse
-  >(endpoint, treeInsertionsQuery, "treeInsertionEvents");
+  >(
+    endpoint,
+    makeTreeInsertionsQuery(toTotalEntityIndex),
+    "treeInsertionEvents"
+  );
 
   const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
   const res = await query({ fromIdx });

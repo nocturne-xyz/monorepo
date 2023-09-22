@@ -91,8 +91,16 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         await maybeApplyThrottle(latestIndexedBlock);
 
         // fetch notes and nfs on or after `from`, will return at most 100 of each
+        // if `numConfirmatinos` was set, we will only fetch data from blocks at least `numConfirmations` blocks behind the tip
         const [sdkEvents, fetchTime] = await timedAsync(() =>
-          fetchSDKEvents(endpoint, from)
+          fetchSDKEvents(
+            endpoint,
+            from,
+            TotalEntityIndexTrait.fromBlockNumber(
+              latestIndexedBlock + 1,
+              "UP_TO"
+            )
+          )
         );
 
         // if we have notes and/or mullifiers, update from and get the last committed merkle index as of the entity index we saw

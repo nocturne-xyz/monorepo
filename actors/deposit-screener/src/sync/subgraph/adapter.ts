@@ -72,6 +72,10 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
           {
             type,
             fromTotalEntityIndex: from,
+            toTotalEntityIndex: TotalEntityIndexTrait.fromBlockNumber(
+              latestIndexedBlock + 1,
+              "UP_TO"
+            ),
           }
         );
 

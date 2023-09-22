@@ -8,6 +8,7 @@ import {
   maxArray,
   TotalEntityIndexTrait,
   range,
+  TotalEntityIndex,
 } from "@nocturne-xyz/core";
 import {
   TreeInsertionSyncAdapter,
@@ -61,10 +62,8 @@ export class SubgraphTreeInsertionSyncAdapter
 
         await sleep(opts?.throttleMs ?? 0);
 
-        // fetch insertions from the subgraph, but filter out any that are from blocks that haven't been indexed yet
-        let insertions = await fetchTreeInsertions(endpoint, from);
-
-        // if `numConfirmations` is set and is non-zero, filter out any insertions from blocks that are too recent
+        // if `numConfirmations` is set and is non-zero, only fetch insertions from blocks at least `numConfirmations` behind the tip
+        let toTotalEntityIndex: TotalEntityIndex | undefined = undefined;
         if (opts?.numConfirmations && opts.numConfirmations > 0) {
           const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
           if (latestIndexedBlock === undefined) {
@@ -78,11 +77,18 @@ export class SubgraphTreeInsertionSyncAdapter
             continue;
           }
 
-          const tipTEI = TotalEntityIndexTrait.fromBlockNumber(tip, "THROUGH");
-          insertions = insertions.filter(
-            ({ totalEntityIndex }) => totalEntityIndex <= tipTEI
+          toTotalEntityIndex = TotalEntityIndexTrait.fromBlockNumber(
+            tip + 1,
+            "UP_TO"
           );
         }
+
+        // fetch insertions from the subgraph, but filter out any that are from blocks that haven't been indexed yet
+        const insertions = await fetchTreeInsertions(
+          endpoint,
+          from,
+          toTotalEntityIndex
+        );
 
         const sorted = insertions.sort(
           ({ inner: a }, { inner: b }) => a.merkleIndex - b.merkleIndex
