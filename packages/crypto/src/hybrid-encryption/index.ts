@@ -61,12 +61,20 @@ export class BabyJubJubHybridCipher {
   // encrypts a message to a given receiver public key rB, where r is the receiver's secret key and B is the curve's base point
   public encrypt(
     msg: Uint8Array,
-    receiverPubkey: AffinePoint<bigint>
+    receiverPubkey: AffinePoint<bigint>,
+    // for test purposes only
+    __ephemeralSecretEntropy?: Uint8Array
   ): HybridCiphertext {
     // sample ephemeral secret
-    const ephemeralSecretEntropy = crypto.getRandomValues(
-      new Uint8Array(this.ephemeralSecretEntropyNumBytes)
-    );
+    // sample ephemeral secret
+    let ephemeralSecretEntropy: Uint8Array;
+    if (__ephemeralSecretEntropy) {
+      ephemeralSecretEntropy = __ephemeralSecretEntropy;
+    } else {
+      ephemeralSecretEntropy = crypto.getRandomValues(
+        new Uint8Array(this.ephemeralSecretEntropyNumBytes)
+      );
+    }
     const ephemeralSecret = BabyJubJub.ScalarField.create(
       bytesToNumberLE(ephemeralSecretEntropy)
     );
