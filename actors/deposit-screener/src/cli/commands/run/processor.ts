@@ -36,6 +36,11 @@ const runProcess = new Command("processor")
     parseInt
   )
   .option(
+    "--finality-blocks <number>",
+    "number of confirmations to wait before processing new deposit requests",
+    parseInt
+  )
+  .option(
     "--stdout-log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
@@ -127,16 +132,22 @@ const runProcess = new Command("processor")
       config.contracts.startBlock
     );
 
+    const finalityBlocks = options.finalityBlocks ?? config.finalityBlocks;
+
     const fulfiller = new DepositScreenerFulfiller(
       logger,
       config.depositManagerAddress,
       signer,
       attestationSigner,
       getRedis(),
-      supportedAssets
+      supportedAssets,
+      finalityBlocks
     );
 
-    const screenerHandle = await screener.start(throttleMs);
+    const screenerHandle = await screener.start({
+      throttleMs,
+      finalityBlocks,
+    });
     const fulfillerHandle = await fulfiller.start();
 
     await Promise.all([screenerHandle.promise, fulfillerHandle.promise]);

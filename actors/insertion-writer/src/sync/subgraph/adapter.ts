@@ -16,6 +16,9 @@ import {
 import { fetchTreeInsertions, fetchTeiFromMerkleIndex } from "./fetch";
 import { Logger } from "winston";
 import { Insertion } from "@nocturne-xyz/persistent-log";
+import { SubgraphUtils } from "@nocturne-xyz/core";
+
+const { fetchLatestIndexedBlock } = SubgraphUtils;
 
 export class SubgraphTreeInsertionSyncAdapter
   implements TreeInsertionSyncAdapter
@@ -51,7 +54,6 @@ export class SubgraphTreeInsertionSyncAdapter
 
       // hack to get typescript to recognize that `_from` can't be `undefined` at this point
       let from = _from;
-
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
         logger &&
           logger.info("fetching insertions", {
@@ -60,7 +62,21 @@ export class SubgraphTreeInsertionSyncAdapter
           });
 
         await sleep(opts?.throttleMs ?? 0);
-        const insertions = await fetchTreeInsertions(endpoint, from);
+
+        // if `finalityBlocks` is set and is non-zero, only fetch insertions from blocks at least `finalityBlocks` behind the tip
+        const toBlock =
+          (await fetchLatestIndexedBlock(endpoint)) -
+          (opts?.finalityBlocks ?? 0);
+        if (toBlock < 0) {
+          await sleep(opts?.throttleOnEmptyMs ?? 0);
+          continue;
+        }
+        // fetch insertions from the subgraph, but filter out any that are from blocks that haven't been indexed yet
+        const insertions = await fetchTreeInsertions(
+          endpoint,
+          from,
+          TotalEntityIndexTrait.fromBlockNumber(toBlock + 1, "UP_TO")
+        );
 
         const sorted = insertions.sort(
           ({ inner: a }, { inner: b }) => a.merkleIndex - b.merkleIndex

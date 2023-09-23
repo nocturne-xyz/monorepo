@@ -98,6 +98,11 @@ export class NocturneClient {
       this.db,
       this.merkleProver,
       opts
+        ? {
+            ...opts,
+            finalityBlocks: opts.finalityBlocks ?? this.config.finalityBlocks,
+          }
+        : undefined
     );
 
     return latestSyncedMerkleIndex;
