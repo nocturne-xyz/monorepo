@@ -64,6 +64,6 @@ export class NocturneSigner extends NocturneViewer {
     const P = BabyJubJub.ExtendedPoint.fromAffine(pk).multiplyUnsafe(c);
     const R = Z.add(P);
     const cp = poseidonBN([pk.x, R.x, R.y, m]);
-    return c == cp;
+    return Fr.eql(c, cp);
   }
 }
