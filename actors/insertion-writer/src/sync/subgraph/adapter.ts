@@ -8,7 +8,6 @@ import {
   maxArray,
   TotalEntityIndexTrait,
   range,
-  TotalEntityIndex,
 } from "@nocturne-xyz/core";
 import {
   TreeInsertionSyncAdapter,
@@ -65,27 +64,18 @@ export class SubgraphTreeInsertionSyncAdapter
         await sleep(opts?.throttleMs ?? 0);
 
         // if `finalityBlocks` is set and is non-zero, only fetch insertions from blocks at least `finalityBlocks` behind the tip
-        let toTotalEntityIndex: TotalEntityIndex | undefined = undefined;
-        if (opts?.finalityBlocks && opts.finalityBlocks > 0) {
-          const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
-          const tip = latestIndexedBlock - opts.finalityBlocks;
-          // edge case where tip is negative due to subtracting finalityBlocks
-          if (tip < 0) {
-            await sleep(opts?.throttleOnEmptyMs ?? 0);
-            continue;
-          }
-
-          toTotalEntityIndex = TotalEntityIndexTrait.fromBlockNumber(
-            tip + 1,
-            "UP_TO"
-          );
+        const toBlock =
+          (await fetchLatestIndexedBlock(endpoint)) -
+          (opts?.finalityBlocks ?? 0);
+        if (toBlock < 0) {
+          await sleep(opts?.throttleOnEmptyMs ?? 0);
+          continue;
         }
-
         // fetch insertions from the subgraph, but filter out any that are from blocks that haven't been indexed yet
         const insertions = await fetchTreeInsertions(
           endpoint,
           from,
-          toTotalEntityIndex
+          TotalEntityIndexTrait.fromBlockNumber(toBlock + 1, "UP_TO")
         );
 
         const sorted = insertions.sort(
