@@ -50,6 +50,16 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         from
       );
 
+      const maybeApplyThrottle = async (currentBlock: number) => {
+        const isCaughtUp =
+          from >=
+          TotalEntityIndexTrait.fromComponents({
+            blockNumber: BigInt(currentBlock),
+          });
+        const sleepDelay = max(opts?.throttleMs ?? 0, isCaughtUp ? 5000 : 0);
+        await sleep(sleepDelay);
+      };
+
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
         const fromBlock = TotalEntityIndexTrait.toComponents(from).blockNumber;
 
@@ -73,23 +83,12 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         const latestIndexedBlock =
           (await fetchLatestIndexedBlock(endpoint)) -
           (opts?.finalityBlocks ?? 0);
-
         if (latestIndexedBlock < 0) {
           await sleep(5000);
           continue;
         }
 
-        const isCaughtUp =
-          from >=
-          TotalEntityIndexTrait.fromComponents({
-            blockNumber: BigInt(latestIndexedBlock),
-          });
-        if (isCaughtUp) {
-          await sleep(5000);
-          continue;
-        } else if (opts?.throttleMs) {
-          await sleep(opts.throttleMs);
-        }
+        await maybeApplyThrottle(latestIndexedBlock);
 
         const toTotalEntityIndex = TotalEntityIndexTrait.fromBlockNumber(
           latestIndexedBlock + 1,
