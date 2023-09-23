@@ -28,7 +28,7 @@ export const runInsertionWriter = new Command("insertion-writer")
     "./logs/insertion-writer"
   )
   .option(
-    "--num-confirmations <number>",
+    "--finality-blocks <number>",
     "number of confirmations to wait before fetching new insertions",
     parseInt
   )

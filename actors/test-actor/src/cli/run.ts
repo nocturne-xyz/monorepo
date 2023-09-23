@@ -55,7 +55,7 @@ export const run = new Command("run")
     "perform 8 ops in rapid succession to fill a bundle every N iterations of the op loop"
   )
   .option(
-    "--num-confirmations <number>",
+    "--finality-blocks <number>",
     'number of confirmations to wait before considering new notes as "finalized"',
     parseInt
   )

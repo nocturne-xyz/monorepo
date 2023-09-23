@@ -36,7 +36,7 @@ const runProcess = new Command("processor")
     parseInt
   )
   .option(
-    "--num-confirmations <number>",
+    "--finality-blocks <number>",
     "number of confirmations to wait before processing new deposit requests",
     parseInt
   )

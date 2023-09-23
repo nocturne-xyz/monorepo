@@ -28,7 +28,7 @@ const runSubmitter = new Command("submitter")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .option(
-    "--num-confirmations <number>",
+    "--finality-blocks <number>",
     "number of confirmations to wait for before considering a submitted op finalized",
     parseInt
   )
