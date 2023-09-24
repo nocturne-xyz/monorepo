@@ -63,6 +63,7 @@ import {
 } from "@nocturne-xyz/local-prover";
 import {
   Erc20Plugin,
+  EthTransferAdapterPlugin,
   UniswapV3Plugin,
   WstethAdapterPlugin,
 } from "@nocturne-xyz/op-request-plugins";
