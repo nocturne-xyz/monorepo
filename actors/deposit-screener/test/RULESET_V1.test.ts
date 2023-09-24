@@ -2,21 +2,16 @@ import { expect } from "chai";
 import fs from "fs";
 import path from "path";
 import { CachedApiCallData } from "../src/screening/checks/RuleSet";
-import { API_CALL_MAP, ApiCallNames } from "../src/screening/checks/apiCalls";
 import { RULESET_V1 } from "../src/screening/checks/v1/RULESET_V1";
 import apiCallsSnapshot from "./snapshots/apiCallsSnapshot09-13-2023.json";
 import {
   APPROVE_ADDRESSES,
   AddressDataSnapshot,
-  CachedAddressData,
   REJECT_ADDRESSES,
   ScreeningTestCaseAddresses,
-  TEST_ADDRESSES,
   formDepositInfo,
   getLatestSnapshotFolder,
-  saveSnapshot,
 } from "./utils";
-import { sleep } from "@nocturne-xyz/core";
 
 const MOCK_API_CALLS = apiCallsSnapshot as Record<
   ScreeningTestCaseAddresses,
@@ -25,50 +20,14 @@ const MOCK_API_CALLS = apiCallsSnapshot as Record<
 
 describe("RULESET_V1", () => {
   let snapshotData: AddressDataSnapshot = {};
-
   before(async () => {
-    if (process.env.SNAPSHOT_ADDRESSES === "true") {
-      const numAddresses = Object.keys(TEST_ADDRESSES).length;
-      console.log(
-        "Test suite invoked with SNAPSHOT_ADDRESSES=true, running API calls and saving snapshot..."
-      );
-      console.log(`There are ${numAddresses} addresses to snapshot`);
-      let count = 0;
-      for (const address of Object.values(TEST_ADDRESSES)) {
-        console.log(
-          `Starting API calls for address: ${address}—${count} of ${numAddresses}`
-        );
-        const deposit = formDepositInfo(address);
-        snapshotData[address] = {};
-        for (const [callName, apiCall] of Object.entries(API_CALL_MAP)) {
-          if (
-            callName === API_CALL_MAP.MISTTRACK_ADDRESS_OVERVIEW.name ||
-            callName === API_CALL_MAP.MISTTRACK_ADDRESS_RISK_SCORE.name
-          ) {
-            console.log(
-              "Sleeping for 5 seconds to avoid Misttrack rate limit..."
-            );
-            await sleep(5000);
-          }
-          const addressData = snapshotData[address] as CachedAddressData;
-          console.log(`Calling ${callName} for ${address}...`);
-          addressData[callName as ApiCallNames] = await apiCall(deposit);
-
-          console.log(`Successfully called ${callName} for ${address}`);
-        }
-      }
-      console.log("All API calls completed, saving snapshot...");
-      saveSnapshot(snapshotData);
-      console.log("Snapshot saved successfully");
+    const folderPath = (await getLatestSnapshotFolder("./snapshots")) ?? "";
+    const filePath = path.join(folderPath, "snapshot.json");
+    if (fs.existsSync(filePath)) {
+      const rawData = fs.readFileSync(filePath, "utf-8");
+      snapshotData = JSON.parse(rawData);
     } else {
-      const folderPath = (await getLatestSnapshotFolder("./snapshots")) ?? "";
-      const filePath = path.join(folderPath, "snapshot.json");
-      if (fs.existsSync(filePath)) {
-        const rawData = fs.readFileSync(filePath, "utf-8");
-        snapshotData = JSON.parse(rawData);
-      } else {
-        throw new Error("No snapshot files found");
-      }
+      throw new Error("No snapshot files found");
     }
   });
 

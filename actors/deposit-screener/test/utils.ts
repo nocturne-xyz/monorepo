@@ -66,7 +66,7 @@ export function saveSnapshot(data: AddressDataSnapshot) {
   const folderPath = path.resolve(
     __dirname,
     "../snapshots",
-    `${date.getMonth() + 1}-${date.getDate()}-${date.getFullYear()}`
+    `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
   );
   if (!fs.existsSync(folderPath)) {
     fs.mkdirSync(folderPath, { recursive: true });
