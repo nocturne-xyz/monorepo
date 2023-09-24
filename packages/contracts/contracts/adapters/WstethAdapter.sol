@@ -40,7 +40,10 @@ contract WstethAdapter {
         // wsteth back (gas optimization to keep wsteth in balance from resetting to 0)
         uint256 wstethBalancePre = _wsteth.balanceOf(address(this));
 
+        // Deposit ETH to wsteth contract, get back wsteth
         Address.sendValue(payable(address(_wsteth)), amount);
+
+        // Send back wsteth to caller
         _wsteth.transfer(
             msg.sender,
             _wsteth.balanceOf(address(this)) - wstethBalancePre
