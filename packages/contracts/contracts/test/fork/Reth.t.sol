@@ -15,6 +15,9 @@ import "../../libs/Types.sol";
 import "../../libs/AssetUtils.sol";
 import "../utils/NocturneUtils.sol";
 
+// NOTE: the reth fork test are run against a different date than the other tests because
+// Rocket Pool has a stepwise deposit limit that gets filled to max every few months. Must pick
+// point in time when deposit limit is not maxed out.
 contract RethTest is ForkBase {
     IWeth public constant weth =
         IWeth(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
