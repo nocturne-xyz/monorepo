@@ -9,6 +9,7 @@ import {
   DepositEventType,
   DepositRequest,
   DepositRequestStatus,
+  IterSyncOpts,
   TotalEntityIndexTrait,
   hashDepositRequest,
 } from "@nocturne-xyz/core";
@@ -136,7 +137,7 @@ export class DepositScreenerScreener {
     };
   }
 
-  async start(queryThrottleMs?: number): Promise<ActorHandle> {
+  async start(opts?: IterSyncOpts): Promise<ActorHandle> {
     this.logger.info(
       `DepositManager contract: ${this.depositManagerContract.address}.`
     );
@@ -160,7 +161,7 @@ export class DepositScreenerScreener {
     const depositEvents = this.adapter.iterDepositEvents(
       DepositEventType.Instantiated,
       nextTotalEntityIndexToSync,
-      { throttleMs: queryThrottleMs }
+      opts
     );
 
     const screenerProm = this.startScreener(

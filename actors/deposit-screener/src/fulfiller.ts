@@ -59,6 +59,7 @@ export class DepositScreenerFulfiller {
   redis: IORedis;
   db: DepositScreenerDB;
   metrics: DepositScreenerFulfillerMetrics;
+  finalityBlocks: number;
 
   constructor(
     logger: Logger,
@@ -66,7 +67,8 @@ export class DepositScreenerFulfiller {
     txSigner: ethers.Signer,
     attestationSigner: ethers.Wallet,
     redis: IORedis,
-    supportedAssets: Set<Address>
+    supportedAssets: Set<Address>,
+    finalityBlocks = 1
   ) {
     this.logger = logger;
     this.redis = redis;
@@ -76,9 +78,10 @@ export class DepositScreenerFulfiller {
       throw new Error("txSigner must have a provider");
     }
     this.txSigner = txSigner;
-
     this.attestationSigner = attestationSigner;
     this.signerMutex = new Mutex();
+
+    this.finalityBlocks = finalityBlocks;
 
     this.depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
@@ -284,7 +287,7 @@ export class DepositScreenerFulfiller {
           logger.info(
             `post-dispatch awaiting tx receipt. nonce: ${depositRequest.nonce}. txhash: ${tx.hash}`
           );
-          const receipt = await tx.wait(1);
+          const receipt = await tx.wait(this.finalityBlocks);
           return receipt;
         default:
           throw new Error("currently only supporting erc20 deposits");

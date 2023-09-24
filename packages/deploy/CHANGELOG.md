@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [16dfb275]
+- Updated dependencies [dcea2acb]
+  - @nocturne-xyz/core@2.0.2
+
+## 0.5.0
+
+### Minor Changes
+
+- 47a5f1e5: Deploy script deploys eth transfer adapter and adds to protocol allowlist
+
+### Patch Changes
+
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [0ed9f872]
+- Updated dependencies [46e47762]
+- Updated dependencies [4d7147b6]
+- Updated dependencies [7d151856]
+- Updated dependencies [7d151856]
+- Updated dependencies [46e47762]
+  - @nocturne-xyz/config@1.0.0
+  - @nocturne-xyz/core@2.0.1
+  - @nocturne-xyz/contracts@0.5.0
+
 ## 0.4.1
 
 ### Patch Changes

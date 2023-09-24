@@ -1,6 +1,10 @@
 {
   "contracts": {
-    "network": { "name": "goerli", "chainId": 5 },
+    "network": {
+      "name": "goerli",
+      "chainId": 5, 
+      "finalityBlocks": 4
+    },
     "startBlock": 9694596,
     "owners": {
       "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
@@ -136,6 +140,13 @@
       {
         "address": "0x779CFf9F408baD3Cb37AC0e4c66df33471f5F2FB",
         "functionSignatures": ["convert(uint256)"]
+      }
+    ],
+    [
+      "ethTransferAdapter",
+      {
+        "address": "0xd5376FBB9a5fe1F541e48D11d00abf7cc7D619D7",
+        "functionSignatures": ["transfer(address,uint256)"]
       }
     ]
   ]

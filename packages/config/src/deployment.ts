@@ -18,6 +18,7 @@ export interface NocturneContractDeployment {
     depositManagerOwner: Address;
   };
   proxyAdmin: Address;
+  finalityBlocks: number;
   canonicalAddressRegistryProxy: ProxyAddresses<any>;
   depositManagerProxy: ProxyAddresses<any>;
   tellerProxy: ProxyAddresses<any>;

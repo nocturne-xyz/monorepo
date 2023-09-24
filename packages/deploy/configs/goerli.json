@@ -1,5 +1,6 @@
 {
   "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+  "finalityBlocks": 4,
   "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
   "subtreeBatchFillers": ["0x6556186E3E940930c40068C76BC875De95811E42"],
   "wethAddress": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",

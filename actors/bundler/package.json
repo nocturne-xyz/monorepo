@@ -1,7 +1,7 @@
 {
   "name": "@nocturne-xyz/bundler",
   "license": "MIT",
-  "version": "0.4.1",
+  "version": "0.4.3",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

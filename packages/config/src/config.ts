@@ -75,6 +75,10 @@ export class NocturneConfig {
     return BigInt(this.contracts.network.chainId);
   }
 
+  get finalityBlocks(): number | undefined {
+    return this.contracts.finalityBlocks;
+  }
+
   get startBlock(): number {
     return this.contracts.startBlock;
   }

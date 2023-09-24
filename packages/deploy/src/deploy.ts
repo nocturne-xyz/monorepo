@@ -247,6 +247,7 @@ export async function deployNocturneCoreContracts(
       depositManagerOwner: config.proxyAdminOwner,
     },
     proxyAdmin: proxyAdmin.address,
+    finalityBlocks: config.finalityBlocks,
     canonicalAddressRegistryProxy: proxiedCanonAddrRegistry.proxyAddresses,
     depositManagerProxy: proxiedDepositManager.proxyAddresses,
     tellerProxy: proxiedTeller.proxyAddresses,

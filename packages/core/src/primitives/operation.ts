@@ -14,7 +14,6 @@ import {
   TrackedAsset,
 } from "./types";
 import { ethers, TypedDataDomain } from "ethers";
-import * as JSON from "bigint-json-serialization";
 
 const { _TypedDataEncoder } = ethers.utils;
 
@@ -274,6 +273,6 @@ export function getTrackedAssets(
     })),
   ];
 
-  // stringify assets to ensure uniqueness in map + for sorting
-  return dedup(assets.map(JSON.stringify)).sort().map(JSON.parse);
+  // dedup assets and sort
+  return dedup(assets).sort();
 }

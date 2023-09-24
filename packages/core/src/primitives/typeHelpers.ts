@@ -1,11 +1,14 @@
 import { JoinSplitRequest } from "../operationRequest/operationRequest";
 import {
+  Asset,
+  IncludedNote,
   Note,
   PreProofJoinSplit,
   PreSignJoinSplit,
   PreSignOperation,
   SignedOperation,
-} from "../primitives";
+} from ".";
+import { MapWithObjectKeys } from "../utils/collections";
 
 export function sortNotesByValue<T extends Note>(notes: T[]): T[] {
   return notes.sort((a, b) => {
@@ -44,6 +47,29 @@ export function merklePathToIndex(
 export interface NullifierWithMerkleIndex {
   nullifier: bigint;
   merkleIndex: bigint;
+}
+
+export function getIncludedNotesFromOp(
+  op: PreSignOperation
+): MapWithObjectKeys<Asset, IncludedNote[]> {
+  const notesMap: MapWithObjectKeys<Asset, IncludedNote[]> =
+    new MapWithObjectKeys();
+
+  op.joinSplits.forEach((joinSplit) => {
+    const { oldNoteA, oldNoteB } = joinSplit;
+    const notes = [oldNoteA, oldNoteB];
+
+    notes.forEach((note) => {
+      if (!notesMap.has(note.asset)) {
+        notesMap.set(note.asset, []);
+      }
+
+      const existingNotes = notesMap.get(note.asset)!;
+      notesMap.set(note.asset, [...existingNotes, note]);
+    });
+  });
+
+  return notesMap;
 }
 
 // returns the merkle indices of the notes spent in an op

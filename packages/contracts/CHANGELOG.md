@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- 7d151856: Add eth transfer adapter and integrate into unit and invariant tests
+- 46e47762: Add foundry script for deploying eth transfer adapter + shell script for calling forge script
+
+### Patch Changes
+
+- 7d151856: Replace all instances of erc20.reserveTokens (simpleerc20) with foundry deal()"
+
 ## 0.4.0
 
 ### Minor Changes

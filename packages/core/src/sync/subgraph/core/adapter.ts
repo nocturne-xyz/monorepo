@@ -78,21 +78,37 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
           console.log(rangeLogMsg);
         }
 
-        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
+        // fetch the latest indexed block minus `finalityBlocks`
+        // if `latestIndexedBlock < 0`, then we simply wait and try again - this can occurr if the chain is brand new (e.g. in tests)
+        const latestIndexedBlock =
+          (await fetchLatestIndexedBlock(endpoint)) -
+          (opts?.finalityBlocks ?? 0);
+        if (latestIndexedBlock < 0) {
+          await sleep(5000);
+          continue;
+        }
+
         await maybeApplyThrottle(latestIndexedBlock);
 
-        // fetch notes and nfs on or after `from`, will return at most 100 of each
-        const [sdkEvents, fetchTime] = await timedAsync(() =>
-          fetchSDKEvents(endpoint, from)
+        const toTotalEntityIndex = TotalEntityIndexTrait.fromBlockNumber(
+          latestIndexedBlock + 1,
+          "UP_TO"
         );
+
+        // fetch notes and nfs on or after `from`, will return at most 100 of each
+        // if `numConfirmatinos` was set, we will only fetch data from blocks at least `finalityBlocks` blocks behind the tip
+        const [sdkEvents, fetchTime] = await timedAsync(() =>
+          fetchSDKEvents(endpoint, from, toTotalEntityIndex)
+        );
+
+        const newLatestCommittedMerkleIndex =
+          await fetchlatestCommittedMerkleIndex(endpoint, toTotalEntityIndex);
 
         // if we have notes and/or mullifiers, update from and get the last committed merkle index as of the entity index we saw
         if (sdkEvents.length > 0) {
+          latestCommittedMerkleIndex = newLatestCommittedMerkleIndex;
           const highestTotalEntityIndex = maxArray(
             sdkEvents.map((n) => n.totalEntityIndex)
-          );
-          latestCommittedMerkleIndex = await fetchlatestCommittedMerkleIndex(
-            endpoint
           );
 
           const notes = sdkEvents.filter(
@@ -151,18 +167,13 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
           from = highestTotalEntityIndex + 1n;
         } else {
           // otherwise, there are no more new notes / tree insertions to fetch
-          // therefore we're in one of two cases:
-          // 1) we're fully caught up
-          // 2) a subtree commit occurred, which we need to notify the SDK of
-
+          // however, there may have been a subtree update, so we check for that here
           const currentBlockTotalEntityIndex =
             TotalEntityIndexTrait.fromBlockNumber(latestIndexedBlock);
 
           // check the latest committed merkle index
           // if it's bigger than the one from the last iteration,
           // then emit an empty diff with only the latest committed merkle index
-          const newLatestCommittedMerkleIndex =
-            await fetchlatestCommittedMerkleIndex(endpoint);
           if (
             !latestCommittedMerkleIndex ||
             (newLatestCommittedMerkleIndex &&
@@ -177,12 +188,20 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
               totalEntityIndex: currentBlockTotalEntityIndex,
             };
 
+            if (logger) {
+              logger.info("yielding empty state diff with subtree update", {
+                stateDiff,
+              });
+            } else {
+              console.log("yielding empty state diff with subtree update", {
+                stateDiff,
+              });
+            }
             yield stateDiff;
           }
 
           // set `from` to the entity index corresponding to the latest indexed block
           // if it's greater than the current `from`.
-
           // this is to prevent an busy loops in the case where the subgraph has indexed a block corresponding
           // to a totalEntityIndex > `endTotalEntityIndex` but we haven't found any insertions in that block
           if (currentBlockTotalEntityIndex > from) {

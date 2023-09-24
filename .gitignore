@@ -8,6 +8,7 @@ lib/
 hh-logs/
 site-dev-logs/
 logs
+broadcast
 
 .DS_Store
 **/.DS_Store"

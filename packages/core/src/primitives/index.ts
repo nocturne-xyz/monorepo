@@ -29,3 +29,8 @@ export {
   hashCanonAddrRegistryEntry,
   computeCanonAddrRegistryEntryDigest,
 } from "./canonAddrRegistryEntry";
+export {
+  maxGasForOperation,
+  gasCompensationForParams,
+  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
+} from "./gasCalculation";

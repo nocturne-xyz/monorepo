@@ -3,6 +3,7 @@ import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller
 import {
   Address,
   computeOperationDigest,
+  maxGasForOperation,
   OperationStatus,
   parseEventsFromContractReceipt,
   SubmittableOperationWithNetworkInfo,
@@ -41,6 +42,7 @@ export class BundlerSubmitter {
   nullifierDB: NullifierDB;
   logger: Logger;
   metrics: BundlerSubmitterMetrics;
+  finalityBlocks: number;
 
   readonly INTERVAL_SECONDS: number = 60;
   readonly BATCH_SIZE: number = 8;
@@ -49,7 +51,8 @@ export class BundlerSubmitter {
     tellerAddress: Address,
     signingProvider: ethers.Signer,
     redis: IORedis,
-    logger: Logger
+    logger: Logger,
+    finalityBlocks = 1
   ) {
     this.redis = redis;
     this.logger = logger;
@@ -60,6 +63,7 @@ export class BundlerSubmitter {
       tellerAddress,
       this.signingProvider
     );
+    this.finalityBlocks = finalityBlocks;
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
     const createCounter = makeCreateCounterFn(
@@ -195,24 +199,23 @@ export class BundlerSubmitter {
     operations: SubmittableOperationWithNetworkInfo[]
   ): Promise<ethers.ContractReceipt | undefined> {
     try {
-      // Estimate gas first
-      const data = this.tellerContract.interface.encodeFunctionData(
-        "processBundle",
-        [{ operations }]
-      );
-      const gasEst = await this.signingProvider.estimateGas({
-        to: this.tellerContract.address,
-        data,
-      });
-
       logger.info("pre-dispatch attempting tx submission");
+
+      // Calculate total gas limit based on op data because eth_estimateGas is not predictable for
+      // processBundle
+      const totalGasLimit = operations
+        .map((op) => maxGasForOperation(op))
+        .reduce((acc, gasForOp) => acc + gasForOp, 0n);
+
       const tx = await this.tellerContract.processBundle(
         { operations },
-        { gasLimit: gasEst.toBigInt() + 200_000n }
+        {
+          gasLimit: totalGasLimit * (15n / 10n),
+        } // 50% gas buffer
       );
 
       logger.info(`post-dispatch awaiting tx receipt. txhash: ${tx.hash}`);
-      const receipt = await tx.wait(1);
+      const receipt = await tx.wait(this.finalityBlocks);
       return receipt;
     } catch (err) {
       logger.error("failed to process bundle:", err);
