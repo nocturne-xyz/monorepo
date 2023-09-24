@@ -20,7 +20,8 @@ contract RethAdapter {
     IRocketStorage _rocketStorage;
 
     // Constructor, takes weth and reth
-    constructor(address rocketStorage) {
+    constructor(address weth, address rocketStorage) {
+        _weth = IWeth(weth);
         _rocketStorage = IRocketStorage(rocketStorage);
     }
 

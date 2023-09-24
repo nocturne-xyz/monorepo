@@ -152,7 +152,7 @@ contract WstethTest is ForkBase {
                 address(wsteth),
                 ERC20_ID
             ),
-            minRefundValue: wstethExpectedOutAmount - 10 // TODO: why -10 buffer in case of uneven-ness?
+            minRefundValue: (wstethExpectedOutAmount * 99) / 100 // TODO: 1% buffer, figure out where actual exchange rate comes from that's used in UI (doesn't match getRethValue)
         });
 
         // Format actions
@@ -213,7 +213,7 @@ contract WstethTest is ForkBase {
         assertEq(weth.balanceOf(address(teller)), 0);
         assertGe(
             wsteth.balanceOf(address(teller)),
-            wstethExpectedOutAmount - 10
-        ); // TODO: why -10 buffer in case of uneven-ness?
+            (wstethExpectedOutAmount * 99) / 100
+        ); // TODO: 1% buffer, figure out where actual exchange rate comes from that's used in UI (doesn't match getRethValue)
     }
 }

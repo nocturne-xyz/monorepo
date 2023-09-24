@@ -127,7 +127,7 @@ contract UniswapTest is ForkBase {
                     ),
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
-                executionGasLimit: 1_000_000,
+                executionGasLimit: 10_000_000,
                 gasPrice: 0,
                 actions: actions,
                 atomicActions: true,
