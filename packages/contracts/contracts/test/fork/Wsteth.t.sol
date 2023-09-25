@@ -140,7 +140,10 @@ contract WstethTest is ForkBase {
         }
         reserveAndDeposit(address(weth), wethInAmount);
 
-        uint256 wstethExpectedOutAmount = wsteth.getWstETHByStETH(wethInAmount);
+        // TODO: 1% buffer, figure out where actual exchange rate comes from that's used in UI (doesn't match getRethValue)
+        uint256 wstethExpectedOutAmount = (wsteth.getWstETHByStETH(
+            wethInAmount
+        ) * 99) / 100;
 
         console.log("wstethExpectedOutAmount:", wstethExpectedOutAmount);
 
@@ -152,7 +155,7 @@ contract WstethTest is ForkBase {
                 address(wsteth),
                 ERC20_ID
             ),
-            minRefundValue: (wstethExpectedOutAmount * 99) / 100 // TODO: 1% buffer, figure out where actual exchange rate comes from that's used in UI (doesn't match getRethValue)
+            minRefundValue: wstethExpectedOutAmount
         });
 
         // Format actions
@@ -211,9 +214,6 @@ contract WstethTest is ForkBase {
 
         // Check post op balances
         assertEq(weth.balanceOf(address(teller)), 0);
-        assertGe(
-            wsteth.balanceOf(address(teller)),
-            (wstethExpectedOutAmount * 99) / 100
-        ); // TODO: 1% buffer, figure out where actual exchange rate comes from that's used in UI (doesn't match getRethValue)
+        assertGe(wsteth.balanceOf(address(teller)), wstethExpectedOutAmount);
     }
 }
