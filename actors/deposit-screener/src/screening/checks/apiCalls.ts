@@ -81,8 +81,6 @@ export type MisttrackApiResponse<T extends MisttrackData> =
       data: T;
     };
 
-export type CallReturnData = TrmData | MisttrackData | ScreeningDepositRequest;
-
 const TRM_BASE_URL = "https://api.trmlabs.com/public/v2";
 const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";
 const TRM_API_KEY = process.env.TRM_API_KEY ?? "";
@@ -155,6 +153,10 @@ export const API_CALL_MAP = {
 } as const;
 
 export type ApiCallNames = keyof typeof API_CALL_MAP;
+export type ApiCallReturnData =
+  | TrmData
+  | MisttrackData
+  | ScreeningDepositRequest;
 export type ApiCallToReturnType = {
   [K in ApiCallNames]: Awaited<ReturnType<(typeof API_CALL_MAP)[K]>>;
 };

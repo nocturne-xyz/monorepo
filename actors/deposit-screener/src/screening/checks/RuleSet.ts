@@ -3,7 +3,7 @@ import {
   API_CALL_MAP,
   ApiCallNames,
   ApiCallToReturnType,
-  CallReturnData,
+  ApiCallReturnData,
 } from "./apiCalls";
 export interface Rejection {
   type: "Rejection";
@@ -58,7 +58,9 @@ export interface CombinedRulesParams<T extends ReadonlyArray<ApiCallNames>> {
   applyIf: "Any" | "All";
 }
 
-export type CachedApiCallData = Partial<Record<ApiCallNames, CallReturnData>>;
+export type CachedApiCallData = Partial<
+  Record<ApiCallNames, ApiCallReturnData>
+>;
 
 export interface RuleLike {
   next: RuleLike | null;
