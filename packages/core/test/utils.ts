@@ -118,7 +118,7 @@ export async function setup(
     })
   );
 
-  const nullifiers = notes.map((n) => signer.createNullifier(n));
+  const nullifiers = notes.map((n) => NoteTrait.createNullifier(signer, n));
   const notesWithNullfiers = zip(notes, nullifiers).map(([n, nf]) =>
     NoteTrait.toIncludedNoteWithNullifier(n, nf)
   );

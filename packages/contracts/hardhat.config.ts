@@ -21,7 +21,9 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
 
     return paths.filter(
       (p) =>
-        (!p.endsWith('.t.sol') && !p.includes('test')) ||
+        (!p.endsWith('.t.sol') &&
+          !p.endsWith('.s.sol') &&
+          !p.includes('test')) ||
         p.includes('TestSubtreeUpdateVerifier') ||
         p.includes('SimpleERC20Token') ||
         p.includes('SimpleERC721Token') ||
@@ -95,6 +97,8 @@ module.exports = {
       'JoinSplitVerifier',
       'SubtreeUpdateVerifier',
       'WstethAdapter',
+      'RethAdapter',
+      'EthTransferAdapter',
       'CanonAddrSigCheckVerifier',
       'SimpleERC20Token',
       'SimpleERC721Token',

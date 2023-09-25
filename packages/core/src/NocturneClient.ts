@@ -7,7 +7,7 @@ import {
   OpDigestWithMetadata,
   computeOperationDigest,
 } from "./primitives";
-import { NocturneViewer } from "./crypto";
+import { NocturneViewer } from "@nocturne-xyz/crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
 import { prepareOperation } from "./prepareOperation";
 import {
@@ -28,7 +28,7 @@ import {
 } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
-import { getMerkleIndicesAndNfsFromOp } from "./utils/misc";
+import { getMerkleIndicesAndNfsFromOp } from "./primitives/typeHelpers";
 import { OpTracker } from "./OpTracker";
 import { getTotalEntityIndexOfNewestNoteInOp } from "./totalEntityIndexOfNewestNoteInOp";
 
@@ -76,7 +76,7 @@ export class NocturneClient {
 
     this.viewer = viewer;
     this.handlerContract = Handler__factory.connect(
-      this.config.handlerAddress(),
+      this.config.handlerAddress,
       provider
     );
     this.merkleProver = merkleProver;
@@ -98,6 +98,11 @@ export class NocturneClient {
       this.db,
       this.merkleProver,
       opts
+        ? {
+            ...opts,
+            finalityBlocks: opts.finalityBlocks ?? this.config.finalityBlocks,
+          }
+        : undefined
     );
 
     return latestSyncedMerkleIndex;

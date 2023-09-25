@@ -43,6 +43,15 @@ export interface IterSyncOpts {
   endTotalEntityIndex?: TotalEntityIndex;
   // throttle the iterator to it will yield at most once every `throttleMs` milliseconds
   throttleMs?: number;
+
+  // if set, iterator will only emit state diffs containing
+  // data in blocks with at least this many confirmations
+  finalityBlocks?: number;
+}
+
+export interface SDKIterSyncOpts extends IterSyncOpts {
+  // if true, the adapter will record and print performance times
+  timing?: boolean;
 }
 
 export interface SDKSyncAdapter {
@@ -56,7 +65,7 @@ export interface SDKSyncAdapter {
   // chunks.
   iterStateDiffs(
     startTotalEntityIndex: TotalEntityIndex,
-    opts?: IterSyncOpts
+    opts?: SDKIterSyncOpts
   ): ClosableAsyncIterator<EncryptedStateDiff>;
 
   // return the latest block the sync adapter can sync to

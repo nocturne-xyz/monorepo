@@ -16,7 +16,9 @@ import {
   Handler,
   CanonAddrSigCheckVerifier__factory,
   WstethAdapter__factory,
+  EthTransferAdapter__factory,
   WstethAdapter,
+  EthTransferAdapter,
 } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { ProxiedContract } from "./proxy";
@@ -29,7 +31,7 @@ import {
 } from "@nocturne-xyz/config";
 import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
 import { NocturneConfig } from "@nocturne-xyz/config";
-import { getSelector } from "./utils";
+import { Address, getSelector } from "./utils";
 import { protocolWhitelistKey } from "@nocturne-xyz/core";
 
 export async function deployNocturne(
@@ -43,8 +45,17 @@ export async function deployNocturne(
   const erc20s = await maybeDeployErc20s(connectedSigner, config.erc20s);
   config.erc20s = erc20s;
 
+  // Deploy eth transfer adapter
+  const ethTransferAdapter = await deployEthTransferAdapter(
+    connectedSigner,
+    config.wethAddress,
+    config.opts
+  );
+
+  // Maybe deploy wsteth adapter, depending on deploy config
   const maybeWstethAdapter = await maybeDeployWstethAdapter(
     connectedSigner,
+    config.wethAddress,
     config.opts
   );
 
@@ -58,7 +69,7 @@ export async function deployNocturne(
   );
   await setErc20Caps(depositManager, config);
 
-  // Whitelist protocols and erc20s
+  // Whitelist erc20s
   const handler = Handler__factory.connect(
     contracts.handlerProxy.proxy,
     connectedSigner
@@ -79,10 +90,17 @@ export async function deployNocturne(
     config.protocolAllowlist.set(name, addressWithSignatures);
   }
 
+  // Whitelist eth transfer adapter
+  config.protocolAllowlist.set("ethTransferAdapter", {
+    address: ethTransferAdapter.address,
+    functionSignatures: ["transfer(address,uint256)"],
+  });
+
+  // Whitelist wsteth adapter if exists
   if (maybeWstethAdapter) {
     const addressWithSignature: ProtocolAddressWithMethods = {
       address: maybeWstethAdapter.address,
-      functionSignatures: ["convert(uint256)"],
+      functionSignatures: ["deposit(uint256)"],
     };
     config.protocolAllowlist.set("wstethAdapter", addressWithSignature);
   }
@@ -229,6 +247,7 @@ export async function deployNocturneCoreContracts(
       depositManagerOwner: config.proxyAdminOwner,
     },
     proxyAdmin: proxyAdmin.address,
+    finalityBlocks: config.finalityBlocks,
     canonicalAddressRegistryProxy: proxiedCanonAddrRegistry.proxyAddresses,
     depositManagerProxy: proxiedDepositManager.proxyAddresses,
     tellerProxy: proxiedTeller.proxyAddresses,
@@ -241,15 +260,30 @@ export async function deployNocturneCoreContracts(
   };
 }
 
+async function deployEthTransferAdapter(
+  connectedSigner: ethers.Wallet,
+  wethAddress: Address,
+  opts?: NocturneDeployOpts
+): Promise<EthTransferAdapter> {
+  console.log("\ndeploying EthTransferAdapter...");
+  const ethTransferAdapter = await new EthTransferAdapter__factory(
+    connectedSigner
+  ).deploy(wethAddress);
+  await ethTransferAdapter.deployTransaction.wait(opts?.confirmations);
+
+  return ethTransferAdapter;
+}
+
 async function maybeDeployWstethAdapter(
   connectedSigner: ethers.Wallet,
+  wethAddress: Address,
   opts?: NocturneDeployOpts
 ): Promise<WstethAdapter | undefined> {
   if (!opts?.wstethAdapterDeployConfig) {
     return undefined;
   }
 
-  const { wethAddress, wstethAddress } = opts.wstethAdapterDeployConfig;
+  const { wstethAddress } = opts.wstethAdapterDeployConfig;
 
   console.log("\ndeploying WstethAdapter...");
   const wstethAdapter = await new WstethAdapter__factory(
@@ -408,6 +442,7 @@ async function deployProxiedContract<
   opts?: NocturneDeployOpts
 ): Promise<ProxiedContract<C, TransparentProxyAddresses>> {
   const implementation = await implementationFactory.deploy();
+  await implementation.deployTransaction.wait(opts?.confirmations);
 
   // If no init args provided, then set init data to empty
   let initData = "0x";

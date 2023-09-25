@@ -1,5 +1,83 @@
 # Changelog
 
+## 2.0.2
+
+### Patch Changes
+
+- 16dfb275: Op request gas estimation existing joinsplit case uses the entries in gasAsset estimation mapping NOT the whole map (bug led to underestimation)
+- dcea2acb: Fix op request gas edge case where odd number of notes from existing joinsplits would not be accounted for in reducing num extra joinsplits by 1 (matching odd existing note with 1 new note does not increase num JSs)
+
+## 2.0.1
+
+### Patch Changes
+
+- 0ed9f872: add instrumentation to give high level breakdowns on where sync overhead is
+- 4d7147b6: Op request gas prep checks how many joinsplits will be added for gas compensation and updates joinsplit requests accounting for new joinsplits
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [46e47762]
+- Updated dependencies [7d151856]
+- Updated dependencies [7d151856]
+- Updated dependencies [46e47762]
+  - @nocturne-xyz/config@1.0.0
+  - @nocturne-xyz/contracts@0.5.0
+
+## 2.0.0
+
+### Major Changes
+
+- 543af0b0: Replace sepolia with goerli everywhere now that we're migrating testnets
+
+### Patch Changes
+
+- 9fccc32f: Update joinsplit verify base amount to 300k since we added joinsplit info PI
+- 543af0b0: Update try update JS requests to assume even same gas asset additions incur extra joinsplit (temp workaround)
+
+## 1.0.0
+
+### Major Changes
+
+- 6abd69b9: Split out builder plugins from core, make op request builder build() async, collect array of plugin promises that resolve to unwraps, actions, refunds, and metadata
+- 0cb20e3d: Op request builder takes optional nocturne config instead of teller address
+- 9098e2c8: Op request builder takes provider, chainid, and optional teller address instead of chainid and networkinfo (plugins will need provider attached)
+- 003e7082: double underscore unwrap, refund, and action so these are only exposed to plugins
+
+### Minor Changes
+
+- 81598815: - remove `signOperation` from `NocturneWalletSDK`
+  - change `NocturneWalletSDK` to hold a `NocturneViewer` instead of a `NocturneSigner`
+  - add method `clearDb`
+  - rename `NocturneWalletSDK` to `NocturneClient`
+- fc364ae8: Integrating Ruleset usage into screener server
+- 77c4063c: Add functionality to snap/fe-sdk that supports signing a canon addr registry entry and returning necessary inputs for sig check proof gen
+- 58b363a4: - add domain separators for nullifiers and new note nonces
+  - set domain separator in initial poseidon sponge state to reduce constraint count
+- 77c4063c: `CanonAddrSigCheck` circuit takes msg directly as PI instead of computing it from nonce
+- 58b363a4: add `joinSplitInfoCommitment` PI to JoinSplitCircuit
+- 589e0230: add sdk support for generating CanonAddrSigCheck proofs
+
+### Patch Changes
+
+- 003e7082: Have op request builder use minRefundValues and simplify build() logic to unwrap as few assets as possible needed for calls, additionally fix all times in core that map uses object keys by adding designated obj key map and set impls
+- 1ffcf31f: update contract and sdk bundler gas comp estimate numbers
+- 86d484ad: - implement plugin system for `OperationRequestBuilder` and update APIs accordingly
+- 1ffcf31f: update gas calculation math in Types.sol and core op request gas to come within ~50k of actual gas spent by bundler
+- 35b0f76f: change deposit request hash calculation to use ethers builtins for eip712
+- 3be7d366: Strongly typed both sides of the JSON RPC boundary, between fe-sdk & snap. Shared in core
+- f8046431: - fix sync issue where subtree commits weren't being detected when there are no new notes or insertions
+- Updated dependencies [1ffcf31f]
+- Updated dependencies [589e0230]
+- Updated dependencies [6998bb7c]
+- Updated dependencies [1ffcf31f]
+- Updated dependencies [6998bb7c]
+- Updated dependencies [77c4063c]
+- Updated dependencies [58b363a4]
+- Updated dependencies [77c4063c]
+- Updated dependencies [de88d6f0]
+- Updated dependencies [58b363a4]
+  - @nocturne-xyz/contracts@0.4.0
+  - @nocturne-xyz/config@0.4.0
+  - @nocturne-xyz/crypto-utils@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes

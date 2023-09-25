@@ -43,7 +43,7 @@ dotenv.config();
 
   console.log("upgrading deposit manager");
   const depositManagerUpgradeTx = await proxyAdmin.upgrade(
-    config.depositManagerAddress(),
+    config.depositManagerAddress,
     newDepositManagerImpl.address
   );
   const depositManagerReceipt = await depositManagerUpgradeTx.wait();
@@ -51,7 +51,7 @@ dotenv.config();
 
   console.log("upgrading teller");
   const tellerUpgradeTx = await proxyAdmin.upgrade(
-    config.tellerAddress(),
+    config.tellerAddress,
     newTellerImpl.address
   );
   const tellerReceipt = await tellerUpgradeTx.wait();
@@ -59,7 +59,7 @@ dotenv.config();
 
   console.log("upgrading handler");
   const handlerUpgradeTx = await proxyAdmin.upgrade(
-    config.handlerAddress(),
+    config.handlerAddress,
     newHandlerImpl.address
   );
   const handlerReceipt = await handlerUpgradeTx.wait();

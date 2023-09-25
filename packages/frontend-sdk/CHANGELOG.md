@@ -1,5 +1,110 @@
 # Changelog
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [16dfb275]
+- Updated dependencies [dcea2acb]
+  - @nocturne-xyz/core@2.0.2
+  - @nocturne-xyz/idb-kv-store@0.4.3
+  - @nocturne-xyz/local-prover@0.4.3
+  - @nocturne-xyz/op-request-plugins@0.3.1
+
+## 1.1.0
+
+### Minor Changes
+
+- 47a5f1e5: Add initiateAnonEthTransfer method that uses EthTransferAdapterPlugin
+- 47a5f1e5: Add getter for getting op request builder from fe sdk + expose performOperation function that prepares/submits op
+
+### Patch Changes
+
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [47a5f1e5]
+- Updated dependencies [0ed9f872]
+- Updated dependencies [46e47762]
+- Updated dependencies [4d7147b6]
+- Updated dependencies [7d151856]
+- Updated dependencies [7d151856]
+- Updated dependencies [46e47762]
+  - @nocturne-xyz/op-request-plugins@0.3.0
+  - @nocturne-xyz/config@1.0.0
+  - @nocturne-xyz/core@2.0.1
+  - @nocturne-xyz/contracts@0.5.0
+  - @nocturne-xyz/idb-kv-store@0.4.2
+  - @nocturne-xyz/local-prover@0.4.2
+
+## 1.0.0
+
+### Major Changes
+
+- 543af0b0: Replace sepolia with goerli everywhere now that we're migrating testnets
+
+### Patch Changes
+
+- Updated dependencies [9fccc32f]
+- Updated dependencies [543af0b0]
+- Updated dependencies [543af0b0]
+  - @nocturne-xyz/core@2.0.0
+  - @nocturne-xyz/idb-kv-store@0.4.1
+  - @nocturne-xyz/local-prover@0.4.1
+  - @nocturne-xyz/op-request-plugins@0.2.1
+
+## 0.4.0
+
+### Minor Changes
+
+- ff4fc598: switch on network name to figure out which S3 bucket to pull circuit artifacts from
+- 9b1fd626: - use `IdbKvStore` for persistent sync state
+- 77c4063c: Add functionality to snap/fe-sdk that supports signing a canon addr registry entry and returning necessary inputs for sig check proof gen
+- 15dbe9d0: Add adapter types for deposits at the frontend-sdk layer
+- 9098e2c8: Update op request builder instantiation to take provider, chainid, and optional teller contract after adding provider support to builder
+- 3be7d366: Strongly typed both sides of the JSON RPC boundary, between fe-sdk & snap. Shared in core
+- 589e0230: add sdk support for generating CanonAddrSigCheck proofs
+
+### Patch Changes
+
+- 86d484ad: - implement plugin system for `OperationRequestBuilder` and update APIs accordingly
+- 04f74995: Add param to retrievePendingDeposit to choose between WETH or ETH
+- 6abd69b9: Update op request builder build() calls to be awaited
+- Updated dependencies [6abd69b9]
+- Updated dependencies [81598815]
+- Updated dependencies [003e7082]
+- Updated dependencies [1ffcf31f]
+- Updated dependencies [fc364ae8]
+- Updated dependencies [003e7082]
+- Updated dependencies [0cb20e3d]
+- Updated dependencies [6abd69b9]
+- Updated dependencies [86d484ad]
+- Updated dependencies [589e0230]
+- Updated dependencies [6998bb7c]
+- Updated dependencies [1ffcf31f]
+- Updated dependencies [77c4063c]
+- Updated dependencies [6998bb7c]
+- Updated dependencies [77c4063c]
+- Updated dependencies [0cb20e3d]
+- Updated dependencies [35b0f76f]
+- Updated dependencies [77c4063c]
+- Updated dependencies [589e0230]
+- Updated dependencies [9098e2c8]
+- Updated dependencies [3be7d366]
+- Updated dependencies [9098e2c8]
+- Updated dependencies [de88d6f0]
+- Updated dependencies [58b363a4]
+- Updated dependencies [003e7082]
+- Updated dependencies [77c4063c]
+- Updated dependencies [58b363a4]
+- Updated dependencies [f8046431]
+- Updated dependencies [9b1fd626]
+  - @nocturne-xyz/core@1.0.0
+  - @nocturne-xyz/contracts@0.4.0
+  - @nocturne-xyz/op-request-plugins@0.2.0
+  - @nocturne-xyz/config@0.4.0
+  - @nocturne-xyz/local-prover@0.4.0
+  - @nocturne-xyz/idb-kv-store@0.4.0
+
 ## 0.3.2
 
 ### Patch Changes

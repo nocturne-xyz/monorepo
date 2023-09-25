@@ -5,10 +5,12 @@ import {
   JoinSplitInputs,
   JoinSplitProofWithPublicSignals,
   JoinSplitProver,
-  StealthAddressTrait,
   VerifyingKey,
-  decomposeCompressedPoint,
 } from "@nocturne-xyz/core";
+import {
+  StealthAddressTrait,
+  decomposeCompressedPoint,
+} from "@nocturne-xyz/crypto";
 
 export class WasmJoinSplitProver implements JoinSplitProver {
   wasmPath: string;

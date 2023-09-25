@@ -12,7 +12,7 @@ import {
 } from "@nocturne-xyz/contracts/dist/src/Handler";
 import { Handler } from "@nocturne-xyz/contracts";
 import { maxArray, queryEvents } from "../../utils";
-import { StealthAddressTrait } from "../../crypto";
+import { StealthAddressTrait } from "@nocturne-xyz/crypto";
 import {
   TotalEntityIndexTrait,
   WithTotalEntityIndex,

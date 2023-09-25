@@ -1,5 +1,5 @@
 import { DepositRequest, EncodedAsset } from "../../../primitives";
-import { CompressedStealthAddress } from "../../../crypto";
+import { CompressedStealthAddress } from "@nocturne-xyz/crypto";
 import { SubgraphUtils } from "..";
 import {
   TotalEntityIndex,
@@ -36,6 +36,7 @@ interface FetchDepositEventsVars {
   fromIdx?: string;
   type?: DepositEventType;
   spender?: string;
+  toIdx?: string;
 }
 
 interface FetchDepositEventsResponse {
@@ -47,7 +48,8 @@ interface FetchDepositEventsResponse {
 function formDepositEventsRawQuery(
   type?: string,
   fromTotalEntityIndex?: TotalEntityIndex,
-  spender?: string
+  spender?: string,
+  toTotalEntityIndex?: TotalEntityIndex
 ) {
   const params = [];
   const conditions = [];
@@ -63,6 +65,10 @@ function formDepositEventsRawQuery(
   if (spender) {
     params.push(`$spender: Bytes!`);
     conditions.push(`spender: $spender`);
+  }
+  if (toTotalEntityIndex) {
+    params.push(`$toIdx: String!`);
+    conditions.push(`id_lt: $toIdx`);
   }
 
   const exists = [type, fromTotalEntityIndex, spender].some((x) => x);
@@ -90,23 +96,33 @@ export async function fetchDepositEvents(
   filter: {
     type?: DepositEventType;
     fromTotalEntityIndex?: TotalEntityIndex;
+    toTotalEntityIndex?: TotalEntityIndex;
     spender?: string;
   } = {}
 ): Promise<WithTotalEntityIndex<DepositEvent>[]> {
-  const { type, fromTotalEntityIndex, spender } = filter;
+  const { type, fromTotalEntityIndex, toTotalEntityIndex, spender } = filter;
   const query = makeSubgraphQuery<
     FetchDepositEventsVars,
     FetchDepositEventsResponse
   >(
     endpoint,
-    formDepositEventsRawQuery(type, fromTotalEntityIndex, spender),
+    formDepositEventsRawQuery(
+      type,
+      fromTotalEntityIndex,
+      spender,
+      toTotalEntityIndex
+    ),
     "depositEvents"
   );
   const fromIdx = fromTotalEntityIndex
     ? TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex)
     : undefined;
 
-  const res = await query({ fromIdx, type, spender });
+  const toIdx = toTotalEntityIndex
+    ? TotalEntityIndexTrait.toStringPadded(toTotalEntityIndex)
+    : undefined;
+
+  const res = await query({ fromIdx, type, spender, toIdx });
 
   if (!res.data || res.data.depositEvents.length === 0) {
     return [];

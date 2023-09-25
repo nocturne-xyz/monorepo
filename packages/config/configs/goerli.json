@@ -1,0 +1,153 @@
+{
+  "contracts": {
+    "network": {
+      "name": "goerli",
+      "chainId": 5, 
+      "finalityBlocks": 4
+    },
+    "startBlock": 9694596,
+    "owners": {
+      "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "tellerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "handlerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "depositManagerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4"
+    },
+    "proxyAdmin": "0x1e78B266C888530Ca42982d0FbF5B769d126df56",
+    "canonicalAddressRegistryProxy": {
+      "kind": "Transparent",
+      "proxy": "0x831513E17bF9604491675b5a4920E1Fb091355bB",
+      "implementation": "0xb65C7aBf37127C8A7127921f7dE01f9FB708Ee1B"
+    },
+    "depositManagerProxy": {
+      "kind": "Transparent",
+      "proxy": "0xF136D2Ce4013e3068881A1F218f718fE7487fC17",
+      "implementation": "0xDAeA3ffB8E84872564E0c7e4b235b8FC58a8541b"
+    },
+    "tellerProxy": {
+      "kind": "Transparent",
+      "proxy": "0x4c76FAB0f74B1923cD2D5299D3C5163daE8B0143",
+      "implementation": "0x1126e25AdD0C14131C1efa69913f3c2A1d702C0e"
+    },
+    "handlerProxy": {
+      "kind": "Transparent",
+      "proxy": "0x9e76C19c591446d01d868dB464948F785408c1f4",
+      "implementation": "0x9FaF95273EAC568c02EbfC4D4726C4E7B62f7D7E"
+    },
+    "joinSplitVerifierAddress": "0xD6EB5C12649607EA71A1190025297959cf75c908",
+    "subtreeUpdateVerifierAddress": "0x5FA70ca6610eEa833AFBCF1499D999FA79E9D019",
+    "canonAddrSigCheckVerifierAddress": "0x67D25192423eb67f3B446660c66388FF72440B3E",
+    "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
+    "depositSources": ["0xF136D2Ce4013e3068881A1F218f718fE7487fC17"]
+  },
+  "erc20s": [
+    [
+      "TEST-TOKEN",
+      {
+        "address": "0x1E839A879472e80C55a25181585BfD4937A4c89b",
+        "globalCapWholeTokens": "1000000n",
+        "maxDepositSizeWholeTokens": "1000n",
+        "resetWindowHours": "4n",
+        "precision": "18n",
+        "isGasAsset": true
+      }
+    ],
+    [
+      "weth",
+      {
+        "address": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+        "globalCapWholeTokens": "1000n",
+        "maxDepositSizeWholeTokens": "100n",
+        "resetWindowHours": "4n",
+        "precision": "18n",
+        "isGasAsset": true
+      }
+    ],
+    [
+      "wsteth",
+      {
+        "address": "0x6320cD32aA674d2898A68ec82e869385Fc5f7E2f",
+        "globalCapWholeTokens": "1000n",
+        "maxDepositSizeWholeTokens": "100n",
+        "resetWindowHours": "4n",
+        "precision": "18n",
+        "isGasAsset": true
+      }
+    ],
+    [
+      "dai",
+      {
+        "address": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844",
+        "globalCapWholeTokens": "1000000n",
+        "maxDepositSizeWholeTokens": "100000n",
+        "resetWindowHours": "4n",
+        "precision": "18n"
+      }
+    ]
+  ],
+  "protocolAllowlist": [
+    [
+      "uniswapV3",
+      {
+        "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        "functionSignatures": [
+          "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))",
+          "exactInput((bytes,address,uint256,uint256,uint256))"
+        ]
+      }
+    ],
+    [
+      "TEST-TOKEN",
+      {
+        "address": "0x1E839A879472e80C55a25181585BfD4937A4c89b",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "weth",
+      {
+        "address": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "wsteth",
+      {
+        "address": "0x6320cD32aA674d2898A68ec82e869385Fc5f7E2f",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "dai",
+      {
+        "address": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "wstethAdapter",
+      {
+        "address": "0x779CFf9F408baD3Cb37AC0e4c66df33471f5F2FB",
+        "functionSignatures": ["convert(uint256)"]
+      }
+    ],
+    [
+      "ethTransferAdapter",
+      {
+        "address": "0xd5376FBB9a5fe1F541e48D11d00abf7cc7D619D7",
+        "functionSignatures": ["transfer(address,uint256)"]
+      }
+    ]
+  ]
+}

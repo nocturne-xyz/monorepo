@@ -1,5 +1,8 @@
-import { DepositManager } from "@nocturne-xyz/contracts";
-import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
+import {
+  DepositManager,
+  SimpleERC20Token,
+  WETH9,
+} from "@nocturne-xyz/contracts";
 import {
   AssetTrait,
   AssetType,
@@ -12,10 +15,11 @@ import {
 } from "@nocturne-xyz/core";
 import { ContractTransaction, ethers } from "ethers";
 import { queryDepositStatus, sleep } from "./utils";
+import { IERC20 } from "@nocturne-xyz/contracts/dist/src/IERC20";
 
 export async function depositFundsMultiToken(
   depositManager: DepositManager,
-  tokensWithAmounts: [SimpleERC20Token, bigint[]][],
+  tokensWithAmounts: [SimpleERC20Token | WETH9, bigint[]][],
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress,
   shouldQueryDepositStatus = true
@@ -26,7 +30,11 @@ export async function depositFundsMultiToken(
   for (const [token, amounts] of tokensWithAmounts) {
     const total = amounts.reduce((sum, a) => sum + a);
 
-    txs.push(await token.reserveTokens(eoa.address, total));
+    const reserveTx =
+      "reserveTokens" in token
+        ? await token.reserveTokens(eoa.address, total)
+        : await token.connect(eoa).deposit({ value: total });
+    txs.push(reserveTx);
 
     txs.push(await token.connect(eoa).approve(depositManager.address, total));
 
@@ -69,7 +77,7 @@ export async function depositFundsMultiToken(
 
 export async function depositFundsSingleToken(
   depositManager: DepositManager,
-  token: SimpleERC20Token,
+  token: SimpleERC20Token | WETH9,
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress,
   amounts: bigint[],
@@ -77,8 +85,13 @@ export async function depositFundsSingleToken(
 ): Promise<[DepositRequest, Note][]> {
   const total = amounts.reduce((sum, a) => sum + a);
 
+  const reserveTx =
+    "reserveTokens" in token
+      ? await token.reserveTokens(eoa.address, total)
+      : await token.connect(eoa).deposit({ value: total });
+
   const txs = [
-    await token.reserveTokens(eoa.address, total),
+    reserveTx,
     await token.connect(eoa).approve(depositManager.address, total),
   ];
   const depositRequests: DepositRequest[] = [];
@@ -126,7 +139,7 @@ interface MakeDepositDeps {
 async function makeDeposit(
   { depositManager, eoa }: MakeDepositDeps,
   stealthAddress: StealthAddress,
-  token: SimpleERC20Token,
+  token: IERC20,
   value: bigint,
   noteNonce: number
 ): Promise<[ContractTransaction, DepositRequest, Note]> {
@@ -141,6 +154,8 @@ async function makeDeposit(
   const depositAddr = StealthAddressTrait.compress(stealthAddress);
 
   const nonce = await depositManager._nonce();
+
+  console.log("instantiating deposit...");
   const instantiateDepositTx = await depositManager
     .connect(eoa)
     .instantiateErc20MultiDeposit(token.address, [value], depositAddr);

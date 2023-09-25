@@ -147,7 +147,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       console.log("applying subtree update...");
       await fillSubtreeBatch();
 
-      await sleep(2000);
+      await sleep(5_000);
 
       console.log("syncing SDK...");
       await nocturneClientAlice.sync();
@@ -191,7 +191,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       console.log("apply subtree update post-operation...");
       await fillSubtreeBatch();
 
-      await sleep(5000);
+      await sleep(5_000);
 
       // sync SDK again...
       console.log("syncing SDK again...");

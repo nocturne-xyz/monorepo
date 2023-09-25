@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.5.1
+
+### Patch Changes
+
+- @nocturne-xyz/offchain-utils@0.1.14
+
+## 0.5.0
+
+### Minor Changes
+
+- 47a5f1e5: Have e2e test deployment include weth, add eth transfer adapter test case in EndToEnd.ts
+
+### Patch Changes
+
+- @nocturne-xyz/offchain-utils@0.1.13
+
+## 0.4.1
+
+### Patch Changes
+
+- @nocturne-xyz/offchain-utils@0.1.12
+
+## 0.4.0
+
+### Minor Changes
+
+- fc364ae8: Integrating Ruleset usage into screener server
+- 77c4063c: Add e2e tests for canon addr registry
+
+### Patch Changes
+
+- 1ffcf31f: update contract and sdk bundler gas comp estimate numbers
+- 86d484ad: - implement plugin system for `OperationRequestBuilder` and update APIs accordingly
+- 6998bb7c: add resetWindowHours to deploy config in config package and deploy package
+- 6abd69b9: Update op request builder build() calls to be awaited
+  - @nocturne-xyz/offchain-utils@0.1.11
+
 ## 0.3.0
 
 ### Minor Changes

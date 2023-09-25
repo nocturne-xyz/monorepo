@@ -1,5 +1,5 @@
 import { Address, NocturneContractDeployment } from "./deployment";
-import * as sepolia from "../configs/sepolia.json";
+import * as goerli from "../configs/goerli.json";
 import * as localhost from "../configs/localhost.json";
 import * as exampleNetwork from "../configs/example-network.json";
 import * as fs from "fs";
@@ -67,28 +67,40 @@ export class NocturneConfig {
     });
   }
 
-  canonicalAddressRegistryAddress(): Address {
+  get networkName(): string {
+    return this.contracts.network.name;
+  }
+
+  get chainId(): bigint {
+    return BigInt(this.contracts.network.chainId);
+  }
+
+  get finalityBlocks(): number | undefined {
+    return this.contracts.finalityBlocks;
+  }
+
+  get startBlock(): number {
+    return this.contracts.startBlock;
+  }
+
+  get canonicalAddressRegistryAddress(): Address {
     return this.contracts.canonicalAddressRegistryProxy.proxy;
   }
 
-  tellerAddress(): Address {
+  get tellerAddress(): Address {
     return this.contracts.tellerProxy.proxy;
   }
 
-  handlerAddress(): Address {
+  get handlerAddress(): Address {
     return this.contracts.handlerProxy.proxy;
   }
 
-  depositManagerAddress(): Address {
+  get depositManagerAddress(): Address {
     return this.contracts.depositManagerProxy.proxy;
   }
 
   erc20(ticker: string): Erc20Config | undefined {
     return this.erc20s.get(ticker);
-  }
-
-  startBlock(): number {
-    return this.contracts.startBlock;
   }
 }
 
@@ -107,8 +119,8 @@ export function loadNocturneConfig(
 
 export function loadNocturneConfigBuiltin(name: string): NocturneConfig {
   switch (name) {
-    case "sepolia":
-      return NocturneConfig.fromObject(sepolia as any);
+    case "goerli":
+      return NocturneConfig.fromObject(goerli as any);
     case "localhost":
       return NocturneConfig.fromObject(localhost as any);
     case "example-network":

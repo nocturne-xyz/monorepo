@@ -19,10 +19,10 @@ import {
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 
 // To build locally, invoke `yarn build:local` from snap directory
-// Sepolia
+// Goerli
 
 const NOCTURNE_BIP44_COINTYPE = 6789;
-const config = loadNocturneConfigBuiltin("sepolia");
+const config = loadNocturneConfigBuiltin("goerli");
 
 async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
   const nocturneNode = await snap.request({

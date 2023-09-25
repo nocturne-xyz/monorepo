@@ -6,7 +6,6 @@ import * as fs from "fs";
 import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 import {
   AssetType,
-  NocturneSigner,
   Note,
   NoteTrait,
   range,
@@ -14,7 +13,8 @@ import {
   TreeConstants,
 } from "@nocturne-xyz/core";
 import { WasmSubtreeUpdateProver } from "../src/subtreeUpdate";
-import { poseidonBN } from "@nocturne-xyz/crypto-utils";
+import { poseidonBN } from "@nocturne-xyz/crypto";
+import { NocturneSigner } from "@nocturne-xyz/crypto";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/subtreeupdateProof.json");

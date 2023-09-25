@@ -39,7 +39,7 @@ describe("OpRequestBuilder", () => {
         },
       ],
       chainId: 1n,
-      tellerContract: DUMMY_CONFIG.tellerAddress(),
+      tellerContract: DUMMY_CONFIG.tellerAddress,
       deadline: 2n,
     };
 
@@ -81,7 +81,7 @@ describe("OpRequestBuilder", () => {
         },
       ],
       chainId: 1n,
-      tellerContract: DUMMY_CONFIG.tellerAddress(),
+      tellerContract: DUMMY_CONFIG.tellerAddress,
       deadline: 2n,
     };
 
@@ -123,7 +123,7 @@ describe("OpRequestBuilder", () => {
       executionGasLimit: 20n,
       gasPrice: 30n,
       chainId: 1n,
-      tellerContract: DUMMY_CONFIG.tellerAddress(),
+      tellerContract: DUMMY_CONFIG.tellerAddress,
       deadline: 2n,
     };
 
@@ -172,7 +172,7 @@ describe("OpRequestBuilder", () => {
       refunds: [],
       actions: [],
       chainId: 1n,
-      tellerContract: DUMMY_CONFIG.tellerAddress(),
+      tellerContract: DUMMY_CONFIG.tellerAddress,
       deadline: 2n,
     };
 
@@ -253,7 +253,7 @@ describe("OpRequestBuilder", () => {
       refundAddr: refundAddr,
       actions,
       chainId: 1n,
-      tellerContract: DUMMY_CONFIG.tellerAddress(),
+      tellerContract: DUMMY_CONFIG.tellerAddress,
       deadline: 2n,
     };
 
@@ -313,7 +313,7 @@ describe("OpRequestBuilder", () => {
       refundAddr: refundAddr,
       actions,
       chainId: 1n,
-      tellerContract: DUMMY_CONFIG.tellerAddress(),
+      tellerContract: DUMMY_CONFIG.tellerAddress,
       deadline: 2n,
     };
 
@@ -358,7 +358,7 @@ describe("OpRequestBuilder", () => {
       refundAddr: refundAddr,
       actions,
       chainId: 1n,
-      tellerContract: DUMMY_CONFIG.tellerAddress(),
+      tellerContract: DUMMY_CONFIG.tellerAddress,
       deadline: 2n,
     };
 
@@ -405,7 +405,7 @@ describe("OpRequestBuilder", () => {
       actions: [],
       refundAddr: refundAddr,
       chainId: 1n,
-      tellerContract: DUMMY_CONFIG.tellerAddress(),
+      tellerContract: DUMMY_CONFIG.tellerAddress,
       deadline: 2n,
     };
 

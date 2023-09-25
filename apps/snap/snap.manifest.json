@@ -1,9 +1,9 @@
 {
-  "version": "0.3.2",
+  "version": "0.4.3",
   "description": "Nocturne Snap",
   "proposedName": "Nocturne Snap",
   "source": {
-    "shasum": "k4hEPb/5H0bdUIvx8d0pgcp92ivZ3PtdrOxf6uAsnRo=",
+    "shasum": "QNiJky2JcE+a5DLWbP/f5mNucB3ivZNcK74Pq7xGVVk=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",

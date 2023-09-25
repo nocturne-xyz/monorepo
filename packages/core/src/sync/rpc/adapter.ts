@@ -7,7 +7,7 @@ import {
 import { min, max } from "../../utils";
 import {
   EncryptedStateDiff,
-  IterSyncOpts,
+  SDKIterSyncOpts,
   SDKSyncAdapter,
 } from "../syncAdapter";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
@@ -49,7 +49,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
   iterStateDiffs(
     startTotalEntityIndex: TotalEntityIndex,
-    opts?: IterSyncOpts
+    opts?: SDKIterSyncOpts
   ): ClosableAsyncIterator<EncryptedStateDiff> {
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
     const handlerContract = this.handlerContract;
@@ -83,8 +83,16 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
           !currTotalEntityIndex ||
           currTotalEntityIndex < endTotalEntityIndex)
       ) {
-        // set `to` to be the min of `from` + `chunkSize` and the current block number
-        const currentBlock = await handlerContract.provider.getBlockNumber();
+        // set `to` to be the min of `from` + `chunkSize` and the current block number minus `finalityBlocks`
+        // if `currentBlock < 0`, then we simply wait and try again - this can occurr if the chain is brand new (e.g. in tests)
+        const currentBlock =
+          (await handlerContract.provider.getBlockNumber()) -
+          (opts?.finalityBlocks ?? 0);
+        if (currentBlock < 0) {
+          await sleep(5000);
+          continue;
+        }
+
         const to = min(from + RPC_MAX_CHUNK_SIZE, currentBlock);
         await maybeApplyThrottle(to);
 

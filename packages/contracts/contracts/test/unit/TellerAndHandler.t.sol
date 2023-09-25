@@ -23,6 +23,10 @@ import {Teller} from "../../Teller.sol";
 import {Handler} from "../../Handler.sol";
 import {CommitmentTreeManager} from "../../CommitmentTreeManager.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
+import {EthTransferAdapter} from "../../adapters/EthTransferAdapter.sol";
+import {IWeth} from "../../interfaces/IWeth.sol";
+import {WETH9} from "../tokens/WETH9.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
@@ -55,6 +59,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     Teller teller;
     Handler handler;
     TreeTest treeTest;
+    EthTransferAdapter ethTransferAdapter;
+    IWeth weth;
     SimpleERC20Token[3] ERC20s;
     IHasherT5 hasherT5;
     IHasherT6 hasherT6;
@@ -112,7 +118,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             ERC20s[i] = new SimpleERC20Token();
 
             // Prefill the handler with 1 token
-            ERC20s[i].reserveTokens(address(handler), 1);
+            deal(address(ERC20s[i]), address(handler), 1);
 
             handler.setContractPermission(address(ERC20s[i]), true);
             handler.setContractMethodPermission(
@@ -126,11 +132,39 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
                 true
             );
         }
+
+        // add weth contract
+        weth = IWeth(address(new WETH9()));
+        handler.setContractPermission(address(weth), true);
+        handler.setContractMethodPermission(
+            address(weth),
+            weth.approve.selector,
+            true
+        );
+        handler.setContractMethodPermission(
+            address(weth),
+            weth.transfer.selector,
+            true
+        );
+
+        // prefill with 1 weth
+        vm.deal(address(handler), 1);
+        vm.prank(address(handler));
+        weth.deposit{value: 1}();
+
+        // add eth transfer adapter
+        ethTransferAdapter = new EthTransferAdapter(address(weth));
+        handler.setContractPermission(address(ethTransferAdapter), true);
+        handler.setContractMethodPermission(
+            address(ethTransferAdapter),
+            ethTransferAdapter.transfer.selector,
+            true
+        );
     }
 
     function depositFunds(
         address spender,
-        SimpleERC20Token token,
+        IERC20 token,
         uint256 value,
         uint256 id,
         CompressedStealthAddress memory depositAddr
@@ -155,10 +189,16 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
     function reserveAndDepositFunds(
         address recipient,
-        SimpleERC20Token token,
+        IERC20 token,
         uint256 amount
     ) internal {
-        token.reserveTokens(recipient, amount);
+        if (address(token) == address(weth)) {
+            vm.deal(address(recipient), amount);
+            vm.prank(recipient);
+            weth.deposit{value: amount}();
+        } else {
+            deal(address(token), address(recipient), amount);
+        }
 
         uint256[] memory batch = new uint256[](16);
 
@@ -388,7 +428,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         // So batch is not empty
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, PER_NOTE_AMOUNT);
+        deal(address(token), address(ALICE), PER_NOTE_AMOUNT);
         depositFunds(
             ALICE,
             token,
@@ -404,7 +444,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
     function testDepositNotDepositSource() public {
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, PER_NOTE_AMOUNT);
+        deal(address(token), address(ALICE), PER_NOTE_AMOUNT);
         vm.prank(ALICE);
         token.approve(address(teller), PER_NOTE_AMOUNT);
 
@@ -432,7 +472,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         // Deploy and dep manager whitelist new token but not in handler
         SimpleERC20Token token = new SimpleERC20Token();
-        token.reserveTokens(ALICE, PER_NOTE_AMOUNT);
+        deal(address(token), address(ALICE), PER_NOTE_AMOUNT);
 
         // Approve 1 notes worth of tokens for deposit
         vm.prank(ALICE);
@@ -457,7 +497,11 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         // Deploy and dep manager whitelist new token but not in handler
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, Validation.MAX_NOTE_VALUE + PER_NOTE_AMOUNT);
+        deal(
+            address(token),
+            address(ALICE),
+            Validation.MAX_NOTE_VALUE + PER_NOTE_AMOUNT
+        );
 
         // Approve 1 notes worth of tokens for deposit
         vm.prank(ALICE);
@@ -710,6 +754,92 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(handler)), uint256(1));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(4 * PER_NOTE_AMOUNT));
+    }
+
+    function testProcessBundleEthTransfer() public {
+        // Alice starts with 1 note of weth
+        IERC20 token = IERC20(address(weth));
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
+
+        uint128 preOpMerkleCount = handler.totalCount();
+
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
+        Action[] memory actions = new Action[](2);
+        actions[0] = Action({
+            contractAddress: address(weth),
+            encodedFunction: abi.encodeWithSelector(
+                weth.approve.selector,
+                address(ethTransferAdapter),
+                PER_NOTE_AMOUNT / 2
+            )
+        });
+        actions[1] = Action({
+            contractAddress: address(ethTransferAdapter),
+            encodedFunction: abi.encodeWithSelector(
+                ethTransferAdapter.transfer.selector,
+                BOB,
+                PER_NOTE_AMOUNT / 2
+            )
+        });
+
+        // Create operation to transfer half of weth to bob as ETH
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
+                ),
+                joinSplitRefundValues: new uint256[](1),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 1,
+                actions: actions,
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        assertEq(token.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 for prefill
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertEq(BOB.balance, uint256(0));
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
+
+        // One op, processed = true, call 0 and 1 succeeded (approve and eth transfer)
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(2));
+        assertEq(opResults[0].callSuccesses[0], true);
+        assertEq(opResults[0].callSuccesses[1], true);
+        assertEq(opResults[0].callResults.length, uint256(2));
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
+
+        // Expect BOB to have the the 1/2 notes worth sent by alice in ETH
+        // Expect teller to have alice's remaining 1/2 notes worth - gasComp
+        // Expect BUNDLER to have > 0 gas tokens
+        assertLt(
+            token.balanceOf(address(teller)),
+            uint256(PER_NOTE_AMOUNT / 2)
+        );
+        assertGt(token.balanceOf(BUNDLER), 0);
+        assertEq(token.balanceOf(address(handler)), uint256(1));
+        assertEq(token.balanceOf(ALICE), uint256(0));
+        assertEq(BOB.balance, uint256(PER_NOTE_AMOUNT / 2));
     }
 
     function testProcessBundleFailureBadRoot() public {
@@ -2021,7 +2151,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         uint128 preOpMerkleCount = handler.totalCount();
 
-        erc20.reserveTokens(ALICE, PER_NOTE_AMOUNT);
+        deal(address(erc20), ALICE, PER_NOTE_AMOUNT);
         vm.prank(ALICE);
         erc20.approve(address(handler), PER_NOTE_AMOUNT);
 

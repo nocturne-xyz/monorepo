@@ -1,4 +1,4 @@
-import { decomposeCompressedPoint } from "./crypto";
+import { decomposeCompressedPoint } from "@nocturne-xyz/crypto";
 import {
   PreProofJoinSplit,
   SignedOperation,

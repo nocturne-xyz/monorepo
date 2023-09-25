@@ -73,7 +73,7 @@ contract BalanceManagerTest is Test {
             ERC20s[i] = new SimpleERC20Token();
 
             // Prefill the balance manager with 1 token
-            ERC20s[i].reserveTokens(address(balanceManager), 1);
+            deal(address(ERC20s[i]), address(balanceManager), 1);
         }
     }
 
@@ -82,7 +82,7 @@ contract BalanceManagerTest is Test {
         SimpleERC20Token token,
         uint256 amount
     ) internal {
-        token.reserveTokens(recipient, amount);
+        deal(address(token), recipient, amount);
 
         CompressedStealthAddress memory addr = NocturneUtils
             .defaultStealthAddress();
@@ -760,7 +760,7 @@ contract BalanceManagerTest is Test {
 
         // Send refund tokens to balance manager
         uint256 refundAmount = 10_000_000;
-        refundToken.reserveTokens(ALICE, refundAmount);
+        deal(address(refundToken), address(ALICE), refundAmount);
         vm.prank(ALICE);
         refundToken.transfer(address(balanceManager), refundAmount);
 

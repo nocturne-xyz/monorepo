@@ -1,11 +1,16 @@
-import { BN254ScalarField, poseidonBN } from "@nocturne-xyz/crypto-utils";
-import { compressPoint, decomposeCompressedPoint } from "../crypto";
-import { CanonAddress, CompressedStealthAddress } from "../crypto/address";
+import {
+  BN254ScalarField,
+  poseidonBN,
+  compressPoint,
+  decomposeCompressedPoint,
+  CanonAddress,
+  CompressedStealthAddress,
+} from "@nocturne-xyz/crypto";
 import { EncodedNote, SENDER_COMMITMENT_DOMAIN_SEPARATOR } from "../primitives";
 import { BaseProof, MerkleProofInput } from "./types";
 import * as ethers from "ethers";
 
-export const JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
+export const JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.create(
   BigInt(
     ethers.utils.keccak256(
       ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_COMMITMENT")
@@ -14,17 +19,17 @@ export const JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
 );
 
 export const JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
-  BN254ScalarField.reduce(
+  BN254ScalarField.create(
     BigInt(
       ethers.utils.keccak256(ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_NONCE"))
     )
   );
 
-export const NULLIFIER_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
+export const NULLIFIER_DOMAIN_SEPARATOR = BN254ScalarField.create(
   BigInt(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("NULLIFIER")))
 );
 
-export const NEW_NOTE_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
+export const NEW_NOTE_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.create(
   BigInt(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("NEW_NOTE_NONCE")))
 );
 
