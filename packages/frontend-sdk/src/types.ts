@@ -36,11 +36,6 @@ export interface NocturneSdkConfig {
 
 export type SupportedNetwork = "goerli" | "mainnet" | "localhost";
 
-export interface GetBalanceOpts {
-  includeUncommitted?: boolean;
-  ignoreOptimisticNFs?: boolean;
-}
-
 export interface DepositHandleWithReceipt {
   receipt: ContractReceipt;
   handle: DepositHandle;
@@ -130,6 +125,30 @@ export interface DisplayDepositRequestWithMetadata
   txHashRetrieved?: string;
 }
 
+// *** REQUEST TYPES *** //
+
+export interface GetBalanceOpts {
+  includeUncommitted?: boolean;
+  ignoreOptimisticNFs?: boolean;
+}
+
+export interface AnonSwapRequestParams {
+  tokenIn: string;
+  amountIn: bigint;
+  tokenOut: string;
+  protocol?: "UNISWAP_V3";
+  maxSlippageBps?: number;
+}
+
+export type UniswapV3SwapOpRequestParams = Omit<
+  AnonSwapRequestParams,
+  "protocol"
+> & {
+  type: "UNISWAP_V3_SWAP";
+};
+
+export type SwapTypes = UniswapV3SwapOpRequestParams["type"];
+
 export interface AnonTransferOpRequestParams {
   type: "ANON_TRANSFER";
   erc20Address: string;
@@ -151,4 +170,5 @@ export interface WstethToWethOpRequestParams {
 export type OpRequestParams =
   | AnonTransferOpRequestParams
   | WethToWstethOpRequestParams
-  | WstethToWethOpRequestParams;
+  | WstethToWethOpRequestParams
+  | UniswapV3SwapOpRequestParams;

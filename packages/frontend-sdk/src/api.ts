@@ -13,6 +13,7 @@ import {
 import { ContractTransaction } from "ethers";
 import { GetSnapsResponse, Snap } from "./metamask/types";
 import {
+  AnonSwapRequestParams,
   DepositHandle,
   DepositHandleWithReceipt,
   DisplayDepositRequest,
@@ -87,6 +88,10 @@ export interface NocturneSdkApi {
   initiateWstethToWeth(
     wstethAmount: bigint,
     maxSlippageBps?: number
+  ): Promise<OperationHandle>;
+
+  initiateAnonErc20Swap(
+    params: AnonSwapRequestParams
   ): Promise<OperationHandle>;
 
   submitOperation(

@@ -87,6 +87,7 @@ import { DepositRequestsBySpenderQueryDocument } from "./gql/queries/DepositRequ
 import { SnapStateSdk } from "./metamask";
 import { GetSnapOptions } from "./metamask/types";
 import {
+  AnonSwapRequestParams,
   DepositHandle,
   DepositHandleWithReceipt,
   DepositRequestStatusWithMetadata,
@@ -99,6 +100,7 @@ import {
   OperationHandle,
   SupportedNetwork,
   SupportedProvider,
+  SwapTypes,
   SyncWithProgressOutput,
 } from "./types";
 import {
@@ -453,6 +455,26 @@ export class NocturneSdk implements NocturneSdkApi {
     };
 
     return this.performOperation(operationRequest, [actionMeta]);
+  }
+
+  async initiateAnonErc20Swap(
+    params: AnonSwapRequestParams
+  ): Promise<OperationHandle> {
+    let type: SwapTypes;
+    switch (params.protocol) {
+      case undefined:
+        type = "UNISWAP_V3_SWAP";
+        break;
+      case "UNISWAP_V3":
+        type = "UNISWAP_V3_SWAP";
+        break;
+      default:
+        throw new Error(`Unsupported protocol: ${params.protocol}`);
+    }
+    return this.createOpRequest({
+      type,
+      ...params,
+    });
   }
 
   /**
@@ -1039,19 +1061,23 @@ export class NocturneSdk implements NocturneSdkApi {
         };
         break;
       }
+      case "UNISWAP_V3_SWAP": {
+        const { tokenIn, amountIn, tokenOut, maxSlippageBps } = params;
+        operationRequest = await builder
+          .use(UniswapV3Plugin)
+          .swap(tokenIn, amountIn, tokenOut, maxSlippageBps)
+          .build();
+        action = {
+          type: "Action",
+          actionType: "UniswapV3 Swap",
+          tokenIn,
+          inAmount: amountIn,
+          tokenOut,
+        };
+        break;
+      }
     }
-    const meta = {
-      items: [action],
-    };
-    const submittableOperation = await this.signAndProveOperation({
-      ...operationRequest,
-      meta,
-    });
-    const opHandleWithoutMetadata = this.submitOperation(submittableOperation);
-    return {
-      ...opHandleWithoutMetadata,
-      meta,
-    };
+    return this.performOperation(operationRequest, [action]);
   }
 }
 
