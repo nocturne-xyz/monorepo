@@ -3,13 +3,14 @@
 
 import { sha256 } from "@noble/hashes/sha256";
 import { expand, extract } from "@noble/hashes/hkdf";
-import { AffineCurve, AffinePoint } from "../algebra";
+import { BabyJubJub, AffinePoint } from "../BabyJubJub";
 import {
   ChaCha20Poly1305,
   KEY_LENGTH,
   NONCE_LENGTH,
 } from "@stablelib/chacha20poly1305";
 import { HPKEKDF, deriveBaseNonce } from "./nonceDerivation";
+import { bytesToNumberLE } from "@noble/curves/abstract/utils";
 
 export interface HybridCiphertext {
   ciphertextBytes: Uint8Array;
@@ -45,8 +46,7 @@ export const HKDF_SHA256: HPKEKDF = {
     expand(sha256, prk, info, outputLen),
 };
 
-export class HybridCipher {
-  protected curve: AffineCurve<bigint>;
+export class BabyJubJubHybridCipher {
   protected ephemeralSecretEntropyNumBytes: number;
 
   // curve is the elliptic curve to use for encryption
@@ -54,11 +54,7 @@ export class HybridCipher {
   // The ephemeral secret is derived by interpreting this array as a little-endian number and reducing it modulo the scalar field order,
   // so the `ephemeralSecretEntropyNumBytes` should be set to a significantly larger value than the scalar field order's byte length
   // to ensure that the resulting secret key has a close to uniform distribution.
-  constructor(
-    curve: AffineCurve<bigint>,
-    ephemeralSecretEntropyNumBytes: number
-  ) {
-    this.curve = curve;
+  constructor(ephemeralSecretEntropyNumBytes: number) {
     this.ephemeralSecretEntropyNumBytes = ephemeralSecretEntropyNumBytes;
   }
 
@@ -70,6 +66,7 @@ export class HybridCipher {
     __ephemeralSecretEntropy?: Uint8Array
   ): HybridCiphertext {
     // sample ephemeral secret
+    // sample ephemeral secret
     let ephemeralSecretEntropy: Uint8Array;
     if (__ephemeralSecretEntropy) {
       ephemeralSecretEntropy = __ephemeralSecretEntropy;
@@ -78,29 +75,30 @@ export class HybridCipher {
         new Uint8Array(this.ephemeralSecretEntropyNumBytes)
       );
     }
-    const ephemeralSecret = this.curve.ScalarField.fromEntropy(
-      ephemeralSecretEntropy
+    const ephemeralSecret = BabyJubJub.ScalarField.create(
+      bytesToNumberLE(ephemeralSecretEntropy)
     );
 
     // construct plaintext: ephemeralSecret || msg
     const ephemeralSecretBytes =
-      this.curve.ScalarField.toBytes(ephemeralSecret);
+      BabyJubJub.ScalarField.toBytes(ephemeralSecret);
     const plaintext = new Uint8Array(ephemeralSecretBytes.length + msg.length);
     plaintext.set(ephemeralSecretBytes);
     plaintext.set(msg, ephemeralSecretBytes.length);
 
     // encapsulate ephemeral secret
-    const encapsulatedSecret = this.curve.scalarMul(
-      this.curve.BasePoint,
-      ephemeralSecret
-    );
+    const encapsulatedSecret =
+      BabyJubJub.BasePointExtended.multiply(ephemeralSecret);
 
     // compute shared secret
-    const sharedSecret = this.curve.scalarMul(receiverPubkey, ephemeralSecret);
+    const sharedSecret =
+      BabyJubJub.ExtendedPoint.fromAffine(receiverPubkey).multiply(
+        ephemeralSecret
+      );
 
     // derive IKM from shared secret and encapsulated secret
-    const encapsulatedSecretBytes = this.curve.toBytes(encapsulatedSecret);
-    const sharedSecretBytes = this.curve.toBytes(sharedSecret);
+    const encapsulatedSecretBytes = BabyJubJub.toBytes(encapsulatedSecret);
+    const sharedSecretBytes = BabyJubJub.toBytes(sharedSecret);
     const ikm = new Uint8Array(
       encapsulatedSecretBytes.length + sharedSecretBytes.length
     );
@@ -132,19 +130,16 @@ export class HybridCipher {
     // deserialize stuff
     const { ciphertextBytes, encapsulatedSecretBytes } = ciphertext;
 
-    const encapsulatedSecret = this.curve.fromBytes(encapsulatedSecretBytes);
+    const encapsulatedSecret = BabyJubJub.fromBytes(encapsulatedSecretBytes);
     if (encapsulatedSecret === null) {
       throw decryptionError;
     }
 
     // compute shared secret
-    const sharedSecret = this.curve.scalarMul(
-      encapsulatedSecret,
-      receiverPrivateKey
-    );
+    const sharedSecret = encapsulatedSecret.multiply(receiverPrivateKey);
 
     // derive IKM from shared secret and encapsulated secret
-    const sharedSecretBytes = this.curve.toBytes(sharedSecret);
+    const sharedSecretBytes = BabyJubJub.toBytes(sharedSecret);
     const ikm = new Uint8Array(
       encapsulatedSecretBytes.length + sharedSecretBytes.length
     );
@@ -167,21 +162,19 @@ export class HybridCipher {
     // extract ephemeral secret and msg from plaintext
     const ephemeralSecretBytes = plaintext.slice(
       0,
-      this.curve.ScalarField.NumBytes
+      BabyJubJub.ScalarField.BYTES
     );
-    const msg = plaintext.slice(this.curve.ScalarField.NumBytes);
+    const msg = plaintext.slice(BabyJubJub.ScalarField.BYTES);
     const ephemeralSecret =
-      this.curve.ScalarField.fromBytes(ephemeralSecretBytes);
+      BabyJubJub.ScalarField.fromBytes(ephemeralSecretBytes);
     if (ephemeralSecret === null) {
       throw decryptionError;
     }
 
     // check ephemeralSecret against encapsulated secret
-    const encapsulatedSecretCheck = this.curve.scalarMul(
-      this.curve.BasePoint,
-      ephemeralSecret
-    );
-    if (!this.curve.eq(encapsulatedSecret, encapsulatedSecretCheck)) {
+    const encapsulatedSecretCheck =
+      BabyJubJub.BasePointExtended.multiply(ephemeralSecret);
+    if (!encapsulatedSecretCheck.equals(encapsulatedSecret)) {
       throw decryptionError;
     }
 
