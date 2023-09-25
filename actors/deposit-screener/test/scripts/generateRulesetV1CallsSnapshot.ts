@@ -30,9 +30,9 @@ async function run() {
       if (
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_OVERVIEW.name ||
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_RISK_SCORE.name
-    ) {
-        console.log("Sleeping for 5 seconds to avoid Misttrack rate limit...");
-        await sleep(5000);
+      ) {
+        console.log("Sleeping for 3 seconds to avoid Misttrack rate limit...");
+        await sleep(3000);
       }
       const addressData = snapshotData[address] as CachedAddressData;
       console.log(`Calling ${callName} for ${address}...`);

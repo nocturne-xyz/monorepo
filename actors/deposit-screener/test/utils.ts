@@ -47,14 +47,10 @@ export const APPROVE_ADDRESSES = {
   AZTEC_3: "0xa0bE23dB857262c8ff29763930fCD04Cc621FcCA",
 } as const;
 
-// TODO change
 export const TEST_ADDRESSES = {
-  VITALIK: "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+  ...REJECT_ADDRESSES,
+  ...APPROVE_ADDRESSES,
 } as const;
-// export const TEST_ADDRESSES = {
-//   ...REJECT_ADDRESSES,
-//   ...APPROVE_ADDRESSES,
-// } as const;
 
 export type ScreeningTestCaseAddresses =
   (typeof TEST_ADDRESSES)[keyof typeof TEST_ADDRESSES];
@@ -65,6 +61,7 @@ export type AddressDataSnapshot = Partial<
   Record<ScreeningTestCaseAddresses, CachedAddressData>
 >;
 
+// saves a snapshot to deposit-screener/test/snapshots/{YYYY-M|MM-D|DD}/snapshot.json
 export function saveSnapshot(data: AddressDataSnapshot) {
   const date = new Date();
   const folderPath = path.resolve(
@@ -79,6 +76,7 @@ export function saveSnapshot(data: AddressDataSnapshot) {
   fs.writeFileSync(filePath, JSON.stringify(data));
 }
 
+// returns the latest snapshot folder in deposit-screener/test/snapshots, according to dated folder name, if any exist
 export async function getLatestSnapshotFolder(
   baseFolder: string
 ): Promise<string | null> {
