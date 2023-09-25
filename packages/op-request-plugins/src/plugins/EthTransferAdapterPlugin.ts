@@ -10,7 +10,7 @@ import {
   Address,
 } from "@nocturne-xyz/core";
 import { EthTransferAdapter__factory } from "@nocturne-xyz/contracts";
-import ERC20_ABI from "./abis/ERC20.json";
+import ERC20_ABI from "../abis/ERC20.json";
 import { ethers } from "ethers";
 
 const WETH_NAME = "weth";

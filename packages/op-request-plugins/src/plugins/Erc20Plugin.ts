@@ -10,7 +10,7 @@ import {
   BuilderItemToProcess,
   UnwrapRequest,
 } from "@nocturne-xyz/core";
-import ERC20_ABI from "./abis/ERC20.json";
+import ERC20_ABI from "../abis/ERC20.json";
 
 export interface Erc20PluginMethods {
   // adds an ERC20 transfer to the operation

@@ -18,7 +18,7 @@ import {
   SwapType,
 } from "@uniswap/smart-order-router";
 import { ethers } from "ethers";
-import ERC20_ABI from "./abis/ERC20.json";
+import ERC20_ABI from "../abis/ERC20.json";
 import JSBI from "jsbi";
 
 const UniswapV3_NAME = "uniswapV3";
