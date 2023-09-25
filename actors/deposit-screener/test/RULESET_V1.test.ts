@@ -14,10 +14,10 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 describe("RULESET_V1", () => {
   let snapshotData: AddressDataSnapshot = {};
   before(async () => {
-    const folderPath = (await getLatestSnapshotFolder("./snapshots")) ?? "";
+    const maybeFolderPath = await getLatestSnapshotFolder("./snapshots");
     const filePath = path.join(
       `${findWorkspaceRoot()!}/actors/deposit-screener/test`,
-      folderPath,
+      maybeFolderPath ?? "",
       "snapshot.json"
     );
     if (fs.existsSync(filePath)) {
