@@ -47,10 +47,14 @@ export const APPROVE_ADDRESSES = {
   AZTEC_3: "0xa0bE23dB857262c8ff29763930fCD04Cc621FcCA",
 } as const;
 
+// TODO change
 export const TEST_ADDRESSES = {
-  ...REJECT_ADDRESSES,
-  ...APPROVE_ADDRESSES,
+  VITALIK: "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
 } as const;
+// export const TEST_ADDRESSES = {
+//   ...REJECT_ADDRESSES,
+//   ...APPROVE_ADDRESSES,
+// } as const;
 
 export type ScreeningTestCaseAddresses =
   (typeof TEST_ADDRESSES)[keyof typeof TEST_ADDRESSES];
@@ -65,7 +69,7 @@ export function saveSnapshot(data: AddressDataSnapshot) {
   const date = new Date();
   const folderPath = path.resolve(
     __dirname,
-    "../snapshots",
+    "./snapshots",
     `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
   );
   if (!fs.existsSync(folderPath)) {

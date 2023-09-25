@@ -30,7 +30,7 @@ async function run() {
       if (
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_OVERVIEW.name ||
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_RISK_SCORE.name
-      ) {
+    ) {
         console.log("Sleeping for 5 seconds to avoid Misttrack rate limit...");
         await sleep(5000);
       }
