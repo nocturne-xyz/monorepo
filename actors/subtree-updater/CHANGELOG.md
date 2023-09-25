@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies [444321c0]
+- Updated dependencies [444321c0]
+- Updated dependencies [7c190c2c]
+- Updated dependencies [07625550]
+- Updated dependencies [444321c0]
+- Updated dependencies [07625550]
+  - @nocturne-xyz/contracts@1.0.0
+  - @nocturne-xyz/core@2.1.0
+  - @nocturne-xyz/config@1.1.0
+  - @nocturne-xyz/persistent-log@0.1.5
+  - @nocturne-xyz/offchain-utils@0.1.15
+
 ## 0.4.3
 
 ### Patch Changes

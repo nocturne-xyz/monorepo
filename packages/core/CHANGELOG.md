@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.0
+
+### Minor Changes
+
+- 07625550: add `finalityBlocks` option to SDKSyncAdapter
+
+### Patch Changes
+
+- 7c190c2c: use `crypto` instead of `crypto-utils`
+- Updated dependencies [444321c0]
+- Updated dependencies [444321c0]
+- Updated dependencies [444321c0]
+- Updated dependencies [07625550]
+- Updated dependencies [d1c549a4]
+  - @nocturne-xyz/contracts@1.0.0
+  - @nocturne-xyz/config@1.1.0
+  - @nocturne-xyz/crypto@0.2.0
+
 ## 2.0.2
 
 ### Patch Changes

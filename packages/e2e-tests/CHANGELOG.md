@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2
+
+### Patch Changes
+
+- @nocturne-xyz/offchain-utils@0.1.15
+
 ## 0.5.1
 
 ### Patch Changes

@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.1.2
+
+### Patch Changes
+
+- 7c190c2c: force sync methods to run with timing enabled
+- Updated dependencies [444321c0]
+- Updated dependencies [444321c0]
+- Updated dependencies [7c190c2c]
+- Updated dependencies [07625550]
+- Updated dependencies [444321c0]
+- Updated dependencies [444321c0]
+- Updated dependencies [07625550]
+  - @nocturne-xyz/contracts@1.0.0
+  - @nocturne-xyz/local-prover@0.4.4
+  - @nocturne-xyz/core@2.1.0
+  - @nocturne-xyz/op-request-plugins@1.0.0
+  - @nocturne-xyz/config@1.1.0
+  - @nocturne-xyz/idb-kv-store@0.4.4
+
 ## 1.1.1
 
 ### Patch Changes
