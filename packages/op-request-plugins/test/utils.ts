@@ -55,6 +55,6 @@ config.protocolAllowlist.set("ethTransferAdapter", {
 });
 config.protocolAllowlist.set("wstethAdapter", {
   address: WSTETH_ADAPTER_ADDRESS,
-  functionSignatures: ["convert(uint256)"],
+  functionSignatures: ["deposit(uint256)"],
 });
 export const DUMMY_CONFIG: NocturneConfig = config;

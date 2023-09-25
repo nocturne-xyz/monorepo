@@ -20,7 +20,7 @@ const WSTETH_ADAPTER_NAME = "wstethAdapter";
 export interface WstethAdapterPluginMethods {
   // adds an ERC20 transfer to the operation
   // handles encoding, unwrapping, and metadata
-  convertWethToWsteth(amount: bigint): this;
+  depositWethForWsteth(amount: bigint): this;
 }
 
 export type WstethAdapterPluginExt<T extends BaseOpRequestBuilder> = T &
@@ -41,7 +41,7 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
   return {
     ...inner,
     use: use,
-    convertWethToWsteth(amount: bigint) {
+    depositWethForWsteth(amount: bigint) {
       const prom = new Promise<BuilderItemToProcess>((resolve) => {
         const wstethAdapterAddress =
           this.config.protocolAllowlist.get(WSTETH_ADAPTER_NAME)?.address;
@@ -82,11 +82,11 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           ]),
         };
 
-        const convertAction: Action = {
+        const depositAction: Action = {
           contractAddress: wstethAdapterAddress,
           encodedFunction:
             WstethAdapter__factory.createInterface().encodeFunctionData(
-              "convert",
+              "deposit",
               [amount]
             ),
         };
@@ -105,7 +105,7 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
         resolve({
           unwraps: [unwrap],
           confidentialPayments: [],
-          actions: [approveAction, convertAction],
+          actions: [approveAction, depositAction],
           refunds: [refund],
           metadatas: [metadata],
         });

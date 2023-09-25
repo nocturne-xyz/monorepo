@@ -11,7 +11,7 @@ import {IRocketDepositPool} from "../interfaces/IRocketDepositPool.sol";
 /// @author Nocturne Labs
 /// @notice Adapter contract for interacting with reth. The Handler contract does not support ETH
 ///         value transfers directly, thus we need a thin adapter for handling the weth -> eth step
-///         when converting weth to reth.
+///         when depositing weth to reth.
 contract RethAdapter {
     // Weth contract
     IWeth public _weth;
@@ -29,12 +29,12 @@ contract RethAdapter {
     receive() external payable {}
 
     /// @notice Convert weth to reth for caller by calling rocket pool deposit pool
-    /// @param amount Amount of weth to convert
-    /// @dev Transfers weth to self, unwraps to eth, converts to reth, then transfers reth back
-    ///      to caller.
+    /// @param amount Amount of weth to deposit
+    /// @dev Transfers weth to self, unwraps to eth, deposits eth and gets back reth, then 
+    ///      transfers reth back to caller.
     /// @dev We attempt to withhold tokens previously force-sent to adapter so we can avoid reth
     ///      balance from resetting to 0 (gas optimization).
-    function convert(uint256 amount) external {
+    function deposit(uint256 amount) external {
         _weth.transferFrom(msg.sender, address(this), amount);
         _weth.withdraw(amount);
 

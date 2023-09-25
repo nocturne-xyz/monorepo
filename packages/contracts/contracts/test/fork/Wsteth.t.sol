@@ -30,7 +30,7 @@ contract WstethTest is ForkBase {
         handler.setContractPermission(address(wsteth), true);
         handler.setContractPermission(address(wstethAdapter), true);
 
-        // Whitelist weth approve, wsteth approve, wsteth adapter convert
+        // Whitelist weth approve, wsteth approve, wsteth adapter deposit
         handler.setContractMethodPermission(
             address(weth),
             weth.approve.selector,
@@ -43,7 +43,7 @@ contract WstethTest is ForkBase {
         );
         handler.setContractMethodPermission(
             address(wstethAdapter),
-            wstethAdapter.convert.selector,
+            wstethAdapter.deposit.selector,
             true
         );
 
@@ -85,12 +85,12 @@ contract WstethTest is ForkBase {
         actions[1] = Action({
             contractAddress: address(wstethAdapter),
             encodedFunction: abi.encodeWithSelector(
-                wstethAdapter.convert.selector,
+                wstethAdapter.deposit.selector,
                 wethInAmount
             )
         });
 
-        // Create operation to convert weth to wsteth
+        // Create operation to deposit weth to wsteth
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -174,13 +174,13 @@ contract WstethTest is ForkBase {
             actions[i] = Action({
                 contractAddress: address(wstethAdapter),
                 encodedFunction: abi.encodeWithSelector(
-                    wstethAdapter.convert.selector,
+                    wstethAdapter.deposit.selector,
                     wethInAmount / numDeposits
                 )
             });
         }
 
-        // Create operation to convert weth to wsteth
+        // Create operation to deposit weth for wsteth
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({

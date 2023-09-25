@@ -48,7 +48,7 @@ contract RethTest is ForkBase {
         );
         handler.setContractMethodPermission(
             address(rethAdapter),
-            rethAdapter.convert.selector,
+            rethAdapter.deposit.selector,
             true
         );
 
@@ -96,12 +96,12 @@ contract RethTest is ForkBase {
         actions[1] = Action({
             contractAddress: address(rethAdapter),
             encodedFunction: abi.encodeWithSelector(
-                rethAdapter.convert.selector,
+                rethAdapter.deposit.selector,
                 wethInAmount
             )
         });
 
-        // Create operation to convert weth to reth
+        // Create operation to deposit weth and get reth
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -186,13 +186,13 @@ contract RethTest is ForkBase {
             actions[i] = Action({
                 contractAddress: address(rethAdapter),
                 encodedFunction: abi.encodeWithSelector(
-                    rethAdapter.convert.selector,
+                    rethAdapter.deposit.selector,
                     wethInAmount / numDeposits
                 )
             });
         }
 
-        // Create operation to convert weth to wsteth
+        // Create operation to deposit weth and get wsteth
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
