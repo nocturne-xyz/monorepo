@@ -10,8 +10,9 @@ import { flattenDepositRequestStatus, toDepositRequest } from "../../utils";
 import { Address, AssetTrait, DepositStatusResponse, TotalEntityIndexTrait, hashDepositRequest } from "@nocturne-xyz/core";
 import retry from "async-retry";
 import { BigNumber } from "ethers";
+import { DepositAdapter } from "../depositAdapter";
 
-export class SubgraphDepositAdapter {
+export class SubgraphDepositAdapter implements DepositAdapter {
   urqlClient: UrqlClient;
   screenerEndpoint: string;
 
