@@ -442,6 +442,7 @@ async function deployProxiedContract<
   opts?: NocturneDeployOpts
 ): Promise<ProxiedContract<C, TransparentProxyAddresses>> {
   const implementation = await implementationFactory.deploy();
+  await implementation.deployTransaction.wait(opts?.confirmations);
 
   // If no init args provided, then set init data to empty
   let initData = "0x";
