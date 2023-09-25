@@ -106,7 +106,7 @@ export interface NocturneSdkOptions {
   provider?: SupportedProvider;
 
   // version / id of the nocturne snap to use, defaults to the latest version
-  // we highly reccomend letting the SDK default to the latest version unless you have a good reason not to
+  // we highly recommend letting the SDK default to the latest version unless you have a good reason not to
   snap?: GetSnapOptions;
 }
 
