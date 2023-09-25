@@ -123,7 +123,7 @@ export async function deployNocturne(
   if (maybeRethAdapter) {
     const addressWithSignature: ProtocolAddressWithMethods = {
       address: maybeRethAdapter.address,
-      functionSignatures: ["convert(uint256)"],
+      functionSignatures: ["deposit(uint256)"],
     };
     config.protocolAllowlist.set("rethAdapter", addressWithSignature);
   }
