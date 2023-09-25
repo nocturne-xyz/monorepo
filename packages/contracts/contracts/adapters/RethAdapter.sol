@@ -30,7 +30,7 @@ contract RethAdapter {
 
     /// @notice Convert weth to reth for caller by calling rocket pool deposit pool
     /// @param amount Amount of weth to deposit
-    /// @dev Transfers weth to self, unwraps to eth, deposits eth and gets back reth, then 
+    /// @dev Transfers weth to self, unwraps to eth, deposits eth and gets back reth, then
     ///      transfers reth back to caller.
     /// @dev We attempt to withhold tokens previously force-sent to adapter so we can avoid reth
     ///      balance from resetting to 0 (gas optimization).

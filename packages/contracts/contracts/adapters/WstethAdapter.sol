@@ -28,7 +28,7 @@ contract WstethAdapter {
 
     /// @notice Convert weth to wsteth for caller
     /// @param amount Amount of weth to deposit
-    /// @dev Transfers weth to self, unwraps to eth, deposits eth and gets back wsteth, then 
+    /// @dev Transfers weth to self, unwraps to eth, deposits eth and gets back wsteth, then
     ///      transfers wsteth back to caller.
     /// @dev We attempt to withhold tokens previously force-sent to adapter so we can avoid wsteth
     ///      balance from resetting to 0 (gas optimization).
