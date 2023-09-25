@@ -19,6 +19,8 @@ import {
   EthTransferAdapter__factory,
   WstethAdapter,
   EthTransferAdapter,
+  RethAdapter,
+  RethAdapter__factory,
   IPoseidonExtT7__factory,
 } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
@@ -61,8 +63,13 @@ export async function deployNocturne(
     config.opts
   );
 
-  // Maybe deploy wsteth adapter, depending on deploy config
+  // Maybe deploy wsteth/reth adapters, depending on deploy config
   const maybeWstethAdapter = await maybeDeployWstethAdapter(
+    connectedSigner,
+    config.wethAddress,
+    config.opts
+  );
+  const maybeRethAdapter = await maybeDeployRethAdapter(
     connectedSigner,
     config.wethAddress,
     config.opts
@@ -105,13 +112,20 @@ export async function deployNocturne(
     functionSignatures: ["transfer(address,uint256)"],
   });
 
-  // Whitelist wsteth adapter if exists
+  // Whitelist wsteth/reth adapters if exists
   if (maybeWstethAdapter) {
     const addressWithSignature: ProtocolAddressWithMethods = {
       address: maybeWstethAdapter.address,
       functionSignatures: ["deposit(uint256)"],
     };
     config.protocolAllowlist.set("wstethAdapter", addressWithSignature);
+  }
+  if (maybeRethAdapter) {
+    const addressWithSignature: ProtocolAddressWithMethods = {
+      address: maybeRethAdapter.address,
+      functionSignatures: ["convert(uint256)"],
+    };
+    config.protocolAllowlist.set("rethAdapter", addressWithSignature);
   }
 
   await whitelistTokens(connectedSigner, tokens, handler);
@@ -323,6 +337,27 @@ async function maybeDeployWstethAdapter(
   await wstethAdapter.deployTransaction.wait(opts?.confirmations);
 
   return wstethAdapter;
+}
+
+async function maybeDeployRethAdapter(
+  connectedSigner: ethers.Wallet,
+  wethAddress: Address,
+  opts?: NocturneDeployOpts
+): Promise<RethAdapter | undefined> {
+  if (!opts?.rethAdapterDeployConfig) {
+    return undefined;
+  }
+
+  const { rocketPoolStorageAddress } = opts.rethAdapterDeployConfig;
+
+  console.log("\ndeploying RethAdapter...");
+  const rethAdapter = await new RethAdapter__factory(connectedSigner).deploy(
+    wethAddress,
+    rocketPoolStorageAddress
+  );
+  await rethAdapter.deployTransaction.wait(opts?.confirmations);
+
+  return rethAdapter;
 }
 
 async function maybeDeployErc20s(

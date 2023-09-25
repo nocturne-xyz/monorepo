@@ -32,12 +32,17 @@ export interface NocturneDeployConfig {
 export interface NocturneDeployOpts {
   proxyAdmin?: ProxyAdmin;
   wstethAdapterDeployConfig?: WstethAdapterDeployConfig;
+  rethAdapterDeployConfig?: RethAdapterDeployConfig;
   useMockSubtreeUpdateVerifier?: boolean;
   confirmations?: number;
 }
 
 export interface WstethAdapterDeployConfig {
   wstethAddress: Address;
+}
+
+export interface RethAdapterDeployConfig {
+  rocketPoolStorageAddress: Address;
 }
 
 export function loadDeployConfigFromJSON(json: string): NocturneDeployConfig {

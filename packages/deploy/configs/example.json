@@ -45,8 +45,10 @@
   "opts": {
     "useMockSubtreeUpdateVerifier": true,
     "wstethAdapterDeployConfig": {
-      "wethAddress": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
       "wstethAddress": "0x8b79995e5f793a07bc00c21412e50ecae098e710"
+    },
+    "rethAdapterDeployConfig": {
+      "rocketPoolStorageAddress": "0xa9A6A14A3643690D0286574976F45abBDAD8f505"
     },
     "confirmations": 1
   }
