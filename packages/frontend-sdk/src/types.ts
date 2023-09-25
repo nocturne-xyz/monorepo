@@ -46,6 +46,12 @@ export interface DepositHandleWithReceipt {
   handle: DepositHandle;
 }
 
+export enum OnChainDepositRequestStatus {
+  Completed = 'Completed',
+  Pending = 'Pending',
+  Retrieved = 'Retrieved'
+}
+
 export enum DepositRequestStatus {
   // deposit has been initiated on-chain
   // and funds are in escrow, but
@@ -128,4 +134,8 @@ export interface DisplayDepositRequestWithMetadata
   txHashInstantiated?: string;
   txHashCompleted?: string;
   txHashRetrieved?: string;
+}
+
+export interface DisplayDepositRequestWithMetadataAndStatus extends DisplayDepositRequestWithMetadata {
+  onChainStatus?: OnChainDepositRequestStatus;
 }
