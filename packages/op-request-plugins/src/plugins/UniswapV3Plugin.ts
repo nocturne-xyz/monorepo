@@ -10,7 +10,7 @@ import {
   UnwrapRequest,
   RefundRequest,
 } from "@nocturne-xyz/core";
-import { ChainId, Percent, Token, TradeType } from "@uniswap/sdk-core";
+import { Percent, Token, TradeType } from "@uniswap/sdk-core";
 import {
   AlphaRouter,
   CurrencyAmount,
@@ -20,6 +20,7 @@ import {
 import { ethers } from "ethers";
 import ERC20_ABI from "../abis/ERC20.json";
 import JSBI from "jsbi";
+import { chainIdToUniswapChainIdType } from "../helpers/uniswapV3";
 
 const UniswapV3_NAME = "uniswapV3";
 
@@ -84,12 +85,20 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             const router = this.getSwapRouter();
             const handlerAddress = this.config.handlerAddress;
 
-            const erc20InContract = new ethers.Contract(tokenIn, ERC20_ABI);
+            const erc20InContract = new ethers.Contract(
+              tokenIn,
+              ERC20_ABI,
+              this.provider
+            );
             const tokenInDecimals = Number(await erc20InContract.decimals());
             const tokenInSymbol: string = await erc20InContract.symbol();
             const tokenInName: string = await erc20InContract.name();
 
-            const erc20OutContract = new ethers.Contract(tokenOut, ERC20_ABI);
+            const erc20OutContract = new ethers.Contract(
+              tokenOut,
+              ERC20_ABI,
+              this.provider
+            );
             const tokenOutDecimals = Number(await erc20OutContract.decimals());
             const tokenOutSymbol: string = await erc20OutContract.symbol();
             const tokenOutName: string = await erc20OutContract.name();
@@ -201,17 +210,4 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
       return this;
     },
   };
-}
-
-function chainIdToUniswapChainIdType(chainId: bigint): ChainId {
-  switch (chainId) {
-    case 1n:
-      return ChainId.MAINNET;
-    case 5n:
-      return ChainId.GOERLI;
-    case 11155111n:
-      return ChainId.SEPOLIA;
-    default:
-      throw new Error(`chainId not supported: ${chainId}`);
-  }
 }
