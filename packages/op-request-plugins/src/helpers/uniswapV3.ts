@@ -1,4 +1,3 @@
-import { NocturneConfig } from "@nocturne-xyz/config";
 import { Address } from "@nocturne-xyz/core";
 import {
   ChainId,
@@ -10,45 +9,51 @@ import {
 import {
   AlphaRouter,
   SwapOptionsSwapRouter02,
+  SwapRoute,
   SwapType,
 } from "@uniswap/smart-order-router";
 import { ethers } from "ethers";
 import ERC20_ABI from "../abis/ERC20.json";
 
-export async function getSwapQuote(
+export async function getSwapRoute(
   swapRouter: AlphaRouter,
+  chainId: bigint,
+  provider: ethers.providers.BaseProvider,
+  fromAddress: Address,
   tokenIn: Address,
   inAmount: bigint,
-  tokenOut: Address,
-  config: NocturneConfig
-): Promise<bigint> {
-  const erc20InContract = new ethers.Contract(tokenIn, ERC20_ABI);
+  tokenOut: Address
+): Promise<SwapRoute> {
+  const erc20InContract = new ethers.Contract(tokenIn, ERC20_ABI, provider);
   const tokenInDecimals = Number(await erc20InContract.decimals());
   const tokenInSymbol: string = await erc20InContract.symbol();
   const tokenInName: string = await erc20InContract.name();
 
-  const erc20OutContract = new ethers.Contract(tokenOut, ERC20_ABI);
+  const erc20OutContract = new ethers.Contract(tokenOut, ERC20_ABI, provider);
   const tokenOutDecimals = Number(await erc20OutContract.decimals());
   const tokenOutSymbol: string = await erc20OutContract.symbol();
   const tokenOutName: string = await erc20OutContract.name();
 
   const swapOpts: SwapOptionsSwapRouter02 = {
     type: SwapType.SWAP_ROUTER_02,
-    simulate: {
-      fromAddress: config.handlerAddress,
-    },
-    recipient: config.handlerAddress,
+    recipient: fromAddress,
     slippageTolerance: new Percent(100, 10_000),
     deadline: Date.now() + 3_600,
   };
-  const chainId = chainIdToUniswapChainIdType(config.chainId);
+  const uniswapChainId = chainIdToUniswapChainIdType(chainId);
   const route = await swapRouter.route(
     CurrencyAmount.fromRawAmount(
-      new Token(chainId, tokenIn, tokenInDecimals, tokenInSymbol, tokenInName),
+      new Token(
+        uniswapChainId,
+        tokenIn,
+        tokenInDecimals,
+        tokenInSymbol,
+        tokenInName
+      ),
       Number(inAmount) // TODO: truncation ok?
     ),
     new Token(
-      chainId,
+      uniswapChainId,
       tokenOut,
       tokenOutDecimals,
       tokenOutSymbol,
@@ -58,7 +63,7 @@ export async function getSwapQuote(
     swapOpts
   );
 
-  return BigInt(route!.quote.toExact());
+  return route!;
 }
 
 export function chainIdToUniswapChainIdType(chainId: bigint): ChainId {
