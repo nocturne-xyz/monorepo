@@ -78,11 +78,11 @@ export function saveSnapshot(data: AddressDataSnapshot) {
 
 // returns the latest snapshot folder in deposit-screener/test/snapshots, according to dated folder name, if any exist
 export async function getLatestSnapshotFolder(
-  baseFolder: string
+  baseDir: string
 ): Promise<string | null> {
   try {
     const readdir = util.promisify(fs.readdir);
-    const folderPath = path.resolve(__dirname, baseFolder);
+    const folderPath = path.resolve(__dirname, baseDir);
     const files = await readdir(folderPath);
 
     if (files.length === 0) return null;
@@ -91,7 +91,7 @@ export async function getLatestSnapshotFolder(
       return new Date(b).getTime() - new Date(a).getTime();
     });
 
-    return sortedFolders[0];
+    return `${baseDir}/${sortedFolders[0]}`;
   } catch (err) {
     console.error("An error occurred:", err);
     return null;

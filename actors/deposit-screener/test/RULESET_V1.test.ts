@@ -9,12 +9,17 @@ import {
   formDepositInfo,
   getLatestSnapshotFolder,
 } from "./utils";
+import findWorkspaceRoot from "find-yarn-workspace-root";
 
 describe("RULESET_V1", () => {
   let snapshotData: AddressDataSnapshot = {};
   before(async () => {
     const folderPath = (await getLatestSnapshotFolder("./snapshots")) ?? "";
-    const filePath = path.join(folderPath, "snapshot.json");
+    const filePath = path.join(
+      `${findWorkspaceRoot()!}/actors/deposit-screener/test`,
+      folderPath,
+      "snapshot.json"
+    );
     if (fs.existsSync(filePath)) {
       const rawData = fs.readFileSync(filePath, "utf-8");
       snapshotData = JSON.parse(rawData);

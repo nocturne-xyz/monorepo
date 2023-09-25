@@ -22,7 +22,9 @@ async function run() {
   let count = 0;
   for (const address of Object.values(TEST_ADDRESSES)) {
     console.log(
-      `Starting API calls for address: ${address}—${count} of ${numAddresses}`
+      `Starting API calls for address: ${address} ——— ${
+        count + 1
+      } of ${numAddresses}`
     );
     const deposit = formDepositInfo(address);
     snapshotData[address] = {};
