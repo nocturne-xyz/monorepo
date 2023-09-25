@@ -1,20 +1,12 @@
-import { DepositRequest, EncodedAsset } from "../../../primitives";
-import { CompressedStealthAddress } from "@nocturne-xyz/crypto";
-import { SubgraphUtils } from "..";
 import {
+  EncodedAsset,
+  CompressedStealthAddress,
+  SubgraphUtils,
   TotalEntityIndex,
   TotalEntityIndexTrait,
   WithTotalEntityIndex,
-} from "../../totalEntityIndex";
-
-export enum DepositEventType {
-  Instantiated = "Instantiated",
-  Retrieved = "Retrieved",
-  Processed = "Processed",
-}
-export interface DepositEvent extends DepositRequest {
-  type: DepositEventType;
-}
+} from "@nocturne-xyz/core";
+import { DepositEvent, DepositEventType } from "../syncAdapter";
 
 const { makeSubgraphQuery } = SubgraphUtils;
 

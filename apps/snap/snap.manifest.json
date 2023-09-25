@@ -3,7 +3,11 @@
   "description": "Nocturne Snap",
   "proposedName": "Nocturne Snap",
   "source": {
+<<<<<<< HEAD
     "shasum": "q2pQEuyNBHvw/TE/zErR6hFIBjF7dlYq3Qf1DD21Le4=",
+=======
+    "shasum": "2hrZVUHew/3O8Lrx/dcYF7vSDFQHGUMsl8T5CxrnJBY=",
+>>>>>>> e29dbc5b (move fetchDepositEvents from core to screener)
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
