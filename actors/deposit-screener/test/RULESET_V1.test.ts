@@ -11,6 +11,7 @@ import {
   REJECT_ADDRESSES,
 } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
+import { isRejection } from "../src/screening/checks/RuleSet";
 
 describe("RULESET_V1", () => {
   let snapshotData: AddressDataSnapshot = {};
@@ -46,6 +47,9 @@ describe("RULESET_V1", () => {
           expect(result.type).to.equal(
             testCase.isRejected ? "Rejection" : "Delay"
           );
+          if (isRejection(result)) {
+            expect(result.reason).to.equal(testCase.reason);
+          }
         });
       }
     }
@@ -210,6 +214,7 @@ describe("RULESET_V1", () => {
         timeSeconds: 21600,
       });
     });
+
     it("should approve Aztec user 1", async () => {
       const result = await RULESET_V1.check(
         formDepositInfo(APPROVE_ADDRESSES.AZTEC_1),

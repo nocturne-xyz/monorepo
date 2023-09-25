@@ -138,12 +138,30 @@ export const BULK_TEST_CASES = [
       "0x06866f665368dd909330b12d75f866c3311a24eb",
       // "0x253c5cbdd08838dad5493d511e17aa1ac5eab51b",
       "0xba299a1fe0da7b443bf444fdcd0c2a5f2506d2b1",
-      "0x7692ef3dcc4d2ecd497c1a262c50ed22b925a513",
+      // "0x7692ef3dcc4d2ecd497c1a262c50ed22b925a513", // had to remove this one - completely funded by tornado
       // "0x280db0f897b08e2c8d72ca09936a344f9f0fff49",
       "0x65b0d5e1dc0dee0704f53f660aa865c72e986fc7",
       // "0x0b7c43af43d76f79b6f6cfbafb3a01dde0468225",
       "0x9a39996d6ffa124ecc9c3d28a6b0ea59f394592b",
     ],
+    isRejected: false,
+  },
+  {
+    type: "Tornado Funded > 50%",
+    addresses: [
+      "0xf1c9b7faa51468402b70ac2e0b5dde9152cadb50",
+      "0x5dc7fa90651906bc99cd0628fa512e4ef24f7f16",
+      "0x11497063c7839e341c6ed72947ce92fce52ea686",
+      "0xb1dc3f79bf56b9bd78c1d13813a681d390a48728",
+      "0x26294b00a982d75827825f7401b23423dbb4c698",
+      "0x89cb47a328e3720c295defc36301d4dccd7d4382",
+    ],
+    isRejected: true,
+    reason: "Counterparty exposure to mixer > 50%",
+  },
+  {
+    type: "Tornado Funded < 50%",
+    addresses: ["0xffa663addd96b85fe5c369782e8c9279ff32b297"],
     isRejected: false,
   },
 ];
