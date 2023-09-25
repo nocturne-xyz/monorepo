@@ -16,10 +16,10 @@ import {
   NocturneViewer,
   CanonAddress,
   StealthAddressTrait,
-  encryptNote,
   randomFr,
   CompressedStealthAddress,
-} from "./crypto";
+} from "@nocturne-xyz/crypto";
+import { encryptNote } from "./noteEncryption";
 import { MerkleProofInput } from "./proof";
 import {
   sortNotesByValue,
@@ -274,13 +274,13 @@ async function makeJoinSplit(
   const totalValue = oldNoteA.value + oldNoteB.value;
   const publicSpend = totalValue - amountToReturn - paymentAmount;
 
-  const nullifierA = viewer.createNullifier(oldNoteA);
-  const nullifierB = viewer.createNullifier(oldNoteB);
+  const nullifierA = NoteTrait.createNullifier(viewer, oldNoteA);
+  const nullifierB = NoteTrait.createNullifier(viewer, oldNoteB);
 
   // first note contains the leftovers - return to sender
   const newNoteA: Note = {
     owner: StealthAddressTrait.fromCanonAddress(sender),
-    nonce: viewer.generateNewNonce(nullifierA),
+    nonce: NoteTrait.generateNewNonce(viewer, nullifierA),
     asset: oldNoteA.asset,
     value: amountToReturn,
   };
@@ -288,7 +288,7 @@ async function makeJoinSplit(
   // the second note contains the confidential payment
   const newNoteB: Note = {
     owner: StealthAddressTrait.fromCanonAddress(receiver),
-    nonce: viewer.generateNewNonce(nullifierB),
+    nonce: NoteTrait.generateNewNonce(viewer, nullifierB),
     asset: oldNoteA.asset,
     value: paymentAmount,
   };

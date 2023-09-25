@@ -3,15 +3,14 @@ import { expect } from "chai";
 import {
   Asset,
   AssetTrait,
-  NocturneViewer,
   Note,
   NoteTrait,
-  encryptNote,
-  randomFr,
   range,
+  NocturneViewer,
 } from "../src";
+import { randomFr } from "@nocturne-xyz/crypto";
 import randomBytes from "randombytes";
-import { decryptNote } from "../src/crypto/noteEncryption";
+import { encryptNote, decryptNote } from "../src//noteEncryption";
 import { ethers } from "ethers";
 
 describe("note serialization", () => {
@@ -38,7 +37,7 @@ describe("note encryption", () => {
       const note = randomNote(viewer);
       const noteWithSender = { ...note, sender };
       const encrypted = encryptNote(viewer.canonicalAddress(), noteWithSender);
-      const decrypted = decryptNote(vk, encrypted);
+      const decrypted = decryptNote(viewer, encrypted);
 
       expect(noteWithSender).to.eql(decrypted);
     });

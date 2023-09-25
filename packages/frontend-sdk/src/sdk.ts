@@ -760,7 +760,7 @@ export class NocturneSdk implements NocturneSdkApi {
     ) {
       let count = 0;
       while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
-        latestSyncedMerkleIndex = (await client.sync(syncOpts)) ?? 0;
+        latestSyncedMerkleIndex = (await client.sync({ ...syncOpts, timing: true })) ?? 0;
 
         if (count % refetchEvery === 0) {
           latestMerkleIndexOnChain =
@@ -796,7 +796,7 @@ export class NocturneSdk implements NocturneSdkApi {
     try {
       const client = await this.clientThunk();
       latestSyncedMerkleIndex = await this.syncMutex.runExclusive(
-        async () => await client.sync(syncOpts)
+        async () => await client.sync({ ...syncOpts, timing: true })
       );
       await client.updateOptimisticNullifiers();
     } catch (e) {

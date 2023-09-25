@@ -2,21 +2,20 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
-import { poseidonBN } from "@nocturne-xyz/crypto-utils";
+import { poseidonBN } from "@nocturne-xyz/crypto";
 import { WasmJoinSplitProver } from "../src/joinsplit";
 import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 import {
-  NocturneSigner,
   JoinSplitInputs,
   MerkleProofInput,
   EncodedNote,
-  StealthAddressTrait,
   encodeEncodedAssetAddrWithSignBitsPI,
   TreeConstants,
   EncodedAsset,
   JoinSplitProver,
   range,
 } from "@nocturne-xyz/core";
+import { NocturneSigner, StealthAddressTrait } from "@nocturne-xyz/crypto";
 
 const { ZERO_VALUE, ARITY, DEPTH } = TreeConstants;
 

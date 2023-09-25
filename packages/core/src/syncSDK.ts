@@ -1,4 +1,4 @@
-import { NocturneViewer } from "./crypto";
+import { NocturneViewer } from "@nocturne-xyz/crypto";
 import { NocturneDB } from "./NocturneDB";
 import {
   EncryptedStateDiff,
@@ -15,6 +15,7 @@ import {
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { consecutiveChunks } from "./utils/functional";
 import { Histogram, timed, timedAsync } from "./utils";
+import { decryptNote } from "./noteEncryption";
 
 export interface SyncOpts {
   endBlock?: number;
@@ -181,8 +182,11 @@ function decryptStateDiff(
           note as IncludedEncryptedNote;
 
         // TODO: come up with a way to handle sender mismatches when we implement history proofs
-        const [includedNote] = viewer.decryptNote(encryptedNote, merkleIndex);
-        const nullifier = viewer.createNullifier(includedNote);
+        const includedNote = {
+          ...decryptNote(viewer, encryptedNote),
+          merkleIndex,
+        };
+        const nullifier = NoteTrait.createNullifier(viewer, includedNote);
         const res = { ...includedNote, nullifier };
         return {
           inner: res,
@@ -209,7 +213,7 @@ function decryptStateDiff(
       const isOwn = viewer.isOwnAddress(includedNote.owner);
 
       if (isOwn) {
-        const nullifier = viewer.createNullifier(includedNote);
+        const nullifier = NoteTrait.createNullifier(viewer, includedNote);
         const res = { ...includedNote, nullifier };
         return {
           inner: res,
