@@ -100,7 +100,7 @@ export async function deployNocturne(
   if (maybeWstethAdapter) {
     const addressWithSignature: ProtocolAddressWithMethods = {
       address: maybeWstethAdapter.address,
-      functionSignatures: ["convert(uint256)"],
+      functionSignatures: ["deposit(uint256)"],
     };
     config.protocolAllowlist.set("wstethAdapter", addressWithSignature);
   }
