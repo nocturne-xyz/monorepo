@@ -2,13 +2,14 @@ import "mocha";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
+import { range } from "../src/utils";
 import {
+  AssetTrait,
+  newOpRequestBuilder,
   NocturneSigner,
   StealthAddressTrait,
   generateRandomSpendingKey,
-} from "../src/crypto";
-import { range } from "../src/utils";
-import { AssetTrait, newOpRequestBuilder } from "../src";
+} from "../src";
 import { prepareOperation, __private } from "../src/prepareOperation";
 import { sortNotesByValue } from "../src/utils";
 import {

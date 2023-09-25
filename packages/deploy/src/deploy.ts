@@ -100,7 +100,7 @@ export async function deployNocturne(
   if (maybeWstethAdapter) {
     const addressWithSignature: ProtocolAddressWithMethods = {
       address: maybeWstethAdapter.address,
-      functionSignatures: ["convert(uint256)"],
+      functionSignatures: ["deposit(uint256)"],
     };
     config.protocolAllowlist.set("wstethAdapter", addressWithSignature);
   }
@@ -442,6 +442,7 @@ async function deployProxiedContract<
   opts?: NocturneDeployOpts
 ): Promise<ProxiedContract<C, TransparentProxyAddresses>> {
   const implementation = await implementationFactory.deploy();
+  await implementation.deployTransaction.wait(opts?.confirmations);
 
   // If no init args provided, then set init data to empty
   let initData = "0x";

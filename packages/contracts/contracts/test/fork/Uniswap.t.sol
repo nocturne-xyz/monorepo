@@ -29,7 +29,7 @@ contract UniswapTest is ForkBase {
         handler.setContractPermission(address(wsteth), true);
         handler.setContractPermission(address(uniswap), true);
 
-        // Whitelist weth approve, wsteth approve, wsteth adapter convert, and uniswap input swaps
+        // Whitelist weth approve, wsteth approve, wsteth adapter deposit, and uniswap input swaps
         handler.setContractMethodPermission(
             address(weth),
             weth.approve.selector,
@@ -127,7 +127,7 @@ contract UniswapTest is ForkBase {
                     ),
                 trackedRefundAssets: trackedRefundAssets,
                 gasAssetRefundThreshold: 0,
-                executionGasLimit: 1_000_000,
+                executionGasLimit: 10_000_000,
                 gasPrice: 0,
                 actions: actions,
                 atomicActions: true,

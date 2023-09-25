@@ -216,6 +216,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
         excludeSender(address(tellerHandler));
         excludeSender(address(handlerHandler));
         excludeSender(address(depositManagerHandler));
+        excludeSender(address(ethTransferAdapter));
         excludeSender(address(swapper));
         excludeSender(address(teller));
         excludeSender(address(handler));

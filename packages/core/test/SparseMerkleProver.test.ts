@@ -4,14 +4,14 @@ import chaiAsPromised from "chai-as-promised";
 import {
   InMemoryKVStore,
   NoteTrait,
-  StealthAddressTrait,
   bigInt256ToFieldElems,
   bigintToBEPadded,
   range,
   TreeConstants,
   NocturneSigner,
+  StealthAddressTrait,
 } from "../src";
-import { BabyJubJub, poseidonBN } from "@nocturne-xyz/crypto-utils";
+import { BabyJubJub, poseidonBN } from "@nocturne-xyz/crypto";
 import { SparseMerkleProver, TreeNode } from "../src/SparseMerkleProver";
 import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
@@ -25,7 +25,7 @@ chai.use(chaiAsPromised);
 
 const F = BabyJubJub.BaseField;
 
-const randomBaseFieldElement = () => F.reduce(randomBigInt());
+const randomBaseFieldElement = () => F.create(randomBigInt());
 
 describe("SparseMerkleProver", () => {
   it("inserts values one-by-one with consecutive indices", () => {
@@ -448,7 +448,7 @@ describe("SparseMerkleProver", () => {
 
   it.skip("generates domain separators", () => {
     const hash = keccak256(Buffer.from("SENDER_COMMITMENT"));
-    console.log("senderCommitmentDomainSeparator", F.reduce(BigInt(hash)));
+    console.log("senderCommitmentDomainSeparator", F.create(BigInt(hash)));
   });
 });
 

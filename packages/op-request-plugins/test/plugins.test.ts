@@ -47,7 +47,7 @@ describe("OpRequestBuilder", () => {
       .use(UniswapV3Plugin)
       .transferEth(recipient, 200n)
       .erc20Transfer(shitcoin.assetAddr, recipient, 100n)
-      .convertWethToWsteth(100n)
+      .depositWethForWsteth(100n)
       .refundAddr(refundAddr)
       .deadline(2n)
       .build();
@@ -62,7 +62,7 @@ describe("OpRequestBuilder", () => {
         joinSplitRequests: [
           {
             asset: wethAsset,
-            unwrapValue: 300n, // 200 for eth transfer, 100 for wsteth convert
+            unwrapValue: 300n, // 200 for eth transfer, 100 for wsteth deposit
           },
           {
             asset: shitcoin,
@@ -110,7 +110,7 @@ describe("OpRequestBuilder", () => {
             contractAddress: WSTETH_ADAPTER_ADDRESS,
             encodedFunction:
               WstethAdapter__factory.createInterface().encodeFunctionData(
-                "convert",
+                "deposit",
                 [100n]
               ),
           },

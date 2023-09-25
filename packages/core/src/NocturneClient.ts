@@ -7,7 +7,7 @@ import {
   OpDigestWithMetadata,
   computeOperationDigest,
 } from "./primitives";
-import { NocturneViewer } from "./crypto";
+import { NocturneViewer } from "@nocturne-xyz/crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
 import { prepareOperation } from "./prepareOperation";
 import {
