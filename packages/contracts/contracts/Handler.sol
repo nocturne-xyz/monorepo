@@ -49,10 +49,15 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     /// @param leftoverTokensHolder Address of the leftover tokens holder contract
     function initialize(
         address subtreeUpdateVerifier,
+        address priceFeed,
         address leftoverTokensHolder
     ) external initializer {
         __NocturneReentrancyGuard_init();
-        __BalanceManager_init(subtreeUpdateVerifier, leftoverTokensHolder);
+        __BalanceManager_init(
+            subtreeUpdateVerifier,
+            priceFeed,
+            leftoverTokensHolder
+        );
     }
 
     /// @notice Only callable by the handler itself (used so handler can message call itself)
@@ -174,10 +179,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         opResult.preOpMerkleCount = totalCount();
 
         // Handle all joinsplits
-        (uint256 numJoinSplitAssets, ) = _processJoinSplitsReservingFee(
-            op,
-            perJoinSplitVerifyGas
-        );
+        (
+            uint256 numJoinSplitAssets,
+            uint256[] memory totalUnwrapAmounts
+        ) = _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
 
         // If reached this point, assets have been unwrapped and will have refunds to handle
         opResult.assetsUnwrapped = true;
@@ -233,7 +238,12 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             bundler
         );
 
-        _handleAllRefunds(op);
+        uint256[] memory outstandingAmounts = _ensurePriceGapWithinBounds(
+            op,
+            totalUnwrapAmounts
+        );
+
+        _handleAllRefunds(op, outstandingAmounts);
 
         // Mark new merkle count post operation
         opResult.postOpMerkleCount = totalCount();

@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 // Internal
 import {ITeller} from "./interfaces/ITeller.sol";
+import {IPriceFeedUSD} from "./interfaces/IPriceFeedUSD.sol";
 import {CommitmentTreeManager} from "./CommitmentTreeManager.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
@@ -16,8 +17,13 @@ import "./libs/Types.sol";
 contract BalanceManager is CommitmentTreeManager {
     using OperationLib for Operation;
 
+    uint256 public constant MAX_VALUE_INCREASE_USD = 10_000;
+
     // Teller contract to send/request assets to/from
     ITeller public _teller;
+
+    // Price feed contract for pricing assets
+    IPriceFeedUSD public _priceFeed;
 
     // Leftover tokens holder contract
     address public _leftoverTokensHolder;
@@ -30,9 +36,11 @@ contract BalanceManager is CommitmentTreeManager {
     /// @param leftoverTokensHolder Address of the leftover tokens holder contract
     function __BalanceManager_init(
         address subtreeUpdateVerifier,
+        address priceFeed,
         address leftoverTokensHolder
     ) internal onlyInitializing {
         __CommitmentTreeManager_init(subtreeUpdateVerifier);
+        _priceFeed = IPriceFeedUSD(priceFeed);
         _leftoverTokensHolder = leftoverTokensHolder;
     }
 
@@ -190,6 +198,7 @@ contract BalanceManager is CommitmentTreeManager {
         for (uint256 i = 0; i < numTrackedAssets; i++) {
             _transferOutstandingAssetToAndReturnAmount(
                 op.trackedAssets[i].encodedAsset,
+                AssetUtils.balanceOfAsset(op.trackedAssets[i].encodedAsset),
                 _leftoverTokensHolder
             );
         }
@@ -263,6 +272,48 @@ contract BalanceManager is CommitmentTreeManager {
         return refundValue;
     }
 
+    function _ensurePriceGapWithinBounds(
+        Operation calldata op,
+        uint256[] memory totalUnwrapAmounts
+    ) internal view returns (uint256[] memory outstandingBalances) {
+        uint256 numTrackedAssets = op.trackedAssets.length;
+        outstandingBalances = new uint256[](numTrackedAssets);
+
+        // Get price of each tracked asset
+        uint256[] memory trackedAssetPrices = new uint256[](numTrackedAssets);
+        address token;
+        for (uint256 i = 0; i < numTrackedAssets; i++) {
+            (, token, ) = AssetUtils.decodeAsset(
+                op.trackedAssets[i].encodedAsset
+            );
+            trackedAssetPrices[i] = _priceFeed.getLatestPriceUSD(token);
+        }
+
+        // Loop through tracked assets and sum up total value across unwraps and refunds
+        uint256 totalUnwrapValueUSD = 0;
+        uint256 totalProspectiveRefundValueUSD = 0;
+        for (uint256 i = 0; i < numTrackedAssets; i++) {
+            totalUnwrapValueUSD +=
+                totalUnwrapAmounts[i] *
+                trackedAssetPrices[i];
+
+            outstandingBalances[i] = AssetUtils.balanceOfAsset(
+                op.trackedAssets[i].encodedAsset
+            );
+            totalProspectiveRefundValueUSD +=
+                outstandingBalances[i] *
+                trackedAssetPrices[i];
+        }
+
+        // Ensure max of MAX_VALUE_INCREASE_USD increase in value from unwraps to refunds
+        uint256 deltaUSD = totalProspectiveRefundValueUSD > totalUnwrapValueUSD
+            ? totalProspectiveRefundValueUSD - totalUnwrapValueUSD
+            : 0;
+        require(deltaUSD <= MAX_VALUE_INCREASE_USD, "!price gap");
+
+        return outstandingBalances;
+    }
+
     /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
     ///         to the Teller and inserting new note commitments for the sent back assets.
     /// @dev Checks for refunds in op.trackedAssets. A refund occurs if any of the checked assets
@@ -270,7 +321,10 @@ contract BalanceManager is CommitmentTreeManager {
     ///      transfer the asset back to the Teller and insert a new
     ///      note commitment into the commitment tree.
     /// @param op Operation to handle refunds for
-    function _handleAllRefunds(Operation calldata op) internal {
+    function _handleAllRefunds(
+        Operation calldata op,
+        uint256[] memory outstandingAmounts
+    ) internal {
         EncodedAsset calldata encodedAsset;
 
         uint256 numTrackedAssets = op.trackedAssets.length;
@@ -278,6 +332,7 @@ contract BalanceManager is CommitmentTreeManager {
             encodedAsset = op.trackedAssets[i].encodedAsset;
             uint256 refundAmount = _transferOutstandingAssetToAndReturnAmount(
                 encodedAsset,
+                outstandingAmounts[i],
                 address(_teller)
             );
             if (refundAmount > 0) {
@@ -298,6 +353,7 @@ contract BalanceManager is CommitmentTreeManager {
     /// @param encodedAsset Encoded asset to check for refund
     function _transferOutstandingAssetToAndReturnAmount(
         EncodedAsset memory encodedAsset,
+        uint256 outstandingAmount,
         address to
     ) internal returns (uint256) {
         require(
@@ -305,13 +361,11 @@ contract BalanceManager is CommitmentTreeManager {
             "Invalid to addr"
         );
 
-        uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
-
         (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
         uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
 
-        uint256 difference = currentBalance > amountToWithhold
-            ? currentBalance - amountToWithhold
+        uint256 difference = outstandingAmount > amountToWithhold
+            ? outstandingAmount - amountToWithhold
             : 0;
 
         if (difference > 0) {
