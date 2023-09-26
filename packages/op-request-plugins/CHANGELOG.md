@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.0.0
+
+### Major Changes
+
+- 444321c0: In wsteth plugin, rename 'convertWethToWsteth' to 'depositWethForWsteth'
+
+### Patch Changes
+
+- Updated dependencies [444321c0]
+- Updated dependencies [444321c0]
+- Updated dependencies [7c190c2c]
+- Updated dependencies [07625550]
+- Updated dependencies [444321c0]
+- Updated dependencies [07625550]
+  - @nocturne-xyz/contracts@1.0.0
+  - @nocturne-xyz/core@2.1.0
+  - @nocturne-xyz/config@1.1.0
+
 ## 0.3.1
 
 ### Patch Changes

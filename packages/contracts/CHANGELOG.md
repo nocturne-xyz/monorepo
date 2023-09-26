@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.0
+
+### Major Changes
+
+- 444321c0: In wsteth and reth adapter, rename 'convert' to 'deposit'
+
+### Minor Changes
+
+- 444321c0: Add RethAdapter for rocket pool support + fork tests
+
+### Patch Changes
+
+- 444321c0: Add additional excludeSender(ethTransferAdapter) to invariant tests which was previously forgotten
+
 ## 0.5.0
 
 ### Minor Changes

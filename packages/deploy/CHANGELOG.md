@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.6.0
+
+### Minor Changes
+
+- 07625550: add optional `finalityBlocks` to config's `network` property that makes it easier to set `finalityBlocks` in sync logic across the codebase
+
+### Patch Changes
+
+- 9058f77b: Await num confirmations when deploying implementation contracts to avoid unexpected reverts with slow confirmation
+- 444321c0: Change whitelisted fn signature to 'deposit' instead of 'convert'
+- Updated dependencies [444321c0]
+- Updated dependencies [444321c0]
+- Updated dependencies [7c190c2c]
+- Updated dependencies [07625550]
+- Updated dependencies [444321c0]
+- Updated dependencies [07625550]
+  - @nocturne-xyz/contracts@1.0.0
+  - @nocturne-xyz/core@2.1.0
+  - @nocturne-xyz/config@1.1.0
+
 ## 0.5.1
 
 ### Patch Changes

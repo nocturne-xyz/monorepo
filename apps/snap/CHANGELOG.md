@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies [7c190c2c]
+- Updated dependencies [07625550]
+- Updated dependencies [07625550]
+- Updated dependencies [d1c549a4]
+  - @nocturne-xyz/core@2.1.0
+  - @nocturne-xyz/config@1.1.0
+  - @nocturne-xyz/crypto@0.2.0
+
 ## 0.4.3
 
 ### Patch Changes
