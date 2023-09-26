@@ -65,6 +65,9 @@ contract Teller is
         uint128 postOpMerkleCount
     );
 
+    /// @notice Event emitted when a forced exit is processed
+    event ForcedExit(JoinSplitInfo[][] joinSplitInfos);
+
     /// @notice Initializer function
     /// @param handler Address of the handler contract
     /// @param joinSplitVerifier Address of the joinsplit verifier contract
@@ -169,7 +172,7 @@ contract Teller is
     function processBundle(
         Bundle calldata bundle
     )
-        external
+        public
         override
         whenNotPaused
         nonReentrant
@@ -189,7 +192,6 @@ contract Teller is
             ops,
             opDigests
         );
-
         require(success, "Batch JoinSplit verify failed");
 
         uint256 numOps = ops.length;
@@ -226,6 +228,48 @@ contract Teller is
                 opResults[i].postOpMerkleCount
             );
         }
+        return opResults;
+    }
+
+    function forcedExit(
+        Bundle calldata bundle,
+        JoinSplitInfo[][] calldata joinSplitInfos
+    ) external whenNotPaused nonReentrant returns (OperationResult[] memory) {
+        // Ensure bundle has ops that can only send funds out of protocol
+        uint256 numOps = bundle.operations.length;
+        for (uint256 i = 0; i < numOps; i++) {
+            Operation calldata op = bundle.operations[i];
+
+            // Refund addr is burn address
+            require(op.refundAddr.h1 + op.refundAddr.h2 == 0, "!burn addr");
+
+            // No conf joinsplits
+            require(op.confJoinSplits.length == 0, "!conf JS");
+
+            // Exists joinSplitInfo for each public joinSplit
+            uint256 numJoinSplitInfos = joinSplitInfos.length;
+            require(
+                op.pubJoinSplits.length == numJoinSplitInfos,
+                "!JS info len"
+            );
+
+            for (uint256 j = 0; j < numJoinSplitInfos; i++) {
+                // No output notes
+                require(joinSplitInfos[i][j].newNoteValueA == 0, "!newValueA");
+                require(joinSplitInfos[i][j].newNoteValueB == 0, "!newValueB");
+
+                // Require joinSplitInfoCommitment to match joinSplitInfo
+                // TODO: replace dummy 0 with poseidon
+                require(
+                    0 == op.pubJoinSplits[j].joinSplit.joinSplitInfoCommitment,
+                    "!JS info"
+                );
+            }
+        }
+
+        OperationResult[] memory opResults = processBundle(bundle);
+        emit ForcedExit(joinSplitInfos);
+
         return opResults;
     }
 
