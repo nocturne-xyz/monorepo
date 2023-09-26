@@ -2,7 +2,7 @@
   "contracts": {
     "network": {
       "name": "goerli",
-      "chainId": 5, 
+      "chainId": 5,
       "finalityBlocks": 4
     },
     "startBlock": 9694596,
@@ -91,7 +91,7 @@
         "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
         "functionSignatures": [
           "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))",
-          "exactInput((bytes,address,uint256,uint256,uint256))"
+          "exactInput((bytes,address,uint256,uint256,uint256)) TODO: extra uint256"
         ]
       }
     ],

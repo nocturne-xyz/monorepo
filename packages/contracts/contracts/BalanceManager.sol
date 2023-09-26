@@ -67,7 +67,16 @@ contract BalanceManager is CommitmentTreeManager {
     function _processJoinSplitsReservingFee(
         Operation calldata op,
         uint256 perJoinSplitVerifyGas
-    ) internal returns (uint256 numJoinSplitAssets) {
+    )
+        internal
+        returns (
+            uint256 numJoinSplitAssets,
+            uint256[] memory totalUnwrapAmounts
+        )
+    {
+        // Initialize totalUnwrapAmounts array, which tracks total publicSpend per asset
+        totalUnwrapAmounts = new uint256[](op.trackedAssets.length);
+
         // process nullifiers and insert new noteCommitments for each joinSplit
         // will throw an error if nullifiers are invalid or tree root invalid
         // NOTE: we handle both public and conf joinSplits here, all code below though is
@@ -116,6 +125,12 @@ contract BalanceManager is CommitmentTreeManager {
                 gasAssetToReserve -= reserveValue;
             }
 
+            // Add to joinsplit publicSpend to tally of totalUnwrapAmounts for asset
+            totalUnwrapAmounts[joinSplitAssetIndex] += op
+                .pubJoinSplits[subarrayStartIndex]
+                .publicSpend;
+
+            // Update subarray index and numJoinSplitAssets
             subarrayStartIndex = subarrayEndIndex + 1;
             numJoinSplitAssets++; // NOTE: if joinsplits not sorted contiguously by asset, this number will be higher than the actual number of joinsplits
 
@@ -126,6 +141,8 @@ contract BalanceManager is CommitmentTreeManager {
         }
 
         require(gasAssetToReserve == 0, "Too few gas tokens");
+
+        return (numJoinSplitAssets, totalUnwrapAmounts);
     }
 
     /// @notice Gather reserved gas assets and pay bundler calculated amount.

@@ -174,7 +174,7 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         opResult.preOpMerkleCount = totalCount();
 
         // Handle all joinsplits
-        uint256 numJoinSplitAssets = _processJoinSplitsReservingFee(
+        (uint256 numJoinSplitAssets, ) = _processJoinSplitsReservingFee(
             op,
             perJoinSplitVerifyGas
         );
