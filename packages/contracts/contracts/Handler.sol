@@ -49,13 +49,13 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     /// @param leftoverTokensHolder Address of the leftover tokens holder contract
     function initialize(
         address subtreeUpdateVerifier,
-        address priceFeed,
+        address priceOracle,
         address leftoverTokensHolder
     ) external initializer {
         __NocturneReentrancyGuard_init();
         __BalanceManager_init(
             subtreeUpdateVerifier,
-            priceFeed,
+            priceOracle,
             leftoverTokensHolder
         );
     }

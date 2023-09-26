@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 // Internal
 import {ITeller} from "./interfaces/ITeller.sol";
-import {IPriceFeedUSD} from "./interfaces/IPriceFeedUSD.sol";
+import {IPriceOracleUSD} from "./interfaces/IPriceOracleUSD.sol";
 import {CommitmentTreeManager} from "./CommitmentTreeManager.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
@@ -23,7 +23,7 @@ contract BalanceManager is CommitmentTreeManager {
     ITeller public _teller;
 
     // Price feed contract for pricing assets
-    IPriceFeedUSD public _priceFeed;
+    IPriceOracleUSD public _priceOracle;
 
     // Leftover tokens holder contract
     address public _leftoverTokensHolder;
@@ -36,11 +36,11 @@ contract BalanceManager is CommitmentTreeManager {
     /// @param leftoverTokensHolder Address of the leftover tokens holder contract
     function __BalanceManager_init(
         address subtreeUpdateVerifier,
-        address priceFeed,
+        address priceOracle,
         address leftoverTokensHolder
     ) internal onlyInitializing {
         __CommitmentTreeManager_init(subtreeUpdateVerifier);
-        _priceFeed = IPriceFeedUSD(priceFeed);
+        _priceOracle = IPriceOracleUSD(priceOracle);
         _leftoverTokensHolder = leftoverTokensHolder;
     }
 
@@ -286,7 +286,7 @@ contract BalanceManager is CommitmentTreeManager {
             (, token, ) = AssetUtils.decodeAsset(
                 op.trackedAssets[i].encodedAsset
             );
-            trackedAssetPrices[i] = _priceFeed.getLatestPriceUSD(token);
+            trackedAssetPrices[i] = _priceOracle.getLatestPriceUSD(token);
         }
 
         // Loop through tracked assets and sum up total value across unwraps and refunds

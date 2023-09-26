@@ -102,7 +102,11 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             address(handler),
             address(joinSplitVerifier)
         );
-        handler.initialize(address(subtreeUpdateVerifier), address(0x111));
+        handler.initialize(
+            address(subtreeUpdateVerifier),
+            address(0x222), // TODO: replace with dummy price oracle
+            address(0x111)
+        );
         handler.setTeller(address(teller));
 
         teller.setDepositSourcePermission(DEPOSIT_SOURCE, true);

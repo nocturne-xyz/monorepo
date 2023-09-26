@@ -83,7 +83,11 @@ contract DepositManagerTest is Test {
             address(handler),
             address(joinSplitVerifier)
         );
-        handler.initialize(address(subtreeUpdateVerifier), address(0x111));
+        handler.initialize(
+            address(subtreeUpdateVerifier),
+            address(0x222), // TODO: replace with dummy price oracle
+            address(0x111)
+        );
         handler.setTeller(address(teller));
 
         depositManager = new TestDepositManager();

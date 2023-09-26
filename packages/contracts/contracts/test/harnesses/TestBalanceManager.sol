@@ -12,9 +12,14 @@ contract TestBalanceManager is IHandler, BalanceManager {
 
     function initialize(
         address subtreeUpdateVerifier,
+        address priceOracle,
         address leftoverTokensHolder
     ) external initializer {
-        __BalanceManager_init(subtreeUpdateVerifier, leftoverTokensHolder);
+        __BalanceManager_init(
+            subtreeUpdateVerifier,
+            priceOracle,
+            leftoverTokensHolder
+        );
     }
 
     modifier onlyTeller() {
@@ -77,7 +82,10 @@ contract TestBalanceManager is IHandler, BalanceManager {
         return OperationUtils.calculateBundlerGasAssetPayout(op, opResult);
     }
 
-    function handleAllRefunds(Operation calldata op) public {
-        _handleAllRefunds(op);
+    function handleAllRefunds(
+        Operation calldata op,
+        uint256[] memory outstandingAmounts
+    ) public {
+        _handleAllRefunds(op, outstandingAmounts);
     }
 }
