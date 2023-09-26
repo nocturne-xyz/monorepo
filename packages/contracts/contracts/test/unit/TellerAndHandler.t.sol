@@ -105,6 +105,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         handler.initialize(address(subtreeUpdateVerifier), address(0x111));
         handler.setTeller(address(teller));
 
+        teller.setBundlerPermission(BUNDLER, true);
         teller.setDepositSourcePermission(DEPOSIT_SOURCE, true);
         handler.setSubtreeBatchFillerPermission(address(this), true);
 
@@ -662,6 +663,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
@@ -733,6 +735,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
@@ -889,6 +892,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -959,6 +963,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -1026,6 +1031,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -1721,6 +1727,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -2036,6 +2043,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             true
         );
 
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, approve call and swap call both succeeded
@@ -2545,7 +2553,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(teller)), PER_NOTE_AMOUNT);
         assertEq(token.balanceOf(address(BOB)), 0);
 
-        vm.prank(BOB);
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed (too few gas tokens)
@@ -2609,7 +2617,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(teller)), 2 * PER_NOTE_AMOUNT);
         assertEq(token.balanceOf(address(BOB)), 0);
 
-        vm.prank(ALICE);
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -2621,7 +2629,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         // ALICE (bundler) was still paid
         assertLt(token.balanceOf(address(teller)), 2 * PER_NOTE_AMOUNT);
-        assertGt(token.balanceOf(address(ALICE)), 0);
+        assertGt(token.balanceOf(address(BUNDLER)), 0);
     }
 
     function testHandleOperationNotTellerCaller() public {

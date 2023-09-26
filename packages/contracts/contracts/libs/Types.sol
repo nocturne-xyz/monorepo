@@ -48,6 +48,15 @@ struct JoinSplit {
     EncryptedNote newNoteBEncrypted;
 }
 
+struct JoinSplitInfo {
+    uint256 compressedSenderCanonAddr;
+    uint256 compressedReceiverCanonAddr;
+    uint256 oldMerkleIndicesAndWithBits;
+    uint256 newNoteValueA;
+    uint256 newNoteValueB;
+    uint256 nonce;
+}
+
 struct EncodedNote {
     uint256 ownerH1;
     uint256 ownerH2;

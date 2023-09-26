@@ -41,11 +41,17 @@ contract Teller is
     // Set of contracts which can deposit funds into Teller
     mapping(address => bool) public _depositSources;
 
+    // Set of allowed bundlers
+    mapping(address => bool) public _bundlers;
+
     // Gap for upgrade safety
     uint256[50] private __GAP;
 
     /// @notice Event emitted when a deposit source is given/revoked permission
     event DepositSourcePermissionSet(address source, bool permission);
+
+    /// @notice Event emitted when a bundler is given/revoked permission
+    event BundlerPermissionSet(address bundler, bool permission);
 
     /// @notice Event emitted when an operation is processed/executed (one per operation)
     event OperationProcessed(
@@ -88,6 +94,12 @@ contract Teller is
         _;
     }
 
+    /// @notice Only callable by allowed bundler
+    modifier onlyAllowedBundler() {
+        require(_bundlers[msg.sender], "Only bundler");
+        _;
+    }
+
     /// @notice Pauses contract, only callable by owner
     function pause() external onlyOwner {
         _pause();
@@ -107,6 +119,17 @@ contract Teller is
     ) external onlyOwner {
         _depositSources[source] = permission;
         emit DepositSourcePermissionSet(source, permission);
+    }
+
+    /// @notice Sets permission for a bundler
+    /// @param bundler Address of the bundler
+    /// @param permission Whether or not the bundler is allowed to process bundles
+    function setBundlerPermission(
+        address bundler,
+        bool permission
+    ) external onlyOwner {
+        _bundlers[bundler] = permission;
+        emit BundlerPermissionSet(bundler, permission);
     }
 
     /// @notice Deposits funds into the Teller contract and calls on handler to add new notes
@@ -150,6 +173,7 @@ contract Teller is
         override
         whenNotPaused
         nonReentrant
+        onlyAllowedBundler
         returns (OperationResult[] memory)
     {
         Operation[] calldata ops = bundle.operations;
