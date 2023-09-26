@@ -6,7 +6,6 @@ import {
   Address,
   AssetTrait,
   ClosableAsyncIterator,
-  DepositEventType,
   DepositRequest,
   DepositRequestStatus,
   IterSyncOpts,
@@ -27,7 +26,11 @@ import { Logger } from "winston";
 import { DepositScreenerDB } from "./db";
 import { ScreeningCheckerApi } from "./screening";
 import { Delay } from "./screening/checks/RuleSet";
-import { DepositEventsBatch, ScreenerSyncAdapter } from "./sync/syncAdapter";
+import {
+  DepositEventType,
+  DepositEventsBatch,
+  ScreenerSyncAdapter,
+} from "./sync";
 import {
   ACTOR_NAME,
   DELAYED_DEPOSIT_JOB_TAG,

@@ -2,8 +2,6 @@ import {
   ClosableAsyncIterator,
   IterSyncOpts,
   sleep,
-  fetchDepositEvents,
-  DepositEventType,
   TotalEntityIndex,
   maxArray,
   TotalEntityIndexTrait,
@@ -11,10 +9,15 @@ import {
   max,
 } from "@nocturne-xyz/core";
 import { Logger } from "winston";
+import { fetchDepositEvents } from "./fetch";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
-import { DepositEventsBatch, ScreenerSyncAdapter } from "../syncAdapter";
+import {
+  DepositEventsBatch,
+  ScreenerSyncAdapter,
+  DepositEventType,
+} from "../syncAdapter";
 
 export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
   private readonly graphqlEndpoint: string;

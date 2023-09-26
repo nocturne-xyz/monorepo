@@ -14,6 +14,7 @@ export {
   NocturneViewer,
   generateRandomSpendingKey,
   StealthAddress,
+  CompressedStealthAddress,
   CanonAddress,
   StealthAddressTrait,
   compressPoint,

@@ -9,10 +9,3 @@ export {
   encryptedNoteFromEncryptedNoteResponse,
 } from "./core";
 export * as SubgraphUtils from "./utils";
-
-export {
-  DepositEventType,
-  DepositEvent,
-  DepositEventResponse,
-  fetchDepositEvents,
-} from "./deposits";
