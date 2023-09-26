@@ -125,8 +125,6 @@ export class BabyJubJubHybridCipher {
     ciphertext: HybridCiphertext,
     receiverPrivateKey: bigint
   ): Uint8Array | null {
-    const decryptionError = new Error("failed to decrypt");
-
     // deserialize stuff
     const { ciphertextBytes, encapsulatedSecretBytes } = ciphertext;
 
@@ -168,10 +166,11 @@ export class BabyJubJubHybridCipher {
       BabyJubJub.ScalarField.BYTES
     );
     const msg = plaintext.slice(BabyJubJub.ScalarField.BYTES);
-    const ephemeralSecret =
+    let ephemeralSecret =
       BabyJubJub.ScalarField.fromBytes(ephemeralSecretBytes);
     if (ephemeralSecret === null) {
-      throw decryptionError;
+      ephemeralSecret = BabyJubJub.PRIME_SUBGROUP_ORDER - 1n;
+      returnNull = true;
     }
 
     // check ephemeralSecret against encapsulated secret
