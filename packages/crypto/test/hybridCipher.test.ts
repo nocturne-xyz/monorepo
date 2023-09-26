@@ -52,7 +52,7 @@ describe("BabyJubJubHybridCipher", () => {
       BabyJubJub.BasePointExtended.multiply(receiverPrivateKey).toAffine();
 
     const ciphertext = cipher.encrypt(msgBytes, receiverPublicKey);
-    ciphertext.ciphertextBytes[0] = (ciphertext.ciphertextBytes[0] + 3) % 8;
+    ciphertext.ciphertextBytes[0] = randomBytes(1)[0];
 
     const decrypted = cipher.decrypt(ciphertext, receiverPrivateKey);
     expect(decrypted).to.be.null;

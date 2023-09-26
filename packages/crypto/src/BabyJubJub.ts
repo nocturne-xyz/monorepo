@@ -8,7 +8,15 @@ import { sha256 } from "@noble/hashes/sha256";
 export { AffinePoint } from "@noble/curves/abstract/curve";
 
 // HACK: noble doesn't export it's field type, so I have to infer and make an alias
-export type FpField = ReturnType<typeof Field>;
+// HACK - noble doesn't check that the resulting bigint is in the field in `fromBytes`, so we override it
+// and add a method that doesn't throw error to avoid footgun
+export type FpField = Omit<ReturnType<typeof Field>, "fromBytes"> & {
+  // throws error
+  fromBytes: (bytes: Uint8Array) => bigint;
+
+  // returns null
+  fromBytesUnsafe: (bytes: Uint8Array) => bigint | null;
+};
 
 export type BabyJubJubCurveType = {
   A: bigint;
@@ -33,12 +41,18 @@ const __BaseField = Field(
   true
 );
 
-const BaseField: Readonly<FpField> = {
+const BaseField: FpField = {
   ...__BaseField,
-  // HACK - noble doesn't check that the resulting bigint is in the field, so we override it to avoid footgun
-  fromBytes: (bytes: Uint8Array) => {
+  fromBytes(bytes: Uint8Array) {
     const res = __BaseField.fromBytes(bytes);
-    assert(__BaseField.isValid(res), "invalid base field element");
+    assert(__BaseField.isValid(res), "result is not a valid field element");
+    return res;
+  },
+  fromBytesUnsafe(bytes: Uint8Array) {
+    const res = __BaseField.fromBytes(bytes);
+    if (!__BaseField.isValid(res)) {
+      return null;
+    }
     return res;
   },
 };
@@ -55,10 +69,16 @@ const __ScalarField = Field(
 
 const ScalarField: Readonly<FpField> = {
   ...__ScalarField,
-  // HACK - noble doesn't check that the resulting bigint is in the field, so we override it to avoid footgun
-  fromBytes: (bytes: Uint8Array) => {
+  fromBytes(bytes: Uint8Array) {
     const res = __ScalarField.fromBytes(bytes);
-    assert(__ScalarField.isValid(res), "invalid scalar field element");
+    assert(__ScalarField.isValid(res), "result is not a valid field element");
+    return res;
+  },
+  fromBytesUnsafe(bytes: Uint8Array) {
+    const res = __ScalarField.fromBytes(bytes);
+    if (!__ScalarField.isValid(res)) {
+      return null;
+    }
     return res;
   },
 };
@@ -122,6 +142,7 @@ export const BabyJubJub = {
 
   // retuns an extended point - can be converted back to affine with `toAffine`
   // note that `ExtPointType` has getters for `x` and `y` that return field elements in affine coordinates
+  // throws an error if encoding is invalid
   fromBytes(bytes: Uint8Array): ExtPointType {
     assert(bytes.length === this.BaseField.BYTES * 2);
 
@@ -131,19 +152,38 @@ export const BabyJubJub = {
     const x = this.BaseField.fromBytes(xBytes);
     const y = this.BaseField.fromBytes(yBytes);
 
-    assert(
-      this.BaseField.isValid(x),
-      "x coordinate is not a valid field element"
-    );
-    assert(
-      this.BaseField.isValid(y),
-      "y coordinate is not a valid field element"
-    );
-
     const point = { x, y };
     const ext = babyJubJubFn.ExtendedPoint.fromAffine(point);
     ext.assertValidity();
     assert(ext.isTorsionFree(), "point is not in prime-order subgroup");
+
+    return ext;
+  },
+
+  // returns an extended point - can be converted back to affine with `toAffine`
+  // note that `ExtPointType` has getters for `x` and `y` that return field elements in affine coordinates
+  // returns null if encoding is invalid
+  fromBytesUnsafe(bytes: Uint8Array): ExtPointType | null {
+    assert(bytes.length === this.BaseField.BYTES * 2);
+
+    const xBytes = bytes.slice(0, this.BaseField.BYTES);
+    const yBytes = bytes.slice(this.BaseField.BYTES);
+
+    let x = this.BaseField.fromBytesUnsafe(xBytes);
+    let y = this.BaseField.fromBytesUnsafe(yBytes);
+
+    let returnNull = false;
+    if (x === null || y === null) {
+      returnNull = true;
+      x = this.BasePointAffine.x;
+      y = this.BasePointAffine.y;
+    }
+
+    const point = { x, y };
+    const ext = babyJubJubFn.ExtendedPoint.fromAffine(point);
+    if (!ext.isTorsionFree() || returnNull) {
+      return null;
+    }
 
     return ext;
   },
