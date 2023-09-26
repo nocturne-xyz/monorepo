@@ -128,9 +128,11 @@ export class BabyJubJubHybridCipher {
     // deserialize stuff
     const { ciphertextBytes, encapsulatedSecretBytes } = ciphertext;
 
-    let encapsulatedSecret = BabyJubJub.fromBytes(encapsulatedSecretBytes);
     let returnNull = false;
-    if (encapsulatedSecret === null) {
+    let encapsulatedSecret;
+    try {
+      encapsulatedSecret = BabyJubJub.fromBytes(encapsulatedSecretBytes);
+    } catch {
       encapsulatedSecret = BabyJubJub.BasePointExtended;
       returnNull = true;
     }
@@ -166,10 +168,12 @@ export class BabyJubJubHybridCipher {
       BabyJubJub.ScalarField.BYTES
     );
     const msg = plaintext.slice(BabyJubJub.ScalarField.BYTES);
-    let ephemeralSecret =
-      BabyJubJub.ScalarField.fromBytes(ephemeralSecretBytes);
-    if (ephemeralSecret === null) {
-      ephemeralSecret = BabyJubJub.PRIME_SUBGROUP_ORDER - 1n;
+
+    let ephemeralSecret;
+    try {
+      ephemeralSecret = BabyJubJub.ScalarField.fromBytes(ephemeralSecretBytes);
+    } catch {
+      ephemeralSecret = BabyJubJub.ScalarField.ORDER - 1n;
       returnNull = true;
     }
 

@@ -26,22 +26,42 @@ export type BabyJubJubCurveType = {
 };
 
 // BN254 Scalar Field - base field of BabyJubJub
-const BaseField = Field(
+const __BaseField = Field(
   21888242871839275222246405745257275088548364400416034343698204186575808495617n,
   undefined,
   // use little-endian encoding
   true
 );
 
+const BaseField: Readonly<FpField> = {
+  ...__BaseField,
+  // HACK - noble doesn't check that the resulting bigint is in the field, so we override it to avoid footgun
+  fromBytes: (bytes: Uint8Array) => {
+    const res = __BaseField.fromBytes(bytes);
+    assert(__BaseField.isValid(res), "invalid base field element");
+    return res;
+  },
+};
+
 // scalar field of Baby Jubjub's prime-order subgroup. technically this isn't the scalar field for the curve
 // overall, but we only ever use points in the subgroup, and not exporting the curve's
 // scalar field this helps us prevent cases where we accidentally use a point that's not in the subgroup
-const ScalarField = Field(
+const __ScalarField = Field(
   2736030358979909402780800718157159386076813972158567259200215660948447373041n,
   undefined,
   // use little-endian encoding
   true
 );
+
+const ScalarField: Readonly<FpField> = {
+  ...__ScalarField,
+  // HACK - noble doesn't check that the resulting bigint is in the field, so we override it to avoid footgun
+  fromBytes: (bytes: Uint8Array) => {
+    const res = __ScalarField.fromBytes(bytes);
+    assert(__ScalarField.isValid(res), "invalid scalar field element");
+    return res;
+  },
+};
 
 const GeneratorPoint: AffinePoint<bigint> = {
   x: 995203441582195749578291179787384436505546430278305826713579947235728471134n,
