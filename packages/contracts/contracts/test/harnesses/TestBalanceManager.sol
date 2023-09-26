@@ -6,6 +6,7 @@ import "../../libs/OperationUtils.sol";
 import {ITeller} from "../../interfaces/ITeller.sol";
 import {IHandler} from "../../interfaces/IHandler.sol";
 import {BalanceManager} from "../../BalanceManager.sol";
+import {AssetUtils} from "../../libs/AssetUtils.sol";
 
 contract TestBalanceManager is IHandler, BalanceManager {
     using OperationLib for Operation;
@@ -82,10 +83,17 @@ contract TestBalanceManager is IHandler, BalanceManager {
         return OperationUtils.calculateBundlerGasAssetPayout(op, opResult);
     }
 
-    function handleAllRefunds(
-        Operation calldata op,
-        uint256[] memory outstandingAmounts
-    ) public {
+    function handleAllRefunds(Operation calldata op) public {
+        // Get outstanding amounts for each asset (normally handled in Handler)
+        uint256[] memory outstandingAmounts = new uint256[](
+            op.trackedAssets.length
+        );
+        for (uint256 i = 0; i < op.trackedAssets.length; i++) {
+            outstandingAmounts[i] = AssetUtils.balanceOfAsset(
+                op.trackedAssets[i].encodedAsset
+            );
+        }
+
         _handleAllRefunds(op, outstandingAmounts);
     }
 }

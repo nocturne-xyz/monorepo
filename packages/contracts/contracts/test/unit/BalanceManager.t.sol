@@ -14,6 +14,7 @@ import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.
 import {OperationUtils} from "../../libs/OperationUtils.sol";
 import {Teller} from "../../Teller.sol";
 import {TestBalanceManager} from "../harnesses/TestBalanceManager.sol";
+import {DummyPriceOracleUSD} from "../utils/DummyPriceOracleUSD.sol";
 import "../utils/NocturneUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {Utils} from "../../libs/Utils.sol";
@@ -52,9 +53,11 @@ contract BalanceManagerTest is Test {
         joinSplitVerifier = new TestJoinSplitVerifier();
         subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
+        DummyPriceOracleUSD dummyPriceOracle = new DummyPriceOracleUSD();
+
         balanceManager.initialize(
             address(subtreeUpdateVerifier),
-            address(0x222), // TODO: replace with dummy price oracle
+            address(dummyPriceOracle),
             address(0x111)
         );
         balanceManager.setTeller(address(teller));
@@ -705,19 +708,8 @@ contract BalanceManagerTest is Test {
         );
         assertEq(token.balanceOf(address(teller)), 0);
 
-        // Get outstanding amounts for each asset (normally handled in Handler)
-        uint256[] memory outstandingAmounts = new uint256[](
-            op.trackedAssets.length
-        );
-        for (uint256 i = 0; i < op.trackedAssets.length; i++) {
-            vm.prank(address(balanceManager));
-            outstandingAmounts[i] = AssetUtils.balanceOfAsset(
-                op.trackedAssets[i].encodedAsset
-            );
-        }
-
         // Expect all 2 notes worth to be refunded to teller
-        balanceManager.handleAllRefunds(op, outstandingAmounts);
+        balanceManager.handleAllRefunds(op);
         assertEq(token.balanceOf(address(balanceManager)), 1);
         assertEq(token.balanceOf(address(teller)), (2 * PER_NOTE_AMOUNT));
     }
@@ -788,7 +780,7 @@ contract BalanceManagerTest is Test {
         }
 
         // Expect all refund tokens to be refunded to teller
-        balanceManager.handleAllRefunds(op, outstandingAmounts);
+        balanceManager.handleAllRefunds(op);
         assertEq(refundToken.balanceOf(address(balanceManager)), 1); // +1 due to prefill
         assertEq(refundToken.balanceOf(address(teller)), refundAmount);
     }

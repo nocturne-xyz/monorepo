@@ -13,6 +13,7 @@ import {HandlerHandler} from "./actors/HandlerHandler.sol";
 import {TokenSwapper, SwapRequest} from "../utils/TokenSwapper.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
+import {DummyPriceOracleUSD} from "../utils/DummyPriceOracleUSD.sol";
 import "../utils/NocturneUtils.sol";
 import {TestDepositManager} from "../harnesses/TestDepositManager.sol";
 import {Teller} from "../../Teller.sol";
@@ -30,6 +31,8 @@ contract ProtocolInvariants is Test, InvariantsBase {
         handler = new Handler();
         depositManager = new TestDepositManager();
 
+        DummyPriceOracleUSD dummyPriceOracle = new DummyPriceOracleUSD();
+
         WETH9 weth = new WETH9();
         EthTransferAdapter ethTransferAdapter = new EthTransferAdapter(
             address(weth)
@@ -46,7 +49,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
         );
         handler.initialize(
             address(subtreeUpdateVerifier),
-            address(0x222), // TODO: replace with dummy price oracle
+            address(dummyPriceOracle),
             address(0x111)
         );
         handler.setTeller(address(teller));

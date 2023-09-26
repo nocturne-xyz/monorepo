@@ -15,6 +15,7 @@ import {Handler} from "../../Handler.sol";
 import {Teller} from "../../Teller.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
+import {DummyPriceOracleUSD} from "../utils/DummyPriceOracleUSD.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {WETH9} from "../tokens/WETH9.sol";
 
@@ -77,6 +78,8 @@ contract DepositManagerTest is Test {
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
+        DummyPriceOracleUSD dummyPriceOracle = new DummyPriceOracleUSD();
+
         teller.initialize(
             "NocturneTeller",
             "v1",
@@ -85,7 +88,7 @@ contract DepositManagerTest is Test {
         );
         handler.initialize(
             address(subtreeUpdateVerifier),
-            address(0x222), // TODO: replace with dummy price oracle
+            address(dummyPriceOracle),
             address(0x111)
         );
         handler.setTeller(address(teller));

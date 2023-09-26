@@ -114,12 +114,13 @@ contract BalanceManager is CommitmentTreeManager {
                 subarrayStartIndex
             );
 
-            uint256 valueToGatherForSubarray = _sumJoinSplitPublicSpendsInclusive(
-                    op.pubJoinSplits,
-                    subarrayStartIndex,
-                    subarrayEndIndex
-                );
+            uint256 totalValueInSubarray = _sumJoinSplitPublicSpendsInclusive(
+                op.pubJoinSplits,
+                subarrayStartIndex,
+                subarrayEndIndex
+            );
 
+            uint256 valueToGatherForSubarray = totalValueInSubarray;
             if (
                 gasAssetToReserve > 0 &&
                 AssetUtils.eq(encodedGasAsset, encodedAsset)
@@ -133,10 +134,8 @@ contract BalanceManager is CommitmentTreeManager {
                 gasAssetToReserve -= reserveValue;
             }
 
-            // Add to joinsplit publicSpend to tally of totalUnwrapAmounts for asset
-            totalUnwrapAmounts[joinSplitAssetIndex] += op
-                .pubJoinSplits[subarrayStartIndex]
-                .publicSpend;
+            // Add sum of joinsplit public spends to tally of totalUnwrapAmounts for asset
+            totalUnwrapAmounts[joinSplitAssetIndex] += totalValueInSubarray;
 
             // Update subarray index and numJoinSplitAssets
             subarrayStartIndex = subarrayEndIndex + 1;

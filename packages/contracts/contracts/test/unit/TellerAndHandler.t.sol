@@ -15,6 +15,7 @@ import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
+import {DummyPriceOracleUSD} from "../utils/DummyPriceOracleUSD.sol";
 import {ReentrantCaller} from "../utils/ReentrantCaller.sol";
 import {TokenSwapper, SwapRequest, Erc721TransferFromRequest, Erc721And1155SafeTransferFromRequest} from "../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../utils/TreeTest.sol";
@@ -96,6 +97,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
+        DummyPriceOracleUSD dummyPriceOracle = new DummyPriceOracleUSD();
+
         teller.initialize(
             "NocturneTeller",
             "v1",
@@ -104,7 +107,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         );
         handler.initialize(
             address(subtreeUpdateVerifier),
-            address(0x222), // TODO: replace with dummy price oracle
+            address(dummyPriceOracle),
             address(0x111)
         );
         handler.setTeller(address(teller));

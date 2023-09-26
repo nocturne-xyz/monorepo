@@ -8,6 +8,7 @@ import {Teller} from "../../Teller.sol";
 import {Handler} from "../../Handler.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
+import {DummyPriceOracleUSD} from "../utils/DummyPriceOracleUSD.sol";
 import "../../libs/Types.sol";
 import "../../libs/AssetUtils.sol";
 
@@ -22,6 +23,7 @@ contract ForkBase is Test {
     function baseSetUp() public {
         teller = new Teller();
         handler = new Handler();
+        DummyPriceOracleUSD dummyPriceOracle = new DummyPriceOracleUSD();
 
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
@@ -34,7 +36,7 @@ contract ForkBase is Test {
         );
         handler.initialize(
             address(subtreeUpdateVerifier),
-            address(0x222), // TODO: replace with dummy price oracle
+            address(dummyPriceOracle),
             address(0x111)
         );
         handler.setTeller(address(teller));
