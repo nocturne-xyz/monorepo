@@ -6,11 +6,11 @@ import {
   WithTotalEntityIndex,
   IncludedEncryptedNote,
   IncludedNote,
-  EncodedOrEncryptedNoteResponse,
-  encryptedNoteFromEncryptedNoteResponse,
-  includedNoteFromNoteResponse,
   SubgraphUtils,
+  StealthAddressTrait,
+  AssetTrait,
 } from "@nocturne-xyz/core";
+import { ethers } from "ethers";
 
 const { makeSubgraphQuery } = SubgraphUtils;
 
@@ -29,10 +29,32 @@ export interface FilledBatchWithZerosEventResponse {
   numZeros: string;
 }
 
+// it's a plaintext note iff only those fields and merkleIndex are non-null
+// it's an encrypted note iff only those fields and merkleIndex are non-null
+// it's a tree batch fill iff only `merkleIndex` is non-null
 export interface TreeInsertionEventReponse {
   id: string;
-  encodedOrEncryptedNote: Omit<EncodedOrEncryptedNoteResponse, "id"> | null;
-  filledBatchWithZerosEvent: FilledBatchWithZerosEventResponse | null;
+
+  // merkle index of the insertion
+  // in the case of a note, this is the merkle index for the note
+  // in the case of a tree batch being filled with zeros, this is the first index of the batch
+  merkleIndex: string;
+
+  // plaintext note insertion (from a deposit or refund)
+  encodedNoteOwnerH1: string | null;
+  encodedNoteOwnerH2: string | null;
+  encodedNoteNonce: string | null;
+  encodedNoteEncodedAssetAddr: string | null;
+  encodedNoteEncodedAssetId: string | null;
+  encodedNoteValue: string | null;
+
+  // encrypted note insertion (from a joinsplit)
+  encryptedNoteCiphertextBytes: string | null;
+  encryptedNoteEncapsulatedSecretBytes: string | null;
+  encryptedNoteCommitment: string | null;
+
+  // tree batch filled with zeros
+  filledBatchWithZerosNumZeros: string | null;
 }
 
 interface FetchTreeInsertionsResponse {
@@ -53,26 +75,21 @@ function makeTreeInsertionsQuery(toIdx?: TotalEntityIndex) {
 query fetchTreeInsertionEvents($fromIdx: String!) {
   treeInsertionEvents(where: ${where}) {
     id
-    encodedOrEncryptedNote {
-      merkleIndex
-      note {
-        ownerH1
-        ownerH2
-        nonce
-        encodedAssetAddr
-        encodedAssetId
-        value
-      }
-      encryptedNote {
-        ciphertextBytes
-        encapsulatedSecretBytes
-        commitment
-      }
-    }
-    filledBatchWithZerosEvent {
-      startIndex
-      numZeros
-    }
+
+    merkleIndex
+  
+    encodedNoteOwnerH1
+    encodedNoteOwnerH2
+    encodedNoteNonce
+    encodedNoteEncodedAssetAddr
+    encodedNoteEncodedAssetId
+    encodedNoteValue
+  
+    encryptedNoteCiphertextBytes
+    encryptedNoteEncapsulatedSecretBytes
+    encryptedNoteCommitment
+  
+    filledBatchWithZerosNumZeros
   }
 }`;
 }
@@ -98,47 +115,110 @@ export async function fetchTreeInsertions(
     return [];
   }
 
-  return res.data.treeInsertionEvents.map(
-    ({ id, encodedOrEncryptedNote, filledBatchWithZerosEvent }) => {
-      const totalEntityIndex = BigInt(id);
+  return res.data.treeInsertionEvents.map((res) => {
+    const totalEntityIndex = BigInt(res.id);
 
-      // encrypted note
-      if (encodedOrEncryptedNote && encodedOrEncryptedNote.encryptedNote) {
-        const { encryptedNote, merkleIndex } = encodedOrEncryptedNote;
-        return {
-          inner: encryptedNoteFromEncryptedNoteResponse(
-            encryptedNote,
-            parseInt(merkleIndex)
-          ),
-          totalEntityIndex,
-        };
-      }
+    const event =
+      tryIncludedNoteFromTreeInsertionEventResponse(res) ??
+      tryIncludedEncryptedNoteFromTreeInsertionEventResponse(res) ??
+      tryFilledBatchWithZerosEventFromTreeInsertionEventResponse(res);
 
-      // encoded note
-      if (encodedOrEncryptedNote && encodedOrEncryptedNote.note) {
-        const { note, merkleIndex } = encodedOrEncryptedNote;
-        return {
-          inner: includedNoteFromNoteResponse(note, parseInt(merkleIndex)),
-          totalEntityIndex,
-        };
-      }
-
-      // filled batch with zeros
-      if (filledBatchWithZerosEvent) {
-        const { startIndex, numZeros } = filledBatchWithZerosEvent;
-        return {
-          inner: {
-            merkleIndex: parseInt(startIndex),
-            numZeros: parseInt(numZeros),
-          },
-          totalEntityIndex,
-        };
-      }
-
-      // should never happen
+    if (!event) {
       throw new Error("invalid tree insertion event");
     }
-  );
+
+    return {
+      totalEntityIndex,
+      inner: event,
+    };
+  });
+}
+
+function tryIncludedNoteFromTreeInsertionEventResponse(
+  res: TreeInsertionEventReponse
+): IncludedNote | undefined {
+  if (
+    res.encodedNoteOwnerH1 !== null &&
+    res.encodedNoteOwnerH2 !== null &&
+    res.encodedNoteNonce !== null &&
+    res.encodedNoteEncodedAssetAddr !== null &&
+    res.encodedNoteEncodedAssetId !== null &&
+    res.encodedNoteValue !== null &&
+    res.encryptedNoteCiphertextBytes === null &&
+    res.encryptedNoteEncapsulatedSecretBytes === null &&
+    res.encryptedNoteCommitment === null &&
+    res.filledBatchWithZerosNumZeros === null
+  ) {
+    return {
+      owner: StealthAddressTrait.decompress({
+        h1: BigInt(res.encodedNoteOwnerH1),
+        h2: BigInt(res.encodedNoteOwnerH2),
+      }),
+      asset: AssetTrait.decode({
+        encodedAssetAddr: BigInt(res.encodedNoteEncodedAssetAddr),
+        encodedAssetId: BigInt(res.encodedNoteEncodedAssetId),
+      }),
+      value: BigInt(res.encodedNoteValue),
+      nonce: BigInt(res.encodedNoteNonce),
+      merkleIndex: parseInt(res.merkleIndex),
+    };
+  }
+
+  return undefined;
+}
+
+function tryIncludedEncryptedNoteFromTreeInsertionEventResponse(
+  res: TreeInsertionEventReponse
+): IncludedEncryptedNote | undefined {
+  if (
+    res.encryptedNoteCiphertextBytes !== null &&
+    res.encryptedNoteEncapsulatedSecretBytes !== null &&
+    res.encryptedNoteCommitment !== null &&
+    res.encodedNoteOwnerH1 === null &&
+    res.encodedNoteOwnerH2 === null &&
+    res.encodedNoteNonce === null &&
+    res.encodedNoteEncodedAssetAddr === null &&
+    res.encodedNoteEncodedAssetId === null &&
+    res.encodedNoteValue === null &&
+    res.filledBatchWithZerosNumZeros === null
+  ) {
+    return {
+      ciphertextBytes: Array.from(
+        ethers.utils.arrayify(res.encryptedNoteCiphertextBytes)
+      ),
+      encapsulatedSecretBytes: Array.from(
+        ethers.utils.arrayify(res.encryptedNoteEncapsulatedSecretBytes)
+      ),
+      commitment: BigInt(res.encryptedNoteCommitment),
+      merkleIndex: parseInt(res.merkleIndex),
+    };
+  }
+
+  return undefined;
+}
+
+function tryFilledBatchWithZerosEventFromTreeInsertionEventResponse(
+  res: TreeInsertionEventReponse
+): FilledBatchWithZerosEvent | undefined {
+  if (
+    res.filledBatchWithZerosNumZeros !== null &&
+    res.encodedNoteOwnerH1 === null &&
+    res.encodedNoteOwnerH2 === null &&
+    res.encodedNoteNonce === null &&
+    res.encodedNoteEncodedAssetAddr === null &&
+    res.encodedNoteEncodedAssetId === null &&
+    res.encodedNoteValue === null &&
+    res.encryptedNoteCiphertextBytes === null &&
+    res.encryptedNoteEncapsulatedSecretBytes === null &&
+    res.encryptedNoteCommitment === null
+  ) {
+    return {
+      numZeros: parseInt(res.filledBatchWithZerosNumZeros),
+      merkleIndex: parseInt(res.merkleIndex),
+    };
+  }
+
+  return undefined;
 }
 
 export async function fetchLatestSubtreeIndex(
