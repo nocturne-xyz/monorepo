@@ -107,11 +107,8 @@ contract Teller is
     }
 
     /// @notice Only callable by allowed bundler
-    modifier onlyAllowedBundlerOrThis() {
-        require(
-            msg.sender == address(this) || _bundlers[msg.sender],
-            "Only bundler"
-        );
+    modifier onlyAllowedBundler() {
+        require(_bundlers[msg.sender], "Only bundler");
         _;
     }
 
@@ -189,7 +186,7 @@ contract Teller is
         override
         whenNotPaused
         nonReentrant
-        onlyAllowedBundlerOrThis
+        onlyAllowedBundler
         returns (OperationResult[] memory)
     {
         return _processBundle(bundle);
