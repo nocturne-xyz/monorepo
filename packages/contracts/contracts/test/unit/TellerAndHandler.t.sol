@@ -2913,7 +2913,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(handler)), uint256(1));
         assertEq(token.balanceOf(ALICE), PER_NOTE_AMOUNT);
 
-        // TODO: check for ForcedExit event
+        // TODO: check for ForcedExit event!
     }
 
     // TODO: add testcase for leftover tokens in handler sent to leftover holder

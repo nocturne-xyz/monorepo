@@ -12,6 +12,7 @@ import {
   SubmittableOperationWithNetworkInfo,
   RelayResponse,
   OperationStatusResponse,
+  Address,
 } from "@nocturne-xyz/core";
 import { Handler, Teller } from "@nocturne-xyz/contracts";
 import {
@@ -31,6 +32,7 @@ export interface HandleRelayDeps {
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   redis: IORedis;
+  bundlerAddress: Address;
   tellerContract: Teller;
   handlerContract: Handler;
   provider: ethers.providers.Provider;
@@ -44,6 +46,7 @@ export function makeRelayHandler({
   statusDB,
   nullifierDB,
   redis,
+  bundlerAddress,
   tellerContract,
   handlerContract,
   provider,
@@ -105,6 +108,7 @@ export function makeRelayHandler({
 
     childLogger.debug("validating reverts");
     const revertErr = await checkRevertError(
+      bundlerAddress,
       tellerContract,
       handlerContract,
       provider,
