@@ -34,7 +34,7 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
 
     function setUp() public virtual {
         // Deploy poseidon poseidon libraries
-        deployPoseidon3Through6();
+        deployPoseidons();
         subtreeUpdateVerifier = ISubtreeUpdateVerifier(
             new TestSubtreeUpdateVerifier()
         );

@@ -73,7 +73,7 @@ contract Teller is
     );
 
     /// @notice Event emitted when a forced exit is processed
-    event ForcedExit(JoinSplitInfo[][] joinSplitInfos);
+    event ForcedExit(uint256[] opDigests, JoinSplitInfo[][] joinSplitInfos);
 
     /// @notice Initializer function
     /// @param handler Address of the handler contract
@@ -187,7 +187,7 @@ contract Teller is
         whenNotPaused
         nonReentrant
         onlyAllowedBundler
-        returns (OperationResult[] memory)
+        returns (uint256[] memory opDigests, OperationResult[] memory opResults)
     {
         return _processBundle(bundle);
     }
@@ -195,7 +195,7 @@ contract Teller is
     function forcedExit(
         Bundle calldata bundle,
         JoinSplitInfo[][] calldata joinSplitInfos
-    ) external whenNotPaused returns (OperationResult[] memory) {
+    ) external whenNotPaused nonReentrant returns (OperationResult[] memory) {
         // Ensure bundle has ops that can only send funds out of protocol and that user
         // reveals notes being spent on the way out
         uint256 numOps = bundle.operations.length;
@@ -241,8 +241,11 @@ contract Teller is
             }
         }
 
-        OperationResult[] memory opResults = _processBundle(bundle);
-        emit ForcedExit(joinSplitInfos);
+        (
+            uint256[] memory opDigests,
+            OperationResult[] memory opResults
+        ) = _processBundle(bundle);
+        emit ForcedExit(opDigests, joinSplitInfos);
 
         return opResults;
     }
@@ -253,11 +256,14 @@ contract Teller is
     /// @param bundle Bundle of operations to process
     function _processBundle(
         Bundle calldata bundle
-    ) internal returns (OperationResult[] memory) {
+    )
+        internal
+        returns (uint256[] memory opDigests, OperationResult[] memory opResults)
+    {
         Operation[] calldata ops = bundle.operations;
         require(ops.length > 0, "empty bundle");
 
-        uint256[] memory opDigests = new uint256[](ops.length);
+        opDigests = new uint256[](ops.length);
         for (uint256 i = 0; i < ops.length; i++) {
             Validation.validateOperation(ops[i]);
             opDigests[i] = _computeDigest(ops[i]);
@@ -270,7 +276,7 @@ contract Teller is
         require(success, "Batch JoinSplit verify failed");
 
         uint256 numOps = ops.length;
-        OperationResult[] memory opResults = new OperationResult[](numOps);
+        opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
             try
                 _handler.handleOperation(
@@ -303,7 +309,7 @@ contract Teller is
                 opResults[i].postOpMerkleCount
             );
         }
-        return opResults;
+        return (opDigests, opResults);
     }
 
     /// @notice Verifies or batch verifies joinSplit proofs for an array of operations.
