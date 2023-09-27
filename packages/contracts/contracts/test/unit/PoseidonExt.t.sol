@@ -3,8 +3,8 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
-import {IHasherExtT3, IHasherExtT4, IHasherExtT7} from "../interfaces/IHasherExt.sol";
-import {PoseidonExtHasherT3, PoseidonExtHasherT4, PoseidonExtHasherT7} from "../utils/PoseidonHashers.sol";
+import {IHasherExtT3, IHasherExtT4, IHasherExtT7} from "../../interfaces/IHasherExt.sol";
+import {PoseidonExtHasherT3, PoseidonExtHasherT4, PoseidonExtHasherT7} from "../../PoseidonExt.sol";
 
 contract TestPoseidonExt is PoseidonDeployer {
     IHasherExtT3 public hasherExtT3;
