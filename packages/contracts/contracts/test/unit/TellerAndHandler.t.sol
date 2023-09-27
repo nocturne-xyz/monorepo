@@ -18,7 +18,7 @@ import {ReentrantCaller} from "../utils/ReentrantCaller.sol";
 import {TokenSwapper, SwapRequest, Erc721TransferFromRequest, Erc721And1155SafeTransferFromRequest} from "../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../utils/TreeTest.sol";
 import "../utils/NocturneUtils.sol";
-import {Teller} from "../../Teller.sol";
+import {TestTeller} from "../harnesses/TestTeller.sol";
 import {Handler} from "../../Handler.sol";
 import {CommitmentTreeManager} from "../../CommitmentTreeManager.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
@@ -55,7 +55,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     address constant DEPOSIT_SOURCE = address(3);
     uint256 constant PER_NOTE_AMOUNT = uint256(50_000_000);
 
-    Teller teller;
+    TestTeller teller;
     Handler handler;
     TreeTest treeTest;
     EthTransferAdapter ethTransferAdapter;
@@ -86,12 +86,14 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         JoinSplit joinSplit
     );
 
+    event ForcedExit(uint256[] opDigests, JoinSplitInfo[][] joinSplitInfos);
+
     function setUp() public virtual {
         // Deploy poseidon poseidon libraries
         deployPoseidons();
         deployPoseidonExts();
 
-        teller = new Teller();
+        teller = new TestTeller();
         handler = new Handler();
 
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
@@ -2893,6 +2895,12 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 for prefill
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
 
+        // Expect ForcedExit event
+        uint256[] memory opDigests = new uint256[](1);
+        opDigests[0] = teller.computeDigest(bundle.operations[0]);
+        vm.expectEmit(true, true, true, true);
+        emit ForcedExit(opDigests, joinSplitInfos);
+
         vm.prank(ALICE); // ALICE self submitting, not bundler
         OperationResult[] memory opResults = teller.forcedExit(
             bundle,
@@ -2912,8 +2920,6 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(teller)), 0);
         assertEq(token.balanceOf(address(handler)), uint256(1));
         assertEq(token.balanceOf(ALICE), PER_NOTE_AMOUNT);
-
-        // TODO: check for ForcedExit event!
     }
 
     // TODO: add testcase for leftover tokens in handler sent to leftover holder
