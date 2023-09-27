@@ -33,6 +33,9 @@ contract Teller is
 {
     using OperationLib for Operation;
 
+    bytes32 public constant JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
+        keccak256(bytes("JOINSPLIT_INFO_COMMITMENT"));
+
     // Handler contract
     IHandler public _handler;
 
@@ -266,9 +269,20 @@ contract Teller is
                 require(joinSplitInfos[i][j].newNoteValueB == 0, "!newValueB");
 
                 // Require joinSplitInfoCommitment to match joinSplitInfo
-                // uint256 joinSplitInfoCommmitment =
+                uint256 joinSplitInfoCommmitment = _poseidonT7.poseidonExt(
+                    uint256(JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR),
+                    [
+                        joinSplitInfos[i][j].compressedSenderCanonAddr,
+                        joinSplitInfos[i][j].compressedReceiverCanonAddr,
+                        joinSplitInfos[i][j].oldMerkleIndicesAndWithBits,
+                        joinSplitInfos[i][j].newNoteValueA,
+                        joinSplitInfos[i][j].newNoteValueB,
+                        joinSplitInfos[i][j].nonce
+                    ]
+                );
                 require(
-                    0 == op.pubJoinSplits[j].joinSplit.joinSplitInfoCommitment,
+                    joinSplitInfoCommmitment ==
+                        op.pubJoinSplits[j].joinSplit.joinSplitInfoCommitment,
                     "!JS info"
                 );
             }
