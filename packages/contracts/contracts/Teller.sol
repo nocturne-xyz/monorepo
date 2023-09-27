@@ -49,7 +49,7 @@ contract Teller is
     mapping(address => bool) public _bundlers;
 
     // 6 elem poseidon hasher
-    IPoseidonExtT7 public _poseidonT7;
+    IPoseidonExtT7 public _poseidonExtT7;
 
     // Gap for upgrade safety
     uint256[50] private __GAP;
@@ -83,7 +83,7 @@ contract Teller is
         string calldata contractVersion,
         address handler,
         address joinSplitVerifier,
-        address poseidonT7
+        address poseidonExtT7
     ) external initializer {
         __Pausable_init();
         __Ownable2Step_init();
@@ -91,7 +91,7 @@ contract Teller is
         __OperationEIP712_init(contractName, contractVersion);
         _handler = IHandler(handler);
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
-        _poseidonT7 = IPoseidonExtT7(poseidonT7);
+        _poseidonExtT7 = IPoseidonExtT7(poseidonExtT7);
     }
 
     /// @notice Only callable by the Handler, so Handler can request assets
@@ -107,8 +107,11 @@ contract Teller is
     }
 
     /// @notice Only callable by allowed bundler
-    modifier onlyAllowedBundler() {
-        require(_bundlers[msg.sender], "Only bundler");
+    modifier onlyAllowedBundlerOrThis() {
+        require(
+            msg.sender == address(this) || _bundlers[msg.sender],
+            "Only bundler"
+        );
         _;
     }
 
@@ -174,20 +177,86 @@ contract Teller is
         AssetUtils.transferAssetTo(encodedAsset, address(_handler), value);
     }
 
-    /// @notice Processes a bundle of operations. Verifies all proofs, then loops through each op
-    ///         and passes to Handler for processing/execution. Emits one OperationProcessed event
-    ///         per op.
+    /// @notice Processes a bundle of operations.
+    /// @dev Wraps internal _processBundle method (see below for more details) and adds not paused
+    ///      guard and reentrancy guard.
+    /// @dev Currently restricts callers to only allowed bundlers.
     /// @param bundle Bundle of operations to process
     function processBundle(
         Bundle calldata bundle
     )
-        public
+        external
         override
         whenNotPaused
         nonReentrant
-        onlyAllowedBundler
+        onlyAllowedBundlerOrThis
         returns (OperationResult[] memory)
     {
+        return _processBundle(bundle);
+    }
+
+    function forcedExit(
+        Bundle calldata bundle,
+        JoinSplitInfo[][] calldata joinSplitInfos
+    ) external whenNotPaused returns (OperationResult[] memory) {
+        // Ensure bundle has ops that can only send funds out of protocol and that user
+        // reveals notes being spent on the way out
+        uint256 numOps = bundle.operations.length;
+        for (uint256 i = 0; i < numOps; i++) {
+            Operation calldata op = bundle.operations[i];
+
+            // Refund addr is burn address
+            require(op.refundAddr.h1 + op.refundAddr.h2 == 0, "!burn addr");
+
+            // No conf joinsplits
+            require(op.confJoinSplits.length == 0, "!conf JS");
+
+            // Exists joinSplitInfo for each public joinSplit
+            uint256 numJoinSplitInfosForOp = joinSplitInfos[i].length;
+            require(
+                op.pubJoinSplits.length == numJoinSplitInfosForOp,
+                "!JS info len"
+            );
+
+            for (uint256 j = 0; j < numJoinSplitInfosForOp; j++) {
+                // No output notes
+                require(joinSplitInfos[i][j].newNoteValueA == 0, "!newValueA");
+                require(joinSplitInfos[i][j].newNoteValueB == 0, "!newValueB");
+
+                // Require joinSplitInfoCommitment to match joinSplitInfo
+                uint256 joinSplitInfoCommmitment = _poseidonExtT7.poseidonExt(
+                    uint256(JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR),
+                    [
+                        joinSplitInfos[i][j].compressedSenderCanonAddr,
+                        joinSplitInfos[i][j].compressedReceiverCanonAddr,
+                        joinSplitInfos[i][j].oldMerkleIndicesAndWithBits,
+                        joinSplitInfos[i][j].newNoteValueA,
+                        joinSplitInfos[i][j].newNoteValueB,
+                        joinSplitInfos[i][j].nonce
+                    ]
+                );
+
+                require(
+                    joinSplitInfoCommmitment ==
+                        op.pubJoinSplits[j].joinSplit.joinSplitInfoCommitment,
+                    "!JS info"
+                );
+            }
+        }
+
+        OperationResult[] memory opResults = _processBundle(bundle);
+        emit ForcedExit(joinSplitInfos);
+
+        return opResults;
+    }
+
+    /// @notice Processes a bundle of operations. Verifies all proofs, then loops through each op
+    ///         and passes to Handler for processing/execution. Emits one OperationProcessed event
+    ///         per op.
+    /// @param bundle Bundle of operations to process
+    function _processBundle(
+        Bundle calldata bundle
+    ) internal returns (OperationResult[] memory) {
         Operation[] calldata ops = bundle.operations;
         require(ops.length > 0, "empty bundle");
 
@@ -237,60 +306,6 @@ contract Teller is
                 opResults[i].postOpMerkleCount
             );
         }
-        return opResults;
-    }
-
-    function forcedExit(
-        Bundle calldata bundle,
-        JoinSplitInfo[][] calldata joinSplitInfos
-    ) external whenNotPaused nonReentrant returns (OperationResult[] memory) {
-        // Ensure bundle has ops that can only send funds out of protocol and that user
-        // reveals notes being spent on the way out
-        uint256 numOps = bundle.operations.length;
-        for (uint256 i = 0; i < numOps; i++) {
-            Operation calldata op = bundle.operations[i];
-
-            // Refund addr is burn address
-            require(op.refundAddr.h1 + op.refundAddr.h2 == 0, "!burn addr");
-
-            // No conf joinsplits
-            require(op.confJoinSplits.length == 0, "!conf JS");
-
-            // Exists joinSplitInfo for each public joinSplit
-            uint256 numJoinSplitInfosForOp = joinSplitInfos[i].length;
-            require(
-                op.pubJoinSplits.length == numJoinSplitInfosForOp,
-                "!JS info len"
-            );
-
-            for (uint256 j = 0; j < numJoinSplitInfosForOp; i++) {
-                // No output notes
-                require(joinSplitInfos[i][j].newNoteValueA == 0, "!newValueA");
-                require(joinSplitInfos[i][j].newNoteValueB == 0, "!newValueB");
-
-                // Require joinSplitInfoCommitment to match joinSplitInfo
-                uint256 joinSplitInfoCommmitment = _poseidonT7.poseidonExt(
-                    uint256(JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR),
-                    [
-                        joinSplitInfos[i][j].compressedSenderCanonAddr,
-                        joinSplitInfos[i][j].compressedReceiverCanonAddr,
-                        joinSplitInfos[i][j].oldMerkleIndicesAndWithBits,
-                        joinSplitInfos[i][j].newNoteValueA,
-                        joinSplitInfos[i][j].newNoteValueB,
-                        joinSplitInfos[i][j].nonce
-                    ]
-                );
-                require(
-                    joinSplitInfoCommmitment ==
-                        op.pubJoinSplits[j].joinSplit.joinSplitInfoCommitment,
-                    "!JS info"
-                );
-            }
-        }
-
-        OperationResult[] memory opResults = processBundle(bundle);
-        emit ForcedExit(joinSplitInfos);
-
         return opResults;
     }
 
