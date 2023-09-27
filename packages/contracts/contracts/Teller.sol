@@ -11,6 +11,7 @@ import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/acces
 import {ITeller} from "./interfaces/ITeller.sol";
 import {IHandler} from "./interfaces/IHandler.sol";
 import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
+import {IPoseidonExtT7} from "./interfaces/IPoseidonExt.sol";
 import {OperationEIP712} from "./OperationEIP712.sol";
 import {Utils} from "./libs/Utils.sol";
 import {Validation} from "./libs/Validation.sol";
@@ -44,6 +45,9 @@ contract Teller is
     // Set of allowed bundlers
     mapping(address => bool) public _bundlers;
 
+    // 6 elem poseidon hasher
+    IPoseidonExtT7 public _poseidonT7;
+
     // Gap for upgrade safety
     uint256[50] private __GAP;
 
@@ -75,7 +79,8 @@ contract Teller is
         string calldata contractName,
         string calldata contractVersion,
         address handler,
-        address joinSplitVerifier
+        address joinSplitVerifier,
+        address poseidonT7
     ) external initializer {
         __Pausable_init();
         __Ownable2Step_init();
@@ -83,6 +88,7 @@ contract Teller is
         __OperationEIP712_init(contractName, contractVersion);
         _handler = IHandler(handler);
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
+        _poseidonT7 = IPoseidonExtT7(poseidonT7);
     }
 
     /// @notice Only callable by the Handler, so Handler can request assets
@@ -260,7 +266,7 @@ contract Teller is
                 require(joinSplitInfos[i][j].newNoteValueB == 0, "!newValueB");
 
                 // Require joinSplitInfoCommitment to match joinSplitInfo
-                // TODO: replace dummy 0 with poseidon
+                // uint256 joinSplitInfoCommmitment =
                 require(
                     0 == op.pubJoinSplits[j].joinSplit.joinSplitInfoCommitment,
                     "!JS info"

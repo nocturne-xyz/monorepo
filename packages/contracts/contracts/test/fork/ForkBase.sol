@@ -8,10 +8,11 @@ import {Teller} from "../../Teller.sol";
 import {Handler} from "../../Handler.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
+import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
 import "../../libs/Types.sol";
 import "../../libs/AssetUtils.sol";
 
-contract ForkBase is Test {
+contract ForkBase is Test, PoseidonDeployer {
     address public constant DEPOSIT_SOURCE = address(0x111);
     address public constant ALICE = address(0x222);
     address public constant BUNDLER = address(0x333);
@@ -20,6 +21,8 @@ contract ForkBase is Test {
     Handler handler;
 
     function baseSetUp() public {
+        deployPoseidonExts();
+
         teller = new Teller();
         handler = new Handler();
 
@@ -30,7 +33,8 @@ contract ForkBase is Test {
             "NocturneTeller",
             "v1",
             address(handler),
-            address(joinSplitVerifier)
+            address(joinSplitVerifier),
+            address(poseidonExtT7)
         );
         handler.initialize(address(subtreeUpdateVerifier), address(0x111));
         handler.setTeller(address(teller));

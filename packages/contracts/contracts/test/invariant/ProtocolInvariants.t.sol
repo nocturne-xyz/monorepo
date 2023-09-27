@@ -22,10 +22,13 @@ import {EventParsing} from "../utils/EventParsing.sol";
 import {WETH9} from "../tokens/WETH9.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {Utils} from "../../libs/Utils.sol";
+import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
 import "../../libs/Types.sol";
 
-contract ProtocolInvariants is Test, InvariantsBase {
+contract ProtocolInvariants is Test, InvariantsBase, PoseidonDeployer {
     function setUp() public virtual {
+        deployPoseidonExts();
+
         teller = new Teller();
         handler = new Handler();
         depositManager = new TestDepositManager();
@@ -42,7 +45,8 @@ contract ProtocolInvariants is Test, InvariantsBase {
             "NocturneTeller",
             "v1",
             address(handler),
-            address(joinSplitVerifier)
+            address(joinSplitVerifier),
+            address(poseidonExtT7)
         );
         handler.initialize(address(subtreeUpdateVerifier), address(0x111));
         handler.setTeller(address(teller));
