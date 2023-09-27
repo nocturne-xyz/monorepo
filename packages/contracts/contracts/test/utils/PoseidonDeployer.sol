@@ -18,7 +18,7 @@ contract PoseidonDeployer is Test {
     IPoseidonExtT4 _poseidonExtT4;
     IPoseidonExtT7 _poseidonExtT7;
 
-    function deployPoseidon3Through6() public {
+    function deployPoseidons() public {
         string memory root = vm.projectRoot();
         address[4] memory poseidonAddrs;
 
