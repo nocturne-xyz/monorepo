@@ -235,7 +235,8 @@ contract Teller is
         Bundle calldata bundle,
         JoinSplitInfo[][] calldata joinSplitInfos
     ) external whenNotPaused nonReentrant returns (OperationResult[] memory) {
-        // Ensure bundle has ops that can only send funds out of protocol
+        // Ensure bundle has ops that can only send funds out of protocol and that user
+        // reveals notes being spent on the way out
         uint256 numOps = bundle.operations.length;
         for (uint256 i = 0; i < numOps; i++) {
             Operation calldata op = bundle.operations[i];
@@ -247,13 +248,13 @@ contract Teller is
             require(op.confJoinSplits.length == 0, "!conf JS");
 
             // Exists joinSplitInfo for each public joinSplit
-            uint256 numJoinSplitInfos = joinSplitInfos.length;
+            uint256 numJoinSplitInfosForOp = joinSplitInfos[i].length;
             require(
-                op.pubJoinSplits.length == numJoinSplitInfos,
+                op.pubJoinSplits.length == numJoinSplitInfosForOp,
                 "!JS info len"
             );
 
-            for (uint256 j = 0; j < numJoinSplitInfos; i++) {
+            for (uint256 j = 0; j < numJoinSplitInfosForOp; i++) {
                 // No output notes
                 require(joinSplitInfos[i][j].newNoteValueA == 0, "!newValueA");
                 require(joinSplitInfos[i][j].newNoteValueB == 0, "!newValueB");
