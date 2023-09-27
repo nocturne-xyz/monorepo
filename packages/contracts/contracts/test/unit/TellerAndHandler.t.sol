@@ -11,6 +11,7 @@ import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.so
 import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../libs/OffchainMerkleTree.sol";
 import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
 import {IPoseidonT3, IPoseidonT5, IPoseidonT6} from "../interfaces/IPoseidon.sol";
+import {IPoseidonExtT7} from "../../interfaces/IPoseidonExt.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import {ReentrantCaller} from "../utils/ReentrantCaller.sol";
@@ -62,6 +63,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     SimpleERC20Token[3] ERC20s;
     IPoseidonT5 poseidonT5;
     IPoseidonT6 poseidonT6;
+    IPoseidonExtT7 poseidonExtT7;
 
     event DepositSourcePermissionSet(address source, bool permission);
 
@@ -87,6 +89,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     function setUp() public virtual {
         // Deploy poseidon poseidon libraries
         deployPoseidon3Through6();
+        deployPoseidonExts();
 
         teller = new Teller();
         handler = new Handler();
@@ -110,6 +113,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         poseidonT5 = IPoseidonT5(_poseidonT5);
         poseidonT6 = IPoseidonT6(_poseidonT6);
+        poseidonExtT7 = IPoseidonExtT7(_poseidonExtT7);
 
         treeTest.initialize(poseidonT5, poseidonT6);
 
@@ -601,7 +605,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
         assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
-        // Expect BOB to have the the 1/2 notes worth sent by alice
+        // Expect BOB to have the 1/2 notes worth sent by alice
         // Expect teller to have alice's remaining 1/2 notes worth - gasComp
         // Expect BUNDLER to have > 0 gas tokens
         assertLt(
@@ -831,7 +835,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
         assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
-        // Expect BOB to have the the 1/2 notes worth sent by alice in ETH
+        // Expect BOB to have the 1/2 notes worth sent by alice in ETH
         // Expect teller to have alice's remaining 1/2 notes worth - gasComp
         // Expect BUNDLER to have > 0 gas tokens
         assertLt(
@@ -2811,86 +2815,104 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
     }
 
-    // function testForceExitSuccess() public {
-    //     // Alice starts with 1 notes worth of tokens in teller
-    //     SimpleERC20Token token = ERC20s[0];
-    //     reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
+    function testForceExitSuccess() public {
+        // Alice starts with 1 notes worth of tokens in teller
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
-    //     TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
 
-    //     // Create operation to transfer half of tokens to bob
-    //     Bundle memory bundle = Bundle({operations: new Operation[](1)});
-    //     bundle.operations[0] = NocturneUtils.formatOperation(
-    //         FormatOperationArgs({
-    //             joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-    //                 address(token)
-    //             ),
-    //             joinSplitRefundValues: new uint256[](1),
-    //             gasToken: address(token),
-    //             root: handler.root(),
-    //             joinSplitsPublicSpends: NocturneUtils
-    //                 ._publicSpendsArrayOfOnePublicSpendArray(
-    //                     NocturneUtils.fillJoinSplitPublicSpends(
-    //                         PER_NOTE_AMOUNT,
-    //                         1
-    //                     )
-    //                 ),
-    //             trackedRefundAssets: trackedRefundAssets,
-    //             gasAssetRefundThreshold: 0,
-    //             executionGasLimit: DEFAULT_GAS_LIMIT,
-    //             gasPrice: 1,
-    //             actions: NocturneUtils.formatSingleTransferActionArray(
-    //                 address(token),
-    //                 BOB,
-    //                 PER_NOTE_AMOUNT / 2
-    //             ),
-    //             atomicActions: false,
-    //             operationFailureType: OperationFailureType.NONE
-    //         })
-    //     );
+        // Create operation to transfer all tokens back to self
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
+                ),
+                joinSplitRefundValues: new uint256[](1),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0, // no gas comp, since alice is self-submitting
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    address(token),
+                    ALICE, // transfer all to self
+                    PER_NOTE_AMOUNT
+                ),
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
 
-    //     // TODO: make sure vals match joinSplitInfoCommitment
-    //     JoinSplitInfo[] memory joinSplitInfo = new JoinSplitInfo[](1);
-    //     joinSplitInfo[0] = JoinSplitInfo({
-    //         compressedSenderCanonAddr: 0,
-    //         compressedReceiverCanonAddr: 0,
-    //         oldMerkleIndicesAndWithBits: 0,
-    //         newNoteValueA: 0,
-    //         newNoteValueB: 0,
-    //         nonce: 0
-    //     });
+        // Dummy joinsplit info used for forcedExit
+        JoinSplitInfo[] memory joinSplitInfo = new JoinSplitInfo[](1);
+        joinSplitInfo[0] = JoinSplitInfo({
+            compressedSenderCanonAddr: 1,
+            compressedReceiverCanonAddr: 2,
+            oldMerkleIndicesAndWithBits: 3,
+            newNoteValueA: 0,
+            newNoteValueB: 0,
+            nonce: 6
+        });
 
-    //     JoinSplitInfo[][] memory joinSplitInfos = new JoinSplitInfo[][](1);
-    //     joinSplitInfos[0] = joinSplitInfo;
+        JoinSplitInfo[][] memory joinSplitInfos = new JoinSplitInfo[][](1);
+        joinSplitInfos[0] = joinSplitInfo;
 
-    //     assertEq(token.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
-    //     assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 for prefill
-    //     assertEq(token.balanceOf(address(ALICE)), uint256(0));
-    //     assertEq(token.balanceOf(address(BOB)), uint256(0));
+        // Set op joinsplit info commitment to match hash of passed in joinsplit info
+        uint256 joinSplitInfoCommitment = _poseidonExtT7.poseidonExt(
+            uint256(teller.JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR()),
+            [
+                joinSplitInfo[0].compressedSenderCanonAddr,
+                joinSplitInfo[0].compressedReceiverCanonAddr,
+                joinSplitInfo[0].oldMerkleIndicesAndWithBits,
+                joinSplitInfo[0].newNoteValueA,
+                joinSplitInfo[0].newNoteValueB,
+                joinSplitInfo[0].nonce
+            ]
+        );
+        bundle
+            .operations[0]
+            .pubJoinSplits[0]
+            .joinSplit
+            .joinSplitInfoCommitment = joinSplitInfoCommitment;
 
-    //     vm.prank(BUNDLER);
-    //     OperationResult[] memory opResults = teller.processBundle(bundle);
+        // Set op refund addr to be burn address
+        bundle.operations[0].refundAddr = CompressedStealthAddress(0, 0);
 
-    //     // One op, processed = true, call[0] succeeded
-    //     assertEq(opResults.length, uint256(1));
-    //     assertEq(opResults[0].opProcessed, true);
-    //     assertEq(opResults[0].assetsUnwrapped, true);
-    //     assertEq(opResults[0].callSuccesses.length, uint256(1));
-    //     assertEq(opResults[0].callSuccesses[0], true);
-    //     assertEq(opResults[0].callResults.length, uint256(1));
+        // Pre process checks
+        assertEq(token.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 for prefill
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
 
-    //     // Expect BOB to have the the 1/2 notes worth sent by alice
-    //     // Expect teller to have alice's remaining 1/2 notes worth - gasComp
-    //     // Expect BUNDLER to have > 0 gas tokens
-    //     assertLt(
-    //         token.balanceOf(address(teller)),
-    //         uint256(PER_NOTE_AMOUNT / 2)
-    //     );
-    //     assertGt(token.balanceOf(BUNDLER), 0);
-    //     assertEq(token.balanceOf(address(handler)), uint256(1));
-    //     assertEq(token.balanceOf(ALICE), uint256(0));
-    //     assertEq(token.balanceOf(BOB), uint256(PER_NOTE_AMOUNT / 2));
-    // }
+        vm.prank(ALICE); // ALICE self submitting, not bundler
+        OperationResult[] memory opResults = teller.forcedExit(
+            bundle,
+            joinSplitInfos
+        );
+
+        // One op, processed = true, call[0] succeeded
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(1));
+        assertEq(opResults[0].callSuccesses[0], true);
+        assertEq(opResults[0].callResults.length, uint256(1));
+
+        // Expect ALICE to have all the notes
+        // Expect teller to have 0
+        assertEq(token.balanceOf(address(teller)), 0);
+        assertEq(token.balanceOf(address(handler)), uint256(1));
+        assertEq(token.balanceOf(ALICE), PER_NOTE_AMOUNT);
+    }
 
     // TODO: add testcase for leftover tokens in handler sent to leftover holder
 }
