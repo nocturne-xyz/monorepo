@@ -15,6 +15,7 @@ const runServer = new Command("server")
     "config name or path to Nocturne contract JSON config file"
   )
   .requiredOption("--port <number>", "server port", parseInt)
+  .requiredOption("--bundler-address <string>", "bundler submitter address")
   .option(
     "--log-dir <string>",
     "directory to write logs to",
@@ -25,7 +26,8 @@ const runServer = new Command("server")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
-    const { configNameOrPath, port, logDir, stdoutLogLevel } = options;
+    const { configNameOrPath, port, bundlerAddress, logDir, stdoutLogLevel } =
+      options;
     const config = loadNocturneConfig(configNameOrPath);
 
     const rpcUrl = process.env.RPC_URL;
@@ -42,6 +44,7 @@ const runServer = new Command("server")
       stdoutLogLevel
     );
     const server = new BundlerServer(
+      bundlerAddress,
       config.tellerAddress,
       config.handlerAddress,
       provider,

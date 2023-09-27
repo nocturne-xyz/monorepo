@@ -23,6 +23,7 @@ export interface NocturneContractDeployment {
   depositManagerProxy: ProxyAddresses<any>;
   tellerProxy: ProxyAddresses<any>;
   handlerProxy: ProxyAddresses<any>;
+  poseidonExtT7Address: Address;
   joinSplitVerifierAddress: Address;
   subtreeUpdateVerifierAddress: Address;
   canonAddrSigCheckVerifierAddress: Address;

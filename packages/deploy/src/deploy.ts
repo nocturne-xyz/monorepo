@@ -239,6 +239,12 @@ export async function deployNocturneCoreContracts(
     await tx.wait(opts?.confirmations);
   }
 
+  console.log("\nsetting teller bundlers...");
+  for (const bundler of config.bundlers) {
+    const tx = await proxiedTeller.contract.setBundlerPermission(bundler, true);
+    await tx.wait(opts?.confirmations);
+  }
+
   console.log("\nsetting subtree batch fillers...");
   for (const filler of config.subtreeBatchFillers) {
     const tx = await proxiedHandler.contract.setSubtreeBatchFillerPermission(
@@ -276,6 +282,7 @@ export async function deployNocturneCoreContracts(
     depositManagerProxy: proxiedDepositManager.proxyAddresses,
     tellerProxy: proxiedTeller.proxyAddresses,
     handlerProxy: proxiedHandler.proxyAddresses,
+    poseidonExtT7Address: poseidonExtT7.address,
     joinSplitVerifierAddress: joinSplitVerifier.address,
     subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
     canonAddrSigCheckVerifierAddress: canonAddrSigCheckVerifier.address,
