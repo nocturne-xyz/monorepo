@@ -192,6 +192,13 @@ contract Teller is
         return _processBundle(bundle);
     }
 
+    /// @notice Allows user to submit a bundle of operations given they open the commitment to
+    ///         joinsplit info. This ensures users are always able to exit the protocol even if the
+    ///         the bundler goes down or rejects an operation.
+    /// @dev Opens joinsplit info commitment and ensures funds can only exit the protocol (i.e.
+    ///      refundAddr is burn address, no conf joinsplits, no joinsplit output notes).
+    /// @param bundle Bundle of operations to process
+    /// @param joinSplitInfos Array of joinSplitInfos for each public joinSplit in each operation
     function forcedExit(
         Bundle calldata bundle,
         JoinSplitInfo[][] calldata joinSplitInfos
