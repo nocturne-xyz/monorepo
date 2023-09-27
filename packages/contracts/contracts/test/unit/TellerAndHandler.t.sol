@@ -2858,7 +2858,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         joinSplitInfo[0] = JoinSplitInfo({
             compressedSenderCanonAddr: 1,
             compressedReceiverCanonAddr: 2,
-            oldMerkleIndicesAndWithBits: 3,
+            oldMerkleIndicesWithSignBits: 3,
             newNoteValueA: 0,
             newNoteValueB: 0,
             nonce: 6
@@ -2873,7 +2873,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             [
                 joinSplitInfo[0].compressedSenderCanonAddr,
                 joinSplitInfo[0].compressedReceiverCanonAddr,
-                joinSplitInfo[0].oldMerkleIndicesAndWithBits,
+                joinSplitInfo[0].oldMerkleIndicesWithSignBits,
                 joinSplitInfo[0].newNoteValueA,
                 joinSplitInfo[0].newNoteValueB,
                 joinSplitInfo[0].nonce

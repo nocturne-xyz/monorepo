@@ -33,6 +33,7 @@ contract Teller is
 {
     using OperationLib for Operation;
 
+    // Domain separator hashed with joinsplit info for joinsplit info commitment
     bytes32 public constant JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
         keccak256(bytes("JOINSPLIT_INFO_COMMITMENT"));
 
@@ -233,13 +234,12 @@ contract Teller is
                     [
                         joinSplitInfos[i][j].compressedSenderCanonAddr,
                         joinSplitInfos[i][j].compressedReceiverCanonAddr,
-                        joinSplitInfos[i][j].oldMerkleIndicesAndWithBits,
+                        joinSplitInfos[i][j].oldMerkleIndicesWithSignBits,
                         joinSplitInfos[i][j].newNoteValueA,
                         joinSplitInfos[i][j].newNoteValueB,
                         joinSplitInfos[i][j].nonce
                     ]
                 );
-
                 require(
                     joinSplitInfoCommmitment ==
                         op.pubJoinSplits[j].joinSplit.joinSplitInfoCommitment,

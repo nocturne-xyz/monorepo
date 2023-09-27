@@ -51,7 +51,7 @@ struct JoinSplit {
 struct JoinSplitInfo {
     uint256 compressedSenderCanonAddr;
     uint256 compressedReceiverCanonAddr;
-    uint256 oldMerkleIndicesAndWithBits;
+    uint256 oldMerkleIndicesWithSignBits;
     uint256 newNoteValueA;
     uint256 newNoteValueB;
     uint256 nonce;
