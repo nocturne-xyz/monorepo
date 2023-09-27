@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
-import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
+import {IPoseidonT3, IPoseidonT5, IPoseidonT6} from "../interfaces/IPoseidon.sol";
 import {TreeUtils} from "../../libs/TreeUtils.sol";
 import {AlgebraicUtils} from "./AlgebraicUtils.sol";
 import "../../libs/Types.sol";
 import "forge-std/Test.sol";
 
 struct TreeTest {
-    IHasherT5 hasherT5;
-    IHasherT6 hasherT6;
+    IPoseidonT5 poseidonT5;
+    IPoseidonT6 poseidonT6;
 }
 
 library TreeTestLib {
@@ -17,11 +17,11 @@ library TreeTestLib {
 
     function initialize(
         TreeTest storage self,
-        IHasherT5 _hasherT5,
-        IHasherT6 _hasherT6
+        IPoseidonT5 _poseidonT5,
+        IPoseidonT6 _poseidonT6
     ) internal {
-        self.hasherT5 = _hasherT5;
-        self.hasherT6 = _hasherT6;
+        self.poseidonT5 = _poseidonT5;
+        self.poseidonT6 = _poseidonT6;
     }
 
     function computeSubtreeRoot(
@@ -47,7 +47,7 @@ library TreeTestLib {
                 uint256 two = scratch[4 * j + 1];
                 uint256 three = scratch[4 * j + 2];
                 uint256 four = scratch[4 * j + 3];
-                scratch[j] = self.hasherT5.hash([one, two, three, four]);
+                scratch[j] = self.poseidonT5.poseidon([one, two, three, four]);
             }
         }
 
@@ -80,10 +80,10 @@ library TreeTestLib {
             i < TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH;
             i++
         ) {
-            paths[0][i + 1] = self.hasherT5.hash(
+            paths[0][i + 1] = self.poseidonT5.poseidon(
                 [paths[0][i], zero, zero, zero]
             );
-            zero = self.hasherT5.hash([zero, zero, zero, zero]);
+            zero = self.poseidonT5.poseidon([zero, zero, zero, zero]);
         }
 
         return paths;
@@ -117,17 +117,17 @@ library TreeTestLib {
         ) {
             if (subtreeIdx & 3 == 0) {
                 // first child
-                newPaths[0][i + 1] = self.hasherT5.hash(
+                newPaths[0][i + 1] = self.poseidonT5.poseidon(
                     [newPaths[0][i], zero, zero, zero]
                 );
             } else if (subtreeIdx & 3 == 1) {
                 // second child
-                newPaths[0][i + 1] = self.hasherT5.hash(
+                newPaths[0][i + 1] = self.poseidonT5.poseidon(
                     [lastThreePaths[0][i], newPaths[0][i], zero, zero]
                 );
             } else if (subtreeIdx & 3 == 2) {
                 // third child
-                newPaths[0][i + 1] = self.hasherT5.hash(
+                newPaths[0][i + 1] = self.poseidonT5.poseidon(
                     [
                         lastThreePaths[1][i],
                         lastThreePaths[0][i],
@@ -137,7 +137,7 @@ library TreeTestLib {
                 );
             } else {
                 // fourth child
-                newPaths[0][i + 1] = self.hasherT5.hash(
+                newPaths[0][i + 1] = self.poseidonT5.poseidon(
                     [
                         lastThreePaths[2][i],
                         lastThreePaths[1][i],
@@ -147,7 +147,7 @@ library TreeTestLib {
                 );
             }
 
-            zero = self.hasherT5.hash([zero, zero, zero, zero]);
+            zero = self.poseidonT5.poseidon([zero, zero, zero, zero]);
             subtreeIdx >>= 2;
         }
 
@@ -164,9 +164,9 @@ library TreeTestLib {
         (uint256 h2X, uint256 h2Y) = AlgebraicUtils.decompressPoint(
             note.ownerH2
         );
-        uint256 addrHash = self.hasherT5.hash([h1X, h1Y, h2X, h2Y]);
+        uint256 addrHash = self.poseidonT5.poseidon([h1X, h1Y, h2X, h2Y]);
         return
-            self.hasherT6.hash(
+            self.poseidonT6.poseidon(
                 [
                     addrHash,
                     note.nonce,
