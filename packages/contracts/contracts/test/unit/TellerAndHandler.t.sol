@@ -108,8 +108,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         teller.setDepositSourcePermission(DEPOSIT_SOURCE, true);
         handler.setSubtreeBatchFillerPermission(address(this), true);
 
-        poseidonT5 = IPoseidonT5(poseidonT5);
-        poseidonT6 = IPoseidonT6(poseidonT6);
+        poseidonT5 = IPoseidonT5(_poseidonT5);
+        poseidonT6 = IPoseidonT6(_poseidonT6);
 
         treeTest.initialize(poseidonT5, poseidonT6);
 
