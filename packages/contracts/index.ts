@@ -1,5 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
+export type { IPoseidonExtT7 } from './src/IPoseidonExtT7';
+
 export type { DepositManager } from './src/DepositManager';
 export type { Teller } from './src/Teller';
 export type { Handler } from './src/Handler';
@@ -28,6 +30,8 @@ export type { IBalancer } from './src/IBalancer';
 export type { SimpleERC20Token } from './src/SimpleERC20Token';
 export type { SimpleERC721Token } from './src/SimpleERC721Token';
 export type { SimpleERC1155Token } from './src/SimpleERC1155Token';
+
+export { IPoseidonExtT7__factory } from './src/factories/IPoseidonExtT7__factory';
 
 export { DepositManager__factory } from './src/factories/DepositManager__factory';
 export { Teller__factory } from './src/factories/Teller__factory';

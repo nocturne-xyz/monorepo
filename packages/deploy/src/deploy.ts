@@ -19,6 +19,7 @@ import {
   EthTransferAdapter__factory,
   WstethAdapter,
   EthTransferAdapter,
+  IPoseidonExtT7__factory,
 } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { ProxiedContract } from "./proxy";
@@ -33,6 +34,14 @@ import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { Address, getSelector } from "./utils";
 import { protocolWhitelistKey } from "@nocturne-xyz/core";
+import * as fs from "fs";
+import findWorkspaceRoot from "find-yarn-workspace-root";
+
+const ROOT_DIR = findWorkspaceRoot()!;
+const POSEIDON_EXT_T7_BYTECODE = fs.readFileSync(
+  `${ROOT_DIR}/packages/contracts/poseidon-bytecode/PoseidonExtT7.txt`,
+  "utf-8"
+);
 
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
@@ -165,11 +174,26 @@ export async function deployNocturneCoreContracts(
   );
   console.log("deployed proxied Handler:", proxiedHandler.proxyAddresses);
 
+  // Deploy poseidonExtT7 contract
+  console.log("\ndeploying poseidonExtT7...");
+  const poseidonExtT7 = await new ethers.ContractFactory(
+    IPoseidonExtT7__factory.createInterface(),
+    POSEIDON_EXT_T7_BYTECODE,
+    connectedSigner
+  ).deploy();
+  await poseidonExtT7.deployTransaction.wait(opts?.confirmations);
+
   console.log("\ndeploying proxied Teller...");
   const proxiedTeller = await deployProxiedContract(
     new Teller__factory(connectedSigner),
     proxyAdmin,
-    ["NocturneTeller", "v1", proxiedHandler.address, joinSplitVerifier.address] // initialize here
+    [
+      "NocturneTeller",
+      "v1",
+      proxiedHandler.address,
+      joinSplitVerifier.address,
+      poseidonExtT7.address,
+    ] // initialize here
   );
   console.log("deployed proxied Teller:", proxiedTeller.proxyAddresses);
 
