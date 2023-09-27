@@ -46,7 +46,7 @@ contract ProtocolInvariants is Test, InvariantsBase, PoseidonDeployer {
             "v1",
             address(handler),
             address(joinSplitVerifier),
-            address(poseidonExtT7)
+            address(_poseidonExtT7)
         );
         handler.initialize(address(subtreeUpdateVerifier), address(0x111));
         handler.setTeller(address(teller));

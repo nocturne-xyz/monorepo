@@ -9,10 +9,8 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {IJoinSplitVerifier} from "../../interfaces/IJoinSplitVerifier.sol";
 import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
 import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../libs/OffchainMerkleTree.sol";
-import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../utils//PoseidonHashers.sol";
-import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
-import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
+import {IPoseidonT3, IPoseidonT5, IPoseidonT6} from "../interfaces/IPoseidon.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import {ReentrantCaller} from "../utils/ReentrantCaller.sol";
@@ -62,8 +60,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     EthTransferAdapter ethTransferAdapter;
     IWeth weth;
     SimpleERC20Token[3] ERC20s;
-    IHasherT5 hasherT5;
-    IHasherT6 hasherT6;
+    IPoseidonT5 poseidonT5;
+    IPoseidonT6 poseidonT6;
 
     event DepositSourcePermissionSet(address source, bool permission);
 
@@ -87,7 +85,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     );
 
     function setUp() public virtual {
-        // Deploy poseidon hasher libraries
+        // Deploy poseidon poseidon libraries
         deployPoseidon3Through6();
 
         teller = new Teller();
@@ -101,7 +99,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             "v1",
             address(handler),
             address(joinSplitVerifier),
-            address(poseidonExtT7)
+            address(_poseidonExtT7)
         );
         handler.initialize(address(subtreeUpdateVerifier), address(0x111));
         handler.setTeller(address(teller));
@@ -110,10 +108,10 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         teller.setDepositSourcePermission(DEPOSIT_SOURCE, true);
         handler.setSubtreeBatchFillerPermission(address(this), true);
 
-        hasherT5 = IHasherT5(new PoseidonHasherT5(poseidonT5));
-        hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
+        poseidonT5 = IPoseidonT5(poseidonT5);
+        poseidonT6 = IPoseidonT6(poseidonT6);
 
-        treeTest.initialize(hasherT5, hasherT6);
+        treeTest.initialize(poseidonT5, poseidonT6);
 
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {

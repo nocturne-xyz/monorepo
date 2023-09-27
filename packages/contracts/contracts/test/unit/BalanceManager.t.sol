@@ -68,7 +68,7 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
             "v1",
             address(balanceManager),
             address(joinSplitVerifier),
-            address(poseidonExtT7)
+            address(_poseidonExtT7)
         );
         teller.setDepositSourcePermission(ALICE, true);
 
