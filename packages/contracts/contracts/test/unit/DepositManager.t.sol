@@ -17,8 +17,9 @@ import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {WETH9} from "../tokens/WETH9.sol";
+import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
 
-contract DepositManagerTest is Test {
+contract DepositManagerTest is Test, PoseidonDeployer {
     Teller public teller;
     Handler public handler;
     TestDepositManager public depositManager;
@@ -69,7 +70,8 @@ contract DepositManagerTest is Test {
     );
 
     function setUp() public virtual {
-        // TODO: extract teller/handler deployment into NocturneUtils
+        deployPoseidonExts();
+
         teller = new Teller();
         handler = new Handler();
         weth = new WETH9();
@@ -81,7 +83,8 @@ contract DepositManagerTest is Test {
             "NocturneTeller",
             "v1",
             address(handler),
-            address(joinSplitVerifier)
+            address(joinSplitVerifier),
+            address(poseidonExtT7)
         );
         handler.initialize(address(subtreeUpdateVerifier), address(0x111));
         handler.setTeller(address(teller));
