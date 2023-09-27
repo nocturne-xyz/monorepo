@@ -161,6 +161,7 @@ export async function gatherNotes(
   // 3. until we've gathered notes totalling at least the requested amount, repeat the following:
   //    a. find the smallest subsequence sum that is >= to the remaining amount to gather
   //    b. add the largest note of that subsequence to the set of notes to use.
+  // 4. If this process results in an odd number of notes to spend and there is still room, grab the smallest unused note for dust collection
 
   // 1. Sort notes from small to large
   const sortedNotes = sortNotesByValue(notes);
@@ -175,6 +176,7 @@ export async function gatherNotes(
 
   // 3. Construct the set of notes to use.
   const notesToUse: IncludedNote[] = [];
+  const usedNoteIndexes: Set<number> = new Set();
   let remainingAmount = requestedAmount;
   let subseqIndex = subsequenceSums.length - 1;
   while (remainingAmount > 0n) {
@@ -191,8 +193,19 @@ export async function gatherNotes(
     notesToUse.push(note);
     remainingAmount -= note.value;
 
+    usedNoteIndexes.add(subseqIndex);
     // Skip to next note
     subseqIndex--;
+  }
+
+  // 4. If this process results in an odd number of notes to spend and there is still room, grab the smallest unused note for dust collection
+  if (notesToUse.length % 2 == 1 && notesToUse.length < notes.length) {
+    const smallestUnusedNote = sortedNotes.find(
+      (note, i) => !usedNoteIndexes.has(i)
+    );
+    if (smallestUnusedNote) {
+      notesToUse.push(smallestUnusedNote);
+    }
   }
 
   console.log(

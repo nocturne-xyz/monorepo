@@ -75,6 +75,7 @@ export class NocturneClient {
     );
 
     this.viewer = viewer;
+    console.log(`Canonical address: `, this.viewer.canonicalAddress());
     this.handlerContract = Handler__factory.connect(
       this.config.handlerAddress,
       provider

@@ -61,8 +61,8 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
       op
     );
 
-    // we expect it to be 3000, the totalEntityIndex of the to 20 token note which we expect should be the
-    // newest note in the op
-    expect(totalEntityindex).to.equal(3000n);
+    // we expect it to be 4000, the totalEntityIndex of the to 1000 token note which we expect should be the
+    // newest note in the op due to even number padding.
+    expect(totalEntityindex).to.equal(4000n);
   });
 });
