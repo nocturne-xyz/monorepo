@@ -12,6 +12,10 @@ contract PoseidonDeployer is Test {
     address poseidonT5;
     address poseidonT6;
 
+    address poseidonExtT3;
+    address poseidonExtT4;
+    address poseidonExtT7;
+
     function deployPoseidon3Through6() public {
         string memory root = vm.projectRoot();
         address[4] memory poseidonAddrs;
@@ -38,5 +42,34 @@ contract PoseidonDeployer is Test {
         poseidonT4 = poseidonAddrs[1];
         poseidonT5 = poseidonAddrs[2];
         poseidonT6 = poseidonAddrs[3];
+    }
+
+    function deployPoseidonExts() public {
+        string memory root = vm.projectRoot();
+        address[3] memory poseidonAddrs;
+
+        uint8[3] memory widths = [3, 4, 7];
+
+        for (uint256 i = 0; i < 3; i++) {
+            bytes memory path = abi.encodePacked(
+                bytes(root),
+                "/packages/contracts/poseidon-bytecode/PoseidonExtT"
+            );
+            path = abi.encodePacked(path, bytes(Strings.toString(widths[i])));
+            path = abi.encodePacked(path, ".txt");
+
+            string memory bytecodeStr = vm.readFile(string(path));
+            bytes memory bytecode = ParseUtils.hexToBytes(bytecodeStr);
+
+            address deployed;
+            assembly {
+                deployed := create(0, add(bytecode, 0x20), mload(bytecode))
+            }
+            poseidonAddrs[i] = deployed;
+        }
+
+        poseidonExtT3 = poseidonAddrs[0];
+        poseidonExtT4 = poseidonAddrs[1];
+        poseidonExtT7 = poseidonAddrs[2];
     }
 }
