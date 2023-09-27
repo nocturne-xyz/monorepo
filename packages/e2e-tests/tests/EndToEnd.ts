@@ -51,7 +51,7 @@ type BundlerSubmissionResult =
   | BundlerSubmissionSuccess
   | BundlerSubmissionError;
 
-interface TestE2eParams {
+interface TestE2EParams {
   opRequestWithMetadata: OperationRequestWithMetadata;
   expectedResult: BundlerSubmissionResult;
   contractChecks?: () => Promise<void>;
@@ -134,7 +134,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     contractChecks,
     offchainChecks,
     expectedResult,
-  }: TestE2eParams): Promise<void> {
+  }: TestE2EParams): Promise<void> {
     console.log("alice: Sync SDK");
     await nocturneClientAlice.sync();
 
