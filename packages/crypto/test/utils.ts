@@ -1,5 +1,3 @@
-import "./crypto";
-
 export function range(start: number, stop?: number, step?: number): number[] {
   if (!stop) {
     stop = start;
