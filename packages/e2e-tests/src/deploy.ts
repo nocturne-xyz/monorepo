@@ -198,12 +198,12 @@ export async function setupTestDeployment(
   actorConfig.configs = actorConfig.configs ?? {};
 
   const [
-    deployerEoa,
-    aliceEoa,
-    bobEoa,
-    bundlerEoa,
-    subtreeUpdaterEoa,
-    screenerEoa,
+    deployerEoa, // anvil account #0
+    aliceEoa, // anvil account #1
+    bobEoa, // anvil account #2
+    bundlerEoa, // anvil account #3
+    subtreeUpdaterEoa, // anvil account #4
+    screenerEoa, // anvil account #5
   ] = KEYS_TO_WALLETS(provider);
   console.log("deploying contracts...");
   const [
