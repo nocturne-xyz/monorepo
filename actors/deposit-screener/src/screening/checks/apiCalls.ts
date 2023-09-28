@@ -69,7 +69,14 @@ export interface MisttrackRiskScoreData {
   risk_level: "Low" | "Moderate" | "High" | "Severe";
   risk_detail: MisttrackRiskDetail[];
 }
-type MisttrackData = MisttrackRiskScoreData | MisttrackAddressOverviewData;
+
+export interface MisttrackLabelsData {
+  label_list: string[];
+}
+type MisttrackData =
+  | MisttrackRiskScoreData
+  | MisttrackAddressOverviewData
+  | MisttrackLabelsData;
 
 export type MisttrackApiResponse<T extends MisttrackData> =
   | {
@@ -108,7 +115,7 @@ export const API_CALL_MAP = {
     });
     const jsonResponse = await response.json();
     if (jsonResponse["code"] === 400) {
-      throw new Error(`Bad Request: ${jsonResponse["errors"]}`);
+      throw new Error(`Bad Request: ${JSON.stringify(jsonResponse["errors"])}`);
     }
     const data = jsonResponse[0] as TrmData;
     console.log(data);
@@ -132,6 +139,31 @@ export const API_CALL_MAP = {
     return misttrackResponse.data;
   },
 
+  MISTTRACK_ADDRESS_LABELS: async (
+    deposit: ScreeningDepositRequest,
+    token = "ETH"
+  ): Promise<MisttrackLabelsData> => {
+    const response = await fetch(
+      `${MISTTRACK_BASE_URL}/address_labels?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+    );
+    // check the content type before parsing json
+    if (!response.headers.get("content-type")?.includes("application/json")) {
+      console.log(await response.text());
+      throw new Error(
+        `Call to misttrack failed with message: ${response.statusText}`
+      );
+    }
+    const misttrackResponse =
+      (await response.json()) as MisttrackApiResponse<MisttrackLabelsData>;
+    if (!misttrackResponse.success) {
+      throw new Error(
+        `Call to misttrack failed with message: ${misttrackResponse.msg}`
+      );
+    }
+    console.log(misttrackResponse.data);
+    return misttrackResponse.data;
+  },
+
   MISTTRACK_ADDRESS_RISK_SCORE: async (
     deposit: ScreeningDepositRequest,
     token = "ETH"
@@ -139,6 +171,13 @@ export const API_CALL_MAP = {
     const response = await fetch(
       `${MISTTRACK_BASE_URL}/risk_score?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
     );
+    // check the content type before parsing json
+    if (!response.headers.get("content-type")?.includes("application/json")) {
+      console.log(await response.text());
+      throw new Error(
+        `Call to misttrack failed with message: ${response.statusText}`
+      );
+    }
     const misttrackResponse =
       (await response.json()) as MisttrackApiResponse<MisttrackRiskScoreData>;
     if (!misttrackResponse.success) {

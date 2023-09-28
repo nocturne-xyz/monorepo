@@ -3,11 +3,12 @@ import fs from "fs";
 import path from "path";
 import { RULESET_V1 } from "../src/screening/checks/v1/RULESET_V1";
 import {
-  APPROVE_ADDRESSES,
   AddressDataSnapshot,
-  REJECT_ADDRESSES,
+  APPROVE_ADDRESSES,
+  BULK_TEST_CASES,
   formDepositInfo,
   getLatestSnapshotFolder,
+  REJECT_ADDRESSES,
 } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 
@@ -25,6 +26,28 @@ describe("RULESET_V1", () => {
       snapshotData = JSON.parse(rawData);
     } else {
       throw new Error("No snapshot files found");
+    }
+  });
+
+  describe("Bulk Tests", () => {
+    for (const testCase of BULK_TEST_CASES) {
+      for (const address of testCase.addresses) {
+        it(`bulk test: isRejected=${testCase.isRejected}, type=${testCase.type}, address=${address}`, async () => {
+          const mockedResponse = snapshotData[address];
+          expect(
+            mockedResponse,
+            `mockedResponse is not found for address=${address}`
+          ).to.be.ok;
+
+          const result = await RULESET_V1.check(
+            formDepositInfo(address),
+            snapshotData[address]
+          );
+          expect(result.type).to.equal(
+            testCase.isRejected ? "Rejection" : "Delay"
+          );
+        });
+      }
     }
   });
 

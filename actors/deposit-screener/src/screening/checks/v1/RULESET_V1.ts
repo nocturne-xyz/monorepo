@@ -1,6 +1,7 @@
 import { CombinedRulesParams, RuleParams, RuleSet } from "../RuleSet";
 import {
   MisttrackAddressOverviewData,
+  MisttrackLabelsData,
   MisttrackRiskItem,
   MisttrackRiskScoreData,
   TrmData,
@@ -36,34 +37,66 @@ const TRM_SEVERE_OWNERSHIP_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
   },
 };
 
-const TRM_HIGH_COUNTERPARTY_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
-  name: "TRM_HIGH_COUNTERPARTY_REJECT",
-  call: "TRM_SCREENING_ADDRESSES",
-  threshold: (data: TrmData) => {
-    return data.addressRiskIndicators.some(
-      (item) =>
-        item.riskType === "COUNTERPARTY" &&
-        item.categoryRiskScoreLevelLabel === "High" &&
-        Number(item.totalVolumeUsd) > 5_000
-    );
+const noPositiveLabelsPartial = {
+  name: "NO_POSITIVE_LABELS_PARTIAL",
+  call: "MISTTRACK_ADDRESS_LABELS",
+  threshold: (data: MisttrackLabelsData) => {
+    for (const label of data.label_list) {
+      if (label === "DeFi Whale") {
+        return false;
+      } else if (label.startsWith("Twitter:")) {
+        return false;
+      }
+    }
+
+    return true;
   },
+} as const;
+
+const TRM_HIGH_COUNTERPARTY_REJECT: CombinedRulesParams<
+  ["TRM_SCREENING_ADDRESSES", "MISTTRACK_ADDRESS_LABELS"]
+> = {
+  partialRules: [
+    {
+      name: "TRM_HIGH_COUNTERPARTY_REJECT",
+      call: "TRM_SCREENING_ADDRESSES",
+      threshold: (data: TrmData) => {
+        return data.addressRiskIndicators.some(
+          (item) =>
+            item.riskType === "COUNTERPARTY" &&
+            item.categoryRiskScoreLevelLabel === "High" &&
+            Number(item.totalVolumeUsd) > 5_000
+        );
+      },
+    },
+    noPositiveLabelsPartial,
+  ],
   action: {
     type: "Rejection",
     reason: "Counterparty exposure to high risk categories > $5k",
   },
+  applyIf: "All",
 };
 
-const TRM_HIGH_INDIRECT_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
-  name: "TRM_HIGH_INDIRECT_REJECT",
-  call: "TRM_SCREENING_ADDRESSES",
-  threshold: (data: TrmData) => {
-    return data.addressRiskIndicators.some(
-      (item) =>
-        item.riskType === "INDIRECT" &&
-        item.categoryRiskScoreLevelLabel === "High" &&
-        Number(item.totalVolumeUsd) > 20_000
-    );
-  },
+const TRM_HIGH_INDIRECT_REJECT: CombinedRulesParams<
+  ["TRM_SCREENING_ADDRESSES", "MISTTRACK_ADDRESS_LABELS"]
+> = {
+  partialRules: [
+    {
+      name: "TRM_HIGH_INDIRECT_REJECT",
+      call: "TRM_SCREENING_ADDRESSES",
+      threshold: (data: TrmData) => {
+        return data.addressRiskIndicators.some(
+          (item) =>
+            item.riskType === "INDIRECT" &&
+            item.categoryRiskScoreLevelLabel === "High" &&
+            Number(item.totalVolumeUsd) > 20_000
+        );
+      },
+    },
+    noPositiveLabelsPartial,
+  ],
+  applyIf: "All",
   action: {
     type: "Rejection",
     reason: "Indirect exposure to high risk categories > $20k",
@@ -210,8 +243,8 @@ export const RULESET_V1 = new RuleSet({
   baseDelaySeconds: BASE_DELAY_SECONDS,
 })
   .add(TRM_SEVERE_OWNERSHIP_REJECT)
-  .add(TRM_HIGH_COUNTERPARTY_REJECT)
-  .add(TRM_HIGH_INDIRECT_REJECT)
+  .combineAndAdd(TRM_HIGH_COUNTERPARTY_REJECT)
+  .combineAndAdd(TRM_HIGH_INDIRECT_REJECT)
   .add(MISTTRACK_RISK_REJECT)
   .add(SHORT_WALLET_HISTORY_DELAY)
   .combineAndAdd(SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY)

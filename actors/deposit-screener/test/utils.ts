@@ -47,19 +47,15 @@ export const APPROVE_ADDRESSES = {
   AZTEC_3: "0xa0bE23dB857262c8ff29763930fCD04Cc621FcCA",
 } as const;
 
-export const TEST_ADDRESSES = {
+export const NAMED_TEST_ADDRESSES = {
   ...REJECT_ADDRESSES,
   ...APPROVE_ADDRESSES,
 } as const;
 
-export type ScreeningTestCaseAddresses =
-  (typeof TEST_ADDRESSES)[keyof typeof TEST_ADDRESSES];
 export type CachedAddressData = Partial<
   Record<ApiCallNames, ApiCallReturnData>
 >;
-export type AddressDataSnapshot = Partial<
-  Record<ScreeningTestCaseAddresses, CachedAddressData>
->;
+export type AddressDataSnapshot = Record<string, CachedAddressData>;
 
 // saves a snapshot to deposit-screener/test/snapshots/{YYYY-M|MM-D|DD}/snapshot.json
 export function saveSnapshot(data: AddressDataSnapshot) {
@@ -97,3 +93,62 @@ export async function getLatestSnapshotFolder(
     return null;
   }
 }
+
+// TODO: 7 of these are still commented out until we introduce a whitelist feature
+export const BULK_TEST_CASES = [
+  {
+    type: "ENS",
+    addresses: [
+      "0x9c5083dd4838E120Dbeac44C052179692Aa5dAC5", // "pennilesswassie.eth",
+      "0xAa9c52276069B58227697805F24707e175313351", // "Voltokara.eth",
+      "0x471f59dD44f4b3c8F075FFa6ec59362D3C3Cd6dc", // "patokeeem.eth",
+    ],
+    isRejected: false,
+  },
+  {
+    type: "Still Active Users",
+    addresses: [
+      "0x8a7fbe7452b9a96aa029af480d6df4c658e401bf",
+      "0x18f768455e7f5fb09fc491fd86bcc282bcdd5973",
+      // "0x92f29100cc4dca707359d8eb78402eb3acfd87d3",
+      "0xf313e4f2f79081b7dd5e702ca64e86aae3253322",
+      "0x50dd57f50a17d57304e7a4f262da30beb31c2e87",
+      "0x7a74fb6bd364b9b5ef69605a3d28327da8087aa0",
+      "0x82e67fb485b9e29a3cd2e6fdfa789e4220324671",
+      "0x1c31e146ca6525dcb100f7faf280cbdac6e19ed2",
+      "0xf74b623336ace7b9cf6da1e82a7eb19a4737cbb4",
+      "0x7b2fc0feacdf2f59bc26f19839aeb6eee43f4224",
+      "0x70c83233c2eb2d5a2334a59eff98a2922bb5abd6",
+      // "0xfc23a2b9330570b586353b09969049dff2399ab4",
+    ],
+    isRejected: false,
+  },
+  {
+    type: "Old DeFI Users",
+    addresses: [
+      "0x50adf7a75d7cd6132acc0a2fb21c019011286635",
+      // "0xba681f15a7bacb49ccf4a6577f2b522869db90d8",
+      // "0x7ed6dd8a5add34f4a8926b13b6c6bcb4419b115c",
+      "0x2b9324f66b7733202261777726d8f9720285cb8a",
+      "0x4e6b41472d13ad84f6990dfec1af282cb04705f8",
+      "0x94b171f23236c8bbd61db21ca4af94dbc033d255",
+      "0x13838e488e298afc21046cdedc1c3ce4df38cd90",
+      "0x800366f5cb71966d5e10fa4ee0222d2395588d2a",
+      "0xa98b254d9e2b9e2c11f20780d5e021ef3c45c23d",
+      "0x06866f665368dd909330b12d75f866c3311a24eb",
+      // "0x253c5cbdd08838dad5493d511e17aa1ac5eab51b",
+      "0xba299a1fe0da7b443bf444fdcd0c2a5f2506d2b1",
+      "0x7692ef3dcc4d2ecd497c1a262c50ed22b925a513",
+      // "0x280db0f897b08e2c8d72ca09936a344f9f0fff49",
+      "0x65b0d5e1dc0dee0704f53f660aa865c72e986fc7",
+      // "0x0b7c43af43d76f79b6f6cfbafb3a01dde0468225",
+      "0x9a39996d6ffa124ecc9c3d28a6b0ea59f394592b",
+    ],
+    isRejected: false,
+  },
+];
+
+export const ALL_TEST_ADDRESSES = [
+  ...Object.values(NAMED_TEST_ADDRESSES),
+  ...BULK_TEST_CASES.flatMap((testCase) => testCase.addresses),
+] as const;
