@@ -32,7 +32,7 @@ export interface FilledBatchWithZerosEventResponse {
 // it's a plaintext note iff only those fields and merkleIndex are non-null
 // it's an encrypted note iff only those fields and merkleIndex are non-null
 // it's a tree batch fill iff only `merkleIndex` is non-null
-export interface TreeInsertionEventReponse {
+export interface TreeInsertionEventResponse {
   id: string;
 
   // merkle index of the insertion
@@ -59,7 +59,7 @@ export interface TreeInsertionEventReponse {
 
 interface FetchTreeInsertionsResponse {
   data: {
-    treeInsertionEvents: TreeInsertionEventReponse[];
+    treeInsertionEvents: TreeInsertionEventResponse[];
   };
 }
 
@@ -135,7 +135,7 @@ export async function fetchTreeInsertions(
 }
 
 function tryIncludedNoteFromTreeInsertionEventResponse(
-  res: TreeInsertionEventReponse
+  res: TreeInsertionEventResponse
 ): IncludedNote | undefined {
   if (
     res.encodedNoteOwnerH1 !== null &&
@@ -168,7 +168,7 @@ function tryIncludedNoteFromTreeInsertionEventResponse(
 }
 
 function tryIncludedEncryptedNoteFromTreeInsertionEventResponse(
-  res: TreeInsertionEventReponse
+  res: TreeInsertionEventResponse
 ): IncludedEncryptedNote | undefined {
   if (
     res.encryptedNoteCiphertextBytes !== null &&
@@ -198,7 +198,7 @@ function tryIncludedEncryptedNoteFromTreeInsertionEventResponse(
 }
 
 function tryFilledBatchWithZerosEventFromTreeInsertionEventResponse(
-  res: TreeInsertionEventReponse
+  res: TreeInsertionEventResponse
 ): FilledBatchWithZerosEvent | undefined {
   if (
     res.filledBatchWithZerosNumZeros !== null &&
