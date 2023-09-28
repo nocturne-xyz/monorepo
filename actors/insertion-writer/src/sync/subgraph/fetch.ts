@@ -140,10 +140,10 @@ function tryIncludedNoteFromTreeInsertionEventResponse(
   if (
     res.encodedNoteOwnerH1 !== null &&
     res.encodedNoteOwnerH2 !== null &&
-    res.encodedNoteNonce !== null &&
     res.encodedNoteEncodedAssetAddr !== null &&
     res.encodedNoteEncodedAssetId !== null &&
     res.encodedNoteValue !== null &&
+    res.encodedNoteNonce !== null &&
     res.encryptedNoteCiphertextBytes === null &&
     res.encryptedNoteEncapsulatedSecretBytes === null &&
     res.encryptedNoteCommitment === null &&
