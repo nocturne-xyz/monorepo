@@ -164,11 +164,7 @@ export class NocturneSdk implements NocturneSdkApi {
     this.endpoints = config.endpoints;
     this.config = config;
     this._provider = options.provider;
-    this._snap = new SnapStateSdk(
-      snapOptions?.version,
-      snapOptions?.snapId,
-      networkName
-    );
+    this._snap = new SnapStateSdk(snapOptions?.version, snapOptions?.snapId);
     this.syncMutex = new Mutex();
 
     this.signerThunk = thunk(() => this.getWindowSigner());
@@ -812,7 +808,7 @@ export class NocturneSdk implements NocturneSdkApi {
    */
   async getRandomStealthAddress(): Promise<StealthAddress> {
     const client = await this.clientThunk();
-    return await client.viewer.generateRandomStealthAddress();
+    return client.viewer.generateRandomStealthAddress();
   }
 
   // ! TODO this is an atrocious signature to hand consumers
