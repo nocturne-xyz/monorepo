@@ -35,7 +35,7 @@ contract Teller is
 
     // Domain separator hashed with joinsplit info for joinsplit info commitment
     uint256 public constant JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
-        uint256(keccak256(bytes("JOINSPLIT_INFO_NONCE"))); // TODO: unswitch strings
+        uint256(keccak256(bytes("JOINSPLIT_INFO_COMMITMENT")));
 
     // Compressed babyjubjub base point, (BasePoint, BasePoint) is used as the burn address
     uint256 public constant COMPRESSED_BASE_POINT =

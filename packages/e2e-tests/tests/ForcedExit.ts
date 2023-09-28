@@ -16,10 +16,15 @@ import {
   NocturneSigner,
   signOperation,
   JoinSplitInfo,
+  SubmittableOperationWithNetworkInfo,
+  computeOperationDigest,
 } from "@nocturne-xyz/core";
 import { ONE_DAY_SECONDS } from "../src/utils";
 import { depositFundsMultiToken } from "../src/deposit";
-import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
+import {
+  ForcedExitEvent,
+  OperationProcessedEvent,
+} from "@nocturne-xyz/contracts/dist/src/Teller";
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
 import { computeJoinSplitInfo } from "@nocturne-xyz/core/src/proof/joinsplit";
@@ -28,8 +33,8 @@ import { BabyJubJub } from "@nocturne-xyz/crypto";
 chai.use(chaiAsPromised);
 
 interface TestE2EParams {
-  senderClient: NocturneClient;
-  opRequestWithMetadata: OperationRequestWithMetadata;
+  operation: SubmittableOperationWithNetworkInfo;
+  joinSplitInfos: JoinSplitInfo[];
   success: boolean;
   contractChecks?: () => Promise<void>;
   offchainChecks?: () => Promise<void>;
@@ -50,7 +55,6 @@ describe("forcedExit", async () => {
   let nocturneSignerAlice: NocturneSigner;
   let nocturneDBAlice: NocturneDB;
   let nocturneClientAlice: NocturneClient;
-  let nocturneClientBob: NocturneClient;
   let joinSplitProver: JoinSplitProver;
 
   let erc20: SimpleERC20Token;
@@ -84,7 +88,6 @@ describe("forcedExit", async () => {
       nocturneDBAlice,
       nocturneSignerAlice,
       nocturneClientAlice,
-      nocturneClientBob,
       joinSplitProver,
     } = await setupTestClient(testDeployment.config, provider, {
       gasAssets: new Map([["GAS", gasTokenAsset.assetAddr]]),
@@ -95,28 +98,14 @@ describe("forcedExit", async () => {
     await teardown();
   });
 
-  async function testE2E({
-    senderClient,
-    opRequestWithMetadata,
-    success,
-    contractChecks,
-    offchainChecks,
-  }: TestE2EParams): Promise<void> {
-    console.log("alice: Sync SDK");
-    await nocturneClientAlice.sync();
-
-    console.log("bob: Sync SDK");
-    await nocturneClientBob.sync();
-
-    const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
-    console.log("alice pre-op notes:", preOpNotesAlice);
-    console.log(
-      "alice pre-op latestCommittedMerkleIndex",
-      await nocturneDBAlice.latestCommittedMerkleIndex()
-    );
+  async function prepareForcedExit(
+    senderClient: NocturneClient,
+    opRequestWithMetadata: OperationRequestWithMetadata
+  ): Promise<[SubmittableOperationWithNetworkInfo, JoinSplitInfo[]]> {
+    await senderClient.sync();
 
     console.log("prepare, sign, and prove operation with NocturneClient");
-    const preSign = await nocturneClientAlice.prepareOperation(
+    const preSign = await senderClient.prepareOperation(
       opRequestWithMetadata.request
     );
     const signed = signOperation(nocturneSignerAlice, preSign);
@@ -133,8 +122,19 @@ describe("forcedExit", async () => {
       );
     });
 
-    console.log("proven operation:", operation);
+    console.log("operation", operation);
+    console.log("joinSplitInfos", joinSplitInfos);
 
+    return [operation, joinSplitInfos];
+  }
+
+  async function testE2E({
+    operation,
+    joinSplitInfos,
+    success,
+    contractChecks,
+    offchainChecks,
+  }: TestE2EParams): Promise<void> {
     try {
       await teller.forcedExit({ operations: [operation] }, [joinSplitInfos]);
       expect(success).to.be.true;
@@ -184,18 +184,58 @@ describe("forcedExit", async () => {
       )
       .build();
 
+    const [operation, joinSplitInfos] = await prepareForcedExit(
+      nocturneClientAlice,
+      opRequestWithMetadata
+    );
+
     const contractChecks = async () => {
       console.log("check for OperationProcessed event");
       const latestBlock = await provider.getBlockNumber();
-      const events: OperationProcessedEvent[] = await queryEvents(
+      const opProcessedEvents: OperationProcessedEvent[] = await queryEvents(
         teller,
         teller.filters.OperationProcessed(),
         0,
         latestBlock
       );
-      expect(events.length).to.equal(1);
-      expect(events[0].args.opProcessed).to.equal(true);
-      expect(events[0].args.callSuccesses[0]).to.equal(true);
+      expect(opProcessedEvents.length).to.equal(1);
+      expect(opProcessedEvents[0].args.opProcessed).to.equal(true);
+      expect(opProcessedEvents[0].args.callSuccesses[0]).to.equal(true);
+
+      // Check forced exit event exposes the correct info
+      const forcedExitEvents: ForcedExitEvent[] = await queryEvents(
+        teller,
+        teller.filters.ForcedExit(),
+        0,
+        latestBlock
+      );
+      expect(forcedExitEvents.length).to.equal(1);
+      expect(forcedExitEvents[0].args.opDigests).to.equal(
+        computeOperationDigest(operation)
+      );
+      for (let i = 0; i < joinSplitInfos.length; i++) {
+        expect(
+          forcedExitEvents[0].args.joinSplitInfos[0][i]
+            .compressedSenderCanonAddr
+        ).to.equal(joinSplitInfos[i].compressedSenderCanonAddr);
+        expect(
+          forcedExitEvents[0].args.joinSplitInfos[0][i]
+            .compressedReceiverCanonAddr
+        ).to.equal(joinSplitInfos[i].compressedReceiverCanonAddr);
+        expect(
+          forcedExitEvents[0].args.joinSplitInfos[0][i]
+            .oldMerkleIndicesWithSignBits
+        ).to.equal(joinSplitInfos[i].oldMerkleIndicesWithSignBits);
+        expect(
+          forcedExitEvents[0].args.joinSplitInfos[0][i].newNoteValueA
+        ).to.equal(joinSplitInfos[i].newNoteValueA);
+        expect(
+          forcedExitEvents[0].args.joinSplitInfos[0][i].newNoteValueB
+        ).to.equal(joinSplitInfos[i].newNoteValueB);
+        expect(forcedExitEvents[0].args.joinSplitInfos[0][i].nonce).to.equal(
+          joinSplitInfos[i].nonce
+        );
+      }
 
       expect(
         (await erc20.balanceOf(await aliceEoa.getAddress())).toBigInt()
@@ -217,8 +257,8 @@ describe("forcedExit", async () => {
     };
 
     await testE2E({
-      senderClient: nocturneClientAlice,
-      opRequestWithMetadata,
+      operation,
+      joinSplitInfos,
       success: true,
       contractChecks,
       offchainChecks,
