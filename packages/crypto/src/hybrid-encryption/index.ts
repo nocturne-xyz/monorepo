@@ -124,15 +124,17 @@ export class BabyJubJubHybridCipher {
   decrypt(
     ciphertext: HybridCiphertext,
     receiverPrivateKey: bigint
-  ): Uint8Array {
-    const decryptionError = new Error("failed to decrypt");
-
+  ): Uint8Array | null {
     // deserialize stuff
     const { ciphertextBytes, encapsulatedSecretBytes } = ciphertext;
 
-    const encapsulatedSecret = BabyJubJub.fromBytes(encapsulatedSecretBytes);
+    let returnNull = false;
+    let encapsulatedSecret = BabyJubJub.fromBytesUnsafe(
+      encapsulatedSecretBytes
+    );
     if (encapsulatedSecret === null) {
-      throw decryptionError;
+      encapsulatedSecret = BabyJubJub.BasePointExtended;
+      returnNull = true;
     }
 
     // compute shared secret
@@ -153,9 +155,10 @@ export class BabyJubJubHybridCipher {
     // decrypt
     const cipher = new ChaCha20Poly1305(ephemeralKey);
     const nonce = deriveBaseNonce(HKDF_SHA256, sharedSecretBytes, NONCE_LENGTH);
-    const plaintext = cipher.open(nonce, ciphertextBytes);
+    let plaintext = cipher.open(nonce, ciphertextBytes);
     if (plaintext === null) {
-      throw decryptionError;
+      plaintext = ciphertextBytes;
+      returnNull = true;
     }
     cipher.clean();
 
@@ -165,17 +168,19 @@ export class BabyJubJubHybridCipher {
       BabyJubJub.ScalarField.BYTES
     );
     const msg = plaintext.slice(BabyJubJub.ScalarField.BYTES);
-    const ephemeralSecret =
-      BabyJubJub.ScalarField.fromBytes(ephemeralSecretBytes);
+
+    let ephemeralSecret =
+      BabyJubJub.ScalarField.fromBytesUnsafe(ephemeralSecretBytes);
     if (ephemeralSecret === null) {
-      throw decryptionError;
+      ephemeralSecret = BabyJubJub.ScalarField.ORDER - 1n;
+      returnNull = true;
     }
 
     // check ephemeralSecret against encapsulated secret
     const encapsulatedSecretCheck =
       BabyJubJub.BasePointExtended.multiply(ephemeralSecret);
-    if (!encapsulatedSecretCheck.equals(encapsulatedSecret)) {
-      throw decryptionError;
+    if (!encapsulatedSecretCheck.equals(encapsulatedSecret) || returnNull) {
+      return null;
     }
 
     return msg;

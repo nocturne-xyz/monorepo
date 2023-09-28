@@ -55,12 +55,15 @@ export function decryptNote(
 ): NoteWithSender {
   const ciphertext = deserializeHybridCiphertext(encryptedNote);
   const msgBytes = cipher.decrypt(ciphertext, viewer.vk);
+  if (msgBytes === null) {
+    throw new Error("failed to decrypt");
+  }
 
   const senderBytes = msgBytes.slice(0, BabyJubJub.BYTES);
   const noteBytes = msgBytes.slice(BabyJubJub.BYTES);
 
   const sender = BabyJubJub.fromBytes(senderBytes).toAffine();
-  if (!sender) throw new Error("Invalid sender");
+  if (!sender) throw new Error("invalid sender");
   const note = NoteTrait.deserializeCompact(noteBytes);
 
   return { sender, ...note };

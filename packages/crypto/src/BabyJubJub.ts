@@ -8,7 +8,15 @@ import { sha256 } from "@noble/hashes/sha256";
 export { AffinePoint } from "@noble/curves/abstract/curve";
 
 // HACK: noble doesn't export it's field type, so I have to infer and make an alias
-export type FpField = ReturnType<typeof Field>;
+// HACK - noble doesn't check that the resulting bigint is in the field in `fromBytes`, so we override it
+// and add a method that doesn't throw error to avoid footgun
+export type FpField = Omit<ReturnType<typeof Field>, "fromBytes"> & {
+  // throws error
+  fromBytes: (bytes: Uint8Array) => bigint;
+
+  // returns null
+  fromBytesUnsafe: (bytes: Uint8Array) => bigint | null;
+};
 
 export type BabyJubJubCurveType = {
   A: bigint;
@@ -26,22 +34,54 @@ export type BabyJubJubCurveType = {
 };
 
 // BN254 Scalar Field - base field of BabyJubJub
-const BaseField = Field(
+const __BaseField = Field(
   21888242871839275222246405745257275088548364400416034343698204186575808495617n,
   undefined,
   // use little-endian encoding
   true
 );
 
+const BaseField: FpField = {
+  ...__BaseField,
+  fromBytes(bytes: Uint8Array) {
+    const res = __BaseField.fromBytes(bytes);
+    assert(__BaseField.isValid(res), "result is not a valid field element");
+    return res;
+  },
+  fromBytesUnsafe(bytes: Uint8Array) {
+    const res = __BaseField.fromBytes(bytes);
+    if (!__BaseField.isValid(res)) {
+      return null;
+    }
+    return res;
+  },
+};
+
 // scalar field of Baby Jubjub's prime-order subgroup. technically this isn't the scalar field for the curve
 // overall, but we only ever use points in the subgroup, and not exporting the curve's
 // scalar field this helps us prevent cases where we accidentally use a point that's not in the subgroup
-const ScalarField = Field(
+const __ScalarField = Field(
   2736030358979909402780800718157159386076813972158567259200215660948447373041n,
   undefined,
   // use little-endian encoding
   true
 );
+
+const ScalarField: Readonly<FpField> = {
+  ...__ScalarField,
+  fromBytes(bytes: Uint8Array) {
+    const res = __ScalarField.fromBytes(bytes);
+    assert(__ScalarField.isValid(res), "result is not a valid field element");
+    return res;
+  },
+  fromBytesUnsafe(bytes: Uint8Array) {
+    const res = __ScalarField.fromBytes(bytes);
+    if (!__ScalarField.isValid(res)) {
+      return null;
+    }
+    return res;
+  },
+};
 
 const GeneratorPoint: AffinePoint<bigint> = {
   x: 995203441582195749578291179787384436505546430278305826713579947235728471134n,
@@ -102,6 +142,7 @@ export const BabyJubJub = {
 
   // retuns an extended point - can be converted back to affine with `toAffine`
   // note that `ExtPointType` has getters for `x` and `y` that return field elements in affine coordinates
+  // throws an error if encoding is invalid
   fromBytes(bytes: Uint8Array): ExtPointType {
     assert(bytes.length === this.BaseField.BYTES * 2);
 
@@ -111,19 +152,38 @@ export const BabyJubJub = {
     const x = this.BaseField.fromBytes(xBytes);
     const y = this.BaseField.fromBytes(yBytes);
 
-    assert(
-      this.BaseField.isValid(x),
-      "x coordinate is not a valid field element"
-    );
-    assert(
-      this.BaseField.isValid(y),
-      "y coordinate is not a valid field element"
-    );
-
     const point = { x, y };
     const ext = babyJubJubFn.ExtendedPoint.fromAffine(point);
     ext.assertValidity();
     assert(ext.isTorsionFree(), "point is not in prime-order subgroup");
+
+    return ext;
+  },
+
+  // returns an extended point - can be converted back to affine with `toAffine`
+  // note that `ExtPointType` has getters for `x` and `y` that return field elements in affine coordinates
+  // returns null if encoding is invalid
+  fromBytesUnsafe(bytes: Uint8Array): ExtPointType | null {
+    assert(bytes.length === this.BaseField.BYTES * 2);
+
+    const xBytes = bytes.slice(0, this.BaseField.BYTES);
+    const yBytes = bytes.slice(this.BaseField.BYTES);
+
+    let x = this.BaseField.fromBytesUnsafe(xBytes);
+    let y = this.BaseField.fromBytesUnsafe(yBytes);
+
+    let returnNull = false;
+    if (x === null || y === null) {
+      returnNull = true;
+      x = this.BasePointAffine.x;
+      y = this.BasePointAffine.y;
+    }
+
+    const point = { x, y };
+    const ext = babyJubJubFn.ExtendedPoint.fromAffine(point);
+    if (!ext.isTorsionFree() || returnNull) {
+      return null;
+    }
 
     return ext;
   },
