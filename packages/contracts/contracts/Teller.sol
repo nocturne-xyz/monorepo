@@ -35,12 +35,10 @@ contract Teller is
 
     // Domain separator hashed with joinsplit info for joinsplit info commitment
     uint256 public constant JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
-        uint256(keccak256(bytes("JOINSPLIT_INFO_COMMITMENT")));
+        uint256(keccak256(bytes("JOINSPLIT_INFO_NONCE"))); // TODO: unswitch strings
 
-    // Nocturne burn canonical address point, defined as h1 and h2 of the base point
-    uint256 public constant BURN_CANONICAL_ADDRESS_X =
-        5299619240641551281634865583518297030282874472190772894086521144482721001553;
-    uint256 public constant BURN_CANONICAL_ADDRESS_Y =
+    // Compressed babyjubjub base point, (BasePoint, BasePoint) is used as the burn address
+    uint256 public constant COMPRESSED_BASE_POINT =
         16950150798460657717958625567821834550301663161624707787222815936182638968203;
 
     // Handler contract
@@ -218,8 +216,8 @@ contract Teller is
 
             // Refund addr is burn address
             require(
-                op.refundAddr.h1 == BURN_CANONICAL_ADDRESS_X &&
-                    op.refundAddr.h2 == BURN_CANONICAL_ADDRESS_Y,
+                op.refundAddr.h1 == COMPRESSED_BASE_POINT &&
+                    op.refundAddr.h2 == COMPRESSED_BASE_POINT,
                 "!burn addr"
             );
 

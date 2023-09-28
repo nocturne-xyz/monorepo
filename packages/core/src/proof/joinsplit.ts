@@ -18,12 +18,14 @@ import {
 import { BaseProof, MerkleProofInput } from "./types";
 import * as ethers from "ethers";
 
+// TODO: strings switched
 export const JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.create(
   BigInt(
     ethers.utils.keccak256(ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_NONCE"))
   )
 );
 
+// TODO: strings switched
 export const JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
   BN254ScalarField.create(
     BigInt(

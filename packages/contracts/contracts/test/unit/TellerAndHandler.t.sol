@@ -2889,8 +2889,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         // Set op refund addr to be burn address
         bundle.operations[0].refundAddr = CompressedStealthAddress(
-            teller.BURN_CANONICAL_ADDRESS_X(),
-            teller.BURN_CANONICAL_ADDRESS_Y()
+            teller.COMPRESSED_BASE_POINT(),
+            teller.COMPRESSED_BASE_POINT()
         );
 
         // Pre process checks
