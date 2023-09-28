@@ -95,14 +95,16 @@ describe("InsertionWriter", () => {
   it("replicates insertion log with only deposits", async () => {
     const logger = makeTestLogger(
       "insertion-writer",
-      "should replicate insertion log"
+      "should replicate insertion log with only deposits"
     );
     const adapter = new SubgraphTreeInsertionSyncAdapter(
       SUBGRAPH_URL,
       logger.child({ function: "adapter" })
     );
     const writer = new InsertionWriter(adapter, redis, logger);
-    const handle = await writer.start();
+    const handle = await writer.start({
+      throttleOnEmptyMs: 3000,
+    });
 
     // deposit
     await depositFundsSingleToken(
@@ -128,14 +130,16 @@ describe("InsertionWriter", () => {
   it("replicates insertion log with deposits and ops", async () => {
     const logger = makeTestLogger(
       "insertion-writer",
-      "should replicate insertion log"
+      "should replicate insertion log with deposits and ops"
     );
     const adapter = new SubgraphTreeInsertionSyncAdapter(
       SUBGRAPH_URL,
       logger.child({ function: "adapter" })
     );
     const writer = new InsertionWriter(adapter, redis, logger);
-    const handle = await writer.start();
+    const handle = await writer.start({
+      throttleOnEmptyMs: 3000,
+    });
 
     // deposit
     await depositFundsSingleToken(
@@ -185,7 +189,9 @@ describe("InsertionWriter", () => {
       logger.child({ function: "adapter" })
     );
     const writer = new InsertionWriter(adapter, redis, logger);
-    let handle = await writer.start();
+    let handle = await writer.start({
+      throttleOnEmptyMs: 3000,
+    });
 
     // deposit
     await depositFundsSingleToken(

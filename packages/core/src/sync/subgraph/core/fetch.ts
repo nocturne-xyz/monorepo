@@ -24,11 +24,27 @@ export type SDKEvent =
   | Nullifier
   | FilledBatchWithZerosEndMerkleIndex;
 
+// it's a plaintext note iff only those fields and merkleIndex are non-null
+// it's an encrypted note iff only those fields and merkleIndex are non-null
+// it's a nullifier iff only that field and merkleIndex are non-null
+// it's a "filled batch with zeros up to" iff only `merkleIndex` is non-null
 export interface SDKEventResponse {
   id: string;
-  encodedOrEncryptedNote: Omit<EncodedOrEncryptedNoteResponse, "id"> | null;
-  nullifier: Omit<NullifierResponse, "id"> | null;
-  filledBatchWithZerosUpToMerkleIndex: string | null;
+
+  merkleIndex: string | null;
+
+  encodedNoteOwnerH1: string | null;
+  encodedNoteOwnerH2: string | null;
+  encodedNoteEncodedAssetAddr: string | null;
+  encodedNoteEncodedAssetId: string | null;
+  encodedNoteValue: string | null;
+  encodedNoteNonce: string | null;
+
+  encryptedNoteCiphertextBytes: string | null;
+  encryptedNoteEncapsulatedSecretBytes: string | null;
+  encryptedNoteCommitment: string | null;
+
+  nullifier: string | null;
 }
 
 export interface SDKEventsResponse {
@@ -47,28 +63,22 @@ export function makeSdkEventsQuery(toIdx?: TotalEntityIndex): string {
     : "{ id_gte: $fromIdx }";
   return `\
 query fetchSDKEvents($fromIdx: String!) {
-  sdkevents(where: ${where}, first: 100) {
+  sdkevents(where: ${where}) {
     id
-    encodedOrEncryptedNote {
-      merkleIndex
-      note {
-        ownerH1
-        ownerH2
-        nonce
-        encodedAssetAddr
-        encodedAssetId
-        value
-      }
-      encryptedNote {
-        ciphertextBytes
-        encapsulatedSecretBytes
-        commitment
-      }
-    }
-    nullifier {
-      nullifier
-    }
-    filledBatchWithZerosUpToMerkleIndex 
+    merkleIndex
+
+    encodedNoteOwnerH1
+    encodedNoteOwnerH2
+    encodedNoteEncodedAssetAddr
+    encodedNoteEncodedAssetId
+    encodedNoteValue
+    encodedNoteNonce
+  
+    encryptedNoteCiphertextBytes
+    encryptedNoteEncapsulatedSecretBytes
+    encryptedNoteCommitment
+
+    nullifier
   }
 }`;
 }
@@ -91,56 +101,134 @@ export async function fetchSDKEvents(
     return [];
   }
 
-  return res.data.sdkevents.map(
-    ({
-      id,
-      encodedOrEncryptedNote,
-      nullifier,
-      filledBatchWithZerosUpToMerkleIndex,
-    }) => {
-      const totalEntityIndex = BigInt(id);
+  return res.data.sdkevents.map((res) => {
+    const { id } = res;
+    const totalEntityIndex = BigInt(id);
 
-      // encrypted note
-      if (encodedOrEncryptedNote && encodedOrEncryptedNote.encryptedNote) {
-        const { encryptedNote, merkleIndex } = encodedOrEncryptedNote;
-        return {
-          inner: encryptedNoteFromEncryptedNoteResponse(
-            encryptedNote,
-            parseInt(merkleIndex)
-          ),
-          totalEntityIndex,
-        };
-      }
+    const event =
+      tryIncludedNotefromSdkEventResponse(res) ??
+      tryIncludedEncryptedNoteFromSdkEventResponse(res) ??
+      tryNullifierFromSdkEventResponse(res) ??
+      tryFilledBatchMerkleIndexFromSdkEventResponse(res);
 
-      // encoded note
-      if (encodedOrEncryptedNote && encodedOrEncryptedNote.note) {
-        const { note, merkleIndex } = encodedOrEncryptedNote;
-        return {
-          inner: includedNoteFromNoteResponse(note, parseInt(merkleIndex)),
-          totalEntityIndex,
-        };
-      }
-
-      // nullifier
-      if (nullifier) {
-        return {
-          inner: BigInt(nullifier.nullifier),
-          totalEntityIndex,
-        };
-      }
-
-      // filledBatchWithZerosUpToMerkleIndexA
-      if (filledBatchWithZerosUpToMerkleIndex) {
-        return {
-          inner: Number(BigInt(filledBatchWithZerosUpToMerkleIndex)),
-          totalEntityIndex,
-        };
-      }
-
-      // should never happen
+    if (!event) {
       throw new Error("invalid sdk event");
     }
-  );
+
+    return {
+      inner: event,
+      totalEntityIndex,
+    };
+  });
+}
+
+function tryIncludedNotefromSdkEventResponse(
+  res: SDKEventResponse
+): IncludedNote | undefined {
+  if (
+    res.merkleIndex !== null &&
+    res.encodedNoteOwnerH1 !== null &&
+    res.encodedNoteOwnerH2 !== null &&
+    res.encodedNoteEncodedAssetAddr !== null &&
+    res.encodedNoteEncodedAssetId !== null &&
+    res.encodedNoteValue !== null &&
+    res.encodedNoteNonce !== null &&
+    res.encryptedNoteCiphertextBytes === null &&
+    res.encryptedNoteEncapsulatedSecretBytes === null &&
+    res.encryptedNoteCommitment === null &&
+    res.nullifier === null
+  ) {
+    return {
+      owner: StealthAddressTrait.decompress({
+        h1: BigInt(res.encodedNoteOwnerH1),
+        h2: BigInt(res.encodedNoteOwnerH2),
+      }),
+      asset: AssetTrait.decode({
+        encodedAssetAddr: BigInt(res.encodedNoteEncodedAssetAddr),
+        encodedAssetId: BigInt(res.encodedNoteEncodedAssetId),
+      }),
+      value: BigInt(res.encodedNoteValue),
+      nonce: BigInt(res.encodedNoteNonce),
+      merkleIndex: parseInt(res.merkleIndex),
+    };
+  }
+
+  return undefined;
+}
+
+function tryIncludedEncryptedNoteFromSdkEventResponse(
+  res: SDKEventResponse
+): IncludedEncryptedNote | undefined {
+  if (
+    res.merkleIndex !== null &&
+    res.encryptedNoteCiphertextBytes !== null &&
+    res.encryptedNoteEncapsulatedSecretBytes !== null &&
+    res.encryptedNoteCommitment !== null &&
+    res.encodedNoteOwnerH1 === null &&
+    res.encodedNoteOwnerH2 === null &&
+    res.encodedNoteEncodedAssetAddr === null &&
+    res.encodedNoteEncodedAssetId === null &&
+    res.encodedNoteValue === null &&
+    res.encodedNoteNonce === null &&
+    res.nullifier === null
+  ) {
+    return {
+      ciphertextBytes: Array.from(
+        ethers.utils.arrayify(res.encryptedNoteCiphertextBytes)
+      ),
+      encapsulatedSecretBytes: Array.from(
+        ethers.utils.arrayify(res.encryptedNoteEncapsulatedSecretBytes)
+      ),
+      commitment: BigInt(res.encryptedNoteCommitment),
+      merkleIndex: parseInt(res.merkleIndex),
+    };
+  }
+
+  return undefined;
+}
+
+function tryNullifierFromSdkEventResponse(
+  res: SDKEventResponse
+): Nullifier | undefined {
+  if (
+    res.nullifier !== null &&
+    res.merkleIndex === null &&
+    res.encodedNoteOwnerH1 === null &&
+    res.encodedNoteOwnerH2 === null &&
+    res.encodedNoteEncodedAssetAddr === null &&
+    res.encodedNoteEncodedAssetId === null &&
+    res.encodedNoteValue === null &&
+    res.encodedNoteNonce === null &&
+    res.encryptedNoteCiphertextBytes === null &&
+    res.encryptedNoteEncapsulatedSecretBytes === null &&
+    res.encryptedNoteCommitment === null
+  ) {
+    return BigInt(res.nullifier);
+  }
+
+  return undefined;
+}
+
+function tryFilledBatchMerkleIndexFromSdkEventResponse(
+  res: SDKEventResponse
+): FilledBatchWithZerosEndMerkleIndex | undefined {
+  if (
+    res.merkleIndex !== null &&
+    res.encodedNoteOwnerH1 === null &&
+    res.encodedNoteOwnerH2 === null &&
+    res.encodedNoteEncodedAssetAddr === null &&
+    res.encodedNoteEncodedAssetId === null &&
+    res.encodedNoteValue === null &&
+    res.encodedNoteNonce === null &&
+    res.encryptedNoteCiphertextBytes === null &&
+    res.encryptedNoteEncapsulatedSecretBytes === null &&
+    res.encryptedNoteCommitment === null &&
+    res.nullifier === null
+  ) {
+    return parseInt(res.merkleIndex);
+  }
+
+  return undefined;
 }
 
 export interface NoteResponse {

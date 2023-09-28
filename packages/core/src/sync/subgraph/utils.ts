@@ -31,6 +31,15 @@ export async function fetchLatestIndexedBlock(
     "latest indexed block"
   );
   const res = await query(undefined);
+
+  if (!res.data) {
+    const msg = `could not get latest indexed block from subgraph. Response: ${JSON.stringify(
+      res,
+      undefined,
+      2
+    )}`;
+    throw Error(msg);
+  }
   return res.data._meta.block.number;
 }
 
