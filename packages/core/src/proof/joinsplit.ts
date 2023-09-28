@@ -12,16 +12,16 @@ import * as ethers from "ethers";
 
 export const JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.create(
   BigInt(
-    ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_COMMITMENT")
-    )
+    ethers.utils.keccak256(ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_NONCE"))
   )
 );
 
 export const JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
   BN254ScalarField.create(
     BigInt(
-      ethers.utils.keccak256(ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_NONCE"))
+      ethers.utils.keccak256(
+        ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_COMMITMENT")
+      )
     )
   );
 
