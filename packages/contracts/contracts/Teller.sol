@@ -34,8 +34,14 @@ contract Teller is
     using OperationLib for Operation;
 
     // Domain separator hashed with joinsplit info for joinsplit info commitment
-    bytes32 public constant JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
-        keccak256(bytes("JOINSPLIT_INFO_COMMITMENT"));
+    uint256 public constant JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
+        uint256(keccak256(bytes("JOINSPLIT_INFO_COMMITMENT")));
+
+    // Nocturne burn canonical address point, defined as h1 and h2 of the base point
+    uint256 public constant BURN_CANONICAL_ADDRESS_X =
+        5299619240641551281634865583518297030282874472190772894086521144482721001553;
+    uint256 public constant BURN_CANONICAL_ADDRESS_Y =
+        16950150798460657717958625567821834550301663161624707787222815936182638968203;
 
     // Handler contract
     IHandler public _handler;
@@ -211,7 +217,11 @@ contract Teller is
             Operation calldata op = bundle.operations[i];
 
             // Refund addr is burn address
-            require(op.refundAddr.h1 + op.refundAddr.h2 == 0, "!burn addr");
+            require(
+                op.refundAddr.h1 == BURN_CANONICAL_ADDRESS_X &&
+                    op.refundAddr.h2 == BURN_CANONICAL_ADDRESS_Y,
+                "!burn addr"
+            );
 
             // No conf joinsplits
             require(op.confJoinSplits.length == 0, "!conf JS");
@@ -230,7 +240,7 @@ contract Teller is
 
                 // Require joinSplitInfoCommitment to match joinSplitInfo
                 uint256 joinSplitInfoCommmitment = _poseidonExtT7.poseidonExt(
-                    uint256(JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR),
+                    JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR,
                     [
                         joinSplitInfos[i][j].compressedSenderCanonAddr,
                         joinSplitInfos[i][j].compressedReceiverCanonAddr,

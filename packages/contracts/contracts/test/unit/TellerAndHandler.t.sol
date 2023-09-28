@@ -2888,7 +2888,10 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             .joinSplitInfoCommitment = joinSplitInfoCommitment;
 
         // Set op refund addr to be burn address
-        bundle.operations[0].refundAddr = CompressedStealthAddress(0, 0);
+        bundle.operations[0].refundAddr = CompressedStealthAddress(
+            teller.BURN_CANONICAL_ADDRESS_X(),
+            teller.BURN_CANONICAL_ADDRESS_Y()
+        );
 
         // Pre process checks
         assertEq(token.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));

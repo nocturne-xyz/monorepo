@@ -23,6 +23,7 @@ import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
 import { computeJoinSplitInfo } from "@nocturne-xyz/core/src/proof/joinsplit";
+import { BabyJubJub } from "@nocturne-xyz/crypto";
 
 chai.use(chaiAsPromised);
 
@@ -171,7 +172,12 @@ describe("forcedExit", async () => {
     )
       .use(Erc20Plugin)
       .erc20Transfer(erc20.address, aliceEoa.address, PER_NOTE_AMOUNT * 4n)
-      .refundAddr({ h1X: 0n, h1Y: 0n, h2X: 0n, h2Y: 0n })
+      .refundAddr({
+        h1X: BabyJubJub.BasePointAffine.x,
+        h1Y: BabyJubJub.BasePointAffine.y,
+        h2X: BabyJubJub.BasePointAffine.x,
+        h2Y: BabyJubJub.BasePointAffine.y,
+      })
       .gasPrice(0n)
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
