@@ -92,6 +92,11 @@ struct TrackedAsset {
     uint256 minRefundValue;
 }
 
+enum ProcessBundleType {
+    Standard,
+    ForcedExit
+}
+
 struct Operation {
     PublicJoinSplit[] pubJoinSplits;
     JoinSplit[] confJoinSplits;

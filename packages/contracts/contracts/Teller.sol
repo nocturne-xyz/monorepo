@@ -190,7 +190,7 @@ contract Teller is
         onlyAllowedBundler
         returns (uint256[] memory opDigests, OperationResult[] memory opResults)
     {
-        return _processBundle(bundle);
+        return _processBundle(bundle, ProcessBundleType.Standard);
     }
 
     /// @notice Allows user to submit a bundle of operations given they open the commitment to
@@ -214,9 +214,6 @@ contract Teller is
         uint256 numOps = bundle.operations.length;
         for (uint256 i = 0; i < numOps; i++) {
             Operation calldata op = bundle.operations[i];
-
-            // isForcedExit set to true
-            require(op.isForcedExit, "!forcedExit");
 
             // No conf joinsplits
             require(op.confJoinSplits.length == 0, "!conf JS");
@@ -256,7 +253,7 @@ contract Teller is
         (
             uint256[] memory opDigests,
             OperationResult[] memory opResults
-        ) = _processBundle(bundle);
+        ) = _processBundle(bundle, ProcessBundleType.ForcedExit);
         emit ForcedExit(opDigests, joinSplitInfos);
 
         return opResults;
@@ -267,7 +264,8 @@ contract Teller is
     ///         per op.
     /// @param bundle Bundle of operations to process
     function _processBundle(
-        Bundle calldata bundle
+        Bundle calldata bundle,
+        ProcessBundleType bundleType
     )
         internal
         returns (uint256[] memory opDigests, OperationResult[] memory opResults)
@@ -290,6 +288,13 @@ contract Teller is
         uint256 numOps = ops.length;
         opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
+            // Every op in the bundle must match the bundle type denoted
+            require(
+                ops[i].isForcedExit ==
+                    (bundleType == ProcessBundleType.ForcedExit),
+                "!op type"
+            );
+
             try
                 _handler.handleOperation(
                     ops[i],
