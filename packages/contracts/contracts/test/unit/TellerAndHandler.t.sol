@@ -3035,5 +3035,131 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(ALICE), PER_NOTE_AMOUNT);
     }
 
+    function testForcedExitFailsGivenWrongFlag() public {
+        // Alice starts with 1 notes worth of tokens in teller
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
+
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
+        // Create operation to unwrap and transfer all tokens to alice
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
+                ),
+                joinSplitRefundValues: new uint256[](1),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0, // no gas comp, since alice is self-submitting
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    address(token),
+                    ALICE, // transfer all to self
+                    PER_NOTE_AMOUNT
+                ),
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Dummy joinsplit info used for forcedExit
+        JoinSplitInfo[] memory joinSplitInfo = new JoinSplitInfo[](1);
+        joinSplitInfo[0] = JoinSplitInfo({
+            compressedSenderCanonAddr: 1,
+            compressedReceiverCanonAddr: 2,
+            oldMerkleIndicesWithSignBits: 3,
+            newNoteValueA: 0,
+            newNoteValueB: 0,
+            nonce: 6
+        });
+
+        JoinSplitInfo[][] memory joinSplitInfos = new JoinSplitInfo[][](1);
+        joinSplitInfos[0] = joinSplitInfo;
+
+        // Set op joinsplit info commitment to match hash of passed in joinsplit info
+        uint256 joinSplitInfoCommitment = _poseidonExtT7.poseidonExt(
+            uint256(teller.JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR()),
+            [
+                joinSplitInfo[0].compressedSenderCanonAddr,
+                joinSplitInfo[0].compressedReceiverCanonAddr,
+                joinSplitInfo[0].oldMerkleIndicesWithSignBits,
+                joinSplitInfo[0].newNoteValueA,
+                joinSplitInfo[0].newNoteValueB,
+                joinSplitInfo[0].nonce
+            ]
+        );
+        bundle
+            .operations[0]
+            .pubJoinSplits[0]
+            .joinSplit
+            .joinSplitInfoCommitment = joinSplitInfoCommitment;
+
+        bundle.operations[0].isForcedExit = false; // set isForcedExit to false
+
+        // Expect revert
+        vm.expectRevert("!op type");
+
+        vm.prank(ALICE); // ALICE self submitting, not bundler
+        teller.forcedExit(bundle, joinSplitInfos);
+    }
+
+    function testProcessBundleFailsIfForcedExitFlagTrue() public {
+        // Alice starts with 1 notes worth of tokens in teller
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
+
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
+        // Create operation to unwrap and transfer all tokens to alice
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
+                ),
+                joinSplitRefundValues: new uint256[](1),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    address(token),
+                    ALICE, // transfer all to self
+                    PER_NOTE_AMOUNT
+                ),
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        bundle.operations[0].isForcedExit = true; // set isForcedExit to true
+
+        // Expect revert
+        vm.expectRevert("!op type");
+
+        vm.prank(BUNDLER);
+        teller.processBundle(bundle);
+    }
+
     // TODO: add testcase for leftover tokens in handler sent to leftover holder
 }

@@ -175,6 +175,7 @@ describe("forcedExit", async () => {
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
       )
+      .forcedExit(true)
       .build();
 
     const [operation, joinSplitInfos] = await prepareForcedExit(

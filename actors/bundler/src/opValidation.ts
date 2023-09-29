@@ -2,7 +2,6 @@ import { ethers } from "ethers";
 import {
   Bundle,
   computeOperationDigest,
-  OperationType,
   SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/core";
 import { Handler, Teller } from "@nocturne-xyz/contracts";
@@ -75,7 +74,6 @@ export async function checkRevertError(
       operation,
       300_000, // upper bound on verification gas needed
       bundler,
-      OperationType.Standard,
       { from: tellerContract.address } // hack to avoid simulation reverting, only teller can call handler
     );
 
