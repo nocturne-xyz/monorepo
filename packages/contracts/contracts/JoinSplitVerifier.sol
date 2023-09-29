@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
@@ -49,7 +48,6 @@ contract JoinSplitVerifier is IJoinSplitVerifier {
         );
         vk.IC = new Pairing.G1Point[](14);
 
-        
         vk.IC[0] = Pairing.G1Point(
             9524985516120418107975902189443349338859670708689358711231918784968189969937,
             20126430599005730873466796188517981279028686335762847957312250891091598557443
