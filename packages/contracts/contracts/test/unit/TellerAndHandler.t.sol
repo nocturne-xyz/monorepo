@@ -89,7 +89,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     event ForcedExit(uint256[] opDigests, JoinSplitInfo[][] joinSplitInfos);
 
     function setUp() public virtual {
-        // Deploy poseidon poseidon libraries
+        // Deploy poseidon libraries
         deployPoseidons();
         deployPoseidonExts();
 

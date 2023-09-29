@@ -37,7 +37,8 @@ contract Teller is
     uint256 public constant JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
         uint256(keccak256(bytes("JOINSPLIT_INFO_COMMITMENT")));
 
-    // Compressed babyjubjub base point, (BasePoint, BasePoint) is used as the burn address
+    // Compressed babyjubjub base point
+    // (BasePoint, BasePoint) is used as the burn address
     uint256 public constant COMPRESSED_BASE_POINT =
         16950150798460657717958625567821834550301663161624707787222815936182638968203;
 
