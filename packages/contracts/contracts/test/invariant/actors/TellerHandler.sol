@@ -177,7 +177,7 @@ contract TellerHandler is OperationGenerator {
         bundle.operations[0] = op;
 
         vm.prank(bundlerAddress);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // TODO: enable multiple ops in bundle
         OperationResult memory opResult = opResults[0];

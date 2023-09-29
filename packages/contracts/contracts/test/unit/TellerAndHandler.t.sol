@@ -9,17 +9,16 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {IJoinSplitVerifier} from "../../interfaces/IJoinSplitVerifier.sol";
 import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
 import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../libs/OffchainMerkleTree.sol";
-import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../utils//PoseidonHashers.sol";
-import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
-import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
+import {IPoseidonT3, IPoseidonT5, IPoseidonT6} from "../interfaces/IPoseidon.sol";
+import {IPoseidonExtT7} from "../../interfaces/IPoseidonExt.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import {ReentrantCaller} from "../utils/ReentrantCaller.sol";
 import {TokenSwapper, SwapRequest, Erc721TransferFromRequest, Erc721And1155SafeTransferFromRequest} from "../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../utils/TreeTest.sol";
 import "../utils/NocturneUtils.sol";
-import {Teller} from "../../Teller.sol";
+import {TestTeller} from "../harnesses/TestTeller.sol";
 import {Handler} from "../../Handler.sol";
 import {CommitmentTreeManager} from "../../CommitmentTreeManager.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
@@ -56,14 +55,15 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
     address constant DEPOSIT_SOURCE = address(3);
     uint256 constant PER_NOTE_AMOUNT = uint256(50_000_000);
 
-    Teller teller;
+    TestTeller teller;
     Handler handler;
     TreeTest treeTest;
     EthTransferAdapter ethTransferAdapter;
     IWeth weth;
     SimpleERC20Token[3] ERC20s;
-    IHasherT5 hasherT5;
-    IHasherT6 hasherT6;
+    IPoseidonT5 poseidonT5;
+    IPoseidonT6 poseidonT6;
+    IPoseidonExtT7 poseidonExtT7;
 
     event DepositSourcePermissionSet(address source, bool permission);
 
@@ -86,11 +86,14 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         JoinSplit joinSplit
     );
 
-    function setUp() public virtual {
-        // Deploy poseidon hasher libraries
-        deployPoseidon3Through6();
+    event ForcedExit(uint256[] opDigests, JoinSplitInfo[][] joinSplitInfos);
 
-        teller = new Teller();
+    function setUp() public virtual {
+        // Deploy poseidon libraries
+        deployPoseidons();
+        deployPoseidonExts();
+
+        teller = new TestTeller();
         handler = new Handler();
 
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
@@ -100,18 +103,21 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             "NocturneTeller",
             "v1",
             address(handler),
-            address(joinSplitVerifier)
+            address(joinSplitVerifier),
+            address(_poseidonExtT7)
         );
         handler.initialize(address(subtreeUpdateVerifier), address(0x111));
         handler.setTeller(address(teller));
 
+        teller.setBundlerPermission(BUNDLER, true);
         teller.setDepositSourcePermission(DEPOSIT_SOURCE, true);
         handler.setSubtreeBatchFillerPermission(address(this), true);
 
-        hasherT5 = IHasherT5(new PoseidonHasherT5(poseidonT5));
-        hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
+        poseidonT5 = IPoseidonT5(_poseidonT5);
+        poseidonT6 = IPoseidonT6(_poseidonT6);
+        poseidonExtT7 = IPoseidonExtT7(_poseidonExtT7);
 
-        treeTest.initialize(hasherT5, hasherT6);
+        treeTest.initialize(poseidonT5, poseidonT6);
 
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
@@ -589,7 +595,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
@@ -601,7 +607,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
         assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
-        // Expect BOB to have the the 1/2 notes worth sent by alice
+        // Expect BOB to have the 1/2 notes worth sent by alice
         // Expect teller to have alice's remaining 1/2 notes worth - gasComp
         // Expect BUNDLER to have > 0 gas tokens
         assertLt(
@@ -662,7 +668,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        vm.prank(BUNDLER);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
@@ -733,7 +740,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        vm.prank(BUNDLER);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
@@ -816,7 +824,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(BOB.balance, uint256(0));
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call 0 and 1 succeeded (approve and eth transfer)
         assertEq(opResults.length, uint256(1));
@@ -829,7 +837,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
         assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
 
-        // Expect BOB to have the the 1/2 notes worth sent by alice in ETH
+        // Expect BOB to have the 1/2 notes worth sent by alice in ETH
         // Expect teller to have alice's remaining 1/2 notes worth - gasComp
         // Expect BUNDLER to have > 0 gas tokens
         assertLt(
@@ -889,7 +897,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        vm.prank(BUNDLER);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
@@ -959,7 +968,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        vm.prank(BUNDLER);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
@@ -1026,7 +1036,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        vm.prank(BUNDLER);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
@@ -1108,7 +1119,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
@@ -1217,7 +1228,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
@@ -1328,7 +1339,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed, handleOperation only
         // callable by teller
@@ -1448,7 +1459,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
@@ -1530,7 +1541,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         // Use Bob as bundler for this call
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
@@ -1611,7 +1622,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // op processed = false, whole op reverted
         assertEq(opResults.length, uint256(1));
@@ -1721,7 +1732,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        vm.prank(BUNDLER);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
@@ -1818,7 +1830,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
@@ -1929,7 +1941,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
@@ -2036,7 +2048,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             true
         );
 
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        vm.prank(BUNDLER);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, approve call and swap call both succeeded
         assertEq(opResults.length, uint256(1));
@@ -2124,7 +2137,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         uint256 totalCount = handler.totalCount();
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed, assets unwrapped
         assertEq(opResults.length, uint256(1));
@@ -2192,7 +2205,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         );
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, not processed, no assets unwrapped
         assertEq(opResults.length, uint256(1));
@@ -2255,7 +2268,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         );
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, not processed, failure reason for approve check failure
         assertEq(opResults.length, uint256(1));
@@ -2328,7 +2341,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         );
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, not processed, failure reason for approve check failure
         assertEq(opResults.length, uint256(1));
@@ -2397,7 +2410,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         );
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, not processed, failure reason for approve check failure
         assertEq(opResults.length, uint256(1));
@@ -2481,7 +2494,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         );
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, not processed, no assets unwrapped
         assertEq(opResults.length, uint256(1));
@@ -2545,8 +2558,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(teller)), PER_NOTE_AMOUNT);
         assertEq(token.balanceOf(address(BOB)), 0);
 
-        vm.prank(BOB);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        vm.prank(BUNDLER);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed (too few gas tokens)
         assertEq(opResults.length, uint256(1));
@@ -2609,8 +2622,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(teller)), 2 * PER_NOTE_AMOUNT);
         assertEq(token.balanceOf(address(BOB)), 0);
 
-        vm.prank(ALICE);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        vm.prank(BUNDLER);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
@@ -2621,7 +2634,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
 
         // ALICE (bundler) was still paid
         assertLt(token.balanceOf(address(teller)), 2 * PER_NOTE_AMOUNT);
-        assertGt(token.balanceOf(address(ALICE)), 0);
+        assertGt(token.balanceOf(address(BUNDLER)), 0);
     }
 
     function testHandleOperationNotTellerCaller() public {
@@ -2793,7 +2806,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         );
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = teller.processBundle(bundle);
+        (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, not processed, failure reason zero code
         assertEq(opResults.length, uint256(1));
@@ -2802,6 +2815,114 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(opResults[0].failureReason, "!zero code");
         assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
         assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
+    }
+
+    function testForcedExitSuccess() public {
+        // Alice starts with 1 notes worth of tokens in teller
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
+
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
+        // Create operation to transfer all tokens back to self
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
+                ),
+                joinSplitRefundValues: new uint256[](1),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0, // no gas comp, since alice is self-submitting
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    address(token),
+                    ALICE, // transfer all to self
+                    PER_NOTE_AMOUNT
+                ),
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Dummy joinsplit info used for forcedExit
+        JoinSplitInfo[] memory joinSplitInfo = new JoinSplitInfo[](1);
+        joinSplitInfo[0] = JoinSplitInfo({
+            compressedSenderCanonAddr: 1,
+            compressedReceiverCanonAddr: 2,
+            oldMerkleIndicesWithSignBits: 3,
+            newNoteValueA: 0,
+            newNoteValueB: 0,
+            nonce: 6
+        });
+
+        JoinSplitInfo[][] memory joinSplitInfos = new JoinSplitInfo[][](1);
+        joinSplitInfos[0] = joinSplitInfo;
+
+        // Set op joinsplit info commitment to match hash of passed in joinsplit info
+        uint256 joinSplitInfoCommitment = _poseidonExtT7.poseidonExt(
+            uint256(teller.JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR()),
+            [
+                joinSplitInfo[0].compressedSenderCanonAddr,
+                joinSplitInfo[0].compressedReceiverCanonAddr,
+                joinSplitInfo[0].oldMerkleIndicesWithSignBits,
+                joinSplitInfo[0].newNoteValueA,
+                joinSplitInfo[0].newNoteValueB,
+                joinSplitInfo[0].nonce
+            ]
+        );
+        bundle
+            .operations[0]
+            .pubJoinSplits[0]
+            .joinSplit
+            .joinSplitInfoCommitment = joinSplitInfoCommitment;
+
+        // Set op refund addr to be burn address
+        bundle.operations[0].refundAddr = CompressedStealthAddress(
+            teller.COMPRESSED_BASE_POINT(),
+            teller.COMPRESSED_BASE_POINT()
+        );
+
+        // Pre process checks
+        assertEq(token.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 for prefill
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+
+        // Expect ForcedExit event
+        uint256[] memory opDigests = new uint256[](1);
+        opDigests[0] = teller.computeDigest(bundle.operations[0]);
+        vm.expectEmit(true, true, true, true);
+        emit ForcedExit(opDigests, joinSplitInfos);
+
+        vm.prank(ALICE); // ALICE self submitting, not bundler
+        OperationResult[] memory opResults = teller.forcedExit(
+            bundle,
+            joinSplitInfos
+        );
+
+        // One op, processed = true, call[0] succeeded
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(1));
+        assertEq(opResults[0].callSuccesses[0], true);
+        assertEq(opResults[0].callResults.length, uint256(1));
+
+        // Expect ALICE to have all the notes
+        // Expect teller to have 0
+        assertEq(token.balanceOf(address(teller)), 0);
+        assertEq(token.balanceOf(address(handler)), uint256(1));
+        assertEq(token.balanceOf(ALICE), PER_NOTE_AMOUNT);
     }
 
     // TODO: add testcase for leftover tokens in handler sent to leftover holder

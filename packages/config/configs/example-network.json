@@ -24,6 +24,7 @@
       "proxy": "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9",
       "implementation": "0x9E545E3C0baAB3E08CdfD552C960A1050f373042"
     },
+    "poseidonExtT7Address": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
     "joinSplitVerifierAddress": "0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8",
     "subtreeUpdateVerifierAddress": "0x851356ae760d987E095750cCeb3bC6014560891C",
     "depositSources": ["0x51401dc811bb5740090279Ba06cfA8fcF6113778"],

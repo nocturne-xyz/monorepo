@@ -6,8 +6,6 @@ import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 import {console} from "forge-std/console.sol";
 
-import {IHasherT3} from "../../interfaces/IHasher.sol";
-import {PoseidonHasherT3} from "../../utils/PoseidonHashers.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {Validation} from "../../../libs/Validation.sol";
 import {TestSubtreeUpdateVerifier} from "../../harnesses/TestSubtreeUpdateVerifier.sol";

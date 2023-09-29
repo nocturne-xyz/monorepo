@@ -8,9 +8,8 @@ import {TreeUtils} from "../../libs/TreeUtils.sol";
 import {TreeTest, TreeTestLib} from "../utils/TreeTest.sol";
 import {QueueLib} from "../../libs/Queue.sol";
 import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../libs/OffchainMerkleTree.sol";
-import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
+import {IPoseidonT5, IPoseidonT6} from "../interfaces/IPoseidon.sol";
 import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
-import {PoseidonHasherT3, PoseidonHasherT5, PoseidonHasherT6} from "../utils/PoseidonHashers.sol";
 import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import "../../libs/Types.sol";
@@ -22,8 +21,8 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
 
     OffchainMerkleTree merkle;
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
-    IHasherT5 hasherT5;
-    IHasherT6 hasherT6;
+    IPoseidonT5 poseidonT5;
+    IPoseidonT6 poseidonT6;
     TreeTest treeTest;
 
     event InsertNoteCommitments(uint256[] commitments);
@@ -34,14 +33,14 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH;
 
     function setUp() public virtual {
-        // Deploy poseidon hasher libraries
-        deployPoseidon3Through6();
+        // Deploy poseidon libraries
+        deployPoseidons();
         subtreeUpdateVerifier = ISubtreeUpdateVerifier(
             new TestSubtreeUpdateVerifier()
         );
-        hasherT5 = IHasherT5(new PoseidonHasherT5(poseidonT5));
-        hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
-        treeTest.initialize(hasherT5, hasherT6);
+        poseidonT5 = IPoseidonT5(_poseidonT5);
+        poseidonT6 = IPoseidonT6(_poseidonT6);
+        treeTest.initialize(poseidonT5, poseidonT6);
         merkle.initialize(address(subtreeUpdateVerifier));
     }
 

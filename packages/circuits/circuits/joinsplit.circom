@@ -60,7 +60,7 @@ include "lib.circom";
 //@ensures(14) `joinSplitInfoCommitment` is computed correctly as `Poseidon(keccak256("JOINSPLIT_INFO_COMMITMENT") % p, ...encodedJoinSplitInfo)` where `encodedJoinSplitInfo` is an array consisting of the following:
 // - `compressedSenderCanonAddrY`
 // - `compressedReceiverCanonAddrY`
-// - `oldMerkleIndicesAndWithBits`, defined as `u32(oldNoteAIndex) || u32(oldNoteBIndex) << 32 || senderSignBit << 64 || receiverSignBit << 65 || noteBIsDummy << 66`
+// - `oldMerkleIndicesWithSignBits`, defined as `u32(oldNoteAIndex) || u32(oldNoteBIndex) << 32 || senderSignBit << 64 || receiverSignBit << 65 || noteBIsDummy << 66`
 //      where `oldNoteAIndex` and `oldNoteBIndex` are computed from `pathA` and `pathB`,and `noteBIsDummy` is a single bit that's a `1` if note B is a dummy note and `0` otherwise
 // - `newNoteAValue`
 // - `newNoteBValue`

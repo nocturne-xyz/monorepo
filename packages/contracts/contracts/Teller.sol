@@ -11,6 +11,7 @@ import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/acces
 import {ITeller} from "./interfaces/ITeller.sol";
 import {IHandler} from "./interfaces/IHandler.sol";
 import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
+import {IPoseidonExtT7} from "./interfaces/IPoseidonExt.sol";
 import {OperationEIP712} from "./OperationEIP712.sol";
 import {Utils} from "./libs/Utils.sol";
 import {Validation} from "./libs/Validation.sol";
@@ -32,6 +33,15 @@ contract Teller is
 {
     using OperationLib for Operation;
 
+    // Domain separator hashed with joinsplit info for joinsplit info commitment
+    uint256 public constant JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
+        uint256(keccak256(bytes("JOINSPLIT_INFO_COMMITMENT")));
+
+    // Compressed babyjubjub base point
+    // (BasePoint, BasePoint) is used as the burn address
+    uint256 public constant COMPRESSED_BASE_POINT =
+        16950150798460657717958625567821834550301663161624707787222815936182638968203;
+
     // Handler contract
     IHandler public _handler;
 
@@ -41,11 +51,20 @@ contract Teller is
     // Set of contracts which can deposit funds into Teller
     mapping(address => bool) public _depositSources;
 
+    // Set of allowed bundlers
+    mapping(address => bool) public _bundlers;
+
+    // 6 elem poseidon hasher
+    IPoseidonExtT7 public _poseidonExtT7;
+
     // Gap for upgrade safety
     uint256[50] private __GAP;
 
     /// @notice Event emitted when a deposit source is given/revoked permission
     event DepositSourcePermissionSet(address source, bool permission);
+
+    /// @notice Event emitted when a bundler is given/revoked permission
+    event BundlerPermissionSet(address bundler, bool permission);
 
     /// @notice Event emitted when an operation is processed/executed (one per operation)
     event OperationProcessed(
@@ -59,6 +78,9 @@ contract Teller is
         uint128 postOpMerkleCount
     );
 
+    /// @notice Event emitted when a forced exit is processed
+    event ForcedExit(uint256[] opDigests, JoinSplitInfo[][] joinSplitInfos);
+
     /// @notice Initializer function
     /// @param handler Address of the handler contract
     /// @param joinSplitVerifier Address of the joinsplit verifier contract
@@ -66,7 +88,8 @@ contract Teller is
         string calldata contractName,
         string calldata contractVersion,
         address handler,
-        address joinSplitVerifier
+        address joinSplitVerifier,
+        address poseidonExtT7
     ) external initializer {
         __Pausable_init();
         __Ownable2Step_init();
@@ -74,6 +97,7 @@ contract Teller is
         __OperationEIP712_init(contractName, contractVersion);
         _handler = IHandler(handler);
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
+        _poseidonExtT7 = IPoseidonExtT7(poseidonExtT7);
     }
 
     /// @notice Only callable by the Handler, so Handler can request assets
@@ -85,6 +109,12 @@ contract Teller is
     /// @notice Only callable by allowed deposit source
     modifier onlyDepositSource() {
         require(_depositSources[msg.sender], "Only deposit source");
+        _;
+    }
+
+    /// @notice Only callable by allowed bundler
+    modifier onlyAllowedBundler() {
+        require(_bundlers[msg.sender], "Only bundler");
         _;
     }
 
@@ -107,6 +137,17 @@ contract Teller is
     ) external onlyOwner {
         _depositSources[source] = permission;
         emit DepositSourcePermissionSet(source, permission);
+    }
+
+    /// @notice Sets permission for a bundler
+    /// @param bundler Address of the bundler
+    /// @param permission Whether or not the bundler is allowed to process bundles
+    function setBundlerPermission(
+        address bundler,
+        bool permission
+    ) external onlyOwner {
+        _bundlers[bundler] = permission;
+        emit BundlerPermissionSet(bundler, permission);
     }
 
     /// @notice Deposits funds into the Teller contract and calls on handler to add new notes
@@ -139,9 +180,10 @@ contract Teller is
         AssetUtils.transferAssetTo(encodedAsset, address(_handler), value);
     }
 
-    /// @notice Processes a bundle of operations. Verifies all proofs, then loops through each op
-    ///         and passes to Handler for processing/execution. Emits one OperationProcessed event
-    ///         per op.
+    /// @notice Processes a bundle of operations.
+    /// @dev Wraps internal _processBundle method (see below for more details) and adds not paused
+    ///      guard and reentrancy guard.
+    /// @dev Currently restricts callers to only allowed bundlers.
     /// @param bundle Bundle of operations to process
     function processBundle(
         Bundle calldata bundle
@@ -150,12 +192,94 @@ contract Teller is
         override
         whenNotPaused
         nonReentrant
-        returns (OperationResult[] memory)
+        onlyAllowedBundler
+        returns (uint256[] memory opDigests, OperationResult[] memory opResults)
+    {
+        return _processBundle(bundle);
+    }
+
+    /// @notice Allows user to submit a bundle of operations given they open the commitment to
+    ///         joinsplit info. This ensures users are always able to exit the protocol even if the
+    ///         the bundler goes down or rejects an operation.
+    /// @dev Opens joinsplit info commitment and ensures funds can only exit the protocol (i.e.
+    ///      refundAddr is burn address, no conf joinsplits, no joinsplit output notes).
+    /// @param bundle Bundle of operations to process
+    /// @param joinSplitInfos Array of joinSplitInfos for each public joinSplit in each operation
+    function forcedExit(
+        Bundle calldata bundle,
+        JoinSplitInfo[][] calldata joinSplitInfos
+    ) external whenNotPaused nonReentrant returns (OperationResult[] memory) {
+        // Ensure bundle has ops that can only send funds out of protocol and that user
+        // reveals notes being spent on the way out
+        uint256 numOps = bundle.operations.length;
+        for (uint256 i = 0; i < numOps; i++) {
+            Operation calldata op = bundle.operations[i];
+
+            // Refund addr is burn address
+            require(
+                op.refundAddr.h1 == COMPRESSED_BASE_POINT &&
+                    op.refundAddr.h2 == COMPRESSED_BASE_POINT,
+                "!burn addr"
+            );
+
+            // No conf joinsplits
+            require(op.confJoinSplits.length == 0, "!conf JS");
+
+            // Exists joinSplitInfo for each public joinSplit
+            uint256 numJoinSplitInfosForOp = joinSplitInfos[i].length;
+            require(
+                op.pubJoinSplits.length == numJoinSplitInfosForOp,
+                "!JS info len"
+            );
+
+            for (uint256 j = 0; j < numJoinSplitInfosForOp; j++) {
+                // No output notes
+                require(joinSplitInfos[i][j].newNoteValueA == 0, "!newValueA");
+                require(joinSplitInfos[i][j].newNoteValueB == 0, "!newValueB");
+
+                // Require joinSplitInfoCommitment to match joinSplitInfo
+                uint256 joinSplitInfoCommmitment = _poseidonExtT7.poseidonExt(
+                    JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR,
+                    [
+                        joinSplitInfos[i][j].compressedSenderCanonAddr,
+                        joinSplitInfos[i][j].compressedReceiverCanonAddr,
+                        joinSplitInfos[i][j].oldMerkleIndicesWithSignBits,
+                        joinSplitInfos[i][j].newNoteValueA,
+                        joinSplitInfos[i][j].newNoteValueB,
+                        joinSplitInfos[i][j].nonce
+                    ]
+                );
+                require(
+                    joinSplitInfoCommmitment ==
+                        op.pubJoinSplits[j].joinSplit.joinSplitInfoCommitment,
+                    "!JS info"
+                );
+            }
+        }
+
+        (
+            uint256[] memory opDigests,
+            OperationResult[] memory opResults
+        ) = _processBundle(bundle);
+        emit ForcedExit(opDigests, joinSplitInfos);
+
+        return opResults;
+    }
+
+    /// @notice Processes a bundle of operations. Verifies all proofs, then loops through each op
+    ///         and passes to Handler for processing/execution. Emits one OperationProcessed event
+    ///         per op.
+    /// @param bundle Bundle of operations to process
+    function _processBundle(
+        Bundle calldata bundle
+    )
+        internal
+        returns (uint256[] memory opDigests, OperationResult[] memory opResults)
     {
         Operation[] calldata ops = bundle.operations;
         require(ops.length > 0, "empty bundle");
 
-        uint256[] memory opDigests = new uint256[](ops.length);
+        opDigests = new uint256[](ops.length);
         for (uint256 i = 0; i < ops.length; i++) {
             Validation.validateOperation(ops[i]);
             opDigests[i] = _computeDigest(ops[i]);
@@ -165,11 +289,10 @@ contract Teller is
             ops,
             opDigests
         );
-
         require(success, "Batch JoinSplit verify failed");
 
         uint256 numOps = ops.length;
-        OperationResult[] memory opResults = new OperationResult[](numOps);
+        opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
             try
                 _handler.handleOperation(
@@ -202,7 +325,7 @@ contract Teller is
                 opResults[i].postOpMerkleCount
             );
         }
-        return opResults;
+        return (opDigests, opResults);
     }
 
     /// @notice Verifies or batch verifies joinSplit proofs for an array of operations.

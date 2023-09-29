@@ -18,9 +18,10 @@ import "../utils/NocturneUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {Utils} from "../../libs/Utils.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
+import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
 import "../../libs/Types.sol";
 
-contract BalanceManagerTest is Test {
+contract BalanceManagerTest is Test, PoseidonDeployer {
     using LibOffchainMerkleTree for OffchainMerkleTree;
     using stdJson for string;
     using OperationLib for Operation;
@@ -45,6 +46,8 @@ contract BalanceManagerTest is Test {
     SimpleERC20Token[3] ERC20s;
 
     function setUp() public virtual {
+        deployPoseidonExts();
+
         // Instantiate teller, joinSplitVerifier, tree, and balanceManager
         teller = new Teller();
         balanceManager = new TestBalanceManager();
@@ -64,7 +67,8 @@ contract BalanceManagerTest is Test {
             "NocturneTeller",
             "v1",
             address(balanceManager),
-            address(joinSplitVerifier)
+            address(joinSplitVerifier),
+            address(_poseidonExtT7)
         );
         teller.setDepositSourcePermission(ALICE, true);
 

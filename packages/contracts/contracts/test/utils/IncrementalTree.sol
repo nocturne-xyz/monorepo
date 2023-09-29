@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
-import {IHasherT3} from "../interfaces/IHasher.sol";
+import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 
 //TODO: test new functions added to ensure proper merkle roots are computed
 
@@ -11,7 +11,7 @@ struct IncrementalTree {
     uint8 depth; // Depth of the tree (levels - 1).
     uint256 root; // Root hash of the tree.
     uint256 numberOfLeaves; // Number of leaves of the tree.
-    IHasherT3 hasherT3; // HasherT3 contract
+    IPoseidonT3 poseidonT3; // PoseidonT3 contract
     mapping(uint256 => uint256) zeroes; // Zero hashes used for empty nodes (level -> zero hash).
     // The nodes of the subtrees used in the last addition of a leaf (level -> [left node, right node]).
     mapping(uint256 => uint256[2]) lastSubtrees; // Caching these values is essential to efficient appends.
@@ -33,7 +33,7 @@ library LibIncrementalTree {
         IncrementalTree storage self,
         uint8 depth,
         uint256 zero,
-        IHasherT3 hasherT3
+        IPoseidonT3 poseidonT3
     ) internal {
         require(
             zero < BN254_SCALAR_FIELD_MODULUS,
@@ -45,11 +45,11 @@ library LibIncrementalTree {
         );
 
         self.depth = depth;
-        self.hasherT3 = hasherT3;
+        self.poseidonT3 = poseidonT3;
 
         for (uint8 i = 0; i < depth; i++) {
             self.zeroes[i] = zero;
-            zero = self.hasherT3.hash([zero, zero]);
+            zero = self.poseidonT3.poseidon([zero, zero]);
         }
 
         self.root = zero;
@@ -78,7 +78,7 @@ library LibIncrementalTree {
                 self.lastSubtrees[i][1] = hash;
             }
 
-            hash = self.hasherT3.hash(self.lastSubtrees[i]);
+            hash = self.poseidonT3.poseidon(self.lastSubtrees[i]);
             index /= 2;
         }
 
@@ -102,7 +102,7 @@ library LibIncrementalTree {
         );
 
         uint256 index = self.numberOfLeaves / 2;
-        uint256 hash = self.hasherT3.hash(leaves);
+        uint256 hash = self.poseidonT3.poseidon(leaves);
 
         for (uint8 i = 1; i < self.depth; i++) {
             if (index % 2 == 0) {
@@ -111,7 +111,7 @@ library LibIncrementalTree {
                 self.lastSubtrees[i][1] = hash;
             }
 
-            hash = self.hasherT3.hash(self.lastSubtrees[i]);
+            hash = self.poseidonT3.poseidon(self.lastSubtrees[i]);
             index /= 2;
         }
 
@@ -145,7 +145,7 @@ library LibIncrementalTree {
                 self.lastSubtrees[i][1] = hash;
             }
 
-            hash = self.hasherT3.hash(self.lastSubtrees[i]);
+            hash = self.poseidonT3.poseidon(self.lastSubtrees[i]);
             index /= 2;
         }
 
@@ -179,7 +179,7 @@ library LibIncrementalTree {
                 self.lastSubtrees[i][1] = hash;
             }
 
-            hash = self.hasherT3.hash(self.lastSubtrees[i]);
+            hash = self.poseidonT3.poseidon(self.lastSubtrees[i]);
             index /= 2;
         }
 
@@ -191,21 +191,21 @@ library LibIncrementalTree {
         IncrementalTree storage self,
         uint256[8] memory leaves
     ) internal view returns (uint256) {
-        uint256 leftHash = self.hasherT3.hash(
+        uint256 leftHash = self.poseidonT3.poseidon(
             [
-                self.hasherT3.hash([leaves[0], leaves[1]]),
-                self.hasherT3.hash([leaves[2], leaves[3]])
+                self.poseidonT3.poseidon([leaves[0], leaves[1]]),
+                self.poseidonT3.poseidon([leaves[2], leaves[3]])
             ]
         );
 
-        uint256 rightHash = self.hasherT3.hash(
+        uint256 rightHash = self.poseidonT3.poseidon(
             [
-                self.hasherT3.hash([leaves[4], leaves[5]]),
-                self.hasherT3.hash([leaves[6], leaves[7]])
+                self.poseidonT3.poseidon([leaves[4], leaves[5]]),
+                self.poseidonT3.poseidon([leaves[6], leaves[7]])
             ]
         );
 
-        return self.hasherT3.hash([leftHash, rightHash]);
+        return self.poseidonT3.poseidon([leftHash, rightHash]);
     }
 
     function getRootFrom16(
@@ -219,7 +219,7 @@ library LibIncrementalTree {
             rightHalf[i] = leaves[i * 2];
         }
         return
-            self.hasherT3.hash(
+            self.poseidonT3.poseidon(
                 [getRootFrom8(self, leftHalf), getRootFrom8(self, rightHalf)]
             );
     }
