@@ -92,7 +92,7 @@ struct TrackedAsset {
     uint256 minRefundValue;
 }
 
-enum ProcessBundleType {
+enum OperationType {
     Standard,
     ForcedExit
 }
