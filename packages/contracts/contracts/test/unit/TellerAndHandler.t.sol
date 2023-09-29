@@ -2920,5 +2920,118 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(ALICE), PER_NOTE_AMOUNT);
     }
 
+    function testForcedExitWithLeftoverFunds() public {
+        // Alice starts with 1 notes worth of tokens in teller
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
+
+        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
+
+        // Create operation to unwrap all tokens but only transfer out half
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
+                ),
+                joinSplitRefundValues: new uint256[](1),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT * 2,
+                            1
+                        )
+                    ),
+                trackedRefundAssets: trackedRefundAssets,
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0, // no gas comp, since alice is self-submitting
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    address(token),
+                    ALICE, // transfer HALF to self
+                    PER_NOTE_AMOUNT
+                ),
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // Dummy joinsplit info used for forcedExit
+        JoinSplitInfo[] memory joinSplitInfo = new JoinSplitInfo[](1);
+        joinSplitInfo[0] = JoinSplitInfo({
+            compressedSenderCanonAddr: 1,
+            compressedReceiverCanonAddr: 2,
+            oldMerkleIndicesWithSignBits: 3,
+            newNoteValueA: 0,
+            newNoteValueB: 0,
+            nonce: 6
+        });
+
+        JoinSplitInfo[][] memory joinSplitInfos = new JoinSplitInfo[][](1);
+        joinSplitInfos[0] = joinSplitInfo;
+
+        // Set op joinsplit info commitment to match hash of passed in joinsplit info
+        uint256 joinSplitInfoCommitment = _poseidonExtT7.poseidonExt(
+            uint256(teller.JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR()),
+            [
+                joinSplitInfo[0].compressedSenderCanonAddr,
+                joinSplitInfo[0].compressedReceiverCanonAddr,
+                joinSplitInfo[0].oldMerkleIndicesWithSignBits,
+                joinSplitInfo[0].newNoteValueA,
+                joinSplitInfo[0].newNoteValueB,
+                joinSplitInfo[0].nonce
+            ]
+        );
+        bundle
+            .operations[0]
+            .pubJoinSplits[0]
+            .joinSplit
+            .joinSplitInfoCommitment = joinSplitInfoCommitment;
+
+        // Pre process checks
+        assertEq(
+            token.balanceOf(address(teller)),
+            uint256(PER_NOTE_AMOUNT * 2)
+        );
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 for prefill
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+
+        // Expect ForcedExit event
+        uint256[] memory opDigests = new uint256[](1);
+        opDigests[0] = teller.computeDigest(bundle.operations[0]);
+        vm.expectEmit(true, true, true, true);
+        emit ForcedExit(opDigests, joinSplitInfos);
+
+        uint256 preOpMerkleCount = handler.totalCount();
+
+        vm.prank(ALICE); // ALICE self submitting, not bundler
+        OperationResult[] memory opResults = teller.forcedExit(
+            bundle,
+            joinSplitInfos
+        );
+
+        // One op, processed = true, call[0] succeeded
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(1));
+        assertEq(opResults[0].callSuccesses[0], true);
+        assertEq(opResults[0].callResults.length, uint256(1));
+
+        // ensure no new merkle leaves added
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount);
+        assertEq(handler.totalCount() == preOpMerkleCount, true);
+
+        // Expect ALICE to have half the tokens
+        // Expect teller to have 0
+        // Expect handler to have other half of the tokens + prefill
+        assertEq(token.balanceOf(address(teller)), 0);
+        assertEq(token.balanceOf(address(handler)), PER_NOTE_AMOUNT + 1);
+        assertEq(token.balanceOf(ALICE), PER_NOTE_AMOUNT);
+    }
+
     // TODO: add testcase for leftover tokens in handler sent to leftover holder
 }

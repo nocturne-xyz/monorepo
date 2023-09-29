@@ -197,6 +197,8 @@ contract Teller is
     ///         joinsplit info. This ensures users are always able to exit the protocol even if the
     ///         the bundler goes down or rejects an operation.
     /// @dev Opens joinsplit info commitment and ensures joinsplit info matches the commitment.
+    ///      Also ensures there are no conf joinsplits and that pub joinsplits have output notes of
+    ///      value 0, making sure there is no value being created in new notes.
     /// @dev Passes the ForcedExit operation type to the Handler, which signals to
     ///      the Handler to NOT create new output notes and NOT create refund notes. This is to
     ///      ensure funds can only flow out of the protocol for forcedExit and no new outputs can
