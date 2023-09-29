@@ -129,7 +129,7 @@ template VKDerivation() {
 //@requires(2) `H2X` and `H2Y` comprise a valid, but not necessarily order-l Baby Jubjub point (i.e. it's on-curve)
 //@ensures(1) `H2X` and `H2Y` comprise a order-l Baby Jubjub point (i.e. it's on-curve)
 //@ensures(2) `H1X`, `H1Y`, `H2X`, and `H2Y` comprise a stealth address "owned" by the viewing key represented by `vkBits` according to the stealth address scheme
-//@ensures(3) if viewing key represented by `vkBits` is the only possible viewing key that can "own" the given stealth address based on the DDH assumption, `isOwner` is 1, and `0` otherwise.
+//@ensures(3) the viewing key represented by `vkBits` is the only possible viewing key that can "own" the given stealth address based on the DDH assumption
 template StealthAddrOwnership() {
     // X and Y coordinates of both
     // components of the stealth address
@@ -137,8 +137,6 @@ template StealthAddrOwnership() {
     signal input H1Y;
     signal input H2X;
     signal input H2Y;
-
-    signal output isOwner;
 
     // little-endian bit representation of viewing key
     // we check elsewhere that this viewing key was derived correctly
@@ -157,28 +155,8 @@ template StealthAddrOwnership() {
     (GG4X, GG4Y) <== BabyDbl()(GG2X, GG2Y);
     (GG8X, GG8Y) <== BabyDbl()(GG4X, GG4Y);
 
-    signal GG8XIsZero <== IsZero()(GG8X);
-    signal GG8YIsOne <== IsZero()(GG8Y - 1);
-
-    isOwner <== GG8XIsZero * GG8YIsOne;
-}
-
-//@ensures(1) `isBasePoint` is 1 if and only if `x` and `y` comprise the canonical encoding of the base point of Baby Jubjub, and 0 otherwise
-template IsBasePoint() {
-    signal input x;
-    signal input y;
-
-    signal output isBasePoint;
-
-    var BASE8[2] = [
-        5299619240641551281634865583518297030282874472190772894086521144482721001553,
-        16950150798460657717958625567821834550301663161624707787222815936182638968203
-    ];
-
-    signal xSame <== IsEqual()([x, BASE8[0]]);
-    signal ySame <== IsEqual()([y, BASE8[1]]);
-
-    isBasePoint <== xSame * ySame;
+    GG8X === 0;
+    GG8Y === 1;
 }
 
 // verify a schnorr signature of `m` under pubkey `pk`

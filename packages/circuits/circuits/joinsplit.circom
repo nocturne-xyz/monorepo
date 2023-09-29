@@ -39,7 +39,7 @@ include "lib.circom";
 //@ensures(6.6) the owner field of `oldNoteB, `oldNoteBOwner`, is "owned" by the viewing key `vk` according to the Nocturne Stealth Address scheme
 //@ensures(7.1) `refundAddrH1CompressedY`, along with its sign bit extracted from `pubEncodedAssetAddrWithSignBits`, represents a valid (on-curve), order-l babyjubjub point according to Nocturne's point compression scheme
 //@ensures(7.2) `refundAddrH2CompressedY`, along with its sign bit extracted from `pubEncodedAssetAddrWithSignBits`, represents a valid (on-curve), order-l babyjubjub point according to Nocturne's point compression scheme
-//@ensures(7.3) if `refundAddr` is not (`BasePoint`, `BasePoint`), it is "owned" by same viewing key as the old note owners, as defined by the "ownership check" of the Nocturne Stealth Address scheme
+//@ensures(7.3) `refundAddr` is "owned" by same viewing key as the old note owners, as defined by the "ownership check" of the Nocturne Stealth Address scheme.
 //@ensures(8.1) `oldNoteACommitment` is included in the quaternary Poseidon merkle tree whose root is `commitmentTreeRoot`
 //@ensures(8.2) `oldNoteBCommitment` is included in the quaternary Poseidon merkle tree whose root is `commitmentTreeRoot` if `oldNoteBValue` is nonzero
 //@ensures(9.1) `nullifierA` was correctly derived from the note commitment of `oldNoteA` and the viewing key `vk`
@@ -251,15 +251,13 @@ template JoinSplit() {
     //@satisfies(6.5)
     //@argument StealthAddrOwnership.requires(1) is satisfied by (6.1) and @lemma(4), and StealthAddrOwnership.requires(2) is satisfied by (6.1)
     //   therefore, by StealthAddrOwnership.ensures(1), old note A owner is "owned" by the viewing key according to the Nocturne Stealth Address scheme
-    signal oldNoteAOwnerOwnedBySender <== StealthAddrOwnership()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, vkBits);
-    oldNoteAOwnerOwnedBySender === 1;
+    StealthAddrOwnership()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, vkBits);
 
     //@lemma(6) oldNoteBOwnerH2 is order-l
     //@argument same as @lemma(5)
     //@satisfies(6.6)
     //@argument same as (6.5), but with @lemma(6) instead of @lemma(5)
-    signal oldNoteBOwnerOwnedBysender <== StealthAddrOwnership()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, vkBits);
-    oldNoteBOwnerOwnedBysender === 1;
+    StealthAddrOwnership()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, vkBits);
 
     // check that the sum of old and new note values are in range [0, 2**252)
     // this can't overflow because all four note values are in range [0, 2**252) and field is 254 bits
@@ -460,21 +458,9 @@ template JoinSplit() {
     refundAddrH2Sign === compressors[1].sign;
 
     //@satisfies(7.3)
-    //@argument StealthAddrOwnership.requires(1) and StealthAddrOwnership.requires(2) is satisfied by (7.1) and (7.2).
-    //  then, StealthAddrOwnership.ensures(1) guarantees `refundAddrOwnedBySender == 1` if `refundAddr` owned by sender
-    //  and 0 otherwise. Furthemore, due to `IsBasePoint().ensures(1)`, `refundAddrH1IsBasePoint * refundAddrH2IsbasePoint == 1`
-    //  IFF both points of the refund addr are the base point, and 0 otherwise.
-    //  then, due to the check below, if the refund addr is not (BasePoint, BasePoint),
-    //  the circuit is unsatisfiable if the user doesn't own the refund addr (7.3):
-    //    refundAddr is not (BasePoint, BasePoint)
-    //      => `refundAddrH1IsBasePoint * refundAddrH2IsBasePoint` is `0`
-    //      => RHS of constraint is 1
-    //      => refundAddrOwnedBySender must be 1 for circuit to be satisfied
-    //      => sender must own refund addr, otherwise circuit is unsatisfiable
-    signal refundAddrOwnedBySender <== StealthAddrOwnership()(refundAddrH1X, refundAddrH1Y, refundAddrH2X, refundAddrH2Y, vkBits);
-    signal refundAddrH1IsBasePoint <== IsBasePoint()(refundAddrH1X, refundAddrH1Y);
-    signal refundAddrH2IsBasePoint <== IsBasePoint()(refundAddrH2X, refundAddrH2Y);
-    refundAddrOwnedBySender === 1 - refundAddrH1IsBasePoint * refundAddrH2IsBasePoint;
+    //@argument StealthAddrOwnership.requires(1) and StealthAddrOwnership.requires(2) is satisfied by (7.1) and (7.2),
+    //  and StealthAddrOwnership.ensures(1) satisfies (7.3)
+    StealthAddrOwnership()(refundAddrH1X, refundAddrH1Y, refundAddrH2X, refundAddrH2Y, vkBits);
 
     // hash the sender's canon addr as `Poseidon4(keccak256("SENDER_COMMITMENT") % p, senderCanonAddrX, senderCanonAddrY, newNoteBNonce)`
     //@satisfies(12.1)
