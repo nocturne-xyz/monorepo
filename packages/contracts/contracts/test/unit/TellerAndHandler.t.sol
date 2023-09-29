@@ -2892,6 +2892,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         vm.expectEmit(true, true, true, true);
         emit ForcedExit(opDigests, joinSplitInfos);
 
+        uint256 preOpMerkleCount = handler.totalCount();
+
         vm.prank(ALICE); // ALICE self submitting, not bundler
         OperationResult[] memory opResults = teller.forcedExit(
             bundle,
@@ -2905,6 +2907,11 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
+
+        // ensure no new merkle leaves added
+        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
+        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount);
+        assertEq(handler.totalCount() == preOpMerkleCount, true);
 
         // Expect ALICE to have all the notes
         // Expect teller to have 0
