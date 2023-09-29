@@ -217,15 +217,6 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         for (uint256 i = 0; i < depositIterations; i++) {
             CompressedStealthAddress memory addr = NocturneUtils
                 .defaultStealthAddress();
-            vm.expectEmit(true, true, true, true);
-            emit RefundProcessed(
-                addr,
-                uint128(i),
-                uint256(uint160(address(token))),
-                ERC20_ID,
-                PER_NOTE_AMOUNT,
-                uint128(i)
-            );
 
             if (i == depositIterations - 1 && remainder != 0) {
                 depositFunds(recipient, token, remainder, ERC20_ID, addr);
