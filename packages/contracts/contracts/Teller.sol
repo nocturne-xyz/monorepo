@@ -190,7 +190,7 @@ contract Teller is
         onlyAllowedBundler
         returns (uint256[] memory opDigests, OperationResult[] memory opResults)
     {
-        return _processBundle(bundle, OperationType.Standard);
+        return _processBundle(bundle);
     }
 
     /// @notice Allows user to submit a bundle of operations given they open the commitment to
@@ -214,6 +214,9 @@ contract Teller is
         uint256 numOps = bundle.operations.length;
         for (uint256 i = 0; i < numOps; i++) {
             Operation calldata op = bundle.operations[i];
+
+            // isForcedExit set to true
+            require(op.isForcedExit, "!forcedExit");
 
             // No conf joinsplits
             require(op.confJoinSplits.length == 0, "!conf JS");
@@ -253,7 +256,7 @@ contract Teller is
         (
             uint256[] memory opDigests,
             OperationResult[] memory opResults
-        ) = _processBundle(bundle, OperationType.ForcedExit);
+        ) = _processBundle(bundle);
         emit ForcedExit(opDigests, joinSplitInfos);
 
         return opResults;
@@ -264,8 +267,7 @@ contract Teller is
     ///         per op.
     /// @param bundle Bundle of operations to process
     function _processBundle(
-        Bundle calldata bundle,
-        OperationType opType
+        Bundle calldata bundle
     )
         internal
         returns (uint256[] memory opDigests, OperationResult[] memory opResults)
@@ -292,8 +294,7 @@ contract Teller is
                 _handler.handleOperation(
                     ops[i],
                     perJoinSplitVerifyGas,
-                    msg.sender,
-                    opType
+                    msg.sender
                 )
             returns (OperationResult memory result) {
                 opResults[i] = result;

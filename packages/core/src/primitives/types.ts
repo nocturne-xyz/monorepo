@@ -124,11 +124,6 @@ export interface TrackedAsset {
 
 export type ExpectedRefund = TrackedAsset;
 
-export enum OperationType {
-  Standard = 0,
-  ForcedExit = 1,
-}
-
 export interface BaseOperation {
   networkInfo: NetworkInfo;
   refundAddr: CompressedStealthAddress;
@@ -140,6 +135,7 @@ export interface BaseOperation {
   gasPrice: bigint;
   deadline: bigint;
   atomicActions: boolean;
+  isForcedExit: boolean;
 }
 
 export interface PreSignOperation extends BaseOperation {

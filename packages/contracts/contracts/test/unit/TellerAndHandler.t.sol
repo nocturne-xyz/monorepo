@@ -394,7 +394,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         handler.handleDeposit(deposit);
         vm.expectRevert("Pausable: paused");
         vm.prank(address(teller));
-        handler.handleOperation(operation, 100, ALICE, OperationType.Standard);
+        handler.handleOperation(operation, 100, ALICE);
         vm.expectRevert("Pausable: paused");
         vm.prank(address(handler));
         handler.executeActions(operation);
@@ -1290,8 +1290,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
                 handler.handleOperation.selector,
                 internalOp,
                 300_000,
-                BUNDLER,
-                OperationType.Standard
+                BUNDLER
             )
         });
 
@@ -2670,7 +2669,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         // teller
         vm.prank(ALICE);
         vm.expectRevert("Only teller");
-        handler.handleOperation(op, 0, ALICE, OperationType.Standard);
+        handler.handleOperation(op, 0, ALICE);
     }
 
     function testHandleOperationExpiredDeadline() public {
@@ -2880,6 +2879,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             .pubJoinSplits[0]
             .joinSplit
             .joinSplitInfoCommitment = joinSplitInfoCommitment;
+        bundle.operations[0].isForcedExit = true;
 
         // Pre process checks
         assertEq(token.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
@@ -2989,6 +2989,8 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             .pubJoinSplits[0]
             .joinSplit
             .joinSplitInfoCommitment = joinSplitInfoCommitment;
+
+        bundle.operations[0].isForcedExit = true;
 
         // Pre process checks
         assertEq(

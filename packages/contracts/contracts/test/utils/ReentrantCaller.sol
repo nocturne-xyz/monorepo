@@ -65,7 +65,7 @@ contract ReentrantCaller {
 
     function reentrantHandleOperation() external {
         Operation memory op = formatOperation();
-        _handler.handleOperation(op, 0, address(0x0), OperationType.Standard);
+        _handler.handleOperation(op, 0, address(0x0));
     }
 
     function reentrantExecuteActions() external {

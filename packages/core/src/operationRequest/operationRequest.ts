@@ -34,6 +34,7 @@ export interface OperationRequest {
   chainId: bigint;
   tellerContract: Address;
   deadline: bigint;
+  isForcedExit?: boolean;
   refundAddr?: StealthAddress;
   executionGasLimit?: bigint;
   gasPrice?: bigint;

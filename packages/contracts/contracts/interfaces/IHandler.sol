@@ -7,8 +7,7 @@ interface IHandler {
     function handleOperation(
         Operation calldata op,
         uint256 perJoinSplitVerifyGas,
-        address bundler,
-        OperationType opType
+        address bundler
     ) external returns (OperationResult memory);
 
     function handleDeposit(

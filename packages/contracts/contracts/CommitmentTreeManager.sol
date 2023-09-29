@@ -169,13 +169,10 @@ contract CommitmentTreeManager is
     ///         reused, adds the new NFs to the nullifier set, and inserts the new note NCs.
     /// @dev This function should be re-entry safe. Nullifiers are be marked
     ///      used as soon as they are checked to be valid.
-    /// @dev If opType is ForcedExit, no new note commitments will be inserted into the tree,
+    /// @dev If op.isForcedExit is true, no new note commitments will be inserted into the tree,
     ///      effectively burning the funds.
     /// @param op Operation with joinsplits
-    function _handleJoinSplits(
-        Operation calldata op,
-        OperationType opType
-    ) internal {
+    function _handleJoinSplits(Operation calldata op) internal {
         uint256 totalNumJoinSplits = op.totalNumJoinSplits();
         uint256[] memory newNoteCommitments = new uint256[](
             totalNumJoinSplits * 2
@@ -234,7 +231,7 @@ contract CommitmentTreeManager is
             );
         }
 
-        if (opType != OperationType.ForcedExit) {
+        if (!op.isForcedExit) {
             _insertNoteCommitments(newNoteCommitments);
         }
     }

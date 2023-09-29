@@ -33,6 +33,7 @@ export const OPERATION_TYPES = {
     { name: "gasPrice", type: "uint256" },
     { name: "deadline", type: "uint256" },
     { name: "atomicActions", type: "bool" },
+    { name: "isForcedExit", type: "bool" },
   ],
   Action: [
     { name: "contractAddress", type: "address" },
@@ -128,6 +129,7 @@ export function toSignableOperation(
     gasPrice,
     deadline,
     atomicActions,
+    isForcedExit,
   } = op;
 
   const trackedAssets = getTrackedAssets(op);
@@ -182,6 +184,7 @@ export function toSignableOperation(
     gasPrice,
     deadline,
     atomicActions,
+    isForcedExit,
   };
 }
 
@@ -199,6 +202,7 @@ export function toSubmittableOperation(
     gasPrice,
     deadline,
     atomicActions,
+    isForcedExit,
   } = op;
 
   const trackedAssets = getTrackedAssets(op);
@@ -255,6 +259,7 @@ export function toSubmittableOperation(
     gasPrice,
     deadline,
     atomicActions,
+    isForcedExit,
   };
 }
 

@@ -66,14 +66,13 @@ contract BalanceManager is CommitmentTreeManager {
     ///                              teller during (batch) proof verification
     function _processJoinSplitsReservingFee(
         Operation calldata op,
-        uint256 perJoinSplitVerifyGas,
-        OperationType opType
+        uint256 perJoinSplitVerifyGas
     ) internal returns (uint256 numJoinSplitAssets) {
         // process nullifiers and insert new noteCommitments for each joinSplit
         // will throw an error if nullifiers are invalid or tree root invalid
         // NOTE: we handle both public and conf joinSplits here, all code below though is
         // only called on public joinSplits
-        _handleJoinSplits(op, opType);
+        _handleJoinSplits(op);
 
         // Get gas asset and amount to reserve
         EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;

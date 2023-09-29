@@ -141,12 +141,13 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             executionGasLimit: 0,
             gasPrice: 0,
             deadline: 0,
-            atomicActions: false
+            atomicActions: false,
+            isForcedExit: false
         });
 
         uint256 totalNumJoinSplits = numPubJoinSplits + numConfJoinSplits;
 
-        commitmentTreeManager.handleJoinSplits(op, OperationType.Standard);
+        commitmentTreeManager.handleJoinSplits(op);
         handleJoinSplitsLength = totalNumJoinSplits;
         _nullifierCounter += 2 * totalNumJoinSplits;
         ghost_joinSplitLeafCount += 2 * totalNumJoinSplits; // call could not have completed without adding 2 * numJoinSplit leaves
