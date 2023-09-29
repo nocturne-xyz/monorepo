@@ -19,6 +19,7 @@ import {
   IncludedNote,
   maxGasForOperation,
   MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
+  OperationType,
 } from "./primitives";
 import { ERC20_ID } from "./primitives/asset";
 import { groupByMap, partition } from "./utils/functional";
@@ -382,6 +383,7 @@ async function simulateOperation(
     opWithFakeProofs,
     verificationGasForOp,
     bundler,
+    OperationType.Standard,
     {
       from: tellerAddress,
     }

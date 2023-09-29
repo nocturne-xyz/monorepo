@@ -124,6 +124,11 @@ export interface TrackedAsset {
 
 export type ExpectedRefund = TrackedAsset;
 
+export enum OperationType {
+  Standard = 0,
+  ForcedExit = 1,
+}
+
 export interface BaseOperation {
   networkInfo: NetworkInfo;
   refundAddr: CompressedStealthAddress;
