@@ -169,6 +169,8 @@ contract CommitmentTreeManager is
     ///         reused, adds the new NFs to the nullifier set, and inserts the new note NCs.
     /// @dev This function should be re-entry safe. Nullifiers are be marked
     ///      used as soon as they are checked to be valid.
+    /// @dev If opType is ForcedExit, no new note commitments will be inserted into the tree,
+    ///      effectively burning the funds.
     /// @param op Operation with joinsplits
     function _handleJoinSplits(
         Operation calldata op,

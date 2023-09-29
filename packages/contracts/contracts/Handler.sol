@@ -144,6 +144,11 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     ///         3. _makeExternalCall: A revert here only leads to top level revert if
     ///            op.atomicActions = true (requires all actions to succeed atomically or none at
     ///            all).
+    /// @dev If the opType is ForcedExit, this function will tell _processJoinSplitsReservingFee
+    ///      NOT to create any output notes and will NOT handle any refunds. This will leave
+    ///      leftover funds in the Handler contract, which will be sent away to the
+    ///      leftoverTokensHolder upon the next operation that spends those same remaining assets.
+    ///      Tokens in the leftoverTokensHolder will be unclaimable.
     /// @param op Operation to handle
     /// @param perJoinSplitVerifyGas Gas usage for verifying a single joinSplit proof
     /// @param bundler Address of the bundler
@@ -235,7 +240,6 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             bundler
         );
 
-        // Handle all refunds if not forced exit
         if (opType != OperationType.ForcedExit) {
             _handleAllRefunds(op);
         }
