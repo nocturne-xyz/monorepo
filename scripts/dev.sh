@@ -1,3 +1,5 @@
+#! /usr/bin/env bash
+
 cleanup() {
     echo "SIGINT signal caught, cleaning up..."
     docker stop $(docker ps -aq)
@@ -23,6 +25,9 @@ rm -rf "$LOG_DIR/**"
 mkdir -p "$LOG_DIR"
 
 trap 'cleanup; trap - SIGTERM && kill 0' SIGINT SIGTERM EXIT
+
+echo 'Initializing submodules if necessary'
+git submodule update --init
 
 pushd packages/e2e-tests
 echo "starting hardhat..."
