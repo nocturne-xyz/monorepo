@@ -394,7 +394,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         handler.handleDeposit(deposit);
         vm.expectRevert("Pausable: paused");
         vm.prank(address(teller));
-        handler.handleOperation(operation, 100, ALICE);
+        handler.handleOperation(operation, 100, ALICE, OperationType.Standard);
         vm.expectRevert("Pausable: paused");
         vm.prank(address(handler));
         handler.executeActions(operation);
@@ -1288,7 +1288,10 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             contractAddress: address(handler),
             encodedFunction: abi.encodeWithSelector(
                 handler.handleOperation.selector,
-                internalOp
+                internalOp,
+                300_000,
+                BUNDLER,
+                OperationType.Standard
             )
         });
 
@@ -2667,7 +2670,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         // teller
         vm.prank(ALICE);
         vm.expectRevert("Only teller");
-        handler.handleOperation(op, 0, ALICE);
+        handler.handleOperation(op, 0, ALICE, OperationType.Standard);
     }
 
     function testHandleOperationExpiredDeadline() public {
@@ -2877,12 +2880,6 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             .pubJoinSplits[0]
             .joinSplit
             .joinSplitInfoCommitment = joinSplitInfoCommitment;
-
-        // Set op refund addr to be burn address
-        bundle.operations[0].refundAddr = CompressedStealthAddress(
-            teller.COMPRESSED_BASE_POINT(),
-            teller.COMPRESSED_BASE_POINT()
-        );
 
         // Pre process checks
         assertEq(token.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));

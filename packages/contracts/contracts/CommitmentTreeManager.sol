@@ -170,7 +170,10 @@ contract CommitmentTreeManager is
     /// @dev This function should be re-entry safe. Nullifiers are be marked
     ///      used as soon as they are checked to be valid.
     /// @param op Operation with joinsplits
-    function _handleJoinSplits(Operation calldata op) internal {
+    function _handleJoinSplits(
+        Operation calldata op,
+        OperationType opType
+    ) internal {
         uint256 totalNumJoinSplits = op.totalNumJoinSplits();
         uint256[] memory newNoteCommitments = new uint256[](
             totalNumJoinSplits * 2
@@ -229,7 +232,9 @@ contract CommitmentTreeManager is
             );
         }
 
-        _insertNoteCommitments(newNoteCommitments);
+        if (opType != OperationType.ForcedExit) {
+            _insertNoteCommitments(newNoteCommitments);
+        }
     }
 
     /// @notice Inserts a single refund note into the commitment tree

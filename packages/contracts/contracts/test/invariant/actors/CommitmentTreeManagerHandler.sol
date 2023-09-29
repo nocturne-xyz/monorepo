@@ -146,7 +146,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
 
         uint256 totalNumJoinSplits = numPubJoinSplits + numConfJoinSplits;
 
-        commitmentTreeManager.handleJoinSplits(op);
+        commitmentTreeManager.handleJoinSplits(op, OperationType.Standard);
         handleJoinSplitsLength = totalNumJoinSplits;
         _nullifierCounter += 2 * totalNumJoinSplits;
         ghost_joinSplitLeafCount += 2 * totalNumJoinSplits; // call could not have completed without adding 2 * numJoinSplit leaves

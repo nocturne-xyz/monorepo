@@ -37,11 +37,6 @@ contract Teller is
     uint256 public constant JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
         uint256(keccak256(bytes("JOINSPLIT_INFO_COMMITMENT")));
 
-    // Compressed babyjubjub base point
-    // (BasePoint, BasePoint) is used as the burn address
-    uint256 public constant COMPRESSED_BASE_POINT =
-        16950150798460657717958625567821834550301663161624707787222815936182638968203;
-
     // Handler contract
     IHandler public _handler;
 
@@ -195,14 +190,17 @@ contract Teller is
         onlyAllowedBundler
         returns (uint256[] memory opDigests, OperationResult[] memory opResults)
     {
-        return _processBundle(bundle);
+        return _processBundle(bundle, OperationType.Standard);
     }
 
     /// @notice Allows user to submit a bundle of operations given they open the commitment to
     ///         joinsplit info. This ensures users are always able to exit the protocol even if the
     ///         the bundler goes down or rejects an operation.
-    /// @dev Opens joinsplit info commitment and ensures funds can only exit the protocol (i.e.
-    ///      refundAddr is burn address, no conf joinsplits, no joinsplit output notes).
+    /// @dev Opens joinsplit info commitment and ensures joinsplit info matches the commitment.
+    /// @dev Passes the ForcedExit operation type to the Handler, which signals to
+    ///      the Handler to NOT create new output notes and NOT create refund notes. This is to
+    ///      ensure funds can only flow out of the protocol for forcedExit and no new outputs can
+    ///      be created.
     /// @param bundle Bundle of operations to process
     /// @param joinSplitInfos Array of joinSplitInfos for each public joinSplit in each operation
     function forcedExit(
@@ -214,13 +212,6 @@ contract Teller is
         uint256 numOps = bundle.operations.length;
         for (uint256 i = 0; i < numOps; i++) {
             Operation calldata op = bundle.operations[i];
-
-            // Refund addr is burn address
-            require(
-                op.refundAddr.h1 == COMPRESSED_BASE_POINT &&
-                    op.refundAddr.h2 == COMPRESSED_BASE_POINT,
-                "!burn addr"
-            );
 
             // No conf joinsplits
             require(op.confJoinSplits.length == 0, "!conf JS");
@@ -260,7 +251,7 @@ contract Teller is
         (
             uint256[] memory opDigests,
             OperationResult[] memory opResults
-        ) = _processBundle(bundle);
+        ) = _processBundle(bundle, OperationType.ForcedExit);
         emit ForcedExit(opDigests, joinSplitInfos);
 
         return opResults;
@@ -271,7 +262,8 @@ contract Teller is
     ///         per op.
     /// @param bundle Bundle of operations to process
     function _processBundle(
-        Bundle calldata bundle
+        Bundle calldata bundle,
+        OperationType opType
     )
         internal
         returns (uint256[] memory opDigests, OperationResult[] memory opResults)
@@ -298,7 +290,8 @@ contract Teller is
                 _handler.handleOperation(
                     ops[i],
                     perJoinSplitVerifyGas,
-                    msg.sender
+                    msg.sender,
+                    opType
                 )
             returns (OperationResult memory result) {
                 opResults[i] = result;

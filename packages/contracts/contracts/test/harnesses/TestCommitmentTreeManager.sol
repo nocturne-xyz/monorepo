@@ -12,8 +12,11 @@ contract TestCommitmentTreeManager is CommitmentTreeManager {
         __CommitmentTreeManager_init(subtreeUpdateVerifier);
     }
 
-    function handleJoinSplits(Operation calldata op) external {
-        _handleJoinSplits(op);
+    function handleJoinSplits(
+        Operation calldata op,
+        OperationType opType
+    ) external {
+        _handleJoinSplits(op, opType);
     }
 
     function handleRefundNote(

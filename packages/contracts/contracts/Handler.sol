@@ -150,7 +150,8 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
     function handleOperation(
         Operation calldata op,
         uint256 perJoinSplitVerifyGas,
-        address bundler
+        address bundler,
+        OperationType opType
     )
         external
         whenNotPaused
@@ -176,7 +177,8 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
         // Handle all joinsplits
         uint256 numJoinSplitAssets = _processJoinSplitsReservingFee(
             op,
-            perJoinSplitVerifyGas
+            perJoinSplitVerifyGas,
+            opType
         );
 
         // If reached this point, assets have been unwrapped and will have refunds to handle
@@ -233,7 +235,10 @@ contract Handler is IHandler, BalanceManager, NocturneReentrancyGuard {
             bundler
         );
 
-        _handleAllRefunds(op);
+        // Handle all refunds if not forced exit
+        if (opType != OperationType.ForcedExit) {
+            _handleAllRefunds(op);
+        }
 
         // Mark new merkle count post operation
         opResult.postOpMerkleCount = totalCount();

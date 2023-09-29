@@ -158,7 +158,8 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            OperationType.Standard
         );
         assertEq(
             token.balanceOf(address(balanceManager)),
@@ -209,7 +210,8 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            OperationType.Standard
         );
         assertEq(
             token.balanceOf(address(balanceManager)),
@@ -272,7 +274,8 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         assertEq(token1.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            OperationType.Standard
         );
         assertEq(
             token1.balanceOf(address(balanceManager)),
@@ -332,7 +335,8 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            OperationType.Standard
         );
         assertEq(
             token.balanceOf(address(balanceManager)),
@@ -409,7 +413,8 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            OperationType.Standard
         );
         assertEq(
             token.balanceOf(address(balanceManager)),
@@ -489,7 +494,8 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         vm.expectRevert("Too few gas tokens");
         balanceManager.processJoinSplitsReservingFee(
             op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            OperationType.Standard
         );
     }
 
@@ -531,7 +537,8 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         vm.expectRevert("ERC20: transfer amount exceeds balance");
         balanceManager.processJoinSplitsReservingFee(
             op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            OperationType.Standard
         );
     }
 
@@ -573,7 +580,8 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         vm.expectRevert("Tree root not past root");
         balanceManager.processJoinSplitsReservingFee(
             op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            OperationType.Standard
         );
     }
 
@@ -617,7 +625,8 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         vm.expectRevert("Nullifier A already used");
         balanceManager.processJoinSplitsReservingFee(
             op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            OperationType.Standard
         );
     }
 
@@ -659,7 +668,8 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         vm.expectRevert("2 nfs should !equal");
         balanceManager.processJoinSplitsReservingFee(
             op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            OperationType.Standard
         );
     }
 
@@ -700,7 +710,8 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         // Take up 2 notes worth tokens
         balanceManager.processJoinSplitsReservingFee(
             op,
-            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            OperationType.Standard
         );
         assertEq(
             token.balanceOf(address(balanceManager)),

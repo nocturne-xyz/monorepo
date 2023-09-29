@@ -37,16 +37,18 @@ contract TestBalanceManager is IHandler, BalanceManager {
     function handleOperation(
         Operation calldata, // op
         uint256, // perJoinSplitVerifyGas
-        address // bundler
+        address, // bundler
+        OperationType // opType
     ) external pure override returns (OperationResult memory) {
         revert("Should not call this on TestBalanceManager");
     }
 
     function processJoinSplitsReservingFee(
         Operation calldata op,
-        uint256 perJoinSplitVerifyGas
+        uint256 perJoinSplitVerifyGas,
+        OperationType opType
     ) public {
-        _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
+        _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas, opType);
     }
 
     function gatherReservedGasAssetAndPayBundler(
