@@ -2,4 +2,4 @@
 "@nocturne-xyz/contracts": minor
 ---
 
-Revert burn address and instead pass OperationType.ForcedExit to indicate to Handler to skip refunds/output notes
+Revert burn address and include `forcedExit` flag in op to tell Handler not to create refund/output notes
