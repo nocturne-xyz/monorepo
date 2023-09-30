@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.7.0
+
+### Minor Changes
+
+- 5d90ac8e: Add bundlers field to deploy config and whitelist those bundlers in deploy
+- ad41f0d5: Add optional reth adapter deploy to deploy script
+
+### Patch Changes
+
+- Updated dependencies [54b1caf2]
+- Updated dependencies [e2801b16]
+- Updated dependencies [2e641ad2]
+- Updated dependencies [f80bff6a]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [8b3e1b2c]
+- Updated dependencies [f80bff6a]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [fbfadb23]
+- Updated dependencies [5d90ac8e]
+  - @nocturne-xyz/contracts@1.1.0
+  - @nocturne-xyz/core@2.2.0
+  - @nocturne-xyz/config@1.2.0
+
 ## 0.6.0
 
 ### Minor Changes

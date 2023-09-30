@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- 10b5bda4: override noble `fromBytes` with one that throws an error if the encoding is invalid
+  - add `fromBytesUnsafe` that returns null if encoding is invalid
+  - make `BabyJubJubHybridCipher` more constant-time
+
 ## 0.2.0
 
 ### Minor Changes

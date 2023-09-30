@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- 2e641ad2: Fix mismatch between joinsplit info commitment and nonce domain separators
+
 ## 0.4.0
 
 ### Minor Changes

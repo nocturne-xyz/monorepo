@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [e2801b16]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [8b3e1b2c]
+- Updated dependencies [f80bff6a]
+- Updated dependencies [fbfadb23]
+  - @nocturne-xyz/core@2.2.0
+
 ## 0.1.5
 
 ### Patch Changes

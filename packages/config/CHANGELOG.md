@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+### Minor Changes
+
+- 5d90ac8e: Add config field for poseidonExtT7 hasher
+
 ## 1.1.0
 
 ### Minor Changes
