@@ -160,6 +160,7 @@ export const submittableOperationType = {
     gasPrice: bigintType,
     deadline: bigintType,
     atomicActions: booleanType,
+    isForcedExit: booleanType,
   },
   additionalProperties: false,
 };

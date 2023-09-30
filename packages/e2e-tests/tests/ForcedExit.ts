@@ -28,7 +28,6 @@ import {
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
 import { computeJoinSplitInfo } from "@nocturne-xyz/core/src/proof/joinsplit";
-import { BabyJubJub } from "@nocturne-xyz/crypto";
 
 chai.use(chaiAsPromised);
 
@@ -172,16 +171,11 @@ describe("forcedExit", async () => {
     )
       .use(Erc20Plugin)
       .erc20Transfer(erc20.address, aliceEoa.address, PER_NOTE_AMOUNT * 4n)
-      .refundAddr({
-        h1X: BabyJubJub.BasePointAffine.x,
-        h1Y: BabyJubJub.BasePointAffine.y,
-        h2X: BabyJubJub.BasePointAffine.x,
-        h2Y: BabyJubJub.BasePointAffine.y,
-      })
       .gasPrice(0n)
       .deadline(
         BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
       )
+      .forcedExit(true)
       .build();
 
     const [operation, joinSplitInfos] = await prepareForcedExit(
@@ -210,31 +204,34 @@ describe("forcedExit", async () => {
         latestBlock
       );
       expect(forcedExitEvents.length).to.equal(1);
-      expect(forcedExitEvents[0].args.opDigests).to.equal(
+      expect(forcedExitEvents[0].args.opDigests[0].toBigInt()).to.equal(
         computeOperationDigest(operation)
       );
       for (let i = 0; i < joinSplitInfos.length; i++) {
         expect(
-          forcedExitEvents[0].args.joinSplitInfos[0][i]
-            .compressedSenderCanonAddr
+          forcedExitEvents[0].args.joinSplitInfos[0][
+            i
+          ].compressedSenderCanonAddr.toBigInt()
         ).to.equal(joinSplitInfos[i].compressedSenderCanonAddr);
         expect(
-          forcedExitEvents[0].args.joinSplitInfos[0][i]
-            .compressedReceiverCanonAddr
+          forcedExitEvents[0].args.joinSplitInfos[0][
+            i
+          ].compressedReceiverCanonAddr.toBigInt()
         ).to.equal(joinSplitInfos[i].compressedReceiverCanonAddr);
         expect(
-          forcedExitEvents[0].args.joinSplitInfos[0][i]
-            .oldMerkleIndicesWithSignBits
+          forcedExitEvents[0].args.joinSplitInfos[0][
+            i
+          ].oldMerkleIndicesWithSignBits.toBigInt()
         ).to.equal(joinSplitInfos[i].oldMerkleIndicesWithSignBits);
         expect(
-          forcedExitEvents[0].args.joinSplitInfos[0][i].newNoteValueA
+          forcedExitEvents[0].args.joinSplitInfos[0][i].newNoteValueA.toBigInt()
         ).to.equal(joinSplitInfos[i].newNoteValueA);
         expect(
-          forcedExitEvents[0].args.joinSplitInfos[0][i].newNoteValueB
+          forcedExitEvents[0].args.joinSplitInfos[0][i].newNoteValueB.toBigInt()
         ).to.equal(joinSplitInfos[i].newNoteValueB);
-        expect(forcedExitEvents[0].args.joinSplitInfos[0][i].nonce).to.equal(
-          joinSplitInfos[i].nonce
-        );
+        expect(
+          forcedExitEvents[0].args.joinSplitInfos[0][i].nonce.toBigInt()
+        ).to.equal(joinSplitInfos[i].nonce);
       }
 
       expect(

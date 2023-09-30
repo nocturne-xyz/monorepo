@@ -429,5 +429,6 @@ function fakeProvenOperation(
     gasPrice: op.gasPrice,
     deadline: op.deadline,
     atomicActions: op.atomicActions,
+    isForcedExit: op.isForcedExit,
   });
 }
