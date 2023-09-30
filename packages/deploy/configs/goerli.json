@@ -54,11 +54,8 @@
     [
       "uniswapV3",
       {
-        "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
-        "functionSignatures": [
-          "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))",
-          "exactInput((bytes,address,uint256,uint256,uint256))"
-        ]
+        "address": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+        "functionSignatures": ["multicall(uint256,bytes[])"]
       }
     ]
   ],
@@ -66,8 +63,10 @@
   "opts": {
     "useMockSubtreeUpdateVerifier": false,
     "wstethAdapterDeployConfig": {
-      "wethAddress": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
       "wstethAddress": "0x6320cd32aa674d2898a68ec82e869385fc5f7e2f"
+    },
+    "rethAdapterDeployConfig": {
+      "rocketPoolStorageAddress": "0xa9A6A14A3643690D0286574976F45abBDAD8f505"
     },
     "confirmations": 1
   }
