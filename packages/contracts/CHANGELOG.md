@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.0
+
+### Minor Changes
+
+- 54b1caf2: add PoseidonExt
+- f80bff6a: Include `op.forcedExit` flag to tell Handler not to create refund/output notes
+- 5d90ac8e: Make bundler role permissioned and add forcedExit method that wraps \_processBundle
+
+### Patch Changes
+
+- 5d90ac8e: Remove double abstraction layer for poseidon hashers and just have IPoseidon and IPoseidonExt in tests and Teller
+
 ## 1.0.0
 
 ### Major Changes

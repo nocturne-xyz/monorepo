@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.6.0
+
+### Minor Changes
+
+- e2801b16: (breaking) move `fetchDepositEvents` from `core` to `deposit-screener`
+
+### Patch Changes
+
+- 7b21fdff: Add `DeFi Whale` and `Twitter` MistTrack Label threshold screener bypass
+- 78ced423: Added snapshot generation script to test suite, consume from snapshot
+- Updated dependencies [54b1caf2]
+- Updated dependencies [e2801b16]
+- Updated dependencies [2e641ad2]
+- Updated dependencies [f80bff6a]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [8b3e1b2c]
+- Updated dependencies [f80bff6a]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [fbfadb23]
+- Updated dependencies [5d90ac8e]
+  - @nocturne-xyz/contracts@1.1.0
+  - @nocturne-xyz/core@2.2.0
+  - @nocturne-xyz/config@1.2.0
+  - @nocturne-xyz/offchain-utils@0.1.16
+
 ## 0.5.0
 
 ### Minor Changes
