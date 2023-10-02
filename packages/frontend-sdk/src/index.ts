@@ -39,4 +39,4 @@ export {
   Snap,
 } from "./metamask/types";
 
-export { DepositAdapter, HasuraAdapters, SubgraphAdapters } from "./dataFetching"
+export { DepositAdapter, HasuraAdapters, SubgraphAdapters } from "./dataFetching";

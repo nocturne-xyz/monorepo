@@ -99,128 +99,6 @@ export enum Cursor_Ordering {
   Desc = 'DESC'
 }
 
-/** columns and relationships of "goerli.goerli_deposit_event" */
-export type Goerli_Goerli_Deposit_Event = {
-  __typename?: 'goerli_goerli_deposit_event';
-  _gs_chain?: Maybe<Scalars['String']['output']>;
-  _gs_gid: Scalars['String']['output'];
-  block: Scalars['Int']['output'];
-  deposit_addr_h1: Scalars['numeric']['output'];
-  deposit_addr_h2: Scalars['numeric']['output'];
-  encoded_asset_addr: Scalars['numeric']['output'];
-  encoded_asset_id: Scalars['numeric']['output'];
-  gas_compensation: Scalars['numeric']['output'];
-  id: Scalars['String']['output'];
-  nonce: Scalars['numeric']['output'];
-  note_merkle_index?: Maybe<Scalars['numeric']['output']>;
-  spender: Scalars['bytea']['output'];
-  type: Scalars['String']['output'];
-  value: Scalars['numeric']['output'];
-  vid: Scalars['bigint']['output'];
-};
-
-/** Boolean expression to filter rows from the table "goerli.goerli_deposit_event". All fields are combined with a logical 'AND'. */
-export type Goerli_Goerli_Deposit_Event_Bool_Exp = {
-  _and?: InputMaybe<Array<Goerli_Goerli_Deposit_Event_Bool_Exp>>;
-  _gs_chain?: InputMaybe<String_Comparison_Exp>;
-  _gs_gid?: InputMaybe<String_Comparison_Exp>;
-  _not?: InputMaybe<Goerli_Goerli_Deposit_Event_Bool_Exp>;
-  _or?: InputMaybe<Array<Goerli_Goerli_Deposit_Event_Bool_Exp>>;
-  block?: InputMaybe<Int_Comparison_Exp>;
-  deposit_addr_h1?: InputMaybe<Numeric_Comparison_Exp>;
-  deposit_addr_h2?: InputMaybe<Numeric_Comparison_Exp>;
-  encoded_asset_addr?: InputMaybe<Numeric_Comparison_Exp>;
-  encoded_asset_id?: InputMaybe<Numeric_Comparison_Exp>;
-  gas_compensation?: InputMaybe<Numeric_Comparison_Exp>;
-  id?: InputMaybe<String_Comparison_Exp>;
-  nonce?: InputMaybe<Numeric_Comparison_Exp>;
-  note_merkle_index?: InputMaybe<Numeric_Comparison_Exp>;
-  spender?: InputMaybe<Bytea_Comparison_Exp>;
-  type?: InputMaybe<String_Comparison_Exp>;
-  value?: InputMaybe<Numeric_Comparison_Exp>;
-  vid?: InputMaybe<Bigint_Comparison_Exp>;
-};
-
-/** Ordering options when selecting data from "goerli.goerli_deposit_event". */
-export type Goerli_Goerli_Deposit_Event_Order_By = {
-  _gs_chain?: InputMaybe<Order_By>;
-  _gs_gid?: InputMaybe<Order_By>;
-  block?: InputMaybe<Order_By>;
-  deposit_addr_h1?: InputMaybe<Order_By>;
-  deposit_addr_h2?: InputMaybe<Order_By>;
-  encoded_asset_addr?: InputMaybe<Order_By>;
-  encoded_asset_id?: InputMaybe<Order_By>;
-  gas_compensation?: InputMaybe<Order_By>;
-  id?: InputMaybe<Order_By>;
-  nonce?: InputMaybe<Order_By>;
-  note_merkle_index?: InputMaybe<Order_By>;
-  spender?: InputMaybe<Order_By>;
-  type?: InputMaybe<Order_By>;
-  value?: InputMaybe<Order_By>;
-  vid?: InputMaybe<Order_By>;
-};
-
-/** select columns of table "goerli.goerli_deposit_event" */
-export enum Goerli_Goerli_Deposit_Event_Select_Column {
-  /** column name */
-  GsChain = '_gs_chain',
-  /** column name */
-  GsGid = '_gs_gid',
-  /** column name */
-  Block = 'block',
-  /** column name */
-  DepositAddrH1 = 'deposit_addr_h1',
-  /** column name */
-  DepositAddrH2 = 'deposit_addr_h2',
-  /** column name */
-  EncodedAssetAddr = 'encoded_asset_addr',
-  /** column name */
-  EncodedAssetId = 'encoded_asset_id',
-  /** column name */
-  GasCompensation = 'gas_compensation',
-  /** column name */
-  Id = 'id',
-  /** column name */
-  Nonce = 'nonce',
-  /** column name */
-  NoteMerkleIndex = 'note_merkle_index',
-  /** column name */
-  Spender = 'spender',
-  /** column name */
-  Type = 'type',
-  /** column name */
-  Value = 'value',
-  /** column name */
-  Vid = 'vid'
-}
-
-/** Streaming cursor of the table "goerli_goerli_deposit_event" */
-export type Goerli_Goerli_Deposit_Event_Stream_Cursor_Input = {
-  /** Stream column input with initial value */
-  initial_value: Goerli_Goerli_Deposit_Event_Stream_Cursor_Value_Input;
-  /** cursor ordering */
-  ordering?: InputMaybe<Cursor_Ordering>;
-};
-
-/** Initial value of the column from where the streaming should start */
-export type Goerli_Goerli_Deposit_Event_Stream_Cursor_Value_Input = {
-  _gs_chain?: InputMaybe<Scalars['String']['input']>;
-  _gs_gid?: InputMaybe<Scalars['String']['input']>;
-  block?: InputMaybe<Scalars['Int']['input']>;
-  deposit_addr_h1?: InputMaybe<Scalars['numeric']['input']>;
-  deposit_addr_h2?: InputMaybe<Scalars['numeric']['input']>;
-  encoded_asset_addr?: InputMaybe<Scalars['numeric']['input']>;
-  encoded_asset_id?: InputMaybe<Scalars['numeric']['input']>;
-  gas_compensation?: InputMaybe<Scalars['numeric']['input']>;
-  id?: InputMaybe<Scalars['String']['input']>;
-  nonce?: InputMaybe<Scalars['numeric']['input']>;
-  note_merkle_index?: InputMaybe<Scalars['numeric']['input']>;
-  spender?: InputMaybe<Scalars['bytea']['input']>;
-  type?: InputMaybe<Scalars['String']['input']>;
-  value?: InputMaybe<Scalars['numeric']['input']>;
-  vid?: InputMaybe<Scalars['bigint']['input']>;
-};
-
 /** columns and relationships of "goerli.goerli_deposit_request" */
 export type Goerli_Goerli_Deposit_Request = {
   __typename?: 'goerli_goerli_deposit_request';
@@ -765,134 +643,6 @@ export type Goerli_Goerli_Subtree_Commit_Stream_Cursor_Value_Input = {
   vid?: InputMaybe<Scalars['bigint']['input']>;
 };
 
-/** columns and relationships of "goerli.goerli_tree_insertion_event" */
-export type Goerli_Goerli_Tree_Insertion_Event = {
-  __typename?: 'goerli_goerli_tree_insertion_event';
-  _gs_chain?: Maybe<Scalars['String']['output']>;
-  _gs_gid: Scalars['String']['output'];
-  block: Scalars['Int']['output'];
-  encoded_note_encoded_asset_addr?: Maybe<Scalars['numeric']['output']>;
-  encoded_note_encoded_asset_id?: Maybe<Scalars['numeric']['output']>;
-  encoded_note_nonce?: Maybe<Scalars['numeric']['output']>;
-  encoded_note_owner_h1?: Maybe<Scalars['numeric']['output']>;
-  encoded_note_owner_h2?: Maybe<Scalars['numeric']['output']>;
-  encoded_note_value?: Maybe<Scalars['numeric']['output']>;
-  encrypted_note_ciphertext_bytes?: Maybe<Scalars['bytea']['output']>;
-  encrypted_note_commitment?: Maybe<Scalars['numeric']['output']>;
-  encrypted_note_encapsulated_secret_bytes?: Maybe<Scalars['bytea']['output']>;
-  filled_batch_with_zeros_num_zeros?: Maybe<Scalars['numeric']['output']>;
-  id: Scalars['String']['output'];
-  merkle_index: Scalars['numeric']['output'];
-  vid: Scalars['bigint']['output'];
-};
-
-/** Boolean expression to filter rows from the table "goerli.goerli_tree_insertion_event". All fields are combined with a logical 'AND'. */
-export type Goerli_Goerli_Tree_Insertion_Event_Bool_Exp = {
-  _and?: InputMaybe<Array<Goerli_Goerli_Tree_Insertion_Event_Bool_Exp>>;
-  _gs_chain?: InputMaybe<String_Comparison_Exp>;
-  _gs_gid?: InputMaybe<String_Comparison_Exp>;
-  _not?: InputMaybe<Goerli_Goerli_Tree_Insertion_Event_Bool_Exp>;
-  _or?: InputMaybe<Array<Goerli_Goerli_Tree_Insertion_Event_Bool_Exp>>;
-  block?: InputMaybe<Int_Comparison_Exp>;
-  encoded_note_encoded_asset_addr?: InputMaybe<Numeric_Comparison_Exp>;
-  encoded_note_encoded_asset_id?: InputMaybe<Numeric_Comparison_Exp>;
-  encoded_note_nonce?: InputMaybe<Numeric_Comparison_Exp>;
-  encoded_note_owner_h1?: InputMaybe<Numeric_Comparison_Exp>;
-  encoded_note_owner_h2?: InputMaybe<Numeric_Comparison_Exp>;
-  encoded_note_value?: InputMaybe<Numeric_Comparison_Exp>;
-  encrypted_note_ciphertext_bytes?: InputMaybe<Bytea_Comparison_Exp>;
-  encrypted_note_commitment?: InputMaybe<Numeric_Comparison_Exp>;
-  encrypted_note_encapsulated_secret_bytes?: InputMaybe<Bytea_Comparison_Exp>;
-  filled_batch_with_zeros_num_zeros?: InputMaybe<Numeric_Comparison_Exp>;
-  id?: InputMaybe<String_Comparison_Exp>;
-  merkle_index?: InputMaybe<Numeric_Comparison_Exp>;
-  vid?: InputMaybe<Bigint_Comparison_Exp>;
-};
-
-/** Ordering options when selecting data from "goerli.goerli_tree_insertion_event". */
-export type Goerli_Goerli_Tree_Insertion_Event_Order_By = {
-  _gs_chain?: InputMaybe<Order_By>;
-  _gs_gid?: InputMaybe<Order_By>;
-  block?: InputMaybe<Order_By>;
-  encoded_note_encoded_asset_addr?: InputMaybe<Order_By>;
-  encoded_note_encoded_asset_id?: InputMaybe<Order_By>;
-  encoded_note_nonce?: InputMaybe<Order_By>;
-  encoded_note_owner_h1?: InputMaybe<Order_By>;
-  encoded_note_owner_h2?: InputMaybe<Order_By>;
-  encoded_note_value?: InputMaybe<Order_By>;
-  encrypted_note_ciphertext_bytes?: InputMaybe<Order_By>;
-  encrypted_note_commitment?: InputMaybe<Order_By>;
-  encrypted_note_encapsulated_secret_bytes?: InputMaybe<Order_By>;
-  filled_batch_with_zeros_num_zeros?: InputMaybe<Order_By>;
-  id?: InputMaybe<Order_By>;
-  merkle_index?: InputMaybe<Order_By>;
-  vid?: InputMaybe<Order_By>;
-};
-
-/** select columns of table "goerli.goerli_tree_insertion_event" */
-export enum Goerli_Goerli_Tree_Insertion_Event_Select_Column {
-  /** column name */
-  GsChain = '_gs_chain',
-  /** column name */
-  GsGid = '_gs_gid',
-  /** column name */
-  Block = 'block',
-  /** column name */
-  EncodedNoteEncodedAssetAddr = 'encoded_note_encoded_asset_addr',
-  /** column name */
-  EncodedNoteEncodedAssetId = 'encoded_note_encoded_asset_id',
-  /** column name */
-  EncodedNoteNonce = 'encoded_note_nonce',
-  /** column name */
-  EncodedNoteOwnerH1 = 'encoded_note_owner_h1',
-  /** column name */
-  EncodedNoteOwnerH2 = 'encoded_note_owner_h2',
-  /** column name */
-  EncodedNoteValue = 'encoded_note_value',
-  /** column name */
-  EncryptedNoteCiphertextBytes = 'encrypted_note_ciphertext_bytes',
-  /** column name */
-  EncryptedNoteCommitment = 'encrypted_note_commitment',
-  /** column name */
-  EncryptedNoteEncapsulatedSecretBytes = 'encrypted_note_encapsulated_secret_bytes',
-  /** column name */
-  FilledBatchWithZerosNumZeros = 'filled_batch_with_zeros_num_zeros',
-  /** column name */
-  Id = 'id',
-  /** column name */
-  MerkleIndex = 'merkle_index',
-  /** column name */
-  Vid = 'vid'
-}
-
-/** Streaming cursor of the table "goerli_goerli_tree_insertion_event" */
-export type Goerli_Goerli_Tree_Insertion_Event_Stream_Cursor_Input = {
-  /** Stream column input with initial value */
-  initial_value: Goerli_Goerli_Tree_Insertion_Event_Stream_Cursor_Value_Input;
-  /** cursor ordering */
-  ordering?: InputMaybe<Cursor_Ordering>;
-};
-
-/** Initial value of the column from where the streaming should start */
-export type Goerli_Goerli_Tree_Insertion_Event_Stream_Cursor_Value_Input = {
-  _gs_chain?: InputMaybe<Scalars['String']['input']>;
-  _gs_gid?: InputMaybe<Scalars['String']['input']>;
-  block?: InputMaybe<Scalars['Int']['input']>;
-  encoded_note_encoded_asset_addr?: InputMaybe<Scalars['numeric']['input']>;
-  encoded_note_encoded_asset_id?: InputMaybe<Scalars['numeric']['input']>;
-  encoded_note_nonce?: InputMaybe<Scalars['numeric']['input']>;
-  encoded_note_owner_h1?: InputMaybe<Scalars['numeric']['input']>;
-  encoded_note_owner_h2?: InputMaybe<Scalars['numeric']['input']>;
-  encoded_note_value?: InputMaybe<Scalars['numeric']['input']>;
-  encrypted_note_ciphertext_bytes?: InputMaybe<Scalars['bytea']['input']>;
-  encrypted_note_commitment?: InputMaybe<Scalars['numeric']['input']>;
-  encrypted_note_encapsulated_secret_bytes?: InputMaybe<Scalars['bytea']['input']>;
-  filled_batch_with_zeros_num_zeros?: InputMaybe<Scalars['numeric']['input']>;
-  id?: InputMaybe<Scalars['String']['input']>;
-  merkle_index?: InputMaybe<Scalars['numeric']['input']>;
-  vid?: InputMaybe<Scalars['bigint']['input']>;
-};
-
 /** Boolean expression to compare columns of type "numeric". All fields are combined with logical 'AND'. */
 export type Numeric_Comparison_Exp = {
   _eq?: InputMaybe<Scalars['numeric']['input']>;
@@ -924,10 +674,6 @@ export enum Order_By {
 
 export type Query_Root = {
   __typename?: 'query_root';
-  /** fetch data from the table: "goerli.goerli_deposit_event" */
-  goerli_goerli_deposit_event: Array<Goerli_Goerli_Deposit_Event>;
-  /** fetch data from the table: "goerli.goerli_deposit_event" using primary key columns */
-  goerli_goerli_deposit_event_by_pk?: Maybe<Goerli_Goerli_Deposit_Event>;
   /** fetch data from the table: "goerli.goerli_deposit_request" */
   goerli_goerli_deposit_request: Array<Goerli_Goerli_Deposit_Request>;
   /** fetch data from the table: "goerli.goerli_deposit_request" using primary key columns */
@@ -942,24 +688,6 @@ export type Query_Root = {
   goerli_goerli_subtree_commit: Array<Goerli_Goerli_Subtree_Commit>;
   /** fetch data from the table: "goerli.goerli_subtree_commit" using primary key columns */
   goerli_goerli_subtree_commit_by_pk?: Maybe<Goerli_Goerli_Subtree_Commit>;
-  /** fetch data from the table: "goerli.goerli_tree_insertion_event" */
-  goerli_goerli_tree_insertion_event: Array<Goerli_Goerli_Tree_Insertion_Event>;
-  /** fetch data from the table: "goerli.goerli_tree_insertion_event" using primary key columns */
-  goerli_goerli_tree_insertion_event_by_pk?: Maybe<Goerli_Goerli_Tree_Insertion_Event>;
-};
-
-
-export type Query_RootGoerli_Goerli_Deposit_EventArgs = {
-  distinct_on?: InputMaybe<Array<Goerli_Goerli_Deposit_Event_Select_Column>>;
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  offset?: InputMaybe<Scalars['Int']['input']>;
-  order_by?: InputMaybe<Array<Goerli_Goerli_Deposit_Event_Order_By>>;
-  where?: InputMaybe<Goerli_Goerli_Deposit_Event_Bool_Exp>;
-};
-
-
-export type Query_RootGoerli_Goerli_Deposit_Event_By_PkArgs = {
-  _gs_gid: Scalars['String']['input'];
 };
 
 
@@ -973,7 +701,7 @@ export type Query_RootGoerli_Goerli_Deposit_RequestArgs = {
 
 
 export type Query_RootGoerli_Goerli_Deposit_Request_By_PkArgs = {
-  _gs_gid: Scalars['String']['input'];
+  id: Scalars['String']['input'];
 };
 
 
@@ -996,7 +724,7 @@ export type Query_RootGoerli_Goerli_Sdk_Event_AggregateArgs = {
 
 
 export type Query_RootGoerli_Goerli_Sdk_Event_By_PkArgs = {
-  _gs_gid: Scalars['String']['input'];
+  id: Scalars['String']['input'];
 };
 
 
@@ -1010,31 +738,11 @@ export type Query_RootGoerli_Goerli_Subtree_CommitArgs = {
 
 
 export type Query_RootGoerli_Goerli_Subtree_Commit_By_PkArgs = {
-  _gs_gid: Scalars['String']['input'];
-};
-
-
-export type Query_RootGoerli_Goerli_Tree_Insertion_EventArgs = {
-  distinct_on?: InputMaybe<Array<Goerli_Goerli_Tree_Insertion_Event_Select_Column>>;
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  offset?: InputMaybe<Scalars['Int']['input']>;
-  order_by?: InputMaybe<Array<Goerli_Goerli_Tree_Insertion_Event_Order_By>>;
-  where?: InputMaybe<Goerli_Goerli_Tree_Insertion_Event_Bool_Exp>;
-};
-
-
-export type Query_RootGoerli_Goerli_Tree_Insertion_Event_By_PkArgs = {
-  _gs_gid: Scalars['String']['input'];
+  id: Scalars['String']['input'];
 };
 
 export type Subscription_Root = {
   __typename?: 'subscription_root';
-  /** fetch data from the table: "goerli.goerli_deposit_event" */
-  goerli_goerli_deposit_event: Array<Goerli_Goerli_Deposit_Event>;
-  /** fetch data from the table: "goerli.goerli_deposit_event" using primary key columns */
-  goerli_goerli_deposit_event_by_pk?: Maybe<Goerli_Goerli_Deposit_Event>;
-  /** fetch data from the table in a streaming manner: "goerli.goerli_deposit_event" */
-  goerli_goerli_deposit_event_stream: Array<Goerli_Goerli_Deposit_Event>;
   /** fetch data from the table: "goerli.goerli_deposit_request" */
   goerli_goerli_deposit_request: Array<Goerli_Goerli_Deposit_Request>;
   /** fetch data from the table: "goerli.goerli_deposit_request" using primary key columns */
@@ -1055,33 +763,6 @@ export type Subscription_Root = {
   goerli_goerli_subtree_commit_by_pk?: Maybe<Goerli_Goerli_Subtree_Commit>;
   /** fetch data from the table in a streaming manner: "goerli.goerli_subtree_commit" */
   goerli_goerli_subtree_commit_stream: Array<Goerli_Goerli_Subtree_Commit>;
-  /** fetch data from the table: "goerli.goerli_tree_insertion_event" */
-  goerli_goerli_tree_insertion_event: Array<Goerli_Goerli_Tree_Insertion_Event>;
-  /** fetch data from the table: "goerli.goerli_tree_insertion_event" using primary key columns */
-  goerli_goerli_tree_insertion_event_by_pk?: Maybe<Goerli_Goerli_Tree_Insertion_Event>;
-  /** fetch data from the table in a streaming manner: "goerli.goerli_tree_insertion_event" */
-  goerli_goerli_tree_insertion_event_stream: Array<Goerli_Goerli_Tree_Insertion_Event>;
-};
-
-
-export type Subscription_RootGoerli_Goerli_Deposit_EventArgs = {
-  distinct_on?: InputMaybe<Array<Goerli_Goerli_Deposit_Event_Select_Column>>;
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  offset?: InputMaybe<Scalars['Int']['input']>;
-  order_by?: InputMaybe<Array<Goerli_Goerli_Deposit_Event_Order_By>>;
-  where?: InputMaybe<Goerli_Goerli_Deposit_Event_Bool_Exp>;
-};
-
-
-export type Subscription_RootGoerli_Goerli_Deposit_Event_By_PkArgs = {
-  _gs_gid: Scalars['String']['input'];
-};
-
-
-export type Subscription_RootGoerli_Goerli_Deposit_Event_StreamArgs = {
-  batch_size: Scalars['Int']['input'];
-  cursor: Array<InputMaybe<Goerli_Goerli_Deposit_Event_Stream_Cursor_Input>>;
-  where?: InputMaybe<Goerli_Goerli_Deposit_Event_Bool_Exp>;
 };
 
 
@@ -1095,7 +776,7 @@ export type Subscription_RootGoerli_Goerli_Deposit_RequestArgs = {
 
 
 export type Subscription_RootGoerli_Goerli_Deposit_Request_By_PkArgs = {
-  _gs_gid: Scalars['String']['input'];
+  id: Scalars['String']['input'];
 };
 
 
@@ -1125,7 +806,7 @@ export type Subscription_RootGoerli_Goerli_Sdk_Event_AggregateArgs = {
 
 
 export type Subscription_RootGoerli_Goerli_Sdk_Event_By_PkArgs = {
-  _gs_gid: Scalars['String']['input'];
+  id: Scalars['String']['input'];
 };
 
 
@@ -1146,7 +827,7 @@ export type Subscription_RootGoerli_Goerli_Subtree_CommitArgs = {
 
 
 export type Subscription_RootGoerli_Goerli_Subtree_Commit_By_PkArgs = {
-  _gs_gid: Scalars['String']['input'];
+  id: Scalars['String']['input'];
 };
 
 
@@ -1154,27 +835,6 @@ export type Subscription_RootGoerli_Goerli_Subtree_Commit_StreamArgs = {
   batch_size: Scalars['Int']['input'];
   cursor: Array<InputMaybe<Goerli_Goerli_Subtree_Commit_Stream_Cursor_Input>>;
   where?: InputMaybe<Goerli_Goerli_Subtree_Commit_Bool_Exp>;
-};
-
-
-export type Subscription_RootGoerli_Goerli_Tree_Insertion_EventArgs = {
-  distinct_on?: InputMaybe<Array<Goerli_Goerli_Tree_Insertion_Event_Select_Column>>;
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  offset?: InputMaybe<Scalars['Int']['input']>;
-  order_by?: InputMaybe<Array<Goerli_Goerli_Tree_Insertion_Event_Order_By>>;
-  where?: InputMaybe<Goerli_Goerli_Tree_Insertion_Event_Bool_Exp>;
-};
-
-
-export type Subscription_RootGoerli_Goerli_Tree_Insertion_Event_By_PkArgs = {
-  _gs_gid: Scalars['String']['input'];
-};
-
-
-export type Subscription_RootGoerli_Goerli_Tree_Insertion_Event_StreamArgs = {
-  batch_size: Scalars['Int']['input'];
-  cursor: Array<InputMaybe<Goerli_Goerli_Tree_Insertion_Event_Stream_Cursor_Input>>;
-  where?: InputMaybe<Goerli_Goerli_Tree_Insertion_Event_Bool_Exp>;
 };
 
 export type FetchSdkEventsQueryVariables = Exact<{

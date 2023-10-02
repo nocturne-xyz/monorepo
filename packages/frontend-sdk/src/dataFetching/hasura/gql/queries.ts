@@ -49,15 +49,3 @@ export const DepositRequestStatusById = graphql(`
     }
   }
 `);
-
-export const LatestIndexedBlock = graphql(`
-  query fetchLatestIndexedBlock {
-    goerli_goerli_sdk_event_aggregate {
-      aggregate {
-        max {
-          block
-        }
-      }
-    }
-  }
-`);

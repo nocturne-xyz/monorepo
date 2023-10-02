@@ -1,16 +1,21 @@
 import { ClosableAsyncIterator, IncludedEncryptedNote, IncludedNote, Nullifier, SDKSyncAdapter, TotalEntityIndex, TotalEntityIndexTrait, WithTotalEntityIndex, max, maxArray, sleep } from "@nocturne-xyz/core";
 import { EncryptedStateDiff, SDKIterSyncOpts } from "@nocturne-xyz/core/dist/src/sync/syncAdapter";
 import { Client as UrqlClient, fetchExchange } from "@urql/core";
-import { fetchLatestIndexedBlock, fetchSdkEventsAndLatestCommittedMerkleIndex } from "./fetch";
+import { fetchSdkEventsAndLatestCommittedMerkleIndex } from "./fetch";
+import { SubgraphUtils } from "@nocturne-xyz/core";
+
+const { fetchLatestIndexedBlock } = SubgraphUtils;
 
 export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
   client: UrqlClient;
+  subgraphEndpoint: string;
 
-  constructor(graphqlEndpoint: string) {
+  constructor(graphqlEndpoint: string, subgraphEndpoint: string) {
     this.client = new UrqlClient({
       url: graphqlEndpoint,
       exchanges: [fetchExchange],
     });
+    this.subgraphEndpoint = subgraphEndpoint;
   }
 
   iterStateDiffs(
@@ -20,12 +25,14 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
 
     const client = this.client;
+    const fetchLatestIndexedBlock = async () => await this.getLatestIndexedBlock();
+
     let closed = false;
     const generator = async function* () {
       let from = startTotalEntityIndex;
       let latestCommittedMerkleIndex = undefined;;
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
-        const toBlock = await fetchLatestIndexedBlock(client) - (opts?.finalityBlocks ?? 0);
+        const toBlock = await fetchLatestIndexedBlock() - (opts?.finalityBlocks ?? 0);
 
         if (TotalEntityIndexTrait.toComponents(from).blockNumber >= toBlock) {
           await sleep(5000);
@@ -121,7 +128,7 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
   }
 
   async getLatestIndexedBlock(): Promise<number> {
-    return await fetchLatestIndexedBlock(this.client);
+    return await fetchLatestIndexedBlock(this.subgraphEndpoint);
   }
 }
 
