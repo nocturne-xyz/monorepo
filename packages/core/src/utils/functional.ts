@@ -2,6 +2,8 @@ import { SetWithObjectKeys } from "./collections";
 import { assertOrErr } from "./error";
 import * as JSON from "bigint-json-serialization";
 
+export type ArrayElemType<T> = T extends Array<infer U> ? U : never;
+
 export function zip<T, U>(a: T[], b: U[]): [T, U][] {
   return a.map((x, i) => [x, b[i]]);
 }

@@ -121,7 +121,7 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
   }
 
   async getLatestIndexedBlock(): Promise<number> {
-    throw new Error("Method not implemented.");
+    return await fetchLatestIndexedBlock(this.client);
   }
 }
 

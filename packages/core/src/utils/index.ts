@@ -20,6 +20,7 @@ export {
   maxArray,
   thunk,
   Thunk,
+  ArrayElemType,
 } from "./functional";
 export { numberToStringPadded } from "./strings";
 export { assertOrErr } from "./error";
