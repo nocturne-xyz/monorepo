@@ -163,7 +163,15 @@ const MISTTRACK_RISK_REJECT: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
     const detailListContainsBanlistItems = data.detail_list.some((item) =>
       banlistItems.includes(item)
     );
-    const banlistWords = ["theft", "phish", "rug", "hack", "exploit", "scam"];
+    const banlistWords = [
+      "theft",
+      "phish",
+      "rug",
+      "hack",
+      "exploit",
+      "scam",
+      "attacker",
+    ];
     const riskDetailContainsBanlistWords = data.risk_detail.some((item) =>
       banlistWords.some((word) => item.label.toLowerCase().includes(word))
     );

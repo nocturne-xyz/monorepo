@@ -130,7 +130,6 @@ export class CompositeRule<T extends ReadonlyArray<ApiCallNames>>
     this.predicateFn = params.applyIf === "Any" ? "some" : "every";
     this.cache = cache;
   }
-
   async check(
     deposit: ScreeningDepositRequest,
     cachedFetchOptions: CachedFetchOptions = {}
@@ -146,6 +145,7 @@ export class CompositeRule<T extends ReadonlyArray<ApiCallNames>>
         return partial.threshold(data);
       })
     );
+
     const shouldApplyRule = results[this.predicateFn]((_) => _);
     return shouldApplyRule ? this.action : ACTION_NOT_TRIGGERED;
   }
