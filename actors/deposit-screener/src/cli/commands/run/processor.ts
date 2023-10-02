@@ -8,7 +8,11 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
 import { DepositScreenerScreener } from "../../../screener";
-import { DummyScreeningApi, ScreeningCheckerApi } from "../../../screening";
+import {
+  ConcreteScreeningChecker,
+  DummyScreeningApi,
+  ScreeningCheckerApi,
+} from "../../../screening";
 import { SubgraphDepositEventSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { getRedis } from "./utils";
 import { Speed } from "@openzeppelin/defender-relay-client";
@@ -119,7 +123,7 @@ const runProcess = new Command("processor")
       const { dummyScreeningDelay } = options;
       screeningApi = new DummyScreeningApi(dummyScreeningDelay);
     } else {
-      throw new Error(`Not currently supporting non-dummy screening`);
+      screeningApi = new ConcreteScreeningChecker();
     }
 
     const screener = new DepositScreenerScreener(

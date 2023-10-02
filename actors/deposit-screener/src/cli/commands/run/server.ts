@@ -1,9 +1,14 @@
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { Command } from "commander";
-import { DummyScreeningApi, ScreeningCheckerApi } from "../../../screening";
+import {
+  ConcreteScreeningChecker,
+  DummyScreeningApi,
+  ScreeningCheckerApi,
+} from "../../../screening";
 import { DepositScreenerServer } from "../../../server";
 import { getRedis } from "./utils";
+import { requireApiKeys } from "../../../utils";
 
 const runServer = new Command("server")
   .summary("run deposit screener server")
@@ -53,7 +58,8 @@ const runServer = new Command("server")
       const { dummyScreeningDelay } = options;
       screeningApi = new DummyScreeningApi(dummyScreeningDelay);
     } else {
-      throw new Error(`Not currently supporting non-dummy screening`);
+      requireApiKeys();
+      screeningApi = new ConcreteScreeningChecker();
     }
 
     console.log("making logger");
