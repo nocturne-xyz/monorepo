@@ -15,3 +15,12 @@ export function includesMixerUsage(data: MisttrackRiskScoreData): boolean {
     )
   );
 }
+
+// August 8, 2022 + 2 months = October 8, 2022
+const tornadoCashSanctionUnixTime = new Date("2022-10-08").getTime() / 1000;
+export function isCreatedAfterTornadoCashSanction(
+  unixTimestamp: number
+): boolean {
+  // checks if wallet is created after tornado cash sanction
+  return tornadoCashSanctionUnixTime < unixTimestamp;
+}

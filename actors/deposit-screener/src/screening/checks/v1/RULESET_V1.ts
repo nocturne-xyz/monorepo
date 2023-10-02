@@ -6,7 +6,11 @@ import {
   MisttrackRiskScoreData,
   TrmData,
 } from "../apiCalls";
-import { includesMixerUsage, isLessThanOneMonthAgo } from "./utils";
+import {
+  includesMixerUsage,
+  isCreatedAfterTornadoCashSanction,
+  isLessThanOneMonthAgo,
+} from "./utils";
 
 /**
  * Ruleset V1 Specification
@@ -100,6 +104,44 @@ const TRM_HIGH_INDIRECT_REJECT: CombinedRulesParams<
   action: {
     type: "Rejection",
     reason: "Indirect exposure to high risk categories > $20k",
+  },
+};
+
+const walletCreatedAfterTornadoSanctionPartial = {
+  name: "SHORT_WALLET_HISTORY_DELAY",
+  call: "MISTTRACK_ADDRESS_OVERVIEW",
+  threshold: (data: MisttrackAddressOverviewData) =>
+    isCreatedAfterTornadoCashSanction(data.first_seen),
+} as const;
+
+const TRM_HIGH_MIXER_REJECT: CombinedRulesParams<
+  ["MISTTRACK_ADDRESS_OVERVIEW", "TRM_SCREENING_ADDRESSES"]
+> = {
+  partialRules: [
+    walletCreatedAfterTornadoSanctionPartial,
+    {
+      name: "TRM_HIGH_MIXER_REJECT",
+      call: "TRM_SCREENING_ADDRESSES",
+      threshold: (data: TrmData) => {
+        const totalMixerIncoming = data.addressRiskIndicators.reduce(
+          (acc, item) =>
+            (item.category === "Mixer" && item.riskType === "COUNTERPARTY") ||
+            (item.category === "Sanctions" && item.riskType === "COUNTERPARTY")
+              ? acc + Number(item.incomingVolumeUsd)
+              : acc,
+          0
+        );
+
+        const percentageIncomingFromMixer =
+          totalMixerIncoming / Number(data.addressIncomingVolumeUsd);
+        return percentageIncomingFromMixer > 0.5;
+      },
+    },
+  ],
+  applyIf: "All",
+  action: {
+    type: "Rejection",
+    reason: "Counterparty exposure to mixer > 50%",
   },
 };
 
@@ -243,6 +285,7 @@ export const RULESET_V1 = new RuleSet({
   baseDelaySeconds: BASE_DELAY_SECONDS,
 })
   .add(TRM_SEVERE_OWNERSHIP_REJECT)
+  .combineAndAdd(TRM_HIGH_MIXER_REJECT)
   .combineAndAdd(TRM_HIGH_COUNTERPARTY_REJECT)
   .combineAndAdd(TRM_HIGH_INDIRECT_REJECT)
   .add(MISTTRACK_RISK_REJECT)

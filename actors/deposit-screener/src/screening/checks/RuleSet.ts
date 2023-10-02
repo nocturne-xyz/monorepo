@@ -10,6 +10,15 @@ export interface Rejection {
   reason: string;
 }
 
+export interface Delay {
+  type: "Delay";
+  timeSeconds: number;
+}
+
+export function isRejection(obj: Rejection | Delay): obj is Rejection {
+  return obj.type === "Rejection";
+}
+
 export interface AddDelay {
   operation: "Add";
   valueSeconds: number;
@@ -29,11 +38,6 @@ const APPLY_DELAY_OPERATION: Record<
   Add: (a, b) => a + b,
   Multiply: (a, b) => a * b,
 };
-
-export interface Delay {
-  type: "Delay";
-  timeSeconds: number;
-}
 
 const ACTION_NOT_TRIGGERED = {
   type: "ActionNotTriggered",
