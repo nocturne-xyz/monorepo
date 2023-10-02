@@ -5,11 +5,12 @@ import {
 } from "../../src/screening/checks/apiCalls";
 import {
   AddressDataSnapshot,
+  ALL_TEST_ADDRESSES,
   CachedAddressData,
   formDepositInfo,
   saveSnapshot,
-  ALL_TEST_ADDRESSES,
 } from "../utils";
+import { requireApiKeys } from "../../src/utils";
 
 /**
  * This script is used to generate a snapshot of the API calls for the test addresses.
@@ -26,15 +27,10 @@ import {
  *   still in git history if we need them.
  */
 async function run() {
+  requireApiKeys();
+
   const numAddresses = ALL_TEST_ADDRESSES.length;
   console.log(`There are ${numAddresses} addresses to snapshot`);
-
-  if (!process.env.MISTTRACK_API_KEY) {
-    throw new Error("MISTTRACK_API_KEY not set");
-  }
-  if (!process.env.TRM_API_KEY) {
-    throw new Error("TRM_API_KEY not set");
-  }
   let snapshotData: AddressDataSnapshot = {};
   let count = 0;
   for (const address of ALL_TEST_ADDRESSES) {

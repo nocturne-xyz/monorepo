@@ -93,6 +93,37 @@ const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";
 const TRM_API_KEY = process.env.TRM_API_KEY ?? "";
 const MISTTRACK_API_KEY = process.env.MISTTRACK_API_KEY ?? "";
 
+const fetchMisttrackData = async <T extends MisttrackData>(
+  endpoint: string,
+  deposit: ScreeningDepositRequest,
+  token = "ETH",
+  retries = 5
+): Promise<T> => {
+  const response = await fetch(
+    `${MISTTRACK_BASE_URL}/${endpoint}?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+  );
+  // check the content type before parsing json
+  if (!response.headers.get("content-type")?.includes("application/json")) {
+    console.log(await response.text());
+    throw new Error(
+      `Call to misttrack failed with message: ${response.statusText}`
+    );
+  }
+  const misttrackResponse = (await response.json()) as MisttrackApiResponse<T>;
+  if (!misttrackResponse.success) {
+    if (misttrackResponse.msg === "MaxRateLimit") {
+      // sleep for 5 seconds and try again
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      return fetchMisttrackData(endpoint, deposit, token, retries - 1);
+    }
+    throw new Error(
+      `Call to misttrack failed with message: ${misttrackResponse.msg}`
+    );
+  }
+  console.log(misttrackResponse.data);
+  return misttrackResponse.data;
+};
+
 export const API_CALL_MAP = {
   TRM_SCREENING_ADDRESSES: async (
     deposit: ScreeningDepositRequest
@@ -124,69 +155,32 @@ export const API_CALL_MAP = {
   MISTTRACK_ADDRESS_OVERVIEW: async (
     deposit: ScreeningDepositRequest
   ): Promise<MisttrackAddressOverviewData> => {
-    const token = "ETH";
-    const response = await fetch(
-      `${MISTTRACK_BASE_URL}/address_overview?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+    return fetchMisttrackData<MisttrackAddressOverviewData>(
+      "address_overview",
+      deposit
     );
-    const misttrackResponse =
-      (await response.json()) as MisttrackApiResponse<MisttrackAddressOverviewData>;
-    if (!misttrackResponse.success) {
-      throw new Error(
-        `Call to misttrack failed with message: ${misttrackResponse.msg}`
-      );
-    }
-    console.log(misttrackResponse.data);
-    return misttrackResponse.data;
   },
 
   MISTTRACK_ADDRESS_LABELS: async (
     deposit: ScreeningDepositRequest,
     token = "ETH"
   ): Promise<MisttrackLabelsData> => {
-    const response = await fetch(
-      `${MISTTRACK_BASE_URL}/address_labels?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+    return fetchMisttrackData<MisttrackLabelsData>(
+      "address_labels",
+      deposit,
+      token
     );
-    // check the content type before parsing json
-    if (!response.headers.get("content-type")?.includes("application/json")) {
-      console.log(await response.text());
-      throw new Error(
-        `Call to misttrack failed with message: ${response.statusText}`
-      );
-    }
-    const misttrackResponse =
-      (await response.json()) as MisttrackApiResponse<MisttrackLabelsData>;
-    if (!misttrackResponse.success) {
-      throw new Error(
-        `Call to misttrack failed with message: ${misttrackResponse.msg}`
-      );
-    }
-    console.log(misttrackResponse.data);
-    return misttrackResponse.data;
   },
 
   MISTTRACK_ADDRESS_RISK_SCORE: async (
     deposit: ScreeningDepositRequest,
     token = "ETH"
   ): Promise<MisttrackRiskScoreData> => {
-    const response = await fetch(
-      `${MISTTRACK_BASE_URL}/risk_score?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+    return fetchMisttrackData<MisttrackRiskScoreData>(
+      "risk_score",
+      deposit,
+      token
     );
-    // check the content type before parsing json
-    if (!response.headers.get("content-type")?.includes("application/json")) {
-      console.log(await response.text());
-      throw new Error(
-        `Call to misttrack failed with message: ${response.statusText}`
-      );
-    }
-    const misttrackResponse =
-      (await response.json()) as MisttrackApiResponse<MisttrackRiskScoreData>;
-    if (!misttrackResponse.success) {
-      throw new Error(
-        `Call to misttrack failed with message: ${misttrackResponse.msg}`
-      );
-    }
-    console.log(misttrackResponse.data);
-    return misttrackResponse.data;
   },
   IDENTITY: async (deposit: ScreeningDepositRequest) => deposit,
 } as const;

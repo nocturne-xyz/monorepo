@@ -69,7 +69,7 @@ const TRM_HIGH_COUNTERPARTY_REJECT: CombinedRulesParams<
           (item) =>
             item.riskType === "COUNTERPARTY" &&
             item.categoryRiskScoreLevelLabel === "High" &&
-            Number(item.totalVolumeUsd) > 5_000
+            Number(item.totalVolumeUsd) > 150_000
         );
       },
     },
@@ -77,7 +77,7 @@ const TRM_HIGH_COUNTERPARTY_REJECT: CombinedRulesParams<
   ],
   action: {
     type: "Rejection",
-    reason: "Counterparty exposure to high risk categories > $5k",
+    reason: "Counterparty exposure to high risk categories > $150k",
   },
   applyIf: "All",
 };
@@ -94,7 +94,7 @@ const TRM_HIGH_INDIRECT_REJECT: CombinedRulesParams<
           (item) =>
             item.riskType === "INDIRECT" &&
             item.categoryRiskScoreLevelLabel === "High" &&
-            Number(item.totalVolumeUsd) > 20_000
+            Number(item.totalVolumeUsd) > 300_000
         );
       },
     },
@@ -103,7 +103,7 @@ const TRM_HIGH_INDIRECT_REJECT: CombinedRulesParams<
   applyIf: "All",
   action: {
     type: "Rejection",
-    reason: "Indirect exposure to high risk categories > $20k",
+    reason: "Indirect exposure to high risk categories > $3000k",
   },
 };
 
@@ -161,7 +161,15 @@ const MISTTRACK_RISK_REJECT: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
     const detailListContainsBanlistItems = data.detail_list.some((item) =>
       banlistItems.includes(item)
     );
-    const banlistWords = ["theft", "phish", "rug", "hack", "exploit", "scam"];
+    const banlistWords = [
+      "theft",
+      "phish",
+      "rug",
+      "hack",
+      "exploit",
+      "scam",
+      "attacker",
+    ];
     const riskDetailContainsBanlistWords = data.risk_detail.some((item) =>
       banlistWords.some((word) => item.label.toLowerCase().includes(word))
     );

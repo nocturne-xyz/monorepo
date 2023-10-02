@@ -119,23 +119,25 @@ export class CompositeRule<T extends ReadonlyArray<ApiCallNames>>
     this.action = params.action;
     this.predicateFn = params.applyIf === "Any" ? "some" : "every";
   }
-
   async check(
     deposit: ScreeningDepositRequest,
     cache: CachedApiCallData
   ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
-    const results = await Promise.all(
-      this.partialRules.map(async (partial) => {
-        if (!cache[partial.call]) {
-          cache[partial.call] = await API_CALL_MAP[partial.call](deposit);
-        }
-        const data = cache[
-          partial.call
-        ] as ApiCallToReturnType[typeof partial.call];
+    const results = [];
 
-        return partial.threshold(data);
-      })
-    );
+    for (const partial of this.partialRules) {
+      if (!cache[partial.call]) {
+        cache[partial.call] = await API_CALL_MAP[partial.call](deposit);
+        // todo: REMOVE
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      const data = cache[
+        partial.call
+      ] as ApiCallToReturnType[typeof partial.call];
+
+      results.push(partial.threshold(data));
+    }
+
     const shouldApplyRule = results[this.predicateFn]((_) => _);
     return shouldApplyRule ? this.action : ACTION_NOT_TRIGGERED;
   }
