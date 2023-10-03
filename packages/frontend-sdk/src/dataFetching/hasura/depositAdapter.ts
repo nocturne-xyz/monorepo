@@ -35,8 +35,7 @@ export class HasuraDepositAdapter implements DepositAdapter {
   }
 
   async makeDepositHandle(requestWithOnChainStatus: DisplayDepositRequestWithMetadataAndStatus): Promise<DepositHandle> {
-    const { onChainStatus: onChainStatusStr, ...request } = requestWithOnChainStatus;
-    const onChainStatus = onChainStatusStr ? parseOnChainDepositRequestStatus(onChainStatusStr) : undefined; 
+    const { onChainStatus, ...request } = requestWithOnChainStatus;
     const hash = hashDepositRequest(toDepositRequest(request));
 
     const getStatus = async () => getDepositRequestStatus(
@@ -46,19 +45,12 @@ export class HasuraDepositAdapter implements DepositAdapter {
       onChainStatus
     );
 
-    const currentStatus = await getDepositRequestStatus(
-      this.screenerEndpoint,
-      this.client,
-      hash,
-      onChainStatus
-    );
-
     return {
       depositRequestHash: hash,
       request,
-      currentStatus,
+      currentStatus: await getStatus(),
       getStatus,
-    };     
+    };    
   }
 }
 

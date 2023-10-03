@@ -1,4 +1,4 @@
-import { maxArray, sleep, max } from "../../../utils";
+import { maxArray, sleep, max, maxNullish } from "../../../utils";
 import {
   EncryptedStateDiff,
   SDKIterSyncOpts,
@@ -132,18 +132,10 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
               ? maxArray(Array.from(notes.map((n) => n.inner.merkleIndex)))
               : undefined;
 
-          let latestNewlySyncedMerkleIndex: number | undefined;
-          if (latestMerkleIndexFromFiledBatches === undefined) {
-            latestNewlySyncedMerkleIndex = latestMerkleIndexFromNotes;
-          } else if (latestMerkleIndexFromNotes === undefined) {
-            latestNewlySyncedMerkleIndex = latestMerkleIndexFromFiledBatches;
-          } else {
-            // both are defined
-            latestNewlySyncedMerkleIndex = max(
-              latestMerkleIndexFromFiledBatches,
-              latestMerkleIndexFromNotes
-            );
-          }
+          const latestNewlySyncedMerkleIndex = maxNullish(
+            latestMerkleIndexFromFiledBatches,
+            latestMerkleIndexFromNotes
+          );
 
           const stateDiff: EncryptedStateDiff = {
             notes,

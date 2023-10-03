@@ -1,8 +1,7 @@
-import { ClosableAsyncIterator, IncludedEncryptedNote, IncludedNote, Nullifier, SDKSyncAdapter, TotalEntityIndex, TotalEntityIndexTrait, WithTotalEntityIndex, max, maxArray, sleep } from "@nocturne-xyz/core";
+import { ClosableAsyncIterator, IncludedEncryptedNote, IncludedNote, Nullifier, SDKSyncAdapter, TotalEntityIndex, TotalEntityIndexTrait, WithTotalEntityIndex, maxArray, sleep, SubgraphUtils, maxNullish } from "@nocturne-xyz/core";
 import { EncryptedStateDiff, SDKIterSyncOpts } from "@nocturne-xyz/core/dist/src/sync/syncAdapter";
 import { Client as UrqlClient, fetchExchange } from "@urql/core";
 import { fetchSdkEventsAndLatestCommittedMerkleIndex } from "./fetch";
-import { SubgraphUtils } from "@nocturne-xyz/core";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
@@ -68,18 +67,10 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
               ? maxArray(Array.from(notes.map((n) => n.inner.merkleIndex)))
               : undefined;
 
-          let latestNewlySyncedMerkleIndex: number | undefined;
-          if (latestMerkleIndexFromFiledBatches === undefined) {
-            latestNewlySyncedMerkleIndex = latestMerkleIndexFromNotes;
-          } else if (latestMerkleIndexFromNotes === undefined) {
-            latestNewlySyncedMerkleIndex = latestMerkleIndexFromFiledBatches;
-          } else {
-            // both are defined
-            latestNewlySyncedMerkleIndex = max(
-              latestMerkleIndexFromFiledBatches,
-              latestMerkleIndexFromNotes
-            );
-          }
+          const latestNewlySyncedMerkleIndex = maxNullish(
+            latestMerkleIndexFromFiledBatches,
+            latestMerkleIndexFromNotes
+          );
 
           const stateDiff: EncryptedStateDiff = {
             notes,
