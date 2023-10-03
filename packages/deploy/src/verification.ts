@@ -5,12 +5,12 @@ import * as JSON from "bigint-json-serialization";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 
-export type NocturneProxySemanticName =
+export type NocturneProxyContractName =
   | "CanonicalAddressRegistry"
   | "DepositManager"
   | "Teller"
   | "Handler";
-export type NocturneOthersSemanticName =
+export type NocturneOthersContractName =
   | "PoseidonExtT7"
   | "JoinSplitVerifier"
   | "SubtreeUpdateVerifier"
@@ -23,8 +23,8 @@ export interface NocturneDeploymentVerificationData {
   chain: string;
   chainId: number;
   numOptimizations: number;
-  proxies: { [T in NocturneProxySemanticName]: ProxyContractVerification<T> };
-  // TODO: others
+  proxies: { [T in NocturneProxyContractName]: ProxyContractVerification<T> };
+  others: { [T in NocturneOthersContractName]: ContractVerification<T> };
 }
 
 export class NocturneDeploymentVerification {
@@ -52,7 +52,7 @@ export class NocturneDeploymentVerification {
 }
 
 export interface ContractVerification<T> {
-  semanticName: T;
+  contractName: T;
   address: Address;
   constructorArgs?: string[];
 }
@@ -66,15 +66,15 @@ export function verifyProxyContract<T>(
   proxyVerification: ProxyContractVerification<T>
 ): void {
   console.log(
-    `verifying proxy: ${proxyVerification.semanticName}:${proxyVerification.address}`
+    `verifying proxy: ${proxyVerification.contractName}:${proxyVerification.address}`
   );
   verifyContract(network, proxyVerification);
 
   console.log(
-    `verifying implementation ${proxyVerification.semanticName}:${proxyVerification.implementationAddress}`
+    `verifying implementation ${proxyVerification.contractName}:${proxyVerification.implementationAddress}`
   );
   verifyContract(network, {
-    semanticName: proxyVerification.semanticName,
+    contractName: proxyVerification.contractName,
     address: proxyVerification.implementationAddress,
   });
 }

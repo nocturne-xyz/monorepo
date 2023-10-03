@@ -41,7 +41,7 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import {
   NocturneDeploymentVerification,
   NocturneDeploymentVerificationData,
-  NocturneProxySemanticName,
+  NocturneProxyContractName,
   ProxyContractVerification,
 } from "./verification";
 
@@ -203,7 +203,7 @@ export async function deployNocturneCoreContracts(
 
   // Start map of proxy verification objects
   const proxies: {
-    [T in NocturneProxySemanticName]: ProxyContractVerification<T>;
+    [T in NocturneProxyContractName]: ProxyContractVerification<T>;
   } = {} as any;
 
   // Deploy handler proxy
@@ -214,7 +214,7 @@ export async function deployNocturneCoreContracts(
     [subtreeUpdateVerifier.address, leftoverTokenHolder]
   );
   proxies["Handler"] = {
-    semanticName: "Handler",
+    contractName: "Handler",
     address: proxiedHandler.proxyAddresses.proxy,
     implementationAddress: proxiedHandler.proxyAddresses.implementation,
     constructorArgs: proxiedHandler.constructorArgs,
@@ -244,7 +244,7 @@ export async function deployNocturneCoreContracts(
     tellerInitArgs // initialize here
   );
   proxies["Teller"] = {
-    semanticName: "Teller",
+    contractName: "Teller",
     address: proxiedTeller.proxyAddresses.proxy,
     implementationAddress: proxiedTeller.proxyAddresses.implementation,
     constructorArgs: proxiedTeller.constructorArgs,
@@ -264,7 +264,7 @@ export async function deployNocturneCoreContracts(
     ["NocturneDepositManager", "v1", proxiedTeller.address, config.wethAddress] // initialize here
   );
   proxies["DepositManager"] = {
-    semanticName: "DepositManager",
+    contractName: "DepositManager",
     address: proxiedDepositManager.proxyAddresses.proxy,
     implementationAddress: proxiedDepositManager.proxyAddresses.implementation,
     constructorArgs: proxiedDepositManager.constructorArgs,
@@ -290,7 +290,7 @@ export async function deployNocturneCoreContracts(
     ]
   );
   proxies["CanonicalAddressRegistry"] = {
-    semanticName: "CanonicalAddressRegistry",
+    contractName: "CanonicalAddressRegistry",
     address: proxiedCanonAddrRegistry.proxyAddresses.proxy,
     implementationAddress:
       proxiedCanonAddrRegistry.proxyAddresses.implementation,
