@@ -54,7 +54,7 @@ const POSEIDON_EXT_T7_BYTECODE = fs.readFileSync(
   "utf-8"
 );
 
-export interface NocturneContractDeploymentAndVerification {
+export interface NocturneContractDeploymentAndVerificationData {
   contracts: NocturneContractDeployment;
   verification: NocturneDeploymentVerificationData;
 }
@@ -174,7 +174,7 @@ export async function deployNocturne(
 export async function deployNocturneCoreContracts(
   connectedSigner: ethers.Wallet,
   config: NocturneDeployConfig
-): Promise<NocturneContractDeploymentAndVerification> {
+): Promise<NocturneContractDeploymentAndVerificationData> {
   console.log("\ngetting network...");
   const { name, chainId } = await connectedSigner.provider.getNetwork();
   console.log("\nfetching current block number...");
@@ -235,6 +235,8 @@ export async function deployNocturneCoreContracts(
   console.log("deployed proxied Handler:", proxiedHandler.proxyAddresses);
 
   // Deploy poseidonExtT7 contract
+  // NOTE: poseidonExtT7 is an exception where we need to deploy manually, not calling
+  // deployContract() because it doesn't have a typed contract factory (its just bytecode)
   console.log("\ndeploying poseidonExtT7...");
   const poseidonExtT7 = await new ethers.ContractFactory(
     IPoseidonExtT7__factory.createInterface(),
@@ -638,7 +640,6 @@ async function deployProxiedContract<
     contractName: contractName,
     address: proxy.address,
     implementationAddress: implementation.address,
-    constructorArgs: proxyConstructorArgs as string[],
   };
 
   return new ProxiedContract<C, TransparentProxyAddresses>(
@@ -647,7 +648,6 @@ async function deployProxiedContract<
       kind: ProxyKind.Transparent,
       proxy: proxy.address,
       implementation: implementation.address,
-    },
-    proxyConstructorArgs as string[]
+    }
   );
 }

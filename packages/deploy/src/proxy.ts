@@ -5,11 +5,7 @@ export class ProxiedContract<
   C extends Contract,
   A extends ProxyAddresses<any>
 > {
-  constructor(
-    public readonly contract: C,
-    public readonly addresses: A,
-    public readonly constructorArgs: string[] = []
-  ) {}
+  constructor(public readonly contract: C, public readonly addresses: A) {}
 
   get address(): string {
     return this.contract.address;
@@ -17,10 +13,6 @@ export class ProxiedContract<
 
   get proxyAddresses(): ProxyAddresses<any> {
     return this.addresses;
-  }
-
-  get constructorArguments(): string[] {
-    return this.constructorArgs;
   }
 
   connect(
