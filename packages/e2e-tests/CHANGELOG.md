@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.6.0
+
+### Minor Changes
+
+- 5d90ac8e: Add e2e test file for ForcedExit
+
+### Patch Changes
+
+- f80bff6a: Don't use base point after reverting burn addr changes
+  - @nocturne-xyz/offchain-utils@0.1.16
+
+## 0.5.2
+
+### Patch Changes
+
+- @nocturne-xyz/offchain-utils@0.1.15
+
 ## 0.5.1
 
 ### Patch Changes

@@ -3,11 +3,20 @@ import {
   API_CALL_MAP,
   ApiCallNames,
   ApiCallToReturnType,
-  CallReturnData,
+  ApiCallReturnData,
 } from "./apiCalls";
 export interface Rejection {
   type: "Rejection";
   reason: string;
+}
+
+export interface Delay {
+  type: "Delay";
+  timeSeconds: number;
+}
+
+export function isRejection(obj: Rejection | Delay): obj is Rejection {
+  return obj.type === "Rejection";
 }
 
 export interface AddDelay {
@@ -29,11 +38,6 @@ const APPLY_DELAY_OPERATION: Record<
   Add: (a, b) => a + b,
   Multiply: (a, b) => a * b,
 };
-
-export interface Delay {
-  type: "Delay";
-  timeSeconds: number;
-}
 
 const ACTION_NOT_TRIGGERED = {
   type: "ActionNotTriggered",
@@ -58,7 +62,9 @@ export interface CombinedRulesParams<T extends ReadonlyArray<ApiCallNames>> {
   applyIf: "Any" | "All";
 }
 
-export type CachedApiCallData = Partial<Record<ApiCallNames, CallReturnData>>;
+export type CachedApiCallData = Partial<
+  Record<ApiCallNames, ApiCallReturnData>
+>;
 
 export interface RuleLike {
   next: RuleLike | null;

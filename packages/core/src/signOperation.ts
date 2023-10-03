@@ -7,7 +7,7 @@ import {
   computeOperationDigest,
 } from "./primitives";
 import { JoinSplitInputs } from "./proof";
-import { NocturneSignature, NocturneSigner } from "./crypto";
+import { NocturneSignature, NocturneSigner } from "@nocturne-xyz/crypto";
 import { encodeEncodedAssetAddrWithSignBitsPI } from "./proof/joinsplit";
 import { toSignableOperation } from "./primitives/operation";
 
@@ -33,6 +33,7 @@ export function signOperation(
     gasPrice,
     deadline,
     atomicActions,
+    isForcedExit,
   } = op;
 
   return {
@@ -47,6 +48,7 @@ export function signOperation(
     gasPrice,
     deadline,
     atomicActions,
+    isForcedExit,
   };
 }
 

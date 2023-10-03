@@ -5,7 +5,12 @@ import {
   PreSignOperation,
   SignedOperation,
 } from "./primitives";
-import { CanonAddress, NocturneSignature, SpendPk, ViewingKey } from "./crypto";
+import {
+  CanonAddress,
+  NocturneSignature,
+  SpendPk,
+  ViewingKey,
+} from "@nocturne-xyz/crypto";
 
 export interface SignCanonAddrRegistryEntryMethod {
   method: "nocturne_signCanonAddrRegistryEntry";

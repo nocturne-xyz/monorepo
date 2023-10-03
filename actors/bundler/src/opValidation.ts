@@ -48,6 +48,7 @@ export async function checkNullifierConflictError(
 }
 
 export async function checkRevertError(
+  bundlerAddress: string,
   tellerContract: Teller,
   handlerContract: Handler,
   provider: ethers.providers.Provider,
@@ -63,6 +64,7 @@ export async function checkRevertError(
     ]);
     const est = await provider.estimateGas({
       to: tellerContract.address,
+      from: bundlerAddress,
       data,
     });
     logger.info("operation gas estimate: ", { est: est.toBigInt() });

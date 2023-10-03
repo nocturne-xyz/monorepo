@@ -1,5 +1,46 @@
 # Changelog
 
+## 2.2.0
+
+### Minor Changes
+
+- e2801b16: (breaking) move `fetchDepositEvents` from `core` to `deposit-screener`
+- f80bff6a: Add isForcedExit flag to op request builder (optional) and update op digest hashing with new flag
+
+### Patch Changes
+
+- 5d90ac8e: Add method for calculating joinSplitInfo and simplify that method + joinSplitInfoCommitment method to take old notes and new notes rather than specific fields
+- 8b3e1b2c: scan over flattened subgraph entities
+- fbfadb23: Try to make an even number of joinsplits
+- Updated dependencies [54b1caf2]
+- Updated dependencies [2e641ad2]
+- Updated dependencies [f80bff6a]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [10b5bda4]
+  - @nocturne-xyz/contracts@1.1.0
+  - @nocturne-xyz/config@1.2.0
+  - @nocturne-xyz/crypto@0.3.0
+
+## 2.1.0
+
+### Minor Changes
+
+- 07625550: add `finalityBlocks` option to SDKSyncAdapter
+
+### Patch Changes
+
+- 7c190c2c: use `crypto` instead of `crypto-utils`
+- Updated dependencies [444321c0]
+- Updated dependencies [444321c0]
+- Updated dependencies [444321c0]
+- Updated dependencies [07625550]
+- Updated dependencies [d1c549a4]
+  - @nocturne-xyz/contracts@1.0.0
+  - @nocturne-xyz/config@1.1.0
+  - @nocturne-xyz/crypto@0.2.0
+
 ## 2.0.2
 
 ### Patch Changes

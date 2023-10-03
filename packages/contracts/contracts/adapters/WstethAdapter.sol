@@ -9,7 +9,7 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 /// @author Nocturne Labs
 /// @notice Adapter contract for interacting with wsteth. The Handler contract does not support ETH
 ///         value transfers directly, thus we need a thin adapter for handling the weth -> eth step
-///         when converting weth to wsteth.
+///         when depositing weth to wsteth.
 contract WstethAdapter {
     // Weth contract
     IWeth public _weth;
@@ -27,12 +27,12 @@ contract WstethAdapter {
     receive() external payable {}
 
     /// @notice Convert weth to wsteth for caller
-    /// @param amount Amount of weth to convert
-    /// @dev Transfers weth to self, unwraps to eth, converts to wsteth, then transfers wsteth back
-    ///      to caller.
+    /// @param amount Amount of weth to deposit
+    /// @dev Transfers weth to self, unwraps to eth, deposits eth and gets back wsteth, then
+    ///      transfers wsteth back to caller.
     /// @dev We attempt to withhold tokens previously force-sent to adapter so we can avoid wsteth
     ///      balance from resetting to 0 (gas optimization).
-    function convert(uint256 amount) external {
+    function deposit(uint256 amount) external {
         _weth.transferFrom(msg.sender, address(this), amount);
         _weth.withdraw(amount);
 
@@ -40,7 +40,10 @@ contract WstethAdapter {
         // wsteth back (gas optimization to keep wsteth in balance from resetting to 0)
         uint256 wstethBalancePre = _wsteth.balanceOf(address(this));
 
+        // Deposit ETH to wsteth contract, get back wsteth
         Address.sendValue(payable(address(_wsteth)), amount);
+
+        // Send back wsteth to caller
         _wsteth.transfer(
             msg.sender,
             _wsteth.balanceOf(address(this)) - wstethBalancePre

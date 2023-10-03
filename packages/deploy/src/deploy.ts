@@ -19,6 +19,9 @@ import {
   EthTransferAdapter__factory,
   WstethAdapter,
   EthTransferAdapter,
+  RethAdapter,
+  RethAdapter__factory,
+  IPoseidonExtT7__factory,
 } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { ProxiedContract } from "./proxy";
@@ -33,6 +36,14 @@ import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { Address, getSelector } from "./utils";
 import { protocolWhitelistKey } from "@nocturne-xyz/core";
+import * as fs from "fs";
+import findWorkspaceRoot from "find-yarn-workspace-root";
+
+const ROOT_DIR = findWorkspaceRoot()!;
+const POSEIDON_EXT_T7_BYTECODE = fs.readFileSync(
+  `${ROOT_DIR}/packages/contracts/poseidon-bytecode/PoseidonExtT7.txt`,
+  "utf-8"
+);
 
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
@@ -52,8 +63,13 @@ export async function deployNocturne(
     config.opts
   );
 
-  // Maybe deploy wsteth adapter, depending on deploy config
+  // Maybe deploy wsteth/reth adapters, depending on deploy config
   const maybeWstethAdapter = await maybeDeployWstethAdapter(
+    connectedSigner,
+    config.wethAddress,
+    config.opts
+  );
+  const maybeRethAdapter = await maybeDeployRethAdapter(
     connectedSigner,
     config.wethAddress,
     config.opts
@@ -96,13 +112,20 @@ export async function deployNocturne(
     functionSignatures: ["transfer(address,uint256)"],
   });
 
-  // Whitelist wsteth adapter if exists
+  // Whitelist wsteth/reth adapters if exists
   if (maybeWstethAdapter) {
     const addressWithSignature: ProtocolAddressWithMethods = {
       address: maybeWstethAdapter.address,
-      functionSignatures: ["convert(uint256)"],
+      functionSignatures: ["deposit(uint256)"],
     };
     config.protocolAllowlist.set("wstethAdapter", addressWithSignature);
+  }
+  if (maybeRethAdapter) {
+    const addressWithSignature: ProtocolAddressWithMethods = {
+      address: maybeRethAdapter.address,
+      functionSignatures: ["deposit(uint256)"],
+    };
+    config.protocolAllowlist.set("rethAdapter", addressWithSignature);
   }
 
   await whitelistTokens(connectedSigner, tokens, handler);
@@ -165,11 +188,26 @@ export async function deployNocturneCoreContracts(
   );
   console.log("deployed proxied Handler:", proxiedHandler.proxyAddresses);
 
+  // Deploy poseidonExtT7 contract
+  console.log("\ndeploying poseidonExtT7...");
+  const poseidonExtT7 = await new ethers.ContractFactory(
+    IPoseidonExtT7__factory.createInterface(),
+    POSEIDON_EXT_T7_BYTECODE,
+    connectedSigner
+  ).deploy();
+  await poseidonExtT7.deployTransaction.wait(opts?.confirmations);
+
   console.log("\ndeploying proxied Teller...");
   const proxiedTeller = await deployProxiedContract(
     new Teller__factory(connectedSigner),
     proxyAdmin,
-    ["NocturneTeller", "v1", proxiedHandler.address, joinSplitVerifier.address] // initialize here
+    [
+      "NocturneTeller",
+      "v1",
+      proxiedHandler.address,
+      joinSplitVerifier.address,
+      poseidonExtT7.address,
+    ] // initialize here
   );
   console.log("deployed proxied Teller:", proxiedTeller.proxyAddresses);
 
@@ -215,6 +253,12 @@ export async function deployNocturneCoreContracts(
     await tx.wait(opts?.confirmations);
   }
 
+  console.log("\nsetting teller bundlers...");
+  for (const bundler of config.bundlers) {
+    const tx = await proxiedTeller.contract.setBundlerPermission(bundler, true);
+    await tx.wait(opts?.confirmations);
+  }
+
   console.log("\nsetting subtree batch fillers...");
   for (const filler of config.subtreeBatchFillers) {
     const tx = await proxiedHandler.contract.setSubtreeBatchFillerPermission(
@@ -252,6 +296,7 @@ export async function deployNocturneCoreContracts(
     depositManagerProxy: proxiedDepositManager.proxyAddresses,
     tellerProxy: proxiedTeller.proxyAddresses,
     handlerProxy: proxiedHandler.proxyAddresses,
+    poseidonExtT7Address: poseidonExtT7.address,
     joinSplitVerifierAddress: joinSplitVerifier.address,
     subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
     canonAddrSigCheckVerifierAddress: canonAddrSigCheckVerifier.address,
@@ -292,6 +337,27 @@ async function maybeDeployWstethAdapter(
   await wstethAdapter.deployTransaction.wait(opts?.confirmations);
 
   return wstethAdapter;
+}
+
+async function maybeDeployRethAdapter(
+  connectedSigner: ethers.Wallet,
+  wethAddress: Address,
+  opts?: NocturneDeployOpts
+): Promise<RethAdapter | undefined> {
+  if (!opts?.rethAdapterDeployConfig) {
+    return undefined;
+  }
+
+  const { rocketPoolStorageAddress } = opts.rethAdapterDeployConfig;
+
+  console.log("\ndeploying RethAdapter...");
+  const rethAdapter = await new RethAdapter__factory(connectedSigner).deploy(
+    wethAddress,
+    rocketPoolStorageAddress
+  );
+  await rethAdapter.deployTransaction.wait(opts?.confirmations);
+
+  return rethAdapter;
 }
 
 async function maybeDeployErc20s(
@@ -442,6 +508,7 @@ async function deployProxiedContract<
   opts?: NocturneDeployOpts
 ): Promise<ProxiedContract<C, TransparentProxyAddresses>> {
   const implementation = await implementationFactory.deploy();
+  await implementation.deployTransaction.wait(opts?.confirmations);
 
   // If no init args provided, then set init data to empty
   let initData = "0x";

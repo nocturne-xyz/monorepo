@@ -2,13 +2,14 @@ import "mocha";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
+import { range } from "../src/utils";
 import {
+  AssetTrait,
+  newOpRequestBuilder,
   NocturneSigner,
   StealthAddressTrait,
   generateRandomSpendingKey,
-} from "../src/crypto";
-import { range } from "../src/utils";
-import { AssetTrait, newOpRequestBuilder } from "../src";
+} from "../src";
 import { prepareOperation, __private } from "../src/prepareOperation";
 import { sortNotesByValue } from "../src/utils";
 import {
@@ -48,13 +49,14 @@ describe("gatherNotes", () => {
 
   it("gathers the minimum notes for amount < smallest note", async () => {
     const [nocturneDB] = await setup(
-      [100n, 10n],
-      range(2).map((_) => stablescam)
+      [10000n, 1000n, 100n, 10n],
+      range(4).map((_) => stablescam)
     );
     // expect to get one note - the 10 token note
     const notes = await gatherNotes(nocturneDB, 5n, stablescam);
-    expect(notes).to.have.lengthOf(1);
+    expect(notes).to.have.lengthOf(2);
     expect(notes[0].value).to.equal(10n);
+    expect(notes[1].value).to.equal(100n);
   });
 
   it("gathers the minimum amount of notes for amount requiring all notes", async () => {
@@ -118,6 +120,31 @@ describe("gatherNotes", () => {
     expect(sortedNotes[0].value).to.equal(5n);
     expect(sortedNotes[1].value).to.equal(10n);
     expect(sortedNotes[2].value).to.equal(15n);
+  });
+
+  it("ignores uncommitted notes when packing to an even number", async () => {
+    // insert 5 notes, but the last one is uncommitted
+    const [nocturneDB] = await setup(
+      [5n, 15n, 10n, 20n, 30n],
+      range(5).map((_) => stablescam),
+      {
+        latestCommittedMerkleIndex: 3,
+      }
+    );
+
+    // get notes for 30 tokens
+    // we should not get the 30 token note, since it is uncommitted
+    // instead, we should get the other three notes
+    // in this case, we have not used all the notes but we are going to sweep the smallest unused note
+    // in with the rest of the transaction to pad it out and collect dust
+    const notes = await gatherNotes(nocturneDB, 30n, stablescam);
+    expect(notes).to.have.lengthOf(4);
+
+    const sortedNotes = sortNotesByValue(notes);
+    expect(sortedNotes[0].value).to.equal(5n);
+    expect(sortedNotes[1].value).to.equal(10n);
+    expect(sortedNotes[2].value).to.equal(15n);
+    expect(sortedNotes[3].value).to.equal(20n);
   });
 
   it("ignores notes with optimistic NF records", async () => {

@@ -48,6 +48,15 @@ struct JoinSplit {
     EncryptedNote newNoteBEncrypted;
 }
 
+struct JoinSplitInfo {
+    uint256 compressedSenderCanonAddr;
+    uint256 compressedReceiverCanonAddr;
+    uint256 oldMerkleIndicesWithSignBits;
+    uint256 newNoteValueA;
+    uint256 newNoteValueB;
+    uint256 nonce;
+}
+
 struct EncodedNote {
     uint256 ownerH1;
     uint256 ownerH2;
@@ -83,6 +92,11 @@ struct TrackedAsset {
     uint256 minRefundValue;
 }
 
+enum OperationType {
+    Standard,
+    ForcedExit
+}
+
 struct Operation {
     PublicJoinSplit[] pubJoinSplits;
     JoinSplit[] confJoinSplits;
@@ -95,6 +109,7 @@ struct Operation {
     uint256 gasPrice;
     uint256 deadline;
     bool atomicActions;
+    bool isForcedExit;
 }
 
 // An operation is processed if its joinsplitTxs are processed.

@@ -10,6 +10,9 @@ const ANVIL_URL = "http://127.0.0.1:8545";
 const ROOT_DIR = findWorkspaceRoot()!;
 const CONFIG_PATH = `${ROOT_DIR}/packages/config/configs/localhost.json`;
 
+// anvil account #4
+const BUNDLER = "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65";
+
 // anvil account #5
 const SUBTREE_BATCH_FILLER = "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc";
 
@@ -22,6 +25,7 @@ const TEST_ETH_ADDRS = [
   "0x0BA19AfF7aD1e96502eC827587A5A58670162Ac5",
   "0x7DD91d84257596fC1dF6ee26e428a3AF86443EC6",
   "0x3babd1532B330CBB57236BCE5356b6C0A9861277", // daniel
+  "0x83672560a59b1905C735e7538eAC1b5C6B7258d2", // wayne
 ];
 
 // add canonical nocturne addresses for testing here
@@ -41,6 +45,11 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     x: 21810094662991584248543670544455324407472165516530325978277936815581820240557n,
     y: 3135900180088362648756962571679051832113174405893784187728428392187928197296n,
   },
+  // wayne
+  {
+    x: 7314863194427738840825938545358608306075149418734915490341377739242715250545n,
+    y: 10581826534373360003481213257490679122605373835137192497580353787501405317835n,
+  },
 ];
 
 (async () => {
@@ -55,6 +64,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   const [config, { erc20, gasToken }, { depositManager }] =
     await deployContractsWithDummyConfig(deployerEoa, {
       screeners: [DEPOSIT_SCREENER],
+      bundlers: [BUNDLER],
       subtreeBatchFillers: [deployerEoa.address, SUBTREE_BATCH_FILLER],
     });
 

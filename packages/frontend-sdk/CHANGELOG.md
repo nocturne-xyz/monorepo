@@ -1,5 +1,58 @@
 # Changelog
 
+## 2.0.0
+
+### Major Changes
+
+- 2e641ad2: update circuit artifacts
+
+### Minor Changes
+
+- 4229dbb5: Removes snap's clearDb method
+- e2801b16: - abstract deposit-fetching logic behind a new `DepositAdapter` interface
+  - implement `DepositAdapter` over subgraph
+  - use `DepositAdapter` instead of subgraph-specific logic in SDK so that the SDK is decoupled from the subgraph
+  - allow user to pass in a `DepositAdapter` via sdk options to override the default subgraph adapter
+
+### Patch Changes
+
+- Updated dependencies [54b1caf2]
+- Updated dependencies [e2801b16]
+- Updated dependencies [2e641ad2]
+- Updated dependencies [f80bff6a]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [8b3e1b2c]
+- Updated dependencies [f80bff6a]
+- Updated dependencies [5d90ac8e]
+- Updated dependencies [fbfadb23]
+- Updated dependencies [5d90ac8e]
+  - @nocturne-xyz/contracts@1.1.0
+  - @nocturne-xyz/core@2.2.0
+  - @nocturne-xyz/config@1.2.0
+  - @nocturne-xyz/op-request-plugins@1.0.1
+  - @nocturne-xyz/idb-kv-store@0.4.5
+  - @nocturne-xyz/local-prover@0.4.5
+
+## 1.1.2
+
+### Patch Changes
+
+- 7c190c2c: force sync methods to run with timing enabled
+- Updated dependencies [444321c0]
+- Updated dependencies [444321c0]
+- Updated dependencies [7c190c2c]
+- Updated dependencies [07625550]
+- Updated dependencies [444321c0]
+- Updated dependencies [444321c0]
+- Updated dependencies [07625550]
+  - @nocturne-xyz/contracts@1.0.0
+  - @nocturne-xyz/local-prover@0.4.4
+  - @nocturne-xyz/core@2.1.0
+  - @nocturne-xyz/op-request-plugins@1.0.0
+  - @nocturne-xyz/config@1.1.0
+  - @nocturne-xyz/idb-kv-store@0.4.4
+
 ## 1.1.1
 
 ### Patch Changes

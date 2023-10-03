@@ -1,8 +1,12 @@
-import { CanonAddress, CompressedStealthAddress } from "../crypto";
+import {
+  CanonAddress,
+  CompressedStealthAddress,
+  SerializedHybridCiphertext,
+} from "@nocturne-xyz/crypto";
 import { JoinSplitInputs, MerkleProofInput, SolidityProof } from "../proof";
 import { IncludedNote, Note } from "./note";
 import { Asset, EncodedAsset } from "./asset";
-import { SerializedHybridCiphertext } from "@nocturne-xyz/crypto-utils";
+import { CompressedPoint } from "@nocturne-xyz/crypto/dist/src/pointCompression";
 
 export const BN254_SCALAR_FIELD_MODULUS =
   21888242871839275222246405745257275088548364400416034343698204186575808495617n;
@@ -42,6 +46,15 @@ export type EncryptedNote = SerializedHybridCiphertext;
 export interface IncludedEncryptedNote extends EncryptedNote {
   merkleIndex: number;
   commitment: bigint;
+}
+
+export interface JoinSplitInfo {
+  compressedSenderCanonAddr: CompressedPoint;
+  compressedReceiverCanonAddr: CompressedPoint;
+  oldMerkleIndicesWithSignBits: bigint;
+  newNoteValueA: bigint;
+  newNoteValueB: bigint;
+  nonce: bigint;
 }
 
 export interface BaseJoinSplit {
@@ -122,6 +135,7 @@ export interface BaseOperation {
   gasPrice: bigint;
   deadline: bigint;
   atomicActions: boolean;
+  isForcedExit: boolean;
 }
 
 export interface PreSignOperation extends BaseOperation {

@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { CanonAddress, StealthAddress } from "../crypto";
+import { CanonAddress, StealthAddress } from "@nocturne-xyz/crypto";
 import {
   Action,
   Address,
@@ -37,6 +37,7 @@ export interface OperationRequest {
   refundAddr?: StealthAddress;
   executionGasLimit?: bigint;
   gasPrice?: bigint;
+  isForcedExit?: boolean;
 }
 
 export interface OperationRequestWithMetadata {

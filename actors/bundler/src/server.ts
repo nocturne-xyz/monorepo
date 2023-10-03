@@ -30,6 +30,7 @@ import {
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
+import { Address } from "@nocturne-xyz/core";
 
 const COMPONENT_NAME = "server";
 
@@ -45,6 +46,7 @@ export class BundlerServer {
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   logger: Logger;
+  bundlerAddress: Address;
   tellerContract: Teller;
   handlerContract: Handler;
   provider: ethers.providers.Provider;
@@ -52,8 +54,9 @@ export class BundlerServer {
   ignoreGas?: boolean;
 
   constructor(
-    tellerAddress: string,
-    handlerAddress: string,
+    bundlerAddress: Address,
+    tellerAddress: Address,
+    handlerAddress: Address,
     provider: ethers.providers.Provider,
     redis: IORedis,
     logger: Logger,
@@ -65,6 +68,7 @@ export class BundlerServer {
     this.nullifierDB = new NullifierDB(redis);
     this.logger = logger;
     this.provider = provider;
+    this.bundlerAddress = bundlerAddress;
     this.tellerContract = Teller__factory.connect(tellerAddress, provider);
     this.handlerContract = Handler__factory.connect(handlerAddress, provider);
 
@@ -107,6 +111,7 @@ export class BundlerServer {
         statusDB: this.statusDB,
         nullifierDB: this.nullifierDB,
         redis: this.redis,
+        bundlerAddress: this.bundlerAddress,
         tellerContract: this.tellerContract,
         handlerContract: this.handlerContract,
         provider: this.provider,

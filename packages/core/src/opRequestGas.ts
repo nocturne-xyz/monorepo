@@ -1,5 +1,5 @@
 import { Handler } from "@nocturne-xyz/contracts";
-import { NocturneViewer, StealthAddress } from "./crypto";
+import { NocturneViewer, StealthAddress } from "@nocturne-xyz/crypto";
 import { NocturneDB } from "./NocturneDB";
 import {
   GasAccountedOperationRequest,
@@ -429,5 +429,6 @@ function fakeProvenOperation(
     gasPrice: op.gasPrice,
     deadline: op.deadline,
     atomicActions: op.atomicActions,
+    isForcedExit: op.isForcedExit,
   });
 }

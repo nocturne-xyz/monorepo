@@ -6,7 +6,12 @@ import "../libs/Types.sol";
 interface ITeller {
     function processBundle(
         Bundle calldata bundle
-    ) external returns (OperationResult[] memory opResults);
+    )
+        external
+        returns (
+            uint256[] memory opDigests,
+            OperationResult[] memory opResults
+        );
 
     function depositFunds(
         Deposit calldata deposit

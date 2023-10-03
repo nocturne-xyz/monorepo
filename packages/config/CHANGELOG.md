@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0
+
+### Minor Changes
+
+- 5d90ac8e: Add config field for poseidonExtT7 hasher
+
+## 1.1.0
+
+### Minor Changes
+
+- 07625550: add optional `finalityBlocks` to config's `network` property that makes it easier to set `finalityBlocks` in sync logic across the codebase
+
 ## 1.0.0
 
 ### Major Changes

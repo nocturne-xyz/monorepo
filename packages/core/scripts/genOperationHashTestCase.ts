@@ -67,6 +67,7 @@ import { OPERATION_TYPES } from "../src/primitives/operation";
     gasPrice: 1n,
     deadline: 1n,
     atomicActions: true,
+    isForcedExit: false,
   };
 
   console.log("operation", operation);

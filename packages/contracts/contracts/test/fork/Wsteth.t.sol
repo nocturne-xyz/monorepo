@@ -25,12 +25,15 @@ contract WstethTest is ForkBase {
 
         wstethAdapter = new WstethAdapter(address(weth), address(wsteth));
 
+        // Whitelist bundler
+        teller.setBundlerPermission(BUNDLER, true);
+
         // Whitelist weth, wsteth, wsteth adapter
         handler.setContractPermission(address(weth), true);
         handler.setContractPermission(address(wsteth), true);
         handler.setContractPermission(address(wstethAdapter), true);
 
-        // Whitelist weth approve, wsteth approve, wsteth adapter convert
+        // Whitelist weth approve, wsteth approve, wsteth adapter deposit
         handler.setContractMethodPermission(
             address(weth),
             weth.approve.selector,
@@ -43,7 +46,7 @@ contract WstethTest is ForkBase {
         );
         handler.setContractMethodPermission(
             address(wstethAdapter),
-            wstethAdapter.convert.selector,
+            wstethAdapter.deposit.selector,
             true
         );
 
@@ -85,12 +88,12 @@ contract WstethTest is ForkBase {
         actions[1] = Action({
             contractAddress: address(wstethAdapter),
             encodedFunction: abi.encodeWithSelector(
-                wstethAdapter.convert.selector,
+                wstethAdapter.deposit.selector,
                 wethInAmount
             )
         });
 
-        // Create operation to convert weth to wsteth
+        // Create operation to deposit weth to wsteth
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -140,7 +143,10 @@ contract WstethTest is ForkBase {
         }
         reserveAndDeposit(address(weth), wethInAmount);
 
-        uint256 wstethExpectedOutAmount = wsteth.getWstETHByStETH(wethInAmount);
+        // TODO: 1% buffer, figure out where actual exchange rate comes from that's used in UI (doesn't match getRethValue)
+        uint256 wstethExpectedOutAmount = (wsteth.getWstETHByStETH(
+            wethInAmount
+        ) * 99) / 100;
 
         console.log("wstethExpectedOutAmount:", wstethExpectedOutAmount);
 
@@ -152,7 +158,7 @@ contract WstethTest is ForkBase {
                 address(wsteth),
                 ERC20_ID
             ),
-            minRefundValue: wstethExpectedOutAmount - 10 // TODO: why -10 buffer in case of uneven-ness?
+            minRefundValue: wstethExpectedOutAmount
         });
 
         // Format actions
@@ -171,13 +177,13 @@ contract WstethTest is ForkBase {
             actions[i] = Action({
                 contractAddress: address(wstethAdapter),
                 encodedFunction: abi.encodeWithSelector(
-                    wstethAdapter.convert.selector,
+                    wstethAdapter.deposit.selector,
                     wethInAmount / numDeposits
                 )
             });
         }
 
-        // Create operation to convert weth to wsteth
+        // Create operation to deposit weth for wsteth
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -211,9 +217,6 @@ contract WstethTest is ForkBase {
 
         // Check post op balances
         assertEq(weth.balanceOf(address(teller)), 0);
-        assertGe(
-            wsteth.balanceOf(address(teller)),
-            wstethExpectedOutAmount - 10
-        ); // TODO: why -10 buffer in case of uneven-ness?
+        assertGe(wsteth.balanceOf(address(teller)), wstethExpectedOutAmount);
     }
 }

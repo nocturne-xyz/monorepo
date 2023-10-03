@@ -4,7 +4,7 @@ import {
   NocturneSigner,
   NocturneSignature,
   generateRandomSpendingKey,
-} from "../src/crypto";
+} from "@nocturne-xyz/crypto";
 import {
   shitcoin,
   setup,

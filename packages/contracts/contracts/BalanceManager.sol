@@ -167,6 +167,8 @@ contract BalanceManager is CommitmentTreeManager {
     /// @notice Ensure all joinsplit and refund assets start with empty balances (0 or 1).
     /// @dev If any asset has a balance > 1, we transfer the excess to the leftover tokens contract
     ///      and return the amount transferred.
+    /// @dev This is to ensure a user cannot bypass deposit limits by sending tokens to the handler
+    ///      externally then creating an operation to claim those funds via refunds.
     /// @param op Operation to ensure zeroed balances for
     function _ensureZeroedBalances(Operation calldata op) internal {
         uint256 numTrackedAssets = op.trackedAssets.length;

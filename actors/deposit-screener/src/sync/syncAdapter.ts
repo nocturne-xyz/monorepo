@@ -1,10 +1,18 @@
 import {
   ClosableAsyncIterator,
   IterSyncOpts,
-  DepositEventType,
-  DepositEvent,
   TotalEntityIndex,
+  DepositRequest,
 } from "@nocturne-xyz/core";
+
+export enum DepositEventType {
+  Instantiated = "Instantiated",
+  Retrieved = "Retrieved",
+  Processed = "Processed",
+}
+export interface DepositEvent extends DepositRequest {
+  type: DepositEventType;
+}
 
 export interface DepositEventsBatch {
   totalEntityIndex: TotalEntityIndex;

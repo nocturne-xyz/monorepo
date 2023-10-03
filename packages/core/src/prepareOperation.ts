@@ -16,10 +16,10 @@ import {
   NocturneViewer,
   CanonAddress,
   StealthAddressTrait,
-  encryptNote,
   randomFr,
   CompressedStealthAddress,
-} from "./crypto";
+} from "@nocturne-xyz/crypto";
+import { encryptNote } from "./noteEncryption";
 import { MerkleProofInput } from "./proof";
 import {
   sortNotesByValue,
@@ -94,6 +94,7 @@ export async function prepareOperation(
     refunds,
     encodedGasAsset,
     deadline,
+    isForcedExit: opRequest.isForcedExit ?? false,
     atomicActions: true, // always default to atomic until we find reason not to
   };
 
@@ -161,6 +162,7 @@ export async function gatherNotes(
   // 3. until we've gathered notes totalling at least the requested amount, repeat the following:
   //    a. find the smallest subsequence sum that is >= to the remaining amount to gather
   //    b. add the largest note of that subsequence to the set of notes to use.
+  // 4. If this process results in an odd number of notes to spend and there is still room, grab the smallest unused note for dust collection
 
   // 1. Sort notes from small to large
   const sortedNotes = sortNotesByValue(notes);
@@ -175,6 +177,7 @@ export async function gatherNotes(
 
   // 3. Construct the set of notes to use.
   const notesToUse: IncludedNote[] = [];
+  const usedNoteIndexes: Set<number> = new Set();
   let remainingAmount = requestedAmount;
   let subseqIndex = subsequenceSums.length - 1;
   while (remainingAmount > 0n) {
@@ -191,8 +194,19 @@ export async function gatherNotes(
     notesToUse.push(note);
     remainingAmount -= note.value;
 
+    usedNoteIndexes.add(subseqIndex);
     // Skip to next note
     subseqIndex--;
+  }
+
+  // 4. If this process results in an odd number of notes to spend and there is still room, grab the smallest unused note for dust collection
+  if (notesToUse.length % 2 == 1 && notesToUse.length < notes.length) {
+    const smallestUnusedNote = sortedNotes.find(
+      (note, i) => !usedNoteIndexes.has(i)
+    );
+    if (smallestUnusedNote) {
+      notesToUse.push(smallestUnusedNote);
+    }
   }
 
   console.log(
@@ -274,13 +288,13 @@ async function makeJoinSplit(
   const totalValue = oldNoteA.value + oldNoteB.value;
   const publicSpend = totalValue - amountToReturn - paymentAmount;
 
-  const nullifierA = viewer.createNullifier(oldNoteA);
-  const nullifierB = viewer.createNullifier(oldNoteB);
+  const nullifierA = NoteTrait.createNullifier(viewer, oldNoteA);
+  const nullifierB = NoteTrait.createNullifier(viewer, oldNoteB);
 
   // first note contains the leftovers - return to sender
   const newNoteA: Note = {
     owner: StealthAddressTrait.fromCanonAddress(sender),
-    nonce: viewer.generateNewNonce(nullifierA),
+    nonce: NoteTrait.generateNewNonce(viewer, nullifierA),
     asset: oldNoteA.asset,
     value: amountToReturn,
   };
@@ -288,7 +302,7 @@ async function makeJoinSplit(
   // the second note contains the confidential payment
   const newNoteB: Note = {
     owner: StealthAddressTrait.fromCanonAddress(receiver),
-    nonce: viewer.generateNewNonce(nullifierB),
+    nonce: NoteTrait.generateNewNonce(viewer, nullifierB),
     asset: oldNoteA.asset,
     value: paymentAmount,
   };
@@ -309,12 +323,10 @@ async function makeJoinSplit(
   // noteB could have been a dummy note. If it is, we simply duplicate the merkle proof for noteA
   // the circuit will ignore the merkle proof for noteB if it has a value of 0
   const noteBIsDummy = oldNoteB.value === 0n;
-  const oldNoteAIndex = oldNoteA.merkleIndex;
-  let oldNoteBIndex = oldNoteB.merkleIndex;
   let merkleProofB: MerkleProofInput;
   if (noteBIsDummy) {
+    oldNoteB.merkleIndex = oldNoteA.merkleIndex;
     merkleProofB = merkleProofA;
-    oldNoteBIndex = oldNoteAIndex;
   } else {
     const membershipProof = merkle.getProof(oldNoteB.merkleIndex);
 
@@ -341,15 +353,12 @@ async function makeJoinSplit(
 
   // compute joinsplit info commitment
   const joinSplitInfoCommitment = computeJoinSplitInfoCommitment(
-    senderCanonAddr,
+    viewer,
     receiver,
-    oldNoteAIndex,
-    oldNoteBIndex,
-    noteBIsDummy,
-    newNoteA.value,
-    newNoteB.value,
-    nullifierA,
-    viewer.vk
+    oldNoteA,
+    oldNoteB,
+    newNoteA,
+    newNoteB
   );
 
   return {

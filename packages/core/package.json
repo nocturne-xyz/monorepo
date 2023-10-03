@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/core",
-  "version": "2.0.2",
+  "version": "2.2.0",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,6 +14,7 @@
     "clean": "rm -rf .turbo dist",
     "gen-test-cases:operationhash": "npx ts-node ./scripts/genOperationHashTestCase.ts",
     "gen-test-cases:registryentry": "npx ts-node ./scripts/genCanonAddrRegistryEntryHashTestCase.ts",
+    "gen-test-cases:poseidonext": "npx ts-node ./scripts/genPoseidonExtTestCase.ts",
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test",
@@ -23,7 +24,7 @@
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
-    "@nocturne-xyz/crypto-utils": "workspace:^",
+    "@nocturne-xyz/crypto": "workspace:^",
     "@types/randombytes": "^2.0.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "async-retry": "^1.3.3",

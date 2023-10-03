@@ -45,13 +45,15 @@ describe("NocturneDB", async () => {
         value: 100n,
         merkleIndex: i + offset,
       }));
-      const allNfs = allNotes.map((n) => viewer.createNullifier(n));
+      const allNfs = allNotes.map((n) => NoteTrait.createNullifier(viewer, n));
       const notesWithNFs = zip(allNotes, allNfs).map(([n, nf]) =>
         NoteTrait.toIncludedNoteWithNullifier(n, nf)
       );
 
       notes.push(...notesWithNFs);
-      nullifiers.push(...notes.map((n) => viewer.createNullifier(n)));
+      nullifiers.push(
+        ...notes.map((n) => NoteTrait.createNullifier(viewer, n))
+      );
 
       offset += notesPerAsset;
     }

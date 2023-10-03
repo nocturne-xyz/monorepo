@@ -60,7 +60,7 @@ include "lib.circom";
 //@ensures(14) `joinSplitInfoCommitment` is computed correctly as `Poseidon(keccak256("JOINSPLIT_INFO_COMMITMENT") % p, ...encodedJoinSplitInfo)` where `encodedJoinSplitInfo` is an array consisting of the following:
 // - `compressedSenderCanonAddrY`
 // - `compressedReceiverCanonAddrY`
-// - `oldMerkleIndicesAndWithBits`, defined as `u32(oldNoteAIndex) || u32(oldNoteBIndex) << 32 || senderSignBit << 64 || receiverSignBit << 65 || noteBIsDummy << 66`
+// - `oldMerkleIndicesWithSignBits`, defined as `u32(oldNoteAIndex) || u32(oldNoteBIndex) << 32 || senderSignBit << 64 || receiverSignBit << 65 || noteBIsDummy << 66`
 //      where `oldNoteAIndex` and `oldNoteBIndex` are computed from `pathA` and `pathB`,and `noteBIsDummy` is a single bit that's a `1` if note B is a dummy note and `0` otherwise
 // - `newNoteAValue`
 // - `newNoteBValue`
@@ -512,9 +512,9 @@ template JoinSplit() {
     signal oldNoteMerkleIndicesWithSignBits <== oldNoteMerkleIndices + (1 << 64) * senderSignBit + (1 << 65) * receiverSignBit + (1 << 66) * oldNoteBIsDummy;
 
     // keccak256("JOINSPLIT_INFO_NONCE") % p
-    var JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = 8641380568873709859334930917483971124167266522634964152243775747603865574453;
+    var JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = 9902041836430008087134187177357348214750696281851093507858998440354218646130;
     // keccak256("JOINSPLIT_INFO_COMMITMENT") % p
-    var JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR = 9902041836430008087134187177357348214750696281851093507858998440354218646130;
+    var JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR = 8641380568873709859334930917483971124167266522634964152243775747603865574453 ;
 
     signal joinSplitInfoNonce <== PoseidonWithDomainSeparator(2, JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR)([vk, nullifierA]);
     joinSplitInfoCommitment <== PoseidonWithDomainSeparator(6, JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR)([compressedSenderCanonAddrY, compressedReceiverCanonAddrY, oldNoteMerkleIndicesWithSignBits, newNoteAValue, newNoteBValue, joinSplitInfoNonce]);

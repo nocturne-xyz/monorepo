@@ -5,14 +5,13 @@ import { ethers } from "ethers";
 import { CanonicalAddressRegistry } from "@nocturne-xyz/contracts";
 import {
   Asset,
-  NocturneSigner,
   SolidityProof,
-  compressPoint,
   computeCanonAddrRegistryEntryDigest,
   packToSolidityProof,
+  CanonAddrSigCheckInputs,
+  CanonAddrSigCheckProver,
 } from "@nocturne-xyz/core";
-import { CanonAddrSigCheckInputs } from "@nocturne-xyz/core";
-import { CanonAddrSigCheckProver } from "@nocturne-xyz/core";
+import { NocturneSigner, compressPoint } from "@nocturne-xyz/crypto";
 
 chai.use(chaiAsPromised);
 

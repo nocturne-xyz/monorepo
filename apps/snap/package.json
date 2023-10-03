@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/snap",
-  "version": "0.4.3",
+  "version": "0.4.5",
   "description": "Nocturne Snap",
   "license": "(MIT-0 OR Apache-2.0)",
   "main": "src/index.ts",
@@ -33,7 +33,7 @@
     "@metamask/snaps-ui": "^0.32.2",
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",
-    "@nocturne-xyz/crypto-utils": "workspace:^",
+    "@nocturne-xyz/crypto": "workspace:^",
     "bigint-json-serialization": "^1.0.1",
     "buffer": "^6.0.3"
   },

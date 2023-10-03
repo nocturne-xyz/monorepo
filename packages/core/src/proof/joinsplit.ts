@@ -1,30 +1,43 @@
-import { BN254ScalarField, poseidonBN } from "@nocturne-xyz/crypto-utils";
-import { compressPoint, decomposeCompressedPoint } from "../crypto";
-import { CanonAddress, CompressedStealthAddress } from "../crypto/address";
-import { EncodedNote, SENDER_COMMITMENT_DOMAIN_SEPARATOR } from "../primitives";
+import {
+  BN254ScalarField,
+  poseidonBN,
+  compressPoint,
+  decomposeCompressedPoint,
+  CanonAddress,
+  CompressedStealthAddress,
+  NocturneViewer,
+} from "@nocturne-xyz/crypto";
+import {
+  EncodedNote,
+  IncludedNote,
+  JoinSplitInfo,
+  Note,
+  NoteTrait,
+  SENDER_COMMITMENT_DOMAIN_SEPARATOR,
+} from "../primitives";
 import { BaseProof, MerkleProofInput } from "./types";
 import * as ethers from "ethers";
 
-export const JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
+export const JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.create(
   BigInt(
-    ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_COMMITMENT")
-    )
+    ethers.utils.keccak256(ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_NONCE"))
   )
 );
 
 export const JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR =
-  BN254ScalarField.reduce(
+  BN254ScalarField.create(
     BigInt(
-      ethers.utils.keccak256(ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_NONCE"))
+      ethers.utils.keccak256(
+        ethers.utils.toUtf8Bytes("JOINSPLIT_INFO_COMMITMENT")
+      )
     )
   );
 
-export const NULLIFIER_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
+export const NULLIFIER_DOMAIN_SEPARATOR = BN254ScalarField.create(
   BigInt(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("NULLIFIER")))
 );
 
-export const NEW_NOTE_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.reduce(
+export const NEW_NOTE_NONCE_DOMAIN_SEPARATOR = BN254ScalarField.create(
   BigInt(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("NEW_NOTE_NONCE")))
 );
 
@@ -192,38 +205,72 @@ export function computeJoinSplitInfoNonce(
   return poseidonBN([vk, nullifierA], JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR);
 }
 
-export function computeJoinSplitInfoCommitment(
-  senderCanonAddr: CanonAddress,
+export function computeJoinSplitInfo(
+  senderViewer: NocturneViewer,
   receiverCanonAddr: CanonAddress,
-  oldNoteAIndex: number,
-  oldNoteBIndex: number,
-  noteBIsDummy: boolean,
-  newNoteAValue: bigint,
-  newNoteBValue: bigint,
-  nullifierA: bigint,
-  vk: bigint
-): bigint {
+  oldNoteA: IncludedNote,
+  oldNoteB: IncludedNote,
+  newNoteA: Note,
+  newNoteB: Note
+): JoinSplitInfo {
   const [senderSign, senderY] = decomposeCompressedPoint(
-    compressPoint(senderCanonAddr)
+    compressPoint(senderViewer.canonicalAddress())
   );
   const [receiverSign, receiverY] = decomposeCompressedPoint(
     compressPoint(receiverCanonAddr)
   );
 
+  return {
+    compressedSenderCanonAddr: senderY,
+    compressedReceiverCanonAddr: receiverY,
+    oldMerkleIndicesWithSignBits: encodeOldNoteMerkleIndicesWithSignBits(
+      oldNoteA.merkleIndex,
+      oldNoteB.merkleIndex,
+      senderSign,
+      receiverSign,
+      oldNoteB.value === 0n
+    ),
+    newNoteValueA: newNoteA.value,
+    newNoteValueB: newNoteB.value,
+    nonce: computeJoinSplitInfoNonce(
+      NoteTrait.createNullifier(senderViewer, oldNoteA),
+      senderViewer.vk
+    ),
+  };
+}
+
+export function computeJoinSplitInfoCommitment(
+  viewer: NocturneViewer,
+  receiverCanonAddr: CanonAddress,
+  oldNoteA: IncludedNote,
+  oldNoteB: IncludedNote,
+  newNoteA: Note,
+  newNoteB: Note
+): bigint {
+  const {
+    compressedSenderCanonAddr,
+    compressedReceiverCanonAddr,
+    oldMerkleIndicesWithSignBits,
+    newNoteValueA,
+    newNoteValueB,
+    nonce,
+  } = computeJoinSplitInfo(
+    viewer,
+    receiverCanonAddr,
+    oldNoteA,
+    oldNoteB,
+    newNoteA,
+    newNoteB
+  );
+
   return poseidonBN(
     [
-      senderY,
-      receiverY,
-      encodeOldNoteMerkleIndicesWithSignBits(
-        oldNoteAIndex,
-        oldNoteBIndex,
-        senderSign,
-        receiverSign,
-        noteBIsDummy
-      ),
-      newNoteAValue,
-      newNoteBValue,
-      computeJoinSplitInfoNonce(nullifierA, vk),
+      compressedSenderCanonAddr,
+      compressedReceiverCanonAddr,
+      oldMerkleIndicesWithSignBits,
+      newNoteValueA,
+      newNoteValueB,
+      nonce,
     ],
     JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR
   );

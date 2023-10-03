@@ -1,5 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
+export type { IPoseidonExtT7 } from './src/IPoseidonExtT7';
+
 export type { DepositManager } from './src/DepositManager';
 export type { Teller } from './src/Teller';
 export type { Handler } from './src/Handler';
@@ -20,6 +22,7 @@ export type { Versioned } from './src/Versioned';
 export type { WETH9 } from './src/WETH9';
 
 export type { WstethAdapter } from './src/WstethAdapter';
+export type { RethAdapter } from './src/RethAdapter';
 export type { EthTransferAdapter } from './src/EthTransferAdapter';
 export type { IUniswapV3 } from './src/IUniswapV3';
 export type { IBalancer } from './src/IBalancer';
@@ -27,6 +30,8 @@ export type { IBalancer } from './src/IBalancer';
 export type { SimpleERC20Token } from './src/SimpleERC20Token';
 export type { SimpleERC721Token } from './src/SimpleERC721Token';
 export type { SimpleERC1155Token } from './src/SimpleERC1155Token';
+
+export { IPoseidonExtT7__factory } from './src/factories/IPoseidonExtT7__factory';
 
 export { DepositManager__factory } from './src/factories/DepositManager__factory';
 export { Teller__factory } from './src/factories/Teller__factory';
@@ -44,6 +49,7 @@ export { SimpleERC1155Token__factory } from './src/factories/SimpleERC1155Token_
 export { WETH9__factory } from './src/factories/WETH9__factory';
 
 export { WstethAdapter__factory } from './src/factories/WstethAdapter__factory';
+export { RethAdapter__factory } from './src/factories/RethAdapter__factory';
 export { EthTransferAdapter__factory } from './src/factories/EthTransferAdapter__factory';
 
 export { IUniswapV3__factory } from './src/factories/IUniswapV3__factory';

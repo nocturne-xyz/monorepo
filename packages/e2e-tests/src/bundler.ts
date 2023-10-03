@@ -9,6 +9,7 @@ import { ethers } from "ethers";
 import IORedis from "ioredis";
 
 export interface BundlerConfig {
+  bundlerAddress: string;
   tellerAddress: string;
   handlerAddress: string;
   maxLatency: number;
@@ -74,6 +75,7 @@ function startBundlerServer(config: BundlerConfig, redis: IORedis): TeardownFn {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
   const logger = makeTestLogger("bundler", "server");
   const server = new BundlerServer(
+    config.bundlerAddress,
     config.tellerAddress,
     config.handlerAddress,
     provider,

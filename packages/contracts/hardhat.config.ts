@@ -80,6 +80,7 @@ module.exports = {
   // https://www.npmjs.com/package/hardhat-packager
   packager: {
     contracts: [
+      'IPoseidonExtT7',
       'IERC20',
       'IERC721',
       'IERC1155',
@@ -97,6 +98,7 @@ module.exports = {
       'JoinSplitVerifier',
       'SubtreeUpdateVerifier',
       'WstethAdapter',
+      'RethAdapter',
       'EthTransferAdapter',
       'CanonAddrSigCheckVerifier',
       'SimpleERC20Token',

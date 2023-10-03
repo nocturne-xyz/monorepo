@@ -7,7 +7,7 @@ import {
   OpDigestWithMetadata,
   computeOperationDigest,
 } from "./primitives";
-import { NocturneViewer } from "./crypto";
+import { NocturneViewer } from "@nocturne-xyz/crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
 import { prepareOperation } from "./prepareOperation";
 import {
@@ -75,6 +75,7 @@ export class NocturneClient {
     );
 
     this.viewer = viewer;
+    console.log(`Canonical address: `, this.viewer.canonicalAddress());
     this.handlerContract = Handler__factory.connect(
       this.config.handlerAddress,
       provider

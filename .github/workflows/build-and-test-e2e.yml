@@ -36,6 +36,39 @@ jobs:
         working-directory: ./packages/e2e-tests
         run: |
           yarn test:e2e -g 'full system:'
+  build-and-test-e2e-forced-exit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo and get submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "v18.12.1"
+          cache: "yarn"
+      - name: corepack enable
+        run: corepack enable
+      - name: install foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
+      - name: yarn install
+        run: |
+          yarn install --immutable
+      - name: yarn build
+        run: |
+          yarn build
+      - name: run full system test suite
+        working-directory: ./packages/e2e-tests
+        run: |
+          yarn test:e2e -g 'forcedExit'
   build-and-test-e2e-canon-addr-registry:
     runs-on: ubuntu-latest
     steps:
@@ -234,5 +267,3 @@ jobs:
         working-directory: ./packages/e2e-tests
         run: |
           yarn test:e2e -g 'syncing NocturneClient with SubgraphSyncAdapter'
-
-      

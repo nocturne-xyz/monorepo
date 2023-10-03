@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.1.0
+
+### Minor Changes
+
+- 54b1caf2: add PoseidonExt
+- f80bff6a: Include `op.forcedExit` flag to tell Handler not to create refund/output notes
+- 5d90ac8e: Make bundler role permissioned and add forcedExit method that wraps \_processBundle
+
+### Patch Changes
+
+- 5d90ac8e: Remove double abstraction layer for poseidon hashers and just have IPoseidon and IPoseidonExt in tests and Teller
+
+## 1.0.0
+
+### Major Changes
+
+- 444321c0: In wsteth and reth adapter, rename 'convert' to 'deposit'
+
+### Minor Changes
+
+- 444321c0: Add RethAdapter for rocket pool support + fork tests
+
+### Patch Changes
+
+- 444321c0: Add additional excludeSender(ethTransferAdapter) to invariant tests which was previously forgotten
+
 ## 0.5.0
 
 ### Minor Changes
