@@ -12,7 +12,7 @@ type SdkEvent =
   | FilledBatchWithZerosEndMerkleIndex;
 type FilledBatchWithZerosEndMerkleIndex = number;
 type SdkEventsWithLatestCommittedMerkleIndex = { events: WithTotalEntityIndex<SdkEvent>[], latestCommittedMerkleIndex?: number };
-type SdkEventResponse = ArrayElem<FetchSdkEventsQuery['goerli_goerli_sdk_event']>
+type SdkEventResponse = ArrayElem<FetchSdkEventsQuery['sdk_event']>
 
 export async function fetchSdkEventsAndLatestCommittedMerkleIndex(
   client: UrqlClient,
@@ -26,7 +26,7 @@ export async function fetchSdkEventsAndLatestCommittedMerkleIndex(
     throw new Error(error?.message ?? "SdkEvents query failed");
   }
 
-  const events: WithTotalEntityIndex<SdkEvent>[] = data.goerli_goerli_sdk_event.map(res => {
+  const events: WithTotalEntityIndex<SdkEvent>[] = data.sdk_event.map(res => {
     const totalEntityIndex = BigInt(res.id);
     const event = tryIncludedEncryptedNoteFromSdkEventResponse(res) ?? tryIncludedNoteFromSdkEventResponse(res) ?? tryNullifierFromSdkEventResponse(res) ?? tryFilledBatchWithZerosEndMerkleIndexFromSdkEventResponse(res);
 
@@ -41,8 +41,8 @@ export async function fetchSdkEventsAndLatestCommittedMerkleIndex(
   });
 
   let latestCommittedMerkleIndex: number | undefined = undefined;
-  if (data.goerli_goerli_subtree_commit && data.goerli_goerli_subtree_commit.length > 0) {
-    const subtreeCommit = data.goerli_goerli_subtree_commit[0];
+  if (data.subtree_commit && data.subtree_commit.length > 0) {
+    const subtreeCommit = data.subtree_commit[0];
     const batchOffset = parseInt(subtreeCommit.subtree_batch_offset);
     latestCommittedMerkleIndex = batchOffsetToLatestMerkleIndexInBatch(batchOffset);
   }
@@ -158,7 +158,7 @@ function tryFilledBatchWithZerosEndMerkleIndexFromSdkEventResponse(res: SdkEvent
   return undefined;
 }
 
-export function depositRequestResponseToDepositRequestWithMetadata(spender: Address, depositRequestResponse: ArrayElem<FetchDepositRequestsQuery["goerli_goerli_deposit_request"]>): DisplayDepositRequestWithMetadataAndStatus {
+export function depositRequestResponseToDepositRequestWithMetadata(spender: Address, depositRequestResponse: ArrayElem<FetchDepositRequestsQuery["deposit_request"]>): DisplayDepositRequestWithMetadataAndStatus {
   const {
     encoded_asset_addr,
     encoded_asset_id,

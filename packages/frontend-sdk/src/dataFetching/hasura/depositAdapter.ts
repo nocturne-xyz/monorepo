@@ -29,7 +29,7 @@ export class HasuraDepositAdapter implements DepositAdapter {
     }
 
     return Promise.all(
-      data.goerli_goerli_deposit_request.map((res) => depositRequestResponseToDepositRequestWithMetadata(spender, res))
+      data.deposit_request.map((res) => depositRequestResponseToDepositRequestWithMetadata(spender, res))
       .map((depositRequest) => this.makeDepositHandle(depositRequest))
     );
   }
@@ -66,10 +66,10 @@ async function getDepositRequestStatus(
       throw new Error(error?.message ?? "Deposit request query failed");
     }
 
-    if (data.goerli_goerli_deposit_request.length === 0) {
+    if (data.deposit_request.length === 0) {
       throw new Error("Deposit request not found");
     }
-    initialOnChainStatus= parseOnChainDepositRequestStatus(data.goerli_goerli_deposit_request[0].status);
+    initialOnChainStatus= parseOnChainDepositRequestStatus(data.deposit_request[0].status);
   }
 
   const screenerResponse = await retry(
