@@ -31,6 +31,7 @@ dotenv.config();
   const deployConfig = loadDeployConfigFromJSON(configString);
   const { config, verification } = await deployNocturne(deployer, deployConfig);
   console.log(config);
+  console.log(verification);
 
   await checkNocturneDeployment(config, provider);
 

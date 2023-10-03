@@ -34,7 +34,7 @@
     [
       "weth",
       {
-        "address": "0xb16f35c0ae2912430dac15764477e179d9b9ebea",
+        "address": "0xb16F35c0Ae2912430DAc15764477E179D9B9EbEa",
         "globalCap": "250000000000000000000n",
         "maxDepositSize": "25000000000000000000n",
         "isGasAsset": true
