@@ -7,6 +7,7 @@ import { checkNocturneDeployment } from "../src/checks";
 
 const CONFIGS_DIR = `${__dirname}/../configs/`;
 const DEPLOYS_DIR = `${__dirname}/../deploys/`;
+const VERIFICATIONS_DIR = `${__dirname}/../verifications/`;
 
 dotenv.config();
 
@@ -27,19 +28,31 @@ dotenv.config();
     `${CONFIGS_DIR}/${configName}.json`,
     "utf-8"
   );
-  const config = loadDeployConfigFromJSON(configString);
-  const nocturneConfig = await deployNocturne(deployer, config);
-  console.log(nocturneConfig);
+  const deployConfig = loadDeployConfigFromJSON(configString);
+  const { config, verification } = await deployNocturne(deployer, deployConfig);
+  console.log(config);
 
-  await checkNocturneDeployment(nocturneConfig, provider);
+  await checkNocturneDeployment(config, provider);
 
   if (!fs.existsSync(DEPLOYS_DIR)) {
     fs.mkdirSync(DEPLOYS_DIR);
   }
+  if (!fs.existsSync(VERIFICATIONS_DIR)) {
+    fs.mkdirSync(VERIFICATIONS_DIR);
+  }
 
+  const date = Date.now().toString();
   fs.writeFileSync(
-    `${DEPLOYS_DIR}/${configName}-${Date.now().toString()}.json`,
-    nocturneConfig.toString(),
+    `${DEPLOYS_DIR}/${configName}-${date}.json`,
+    config.toString(),
+    {
+      encoding: "utf8",
+      flag: "w",
+    }
+  );
+  fs.writeFileSync(
+    `${VERIFICATIONS_DIR}/${configName}-${date}.json`,
+    verification.toString(),
     {
       encoding: "utf8",
       flag: "w",

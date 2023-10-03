@@ -38,6 +38,12 @@ import { Address, getSelector } from "./utils";
 import { protocolWhitelistKey } from "@nocturne-xyz/core";
 import * as fs from "fs";
 import findWorkspaceRoot from "find-yarn-workspace-root";
+import {
+  NocturneDeploymentVerification,
+  NocturneDeploymentVerificationData,
+  NocturneProxySemanticName,
+  ProxyContractVerification,
+} from "./verification";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const POSEIDON_EXT_T7_BYTECODE = fs.readFileSync(
@@ -45,10 +51,20 @@ const POSEIDON_EXT_T7_BYTECODE = fs.readFileSync(
   "utf-8"
 );
 
+export interface NocturneContractDeploymentAndVerification {
+  contracts: NocturneContractDeployment;
+  verification: NocturneDeploymentVerificationData;
+}
+
+export interface NocturneConfigAndVerification {
+  config: NocturneConfig;
+  verification: NocturneDeploymentVerification;
+}
+
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
   config: NocturneDeployConfig
-): Promise<NocturneConfig> {
+): Promise<NocturneConfigAndVerification> {
   if (!connectedSigner.provider)
     throw new Error("ethers.Wallet must be connected to provider");
 
@@ -76,7 +92,10 @@ export async function deployNocturne(
   );
 
   // Deploy core contracts
-  const contracts = await deployNocturneCoreContracts(connectedSigner, config);
+  const { contracts, verification } = await deployNocturneCoreContracts(
+    connectedSigner,
+    config
+  );
 
   // Set erc20 caps
   const depositManager = DepositManager__factory.connect(
@@ -134,17 +153,20 @@ export async function deployNocturne(
 
   await relinquishContractOwnership(connectedSigner, config, contracts);
 
-  return NocturneConfig.fromObject({
-    contracts,
-    erc20s: Array.from(erc20s.entries()),
-    protocolAllowlist: Array.from(config.protocolAllowlist.entries()),
-  });
+  return {
+    config: NocturneConfig.fromObject({
+      contracts,
+      erc20s: Array.from(erc20s.entries()),
+      protocolAllowlist: Array.from(config.protocolAllowlist.entries()),
+    }),
+    verification: new NocturneDeploymentVerification(verification),
+  };
 }
 
 export async function deployNocturneCoreContracts(
   connectedSigner: ethers.Wallet,
   config: NocturneDeployConfig
-): Promise<NocturneContractDeployment> {
+): Promise<NocturneContractDeploymentAndVerification> {
   console.log("\ngetting network...");
   const { name, chainId } = await connectedSigner.provider.getNetwork();
   console.log("\nfetching current block number...");
@@ -179,6 +201,11 @@ export async function deployNocturneCoreContracts(
   }
   await subtreeUpdateVerifier.deployTransaction.wait(opts?.confirmations);
 
+  // Start map of proxy verification objects
+  const proxies: {
+    [T in NocturneProxySemanticName]: ProxyContractVerification<T>;
+  } = {} as any;
+
   // Deploy handler proxy
   console.log("\ndeploying proxied Handler...");
   const proxiedHandler = await deployProxiedContract(
@@ -186,6 +213,12 @@ export async function deployNocturneCoreContracts(
     proxyAdmin,
     [subtreeUpdateVerifier.address, leftoverTokenHolder]
   );
+  proxies["Handler"] = {
+    semanticName: "Handler",
+    address: proxiedHandler.proxyAddresses.proxy,
+    implementationAddress: proxiedHandler.proxyAddresses.implementation,
+    constructorArgs: proxiedHandler.constructorArgs,
+  };
   console.log("deployed proxied Handler:", proxiedHandler.proxyAddresses);
 
   // Deploy poseidonExtT7 contract
@@ -198,17 +231,24 @@ export async function deployNocturneCoreContracts(
   await poseidonExtT7.deployTransaction.wait(opts?.confirmations);
 
   console.log("\ndeploying proxied Teller...");
+  const tellerInitArgs: [string, string, string, string, string] = [
+    "NocturneTeller",
+    "v1",
+    proxiedHandler.address,
+    joinSplitVerifier.address,
+    poseidonExtT7.address,
+  ];
   const proxiedTeller = await deployProxiedContract(
     new Teller__factory(connectedSigner),
     proxyAdmin,
-    [
-      "NocturneTeller",
-      "v1",
-      proxiedHandler.address,
-      joinSplitVerifier.address,
-      poseidonExtT7.address,
-    ] // initialize here
+    tellerInitArgs // initialize here
   );
+  proxies["Teller"] = {
+    semanticName: "Teller",
+    address: proxiedTeller.proxyAddresses.proxy,
+    implementationAddress: proxiedTeller.proxyAddresses.implementation,
+    constructorArgs: proxiedTeller.constructorArgs,
+  };
   console.log("deployed proxied Teller:", proxiedTeller.proxyAddresses);
 
   console.log("\nSetting Teller address in Handler...");
@@ -223,6 +263,12 @@ export async function deployNocturneCoreContracts(
     proxyAdmin,
     ["NocturneDepositManager", "v1", proxiedTeller.address, config.wethAddress] // initialize here
   );
+  proxies["DepositManager"] = {
+    semanticName: "DepositManager",
+    address: proxiedDepositManager.proxyAddresses.proxy,
+    implementationAddress: proxiedDepositManager.proxyAddresses.implementation,
+    constructorArgs: proxiedDepositManager.constructorArgs,
+  };
   console.log(
     "deployed proxied DepositManager:",
     proxiedDepositManager.proxyAddresses
@@ -242,6 +288,17 @@ export async function deployNocturneCoreContracts(
       "v1",
       canonAddrSigCheckVerifier.address,
     ]
+  );
+  proxies["CanonicalAddressRegistry"] = {
+    semanticName: "CanonicalAddressRegistry",
+    address: proxiedCanonAddrRegistry.proxyAddresses.proxy,
+    implementationAddress:
+      proxiedCanonAddrRegistry.proxyAddresses.implementation,
+    constructorArgs: proxiedCanonAddrRegistry.constructorArgs,
+  };
+  console.log(
+    "deployed proxied CanonicalAddressRegistry:",
+    proxiedCanonAddrRegistry.proxyAddresses
   );
 
   console.log("\nsetting deposit manager screeners...");
@@ -277,31 +334,39 @@ export async function deployNocturneCoreContracts(
   await enrollDepositManagerTx.wait(opts?.confirmations);
 
   return {
-    network: {
-      name,
+    contracts: {
+      network: {
+        name,
+        chainId,
+      },
+      startBlock,
+      owners: {
+        proxyAdminOwner: config.proxyAdminOwner,
+        // Below owners are all anticipated, ownership relinquished after this fn
+        // NOTE: if contracts owners don't match proxyAdminOwner, check fn will throw error
+        tellerOwner: config.proxyAdminOwner,
+        handlerOwner: config.proxyAdminOwner,
+        depositManagerOwner: config.proxyAdminOwner,
+      },
+      proxyAdmin: proxyAdmin.address,
+      finalityBlocks: config.finalityBlocks,
+      canonicalAddressRegistryProxy: proxiedCanonAddrRegistry.proxyAddresses,
+      depositManagerProxy: proxiedDepositManager.proxyAddresses,
+      tellerProxy: proxiedTeller.proxyAddresses,
+      handlerProxy: proxiedHandler.proxyAddresses,
+      poseidonExtT7Address: poseidonExtT7.address,
+      joinSplitVerifierAddress: joinSplitVerifier.address,
+      subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
+      canonAddrSigCheckVerifierAddress: canonAddrSigCheckVerifier.address,
+      screeners: config.screeners,
+      depositSources: [proxiedDepositManager.address],
+    },
+    verification: {
+      chain: name,
       chainId,
+      numOptimizations: 500, // TODO: make parametrizable?
+      proxies,
     },
-    startBlock,
-    owners: {
-      proxyAdminOwner: config.proxyAdminOwner,
-      // Below owners are all anticipated, ownership relinquished after this fn
-      // NOTE: if contracts owners don't match proxyAdminOwner, check fn will throw error
-      tellerOwner: config.proxyAdminOwner,
-      handlerOwner: config.proxyAdminOwner,
-      depositManagerOwner: config.proxyAdminOwner,
-    },
-    proxyAdmin: proxyAdmin.address,
-    finalityBlocks: config.finalityBlocks,
-    canonicalAddressRegistryProxy: proxiedCanonAddrRegistry.proxyAddresses,
-    depositManagerProxy: proxiedDepositManager.proxyAddresses,
-    tellerProxy: proxiedTeller.proxyAddresses,
-    handlerProxy: proxiedHandler.proxyAddresses,
-    poseidonExtT7Address: poseidonExtT7.address,
-    joinSplitVerifierAddress: joinSplitVerifier.address,
-    subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
-    canonAddrSigCheckVerifierAddress: canonAddrSigCheckVerifier.address,
-    screeners: config.screeners,
-    depositSources: [proxiedDepositManager.address],
   };
 }
 
@@ -533,6 +598,7 @@ async function deployProxiedContract<
       kind: ProxyKind.Transparent,
       proxy: proxy.address,
       implementation: implementation.address,
-    }
+    },
+    proxyConstructorArgs as string[]
   );
 }

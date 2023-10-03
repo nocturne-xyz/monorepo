@@ -3968,19 +3968,18 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
-    "@nomiclabs/hardhat-ethers": ^2.0.4
     "@nomiclabs/hardhat-etherscan": ^2.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.1
     "@openzeppelin/contracts": 4.9.2
     "@openzeppelin/contracts-upgradeable": 4.9.2
-    "@openzeppelin/hardhat-upgrades": ^1.22.1
+    "@openzeppelin/hardhat-upgrades": ^2.3.1
     "@typechain/ethers-v5": 7.2.0
     "@typechain/hardhat": ^2.0.1
     "@types/node": ^17.0.14
     dotenv: ^10.0.0
     eslint: ^7.20.0
     ethereum-waffle: ^3.2.2
-    ethers: ^5.7.2
+    ethers: ^5.7.1
     hardhat: ^2.13.1
     hardhat-contract-sizer: ^2.7.0
     hardhat-gas-reporter: ^1.0.4
@@ -4838,16 +4837,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomiclabs/hardhat-ethers@npm:^2.0.4":
-  version: 2.2.3
-  resolution: "@nomiclabs/hardhat-ethers@npm:2.2.3"
-  peerDependencies:
-    ethers: ^5.0.0
-    hardhat: ^2.0.0
-  checksum: 72321317e55eb510306e04c42353c5f7ceb42d086fc76cc740120da6e1635b7ad5bbf23a8d6b02bd590754adcf646618933111624085ab249b1ff3482e773226
-  languageName: node
-  linkType: hard
-
 "@nomiclabs/hardhat-etherscan@npm:^2.1.2":
   version: 2.1.8
   resolution: "@nomiclabs/hardhat-etherscan@npm:2.1.8"
@@ -5136,6 +5125,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openzeppelin/defender-admin-client@npm:^1.48.0":
+  version: 1.48.0
+  resolution: "@openzeppelin/defender-admin-client@npm:1.48.0"
+  dependencies:
+    "@openzeppelin/defender-base-client": 1.48.0
+    axios: ^1.4.0
+    ethers: ^5.7.2
+    lodash: ^4.17.19
+    node-fetch: ^2.6.0
+  checksum: 22d0202ed29f3a57c73547cb51e670bcc1311995c2fcad86653d63c652cacf985ec8a1ec0fdc606314469959de548e97896b8ce9406ad8495681d0fc21fc5b80
+  languageName: node
+  linkType: hard
+
 "@openzeppelin/defender-base-client@npm:1.47.0":
   version: 1.47.0
   resolution: "@openzeppelin/defender-base-client@npm:1.47.0"
@@ -5149,7 +5151,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/defender-base-client@npm:^1.46.0":
+"@openzeppelin/defender-base-client@npm:1.48.0, @openzeppelin/defender-base-client@npm:^1.48.0, @openzeppelin/defender-base-client@npm:^1.48.0-rc.1":
   version: 1.48.0
   resolution: "@openzeppelin/defender-base-client@npm:1.48.0"
   dependencies:
@@ -5183,46 +5185,49 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/hardhat-upgrades@npm:^1.22.1":
-  version: 1.28.0
-  resolution: "@openzeppelin/hardhat-upgrades@npm:1.28.0"
+"@openzeppelin/hardhat-upgrades@npm:^2.3.1":
+  version: 2.3.1
+  resolution: "@openzeppelin/hardhat-upgrades@npm:2.3.1"
   dependencies:
-    "@openzeppelin/defender-base-client": ^1.46.0
-    "@openzeppelin/platform-deploy-client": ^0.8.0
-    "@openzeppelin/upgrades-core": ^1.27.0
+    "@openzeppelin/defender-admin-client": ^1.48.0
+    "@openzeppelin/defender-base-client": ^1.48.0
+    "@openzeppelin/platform-deploy-client": ^0.10.0
+    "@openzeppelin/upgrades-core": ^1.30.0
     chalk: ^4.1.0
     debug: ^4.1.1
+    ethereumjs-util: ^7.1.5
     proper-lockfile: ^4.1.1
+    undici: ^5.14.0
   peerDependencies:
-    "@nomiclabs/hardhat-ethers": ^2.0.0
-    "@nomiclabs/hardhat-etherscan": ^3.1.0
-    ethers: ^5.0.5
+    "@nomicfoundation/hardhat-ethers": ^3.0.0
+    "@nomicfoundation/hardhat-verify": ^1.1.0
+    ethers: ^6.6.0
     hardhat: ^2.0.2
   peerDependenciesMeta:
-    "@nomiclabs/harhdat-etherscan":
+    "@nomicfoundation/hardhat-verify":
       optional: true
   bin:
     migrate-oz-cli-project: dist/scripts/migrate-oz-cli-project.js
-  checksum: b37a5eb7c3a5c1fb4ae6754f5fe1d6e93eb6bc143861f57babf5c7d66706ee3e44ca7d57db17ce2ec6c7014f09c269d506f62b3b116897407fdb0d1ff68f4925
+  checksum: 930e17095c3b0267dcb5b0a0d0db6595dd1229faa0590c65e8b5944caa72382a7fe28efa54f79e5dbc253244009085ccf247c40978017f446daa9e34941a0333
   languageName: node
   linkType: hard
 
-"@openzeppelin/platform-deploy-client@npm:^0.8.0":
-  version: 0.8.0
-  resolution: "@openzeppelin/platform-deploy-client@npm:0.8.0"
+"@openzeppelin/platform-deploy-client@npm:^0.10.0":
+  version: 0.10.0
+  resolution: "@openzeppelin/platform-deploy-client@npm:0.10.0"
   dependencies:
     "@ethersproject/abi": ^5.6.3
-    "@openzeppelin/defender-base-client": ^1.46.0
-    axios: ^0.21.2
+    "@openzeppelin/defender-base-client": ^1.48.0-rc.1
+    axios: ^1.4.0
     lodash: ^4.17.19
     node-fetch: ^2.6.0
-  checksum: 0ce050e185a812c366ceef7dcfce526815babab9396275d9724f324a548ddfdca92ea9913ce61356dcd8c014fc495890c8e21afab4a197e0e14e761c698cce68
+  checksum: e3933c10b3d33a6404cc2fd7eeed77b7ad07bc6d6a382ff307d65919643ab26c6cfda2e14541ca9c9dc3289f01f353ac274823c9fa6c2d7ee110f37fc678c9cb
   languageName: node
   linkType: hard
 
-"@openzeppelin/upgrades-core@npm:^1.27.0":
-  version: 1.29.0
-  resolution: "@openzeppelin/upgrades-core@npm:1.29.0"
+"@openzeppelin/upgrades-core@npm:^1.30.0":
+  version: 1.30.0
+  resolution: "@openzeppelin/upgrades-core@npm:1.30.0"
   dependencies:
     cbor: ^9.0.0
     chalk: ^4.1.0
@@ -5231,10 +5236,10 @@ __metadata:
     ethereumjs-util: ^7.0.3
     minimist: ^1.2.7
     proper-lockfile: ^4.1.1
-    solidity-ast: ^0.4.26
+    solidity-ast: ^0.4.51
   bin:
     openzeppelin-upgrades-core: dist/cli/cli.js
-  checksum: 99dea5d180b56670ff01d0f4fd99f19def5904b0d764b5c79106878d866c7fd6576c1523661a71170947ef06ab83fbb189cd65747bfcd6b20c8ea29adcea8a0a
+  checksum: bd4ae49ed868dd552c346f28518651ab6c9763cde29ab31c4dfbd2b6159e1ab9c6f5e84157e5a7f413863f833b4a5ccbd9f0458a02bd0ab79ab46e79e0dbf754
   languageName: node
   linkType: hard
 
@@ -7565,7 +7570,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^0.21.1, axios@npm:^0.21.2":
+"axios@npm:^0.21.1":
   version: 0.21.4
   resolution: "axios@npm:0.21.4"
   dependencies:
@@ -12028,7 +12033,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
+  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
   languageName: node
   linkType: hard
 
@@ -12195,7 +12200,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"ethereumjs-util@npm:^7.0.10, ethereumjs-util@npm:^7.0.2, ethereumjs-util@npm:^7.0.3":
+"ethereumjs-util@npm:^7.0.10, ethereumjs-util@npm:^7.0.2, ethereumjs-util@npm:^7.0.3, ethereumjs-util@npm:^7.1.5":
   version: 7.1.5
   resolution: "ethereumjs-util@npm:7.1.5"
   dependencies:
@@ -13927,7 +13932,73 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"hardhat@npm:^2.13.1, hardhat@npm:^2.17.1, hardhat@npm:^2.17.3, hardhat@npm:^2.6.4":
+"hardhat@npm:^2.13.1":
+  version: 2.17.4
+  resolution: "hardhat@npm:2.17.4"
+  dependencies:
+    "@ethersproject/abi": ^5.1.2
+    "@metamask/eth-sig-util": ^4.0.0
+    "@nomicfoundation/ethereumjs-block": 5.0.2
+    "@nomicfoundation/ethereumjs-blockchain": 7.0.2
+    "@nomicfoundation/ethereumjs-common": 4.0.2
+    "@nomicfoundation/ethereumjs-evm": 2.0.2
+    "@nomicfoundation/ethereumjs-rlp": 5.0.2
+    "@nomicfoundation/ethereumjs-statemanager": 2.0.2
+    "@nomicfoundation/ethereumjs-trie": 6.0.2
+    "@nomicfoundation/ethereumjs-tx": 5.0.2
+    "@nomicfoundation/ethereumjs-util": 9.0.2
+    "@nomicfoundation/ethereumjs-vm": 7.0.2
+    "@nomicfoundation/solidity-analyzer": ^0.1.0
+    "@sentry/node": ^5.18.1
+    "@types/bn.js": ^5.1.0
+    "@types/lru-cache": ^5.1.0
+    adm-zip: ^0.4.16
+    aggregate-error: ^3.0.0
+    ansi-escapes: ^4.3.0
+    chalk: ^2.4.2
+    chokidar: ^3.4.0
+    ci-info: ^2.0.0
+    debug: ^4.1.1
+    enquirer: ^2.3.0
+    env-paths: ^2.2.0
+    ethereum-cryptography: ^1.0.3
+    ethereumjs-abi: ^0.6.8
+    find-up: ^2.1.0
+    fp-ts: 1.19.3
+    fs-extra: ^7.0.1
+    glob: 7.2.0
+    immutable: ^4.0.0-rc.12
+    io-ts: 1.10.4
+    keccak: ^3.0.2
+    lodash: ^4.17.11
+    mnemonist: ^0.38.0
+    mocha: ^10.0.0
+    p-map: ^4.0.0
+    raw-body: ^2.4.1
+    resolve: 1.17.0
+    semver: ^6.3.0
+    solc: 0.7.3
+    source-map-support: ^0.5.13
+    stacktrace-parser: ^0.1.10
+    tsort: 0.0.1
+    undici: ^5.14.0
+    uuid: ^8.3.2
+    ws: ^7.4.6
+  peerDependencies:
+    ts-node: "*"
+    typescript: "*"
+  peerDependenciesMeta:
+    ts-node:
+      optional: true
+    typescript:
+      optional: true
+  bin:
+    hardhat: internal/cli/bootstrap.js
+  checksum: da8762f29ac08b6178edaedf1bf4641e8bcf44759c944906af644519fa9d0d3fb6c30e87add3904d8899f9cebfbde47a8422e219ad0bb24226c6636f2d3ef7c2
+  languageName: node
+  linkType: hard
+
+"hardhat@npm:^2.17.1, hardhat@npm:^2.6.4":
   version: 2.17.3
   resolution: "hardhat@npm:2.17.3"
   dependencies:
@@ -17338,7 +17409,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   resolution: "monorepo@workspace:."
   dependencies:
     "@changesets/cli": ^2.26.2
-    hardhat: ^2.17.3
+    hardhat: ^2.17.1
     lefthook: ^1.3.8
     ts-node: ^10.9.1
     turbo: 1.6.3
@@ -20792,7 +20863,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"solidity-ast@npm:^0.4.26":
+"solidity-ast@npm:^0.4.51":
   version: 0.4.52
   resolution: "solidity-ast@npm:0.4.52"
   dependencies:
