@@ -57,7 +57,7 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
           const filledBatchEndIndices = events 
             .filter(({ inner }) => typeof inner === "number")
             .map(({ inner }) => inner as number);
-          const latestMerkleIndexFromFiledBatches =
+          const latestMerkleIndexFromFilledBatches =
             filledBatchEndIndices.length > 0
               ? maxArray(filledBatchEndIndices)
               : undefined;
@@ -68,7 +68,7 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
               : undefined;
 
           const latestNewlySyncedMerkleIndex = maxNullish(
-            latestMerkleIndexFromFiledBatches,
+            latestMerkleIndexFromFilledBatches,
             latestMerkleIndexFromNotes
           );
 
@@ -86,8 +86,14 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
 
           from = highestTotalEntityIndex + 1n;
         } else {
+          // otherwise, there are no more new notes / tree insertions to fetch
+          // however, there may have been a subtree update, which we need to notify the sdk of
+          // so we check for that here
           const toBlockTEI = TotalEntityIndexTrait.fromBlockNumber(toBlock, "THROUGH");
 
+          // check the latest committed merkle index
+          // if it's bigger than the one from the last iteration,
+          // then emit an empty diff with only the latest committed merkle index
           if (latestCommittedMerkleIndex && newLatestCommittedMerkleIndex && newLatestCommittedMerkleIndex > latestCommittedMerkleIndex) {
             latestCommittedMerkleIndex = newLatestCommittedMerkleIndex;
 
