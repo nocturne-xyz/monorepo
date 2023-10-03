@@ -84,12 +84,20 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             const router = this.getSwapRouter();
             const handlerAddress = this.config.handlerAddress;
 
-            const erc20InContract = new ethers.Contract(tokenIn, ERC20_ABI);
+            const erc20InContract = new ethers.Contract(
+              tokenIn,
+              ERC20_ABI,
+              this.provider
+            );
             const tokenInDecimals = Number(await erc20InContract.decimals());
             const tokenInSymbol: string = await erc20InContract.symbol();
             const tokenInName: string = await erc20InContract.name();
 
-            const erc20OutContract = new ethers.Contract(tokenOut, ERC20_ABI);
+            const erc20OutContract = new ethers.Contract(
+              tokenOut,
+              ERC20_ABI,
+              this.provider
+            );
             const tokenOutDecimals = Number(await erc20OutContract.decimals());
             const tokenOutSymbol: string = await erc20OutContract.symbol();
             const tokenOutName: string = await erc20OutContract.name();
