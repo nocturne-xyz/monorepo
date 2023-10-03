@@ -20,6 +20,7 @@ import {
 import { ethers } from "ethers";
 import JSBI from "jsbi";
 import ERC20_ABI from "../abis/ERC20.json";
+import { getSwapRoute } from "./helpers";
 
 const UniswapV3_NAME = "uniswapV3";
 
@@ -80,60 +81,16 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 `UniswapV3 not supported on chain with id: ${this._op.chainId}`
               );
             }
-
-            const router = this.getSwapRouter();
-            const handlerAddress = this.config.handlerAddress;
-
-            const erc20InContract = new ethers.Contract(
-              tokenIn,
-              ERC20_ABI,
-              this.provider
-            );
-            const tokenInDecimals = Number(await erc20InContract.decimals());
-            const tokenInSymbol: string = await erc20InContract.symbol();
-            const tokenInName: string = await erc20InContract.name();
-
-            const erc20OutContract = new ethers.Contract(
-              tokenOut,
-              ERC20_ABI,
-              this.provider
-            );
-            const tokenOutDecimals = Number(await erc20OutContract.decimals());
-            const tokenOutSymbol: string = await erc20OutContract.symbol();
-            const tokenOutName: string = await erc20OutContract.name();
-
-            const swapOpts: SwapOptionsSwapRouter02 = {
-              type: SwapType.SWAP_ROUTER_02,
-              simulate: {
-                fromAddress: handlerAddress,
-              },
-              recipient: handlerAddress,
-              slippageTolerance: new Percent(maxSlippageBps, 10_000),
-              deadline: Date.now() + 3_600,
-            };
-            const chainId = chainIdToUniswapChainIdType(this._op.chainId);
-            const route = await router.route(
-              CurrencyAmount.fromRawAmount(
-                new Token(
-                  chainId,
-                  tokenIn,
-                  tokenInDecimals,
-                  tokenInSymbol,
-                  tokenInName
-                ),
-                Number(inAmount) // TODO: truncation ok?
-              ),
-              new Token(
-                chainId,
-                tokenOut,
-                tokenOutDecimals,
-                tokenOutSymbol,
-                tokenOutName
-              ),
-              TradeType.EXACT_INPUT,
-              swapOpts
-            );
-
+            const route = await getSwapRoute({
+              swapRouter: this.getSwapRouter(),
+              chainId: this._op.chainId,
+              provider: this.provider,
+              fromAddress: this.config.handlerAddress,
+              tokenInAddress: tokenIn,
+              amountIn: inAmount,
+              tokenOutAddress: tokenOut,
+              maxSlippageBps,
+            });
             if (!route) {
               throw new Error(
                 `No route found for swap. Token in: ${tokenIn}, Token out: ${tokenOut}. Amount in: ${inAmount}`
@@ -167,7 +124,11 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               inAmount,
               tokenOut,
             };
-
+            const erc20InContract = new ethers.Contract(
+              tokenIn,
+              ERC20_ABI,
+              this.provider
+            );
             // If router contract doesn't have high enough allowance, set to max for handler ->
             // router. Anyone can set allowance on handler so might as well set to max.
             if (

@@ -12,58 +12,70 @@ import {
   SwapRoute,
   SwapType,
 } from "@uniswap/smart-order-router";
-import { ethers } from "ethers";
+import { ethers, providers } from "ethers";
 import ERC20_ABI from "../abis/ERC20.json";
 
-export async function getSwapRoute(
-  swapRouter: AlphaRouter,
-  chainId: bigint,
-  provider: ethers.providers.BaseProvider,
-  fromAddress: Address,
-  tokenIn: Address,
-  inAmount: bigint,
-  tokenOut: Address
-): Promise<SwapRoute> {
-  const erc20InContract = new ethers.Contract(tokenIn, ERC20_ABI, provider);
-  const tokenInDecimals = Number(await erc20InContract.decimals());
-  const tokenInSymbol: string = await erc20InContract.symbol();
-  const tokenInName: string = await erc20InContract.name();
+export interface GetSwapRouteParams {
+  swapRouter: AlphaRouter;
+  chainId: bigint;
+  provider: providers.Provider;
+  fromAddress: Address;
+  tokenInAddress: Address;
+  amountIn: bigint;
+  tokenOutAddress: Address;
+  maxSlippageBps: number;
+}
+export async function getSwapRoute({
+  swapRouter,
+  chainId,
+  provider,
+  fromAddress,
+  tokenInAddress,
+  amountIn,
+  tokenOutAddress,
+  maxSlippageBps,
+}: GetSwapRouteParams): Promise<SwapRoute | null> {
+  const uniswapChainId = chainIdToUniswapChainIdType(chainId);
+  const erc20InContract = new ethers.Contract(
+    tokenInAddress,
+    ERC20_ABI,
+    provider
+  );
+  const tokenIn = new Token(
+    uniswapChainId,
+    tokenInAddress,
+    await erc20InContract.decimals(),
+    await erc20InContract.symbol(),
+    await erc20InContract.name()
+  );
 
-  const erc20OutContract = new ethers.Contract(tokenOut, ERC20_ABI, provider);
-  const tokenOutDecimals = Number(await erc20OutContract.decimals());
-  const tokenOutSymbol: string = await erc20OutContract.symbol();
-  const tokenOutName: string = await erc20OutContract.name();
+  const erc20OutContract = new ethers.Contract(
+    tokenOutAddress,
+    ERC20_ABI,
+    provider
+  );
+  const tokenOut = new Token(
+    uniswapChainId,
+    tokenInAddress,
+    await erc20OutContract.decimals(),
+    await erc20OutContract.symbol(),
+    await erc20OutContract.name()
+  );
 
   const swapOpts: SwapOptionsSwapRouter02 = {
     type: SwapType.SWAP_ROUTER_02,
     recipient: fromAddress,
-    slippageTolerance: new Percent(100, 10_000),
+    slippageTolerance: new Percent(maxSlippageBps, 10_000),
     deadline: Date.now() + 3_600,
   };
-  const uniswapChainId = chainIdToUniswapChainIdType(chainId);
   const route = await swapRouter.route(
-    CurrencyAmount.fromRawAmount(
-      new Token(
-        uniswapChainId,
-        tokenIn,
-        tokenInDecimals,
-        tokenInSymbol,
-        tokenInName
-      ),
-      Number(inAmount) // TODO: truncation ok?
-    ),
-    new Token(
-      uniswapChainId,
-      tokenOut,
-      tokenOutDecimals,
-      tokenOutSymbol,
-      tokenOutName
-    ),
+    CurrencyAmount.fromRawAmount(tokenIn, amountIn.toString()),
+    tokenOut,
     TradeType.EXACT_INPUT,
     swapOpts
   );
 
-  return route!;
+  return route;
 }
 
 export function chainIdToUniswapChainIdType(chainId: bigint): ChainId {
