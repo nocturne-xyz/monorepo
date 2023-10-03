@@ -97,6 +97,7 @@ import {
   getTokenContract,
   toDepositRequest,
 } from "./utils";
+import { Mutex } from "async-mutex";
 
 export interface NocturneSdkOptions {
   // interface for fetching deposit data from subgraph and screener
@@ -988,7 +989,7 @@ export class NocturneSdk implements NocturneSdkApi {
         const { wethAmount } = params;
         operationRequest = await builder
           .use(WstethAdapterPlugin)
-          .convertWethToWsteth(wethAmount)
+          .depositWethForWsteth(wethAmount)
           .build();
         action = {
           type: "Action",
