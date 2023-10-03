@@ -22,8 +22,8 @@ export class HasuraDepositAdapter implements DepositAdapter {
   }
   
   async fetchDepositRequestsBySpender(spender: Address): Promise<DepositHandle[]> {
-    spender = hexToBytea(spender);
-    const { data, error } = await this.client.query<FetchDepositRequestsQuery>(DepositRequestsBySpender, { spender });
+    const spenderBytea = hexToBytea(spender);
+    const { data, error } = await this.client.query<FetchDepositRequestsQuery>(DepositRequestsBySpender, { spender: spenderBytea });
     if (error || !data) {
       throw new Error(error?.message ?? "Deposit request query failed");
     }
