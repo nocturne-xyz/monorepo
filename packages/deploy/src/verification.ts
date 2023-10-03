@@ -62,6 +62,7 @@ export class NocturneDeploymentVerification {
       proms.push(verifyProxyContract(this.verificationData.chain, proxy));
     }
     for (const other of Object.values(this.verificationData.others)) {
+      console.log(`Verifying contract: ${other.contractName}`);
       proms.push(verifyContract(this.verificationData.chain, other));
     }
 
