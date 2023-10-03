@@ -1,4 +1,4 @@
-import { maxArray, sleep, max } from "../../../utils";
+import { maxArray, sleep, max, maxNullish } from "../../../utils";
 import {
   EncryptedStateDiff,
   SDKIterSyncOpts,
@@ -122,7 +122,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
           const filledBatchEndIndices = sdkEvents
             .filter(({ inner }) => typeof inner === "number")
             .map(({ inner }) => inner as number);
-          const latestMerkleIndexFromFiledBatches =
+          const latestMerkleIndexFromFilledBatches =
             filledBatchEndIndices.length > 0
               ? maxArray(filledBatchEndIndices)
               : undefined;
@@ -132,18 +132,10 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
               ? maxArray(Array.from(notes.map((n) => n.inner.merkleIndex)))
               : undefined;
 
-          let latestNewlySyncedMerkleIndex: number | undefined;
-          if (latestMerkleIndexFromFiledBatches === undefined) {
-            latestNewlySyncedMerkleIndex = latestMerkleIndexFromNotes;
-          } else if (latestMerkleIndexFromNotes === undefined) {
-            latestNewlySyncedMerkleIndex = latestMerkleIndexFromFiledBatches;
-          } else {
-            // both are defined
-            latestNewlySyncedMerkleIndex = max(
-              latestMerkleIndexFromFiledBatches,
-              latestMerkleIndexFromNotes
-            );
-          }
+          const latestNewlySyncedMerkleIndex = maxNullish(
+            latestMerkleIndexFromFilledBatches,
+            latestMerkleIndexFromNotes
+          );
 
           const stateDiff: EncryptedStateDiff = {
             notes,
@@ -167,7 +159,8 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
           from = highestTotalEntityIndex + 1n;
         } else {
           // otherwise, there are no more new notes / tree insertions to fetch
-          // however, there may have been a subtree update, so we check for that here
+          // however, there may have been a subtree update, which we need to notify the sdk of
+          // so we check for that here
           const currentBlockTotalEntityIndex =
             TotalEntityIndexTrait.fromBlockNumber(latestIndexedBlock);
 
