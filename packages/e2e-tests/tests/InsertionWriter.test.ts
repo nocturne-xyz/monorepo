@@ -156,7 +156,11 @@ describe("InsertionWriter", () => {
 
     // do an op
     const eoaAddr = await eoa.getAddress();
-    const opRequest = await newOpRequestBuilder(eoa.provider, 31337n, config)
+    const opRequest = await newOpRequestBuilder(
+      eoa.provider as ethers.providers.JsonRpcProvider,
+      31337n,
+      config
+    )
       .use(Erc20Plugin)
       .gasPrice(0n)
       .erc20Transfer(asset.assetAddr, eoaAddr, 1n)

@@ -32,6 +32,11 @@ const DUMMY_GAS_ASSET: Asset = {
 };
 
 describe("handleGasForOperationRequest", async () => {
+  let provider: ethers.providers.JsonRpcProvider;
+  beforeEach(() => {
+    provider = ethers.getDefaultProvider() as ethers.providers.JsonRpcProvider;
+  });
+
   it("produces an operation request with gas price 0 and dummy gas asset when gasPrice set to 0", async () => {
     const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [500_000n, 500_000n],
@@ -46,7 +51,6 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
@@ -82,7 +86,6 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
@@ -125,7 +128,6 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
@@ -177,7 +179,6 @@ describe("handleGasForOperationRequest", async () => {
       db: nocturneDB,
     };
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
@@ -262,7 +263,6 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
 
     // Need 1M tokens to unwrap + op gas estimate (860k * 10)
@@ -312,7 +312,6 @@ describe("handleGasForOperationRequest", async () => {
       tokenConverter: new MockEthToTokenConverter(),
     };
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
 
     // Need 1M tokens to unwrap + op gas estimate with 1 joinsplit (860k * 10)

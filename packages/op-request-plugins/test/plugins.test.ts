@@ -34,7 +34,8 @@ describe("OpRequestBuilder", () => {
     const signer = new NocturneSigner(sk);
     const refundAddr = signer.generateRandomStealthAddress();
 
-    const provider = ethers.getDefaultProvider();
+    const provider =
+      ethers.getDefaultProvider() as ethers.providers.JsonRpcProvider;
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const recipient = ethers.utils.getAddress(
       "0x1E2cD78882b12d3954a049Fd82FFD691565dC0A5"
