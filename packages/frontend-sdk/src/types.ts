@@ -6,6 +6,7 @@ import {
   OperationMetadata,
   OperationStatusResponse,
 } from "@nocturne-xyz/core";
+import { AnonErc20SwapQuote } from "@nocturne-xyz/op-request-plugins";
 import { BigNumber, ContractReceipt, ethers } from "ethers";
 
 export interface Endpoints {
@@ -184,12 +185,6 @@ export type OpRequestParams =
 export interface DisplayDepositRequestWithMetadataAndStatus
   extends DisplayDepositRequestWithMetadata {
   onChainStatus?: OnChainDepositRequestStatus;
-}
-
-export interface AnonErc20SwapQuote {
-  exactQuote: string;
-  minimumAmountOut: string;
-  priceImpactBps: number;
 }
 
 export type AnonErc20SwapQuoteResponse =

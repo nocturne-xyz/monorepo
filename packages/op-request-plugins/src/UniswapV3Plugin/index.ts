@@ -155,4 +155,9 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
   };
 }
 
-export { getSwapRoute } from "./helpers";
+export {
+  getSwapRoute,
+  getSwapQuote,
+  GetSwapRouteParams,
+  AnonErc20SwapQuote,
+} from "./helpers";

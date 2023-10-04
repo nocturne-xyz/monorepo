@@ -65,9 +65,8 @@ import {
   Erc20Plugin,
   EthTransferAdapterPlugin,
   UniswapV3Plugin,
-  getSwapRoute,
+  getSwapQuote,
 } from "@nocturne-xyz/op-request-plugins";
-import { Percent } from "@uniswap/sdk-core";
 import { Mutex } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
@@ -556,7 +555,7 @@ export class NocturneSdk implements NocturneSdkApi {
     let response: AnonErc20SwapQuoteResponse;
     switch (protocol) {
       case "UNISWAP_V3":
-        const route = await getSwapRoute({
+        const quote = await getSwapQuote({
           chainId: this.sdkConfig.config.chainId,
           provider: this.provider,
           fromAddress: this.sdkConfig.config.handlerAddress,
@@ -565,16 +564,10 @@ export class NocturneSdk implements NocturneSdkApi {
           tokenOutAddress: tokenOut,
           maxSlippageBps,
         });
-        response = route
+        response = quote
           ? {
               success: true,
-              quote: {
-                exactQuote: route.quote.toExact(),
-                minimumAmountOut: route.trade
-                  .minimumAmountOut(new Percent(maxSlippageBps))
-                  .toExact(),
-                priceImpactBps: Number(route.trade.priceImpact.toFixed()) * 100,
-              },
+              quote,
             }
           : {
               success: false,

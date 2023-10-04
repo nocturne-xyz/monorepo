@@ -70,7 +70,7 @@ export async function getSwapRoute({
   const swapOpts: SwapOptionsSwapRouter02 = {
     type: SwapType.SWAP_ROUTER_02,
     recipient: fromAddress,
-    slippageTolerance: new Percent(maxSlippageBps, 100),
+    slippageTolerance: new Percent(maxSlippageBps, 10_000),
     deadline: Date.now() + 3_600,
   };
   const route = await swapRouter.route(
@@ -93,4 +93,26 @@ export function chainIdToUniswapChainIdType(chainId: bigint): ChainId {
     default:
       throw new Error(`chainId not supported: ${chainId}`);
   }
+}
+
+export interface AnonErc20SwapQuote {
+  exactQuote: string;
+  minimumAmountOut: number;
+  priceImpactBps: number;
+}
+
+export async function getSwapQuote(
+  params: GetSwapRouteParams
+): Promise<AnonErc20SwapQuote | null> {
+  const route = await getSwapRoute(params);
+  if (!route) {
+    return null;
+  }
+  return {
+    exactQuote: route.quote.toExact(),
+    minimumAmountOut: Number(
+      route.trade.minimumAmountOut(new Percent(50, 10_000)).toExact()
+    ),
+    priceImpactBps: Number(route.trade.priceImpact.toSignificant(4)),
+  };
 }
