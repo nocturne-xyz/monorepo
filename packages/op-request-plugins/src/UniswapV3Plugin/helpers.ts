@@ -15,30 +15,34 @@ import {
 import { ethers } from "ethers";
 import ERC20_ABI from "../abis/ERC20.json";
 
-export interface GetSwapRouteParams {
+export type GetSwapRouteParams = {
   chainId: bigint;
-  baseProvider: ethers.providers.BaseProvider;
+  provider: ethers.providers.JsonRpcProvider;
   fromAddress: Address;
   tokenInAddress: Address;
   amountIn: bigint;
   tokenOutAddress: Address;
   maxSlippageBps: number;
-}
+  router?: AlphaRouter;
+};
 
 export async function getSwapRoute({
   chainId,
-  baseProvider: provider,
+  provider,
   fromAddress,
   tokenInAddress,
   amountIn,
   tokenOutAddress,
   maxSlippageBps,
+  router,
 }: GetSwapRouteParams): Promise<SwapRoute | null> {
   const uniswapChainId = chainIdToUniswapChainIdType(chainId);
-  const swapRouter = new AlphaRouter({
-    chainId: uniswapChainId,
-    provider,
-  });
+  const swapRouter =
+    router ??
+    new AlphaRouter({
+      chainId: uniswapChainId,
+      provider,
+    });
   const erc20InContract = new ethers.Contract(
     tokenInAddress,
     ERC20_ABI,
@@ -51,7 +55,6 @@ export async function getSwapRoute({
     await erc20InContract.symbol(),
     await erc20InContract.name()
   );
-
   const erc20OutContract = new ethers.Contract(
     tokenOutAddress,
     ERC20_ABI,
@@ -59,12 +62,11 @@ export async function getSwapRoute({
   );
   const tokenOut = new Token(
     uniswapChainId,
-    tokenInAddress,
+    tokenOutAddress,
     await erc20OutContract.decimals(),
     await erc20OutContract.symbol(),
     await erc20OutContract.name()
   );
-
   const swapOpts: SwapOptionsSwapRouter02 = {
     type: SwapType.SWAP_ROUTER_02,
     recipient: fromAddress,
@@ -77,7 +79,6 @@ export async function getSwapRoute({
     TradeType.EXACT_INPUT,
     swapOpts
   );
-
   return route;
 }
 

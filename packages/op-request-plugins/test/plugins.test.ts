@@ -52,7 +52,11 @@ describe("OpRequestBuilder", () => {
       .deadline(2n)
       .build();
 
-    const erc20Contract = new ethers.Contract(shitcoin.assetAddr, ERC20_ABI);
+    const erc20Contract = new ethers.Contract(
+      shitcoin.assetAddr,
+      ERC20_ABI,
+      provider
+    );
 
     const wethAsset = AssetTrait.erc20AddressToAsset(WETH_ADDRESS);
     const wstethAsset = AssetTrait.erc20AddressToAsset(WSTETH_ADDRESS);

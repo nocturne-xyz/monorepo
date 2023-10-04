@@ -49,7 +49,11 @@ export function Erc20Plugin<EInner extends BaseOpRequestBuilder>(
         const encodedErc20 =
           AssetTrait.erc20AddressToAsset(tokenContractAddress);
 
-        const contract = new ethers.Contract(tokenContractAddress, ERC20_ABI);
+        const contract = new ethers.Contract(
+          tokenContractAddress,
+          ERC20_ABI,
+          this.provider
+        );
         const encodedFunction = contract.interface.encodeFunctionData(
           "transfer",
           [recipient, amount]

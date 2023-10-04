@@ -57,7 +57,7 @@ export interface TestActorMetrics {
 }
 
 export class TestActor {
-  provider: ethers.providers.Provider;
+  provider: ethers.providers.JsonRpcProvider;
   txSigner: ethers.Signer;
   teller: Teller;
   depositManager: DepositManager;
@@ -73,7 +73,7 @@ export class TestActor {
   _address?: Address;
 
   constructor(
-    provider: ethers.providers.Provider,
+    provider: ethers.providers.JsonRpcProvider,
     txSigner: ethers.Signer,
     teller: Teller,
     depositManager: DepositManager,

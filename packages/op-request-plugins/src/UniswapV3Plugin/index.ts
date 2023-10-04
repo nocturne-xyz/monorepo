@@ -10,18 +10,14 @@ import {
   RefundRequest,
   UnwrapRequest,
 } from "@nocturne-xyz/core";
-import { ChainId } from "@uniswap/sdk-core";
-import { AlphaRouter } from "@uniswap/smart-order-router";
 import { ethers } from "ethers";
 import JSBI from "jsbi";
 import ERC20_ABI from "../abis/ERC20.json";
 import { getSwapRoute } from "./helpers";
 
-const UniswapV3_NAME = "uniswapV3";
+const UNISWAP_V3_NAME = "uniswapV3";
 
 export interface UniswapV3PluginMethods {
-  getSwapRouter(): AlphaRouter;
-
   swap(
     tokenIn: Address,
     inAmount: bigint,
@@ -49,17 +45,6 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
     ...inner,
     use: use,
 
-    getSwapRouter(): AlphaRouter {
-      const chainId = chainIdToUniswapChainIdType(this._op.chainId);
-      const baseProvider = new ethers.providers.BaseProvider(
-        this.provider.getNetwork()
-      );
-      return new AlphaRouter({
-        provider: baseProvider,
-        chainId,
-      });
-    },
-
     swap(
       tokenIn: Address,
       inAmount: bigint,
@@ -70,7 +55,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
         async (resolve, reject) => {
           try {
             const swapRouterAddress =
-              this.config.protocolAllowlist.get(UniswapV3_NAME)?.address;
+              this.config.protocolAllowlist.get(UNISWAP_V3_NAME)?.address;
             if (!swapRouterAddress) {
               throw new Error(
                 `UniswapV3 not supported on chain with id: ${this._op.chainId}`
@@ -78,9 +63,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             }
             const route = await getSwapRoute({
               chainId: this._op.chainId,
-              baseProvider: new ethers.providers.BaseProvider(
-                this.provider.getNetwork()
-              ),
+              provider: this.provider,
               fromAddress: this.config.handlerAddress,
               tokenInAddress: tokenIn,
               amountIn: inAmount,
@@ -128,8 +111,12 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             // If router contract doesn't have high enough allowance, set to max for handler ->
             // router. Anyone can set allowance on handler so might as well set to max.
             if (
-              (await erc20InContract.allowance(swapRouterAddress)).toBigInt() <
-              inAmount
+              (
+                await erc20InContract.allowance(
+                  this.config.handlerAddress,
+                  swapRouterAddress
+                )
+              ).toBigInt() < inAmount
             ) {
               const approveAction: Action = {
                 contractAddress: tokenIn,
@@ -166,19 +153,6 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
       return this;
     },
   };
-}
-
-function chainIdToUniswapChainIdType(chainId: bigint): ChainId {
-  switch (chainId) {
-    case 1n:
-      return ChainId.MAINNET;
-    case 5n:
-      return ChainId.GOERLI;
-    case 11155111n:
-      return ChainId.SEPOLIA;
-    default:
-      throw new Error(`chainId not supported: ${chainId}`);
-  }
 }
 
 export { getSwapRoute } from "./helpers";

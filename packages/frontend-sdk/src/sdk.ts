@@ -578,9 +578,7 @@ export class NocturneSdk implements NocturneSdkApi {
       case "UNISWAP_V3":
         const route = await getSwapRoute({
           chainId: this.sdkConfig.config.chainId,
-          baseProvider: new ethers.providers.BaseProvider(
-            this.provider.getNetwork()
-          ),
+          provider: this.provider,
           fromAddress: this.sdkConfig.config.handlerAddress,
           tokenInAddress: tokenIn,
           amountIn,

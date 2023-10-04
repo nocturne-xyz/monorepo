@@ -44,7 +44,7 @@ export type OpRequestBuilderExt<E extends BaseOpRequestBuilder> = E & {
 
 // methods that are available by default on any implementor of `OpRequestBuilderExt`
 export interface BaseOpRequestBuilder {
-  provider: ethers.providers.Provider;
+  provider: ethers.providers.JsonRpcProvider;
   config: NocturneConfig;
 
   _op: OperationRequest;
@@ -120,7 +120,7 @@ export type UnwrapAmountAndPaymentsForAsset = {
 // the base OpRequestBuilder. This is the only thing users should explicitly construct.
 // to add functionality (erc20s, protocol integrations, etc), user should call `.use(plugin)` with the relevant plugin
 export function newOpRequestBuilder(
-  provider: ethers.providers.Provider,
+  provider: ethers.providers.JsonRpcProvider,
   chainId: bigint,
   config?: NocturneConfig // use override config instead of defaulting to builtin for chainid (for testing purposes)
 ): OpRequestBuilderExt<BaseOpRequestBuilder> {
