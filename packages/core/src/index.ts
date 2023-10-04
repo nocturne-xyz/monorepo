@@ -24,3 +24,8 @@ export {
 
 export { SparseMerkleProver } from "./SparseMerkleProver";
 export { encryptNote, decryptNote } from "./noteEncryption";
+export {
+  BLOCK_GAS_LIMIT,
+  maxGasForOperation,
+  gasCompensationForParams,
+} from "./gasCalculation";

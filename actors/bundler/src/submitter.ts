@@ -6,9 +6,8 @@ import {
   OperationStatus,
   parseEventsFromContractReceipt,
   SubmittableOperationWithNetworkInfo,
+  maxGasForOperation,
 } from "@nocturne-xyz/core";
-// TODO should there be a dedicated gas estimation package?
-import { maxGasForOperation } from "@nocturne-xyz/client";
 import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
 import { ethers } from "ethers";

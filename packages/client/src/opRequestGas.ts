@@ -9,13 +9,7 @@ import {
   JoinSplitRequest,
   OperationRequest,
 } from "./operationRequest/operationRequest";
-import {
-  BLOCK_GAS_LIMIT,
-  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
-  maxGasForOperation,
-  getJoinSplitRequestTotalValue,
-  getIncludedNotesFromOp,
-} from "./utils";
+import { getJoinSplitRequestTotalValue, getIncludedNotesFromOp } from "./utils";
 import {
   ERC20_ID,
   Operation,
@@ -31,6 +25,9 @@ import {
   groupByMap,
   partition,
   MapWithObjectKeys,
+  BLOCK_GAS_LIMIT,
+  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
+  maxGasForOperation,
 } from "@nocturne-xyz/core";
 
 // If gas asset refund is less than this amount * gasPrice denominated in the gas asset, refund will

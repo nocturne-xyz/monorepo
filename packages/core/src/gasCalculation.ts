@@ -2,7 +2,7 @@ import {
   OperationTrait,
   Operation,
   SubmittableOperationWithNetworkInfo,
-} from "@nocturne-xyz/core";
+} from ".";
 
 // Numbers and logic copied from contracts Types.sol
 export const BLOCK_GAS_LIMIT = 30_000_000n;
