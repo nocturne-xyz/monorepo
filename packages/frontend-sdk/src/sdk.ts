@@ -66,7 +66,10 @@ import {
   EthTransferAdapterPlugin,
   UniswapV3Plugin,
   WstethAdapterPlugin,
+  getSwapRoute,
 } from "@nocturne-xyz/op-request-plugins";
+import { Percent } from "@uniswap/sdk-core";
+import { Mutex } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
@@ -75,6 +78,7 @@ import { DepositAdapter, SubgraphDepositAdapter } from "./dataFetching";
 import { SnapStateSdk } from "./metamask";
 import { GetSnapOptions } from "./metamask/types";
 import {
+  AnonErc20SwapQuoteResponse,
   AnonSwapRequestParams,
   DepositHandle,
   DepositHandleWithReceipt,
@@ -97,7 +101,6 @@ import {
   getTokenContract,
   toDepositRequest,
 } from "./utils";
-import { Mutex } from "async-mutex";
 
 export interface NocturneSdkOptions {
   // interface for fetching deposit data from subgraph and screener
@@ -119,7 +122,7 @@ export class NocturneSdk implements NocturneSdkApi {
   protected joinSplitProverThunk: Thunk<WasmJoinSplitProver>;
   protected canonAddrSigCheckProverThunk: Thunk<WasmCanonAddrSigCheckProver>;
   protected endpoints: Endpoints;
-  protected config: NocturneSdkConfig;
+  protected sdkConfig: NocturneSdkConfig;
   protected _provider?: SupportedProvider;
   protected _snap: SnapStateApi;
   protected depositAdapter: DepositAdapter;
@@ -137,7 +140,7 @@ export class NocturneSdk implements NocturneSdkApi {
   constructor(options: NocturneSdkOptions = {}) {
     const networkName = options.networkName || "mainnet";
     const snapOptions = options.snap;
-    const config = getNocturneSdkConfig(networkName);
+    const sdkConfig = getNocturneSdkConfig(networkName);
 
     // HACK `@nocturne-xyz/local-prover` doesn't work with server components (imports a lot of unnecessary garbage)
     this.joinSplitProverThunk = thunk(async () => {
@@ -166,8 +169,8 @@ export class NocturneSdk implements NocturneSdkApi {
       return new WasmCanonAddrSigCheckProver(wasm, zkey, vkey);
     });
 
-    this.endpoints = config.endpoints;
-    this.config = config;
+    this.endpoints = sdkConfig.endpoints;
+    this.sdkConfig = sdkConfig;
     this._provider = options.provider;
     this._snap = new SnapStateSdk(snapOptions?.version, snapOptions?.snapId);
     this.syncMutex = new Mutex();
@@ -175,19 +178,19 @@ export class NocturneSdk implements NocturneSdkApi {
     this.signerThunk = thunk(() => this.getWindowSigner());
     this.depositManagerContractThunk = thunk(async () =>
       DepositManager__factory.connect(
-        this.config.config.depositManagerAddress,
+        this.sdkConfig.config.depositManagerAddress,
         await this.signerThunk()
       )
     );
     this.handlerContractThunk = thunk(async () =>
       Handler__factory.connect(
-        this.config.config.handlerAddress,
+        this.sdkConfig.config.handlerAddress,
         await this.signerThunk()
       )
     );
     this.canonAddrRegistryThunk = thunk(async () =>
       CanonicalAddressRegistry__factory.connect(
-        this.config.config.canonicalAddressRegistryAddress,
+        this.sdkConfig.config.canonicalAddressRegistryAddress,
         await this.signerThunk()
       )
     );
@@ -211,7 +214,7 @@ export class NocturneSdk implements NocturneSdkApi {
       return new NocturneClient(
         new NocturneViewer(vk, vkNonce),
         this.provider,
-        this.config.config,
+        this.sdkConfig.config,
         await SparseMerkleProver.loadFromKV(kv),
         this.db,
         new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
@@ -222,7 +225,7 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   protected get wethAddress(): string {
-    const address = this.config.config.erc20s.get("weth")?.address;
+    const address = this.sdkConfig.config.erc20s.get("weth")?.address;
     if (!address) {
       throw new Error("WETH address not found in Nocturne config");
     }
@@ -230,7 +233,7 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   protected get wstethAddress(): string {
-    const address = this.config.config.erc20s.get("wsteth")?.address;
+    const address = this.sdkConfig.config.erc20s.get("wsteth")?.address;
     if (!address) {
       throw new Error(`Wsteth address not found in Nocturne config`);
     }
@@ -252,7 +255,7 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   get opRequestBuilder(): OpRequestBuilder {
-    return newOpRequestBuilder(this.provider, this.config.config.chainId);
+    return newOpRequestBuilder(this.provider, this.sdkConfig.config.chainId);
   }
 
   protected async getWindowSigner(): Promise<ethers.Signer> {
@@ -321,7 +324,7 @@ export class NocturneSdk implements NocturneSdkApi {
             compressedCanonAddr,
             perCanonAddrNonce: nonce,
           },
-          chainId: BigInt(this.config.config.chainId),
+          chainId: BigInt(this.sdkConfig.config.chainId),
           registryAddress: registry.address,
         },
       });
@@ -440,19 +443,17 @@ export class NocturneSdk implements NocturneSdkApi {
     return this.performOperation(operationRequest, [actionMeta]);
   }
 
-  async initiateAnonErc20Swap(
-    params: AnonSwapRequestParams
-  ): Promise<OperationHandle> {
+  async initiateAnonErc20Swap({
+    protocol = "UNISWAP_V3",
+    ...params
+  }: AnonSwapRequestParams): Promise<OperationHandle> {
     let type: SwapTypes;
-    switch (params.protocol) {
-      case undefined:
-        type = "UNISWAP_V3_SWAP";
-        break;
+    switch (protocol) {
       case "UNISWAP_V3":
         type = "UNISWAP_V3_SWAP";
         break;
       default:
-        throw new Error(`Unsupported protocol: ${params.protocol}`);
+        throw new Error(`Unsupported protocol: ${protocol}`);
     }
     return this.createOpRequest({
       type,
@@ -565,6 +566,48 @@ export class NocturneSdk implements NocturneSdkApi {
     );
   }
 
+  async getAnonErc20SwapQuote({
+    tokenIn,
+    tokenOut,
+    amountIn,
+    maxSlippageBps = 50,
+    protocol = "UNISWAP_V3",
+  }: AnonSwapRequestParams): Promise<AnonErc20SwapQuoteResponse> {
+    let response: AnonErc20SwapQuoteResponse;
+    switch (protocol) {
+      case "UNISWAP_V3":
+        const route = await getSwapRoute({
+          chainId: this.sdkConfig.config.chainId,
+          baseProvider: new ethers.providers.BaseProvider(
+            this.provider.getNetwork()
+          ),
+          fromAddress: this.sdkConfig.config.handlerAddress,
+          tokenInAddress: tokenIn,
+          amountIn,
+          tokenOutAddress: tokenOut,
+          maxSlippageBps,
+        });
+        response = route
+          ? {
+              success: true,
+              quote: {
+                exactQuote: route.quote.toExact(),
+                minimumAmountOut: route.trade
+                  .minimumAmountOut(new Percent(maxSlippageBps))
+                  .toExact(),
+                priceImpactBps: Number(route.trade.priceImpact.toFixed()) * 100,
+              },
+            }
+          : {
+              success: false,
+              message: `No route found for swap. Token in: ${tokenIn}, Token out: ${tokenOut}. Amount in: ${amountIn}`,
+            };
+        break;
+      default:
+        throw new Error(`Unsupported protocol: ${protocol}`);
+    }
+    return response;
+  }
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
    * This includes all joinsplit tx inputs.
@@ -864,7 +907,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
   // ! TODO this is an atrocious signature to hand consumers
   getAvailableErc20s(): Map<string, Erc20Config> {
-    return this.config.config.erc20s;
+    return this.sdkConfig.config.erc20s;
   }
 
   /**

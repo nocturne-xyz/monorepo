@@ -12,23 +12,22 @@ import {
   SwapRoute,
   SwapType,
 } from "@uniswap/smart-order-router";
-import { ethers, providers } from "ethers";
+import { ethers } from "ethers";
 import ERC20_ABI from "../abis/ERC20.json";
 
 export interface GetSwapRouteParams {
-  swapRouter: AlphaRouter;
   chainId: bigint;
-  provider: providers.Provider;
+  baseProvider: ethers.providers.BaseProvider;
   fromAddress: Address;
   tokenInAddress: Address;
   amountIn: bigint;
   tokenOutAddress: Address;
   maxSlippageBps: number;
 }
+
 export async function getSwapRoute({
-  swapRouter,
   chainId,
-  provider,
+  baseProvider: provider,
   fromAddress,
   tokenInAddress,
   amountIn,
@@ -36,6 +35,10 @@ export async function getSwapRoute({
   maxSlippageBps,
 }: GetSwapRouteParams): Promise<SwapRoute | null> {
   const uniswapChainId = chainIdToUniswapChainIdType(chainId);
+  const swapRouter = new AlphaRouter({
+    chainId: uniswapChainId,
+    provider,
+  });
   const erc20InContract = new ethers.Contract(
     tokenInAddress,
     ERC20_ABI,
@@ -65,7 +68,7 @@ export async function getSwapRoute({
   const swapOpts: SwapOptionsSwapRouter02 = {
     type: SwapType.SWAP_ROUTER_02,
     recipient: fromAddress,
-    slippageTolerance: new Percent(maxSlippageBps, 10_000),
+    slippageTolerance: new Percent(maxSlippageBps, 100),
     deadline: Date.now() + 3_600,
   };
   const route = await swapRouter.route(

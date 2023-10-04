@@ -10,13 +10,8 @@ import {
   RefundRequest,
   UnwrapRequest,
 } from "@nocturne-xyz/core";
-import { ChainId, Percent, Token, TradeType } from "@uniswap/sdk-core";
-import {
-  AlphaRouter,
-  CurrencyAmount,
-  SwapOptionsSwapRouter02,
-  SwapType,
-} from "@uniswap/smart-order-router";
+import { ChainId } from "@uniswap/sdk-core";
+import { AlphaRouter } from "@uniswap/smart-order-router";
 import { ethers } from "ethers";
 import JSBI from "jsbi";
 import ERC20_ABI from "../abis/ERC20.json";
@@ -82,9 +77,10 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               );
             }
             const route = await getSwapRoute({
-              swapRouter: this.getSwapRouter(),
               chainId: this._op.chainId,
-              provider: this.provider,
+              baseProvider: new ethers.providers.BaseProvider(
+                this.provider.getNetwork()
+              ),
               fromAddress: this.config.handlerAddress,
               tokenInAddress: tokenIn,
               amountIn: inAmount,
@@ -184,3 +180,5 @@ function chainIdToUniswapChainIdType(chainId: bigint): ChainId {
       throw new Error(`chainId not supported: ${chainId}`);
   }
 }
+
+export { getSwapRoute } from "./helpers";

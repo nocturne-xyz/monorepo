@@ -183,3 +183,19 @@ export interface DisplayDepositRequestWithMetadataAndStatus
   extends DisplayDepositRequestWithMetadata {
   onChainStatus?: OnChainDepositRequestStatus;
 }
+
+export interface AnonErc20SwapQuote {
+  exactQuote: string;
+  minimumAmountOut: string;
+  priceImpactBps: number;
+}
+
+export type AnonErc20SwapQuoteResponse =
+  | {
+      success: true;
+      quote: AnonErc20SwapQuote;
+    }
+  | {
+      success: false;
+      message: string;
+    };
