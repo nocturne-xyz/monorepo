@@ -96,8 +96,8 @@ export function chainIdToUniswapChainIdType(chainId: bigint): ChainId {
 }
 
 export interface AnonErc20SwapQuote {
-  exactQuote: string;
-  minimumAmountOut: number;
+  exactQuoteWei: bigint;
+  minimumAmountOutWei: bigint;
   priceImpactBps: number;
 }
 
@@ -108,10 +108,19 @@ export async function getSwapQuote(
   if (!route) {
     return null;
   }
+  const erc20OutContract = new ethers.Contract(
+    params.tokenOutAddress,
+    ERC20_ABI,
+    params.provider
+  );
   return {
-    exactQuote: route.quote.toExact(),
-    minimumAmountOut: Number(
-      route.trade.minimumAmountOut(new Percent(50, 10_000)).toExact()
+    exactQuoteWei: BigInt(
+      Number(route.quote.toExact()) *
+        Math.pow(10, await erc20OutContract.decimals())
+    ),
+    minimumAmountOutWei: BigInt(
+      Number(route.trade.minimumAmountOut(new Percent(50, 10_000)).toExact()) *
+        Math.pow(10, await erc20OutContract.decimals())
     ),
     priceImpactBps: Number(route.trade.priceImpact.toSignificant(4)),
   };
