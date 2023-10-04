@@ -1,3 +1,4 @@
+import { ethers } from "ethers";
 import {
   DepositManager,
   DepositManager__factory,
@@ -6,16 +7,14 @@ import {
   ProxyAdmin__factory,
   Teller__factory,
 } from "@nocturne-xyz/contracts";
-import { ethers } from "ethers";
 import {
   NocturneContractDeployment,
   Erc20Config,
   ProtocolAddressWithMethods,
+  NocturneConfig,
 } from "@nocturne-xyz/config";
 import { proxyAdmin, proxyImplementation } from "./proxyUtils";
-import { assertOrErr, getSelector } from "./utils";
-import { NocturneConfig } from "@nocturne-xyz/config/dist/src/config";
-import { protocolWhitelistKey } from "@nocturne-xyz/core";
+import { assertOrErr, getSelector, protocolWhitelistKey } from "./utils";
 
 export async function checkNocturneDeployment(
   config: NocturneConfig,

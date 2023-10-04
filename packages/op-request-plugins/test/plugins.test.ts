@@ -8,9 +8,11 @@ import {
 } from "../src";
 import {
   newOpRequestBuilder,
+  OperationRequestWithMetadata,
+} from "@nocturne-xyz/client"
+import {
   NocturneSigner,
   generateRandomSpendingKey,
-  OperationRequestWithMetadata,
   AssetTrait,
 } from "@nocturne-xyz/core";
 import { ethers } from "ethers";

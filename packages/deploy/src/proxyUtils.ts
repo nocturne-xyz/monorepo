@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { Address } from "./utils";
+import { Address } from "@nocturne-xyz/core";
 
 export async function proxyImplementation(
   provider: ethers.providers.Provider,

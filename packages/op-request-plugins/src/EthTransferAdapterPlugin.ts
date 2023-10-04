@@ -1,14 +1,12 @@
+import { Action, AssetTrait, Address } from "@nocturne-xyz/core";
 import {
-  Action,
-  AssetTrait,
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
   OperationMetadataItem,
   BuilderItemToProcess,
   UnwrapRequest,
-  Address,
-} from "@nocturne-xyz/core";
+} from "@nocturne-xyz/client";
 import { EthTransferAdapter__factory } from "@nocturne-xyz/contracts";
 import ERC20_ABI from "./abis/ERC20.json";
 import { ethers } from "ethers";

@@ -3940,7 +3940,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/client@workspace:packages/client":
+"@nocturne-xyz/client@workspace:^, @nocturne-xyz/client@workspace:packages/client":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/client@workspace:packages/client"
   dependencies:
@@ -4394,6 +4394,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/op-request-plugins@workspace:packages/op-request-plugins"
   dependencies:
+    "@nocturne-xyz/client": "workspace:^"
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/core": "workspace:^"
