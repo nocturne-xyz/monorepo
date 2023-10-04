@@ -38,7 +38,6 @@ import {
   SparseMerkleProver,
   StealthAddress,
   StealthAddressTrait,
-  SubgraphSDKSyncAdapter,
   SubmittableOperationWithNetworkInfo,
   SyncOpts,
   Thunk,
@@ -75,11 +74,7 @@ import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
 import { NocturneSdkApi, SnapStateApi } from "./api";
-import {
-  DepositAdapter,
-  SubgraphAdapters,
-  SubgraphDepositAdapter,
-} from "./dataFetching";
+import { DepositAdapter, SubgraphAdapters } from "./dataFetching";
 import { SnapStateSdk } from "./metamask";
 import { GetSnapOptions } from "./metamask/types";
 import {
