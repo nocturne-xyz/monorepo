@@ -40,7 +40,8 @@ describe("signOperation", () => {
     const receiver = receiverSigner.canonicalAddress();
 
     // make operation request and prepare it
-    const provider = ethers.getDefaultProvider();
+    const provider =
+      ethers.getDefaultProvider() as ethers.providers.JsonRpcProvider;
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))

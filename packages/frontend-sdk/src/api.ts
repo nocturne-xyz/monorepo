@@ -13,6 +13,8 @@ import {
 import { ContractTransaction } from "ethers";
 import { GetSnapsResponse, Snap } from "./metamask/types";
 import {
+  AnonErc20SwapQuoteResponse,
+  AnonSwapRequestParams,
   DepositHandle,
   DepositHandleWithReceipt,
   DisplayDepositRequest,
@@ -82,6 +84,10 @@ export interface NocturneSdkApi {
     recipientAddress: Address
   ): Promise<OperationHandle>;
 
+  initiateAnonErc20Swap(
+    params: AnonSwapRequestParams
+  ): Promise<OperationHandle>;
+
   submitOperation(
     operation: SubmittableOperationWithNetworkInfo
   ): Promise<OperationHandle>;
@@ -138,6 +144,10 @@ export interface NocturneSdkApi {
    * Clears the sync DB, upon local dev restart or odd behavior in testnet.
    */
   clearSyncState(): Promise<void>;
+
+  getAnonErc20SwapQuote(
+    params: AnonSwapRequestParams
+  ): Promise<AnonErc20SwapQuoteResponse>;
 
   // *** ACCESSOR METHODS *** //
 

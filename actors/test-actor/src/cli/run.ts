@@ -126,7 +126,7 @@ export const run = new Command("run")
     const privateKey = process.env.TX_SIGNER_KEY;
     const rpcUrl = process.env.RPC_URL;
 
-    let provider: ethers.providers.Provider;
+    let provider: ethers.providers.JsonRpcProvider;
     let signer: ethers.Signer;
     if (relayerApiKey && relayerApiSecret) {
       const credentials = {

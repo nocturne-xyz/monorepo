@@ -103,7 +103,11 @@ describe("Optimistic nullifier tracking", () => {
 
     // make op request spending 200 tokens
     const amountToSpend = 200n;
-    const opRequest = await newOpRequestBuilder(eoa.provider, 31337n, config)
+    const opRequest = await newOpRequestBuilder(
+      eoa.provider as ethers.providers.JsonRpcProvider,
+      31337n,
+      config
+    )
       .__unwrap(erc20Asset, amountToSpend)
       .__action(erc20.address, encodedTransfer)
       .gasPrice(0n)
@@ -222,7 +226,10 @@ describe("Optimistic nullifier tracking", () => {
 
     // make op request spending 200 tokens
     const amountToSpend = 200n;
-    const opRequest = await newOpRequestBuilder(eoa.provider, 31337n)
+    const opRequest = await newOpRequestBuilder(
+      eoa.provider as ethers.providers.JsonRpcProvider,
+      31337n
+    )
       .__unwrap(erc20Asset, amountToSpend)
       .__action(erc20.address, encodedTransfer)
       .gasPrice(0n)

@@ -7,8 +7,6 @@ import {
   Handler,
   Handler__factory,
 } from "@nocturne-xyz/contracts";
-import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
-import { Mutex } from "async-mutex";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
   ActionMetadata,
@@ -16,59 +14,70 @@ import {
   AssetTrait,
   AssetType,
   AssetWithBalance,
+  BundlerOpTracker,
   ClosableAsyncIterator,
   DepositQuoteResponse,
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
-  newOpRequestBuilder,
+  MockEthToTokenConverter,
+  NocturneClient,
+  NocturneDB,
+  NocturneViewer,
+  OpRequestBuilder,
   OperationRequestWithMetadata,
   OperationStatusResponse,
+  PreSignOperation,
   ProvenOperation,
   RelayRequest,
+  RequestViewingKeyMethod,
   RpcRequestMethod,
+  SDKSyncAdapter,
+  SignCanonAddrRegistryEntryMethod,
   SignOperationMethod,
   SignedOperation,
+  SparseMerkleProver,
   StealthAddress,
   StealthAddressTrait,
   SubmittableOperationWithNetworkInfo,
   SyncOpts,
   Thunk,
   VerifyingKey,
+  compressPoint,
   computeOperationDigest,
   decomposeCompressedPoint,
   encodeEncodedAssetAddrWithSignBitsPI,
   hashDepositRequest,
   joinSplitPublicSignalsToArray,
+  newOpRequestBuilder,
+  packToSolidityProof,
   parseEventsFromContractReceipt,
   proveOperation,
   stringifyObjectValues,
   thunk,
   unpackFromSolidityProof,
-  NocturneClient,
-  RequestViewingKeyMethod,
-  NocturneViewer,
-  SparseMerkleProver,
-  NocturneDB,
-  MockEthToTokenConverter,
-  BundlerOpTracker,
-  PreSignOperation,
-  compressPoint,
-  SignCanonAddrRegistryEntryMethod,
-  packToSolidityProof,
-  OpRequestBuilder,
-  SDKSyncAdapter,
 } from "@nocturne-xyz/core";
+import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
 import {
   WasmCanonAddrSigCheckProver,
   WasmJoinSplitProver,
 } from "@nocturne-xyz/local-prover";
+import {
+  Erc20Plugin,
+  EthTransferAdapterPlugin,
+  UniswapV3Plugin,
+  getSwapQuote,
+} from "@nocturne-xyz/op-request-plugins";
+import { Mutex } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
 import { NocturneSdkApi, SnapStateApi } from "./api";
+import { DepositAdapter, SubgraphAdapters } from "./dataFetching";
 import { SnapStateSdk } from "./metamask";
 import { GetSnapOptions } from "./metamask/types";
 import {
+  AnonErc20SwapQuoteResponse,
+  AnonSwapRequestParams,
   DepositHandle,
   DepositHandleWithReceipt,
   DisplayDepositRequest,
@@ -77,9 +86,11 @@ import {
   GetBalanceOpts,
   NocturneSdkConfig,
   OnChainDepositRequestStatus,
+  OpRequestParams,
   OperationHandle,
   SupportedNetwork,
   SupportedProvider,
+  SwapTypes,
   SyncWithProgressOutput,
 } from "./types";
 import {
@@ -88,11 +99,6 @@ import {
   getTokenContract,
   toDepositRequest,
 } from "./utils";
-import {
-  Erc20Plugin,
-  EthTransferAdapterPlugin,
-} from "@nocturne-xyz/op-request-plugins";
-import { DepositAdapter, SubgraphAdapters } from "./dataFetching";
 
 const { SubgraphSDKSyncAdapter, SubgraphDepositAdapter } = SubgraphAdapters;
 
@@ -120,7 +126,7 @@ export class NocturneSdk implements NocturneSdkApi {
   protected joinSplitProverThunk: Thunk<WasmJoinSplitProver>;
   protected canonAddrSigCheckProverThunk: Thunk<WasmCanonAddrSigCheckProver>;
   protected endpoints: Endpoints;
-  protected config: NocturneSdkConfig;
+  protected sdkConfig: NocturneSdkConfig;
   protected _provider?: SupportedProvider;
   protected _snap: SnapStateApi;
   protected depositAdapter: DepositAdapter;
@@ -138,7 +144,7 @@ export class NocturneSdk implements NocturneSdkApi {
   constructor(options: NocturneSdkOptions = {}) {
     const networkName = options.networkName || "mainnet";
     const snapOptions = options.snap;
-    const config = getNocturneSdkConfig(networkName);
+    const sdkConfig = getNocturneSdkConfig(networkName);
 
     // HACK `@nocturne-xyz/local-prover` doesn't work with server components (imports a lot of unnecessary garbage)
     this.joinSplitProverThunk = thunk(async () => {
@@ -167,8 +173,8 @@ export class NocturneSdk implements NocturneSdkApi {
       return new WasmCanonAddrSigCheckProver(wasm, zkey, vkey);
     });
 
-    this.endpoints = config.endpoints;
-    this.config = config;
+    this.endpoints = sdkConfig.endpoints;
+    this.sdkConfig = sdkConfig;
     this._provider = options.provider;
     this._snap = new SnapStateSdk(snapOptions?.version, snapOptions?.snapId);
     this.syncMutex = new Mutex();
@@ -176,24 +182,29 @@ export class NocturneSdk implements NocturneSdkApi {
     this.signerThunk = thunk(() => this.getWindowSigner());
     this.depositManagerContractThunk = thunk(async () =>
       DepositManager__factory.connect(
-        this.config.config.depositManagerAddress,
+        this.sdkConfig.config.depositManagerAddress,
         await this.signerThunk()
       )
     );
     this.handlerContractThunk = thunk(async () =>
       Handler__factory.connect(
-        this.config.config.handlerAddress,
+        this.sdkConfig.config.handlerAddress,
         await this.signerThunk()
       )
     );
     this.canonAddrRegistryThunk = thunk(async () =>
       CanonicalAddressRegistry__factory.connect(
-        this.config.config.canonicalAddressRegistryAddress,
+        this.sdkConfig.config.canonicalAddressRegistryAddress,
         await this.signerThunk()
       )
     );
 
-    this.depositAdapter = options.depositAdapter ?? new SubgraphDepositAdapter(this.endpoints.subgraphEndpoint, this.endpoints.screenerEndpoint);
+    this.depositAdapter =
+      options.depositAdapter ??
+      new SubgraphDepositAdapter(
+        this.endpoints.subgraphEndpoint,
+        this.endpoints.screenerEndpoint
+      );
 
     const kv = new IdbKvStore(`nocturne-fe-sdk-${networkName}`);
     this.db = new NocturneDB(kv);
@@ -207,18 +218,23 @@ export class NocturneSdk implements NocturneSdkApi {
       return new NocturneClient(
         new NocturneViewer(vk, vkNonce),
         this.provider,
-        this.config.config,
+        this.sdkConfig.config,
         await SparseMerkleProver.loadFromKV(kv),
         this.db,
-        options.syncAdapter ?? new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
+        options.syncAdapter ??
+          new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
         new MockEthToTokenConverter(),
         new BundlerOpTracker(this.endpoints.bundlerEndpoint)
       );
     });
   }
 
-  protected get wethAddress(): string | undefined {
-    return this.config.config.erc20s.get("weth")?.address;
+  protected get wethAddress(): string {
+    const address = this.sdkConfig.config.erc20s.get("weth")?.address;
+    if (!address) {
+      throw new Error("WETH address not found in Nocturne config");
+    }
+    return address;
   }
 
   protected get provider(): SupportedProvider {
@@ -236,7 +252,7 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   get opRequestBuilder(): OpRequestBuilder {
-    return newOpRequestBuilder(this.provider, this.config.config.chainId);
+    return newOpRequestBuilder(this.provider, this.sdkConfig.config.chainId);
   }
 
   protected async getWindowSigner(): Promise<ethers.Signer> {
@@ -274,9 +290,7 @@ export class NocturneSdk implements NocturneSdkApi {
     const tx = await (
       await this.depositManagerContractThunk()
     ).instantiateETHMultiDeposit(values, depositAddr, { value: totalValue });
-    if (!this.wethAddress) {
-      throw new Error("WETH address not found in Nocturne config");
-    }
+
     return this.formDepositHandlesWithTxReceipt(tx);
   }
 
@@ -307,7 +321,7 @@ export class NocturneSdk implements NocturneSdkApi {
             compressedCanonAddr,
             perCanonAddrNonce: nonce,
           },
-          chainId: BigInt(this.config.config.chainId),
+          chainId: BigInt(this.sdkConfig.config.chainId),
           registryAddress: registry.address,
         },
       });
@@ -374,20 +388,12 @@ export class NocturneSdk implements NocturneSdkApi {
     amount: bigint,
     recipientAddress: Address
   ): Promise<OperationHandle> {
-    const operationRequest = await this.opRequestBuilder
-      .use(Erc20Plugin)
-      .erc20Transfer(erc20Address, recipientAddress, amount)
-      .build();
-
-    const actionMeta: ActionMetadata = {
-      type: "Action",
-      actionType: "Transfer",
-      recipientAddress,
+    return this.createOpRequest({
+      type: "ANON_TRANSFER",
       erc20Address,
+      recipientAddress,
       amount,
-    };
-
-    return this.performOperation(operationRequest, [actionMeta]);
+    });
   }
 
   /**
@@ -414,6 +420,24 @@ export class NocturneSdk implements NocturneSdkApi {
     };
 
     return this.performOperation(operationRequest, [actionMeta]);
+  }
+
+  async initiateAnonErc20Swap({
+    protocol = "UNISWAP_V3",
+    ...params
+  }: AnonSwapRequestParams): Promise<OperationHandle> {
+    let type: SwapTypes;
+    switch (protocol) {
+      case "UNISWAP_V3":
+        type = "UNISWAP_V3_SWAP";
+        break;
+      default:
+        throw new Error(`Unsupported protocol: ${protocol}`);
+    }
+    return this.createOpRequest({
+      type,
+      ...params,
+    });
   }
 
   /**
@@ -521,6 +545,40 @@ export class NocturneSdk implements NocturneSdkApi {
     );
   }
 
+  async getAnonErc20SwapQuote({
+    tokenIn,
+    tokenOut,
+    amountIn,
+    maxSlippageBps = 50,
+    protocol = "UNISWAP_V3",
+  }: AnonSwapRequestParams): Promise<AnonErc20SwapQuoteResponse> {
+    let response: AnonErc20SwapQuoteResponse;
+    switch (protocol) {
+      case "UNISWAP_V3":
+        const quote = await getSwapQuote({
+          chainId: this.sdkConfig.config.chainId,
+          provider: this.provider,
+          fromAddress: this.sdkConfig.config.handlerAddress,
+          tokenInAddress: tokenIn,
+          amountIn,
+          tokenOutAddress: tokenOut,
+          maxSlippageBps,
+        });
+        response = quote
+          ? {
+              success: true,
+              quote,
+            }
+          : {
+              success: false,
+              message: `No route found for swap. Token in: ${tokenIn}, Token out: ${tokenOut}. Amount in: ${amountIn}`,
+            };
+        break;
+      default:
+        throw new Error(`Unsupported protocol: ${protocol}`);
+    }
+    return response;
+  }
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
    * This includes all joinsplit tx inputs.
@@ -744,7 +802,8 @@ export class NocturneSdk implements NocturneSdkApi {
     ) {
       let count = 0;
       while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
-        latestSyncedMerkleIndex = (await client.sync({ ...syncOpts, timing: true })) ?? 0;
+        latestSyncedMerkleIndex =
+          (await client.sync({ ...syncOpts, timing: true })) ?? 0;
 
         if (count % refetchEvery === 0) {
           latestMerkleIndexOnChain =
@@ -819,7 +878,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
   // ! TODO this is an atrocious signature to hand consumers
   getAvailableErc20s(): Map<string, Erc20Config> {
-    return this.config.config.erc20s;
+    return this.sdkConfig.config.erc20s;
   }
 
   /**
@@ -914,5 +973,48 @@ export class NocturneSdk implements NocturneSdkApi {
       })
     );
   }
-}
 
+  private async createOpRequest(
+    params: OpRequestParams
+  ): Promise<OperationHandle> {
+    const chainId = BigInt((await this.provider.getNetwork()).chainId);
+    const builder = newOpRequestBuilder(this.provider, chainId);
+    let operationRequest: OperationRequestWithMetadata;
+    let action: ActionMetadata;
+    switch (params.type) {
+      case "ANON_TRANSFER": {
+        const { erc20Address, amount, recipientAddress } = params;
+
+        operationRequest = await builder
+          .use(Erc20Plugin)
+          .erc20Transfer(erc20Address, recipientAddress, amount)
+          .build();
+
+        action = {
+          type: "Action",
+          actionType: "Transfer",
+          recipientAddress,
+          erc20Address,
+          amount,
+        };
+        break;
+      }
+      case "UNISWAP_V3_SWAP": {
+        const { tokenIn, amountIn, tokenOut, maxSlippageBps } = params;
+        operationRequest = await builder
+          .use(UniswapV3Plugin)
+          .swap(tokenIn, amountIn, tokenOut, maxSlippageBps)
+          .build();
+        action = {
+          type: "Action",
+          actionType: "UniswapV3 Swap",
+          tokenIn,
+          inAmount: amountIn,
+          tokenOut,
+        };
+        break;
+      }
+    }
+    return this.performOperation(operationRequest, [action]);
+  }
+}

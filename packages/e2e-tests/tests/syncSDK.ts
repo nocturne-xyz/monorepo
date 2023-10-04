@@ -166,7 +166,11 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         );
 
       const chainId = BigInt((await provider.getNetwork()).chainId);
-      const builder = newOpRequestBuilder(provider, chainId, config);
+      const builder = newOpRequestBuilder(
+        provider as ethers.providers.JsonRpcProvider,
+        chainId,
+        config
+      );
       const opRequest = await builder
         .__unwrap(asset, 80n)
         .__action(token.address, transfer)

@@ -36,6 +36,10 @@ const { gatherNotes } = __private;
 
 chai.use(chaiAsPromised);
 
+let provider: ethers.providers.JsonRpcProvider;
+beforeEach(() => {
+  provider = ethers.getDefaultProvider() as ethers.providers.JsonRpcProvider;
+});
 describe("gatherNotes", () => {
   it("throws an error when attempting to overspend", async () => {
     const [nocturneDB] = await setup([100n], [stablescam]);
@@ -197,7 +201,6 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
@@ -252,7 +255,6 @@ describe("prepareOperation", async () => {
     const receiverSigner = new NocturneSigner(receiverRk);
     const receiver = receiverSigner.canonicalAddress();
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
@@ -305,7 +307,6 @@ describe("prepareOperation", async () => {
     };
     const refundAddr = signer.generateRandomStealthAddress();
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
@@ -367,7 +368,6 @@ describe("prepareOperation", async () => {
       .map((sk) => new NocturneSigner(sk))
       .map((signer) => signer.canonicalAddress());
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .confidentialPayment(shitcoin, 1n, receivers[0])
@@ -416,7 +416,6 @@ describe("prepareOperation", async () => {
 
     const refundAddr = signer.generateRandomStealthAddress();
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
@@ -496,7 +495,6 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
@@ -536,7 +534,6 @@ describe("prepareOperation", async () => {
       db: nocturneDB,
     };
 
-    const provider = ethers.getDefaultProvider();
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
