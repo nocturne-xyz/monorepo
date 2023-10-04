@@ -11,6 +11,7 @@ import { DepositScreenerScreener } from "../../../screener";
 import { DummyScreeningApi, ScreeningCheckerApi } from "../../../screening";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
 import { getRedis } from "./utils";
+import { Speed } from "@openzeppelin/defender-relay-client";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
@@ -78,6 +79,7 @@ const runProcess = new Command("processor")
 
     const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
     const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
+    const relayerSpeed = process.env.OZ_RELAYER_SPEED;
 
     const privateKey = process.env.TX_SIGNER_KEY;
     const rpcUrl = process.env.RPC_URL;
@@ -91,7 +93,7 @@ const runProcess = new Command("processor")
       };
       provider = new DefenderRelayProvider(credentials);
       signer = new DefenderRelaySigner(credentials, provider, {
-        speed: "average",
+        speed: (relayerSpeed as Speed) ?? "safeLow",
       });
     } else if (rpcUrl && privateKey) {
       provider = new ethers.providers.JsonRpcProvider(rpcUrl);

@@ -23,6 +23,7 @@ import {
   DefenderRelayProvider,
   DefenderRelaySigner,
 } from "@openzeppelin/defender-relay-client/lib/ethers";
+import { Speed } from "@openzeppelin/defender-relay-client";
 
 export const run = new Command("run")
   .summary("run test actor")
@@ -122,6 +123,7 @@ export const run = new Command("run")
 
     const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
     const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
+    const relayerSpeed = process.env.OZ_RELAYER_SPEED;
 
     const privateKey = process.env.TX_SIGNER_KEY;
     const rpcUrl = process.env.RPC_URL;
@@ -135,7 +137,7 @@ export const run = new Command("run")
       };
       provider = new DefenderRelayProvider(credentials);
       signer = new DefenderRelaySigner(credentials, provider, {
-        speed: "average",
+        speed: (relayerSpeed as Speed) ?? "safeLow",
       });
     } else if (rpcUrl && privateKey) {
       provider = new ethers.providers.JsonRpcProvider(rpcUrl);
