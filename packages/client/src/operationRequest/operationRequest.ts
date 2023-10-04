@@ -6,7 +6,7 @@ import {
   Asset,
   ExpectedRefund,
   OperationMetadata,
-} from "../primitives";
+} from "@nocturne-xyz/core";
 
 const ONE_DAY_SECONDS = 24 * 60 * 60;
 

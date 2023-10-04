@@ -74,7 +74,14 @@ export const __OPERATION_TYPES = {
 };
 
 export class OperationTrait {
-  static computeDigest(operation: PreSignOperation | SignedOperation | ProvenOperation | SignableOperationWithNetworkInfo | SubmittableOperationWithNetworkInfo): bigint {
+  static computeDigest(
+    operation:
+      | PreSignOperation
+      | SignedOperation
+      | ProvenOperation
+      | SignableOperationWithNetworkInfo
+      | SubmittableOperationWithNetworkInfo
+  ): bigint {
     return computeOperationDigest(operation);
   }
 
@@ -86,15 +93,15 @@ export class OperationTrait {
       | SignableOperationWithNetworkInfo
   ): string {
     return hashOperation(operation);
-  } 
+  }
 
-  static toSignableOperation(
+  static toSignable(
     op: PreSignOperation | SignedOperation | ProvenOperation
   ): SignableOperationWithNetworkInfo {
     return toSignableOperation(op);
   }
 
-  static toSubmittableOperation(
+  static toSubmittable(
     op: ProvenOperation
   ): SubmittableOperationWithNetworkInfo {
     return toSubmittableOperation(op);

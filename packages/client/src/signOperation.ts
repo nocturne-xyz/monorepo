@@ -4,18 +4,18 @@ import {
   PreSignOperation,
   PreProofJoinSplit,
   SignedOperation,
-  computeOperationDigest,
-} from "./primitives";
-import { JoinSplitInputs } from "./proof";
-import { NocturneSignature, NocturneSigner } from "@nocturne-xyz/crypto";
-import { encodeEncodedAssetAddrWithSignBitsPI } from "./proof/joinsplit";
-import { toSignableOperation } from "./primitives/operation";
+  JoinSplitInputs,
+  NocturneSigner,
+  encodeEncodedAssetAddrWithSignBitsPI,
+  NocturneSignature,
+  OperationTrait,
+} from "@nocturne-xyz/core";
 
 export function signOperation(
   signer: NocturneSigner,
   op: PreSignOperation
 ): SignedOperation {
-  const opDigest = computeOperationDigest(toSignableOperation(op));
+  const opDigest = OperationTrait.computeDigest(OperationTrait.toSignable(op));
   const opSig = signer.sign(opDigest);
 
   const joinSplits: PreProofJoinSplit[] = op.joinSplits.map((joinSplit) =>

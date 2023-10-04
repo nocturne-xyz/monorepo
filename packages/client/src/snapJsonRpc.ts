@@ -4,7 +4,7 @@ import {
   OperationWithMetadata,
   PreSignOperation,
   SignedOperation,
-} from "./primitives";
+} from "@nocturne-xyz/core";
 import {
   CanonAddress,
   NocturneSignature,

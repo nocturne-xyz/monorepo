@@ -1,3 +1,16 @@
+import {
+  SignedOperation,
+  PreSignOperation,
+  PreProofJoinSplit,
+  PreSignJoinSplit,
+  Note,
+  IncludedNote,
+  Asset,
+  MapWithObjectKeys,
+  merklePathToIndex,
+} from "@nocturne-xyz/core";
+import { JoinSplitRequest } from "../operationRequest";
+
 export function sortNotesByValue<T extends Note>(notes: T[]): T[] {
   return notes.sort((a, b) => {
     return Number(a.value - b.value);

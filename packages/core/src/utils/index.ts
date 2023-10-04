@@ -14,6 +14,8 @@ export {
   thunk,
   Thunk,
   ArrayElem,
+  consecutiveChunks,
+  omitIndices,
 } from "./functional";
 export { numberToStringPadded } from "./strings";
 export { assertOrErr } from "./error";
@@ -22,6 +24,7 @@ export {
   merkleIndexToSubtreeIndex,
   batchOffsetToLatestMerkleIndexInBatch,
   merklePathToIndex,
+  TreeConstants,
 } from "./treeUtils";
 export { MapWithObjectKeys, SetWithObjectKeys } from "./collections";
 export { Histogram, timed, timedAsync, sleep } from "./timing";

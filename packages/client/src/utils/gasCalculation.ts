@@ -1,7 +1,11 @@
-import { getTrackedAssets } from "./operation";
-import { Operation, SubmittableOperationWithNetworkInfo } from "./types";
+import {
+  OperationTrait,
+  Operation,
+  SubmittableOperationWithNetworkInfo,
+} from "@nocturne-xyz/core";
 
 // Numbers and logic copied from contracts Types.sol
+export const BLOCK_GAS_LIMIT = 30_000_000n;
 const GAS_PER_JOINSPLIT_VERIFY_SINGLE = 300_000n;
 const GAS_PER_JOINSPLIT_HANDLE = 110_000n;
 const GAS_PER_INSERTION_SUBTREE_UPDATE = 25_000n;
@@ -25,7 +29,7 @@ export function maxGasForOperation(
     numUniqueAssets = op.trackedAssets.length;
   } else {
     numJoinSplits = op.joinSplits.length;
-    numUniqueAssets = getTrackedAssets(op).length;
+    numUniqueAssets = OperationTrait.getTrackedAssets(op).length;
   }
 
   return gasCompensationForParams({

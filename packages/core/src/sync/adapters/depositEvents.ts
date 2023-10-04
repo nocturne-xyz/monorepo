@@ -1,9 +1,5 @@
-import {
-  DepositRequest,
-} from "../../primitives";
-import { 
-  ClosableAsyncIterator,
-} from "../closableAsyncIterator";
+import { DepositRequest } from "../../primitives";
+import { ClosableAsyncIterator } from "../closableAsyncIterator";
 import { TotalEntityIndex } from "../totalEntityIndex";
 import { IterSyncOpts } from "./shared";
 

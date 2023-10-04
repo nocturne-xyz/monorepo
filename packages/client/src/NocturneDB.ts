@@ -1,17 +1,20 @@
+import { ethers } from "ethers";
+import { OptimisticNFRecord, OptimisticOpDigestRecord } from "./types";
+import * as JSON from "bigint-json-serialization";
 import {
   Asset,
   AssetTrait,
   IncludedNote,
   NoteTrait,
   IncludedNoteWithNullifier,
-  OptimisticNFRecord,
-  OptimisticOpDigestRecord,
-} from "./primitives";
-import { numberToStringPadded, zip } from "./utils";
-import * as JSON from "bigint-json-serialization";
-import { KV, KVStore } from "./store";
-import { StateDiff, TotalEntityIndex, WithTotalEntityIndex } from "./sync";
-import { ethers } from "ethers";
+  zip,
+  numberToStringPadded,
+  KV,
+  KVStore,
+  StateDiff,
+  TotalEntityIndex,
+  WithTotalEntityIndex,
+} from "@nocturne-xyz/core";
 
 const NOTES_BY_INDEX_PREFIX = "NOTES_BY_INDEX";
 const NOTES_BY_ASSET_PREFIX = "NOTES_BY_ASSET";

@@ -1,4 +1,4 @@
-import { Address } from "../primitives";
+import { Address } from "@nocturne-xyz/core";
 
 export function protocolWhitelistKey(
   contractAddress: Address,

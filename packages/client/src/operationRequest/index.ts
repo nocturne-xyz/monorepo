@@ -4,6 +4,7 @@ export {
   OperationRequestWithMetadata,
   UnwrapRequest,
   RefundRequest,
+  JoinSplitRequest,
 } from "./operationRequest";
 export {
   OpRequestBuilder,

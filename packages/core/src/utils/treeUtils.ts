@@ -8,13 +8,19 @@ const SUBTREE_DEPTH = 2;
 const BATCH_SIZE = ARITY ** SUBTREE_DEPTH;
 const DEPTH_TO_SUBTREE = DEPTH - SUBTREE_DEPTH;
 
+// keccak256("nocturne") % BN254ScalarField.Modulus
+export const ZERO_VALUE = BN254ScalarField.create(
+  BigInt(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("nocturne")))
+);
+
 export const TreeConstants = {
   ARITY,
   DEPTH,
   SUBTREE_DEPTH,
   BATCH_SIZE,
   DEPTH_TO_SUBTREE,
-}:
+  ZERO_VALUE,
+};
 
 // Merkle leaf index to start index of the it's corresponding batch
 // E.g. merkleIndex 15 -> batchOffset 0, merkleIndex 28 -> batchOffset 16
@@ -39,12 +45,6 @@ export function batchOffsetToLatestMerkleIndexInBatch(
   );
   return batchOffset + BATCH_SIZE - 1;
 }
-
-
-// keccak256("nocturne") % BN254ScalarField.Modulus
-export const ZERO_VALUE = BN254ScalarField.create(
-  BigInt(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("nocturne")))
-);
 
 export function merklePathToIndex(
   pathIndices: bigint[],

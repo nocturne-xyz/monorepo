@@ -5,12 +5,11 @@ import {
 } from "@nocturne-xyz/crypto";
 import { JoinSplitInputs, MerkleProofInput, SolidityProof } from "../proof";
 import { IncludedNote, Note } from "./note";
-import { Asset, EncodedAsset } from "./asset";
+import { EncodedAsset } from "./asset";
 import { CompressedPoint } from "@nocturne-xyz/crypto/dist/src/pointCompression";
 
 export const BN254_SCALAR_FIELD_MODULUS =
   21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-export const BLOCK_GAS_LIMIT = 30_000_000n;
 export const SENDER_COMMITMENT_DOMAIN_SEPARATOR =
   5680996188676417870015190585682285899130949254168256752199352013418366665222n;
 
@@ -200,68 +199,6 @@ export enum DepositRequestStatus {
 export interface WithTimestamp<T> {
   inner: T;
   timestampUnixMillis: number;
-}
-
-export interface OptimisticNFRecord {
-  nullifier: bigint;
-}
-
-export interface OptimisticOpDigestRecord {
-  merkleIndices: number[];
-  expirationDate: number;
-  metadata?: OperationMetadata;
-}
-
-export interface OperationMetadata {
-  items: OperationMetadataItem[];
-}
-
-export type OperationMetadataItem =
-  | ConfidentialPaymentMetadata
-  | ActionMetadata;
-
-export type ActionMetadata =
-  | {
-      type: "Action";
-      actionType: "Transfer";
-      recipientAddress: Address;
-      erc20Address: Address;
-      amount: bigint;
-    }
-  | {
-      type: "Action";
-      actionType: "Weth To Wsteth";
-      amount: bigint;
-    }
-  | {
-      type: "Action";
-      actionType: "Transfer ETH";
-      to: Address;
-      value: bigint;
-    }
-  | {
-      type: "Action";
-      actionType: "UniswapV3 Swap";
-      tokenIn: Address;
-      inAmount: bigint;
-      tokenOut: Address;
-    };
-
-export interface ConfidentialPaymentMetadata {
-  type: "ConfidentialPayment";
-  recipient: CanonAddress;
-  asset: Asset;
-  amount: bigint;
-}
-
-export interface OpDigestWithMetadata {
-  opDigest: bigint;
-  metadata?: OperationMetadata;
-}
-
-export interface OperationWithMetadata<T extends Operation> {
-  op: T;
-  metadata?: OperationMetadata;
 }
 
 export interface CanonAddrRegistryEntry {

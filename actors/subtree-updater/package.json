@@ -45,7 +45,6 @@
     "winston": "^3.8.2"
   },
   "devDependencies": {
-    "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "@types/bn.js": "^5.1.1",
     "@types/chai": "^4.3.4",
     "@types/commander": "^2.12.2",
@@ -53,6 +52,7 @@
     "@types/node": "^18.8.0",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.44.0",
+    "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "chai": "^4.3.7",
     "concurrently": "^8.2.0",
     "eslint": "^8.28.0",

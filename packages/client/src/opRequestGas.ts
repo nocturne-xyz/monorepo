@@ -1,5 +1,8 @@
+import * as JSON from "bigint-json-serialization";
 import { Handler } from "@nocturne-xyz/contracts";
 import { NocturneViewer, StealthAddress } from "@nocturne-xyz/crypto";
+import { gatherNotes, prepareOperation } from "./prepareOperation";
+import { EthToTokenConverter } from "./conversion";
 import { NocturneDB } from "./NocturneDB";
 import {
   GasAccountedOperationRequest,
@@ -7,27 +10,28 @@ import {
   OperationRequest,
 } from "./operationRequest/operationRequest";
 import {
+  BLOCK_GAS_LIMIT,
+  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
+  maxGasForOperation,
+  getJoinSplitRequestTotalValue,
+  getIncludedNotesFromOp,
+} from "./utils";
+import {
+  ERC20_ID,
   Operation,
   OperationResult,
   Asset,
   PreSignOperation,
-  BLOCK_GAS_LIMIT,
   AssetType,
   ProvenJoinSplit,
   SubmittableOperationWithNetworkInfo,
-  toSubmittableOperation,
+  OperationTrait,
   IncludedNote,
-  maxGasForOperation,
-  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
-} from "./primitives";
-import { ERC20_ID } from "./primitives/asset";
-import { groupByMap, partition } from "./utils/functional";
-import { gatherNotes, prepareOperation } from "./prepareOperation";
-import { MapWithObjectKeys, getJoinSplitRequestTotalValue } from "./utils";
-import { SparseMerkleProver } from "./SparseMerkleProver";
-import { EthToTokenConverter } from "./conversion";
-import { getIncludedNotesFromOp } from "./primitives/typeHelpers";
-import * as JSON from "bigint-json-serialization";
+  SparseMerkleProver,
+  groupByMap,
+  partition,
+  MapWithObjectKeys,
+} from "@nocturne-xyz/core";
 
 // If gas asset refund is less than this amount * gasPrice denominated in the gas asset, refund will
 // not be processed and funds will be sent to bundler. This is because cost of processing would
@@ -417,7 +421,7 @@ function fakeProvenOperation(
     };
   }) as ProvenJoinSplit[];
 
-  return toSubmittableOperation({
+  return OperationTrait.toSubmittable({
     networkInfo: op.networkInfo,
     joinSplits: provenJoinSplits,
     refundAddr: op.refundAddr,

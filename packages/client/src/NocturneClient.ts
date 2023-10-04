@@ -1,3 +1,23 @@
+import ethers from "ethers";
+import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
+import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
+import { NocturneViewer } from "@nocturne-xyz/crypto";
+
+import {
+  OperationRequest,
+  ensureOpRequestChainInfo,
+} from "./operationRequest/operationRequest";
+import { GetNotesOpts, NocturneDB } from "./NocturneDB";
+import { handleGasForOperationRequest } from "./opRequestGas";
+import { prepareOperation } from "./prepareOperation";
+import { SyncOpts, syncSDK } from "./syncSDK";
+import { EthToTokenConverter } from "./conversion";
+import {
+  getMerkleIndicesAndNfsFromOp,
+  getJoinSplitRequestTotalValue,
+} from "./utils";
+import { OpTracker } from "./OpTracker";
+
 import {
   SignedOperation,
   PreSignOperation,
@@ -5,32 +25,17 @@ import {
   OptimisticNFRecord,
   OperationMetadata,
   OpDigestWithMetadata,
-  computeOperationDigest,
-} from "./primitives";
-import { NocturneViewer } from "@nocturne-xyz/crypto";
-import { handleGasForOperationRequest } from "./opRequestGas";
-import { prepareOperation } from "./prepareOperation";
-import {
-  OperationRequest,
-  ensureOpRequestChainInfo,
-} from "./operationRequest/operationRequest";
-import { GetNotesOpts, NocturneDB } from "./NocturneDB";
-import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
-import { ethers } from "ethers";
-import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
-import { Asset, AssetTrait } from "./primitives/asset";
-import { SDKSyncAdapter, TotalEntityIndexTrait } from "./sync";
-import { SyncOpts, syncSDK } from "./syncSDK";
-import {
+  AssetTrait,
+  Asset,
+  SparseMerkleProver,
   MapWithObjectKeys,
-  getJoinSplitRequestTotalValue,
   unzip,
-} from "./utils";
-import { SparseMerkleProver } from "./SparseMerkleProver";
-import { EthToTokenConverter } from "./conversion";
-import { getMerkleIndicesAndNfsFromOp } from "./primitives/typeHelpers";
-import { OpTracker } from "./OpTracker";
-import { getTotalEntityIndexOfNewestNoteInOp } from "./totalEntityIndexOfNewestNoteInOp";
+  maxArray,
+  SDKSyncAdapter,
+  TotalEntityIndex,
+  TotalEntityIndexTrait,
+  OperationTrait,
+} from "@nocturne-xyz/core";
 
 const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000; // 10 minutes
 const BUNDLER_RECEIVED_OP_BUFFER: number = 90 * 1000; // 90 seconds (buffer in case proof gen takes a while)
@@ -189,7 +194,7 @@ export class NocturneClient {
     metadata?: OperationMetadata
   ): Promise<void> {
     // Create op digest record
-    const opDigest = computeOperationDigest(op);
+    const opDigest = OperationTrait.computeDigest(op);
     const expirationDate = Date.now() + OPTIMISTIC_RECORD_TTL;
 
     // Create NF records
@@ -261,4 +266,27 @@ export class NocturneClient {
       Array.from(opDigestsToRemove)
     );
   }
+}
+
+export async function getTotalEntityIndexOfNewestNoteInOp(
+  db: NocturneDB,
+  op: PreSignOperation | SignedOperation
+): Promise<TotalEntityIndex> {
+  // get the max merkle index of any note in any joinsplit in the op
+  const maxMerkleIndex = maxArray(
+    getMerkleIndicesAndNfsFromOp(op).map(({ merkleIndex }) => merkleIndex)
+  );
+
+  // get the corresponding TotalEntityIndex
+  const totalEntityIndex = await db.getTotalEntityIndexForMerkleIndex(
+    Number(maxMerkleIndex)
+  );
+
+  if (totalEntityIndex === undefined) {
+    throw new Error(
+      `totalEntityIndex not found for newest note with merkle index ${maxMerkleIndex}`
+    );
+  }
+
+  return totalEntityIndex;
 }

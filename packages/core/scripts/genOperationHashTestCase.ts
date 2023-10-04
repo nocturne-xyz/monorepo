@@ -71,10 +71,10 @@ import { __OPERATION_TYPES } from "../src/primitives/operation";
 
   console.log("operation", operation);
 
-  const opHash = OperationTrait.hashOperation(operation);
+  const opHash = OperationTrait.hash(operation);
   console.log("operation hash", opHash);
 
-  const opDigest = OperationTrait.computeOperationDigest(operation);
+  const opDigest = OperationTrait.computeDigest(operation);
   console.log("operation digest", "0x" + opDigest.toString(16));
 
   const joinSplitHash = _TypedDataEncoder.hashStruct(

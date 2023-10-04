@@ -1,21 +1,21 @@
 import { NocturneViewer } from "@nocturne-xyz/crypto";
 import { NocturneDB } from "./NocturneDB";
 import {
-  EncryptedStateDiff,
-  StateDiff,
-  SDKSyncAdapter,
-  TotalEntityIndexTrait,
-} from "./sync";
-import {
   IncludedEncryptedNote,
   IncludedNote,
   IncludedNoteCommitment,
   NoteTrait,
-} from "./primitives";
-import { SparseMerkleProver } from "./SparseMerkleProver";
-import { consecutiveChunks } from "./utils/functional";
-import { Histogram, timed, timedAsync } from "./utils";
-import { decryptNote } from "./noteEncryption";
+  EncryptedStateDiff,
+  StateDiff,
+  SDKSyncAdapter,
+  TotalEntityIndexTrait,
+  decryptNote,
+  SparseMerkleProver,
+  consecutiveChunks,
+  timed,
+  timedAsync,
+  Histogram,
+} from "@nocturne-xyz/core";
 
 export interface SyncOpts {
   endBlock?: number;
