@@ -1,6 +1,10 @@
+import { exec } from "child_process";
 import { ethers } from "ethers";
+import { promisify } from "util";
 
 export type Address = string;
+
+export const execAsync = promisify(exec);
 
 export function assertOrErr(condition: boolean, error?: string): void {
   if (!condition) {

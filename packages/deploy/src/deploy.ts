@@ -18,7 +18,6 @@ import {
   WstethAdapter__factory,
   EthTransferAdapter__factory,
   WstethAdapter,
-  EthTransferAdapter,
   RethAdapter,
   RethAdapter__factory,
   IPoseidonExtT7__factory,
@@ -38,6 +37,16 @@ import { Address, getSelector } from "./utils";
 import { protocolWhitelistKey } from "@nocturne-xyz/core";
 import * as fs from "fs";
 import findWorkspaceRoot from "find-yarn-workspace-root";
+import {
+  ContractVerification,
+  NocturneDeploymentVerification,
+  NocturneDeploymentVerificationData,
+  NocturneOthersContractName,
+  NocturneProxyContractName,
+  ProxyContractVerification,
+  isNocturneOther,
+  isNocturneProxy,
+} from "./verification";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const POSEIDON_EXT_T7_BYTECODE = fs.readFileSync(
@@ -45,38 +54,56 @@ const POSEIDON_EXT_T7_BYTECODE = fs.readFileSync(
   "utf-8"
 );
 
+export interface NocturneContractDeploymentAndVerificationData {
+  contracts: NocturneContractDeployment;
+  verification: NocturneDeploymentVerificationData;
+}
+
+export interface NocturneConfigAndVerification {
+  config: NocturneConfig;
+  verification: NocturneDeploymentVerification;
+}
+
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
   config: NocturneDeployConfig
-): Promise<NocturneConfig> {
+): Promise<NocturneConfigAndVerification> {
   if (!connectedSigner.provider)
     throw new Error("ethers.Wallet must be connected to provider");
+
+  // Deploy core contracts
+  const { contracts, verification } = await deployNocturneCoreContracts(
+    connectedSigner,
+    config
+  );
 
   // Maybe deploy erc20s
   const erc20s = await maybeDeployErc20s(connectedSigner, config.erc20s);
   config.erc20s = erc20s;
 
   // Deploy eth transfer adapter
-  const ethTransferAdapter = await deployEthTransferAdapter(
-    connectedSigner,
-    config.wethAddress,
+  const ethTransferAdapter = await deployContract(
+    new EthTransferAdapter__factory(connectedSigner),
+    [config.wethAddress],
+    verification.others,
     config.opts
   );
 
-  // Maybe deploy wsteth/reth adapters, depending on deploy config
+  // Maybe deploy wsteth adapter, depending on deploy config
   const maybeWstethAdapter = await maybeDeployWstethAdapter(
     connectedSigner,
     config.wethAddress,
-    config.opts
-  );
-  const maybeRethAdapter = await maybeDeployRethAdapter(
-    connectedSigner,
-    config.wethAddress,
+    verification.others,
     config.opts
   );
 
-  // Deploy core contracts
-  const contracts = await deployNocturneCoreContracts(connectedSigner, config);
+  // Maybe deploy reth adapter, depending on deploy config
+  const maybeRethAdapter = await maybeDeployRethAdapter(
+    connectedSigner,
+    config.wethAddress,
+    verification.others,
+    config.opts
+  );
 
   // Set erc20 caps
   const depositManager = DepositManager__factory.connect(
@@ -134,21 +161,32 @@ export async function deployNocturne(
 
   await relinquishContractOwnership(connectedSigner, config, contracts);
 
-  return NocturneConfig.fromObject({
-    contracts,
-    erc20s: Array.from(erc20s.entries()),
-    protocolAllowlist: Array.from(config.protocolAllowlist.entries()),
-  });
+  return {
+    config: NocturneConfig.fromObject({
+      contracts,
+      erc20s: Array.from(erc20s.entries()),
+      protocolAllowlist: Array.from(config.protocolAllowlist.entries()),
+    }),
+    verification: new NocturneDeploymentVerification(verification),
+  };
 }
 
 export async function deployNocturneCoreContracts(
   connectedSigner: ethers.Wallet,
   config: NocturneDeployConfig
-): Promise<NocturneContractDeployment> {
+): Promise<NocturneContractDeploymentAndVerificationData> {
   console.log("\ngetting network...");
   const { name, chainId } = await connectedSigner.provider.getNetwork();
   console.log("\nfetching current block number...");
   const startBlock = await connectedSigner.provider.getBlockNumber();
+
+  // Start map of proxy verification objects
+  const proxyVerifications: {
+    [T in NocturneProxyContractName]: ProxyContractVerification<T>;
+  } = {} as any;
+  const otherVerifications: {
+    [T in NocturneOthersContractName]: ContractVerification<T>;
+  } = {} as any;
 
   // Maybe deploy proxy admin
   const { opts, leftoverTokenHolder } = config;
@@ -161,34 +199,44 @@ export async function deployNocturneCoreContracts(
   }
 
   console.log("\ndeploying JoinSplitVerifier...");
-  const joinSplitVerifier = await new JoinSplitVerifier__factory(
-    connectedSigner
-  ).deploy();
-  await joinSplitVerifier.deployTransaction.wait(opts?.confirmations);
+  const joinSplitVerifier = await deployContract(
+    new JoinSplitVerifier__factory(connectedSigner),
+    [],
+    otherVerifications,
+    opts
+  );
 
   let subtreeUpdateVerifier: SubtreeUpdateVerifier | TestSubtreeUpdateVerifier;
   console.log("\ndeploying SubtreeUpdateVerifier...");
   if (opts?.useMockSubtreeUpdateVerifier) {
-    subtreeUpdateVerifier = await new TestSubtreeUpdateVerifier__factory(
-      connectedSigner
-    ).deploy();
+    subtreeUpdateVerifier = await deployContract(
+      new TestSubtreeUpdateVerifier__factory(connectedSigner),
+      [],
+      otherVerifications,
+      opts
+    );
   } else {
-    subtreeUpdateVerifier = await new SubtreeUpdateVerifier__factory(
-      connectedSigner
-    ).deploy();
+    subtreeUpdateVerifier = await deployContract(
+      new SubtreeUpdateVerifier__factory(connectedSigner),
+      [],
+      otherVerifications,
+      opts
+    );
   }
-  await subtreeUpdateVerifier.deployTransaction.wait(opts?.confirmations);
 
   // Deploy handler proxy
   console.log("\ndeploying proxied Handler...");
   const proxiedHandler = await deployProxiedContract(
     new Handler__factory(connectedSigner),
     proxyAdmin,
+    proxyVerifications,
     [subtreeUpdateVerifier.address, leftoverTokenHolder]
   );
   console.log("deployed proxied Handler:", proxiedHandler.proxyAddresses);
 
   // Deploy poseidonExtT7 contract
+  // NOTE: poseidonExtT7 is an exception where we need to deploy manually, not calling
+  // deployContract() because it doesn't have a typed contract factory (its just bytecode)
   console.log("\ndeploying poseidonExtT7...");
   const poseidonExtT7 = await new ethers.ContractFactory(
     IPoseidonExtT7__factory.createInterface(),
@@ -196,18 +244,26 @@ export async function deployNocturneCoreContracts(
     connectedSigner
   ).deploy();
   await poseidonExtT7.deployTransaction.wait(opts?.confirmations);
+  otherVerifications["PoseidonExtT7"] = {
+    contractName: "PoseidonExtT7",
+    address: poseidonExtT7.address,
+    constructorArgs: [],
+  };
+  console.log("deployed poseidonExtT7:", poseidonExtT7.address);
 
   console.log("\ndeploying proxied Teller...");
+  const tellerInitArgs: [string, string, string, string, string] = [
+    "NocturneTeller",
+    "v1",
+    proxiedHandler.address,
+    joinSplitVerifier.address,
+    poseidonExtT7.address,
+  ];
   const proxiedTeller = await deployProxiedContract(
     new Teller__factory(connectedSigner),
     proxyAdmin,
-    [
-      "NocturneTeller",
-      "v1",
-      proxiedHandler.address,
-      joinSplitVerifier.address,
-      poseidonExtT7.address,
-    ] // initialize here
+    proxyVerifications,
+    tellerInitArgs // initialize here
   );
   console.log("deployed proxied Teller:", proxiedTeller.proxyAddresses);
 
@@ -221,6 +277,7 @@ export async function deployNocturneCoreContracts(
   const proxiedDepositManager = await deployProxiedContract(
     new DepositManager__factory(connectedSigner),
     proxyAdmin,
+    proxyVerifications,
     ["NocturneDepositManager", "v1", proxiedTeller.address, config.wethAddress] // initialize here
   );
   console.log(
@@ -229,19 +286,27 @@ export async function deployNocturneCoreContracts(
   );
 
   console.log("\ndeploying sig check verifier...");
-  const canonAddrSigCheckVerifier =
-    await new CanonAddrSigCheckVerifier__factory(connectedSigner).deploy();
-  await canonAddrSigCheckVerifier.deployTransaction.wait(opts?.confirmations);
+  const canonAddrSigCheckVerifier = await deployContract(
+    new CanonAddrSigCheckVerifier__factory(connectedSigner),
+    [],
+    otherVerifications,
+    opts
+  );
 
   console.log("\ndeploying canonical address registry...");
   const proxiedCanonAddrRegistry = await deployProxiedContract(
     new CanonicalAddressRegistry__factory(connectedSigner),
     proxyAdmin,
+    proxyVerifications,
     [
       "NocturneCanonicalAddressRegistry",
       "v1",
       canonAddrSigCheckVerifier.address,
     ]
+  );
+  console.log(
+    "deployed proxied CanonicalAddressRegistry:",
+    proxiedCanonAddrRegistry.proxyAddresses
   );
 
   console.log("\nsetting deposit manager screeners...");
@@ -277,51 +342,49 @@ export async function deployNocturneCoreContracts(
   await enrollDepositManagerTx.wait(opts?.confirmations);
 
   return {
-    network: {
-      name,
+    contracts: {
+      network: {
+        name,
+        chainId,
+      },
+      startBlock,
+      owners: {
+        proxyAdminOwner: config.proxyAdminOwner,
+        // Below owners are all anticipated, ownership relinquished after this fn
+        // NOTE: if contracts owners don't match proxyAdminOwner, check fn will throw error
+        tellerOwner: config.proxyAdminOwner,
+        handlerOwner: config.proxyAdminOwner,
+        depositManagerOwner: config.proxyAdminOwner,
+      },
+      proxyAdmin: proxyAdmin.address,
+      finalityBlocks: config.finalityBlocks,
+      canonicalAddressRegistryProxy: proxiedCanonAddrRegistry.proxyAddresses,
+      depositManagerProxy: proxiedDepositManager.proxyAddresses,
+      tellerProxy: proxiedTeller.proxyAddresses,
+      handlerProxy: proxiedHandler.proxyAddresses,
+      poseidonExtT7Address: poseidonExtT7.address,
+      joinSplitVerifierAddress: joinSplitVerifier.address,
+      subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
+      canonAddrSigCheckVerifierAddress: canonAddrSigCheckVerifier.address,
+      screeners: config.screeners,
+      depositSources: [proxiedDepositManager.address],
+    },
+    verification: {
+      chain: name,
       chainId,
+      numOptimizations: 500, // TODO: make parametrizable?
+      proxies: proxyVerifications,
+      others: otherVerifications,
     },
-    startBlock,
-    owners: {
-      proxyAdminOwner: config.proxyAdminOwner,
-      // Below owners are all anticipated, ownership relinquished after this fn
-      // NOTE: if contracts owners don't match proxyAdminOwner, check fn will throw error
-      tellerOwner: config.proxyAdminOwner,
-      handlerOwner: config.proxyAdminOwner,
-      depositManagerOwner: config.proxyAdminOwner,
-    },
-    proxyAdmin: proxyAdmin.address,
-    finalityBlocks: config.finalityBlocks,
-    canonicalAddressRegistryProxy: proxiedCanonAddrRegistry.proxyAddresses,
-    depositManagerProxy: proxiedDepositManager.proxyAddresses,
-    tellerProxy: proxiedTeller.proxyAddresses,
-    handlerProxy: proxiedHandler.proxyAddresses,
-    poseidonExtT7Address: poseidonExtT7.address,
-    joinSplitVerifierAddress: joinSplitVerifier.address,
-    subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
-    canonAddrSigCheckVerifierAddress: canonAddrSigCheckVerifier.address,
-    screeners: config.screeners,
-    depositSources: [proxiedDepositManager.address],
   };
-}
-
-async function deployEthTransferAdapter(
-  connectedSigner: ethers.Wallet,
-  wethAddress: Address,
-  opts?: NocturneDeployOpts
-): Promise<EthTransferAdapter> {
-  console.log("\ndeploying EthTransferAdapter...");
-  const ethTransferAdapter = await new EthTransferAdapter__factory(
-    connectedSigner
-  ).deploy(wethAddress);
-  await ethTransferAdapter.deployTransaction.wait(opts?.confirmations);
-
-  return ethTransferAdapter;
 }
 
 async function maybeDeployWstethAdapter(
   connectedSigner: ethers.Wallet,
   wethAddress: Address,
+  otherVerifications: {
+    [T in NocturneOthersContractName]: ContractVerification<T>;
+  },
   opts?: NocturneDeployOpts
 ): Promise<WstethAdapter | undefined> {
   if (!opts?.wstethAdapterDeployConfig) {
@@ -331,17 +394,20 @@ async function maybeDeployWstethAdapter(
   const { wstethAddress } = opts.wstethAdapterDeployConfig;
 
   console.log("\ndeploying WstethAdapter...");
-  const wstethAdapter = await new WstethAdapter__factory(
-    connectedSigner
-  ).deploy(wethAddress, wstethAddress);
-  await wstethAdapter.deployTransaction.wait(opts?.confirmations);
-
-  return wstethAdapter;
+  return deployContract(
+    new WstethAdapter__factory(connectedSigner),
+    [wethAddress, wstethAddress],
+    otherVerifications,
+    opts
+  );
 }
 
 async function maybeDeployRethAdapter(
   connectedSigner: ethers.Wallet,
   wethAddress: Address,
+  otherVerifications: {
+    [T in NocturneOthersContractName]: ContractVerification<T>;
+  },
   opts?: NocturneDeployOpts
 ): Promise<RethAdapter | undefined> {
   if (!opts?.rethAdapterDeployConfig) {
@@ -351,13 +417,12 @@ async function maybeDeployRethAdapter(
   const { rocketPoolStorageAddress } = opts.rethAdapterDeployConfig;
 
   console.log("\ndeploying RethAdapter...");
-  const rethAdapter = await new RethAdapter__factory(connectedSigner).deploy(
-    wethAddress,
-    rocketPoolStorageAddress
+  return deployContract(
+    new RethAdapter__factory(connectedSigner),
+    [wethAddress, rocketPoolStorageAddress],
+    otherVerifications,
+    opts
   );
-  await rethAdapter.deployTransaction.wait(opts?.confirmations);
-
-  return rethAdapter;
 }
 
 async function maybeDeployErc20s(
@@ -498,12 +563,47 @@ export async function relinquishContractOwnership(
   await depositManagerTransferOwnershipTx.wait(opts?.confirmations);
 }
 
+async function deployContract<
+  F extends ethers.ContractFactory,
+  C extends Awaited<ReturnType<F["deploy"]>>
+>(
+  factory: F,
+  constructorArgs: Parameters<F["deploy"]>,
+  otherVerifications: {
+    [T in NocturneOthersContractName]: ContractVerification<T>;
+  },
+  opts?: NocturneDeployOpts
+): Promise<C> {
+  const contract = await factory.deploy(...constructorArgs);
+  await contract.deployTransaction.wait(opts?.confirmations);
+
+  const contractName = factory.constructor.name.replace(
+    "__factory",
+    ""
+  ) as NocturneProxyContractName;
+  if (!isNocturneOther(contractName)) {
+    throw new Error(`${contractName} is not a Nocturne other`);
+  }
+
+  // NOTE: we know contractName is a Nocturne other type, so we can cast to any
+  (otherVerifications as any)[contractName] = {
+    contractName: contractName,
+    address: contract.address,
+    constructorArgs: constructorArgs as string[],
+  };
+
+  return contract as C;
+}
+
 async function deployProxiedContract<
   F extends ethers.ContractFactory,
   C extends Awaited<ReturnType<F["deploy"]>>
 >(
   implementationFactory: F,
   proxyAdmin: ProxyAdmin,
+  proxyVerifications: Partial<{
+    [T in NocturneProxyContractName]: ProxyContractVerification<T>;
+  }>,
   initArgs?: Parameters<C["initialize"]>,
   opts?: NocturneDeployOpts
 ): Promise<ProxiedContract<C, TransparentProxyAddresses>> {
@@ -526,6 +626,21 @@ async function deployProxiedContract<
     implementationFactory.signer
   ).deploy(...proxyConstructorArgs);
   await proxy.deployTransaction.wait(opts?.confirmations);
+
+  const contractName = implementationFactory.constructor.name.replace(
+    "__factory",
+    ""
+  ) as NocturneProxyContractName;
+  if (!isNocturneProxy(contractName)) {
+    throw new Error(`${contractName} is not a Nocturne proxy`);
+  }
+
+  // NOTE: we know contractName is a Nocturne proxy type, so we can cast to any
+  (proxyVerifications as any)[contractName] = {
+    contractName: contractName,
+    address: proxy.address,
+    implementationAddress: implementation.address,
+  };
 
   return new ProxiedContract<C, TransparentProxyAddresses>(
     implementation.attach(proxy.address) as C,
