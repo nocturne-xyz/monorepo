@@ -87,6 +87,9 @@
     },
     {
       "path": "./packages/persistent-log"
+    },
+    {
+      "path": "./packages/client",
     }
   ]
 }

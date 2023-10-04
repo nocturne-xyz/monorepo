@@ -1,5 +1,9 @@
 import { assertOrErr } from "./error";
 
+export async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export class Histogram {
   name: string;
   needsSort: boolean;

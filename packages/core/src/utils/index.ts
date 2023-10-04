@@ -1,12 +1,4 @@
-export {
-  sortNotesByValue,
-  getJoinSplitRequestTotalValue,
-  sleep,
-  merklePathToIndex,
-  getMerkleIndicesAndNfsFromOp,
-} from "../primitives/typeHelpers";
 export { bigInt256ToFieldElems, bigintToBEPadded } from "./bits";
-export { protocolWhitelistKey } from "./contract";
 export {
   zip,
   unzip,
@@ -25,11 +17,11 @@ export {
 } from "./functional";
 export { numberToStringPadded } from "./strings";
 export { assertOrErr } from "./error";
-export { queryEvents, parseEventsFromContractReceipt } from "./ethers";
 export {
   merkleIndexToBatchOffset,
   merkleIndexToSubtreeIndex,
   batchOffsetToLatestMerkleIndexInBatch,
-} from "./treeIndex";
+  merklePathToIndex,
+} from "./treeUtils";
 export { MapWithObjectKeys, SetWithObjectKeys } from "./collections";
-export { Histogram, timed, timedAsync } from "./timing";
+export { Histogram, timed, timedAsync, sleep } from "./timing";

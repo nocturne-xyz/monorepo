@@ -1,15 +1,11 @@
-export * from "./utils";
-export * from "./conversion";
-export * from "./primitives";
-export * from "./proof";
-export * from "./store";
-export * from "./sync";
+export * as utils from "./utils";
+export * as primitives from "./primitives";
+export * as proofs "./proof";
+export * as store from "./store";
+export * as sync from "./sync";
 export * from "./request";
-export * from "./OpTracker";
-export * from "./operationRequest";
-export * from "./snapJsonRpc";
 
-export {
+import {
   NocturneSigner,
   NocturneViewer,
   generateRandomSpendingKey,
@@ -25,10 +21,21 @@ export {
   SpendPk,
 } from "@nocturne-xyz/crypto";
 
-export { NocturneClient } from "./NocturneClient";
-export { GetNotesOpts } from "./NocturneDB";
-export { SyncOpts } from "./syncSDK";
-export { signOperation } from "./signOperation";
-export { proveOperation } from "./proveOperation";
-export { NocturneDB } from "./NocturneDB";
+export const crypto = {
+  NocturneSigner,
+  NocturneViewer,
+  generateRandomSpendingKey,
+  StealthAddress,
+  CompressedStealthAddress,
+  CanonAddress,
+  StealthAddressTrait,
+  compressPoint,
+  decompressPoint,
+  decomposeCompressedPoint,
+  SpendingKey,
+  ViewingKey,
+  SpendPk, 
+};
+
 export { SparseMerkleProver } from "./SparseMerkleProver";
+export { encryptNote, decryptNote } from "./noteEncryption";

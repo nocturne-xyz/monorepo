@@ -1,7 +1,5 @@
 export * from "./types";
-export * as TreeConstants from "./treeConstants";
 
-export { BinaryPoseidonTree } from "./binaryPoseidonTree";
 export {
   Note,
   IncludedNote,
@@ -20,17 +18,9 @@ export {
 } from "./asset";
 export { hashDepositRequest } from "./depositRequest";
 export {
-  hashOperation,
-  computeOperationDigest,
-  toSignableOperation,
-  toSubmittableOperation,
+  OperationTrait
 } from "./operation";
 export {
   hashCanonAddrRegistryEntry,
   computeCanonAddrRegistryEntryDigest,
 } from "./canonAddrRegistryEntry";
-export {
-  maxGasForOperation,
-  gasCompensationForParams,
-  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
-} from "./gasCalculation";
