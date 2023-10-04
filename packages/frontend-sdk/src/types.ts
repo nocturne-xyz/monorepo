@@ -47,13 +47,15 @@ export enum OnChainDepositRequestStatus {
   Retrieved = "Retrieved",
 }
 
-export function parseOnChainDepositRequestStatus(status: string): OnChainDepositRequestStatus {
+export function parseOnChainDepositRequestStatus(
+  status: string
+): OnChainDepositRequestStatus {
   switch (status) {
-    case 'Completed':
+    case "Completed":
       return OnChainDepositRequestStatus.Completed;
-    case 'Pending':
+    case "Pending":
       return OnChainDepositRequestStatus.Pending;
-    case 'Retrieved':
+    case "Retrieved":
       return OnChainDepositRequestStatus.Retrieved;
     default:
       throw new Error(`Invalid OnChainDepositRequestStatus: ${status}`);
@@ -175,21 +177,8 @@ export interface AnonTransferOpRequestParams {
   amount: bigint;
 }
 
-export interface WethToWstethOpRequestParams {
-  type: "WETH_TO_WSTETH";
-  wethAmount: bigint;
-}
-
-export interface WstethToWethOpRequestParams {
-  type: "WSTETH_TO_WETH";
-  wstethAmount: bigint;
-  maxSlippageBps?: number;
-}
-
 export type OpRequestParams =
   | AnonTransferOpRequestParams
-  | WethToWstethOpRequestParams
-  | WstethToWethOpRequestParams
   | UniswapV3SwapOpRequestParams;
 
 export interface DisplayDepositRequestWithMetadataAndStatus

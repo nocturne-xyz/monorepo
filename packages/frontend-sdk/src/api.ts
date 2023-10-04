@@ -84,13 +84,6 @@ export interface NocturneSdkApi {
     recipientAddress: Address
   ): Promise<OperationHandle>;
 
-  initiateWethToWsteth(amount: bigint): Promise<OperationHandle>;
-
-  initiateWstethToWeth(
-    wstethAmount: bigint,
-    maxSlippageBps?: number
-  ): Promise<OperationHandle>;
-
   initiateAnonErc20Swap(
     params: AnonSwapRequestParams
   ): Promise<OperationHandle>;

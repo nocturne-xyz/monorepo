@@ -65,7 +65,6 @@ import {
   Erc20Plugin,
   EthTransferAdapterPlugin,
   UniswapV3Plugin,
-  WstethAdapterPlugin,
   getSwapRoute,
 } from "@nocturne-xyz/op-request-plugins";
 import { Percent } from "@uniswap/sdk-core";
@@ -239,14 +238,6 @@ export class NocturneSdk implements NocturneSdkApi {
     return address;
   }
 
-  protected get wstethAddress(): string {
-    const address = this.sdkConfig.config.erc20s.get("wsteth")?.address;
-    if (!address) {
-      throw new Error(`Wsteth address not found in Nocturne config`);
-    }
-    return address;
-  }
-
   protected get provider(): SupportedProvider {
     if (typeof window === "undefined") {
       throw new Error("NocturneSdk must be used in a browser environment");
@@ -403,24 +394,6 @@ export class NocturneSdk implements NocturneSdkApi {
       erc20Address,
       recipientAddress,
       amount,
-    });
-  }
-
-  async initiateWethToWsteth(wethAmount: bigint): Promise<OperationHandle> {
-    return this.createOpRequest({
-      type: "WETH_TO_WSTETH",
-      wethAmount,
-    });
-  }
-
-  async initiateWstethToWeth(
-    wstethAmount: bigint,
-    maxSlippageBps = 50
-  ): Promise<OperationHandle> {
-    return this.createOpRequest({
-      type: "WSTETH_TO_WETH",
-      wstethAmount,
-      maxSlippageBps,
     });
   }
 
@@ -1030,37 +1003,6 @@ export class NocturneSdk implements NocturneSdkApi {
           recipientAddress,
           erc20Address,
           amount,
-        };
-        break;
-      }
-      case "WETH_TO_WSTETH": {
-        const { wethAmount } = params;
-        operationRequest = await builder
-          .use(WstethAdapterPlugin)
-          .depositWethForWsteth(wethAmount)
-          .build();
-        action = {
-          type: "Action",
-          actionType: "Weth To Wsteth",
-          amount: wethAmount,
-        };
-        break;
-      }
-      case "WSTETH_TO_WETH": {
-        const { wstethAmount, maxSlippageBps } = params;
-        const tokenIn = this.wstethAddress;
-        const tokenOut = this.wethAddress;
-
-        operationRequest = await builder
-          .use(UniswapV3Plugin)
-          .swap(tokenIn, wstethAmount, tokenOut, maxSlippageBps)
-          .build();
-        action = {
-          type: "Action",
-          actionType: "UniswapV3 Swap",
-          tokenIn,
-          inAmount: wstethAmount,
-          tokenOut,
         };
         break;
       }
