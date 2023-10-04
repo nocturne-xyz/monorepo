@@ -16,19 +16,22 @@ export {
 
 export {
   ActionMetadata,
+  ConfidentialPaymentMetadata,
+  OperationRequest,
+  OperationRequestWithMetadata,
+  SyncOpts,
+} from "@nocturne-xyz/client";
+
+export {
   Asset,
   AssetTrait,
   AssetWithBalance,
-  ConfidentialPaymentMetadata,
   DepositQuoteResponse,
-  OperationRequest,
-  OperationRequestWithMetadata,
   OperationStatus,
   ProvenOperation,
   SignedOperation,
   StealthAddress,
   StealthAddressTrait,
-  SyncOpts,
 } from "@nocturne-xyz/core";
 
 export { Erc20Config } from "@nocturne-xyz/config";
@@ -39,4 +42,4 @@ export {
   Snap,
 } from "./metamask/types";
 
-export { DepositAdapter, HasuraAdapters, SubgraphAdapters } from "./dataFetching";
+export { DepositAdapter, HasuraDepositAdapter, SubgraphDepositAdapter } from "./depositFetching";

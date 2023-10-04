@@ -9,6 +9,7 @@
     "src/**/*"
   ],
   "scripts": {
+    "codegen": "graphql-codegen --config ./graphql-codegen.ts",
     "build": "yarn clean; tsc --build",
     "check": "yarn clean && tsc --noEmit",
     "clean": "rm -rf .turbo dist",
@@ -18,7 +19,13 @@
     "test:unit": "mocha --require ts-node/register test/** --timeout 10000 --exit",
     "publish": "yarn build; yarn npm publish --access public"
   },
+  "dependencies": {
+    "@nocturne-xyz/core": "workspace:^",
+    "@urql/core": "^4.1.1"
+  },
   "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/client-preset": "^4.1.0",
     "@types/chai": "^4.3.3",
     "@types/chai-as-promised": "^7.1.5",
     "@types/mocha": "^10.0.0",
@@ -28,7 +35,7 @@
     "chai": "^4.3.6",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.8.0",
-    "fake-indexeddb": "^4.0.2",
+    "graphql": "^16.7.1",
     "mocha": "^10.1.0",
     "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
@@ -36,9 +43,5 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "dependencies": {
-    "@nocturne-xyz/core": "workspace:^",
-    "idb": "^7.1.1"
   }
 }

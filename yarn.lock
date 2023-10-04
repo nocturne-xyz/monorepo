@@ -4249,12 +4249,14 @@ __metadata:
     "@graphql-codegen/cli": ^5.0.0
     "@graphql-codegen/client-preset": ^4.1.0
     "@metamask/providers": ^11.1.1
+    "@nocturne-xyz/client": "workspace:^"
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/idb-kv-store": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/op-request-plugins": "workspace:^"
+    "@nocturne-xyz/subgraph-sync-adapters": "workspace:^"
     "@types/async-retry": ^1.4.5
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -4282,6 +4284,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/hasura-sync-adapters@workspace:sync/hasura-sync-adapters"
   dependencies:
+    "@graphql-codegen/cli": ^5.0.0
+    "@graphql-codegen/client-preset": ^4.1.0
     "@nocturne-xyz/core": "workspace:^"
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -4289,11 +4293,11 @@ __metadata:
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
+    "@urql/core": ^4.1.1
     chai: ^4.3.6
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
-    fake-indexeddb: ^4.0.2
-    idb: ^7.1.1
+    graphql: ^16.7.1
     mocha: ^10.1.0
     prettier: ^2.8.8
     ts-node: ^10.9.1
