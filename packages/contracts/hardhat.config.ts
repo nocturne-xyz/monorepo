@@ -1,8 +1,6 @@
 import 'hardhat-gas-reporter';
 import '@nomiclabs/hardhat-etherscan';
 import 'hardhat-packager';
-import '@nomiclabs/hardhat-ethers';
-import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-contract-sizer';
 
 import { subtask } from 'hardhat/config';
@@ -68,6 +66,10 @@ module.exports = {
       url: `${process.env.GOERLI_RPC_URL}`,
       accounts: [`${process.env.DEPLOYER_KEY ?? DUMMY_KEY}`],
     },
+  },
+
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY!,
   },
 
   typechain: {

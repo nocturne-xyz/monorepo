@@ -427,7 +427,7 @@ export async function deployContractsWithDummyConfig(
   };
 
   console.log("deploying contracts...");
-  const config = await deployNocturne(connectedSigner, deployConfig);
+  const { config } = await deployNocturne(connectedSigner, deployConfig);
   checkNocturneDeployment(config, connectedSigner.provider);
 
   console.log("prefilling");
