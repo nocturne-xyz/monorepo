@@ -7,4 +7,5 @@ export { NocturneClient } from "./NocturneClient";
 export { NocturneDB } from "./NocturneDB";
 export { SyncOpts } from "./syncSDK";
 export { BundlerOpTracker } from "./OpTracker";
+export { signOperation } from "./signOperation";
 export { proveOperation } from "./proveOperation";

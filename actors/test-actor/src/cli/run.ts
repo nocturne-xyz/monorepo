@@ -3,15 +3,14 @@ import {
   DepositManager__factory,
   Teller__factory,
 } from "@nocturne-xyz/contracts";
+import { SparseMerkleProver, NocturneSigner } from "@nocturne-xyz/core";
 import {
-  SparseMerkleProver,
-  NocturneDB,
-  NocturneSigner,
   NocturneClient,
-  SubgraphSDKSyncAdapter,
+  NocturneDB,
   MockEthToTokenConverter,
   BundlerOpTracker,
-} from "@nocturne-xyz/core";
+} from "@nocturne-xyz/client";
+import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import { Command } from "commander";
 import { ethers } from "ethers";
