@@ -47,6 +47,19 @@ export enum OnChainDepositRequestStatus {
   Retrieved = "Retrieved",
 }
 
+export function parseOnChainDepositRequestStatus(status: string): OnChainDepositRequestStatus {
+  switch (status) {
+    case 'Completed':
+      return OnChainDepositRequestStatus.Completed;
+    case 'Pending':
+      return OnChainDepositRequestStatus.Pending;
+    case 'Retrieved':
+      return OnChainDepositRequestStatus.Retrieved;
+    default:
+      throw new Error(`Invalid OnChainDepositRequestStatus: ${status}`);
+  }
+}
+
 export enum DepositRequestStatus {
   // deposit has been initiated on-chain
   // and funds are in escrow, but

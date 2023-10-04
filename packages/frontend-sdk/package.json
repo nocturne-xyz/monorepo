@@ -14,6 +14,7 @@
     "clean": "rm -rf .turbo dist",
     "codegen": "yarn codegen:subgraph",
     "codegen:subgraph": "graphql-codegen --config ./graphql-codegen-configs/subgraph.ts",
+    "codegen:hasura": "graphql-codegen --config ./graphql-codegen-configs/hasura.ts",
     "copy-circuit-artifacts": "yarn copy-wasm && yarn copy-zkey && yarn copy-vkey",
     "copy-vkey": "cp ../../circuit-artifacts/joinsplit/joinsplit_cpp/vkey.json ./circuit-artifacts/joinsplit/joinsplitVkey.json",
     "copy-wasm": "cp ../../circuit-artifacts/joinsplit/joinsplit_js/joinsplit.wasm ./circuit-artifacts/joinsplit/joinsplit.wasm",

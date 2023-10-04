@@ -38,3 +38,5 @@ export {
   MetamaskState,
   Snap,
 } from "./metamask/types";
+
+export { DepositAdapter, HasuraAdapters, SubgraphAdapters } from "./dataFetching";

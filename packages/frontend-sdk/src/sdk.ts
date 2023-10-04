@@ -31,6 +31,7 @@ import {
   RelayRequest,
   RequestViewingKeyMethod,
   RpcRequestMethod,
+  SDKSyncAdapter,
   SignCanonAddrRegistryEntryMethod,
   SignOperationMethod,
   SignedOperation,
@@ -74,7 +75,11 @@ import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
 import { NocturneSdkApi, SnapStateApi } from "./api";
-import { DepositAdapter, SubgraphDepositAdapter } from "./dataFetching";
+import {
+  DepositAdapter,
+  SubgraphAdapters,
+  SubgraphDepositAdapter,
+} from "./dataFetching";
 import { SnapStateSdk } from "./metamask";
 import { GetSnapOptions } from "./metamask/types";
 import {
@@ -102,10 +107,16 @@ import {
   toDepositRequest,
 } from "./utils";
 
+const { SubgraphSDKSyncAdapter, SubgraphDepositAdapter } = SubgraphAdapters;
+
 export interface NocturneSdkOptions {
   // interface for fetching deposit data from subgraph and screener
   // defaults to `SubgraphDepositAdapter` if not given
   depositAdapter?: DepositAdapter;
+
+  // inteface for syncing merkle tree and new notes from chain
+  // defaults to `SubgraphSDKSyncAdapter` if not given
+  syncAdapter?: SDKSyncAdapter;
 
   // name of the network to use (e.g. "mainnet", "goerli", "localhost")
   networkName?: SupportedNetwork;
@@ -217,7 +228,8 @@ export class NocturneSdk implements NocturneSdkApi {
         this.sdkConfig.config,
         await SparseMerkleProver.loadFromKV(kv),
         this.db,
-        new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
+        options.syncAdapter ??
+          new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
         new MockEthToTokenConverter(),
         new BundlerOpTracker(this.endpoints.bundlerEndpoint)
       );

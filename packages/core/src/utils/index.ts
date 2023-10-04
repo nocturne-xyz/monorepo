@@ -18,8 +18,10 @@ export {
   partition,
   max,
   maxArray,
+  maxNullish,
   thunk,
   Thunk,
+  ArrayElem,
 } from "./functional";
 export { numberToStringPadded } from "./strings";
 export { assertOrErr } from "./error";

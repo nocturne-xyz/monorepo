@@ -2,6 +2,8 @@ import { SetWithObjectKeys } from "./collections";
 import { assertOrErr } from "./error";
 import * as JSON from "bigint-json-serialization";
 
+export type ArrayElem<T> = T extends Array<infer U> ? U : never;
+
 export function zip<T, U>(a: T[], b: U[]): [T, U][] {
   return a.map((x, i) => [x, b[i]]);
 }
@@ -104,6 +106,19 @@ export function max(a: bigint, b: bigint): bigint;
 export function max(a: number, b: number): number;
 export function max(a: number | bigint, b: number | bigint): number | bigint {
   return a > b ? a : b;
+}
+
+export function maxNullish(
+  a: number | undefined | null,
+  b: number | undefined | null
+): number | undefined {
+  if (a === undefined || a === null) {
+    return b ?? undefined;
+  } else if (b === undefined || b === null) {
+    return a ?? undefined;
+  } else {
+    return max(a, b);
+  }
 }
 
 export function maxArray(arr: number[]): number;
