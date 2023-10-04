@@ -9,7 +9,6 @@ async function run() {
   const swapRouter = new AlphaRouter({
     chainId: 1,
     provider,
-    // simulator: new Simulator(provider, 1)
   });
   const route = await getSwapRoute({
     router: swapRouter,
@@ -30,11 +29,6 @@ async function run() {
     "MIN OUT",
     route.trade.minimumAmountOut(new Percent(50, 10_000)).toExact()
   );
-  //   console.log(
-  //     "MIN OUT SELF CALCULATED",
-  //     Number(route.quote.toExact()) -
-  //       Number(route.quote.toExact()) * (50 / 10_000)
-  //   );
   console.log("QUOTE 1 weth for usdc:" + route.quote.toExact());
   console.log("to:", route.methodParameters?.to);
   console.log("calldata:", route.methodParameters?.calldata);
