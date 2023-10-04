@@ -1,4 +1,4 @@
-import { Address } from "./utils";
+import { Address } from "@nocturne-xyz/core";
 import { ProxyAdmin } from "@nocturne-xyz/contracts";
 import { Erc20Config, ProtocolAddressWithMethods } from "@nocturne-xyz/config";
 import * as JSON from "bigint-json-serialization";

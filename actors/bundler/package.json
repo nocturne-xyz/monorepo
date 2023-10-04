@@ -29,6 +29,7 @@
     "test:unit": "mocha --require ts-node/register test/**.test.ts --timeout 500000 --exit"
   },
   "dependencies": {
+    "@nocturne-xyz/client": "workspace:^",
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",

@@ -9,7 +9,7 @@ import {
 import {
   newOpRequestBuilder,
   OperationRequestWithMetadata,
-} from "@nocturne-xyz/client"
+} from "@nocturne-xyz/client";
 import {
   NocturneSigner,
   generateRandomSpendingKey,

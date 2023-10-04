@@ -4,7 +4,8 @@
   "workspaces": [
     "packages/*",
     "actors/*",
-    "apps/*"
+    "apps/*",
+    "sync/*"
   ],
   "scripts": {
     "build": "yarn turbo run --no-daemon build",

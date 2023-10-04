@@ -1,5 +1,5 @@
 import {
-  computeOperationDigest,
+  OperationTrait,
   SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/core";
 import IORedis from "ioredis";
@@ -44,7 +44,7 @@ export class NullifierDB {
   getAddNullifierTransactions(
     operation: SubmittableOperationWithNetworkInfo
   ): RedisTransaction[] {
-    const digest = computeOperationDigest(operation).toString();
+    const digest = OperationTrait.computeDigest(operation).toString();
 
     const allJoinSplits = [
       ...operation.confJoinSplits,

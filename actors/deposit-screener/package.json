@@ -34,6 +34,7 @@
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/offchain-utils": "workspace:^",
+    "@nocturne-xyz/subgraph-sync-adapters": "workspace:^",
     "@opentelemetry/api": "^1.4.1",
     "@opentelemetry/exporter-metrics-otlp-http": "^0.40.0",
     "@opentelemetry/instrumentation": "^0.40.0",

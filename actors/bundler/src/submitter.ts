@@ -2,12 +2,13 @@ import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
 import {
   Address,
-  computeOperationDigest,
-  maxGasForOperation,
+  OperationTrait,
   OperationStatus,
   parseEventsFromContractReceipt,
   SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/core";
+// TODO should there be a dedicated gas estimation package?
+import { maxGasForOperation } from "@nocturne-xyz/client";
 import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
 import { ethers } from "ethers";
@@ -102,7 +103,7 @@ export class BundlerSubmitter {
         );
 
         const opDigests = operations.map((op) =>
-          computeOperationDigest(op).toString()
+          OperationTrait.computeDigest(op).toString()
         );
         const logger = this.logger.child({
           function: "submitBatch",
@@ -174,7 +175,7 @@ export class BundlerSubmitter {
   ): Promise<void> {
     // Loop through current batch and set each job status to IN_FLIGHT
     const inflightStatusTransactions = operations.map((op) => {
-      const jobId = computeOperationDigest(op).toString();
+      const jobId = OperationTrait.computeDigest(op).toString();
       logger.info(
         `setting operation with digest ${jobId} to status IN_FLIGHT`,
         { opDigest: jobId }
@@ -220,7 +221,7 @@ export class BundlerSubmitter {
     } catch (err) {
       logger.error("failed to process bundle:", err);
       const redisTxs = operations.flatMap((op) => {
-        const digest = computeOperationDigest(op);
+        const digest = OperationTrait.computeDigest(op);
         logger.error(
           `setting operation with digest ${digest} to status BUNDLE_REVERTED`
         );
@@ -255,7 +256,7 @@ export class BundlerSubmitter {
     receipt: ethers.ContractReceipt
   ): Promise<void> {
     const digestsToOps = new Map(
-      operations.map((op) => [computeOperationDigest(op), op])
+      operations.map((op) => [OperationTrait.computeDigest(op), op])
     );
 
     logger.debug("looking for OperationProcessed events...");

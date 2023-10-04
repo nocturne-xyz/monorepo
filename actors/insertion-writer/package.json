@@ -29,6 +29,7 @@
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/offchain-utils": "workspace:^",
     "@nocturne-xyz/persistent-log": "workspace:^",
+    "@nocturne-xyz/subgraph-sync-adapters": "workspace:^",
     "commander": "^9.4.1",
     "dotenv": "^16.0.3",
     "ethers": "^5.7.2",

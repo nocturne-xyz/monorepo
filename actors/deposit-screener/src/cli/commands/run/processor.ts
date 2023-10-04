@@ -9,7 +9,7 @@ import { ethers } from "ethers";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
 import { DepositScreenerScreener } from "../../../screener";
 import { DummyScreeningApi, ScreeningCheckerApi } from "../../../screening";
-import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
+import { SubgraphDepositEventSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { getRedis } from "./utils";
 import { Speed } from "@openzeppelin/defender-relay-client";
 
@@ -72,9 +72,9 @@ const runProcess = new Command("processor")
     if (!subgraphEndpoint) {
       throw new Error("missing SUBGRAPH_URL");
     }
-    const adapter = new SubgraphScreenerSyncAdapter(
+    const adapter = new SubgraphDepositEventSyncAdapter(
       subgraphEndpoint,
-      logger.child({ function: "SubgraphScreenerSyncAdapter" })
+      logger.child({ function: "SubgraphDepositEventSyncAdapter" })
     );
 
     const relayerApiKey = process.env.OZ_RELAYER_API_KEY;

@@ -25,6 +25,8 @@ export {
   batchOffsetToLatestMerkleIndexInBatch,
   merklePathToIndex,
   TreeConstants,
-} from "./treeUtils";
+} from "./tree";
 export { MapWithObjectKeys, SetWithObjectKeys } from "./collections";
 export { Histogram, timed, timedAsync, sleep } from "./timing";
+export { queryEvents, parseEventsFromContractReceipt } from "./ethers";
+export * as SubgraphUtils from "./subgraph";

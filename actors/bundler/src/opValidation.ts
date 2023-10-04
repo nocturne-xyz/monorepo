@@ -1,8 +1,8 @@
 import { ethers } from "ethers";
 import {
   Bundle,
-  computeOperationDigest,
   SubmittableOperationWithNetworkInfo,
+  OperationTrait,
 } from "@nocturne-xyz/core";
 import { Handler, Teller } from "@nocturne-xyz/contracts";
 import { NullifierDB } from "./db";
@@ -98,7 +98,7 @@ export async function checkNotEnoughGasError(
   );
   const gasPrice = (await provider.getGasPrice()).toBigInt();
   if (operation.gasPrice < gasPrice) {
-    const id = computeOperationDigest(operation).toString();
+    const id = OperationTrait.computeDigest(operation).toString();
     return `operation ${id} gas price too low: ${operation.gasPrice} < current chain's gas price ${gasPrice}`;
   }
 }

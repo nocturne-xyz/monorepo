@@ -1,6 +1,7 @@
 export { ClosableAsyncIterator } from "./closableAsyncIterator";
 export {
   IterSyncOpts,
+  SDKIterSyncOpts,
   SDKSyncAdapter,
   EncryptedStateDiff,
   StateDiff,

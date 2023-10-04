@@ -90,6 +90,15 @@
     },
     {
       "path": "./packages/client",
+    },
+    {
+      "path": "./sync/rpc-sync-adapters"
+    },
+    {
+      "path": "./sync/subgraph-sync-adapters"
+    },
+    {
+      "path": "./sync/hasura-sync-adapters"
     }
   ]
 }

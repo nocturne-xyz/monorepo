@@ -3,7 +3,7 @@ import { InsertionWriter } from "../../../";
 import { getRedis } from "../utils";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
-import { SubgraphTreeInsertionSyncAdapter } from "../../../sync/subgraph/adapter";
+import { SubgraphTreeInsertionSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 
 export const runInsertionWriter = new Command("insertion-writer")
   .summary("run insertion writer service")
