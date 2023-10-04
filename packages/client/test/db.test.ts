@@ -1,7 +1,6 @@
 import "mocha";
 import { expect } from "chai";
 import {
-  NocturneDB,
   InMemoryKVStore,
   IncludedNote,
   Asset,
@@ -13,16 +12,9 @@ import {
   WithTotalEntityIndex,
   unzip,
   NocturneSigner,
-} from "../src";
-import {
-  DUMMY_ROOT_KEY,
-  ponzi,
-  shitcoin,
-  stablescam,
-  testDumpableKvStoreImpl,
-} from "./utils";
-
-describe("InMemoryKVStore", testDumpableKvStoreImpl(new InMemoryKVStore()));
+} from "@nocturne-xyz/core";
+import { NocturneDB } from "../src/NocturneDB";
+import { DUMMY_ROOT_KEY, ponzi, shitcoin, stablescam } from "./utils";
 
 describe("NocturneDB", async () => {
   const kv = new InMemoryKVStore();

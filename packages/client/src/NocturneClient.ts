@@ -2,7 +2,11 @@ import ethers from "ethers";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { NocturneViewer } from "@nocturne-xyz/crypto";
-
+import {
+  OptimisticNFRecord,
+  OperationMetadata,
+  OpDigestWithMetadata,
+} from "./types";
 import {
   OperationRequest,
   ensureOpRequestChainInfo,
@@ -22,9 +26,6 @@ import {
   SignedOperation,
   PreSignOperation,
   AssetWithBalance,
-  OptimisticNFRecord,
-  OperationMetadata,
-  OpDigestWithMetadata,
   AssetTrait,
   Asset,
   SparseMerkleProver,

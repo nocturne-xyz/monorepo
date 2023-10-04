@@ -17,11 +17,10 @@ import {
   Address,
   Asset,
   AssetTrait,
-  OperationMetadata,
-  OperationMetadataItem,
-} from "../primitives";
+  MapWithObjectKeys,
+} from "@nocturne-xyz/core";
 import { ethers } from "ethers";
-import { MapWithObjectKeys } from "../utils";
+import { OperationMetadata, OperationMetadataItem } from "../types";
 import { chainIdToNetworkName } from "../utils/constants";
 
 export type OpRequestBuilder = OpRequestBuilderExt<BaseOpRequestBuilder>;

@@ -1,12 +1,7 @@
 import { ethers } from "ethers";
 import { CanonAddress, StealthAddress } from "@nocturne-xyz/crypto";
-import {
-  Action,
-  Address,
-  Asset,
-  ExpectedRefund,
-  OperationMetadata,
-} from "@nocturne-xyz/core";
+import { OperationMetadata } from "../types";
+import { Action, Address, Asset, ExpectedRefund } from "@nocturne-xyz/core";
 
 const ONE_DAY_SECONDS = 24 * 60 * 60;
 

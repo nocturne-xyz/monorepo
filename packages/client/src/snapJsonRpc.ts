@@ -1,7 +1,7 @@
 import * as JSON from "bigint-json-serialization";
+import { OperationWithMetadata } from "./types";
 import {
   CanonAddrRegistryEntry,
-  OperationWithMetadata,
   PreSignOperation,
   SignedOperation,
 } from "@nocturne-xyz/core";

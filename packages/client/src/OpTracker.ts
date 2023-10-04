@@ -1,5 +1,4 @@
-import { OperationStatus } from "./primitives";
-import { OperationStatusResponse } from "./request";
+import { OperationStatus, OperationStatusResponse } from "@nocturne-xyz/core";
 
 export interface OpTracker {
   operationIsInFlight(opDigest: bigint): Promise<boolean>;

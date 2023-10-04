@@ -4,6 +4,13 @@ import {
   GasAccountedOperationRequest,
 } from "./operationRequest/operationRequest";
 import {
+  NocturneViewer,
+  CanonAddress,
+  StealthAddressTrait,
+  randomFr,
+  CompressedStealthAddress,
+} from "@nocturne-xyz/crypto";
+import {
   PreSignJoinSplit,
   Note,
   NoteTrait,
@@ -11,28 +18,16 @@ import {
   Asset,
   AssetTrait,
   PreSignOperation,
-} from "./primitives";
-import {
-  NocturneViewer,
-  CanonAddress,
-  StealthAddressTrait,
-  randomFr,
-  CompressedStealthAddress,
-} from "@nocturne-xyz/crypto";
-import { encryptNote } from "./noteEncryption";
-import { MerkleProofInput } from "./proof";
-import {
-  sortNotesByValue,
+  encryptNote,
   min,
   iterChunks,
-  getJoinSplitRequestTotalValue,
   groupByArr,
-} from "./utils";
-import { SparseMerkleProver } from "./SparseMerkleProver";
-import {
+  SparseMerkleProver,
+  MerkleProofInput,
   computeJoinSplitInfoCommitment,
   computeSenderCommitment,
-} from "./proof/joinsplit";
+} from "@nocturne-xyz/core";
+import { sortNotesByValue, getJoinSplitRequestTotalValue } from "./utils";
 
 export const __private = {
   gatherNotes,

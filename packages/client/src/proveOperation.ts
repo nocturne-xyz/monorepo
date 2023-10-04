@@ -4,15 +4,13 @@ import {
   SignedOperation,
   ProvenJoinSplit,
   ProvenOperation,
-  toSubmittableOperation,
+  OperationTrait,
   SubmittableOperationWithNetworkInfo,
-} from "./primitives";
-import {
   JoinSplitProver,
   joinSplitPublicSignalsFromArray,
   packToSolidityProof,
-} from "./proof";
-import { iterChunks } from "./utils";
+  iterChunks,
+} from "@nocturne-xyz/core";
 
 // SDK will fire off at most this many provers in parallel
 const MAX_PARALLEL_PROVERS = 4;
@@ -34,7 +32,7 @@ export async function proveOperation(
     joinSplits,
   };
 
-  return toSubmittableOperation(operation);
+  return OperationTrait.toSubmittable(operation);
 }
 
 async function proveJoinSplit(
