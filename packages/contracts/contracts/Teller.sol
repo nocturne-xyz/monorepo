@@ -98,6 +98,15 @@ contract Teller is
         _;
     }
 
+    /// @notice Only callable by EOA
+    modifier onlyEoa() {
+        require(
+            tx.origin == msg.sender && msg.sender.code.length == 0,
+            "Only eoa"
+        );
+        _;
+    }
+
     /// @notice Pauses contract, only callable by owner
     function pause() external onlyOwner {
         _pause();
@@ -161,6 +170,7 @@ contract Teller is
         override
         whenNotPaused
         nonReentrant
+        onlyEoa
         returns (uint256[] memory opDigests, OperationResult[] memory opResults)
     {
         Operation[] calldata ops = bundle.operations;
