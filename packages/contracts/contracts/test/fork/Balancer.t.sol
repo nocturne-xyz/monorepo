@@ -47,9 +47,6 @@ contract BalancerTest is ForkBase {
             toInternalBalance: false
         });
 
-        // Whitelist bundler
-        teller.setBundlerPermission(BUNDLER, true);
-
         // Whitelist weth, wsteth, and balancer
         handler.setContractPermission(address(weth), true);
         handler.setContractPermission(address(wsteth), true);
@@ -170,7 +167,7 @@ contract BalancerTest is ForkBase {
         assertEq(weth.balanceOf(address(teller)), 0);
 
         // Execute operation
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         teller.processBundle(bundle);
 
         // Check post op balances
@@ -291,7 +288,7 @@ contract BalancerTest is ForkBase {
         assertEq(weth.balanceOf(address(teller)), 0);
 
         // Execute operation
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         teller.processBundle(bundle);
 
         // Check post op balances
