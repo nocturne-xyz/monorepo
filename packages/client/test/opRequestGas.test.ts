@@ -2,12 +2,13 @@ import "mocha";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
+import { newOpRequestBuilder } from "../src";
 import {
   Asset,
   AssetType,
   gasCompensationForParams,
-  newOpRequestBuilder,
-} from "../src";
+  ERC20_ID,
+} from "@nocturne-xyz/core";
 import {
   setup,
   shitcoin,
@@ -18,7 +19,6 @@ import {
   DUMMY_CONFIG,
 } from "./utils";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
-import { ERC20_ID } from "../src/primitives/asset";
 import { JoinSplitRequest } from "../src/operationRequest/operationRequest";
 import { MockEthToTokenConverter } from "../src/conversion";
 import { ethers } from "ethers";

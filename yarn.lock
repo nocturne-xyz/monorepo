@@ -4207,6 +4207,7 @@ __metadata:
   resolution: "@nocturne-xyz/e2e-tests@workspace:packages/e2e-tests"
   dependencies:
     "@nocturne-xyz/bundler": "workspace:^"
+    "@nocturne-xyz/client": "workspace:^"
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/core": "workspace:^"
@@ -4217,6 +4218,8 @@ __metadata:
     "@nocturne-xyz/offchain-utils": "workspace:^"
     "@nocturne-xyz/op-request-plugins": "workspace:^"
     "@nocturne-xyz/persistent-log": "workspace:^"
+    "@nocturne-xyz/rpc-sync-adapters": "workspace:^"
+    "@nocturne-xyz/subgraph-sync-adapters": "workspace:^"
     "@nocturne-xyz/subtree-updater": "workspace:^"
     "@types/chai": ^4.3.3
     "@types/dockerode": ^3.3.14
@@ -4488,7 +4491,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/rpc-sync-adapters@workspace:sync/rpc-sync-adapters":
+"@nocturne-xyz/rpc-sync-adapters@workspace:^, @nocturne-xyz/rpc-sync-adapters@workspace:sync/rpc-sync-adapters":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/rpc-sync-adapters@workspace:sync/rpc-sync-adapters"
   dependencies:

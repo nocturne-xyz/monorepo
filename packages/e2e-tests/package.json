@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@nocturne-xyz/bundler": "workspace:^",
+    "@nocturne-xyz/client": "workspace:^",
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",
@@ -30,6 +31,8 @@
     "@nocturne-xyz/local-prover": "workspace:^",
     "@nocturne-xyz/op-request-plugins": "workspace:^",
     "@nocturne-xyz/persistent-log": "workspace:^",
+    "@nocturne-xyz/rpc-sync-adapters": "workspace:^",
+    "@nocturne-xyz/subgraph-sync-adapters": "workspace:^",
     "@nocturne-xyz/subtree-updater": "workspace:^",
     "@types/chai": "^4.3.3",
     "@types/dockerode": "^3.3.14",

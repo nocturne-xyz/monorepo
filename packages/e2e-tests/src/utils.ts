@@ -8,7 +8,7 @@ import {
   SubmittableOperationWithNetworkInfo,
   SubtreeUpdateProver,
   TreeConstants,
-  computeOperationDigest,
+  OperationTrait,
   range,
 } from "@nocturne-xyz/core";
 import { Mutex } from "async-mutex";
@@ -23,7 +23,7 @@ import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { thunk } from "@nocturne-xyz/core";
 import { Insertion } from "@nocturne-xyz/persistent-log";
-import { fetchTreeInsertions } from "@nocturne-xyz/insertion-writer/src/sync/subgraph/fetch";
+import { fetchTreeInsertions } from "@nocturne-xyz/subgraph-sync-adapters/src/treeInsertions/fetch";
 import { SUBGRAPH_URL } from "./deploy";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -128,7 +128,7 @@ export async function submitAndProcessOperation(
   console.log("waiting for bundler to receive the operation");
   await sleep(5_000);
 
-  const operationDigest = computeOperationDigest(operation);
+  const operationDigest = OperationTrait.computeDigest(operation);
 
   let count = 0;
   while (count < 10) {

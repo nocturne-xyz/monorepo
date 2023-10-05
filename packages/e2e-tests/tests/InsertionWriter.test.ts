@@ -9,14 +9,16 @@ import { DepositManager } from "@nocturne-xyz/contracts";
 import {
   Asset,
   JoinSplitProver,
-  NocturneClient,
   NocturneSigner,
-  newOpRequestBuilder,
-  proveOperation,
   range,
-  signOperation,
   sleep,
 } from "@nocturne-xyz/core";
+import {
+  NocturneClient,
+  newOpRequestBuilder,
+  proveOperation,
+  signOperation,
+} from "@nocturne-xyz/client";
 import { depositFundsSingleToken } from "../src/deposit";
 import {
   getAllTreeInsertionsFromSubgraph,
@@ -24,10 +26,8 @@ import {
   submitAndProcessOperation,
 } from "../src/utils";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
-import {
-  InsertionWriter,
-  SubgraphTreeInsertionSyncAdapter,
-} from "@nocturne-xyz/insertion-writer";
+import { InsertionWriter } from "@nocturne-xyz/insertion-writer";
+import { SubgraphTreeInsertionSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import IORedis from "ioredis";
 import * as ethers from "ethers";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";

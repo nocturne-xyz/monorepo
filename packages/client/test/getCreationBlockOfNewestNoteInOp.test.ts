@@ -12,7 +12,7 @@ import { MockEthToTokenConverter, newOpRequestBuilder } from "../src";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { prepareOperation } from "../src/prepareOperation";
 import { expect } from "chai";
-import { getTotalEntityIndexOfNewestNoteInOp } from "../src/totalEntityIndexOfNewestNoteInOp";
+import { getTotalEntityIndexOfNewestNoteInOp } from "../src/NocturneClient";
 
 describe("getCreationTimestampOfNewestNoteInOp", () => {
   it("returns the timetsamp of the newest note in op", async () => {

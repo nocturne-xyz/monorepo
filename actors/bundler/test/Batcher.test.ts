@@ -14,7 +14,7 @@ import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { sleep } from "../src/utils";
 import { BatcherDB, StatusDB } from "../src/db";
 import * as JSON from "bigint-json-serialization";
-import { OperationStatus, computeOperationDigest } from "@nocturne-xyz/core";
+import { OperationStatus, OperationTrait } from "@nocturne-xyz/core";
 
 const BATCH_SIZE = 8;
 const MAX_BATCH_LATENCY_SECS = 5;
@@ -61,7 +61,7 @@ describe("BundlerBatcher", async () => {
       operationJson,
     };
 
-    const jobId = computeOperationDigest(operation).toString();
+    const jobId = OperationTrait.computeDigest(operation).toString();
     await queue.add(PROVEN_OPERATION_JOB_TAG, jobData, {
       jobId,
     });

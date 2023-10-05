@@ -1,12 +1,12 @@
 import "mocha";
 import { expect } from "chai";
+import { newOpRequestBuilder, OperationRequest } from "../src";
 import {
-  newOpRequestBuilder,
-  OperationRequest,
   range,
   NocturneSigner,
   generateRandomSpendingKey,
-} from "../src";
+  AssetTrait,
+} from "@nocturne-xyz/core";
 import {
   shitcoin,
   ponzi,
@@ -18,7 +18,6 @@ import {
   DUMMY_CONFIG,
 } from "./utils";
 import { ethers } from "ethers";
-import { AssetTrait } from "../dist";
 
 describe("OpRequestBuilder", () => {
   let provider: ethers.providers.JsonRpcProvider;
