@@ -94,6 +94,10 @@ async function handleRpcRequest({
   console.log("Switching on method: ", request.method);
   console.log("Request Params:", request.params);
   switch (request.method) {
+    // case "nocturne_setSpendKey":
+    //   const { spendKey } = request.params;
+    //   await kvStore.putString(SPEND_KEY_DB_KEY, spendKey);
+    //   return null;
     case "nocturne_requestViewingKey":
       const viewer = signer.viewer();
       return {

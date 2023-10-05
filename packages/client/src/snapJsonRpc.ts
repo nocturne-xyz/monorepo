@@ -12,6 +12,14 @@ import {
   ViewingKey,
 } from "@nocturne-xyz/crypto";
 
+export interface SetSpendKeyMethod {
+  method: "nocturne_setSpendKey";
+  params: {
+    spendKey: string;
+  };
+  return: boolean;
+}
+
 export interface SignCanonAddrRegistryEntryMethod {
   method: "nocturne_signCanonAddrRegistryEntry";
   params: {
