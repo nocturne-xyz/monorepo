@@ -101,6 +101,7 @@ import {
 } from "./utils";
 import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
 import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
+import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
 
 export interface NocturneSdkOptions {
   // interface for fetching deposit data from subgraph and screener
