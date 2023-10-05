@@ -46,10 +46,10 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
   return nocturnePrivKey;
 }
 
-async function getNocturneSignerFromDb(): Promise<NocturneSigner> {
+async function getNocturneSignerFromDb(): Promise<NocturneSigner | undefined> {
   const spendKey = await kvStore.getString(SPEND_KEY_DB_KEY);
   if (!spendKey) {
-    throw new Error("No spend key found in db");
+    return undefined;
   }
 
   return new NocturneSigner(ethers.utils.arrayify(spendKey));
@@ -66,7 +66,6 @@ async function getNocturneSignerFromDb(): Promise<NocturneSigner> {
  * @throws If the request method is not valid for this snap.
  * @throws If the `snap_dialog` call failed.
  */
-
 export const onRpcRequest: OnRpcRequestHandler = async (args) => {
   try {
     const handledResponse = await handleRpcRequest(
@@ -94,10 +93,15 @@ async function handleRpcRequest({
   console.log("Switching on method: ", request.method);
   console.log("Request Params:", request.params);
   switch (request.method) {
-    // case "nocturne_setSpendKey":
-    //   const { spendKey } = request.params;
-    //   await kvStore.putString(SPEND_KEY_DB_KEY, spendKey);
-    //   return null;
+    case "nocturne_setSpendKey":
+      const { spendKey } = request.params;
+
+      if (await kvStore.getString(SPEND_KEY_DB_KEY)) {
+        throw new Error("Spend key already set");
+      }
+
+      await kvStore.putString(SPEND_KEY_DB_KEY, spendKey);
+      return;
     case "nocturne_requestViewingKey":
       const viewer = signer.viewer();
       return {

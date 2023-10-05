@@ -17,7 +17,7 @@ export interface SetSpendKeyMethod {
   params: {
     spendKey: string;
   };
-  return: boolean;
+  return: undefined;
 }
 
 export interface SignCanonAddrRegistryEntryMethod {
@@ -54,6 +54,7 @@ export interface RequestViewingKeyMethod {
 }
 
 export type RpcRequestMethod =
+  | SetSpendKeyMethod
   | SignCanonAddrRegistryEntryMethod
   | SignOperationMethod
   | RequestViewingKeyMethod;
