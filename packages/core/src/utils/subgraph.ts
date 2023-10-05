@@ -14,7 +14,7 @@ const latestIndexedBlockQuery = `
 }
 `;
 
-interface FetchLatestIndexedBlockResponse {
+interface fetchLatestIndexedBlockResponse {
   data: {
     _meta: {
       block: {
@@ -28,7 +28,7 @@ interface FetchLatestIndexedBlockResponse {
 export async function fetchLatestIndexedBlock(
   endpoint: string
 ): Promise<number> {
-  const query = makeSubgraphQuery<undefined, FetchLatestIndexedBlockResponse>(
+  const query = makeSubgraphQuery<undefined, fetchLatestIndexedBlockResponse>(
     endpoint,
     latestIndexedBlockQuery,
     "latest indexed block"
@@ -115,7 +115,7 @@ const subtreeCommitQuery = (params: string, whereClause: string) => `
 `;
 
 // gets last committed merkle index on or before a given totalEntityIndex
-export async function fetchlatestCommittedMerkleIndex(
+export async function fetchLatestCommittedMerkleIndex(
   endpoint: string,
   toTotalEntityIndex?: TotalEntityIndex
 ): Promise<number | undefined> {
