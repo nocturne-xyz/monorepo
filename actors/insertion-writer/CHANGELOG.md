@@ -1,5 +1,22 @@
 # @nocturne-xyz/insertion-writer
 
+## 0.4.0
+
+### Minor Changes
+
+- a6275d8a: - split `core` in half, creating a new `client` package that houses `NocturneClient` and everything around it
+  - moved all "sync adapter" interfaces into `core`
+  - moved all "sync adapter" implementations into data-source-specific packages `rpc-sync-adapters`, `subgraph-sync-adapters`, and `hasura-sync-adapters`
+
+### Patch Changes
+
+- Updated dependencies [22abab87]
+- Updated dependencies [a6275d8a]
+  - @nocturne-xyz/core@3.0.0
+  - @nocturne-xyz/subgraph-sync-adapters@0.3.0
+  - @nocturne-xyz/persistent-log@0.1.7
+  - @nocturne-xyz/offchain-utils@0.1.17
+
 ## 0.3.1
 
 ### Patch Changes
