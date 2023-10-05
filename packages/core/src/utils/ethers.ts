@@ -1,7 +1,6 @@
 import { TypedEvent } from "@nocturne-xyz/contracts/dist/src/common";
-import { BaseContract, ContractReceipt, Event, EventFilter } from "ethers";
-import { EventFragment, Result } from "ethers/lib/utils";
-
+import { BaseContract, EventFilter, ContractReceipt, Event } from "ethers";
+import { Result, EventFragment } from "ethers/lib/utils";
 const CHUNK_SIZE = 2000;
 
 export async function queryEvents<T extends Result, C extends BaseContract>(

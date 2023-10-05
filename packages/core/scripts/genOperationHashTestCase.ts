@@ -2,10 +2,9 @@ import { _TypedDataEncoder } from "ethers/lib/utils";
 import {
   SignableJoinSplit,
   SignableOperationWithNetworkInfo,
-  computeOperationDigest,
-  hashOperation,
+  OperationTrait
 } from "../src";
-import { OPERATION_TYPES } from "../src/primitives/operation";
+import { __OPERATION_TYPES } from "../src/primitives/operation";
 
 (async () => {
   const joinSplit: SignableJoinSplit = {
@@ -72,41 +71,41 @@ import { OPERATION_TYPES } from "../src/primitives/operation";
 
   console.log("operation", operation);
 
-  const opHash = hashOperation(operation);
+  const opHash = OperationTrait.hash(operation);
   console.log("operation hash", opHash);
 
-  const opDigest = computeOperationDigest(operation);
+  const opDigest = OperationTrait.computeDigest(operation);
   console.log("operation digest", "0x" + opDigest.toString(16));
 
   const joinSplitHash = _TypedDataEncoder.hashStruct(
     "JoinSplitWithoutProof",
-    OPERATION_TYPES,
+    __OPERATION_TYPES,
     joinSplit
   );
   console.log("joinSplitHash", joinSplitHash);
 
   const joinSplitsArrayHash = _TypedDataEncoder.hashStruct(
     "JoinSplitWithoutProof[]",
-    OPERATION_TYPES,
+    __OPERATION_TYPES,
     operation.confJoinSplits
   );
   console.log("joinSplitsArrayHash", joinSplitsArrayHash);
 
   const pubJoinSplitHash = _TypedDataEncoder.hashStruct(
     "PublicJoinSplitWithoutProof",
-    OPERATION_TYPES,
+    __OPERATION_TYPES,
     operation.pubJoinSplits[0]
   );
   console.log("pubJoinSplitHash", pubJoinSplitHash);
 
   const pubJoinSplitsArrayHash = _TypedDataEncoder.hashStruct(
     "PublicJoinSplitWithoutProof[]",
-    OPERATION_TYPES,
+    __OPERATION_TYPES,
     operation.pubJoinSplits
   );
   console.log("pubJoinSplitsArrayHash", pubJoinSplitsArrayHash);
 
-  const typehash = new _TypedDataEncoder(OPERATION_TYPES)._types[
+  const typehash = new _TypedDataEncoder(__OPERATION_TYPES)._types[
     "OperationWithoutProofs"
   ];
   console.log("typehash", typehash);

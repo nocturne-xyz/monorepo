@@ -19,6 +19,7 @@
     "publish": "yarn build; yarn npm publish --access public"
   },
   "dependencies": {
+    "@nocturne-xyz/client": "workspace:^",
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",

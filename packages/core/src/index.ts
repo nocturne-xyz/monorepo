@@ -1,16 +1,13 @@
 export * from "./utils";
-export * from "./conversion";
 export * from "./primitives";
 export * from "./proof";
 export * from "./store";
 export * from "./sync";
 export * from "./request";
-export * from "./OpTracker";
-export * from "./operationRequest";
-export * from "./snapJsonRpc";
 
 export {
   NocturneSigner,
+  NocturneSignature,
   NocturneViewer,
   generateRandomSpendingKey,
   StealthAddress,
@@ -25,10 +22,11 @@ export {
   SpendPk,
 } from "@nocturne-xyz/crypto";
 
-export { NocturneClient } from "./NocturneClient";
-export { GetNotesOpts } from "./NocturneDB";
-export { SyncOpts } from "./syncSDK";
-export { signOperation } from "./signOperation";
-export { proveOperation } from "./proveOperation";
-export { NocturneDB } from "./NocturneDB";
 export { SparseMerkleProver } from "./SparseMerkleProver";
+export { encryptNote, decryptNote } from "./noteEncryption";
+export {
+  BLOCK_GAS_LIMIT,
+  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
+  maxGasForOperation,
+  gasCompensationForParams,
+} from "./gasCalculation";

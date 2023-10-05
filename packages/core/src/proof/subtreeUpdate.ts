@@ -1,9 +1,13 @@
 import { BaseProof } from "./types";
-import { Note, NoteTrait, AssetTrait, TreeConstants } from "../primitives";
-import { bigintToBEPadded, bigInt256ToFieldElems } from "../utils";
+import { Note, NoteTrait, AssetTrait } from "../primitives";
+import {
+  bigintToBEPadded,
+  bigInt256ToFieldElems,
+  TreeConstants,
+  merklePathToIndex,
+} from "../utils";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
-import { merklePathToIndex } from "../primitives/typeHelpers";
 
 export interface SubtreeUpdateProofWithPublicSignals {
   proof: BaseProof;

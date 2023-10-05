@@ -3,7 +3,7 @@ import { Job, Queue, Worker } from "bullmq";
 import { BatcherDB, StatusDB } from "./db";
 import {
   OperationStatus,
-  computeOperationDigest,
+  OperationTrait,
   SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/core";
 import {
@@ -138,7 +138,7 @@ export class BundlerBatcher {
               batch.length
             );
             const setJobStatusTransactions = batch.map((op) => {
-              const jobId = computeOperationDigest(op).toString();
+              const jobId = OperationTrait.computeDigest(op).toString();
               return this.statusDB.getSetJobStatusTransaction(
                 jobId,
                 OperationStatus.IN_BATCH

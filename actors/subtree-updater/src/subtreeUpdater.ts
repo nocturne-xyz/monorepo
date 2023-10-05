@@ -14,7 +14,7 @@ import {
   IncludedNoteCommitment,
   BaseProof,
   SubtreeUpdateInputs,
-  fetchlatestCommittedMerkleIndex,
+  SubgraphUtils,
 } from "@nocturne-xyz/core";
 import IORedis from "ioredis";
 import { Handler } from "@nocturne-xyz/contracts";
@@ -24,6 +24,7 @@ import { TreeInsertionLog, Insertion } from "@nocturne-xyz/persistent-log";
 import { Mutex } from "async-mutex";
 import { ACTOR_NAME, COMPONENT_NAME } from "./constants";
 
+const { fetchlatestCommittedMerkleIndex } = SubgraphUtils;
 const { BATCH_SIZE } = TreeConstants;
 const SUBTREE_INCLUDE_ARRAY = [true, ...range(BATCH_SIZE - 1).map(() => false)];
 const INSERTION_LOG_STREAM_NAME = "insertion-log";

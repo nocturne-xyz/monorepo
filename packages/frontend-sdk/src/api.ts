@@ -3,13 +3,15 @@ import {
   Address,
   AssetWithBalance,
   DepositQuoteResponse,
-  OperationRequestWithMetadata,
   ProvenOperation,
   SignedOperation,
   StealthAddress,
   SubmittableOperationWithNetworkInfo,
-  SyncOpts,
 } from "@nocturne-xyz/core";
+import {
+  OperationRequestWithMetadata,
+  SyncOpts,
+} from "@nocturne-xyz/client";
 import { ContractTransaction } from "ethers";
 import { GetSnapsResponse, Snap } from "./metamask/types";
 import {

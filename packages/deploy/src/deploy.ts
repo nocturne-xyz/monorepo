@@ -1,3 +1,5 @@
+import * as fs from "fs";
+import { ethers } from "ethers";
 import {
   JoinSplitVerifier__factory,
   ProxyAdmin,
@@ -22,21 +24,18 @@ import {
   RethAdapter__factory,
   IPoseidonExtT7__factory,
 } from "@nocturne-xyz/contracts";
-import { ethers } from "ethers";
-import { ProxiedContract } from "./proxy";
 import {
   ProxyKind,
   TransparentProxyAddresses,
   NocturneContractDeployment,
   Erc20Config,
   ProtocolAddressWithMethods,
+  NocturneConfig,
 } from "@nocturne-xyz/config";
+import { Address } from "@nocturne-xyz/core";
+import { ProxiedContract } from "./proxy";
 import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
-import { NocturneConfig } from "@nocturne-xyz/config";
-import { Address, getSelector } from "./utils";
-import { protocolWhitelistKey } from "@nocturne-xyz/core";
-import * as fs from "fs";
-import findWorkspaceRoot from "find-yarn-workspace-root";
+import { getSelector, protocolWhitelistKey } from "./utils";
 import {
   ContractVerification,
   NocturneDeploymentVerification,
@@ -48,6 +47,7 @@ import {
   isNocturneProxy,
 } from "./verification";
 
+import findWorkspaceRoot from "find-yarn-workspace-root";
 const ROOT_DIR = findWorkspaceRoot()!;
 const POSEIDON_EXT_T7_BYTECODE = fs.readFileSync(
   `${ROOT_DIR}/packages/contracts/poseidon-bytecode/PoseidonExtT7.txt`,

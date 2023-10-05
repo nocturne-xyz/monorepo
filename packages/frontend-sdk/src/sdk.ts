@@ -9,54 +9,55 @@ import {
 } from "@nocturne-xyz/contracts";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
-  ActionMetadata,
   Address,
   AssetTrait,
   AssetType,
   AssetWithBalance,
-  BundlerOpTracker,
   ClosableAsyncIterator,
   DepositQuoteResponse,
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
-  MockEthToTokenConverter,
-  NocturneClient,
-  NocturneDB,
-  NocturneViewer,
-  OpRequestBuilder,
-  OperationRequestWithMetadata,
   OperationStatusResponse,
   PreSignOperation,
   ProvenOperation,
   RelayRequest,
-  RequestViewingKeyMethod,
-  RpcRequestMethod,
-  SDKSyncAdapter,
-  SignCanonAddrRegistryEntryMethod,
-  SignOperationMethod,
   SignedOperation,
   SparseMerkleProver,
   StealthAddress,
   StealthAddressTrait,
   SubmittableOperationWithNetworkInfo,
-  SyncOpts,
   Thunk,
   VerifyingKey,
-  compressPoint,
-  computeOperationDigest,
   decomposeCompressedPoint,
   encodeEncodedAssetAddrWithSignBitsPI,
   hashDepositRequest,
   joinSplitPublicSignalsToArray,
-  newOpRequestBuilder,
   packToSolidityProof,
   parseEventsFromContractReceipt,
-  proveOperation,
-  stringifyObjectValues,
   thunk,
   unpackFromSolidityProof,
+  NocturneViewer,
+  compressPoint,
+  SDKSyncAdapter,
+  OperationTrait,
 } from "@nocturne-xyz/core";
-import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
+import {
+  NocturneClient,
+  OpRequestBuilder,
+  SignCanonAddrRegistryEntryMethod,
+  NocturneDB,
+  MockEthToTokenConverter,
+  BundlerOpTracker,
+  RequestViewingKeyMethod,
+  proveOperation,
+  stringifyObjectValues,
+  SyncOpts,
+  RpcRequestMethod,
+  SignOperationMethod,
+  newOpRequestBuilder,
+  OperationRequestWithMetadata,
+  ActionMetadata,
+} from "@nocturne-xyz/client";
 import {
   WasmCanonAddrSigCheckProver,
   WasmJoinSplitProver,
@@ -72,7 +73,6 @@ import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
 import { NocturneSdkApi, SnapStateApi } from "./api";
-import { DepositAdapter, SubgraphAdapters } from "./dataFetching";
 import { SnapStateSdk } from "./metamask";
 import { GetSnapOptions } from "./metamask/types";
 import {
@@ -99,8 +99,9 @@ import {
   getTokenContract,
   toDepositRequest,
 } from "./utils";
-
-const { SubgraphSDKSyncAdapter, SubgraphDepositAdapter } = SubgraphAdapters;
+import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
+import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
+import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
 
 export interface NocturneSdkOptions {
   // interface for fetching deposit data from subgraph and screener
@@ -638,7 +639,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
   async verifyProvenOperation(operation: ProvenOperation): Promise<boolean> {
     console.log("ProvenOperation:", operation);
-    const opDigest = computeOperationDigest(operation);
+    const opDigest = OperationTrait.computeDigest(operation);
 
     const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] =
       operation.joinSplits.map((joinSplit) => {

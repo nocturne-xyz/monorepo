@@ -1,15 +1,13 @@
 import { ethers } from "ethers";
+import { Action, Address, AssetTrait } from "@nocturne-xyz/core";
 import {
-  Action,
-  Address,
-  AssetTrait,
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
   OperationMetadataItem,
   BuilderItemToProcess,
   UnwrapRequest,
-} from "@nocturne-xyz/core";
+} from "@nocturne-xyz/client";
 import ERC20_ABI from "./abis/ERC20.json";
 
 export interface Erc20PluginMethods {

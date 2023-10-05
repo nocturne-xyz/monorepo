@@ -5,8 +5,8 @@ import {
   DepositScreenerScreener,
   DepositScreenerServer,
   DummyScreeningApi,
-  SubgraphScreenerSyncAdapter,
 } from "@nocturne-xyz/deposit-screener";
+import { SubgraphDepositEventSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { ethers } from "ethers";
 import IORedis from "ioredis";
@@ -71,7 +71,7 @@ async function startDepositScreenerScreener(
   const { depositManagerAddress, subgraphUrl, rpcUrl } = config;
 
   const logger = makeTestLogger("deposit-screener", "processor");
-  const adapter = new SubgraphScreenerSyncAdapter(subgraphUrl, logger);
+  const adapter = new SubgraphDepositEventSyncAdapter(subgraphUrl, logger);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const screener = new DepositScreenerScreener(
     adapter,

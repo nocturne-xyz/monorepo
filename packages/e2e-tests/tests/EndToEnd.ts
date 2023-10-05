@@ -11,19 +11,21 @@ import {
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
-  NocturneClient,
-  NocturneDB,
-  newOpRequestBuilder,
   queryEvents,
   Asset,
   JoinSplitProver,
-  proveOperation,
   OperationStatus,
-  OperationRequestWithMetadata,
   NocturneSigner,
-  signOperation,
   AssetTrait,
 } from "@nocturne-xyz/core";
+import {
+  NocturneClient,
+  NocturneDB,
+  newOpRequestBuilder,
+  proveOperation,
+  OperationRequestWithMetadata,
+  signOperation,
+} from "@nocturne-xyz/client";
 import {
   GAS_FAUCET_DEFAULT_AMOUNT,
   GAS_PRICE,

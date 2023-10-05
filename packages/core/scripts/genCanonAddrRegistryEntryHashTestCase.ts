@@ -1,7 +1,7 @@
 import { _TypedDataEncoder } from "ethers/lib/utils";
 import { CanonAddrRegistryEntry } from "../src";
 import {
-  CANON_ADDR_REGISTRY_ENTRY_TYPES,
+  __CANON_ADDR_REGISTRY_ENTRY_TYPES,
   computeCanonAddrRegistryEntryDigest,
   hashCanonAddrRegistryEntry,
 } from "../src/primitives/canonAddrRegistryEntry";
@@ -23,7 +23,7 @@ import {
   );
   console.log("entry digest", digest);
 
-  const typehash = new _TypedDataEncoder(CANON_ADDR_REGISTRY_ENTRY_TYPES)
+  const typehash = new _TypedDataEncoder(__CANON_ADDR_REGISTRY_ENTRY_TYPES)
     ._types["CanonAddrRegistryEntry"];
   console.log("typehash", typehash);
 })();

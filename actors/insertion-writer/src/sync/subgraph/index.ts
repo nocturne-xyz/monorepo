@@ -1,1 +1,0 @@
-export { SubgraphTreeInsertionSyncAdapter } from "./adapter";

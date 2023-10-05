@@ -17,10 +17,10 @@ import { ethers, TypedDataDomain } from "ethers";
 
 const { _TypedDataEncoder } = ethers.utils;
 
-export const TELLER_CONTRACT_NAME = "NocturneTeller";
-export const TELLER_CONTRACT_VERSION = "v1";
+const TELLER_CONTRACT_NAME = "NocturneTeller";
+const TELLER_CONTRACT_VERSION = "v1";
 
-export const OPERATION_TYPES = {
+export const __OPERATION_TYPES = {
   OperationWithoutProofs: [
     { name: "pubJoinSplits", type: "PublicJoinSplitWithoutProof[]" },
     { name: "confJoinSplits", type: "JoinSplitWithoutProof[]" },
@@ -73,7 +73,48 @@ export const OPERATION_TYPES = {
   ],
 };
 
-export function computeOperationDigest(
+export class OperationTrait {
+  static computeDigest(
+    operation:
+      | PreSignOperation
+      | SignedOperation
+      | ProvenOperation
+      | SignableOperationWithNetworkInfo
+      | SubmittableOperationWithNetworkInfo
+  ): bigint {
+    return computeOperationDigest(operation);
+  }
+
+  static hash(
+    operation:
+      | PreSignOperation
+      | SignedOperation
+      | ProvenOperation
+      | SignableOperationWithNetworkInfo
+  ): string {
+    return hashOperation(operation);
+  }
+
+  static toSignable(
+    op: PreSignOperation | SignedOperation | ProvenOperation
+  ): SignableOperationWithNetworkInfo {
+    return toSignableOperation(op);
+  }
+
+  static toSubmittable(
+    op: ProvenOperation
+  ): SubmittableOperationWithNetworkInfo {
+    return toSubmittableOperation(op);
+  }
+
+  static getTrackedAssets(
+    op: PreSignOperation | SignedOperation | ProvenOperation
+  ): TrackedAsset[] {
+    return getTrackedAssets(op);
+  }
+}
+
+function computeOperationDigest(
   operation:
     | PreSignOperation
     | SignedOperation
@@ -92,11 +133,11 @@ export function computeOperationDigest(
     verifyingContract: operation.networkInfo.tellerContract,
   };
 
-  const digest = _TypedDataEncoder.hash(domain, OPERATION_TYPES, operation);
+  const digest = _TypedDataEncoder.hash(domain, __OPERATION_TYPES, operation);
   return BigInt(digest) % BN254_SCALAR_FIELD_MODULUS;
 }
 
-export function hashOperation(
+function hashOperation(
   operation:
     | PreSignOperation
     | SignedOperation
@@ -109,13 +150,13 @@ export function hashOperation(
 
   return _TypedDataEncoder.hashStruct(
     "OperationWithoutProofs",
-    OPERATION_TYPES,
+    __OPERATION_TYPES,
     operation
   );
 }
 
 // TODO: eventually remove translation layer and build in correct op structure into sdk
-export function toSignableOperation(
+function toSignableOperation(
   op: PreSignOperation | SignedOperation | ProvenOperation
 ): SignableOperationWithNetworkInfo {
   const {
@@ -188,7 +229,7 @@ export function toSignableOperation(
   };
 }
 
-export function toSubmittableOperation(
+function toSubmittableOperation(
   op: ProvenOperation
 ): SubmittableOperationWithNetworkInfo {
   const {
@@ -263,7 +304,7 @@ export function toSubmittableOperation(
   };
 }
 
-export function getTrackedAssets(
+function getTrackedAssets(
   op: PreSignOperation | SignedOperation | ProvenOperation
 ): TrackedAsset[] {
   const { joinSplits, refunds } = op;

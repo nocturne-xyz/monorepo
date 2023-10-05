@@ -7,14 +7,16 @@ import {
 import {
   AssetType,
   JoinSplitProver,
-  NocturneClient,
-  proveOperation,
-  newOpRequestBuilder,
   NoteTrait,
   unzip,
   NocturneSigner,
-  signOperation,
 } from "@nocturne-xyz/core";
+import {
+  NocturneClient,
+  proveOperation,
+  newOpRequestBuilder,
+  signOperation,
+} from "@nocturne-xyz/client";
 import {
   SyncAdapterOption,
   setupTestDeployment,

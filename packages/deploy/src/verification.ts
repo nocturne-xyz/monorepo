@@ -1,4 +1,5 @@
-import { Address, execAsync } from "./utils";
+import { execAsync } from "./utils";
+import { Address } from "@nocturne-xyz/core";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as JSON from "bigint-json-serialization";
 

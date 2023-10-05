@@ -1,12 +1,4 @@
-export {
-  sortNotesByValue,
-  getJoinSplitRequestTotalValue,
-  sleep,
-  merklePathToIndex,
-  getMerkleIndicesAndNfsFromOp,
-} from "../primitives/typeHelpers";
 export { bigInt256ToFieldElems, bigintToBEPadded } from "./bits";
-export { protocolWhitelistKey } from "./contract";
 export {
   zip,
   unzip,
@@ -22,14 +14,19 @@ export {
   thunk,
   Thunk,
   ArrayElem,
+  consecutiveChunks,
+  omitIndices,
 } from "./functional";
 export { numberToStringPadded } from "./strings";
 export { assertOrErr } from "./error";
-export { queryEvents, parseEventsFromContractReceipt } from "./ethers";
 export {
   merkleIndexToBatchOffset,
   merkleIndexToSubtreeIndex,
   batchOffsetToLatestMerkleIndexInBatch,
-} from "./treeIndex";
+  merklePathToIndex,
+  TreeConstants,
+} from "./tree";
 export { MapWithObjectKeys, SetWithObjectKeys } from "./collections";
-export { Histogram, timed, timedAsync } from "./timing";
+export { Histogram, timed, timedAsync, sleep } from "./timing";
+export { queryEvents, parseEventsFromContractReceipt } from "./ethers";
+export * as SubgraphUtils from "./subgraph";

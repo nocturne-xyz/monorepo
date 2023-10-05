@@ -1,11 +1,11 @@
 import "mocha";
 
+import { BinaryPoseidonTree } from "./utils";
 import { expect } from "chai";
 import * as path from "path";
 import {
   Note,
   NocturneSigner,
-  BinaryPoseidonTree,
   NoteTrait,
   AssetType,
   subtreeUpdateInputsFromBatch,

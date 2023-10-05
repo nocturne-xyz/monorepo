@@ -4,17 +4,19 @@ import {
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
-  ActionMetadata,
   Asset,
   JoinSplitProver,
+  OperationTrait,
+  NocturneSigner,
+} from "@nocturne-xyz/core";
+import {
+  ActionMetadata,
   NocturneDB,
   NocturneClient,
   newOpRequestBuilder,
-  computeOperationDigest,
   proveOperation,
-  NocturneSigner,
   signOperation,
-} from "@nocturne-xyz/core";
+} from "@nocturne-xyz/client";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ethers } from "ethers";
@@ -151,7 +153,7 @@ describe("Optimistic nullifier tracking", () => {
     expect(nfRecord0.nullifier).to.not.eql(nfRecord1.nullifier);
 
     // Check op digest record
-    const opDigest = computeOperationDigest(signedOp);
+    const opDigest = OperationTrait.computeDigest(signedOp);
     const opDigestRecords = await db.getAllOptimisticOpDigestRecords();
     expect(opDigestRecords.size).to.eql(1);
 
@@ -271,7 +273,7 @@ describe("Optimistic nullifier tracking", () => {
     expect(nfRecord0.nullifier).to.not.eql(nfRecord1.nullifier);
 
     // Check op digest record
-    const opDigest = computeOperationDigest(signedOp);
+    const opDigest = OperationTrait.computeDigest(signedOp);
     const opDigestRecords = await db.getAllOptimisticOpDigestRecords();
     expect(opDigestRecords.size).to.eql(1);
 

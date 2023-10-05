@@ -9,19 +9,21 @@ import {
   Address,
   Asset,
   JoinSplitProver,
+  StealthAddressTrait,
+  OperationTrait,
+  min,
+  parseEventsFromContractReceipt,
+  sleep,
+  NocturneSigner,
+} from "@nocturne-xyz/core";
+import {
   NocturneClient,
   OperationRequest,
   newOpRequestBuilder,
   OperationRequestWithMetadata,
-  StealthAddressTrait,
-  computeOperationDigest,
-  min,
-  parseEventsFromContractReceipt,
   proveOperation,
-  sleep,
   signOperation,
-  NocturneSigner,
-} from "@nocturne-xyz/core";
+} from "@nocturne-xyz/client";
 import {
   makeCreateCounterFn,
   makeCreateHistogramFn,
@@ -332,7 +334,7 @@ export class TestActor {
       const signed = signOperation(this.nocturneSigner, preSign);
       await this.client.applyOptimisticRecordsForOp(signed);
 
-      const opDigest = computeOperationDigest(signed);
+      const opDigest = OperationTrait.computeDigest(signed);
       this.logger.info(`proving operation with digest ${opDigest}`, {
         opDigest,
         signedOp: signed,

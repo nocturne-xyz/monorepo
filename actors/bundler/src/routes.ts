@@ -8,7 +8,7 @@ import {
 import { Request, RequestHandler, Response } from "express";
 import {
   OperationStatus,
-  computeOperationDigest,
+  OperationTrait,
   SubmittableOperationWithNetworkInfo,
   RelayResponse,
   OperationStatusResponse,
@@ -67,7 +67,7 @@ export function makeRelayHandler({
     }
 
     const operation = errorOrRelayRequest.operation;
-    const digest = computeOperationDigest(operation);
+    const digest = OperationTrait.computeDigest(operation);
     const childLogger = logger.child({ opDigest: digest });
 
     const logValidationFailure = (msg: string) =>
@@ -218,7 +218,7 @@ async function postJob(
   logger: Logger,
   operation: SubmittableOperationWithNetworkInfo
 ): Promise<string> {
-  const jobId = computeOperationDigest(operation).toString();
+  const jobId = OperationTrait.computeDigest(operation).toString();
   const operationJson = JSON.stringify(operation);
   const jobData: OperationJobData = {
     operationJson,

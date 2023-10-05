@@ -1,12 +1,8 @@
 import { DepositManager } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { fetchDepositEvents } from "@nocturne-xyz/deposit-screener/dist/src/sync/subgraph/fetch";
-import {
-  Asset,
-  NocturneClient,
-  StealthAddressTrait,
-  sleep,
-} from "@nocturne-xyz/core";
+import { fetchDepositEvents } from "@nocturne-xyz/subgraph-sync-adapters/src/depositEvents/fetch";
+import { Asset, StealthAddressTrait, sleep } from "@nocturne-xyz/core";
+import { NocturneClient } from "@nocturne-xyz/client";
 import { ethers } from "ethers";
 import {
   SUBGRAPH_URL,

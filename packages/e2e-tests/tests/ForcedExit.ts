@@ -5,20 +5,22 @@ import { ethers } from "ethers";
 import { DepositManager, Teller } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
-  NocturneClient,
-  NocturneDB,
-  newOpRequestBuilder,
   queryEvents,
   Asset,
   JoinSplitProver,
-  proveOperation,
-  OperationRequestWithMetadata,
   NocturneSigner,
-  signOperation,
   JoinSplitInfo,
   SubmittableOperationWithNetworkInfo,
-  computeOperationDigest,
+  OperationTrait,
 } from "@nocturne-xyz/core";
+import {
+  NocturneClient,
+  NocturneDB,
+  newOpRequestBuilder,
+  signOperation,
+  proveOperation,
+  OperationRequestWithMetadata,
+} from "@nocturne-xyz/client";
 import { ONE_DAY_SECONDS } from "../src/utils";
 import { depositFundsMultiToken } from "../src/deposit";
 import {
@@ -205,7 +207,7 @@ describe("forcedExit", async () => {
       );
       expect(forcedExitEvents.length).to.equal(1);
       expect(forcedExitEvents[0].args.opDigests[0].toBigInt()).to.equal(
-        computeOperationDigest(operation)
+        OperationTrait.computeDigest(operation)
       );
       for (let i = 0; i < joinSplitInfos.length; i++) {
         expect(

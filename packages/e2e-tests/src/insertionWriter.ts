@@ -1,7 +1,5 @@
-import {
-  InsertionWriter,
-  SubgraphTreeInsertionSyncAdapter,
-} from "@nocturne-xyz/insertion-writer";
+import { InsertionWriter } from "@nocturne-xyz/insertion-writer";
+import { SubgraphTreeInsertionSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { getInsertionLogRedisServer } from "./subtreeUpdater";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import IORedis from "ioredis";

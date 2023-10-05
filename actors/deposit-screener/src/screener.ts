@@ -11,6 +11,9 @@ import {
   IterSyncOpts,
   TotalEntityIndexTrait,
   hashDepositRequest,
+  DepositEventType,
+  DepositEventsBatch,
+  DepositEventSyncAdapter,
 } from "@nocturne-xyz/core";
 import {
   ActorHandle,
@@ -26,11 +29,6 @@ import { Logger } from "winston";
 import { DepositScreenerDB } from "./db";
 import { ScreeningCheckerApi } from "./screening";
 import { Delay } from "./screening/checks/RuleSet";
-import {
-  DepositEventType,
-  DepositEventsBatch,
-  ScreenerSyncAdapter,
-} from "./sync";
 import {
   ACTOR_NAME,
   DELAYED_DEPOSIT_JOB_TAG,
@@ -54,7 +52,7 @@ interface DepositScreenerScreenerMetrics {
 }
 
 export class DepositScreenerScreener {
-  adapter: ScreenerSyncAdapter;
+  adapter: DepositEventSyncAdapter;
   depositManagerContract: DepositManager;
   screeningApi: ScreeningCheckerApi;
   screenerDelayQueue: Queue<DepositRequestJobData>;
@@ -66,7 +64,7 @@ export class DepositScreenerScreener {
   metrics: DepositScreenerScreenerMetrics;
 
   constructor(
-    syncAdapter: ScreenerSyncAdapter,
+    syncAdapter: DepositEventSyncAdapter,
     depositManagerAddress: Address,
     provider: ethers.providers.Provider,
     redis: IORedis,

@@ -1,9 +1,8 @@
 import { NocturneConfig } from "@nocturne-xyz/config";
-
+import { OperationMetadata } from "@nocturne-xyz/client";
 import {
   AssetType,
   ClosableAsyncIterator,
-  OperationMetadata,
   OperationStatusResponse,
 } from "@nocturne-xyz/core";
 import { AnonErc20SwapQuote } from "@nocturne-xyz/op-request-plugins";

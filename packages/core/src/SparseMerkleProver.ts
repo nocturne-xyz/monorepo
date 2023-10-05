@@ -8,8 +8,9 @@ import {
   omitIndices,
   partition,
   range,
-} from "./utils/functional";
-import { ZERO_VALUE, DEPTH, ARITY } from "./primitives/treeConstants";
+  TreeConstants,
+} from "./utils";
+const { ZERO_VALUE, DEPTH, ARITY } = TreeConstants;
 
 // high level idea:
 // want to sync a local replica of the tree such that

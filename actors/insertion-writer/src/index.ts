@@ -1,11 +1,11 @@
 import { TreeInsertionLog } from "@nocturne-xyz/persistent-log";
+import {
+  TreeInsertionSyncOpts,
+  TreeInsertionSyncAdapter,
+} from "@nocturne-xyz/core";
 import IORedis from "ioredis";
 import { Logger } from "winston";
-import { TreeInsertionSyncAdapter } from "./sync";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
-import { TreeInsertionSyncOpts } from "./sync/syncAdapter";
-
-export * from "./sync";
 
 const INSERTION_LOG_STREAM_NAME = "insertion-log";
 
