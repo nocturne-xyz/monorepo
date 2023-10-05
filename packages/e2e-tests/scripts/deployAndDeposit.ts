@@ -64,7 +64,6 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   const [config, { erc20, gasToken }, { depositManager }] =
     await deployContractsWithDummyConfig(deployerEoa, {
       screeners: [DEPOSIT_SCREENER],
-      bundlers: [BUNDLER],
       subtreeBatchFillers: [deployerEoa.address, SUBTREE_BATCH_FILLER],
     });
 
