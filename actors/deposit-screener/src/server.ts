@@ -1,5 +1,9 @@
 import { Address } from "@nocturne-xyz/core";
-import { ActorHandle, HealthCheckResponse } from "@nocturne-xyz/offchain-utils";
+import {
+  ActorHandle,
+  HealthCheckResponse,
+  geoMiddleware,
+} from "@nocturne-xyz/offchain-utils";
 import { Queue } from "bullmq";
 import cors from "cors";
 import express from "express";
@@ -98,6 +102,7 @@ export class DepositScreenerServer {
     app.use(logMiddleware);
     app.use(cors());
     app.use(express.json());
+    app.use(geoMiddleware({ logger: this.logger }));
     app.use(router);
 
     const server = app.listen(port, () => {
