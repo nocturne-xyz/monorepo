@@ -19,12 +19,16 @@ import {
   makeSignOperationContent,
 } from "./utils/display";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
+import { SnapKvStore } from "./snapdb";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Goerli
 
 const NOCTURNE_BIP44_COINTYPE = 6789;
+const SPEND_KEY_DB_KEY = "nocturne_spend_key";
+
 const config = loadNocturneConfigBuiltin("goerli");
+const kvStore = new SnapKvStore();
 
 async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
   const nocturneNode = await snap.request({
@@ -40,6 +44,15 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
   const sk = ethers.utils.keccak256(ethers.utils.arrayify(keyNode.privateKey!));
   const nocturnePrivKey = new NocturneSigner(ethers.utils.arrayify(sk));
   return nocturnePrivKey;
+}
+
+async function getNocturneSignerFromDb(): Promise<NocturneSigner> {
+  const spendKey = await kvStore.getString(SPEND_KEY_DB_KEY);
+  if (!spendKey) {
+    throw new Error("No spend key found in db");
+  }
+
+  return new NocturneSigner(ethers.utils.arrayify(spendKey));
 }
 
 /**
@@ -74,7 +87,9 @@ async function handleRpcRequest({
     ? parseObjectValues(request.params)
     : undefined;
 
-  const signer = await getNocturneSignerFromBIP44();
+  // Attempt to get signer from db first, if empty get from bip44 which always returns a value
+  const signer =
+    (await getNocturneSignerFromDb()) ?? (await getNocturneSignerFromBIP44());
 
   console.log("Switching on method: ", request.method);
   console.log("Request Params:", request.params);
