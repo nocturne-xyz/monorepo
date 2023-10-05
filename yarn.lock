@@ -3949,18 +3949,14 @@ __metadata:
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/crypto": "workspace:^"
-    "@types/async-retry": ^1.4.5
-    "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
     "@types/mocha": ^10.0.0
     "@types/node": ^18.8.0
-    "@types/randombytes": ^2.0.0
     "@types/sinon": ^10.0.13
     "@types/sinon-chai": ^3.2.9
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
-    async-retry: ^1.3.3
     big-integer: ^1.6.42
     bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
@@ -3971,13 +3967,10 @@ __metadata:
     js-sha256: ^0.9.0
     mocha: ^10.1.0
     prettier: ^2.8.8
-    randombytes: ^2.1.0
     sinon: ^15.0.1
     sinon-chai: ^3.7.0
-    sorted-btree: ^1.8.1
     ts-node: ^10.9.1
     typescript: ^4.8.4
-    winston: ^3.9.0
   languageName: unknown
   linkType: soft
 
@@ -4039,11 +4032,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/core@workspace:packages/core"
   dependencies:
-    "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/crypto": "workspace:^"
     "@types/async-retry": ^1.4.5
-    "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
     "@types/mocha": ^10.0.0
@@ -4290,18 +4281,13 @@ __metadata:
     "@graphql-codegen/cli": ^5.0.0
     "@graphql-codegen/client-preset": ^4.1.0
     "@nocturne-xyz/core": "workspace:^"
-    "@types/chai": ^4.3.3
-    "@types/chai-as-promised": ^7.1.5
-    "@types/mocha": ^10.0.0
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
     "@urql/core": ^4.1.1
-    chai: ^4.3.6
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
     graphql: ^16.7.1
-    mocha: ^10.1.0
     prettier: ^2.8.8
     ts-node: ^10.9.1
     typescript: ^4.8.4
@@ -4496,18 +4482,12 @@ __metadata:
   resolution: "@nocturne-xyz/rpc-sync-adapters@workspace:sync/rpc-sync-adapters"
   dependencies:
     "@nocturne-xyz/core": "workspace:^"
-    "@types/chai": ^4.3.3
-    "@types/chai-as-promised": ^7.1.5
-    "@types/mocha": ^10.0.0
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
-    chai: ^4.3.6
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
     ethers: ^5.7.2
-    fake-indexeddb: ^4.0.2
-    mocha: ^10.1.0
     prettier: ^2.8.8
     ts-node: ^10.9.1
     typescript: ^4.8.4
@@ -4556,17 +4536,11 @@ __metadata:
   resolution: "@nocturne-xyz/subgraph-sync-adapters@workspace:sync/subgraph-sync-adapters"
   dependencies:
     "@nocturne-xyz/core": "workspace:^"
-    "@types/chai": ^4.3.3
-    "@types/chai-as-promised": ^7.1.5
-    "@types/mocha": ^10.0.0
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
-    chai: ^4.3.6
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
-    fake-indexeddb: ^4.0.2
-    mocha: ^10.1.0
     prettier: ^2.8.8
     ts-node: ^10.9.1
     typescript: ^4.8.4

@@ -1,6 +1,3 @@
-import { TypedEvent } from "@nocturne-xyz/contracts/dist/src/common";
-import { Result } from "ethers/lib/utils";
-
 const U32_MAX = 0xffffffffn;
 
 // a "total entity index" is defined as `blockNumber << 96 | txIdx << 64 | logIdx << 32 | entityIdx `,
@@ -14,6 +11,12 @@ const U32_MAX = 0xffffffffn;
 //   - nullifier B (entityIdx = 1)
 //   - new encrypted note A (entityIdx = 2)
 //   - new encrypted note B (entityIdx = 3)
+
+export interface EthereumEventOrd {
+  blockNumber: number;
+  transactionIndex: number;
+  logIndex: number;
+}
 
 export type TotalEntityIndex = bigint;
 export interface TotalEntityIndexComponents {
@@ -81,7 +84,7 @@ export class TotalEntityIndexTrait {
     return `0x${idx.toString(16).padStart(64, "0")}`;
   }
 
-  public static fromTypedEvent<E extends TypedEvent<A>, A extends Result>(
+  public static fromTypedEvent<E extends EthereumEventOrd>(
     event: E
   ): TotalEntityIndex {
     return this.fromComponents({
