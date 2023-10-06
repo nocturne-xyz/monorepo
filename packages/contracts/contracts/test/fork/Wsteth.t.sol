@@ -25,9 +25,6 @@ contract WstethTest is ForkBase {
 
         wstethAdapter = new WstethAdapter(address(weth), address(wsteth));
 
-        // Whitelist bundler
-        teller.setBundlerPermission(BUNDLER, true);
-
         // Whitelist weth, wsteth, wsteth adapter
         handler.setContractPermission(address(weth), true);
         handler.setContractPermission(address(wsteth), true);
@@ -122,7 +119,7 @@ contract WstethTest is ForkBase {
         assertEq(wsteth.balanceOf(address(teller)), 0);
 
         // Execute operation
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         teller.processBundle(bundle);
 
         // Check post op balances
@@ -212,7 +209,7 @@ contract WstethTest is ForkBase {
         assertEq(wsteth.balanceOf(address(teller)), 0);
 
         // Execute operation
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         teller.processBundle(bundle);
 
         // Check post op balances

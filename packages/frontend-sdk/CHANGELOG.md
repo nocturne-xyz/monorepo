@@ -1,5 +1,33 @@
 # Changelog
 
+## 3.0.0
+
+### Major Changes
+
+- a6275d8a: - split `core` in half, creating a new `client` package that houses `NocturneClient` and everything around it
+  - moved all "sync adapter" interfaces into `core`
+  - moved all "sync adapter" implementations into data-source-specific packages `rpc-sync-adapters`, `subgraph-sync-adapters`, and `hasura-sync-adapters`
+
+### Minor Changes
+
+- 22abab87: add hasura sync adapters
+
+### Patch Changes
+
+- b8628f56: Adds plugins to fe-sdk
+- Updated dependencies [b8628f56]
+- Updated dependencies [22abab87]
+- Updated dependencies [a6275d8a]
+- Updated dependencies [6ec2a7ac]
+- Updated dependencies [b8628f56]
+  - @nocturne-xyz/op-request-plugins@2.0.0
+  - @nocturne-xyz/core@3.0.0
+  - @nocturne-xyz/client@3.0.0
+  - @nocturne-xyz/subgraph-sync-adapters@0.3.0
+  - @nocturne-xyz/contracts@1.1.1
+  - @nocturne-xyz/idb-kv-store@0.4.6
+  - @nocturne-xyz/local-prover@0.4.6
+
 ## 2.0.0
 
 ### Major Changes

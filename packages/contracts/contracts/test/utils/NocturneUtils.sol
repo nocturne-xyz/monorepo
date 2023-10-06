@@ -277,8 +277,7 @@ library NocturneUtils {
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
             deadline: deadline,
-            atomicActions: args.atomicActions,
-            isForcedExit: false
+            atomicActions: args.atomicActions
         });
 
         return op;

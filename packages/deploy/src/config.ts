@@ -6,7 +6,6 @@ import * as JSON from "bigint-json-serialization";
 export interface NocturneDeployConfigProperties {
   proxyAdminOwner: Address;
   screeners: Address[];
-  bundlers: Address[];
   subtreeBatchFillers: Address[];
   wethAddress: Address;
   erc20s: [string, Erc20Config][];
@@ -19,7 +18,6 @@ export interface NocturneDeployConfigProperties {
 export interface NocturneDeployConfig {
   proxyAdminOwner: Address;
   screeners: Address[];
-  bundlers: Address[];
   subtreeBatchFillers: Address[];
   wethAddress: Address;
   erc20s: Map<string, Erc20Config>;

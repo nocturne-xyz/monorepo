@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0
+
+### Minor Changes
+
+- a6275d8a: - split `core` in half, creating a new `client` package that houses `NocturneClient` and everything around it
+  - moved all "sync adapter" interfaces into `core`
+  - moved all "sync adapter" implementations into data-source-specific packages `rpc-sync-adapters`, `subgraph-sync-adapters`, and `hasura-sync-adapters`
+
+### Patch Changes
+
+- @nocturne-xyz/offchain-utils@0.1.17
+
 ## 0.6.0
 
 ### Minor Changes

@@ -20,7 +20,7 @@ import {
 import { fetchSDKEvents } from "./fetch";
 import { Logger } from "winston";
 
-const { fetchlatestCommittedMerkleIndex, fetchLatestIndexedBlock } =
+const { fetchLatestCommittedMerkleIndex, fetchLatestIndexedBlock } =
   SubgraphUtils;
 
 export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
@@ -47,7 +47,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
     const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
       let from = startTotalEntityIndex;
-      let latestCommittedMerkleIndex = await fetchlatestCommittedMerkleIndex(
+      let latestCommittedMerkleIndex = await fetchLatestCommittedMerkleIndex(
         endpoint,
         from
       );
@@ -104,7 +104,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         );
 
         const newLatestCommittedMerkleIndex =
-          await fetchlatestCommittedMerkleIndex(endpoint, toTotalEntityIndex);
+          await fetchLatestCommittedMerkleIndex(endpoint, toTotalEntityIndex);
 
         // if we have notes and/or mullifiers, update from and get the last committed merkle index as of the entity index we saw
         if (sdkEvents.length > 0) {

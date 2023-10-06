@@ -24,9 +24,6 @@ contract UniswapTest is ForkBase {
     function setUp() public {
         baseSetUp();
 
-        // Whitelist bundler
-        teller.setBundlerPermission(BUNDLER, true);
-
         // Whitelist weth, wsteth, wsteth adapter, and uniswap
         handler.setContractPermission(address(weth), true);
         handler.setContractPermission(address(wsteth), true);
@@ -143,7 +140,7 @@ contract UniswapTest is ForkBase {
         assertEq(weth.balanceOf(address(teller)), 0);
 
         // Execute operation
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         teller.processBundle(bundle);
 
         // Check post op balances
@@ -236,7 +233,7 @@ contract UniswapTest is ForkBase {
         assertEq(weth.balanceOf(address(teller)), 0);
 
         // Execute operation
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         teller.processBundle(bundle);
 
         // Check post op balances

@@ -59,6 +59,5 @@ export const VALID_RELAY_REQUEST = {
     gasPrice: "10n",
     deadline: "1000n",
     atomicActions: true,
-    isForcedExit: false,
   },
 };
