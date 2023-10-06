@@ -104,7 +104,7 @@ import {
 import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
 import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
-import { generateNocturneSpendKey } from "./keygen";
+import { generateNocturneSpendKeyFromEoaSig } from "./eoaSigKeygen";
 
 export interface NocturneSdkOptions {
   // interface for fetching deposit data from subgraph and screener
@@ -268,7 +268,7 @@ export class NocturneSdk implements NocturneSdkApi {
    * Check if snap's spend key is set.
    * @returns true if the user has a spend key set, false otherwise
    */
-  async spendKeyIsSet(): Promise<boolean> {
+  async snapSpendKeyIsSet(): Promise<boolean> {
     return this.invokeSnap<SpendKeyIsSetMethod>({
       method: "nocturne_spendKeyIsSet",
       params: undefined,
@@ -278,18 +278,21 @@ export class NocturneSdk implements NocturneSdkApi {
   /**
    * Generate spend key based on Ethereum private key signature, then pass to snap
    * to store/manage.
-   * @dev Spend key is Uint8Array because we can zero out the array's memory after its been
-   * passed to the snap.
+   * Will throw an error if the snap already has a key stored.
+   * This function should only be used an alternative to the default key generation using the
+   * snap's internal seed phrase when portability is required.
+   * @dev WARNING: 
+   * @dev WARNING: The spending key will momentarily exist in memory
    */
-  async generateAndStoreSpendKey(): Promise<void> {
+  async generateAndStoreSpendKeyFromEoaSig(): Promise<void> {
     // Return early if spend key already set
-    if (await this.spendKeyIsSet()) {
+    if (await this.snapSpendKeyIsSet()) {
       throw new Error("Spend key already set");
     }
 
     // Generate spend key and attempt to set in snap
     const signer = await this.getWindowSigner();
-    let spendKey = await generateNocturneSpendKey(signer);
+    const spendKey = await generateNocturneSpendKeyFromEoaSig(signer);
 
     const maybeErrorString = await this.invokeSnap<SetSpendKeyMethod>({
       method: "nocturne_setSpendKey",

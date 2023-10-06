@@ -93,7 +93,7 @@ async function handleRpcRequest({
   console.log("Switching on method: ", request.method);
   switch (request.method) {
     case "nocturne_spendKeyIsSet":
-      return kvStore.containsKey(SPEND_KEY_DB_KEY);
+      return await kvStore.containsKey(SPEND_KEY_DB_KEY);
     case "nocturne_setSpendKey":
       const { spendKey } = request.params;
 
