@@ -100,10 +100,7 @@ contract Teller is
 
     /// @notice Only callable by EOA
     modifier onlyEoa() {
-        require(
-            tx.origin == msg.sender && msg.sender.code.length == 0,
-            "Only eoa"
-        );
+        require(tx.origin == msg.sender, "Only eoa");
         _;
     }
 
