@@ -155,10 +155,11 @@ contract Teller is
         AssetUtils.transferAssetTo(encodedAsset, address(_handler), value);
     }
 
-    /// @notice Processes a bundle of operations.
-    /// @dev Wraps internal _processBundle method (see below for more details) and adds not paused
-    ///      guard and reentrancy guard.
-    /// @dev Currently restricts callers to only allowed bundlers.
+    /// @notice Processes a bundle of operations. Verifies all proofs, then loops through each op
+    ///         and passes to Handler for processing/execution. Emits one OperationProcessed event
+    ///         per op.
+    /// @dev Restricts caller of entrypoint to EOA to ensure processBundle cannot be atomically
+    ///      called with another transaction.
     /// @param bundle Bundle of operations to process
     function processBundle(
         Bundle calldata bundle
