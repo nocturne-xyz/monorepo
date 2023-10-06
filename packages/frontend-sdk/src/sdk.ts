@@ -284,7 +284,7 @@ export class NocturneSdk implements NocturneSdkApi {
   async generateAndStoreSpendKey(): Promise<void> {
     // Return early if spend key already set
     if (await this.spendKeyIsSet()) {
-      return;
+      throw new Error("Spend key already set");
     }
 
     // Generate spend key and attempt to set in snap

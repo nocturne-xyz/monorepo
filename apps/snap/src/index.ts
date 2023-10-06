@@ -151,8 +151,6 @@ async function handleRpcRequest({
         vkNonce,
       };
     case "nocturne_signOperation":
-      console.log("Request params: ", request.params);
-
       const { op, metadata } = request.params;
       const contentItems = makeSignOperationContent(
         // specifies nothing about ordering
@@ -174,13 +172,8 @@ async function handleRpcRequest({
         throw new Error("snap request rejected by user");
       }
 
-      console.log("signing operation:", op);
       try {
         const signedOp = signOperation(signer, op);
-        console.log(
-          "PreProofOperationInputsAndProofInputs: ",
-          JSON.stringify(signedOp)
-        );
         return signedOp;
       } catch (err) {
         console.log("Error getting pre-proof operation:", err);
