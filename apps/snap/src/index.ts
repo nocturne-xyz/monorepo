@@ -95,7 +95,7 @@ async function handleRpcRequest({
     case "nocturne_spendKeyIsSet":
       return await kvStore.containsKey(SPEND_KEY_DB_KEY);
     case "nocturne_setSpendKey":
-      const { spendKey } = request.params;
+      const spendKey = new Uint8Array(request.params.spendKey);
 
       // Can only set spend key if not already set, only way to reset is to clear snap db and
       // regenerate key
