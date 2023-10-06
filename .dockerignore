@@ -10,3 +10,4 @@
 !circuit-artifacts/joinsplit/joinsplit_cpp/joinsplit.zkey
 !circuit-artifacts/joinsplit/joinsplit_cpp/vkey.json
 !circuit-artifacts/joinsplit/joinsplit_js/*
+**/.env
