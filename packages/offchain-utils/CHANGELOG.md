@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.17
+
+### Patch Changes
+
+- @nocturne-xyz/persistent-log@0.1.7
+
 ## 0.1.16
 
 ### Patch Changes

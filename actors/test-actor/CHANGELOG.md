@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- 257799c9: Add ability to pass oz relayer speed to actors
+- a6275d8a: - split `core` in half, creating a new `client` package that houses `NocturneClient` and everything around it
+  - moved all "sync adapter" interfaces into `core`
+  - moved all "sync adapter" implementations into data-source-specific packages `rpc-sync-adapters`, `subgraph-sync-adapters`, and `hasura-sync-adapters`
+
+### Patch Changes
+
+- Updated dependencies [b8628f56]
+- Updated dependencies [22abab87]
+- Updated dependencies [a6275d8a]
+- Updated dependencies [6ec2a7ac]
+- Updated dependencies [b8628f56]
+  - @nocturne-xyz/op-request-plugins@2.0.0
+  - @nocturne-xyz/core@3.0.0
+  - @nocturne-xyz/client@3.0.0
+  - @nocturne-xyz/subgraph-sync-adapters@0.3.0
+  - @nocturne-xyz/contracts@1.1.1
+  - @nocturne-xyz/local-prover@0.4.6
+  - @nocturne-xyz/offchain-utils@0.1.17
+
 ## 0.4.1
 
 ### Patch Changes

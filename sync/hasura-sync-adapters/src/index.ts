@@ -1,1 +1,1 @@
-export const henlo = "hello";
+export { HasuraSdkSyncAdapter } from "./sdk";

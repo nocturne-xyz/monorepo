@@ -3,13 +3,15 @@ import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { heading, panel, text } from "@metamask/snaps-ui";
 import {
   NocturneSigner,
+  computeCanonAddrRegistryEntryDigest,
+} from "@nocturne-xyz/core";
+import {
   SnapRpcRequestHandlerArgs,
   RpcRequestMethod,
   parseObjectValues,
   signOperation,
   assertAllRpcMethodsHandled,
-  computeCanonAddrRegistryEntryDigest,
-} from "@nocturne-xyz/core";
+} from "@nocturne-xyz/client";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
 import {

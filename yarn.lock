@@ -4507,6 +4507,7 @@ __metadata:
     "@metamask/snaps-cli": 0.32.2
     "@metamask/snaps-types": 0.32.2
     "@metamask/snaps-ui": ^0.32.2
+    "@nocturne-xyz/client": "workspace:^"
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/crypto": "workspace:^"

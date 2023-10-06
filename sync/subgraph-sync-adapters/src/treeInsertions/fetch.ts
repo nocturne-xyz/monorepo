@@ -11,7 +11,7 @@ import {
 } from "@nocturne-xyz/core";
 import { ethers } from "ethers";
 
-const { makeSubgraphQuery, fetchlatestCommittedMerkleIndex } = SubgraphUtils;
+const { makeSubgraphQuery, fetchLatestCommittedMerkleIndex } = SubgraphUtils;
 
 export type TreeInsertion =
   | FilledBatchWithZerosEvent
@@ -223,7 +223,7 @@ function tryFilledBatchWithZerosEventFromTreeInsertionEventResponse(
 export async function fetchLatestSubtreeIndex(
   endpoint: string
 ): Promise<number | undefined> {
-  const latestCommittedMerkleIndex = await fetchlatestCommittedMerkleIndex(
+  const latestCommittedMerkleIndex = await fetchLatestCommittedMerkleIndex(
     endpoint
   );
   return latestCommittedMerkleIndex
