@@ -9,7 +9,6 @@ import {
   UnwrapRequest,
 } from "@nocturne-xyz/client";
 import { ethers } from "ethers";
-import JSBI from "jsbi";
 import ERC20_ABI from "../abis/ERC20.json";
 import { getSwapRoute } from "./helpers";
 import { Percent } from "@uniswap/sdk-core";
