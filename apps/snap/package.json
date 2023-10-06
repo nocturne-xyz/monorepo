@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@metamask/snaps-ui": "^0.32.2",
+    "@nocturne-xyz/client": "workspace:^",
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/crypto": "workspace:^",
