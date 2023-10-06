@@ -98,8 +98,11 @@
     [
       "uniswapV3",
       {
-        "address": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
-        "functionSignatures": ["multicall(uint256,bytes[])"]
+        "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        "functionSignatures": [
+          "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))",
+          "exactInput((bytes,address,uint256,uint256,uint256))"
+        ]
       }
     ],
     [

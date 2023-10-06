@@ -12,6 +12,7 @@ import { ethers } from "ethers";
 import JSBI from "jsbi";
 import ERC20_ABI from "../abis/ERC20.json";
 import { getSwapRoute } from "./helpers";
+import { Percent } from "@uniswap/sdk-core";
 
 const UNISWAP_V3_NAME = "uniswapV3";
 
@@ -59,7 +60,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 `UniswapV3 not supported on chain with id: ${this._op.chainId}`
               );
             }
-            const route = await getSwapRoute({
+            const swapRoute = await getSwapRoute({
               chainId: this._op.chainId,
               provider: this.provider,
               fromAddress: this.config.handlerAddress,
@@ -68,10 +69,39 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               tokenOutAddress: tokenOut,
               maxSlippageBps,
             });
-            if (!route) {
+
+            if (!swapRoute) {
               throw new Error(
                 `No route found for swap. Token in: ${tokenIn}, Token out: ${tokenOut}. Amount in: ${inAmount}`
               );
+            }
+            if (swapRoute.route[0].protocol !== "V3") {
+              throw new Error("Not supporting non-V3 routes");
+            }
+
+            const route = swapRoute.route[0];
+            const pools = route.route.pools;
+            const minimumAmountWithSlippage = BigInt(
+              swapRoute.trade
+                .minimumAmountOut(new Percent(50, 10_000))
+                .toExact()
+            );
+
+            let swapParams: ExactInputSingleParams | ExactInputParams;
+            if (pools.length == 1) {
+              const pool = pools[0];
+              swapParams = {
+                tokenIn: tokenIn,
+                tokenOut: tokenOut,
+                fee: pool.fee,
+                recipient: this.config.handlerAddress,
+                deadline: Math.floor(Date.now() / 1000) + 60 * 20,
+                amountIn: inAmount,
+                amountOutMinimum: minimumAmountWithSlippage,
+                sqrtPriceLimitX96: 0,
+              };
+            } else {
+              throw new Error("TODO: not supporting multi hop");
             }
 
             const unwrap: UnwrapRequest = {
@@ -81,7 +111,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
 
             const swapAction: Action = {
               contractAddress: swapRouterAddress,
-              encodedFunction: route.methodParameters!.calldata,
+              encodedFunction: swapRoute.methodParameters!.calldata,
             };
 
             const refund: RefundRequest = {
