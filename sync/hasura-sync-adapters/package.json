@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/hasura-sync-adapters",
-  "version": "0.1.0",
+  "version": "0.2.2",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,10 +9,10 @@
     "src/**/*"
   ],
   "scripts": {
-    "codegen": "graphql-codegen --config ./graphql-codegen.ts",
     "build": "yarn clean; tsc --build",
     "check": "yarn clean && tsc --noEmit",
     "clean": "rm -rf .turbo dist",
+    "codegen": "graphql-codegen --config ./graphql-codegen.ts",
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src",
     "prettier:write": "prettier --write ./src",
