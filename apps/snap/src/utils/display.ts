@@ -1,9 +1,6 @@
 import { Erc20Config } from "@nocturne-xyz/config";
-import {
-  Address,
-  CanonAddrRegistryEntry,
-  OperationMetadata,
-} from "@nocturne-xyz/core";
+import { Address, CanonAddrRegistryEntry } from "@nocturne-xyz/core";
+import { OperationMetadata } from "@nocturne-xyz/client";
 import { formatUnits } from "ethers/lib/utils";
 
 const lookupTickerByAddress = (
@@ -46,9 +43,14 @@ export const makeSignOperationContent = (
   return opMetadata.items.map((item) => {
     if (item.type === "ConfidentialPayment")
       throw new Error(`${item.type} snap display not yet supported`);
+
+    // TODO support non-erc20 transfer metadata
     const {
+      //@ts-ignore
       amount: amountSmallestUnits,
+      //@ts-ignore
       recipientAddress,
+      //@ts-ignore
       erc20Address,
       actionType: operationType,
     } = item;

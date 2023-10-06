@@ -24,7 +24,7 @@ import { TreeInsertionLog, Insertion } from "@nocturne-xyz/persistent-log";
 import { Mutex } from "async-mutex";
 import { ACTOR_NAME, COMPONENT_NAME } from "./constants";
 
-const { fetchlatestCommittedMerkleIndex } = SubgraphUtils;
+const { fetchLatestCommittedMerkleIndex } = SubgraphUtils;
 const { BATCH_SIZE } = TreeConstants;
 const SUBTREE_INCLUDE_ARRAY = [true, ...range(BATCH_SIZE - 1).map(() => false)];
 const INSERTION_LOG_STREAM_NAME = "insertion-log";
@@ -160,7 +160,7 @@ export class SubtreeUpdater {
     logger.info("starting subtree updater");
 
     const latestCommittedMerkleIndexAtStart =
-      await fetchlatestCommittedMerkleIndex(this.subgraphEndpoint);
+      await fetchLatestCommittedMerkleIndex(this.subgraphEndpoint);
 
     if (latestCommittedMerkleIndexAtStart !== undefined) {
       // recover in-memory tree from insertion log up to and including the latest committed subtree

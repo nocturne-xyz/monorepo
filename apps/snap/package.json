@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/snap",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "description": "Nocturne Snap",
   "license": "(MIT-0 OR Apache-2.0)",
   "main": "src/index.ts",
@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@metamask/snaps-ui": "^0.32.2",
+    "@nocturne-xyz/client": "workspace:^",
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/crypto": "workspace:^",

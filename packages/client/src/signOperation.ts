@@ -33,7 +33,6 @@ export function signOperation(
     gasPrice,
     deadline,
     atomicActions,
-    isForcedExit,
   } = op;
 
   return {
@@ -48,7 +47,6 @@ export function signOperation(
     gasPrice,
     deadline,
     atomicActions,
-    isForcedExit,
   };
 }
 

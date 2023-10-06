@@ -141,8 +141,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             executionGasLimit: 0,
             gasPrice: 0,
             deadline: 0,
-            atomicActions: false,
-            isForcedExit: false
+            atomicActions: false
         });
 
         uint256 totalNumJoinSplits = numPubJoinSplits + numConfJoinSplits;

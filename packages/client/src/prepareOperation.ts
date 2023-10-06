@@ -89,7 +89,6 @@ export async function prepareOperation(
     refunds,
     encodedGasAsset,
     deadline,
-    isForcedExit: opRequest.isForcedExit ?? false,
     atomicActions: true, // always default to atomic until we find reason not to
   };
 

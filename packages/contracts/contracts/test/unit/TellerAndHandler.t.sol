@@ -86,8 +86,6 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         JoinSplit joinSplit
     );
 
-    event ForcedExit(uint256[] opDigests, JoinSplitInfo[][] joinSplitInfos);
-
     function setUp() public virtual {
         // Deploy poseidon libraries
         deployPoseidons();
@@ -109,7 +107,6 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         handler.initialize(address(subtreeUpdateVerifier), address(0x111));
         handler.setTeller(address(teller));
 
-        teller.setBundlerPermission(BUNDLER, true);
         teller.setDepositSourcePermission(DEPOSIT_SOURCE, true);
         handler.setSubtreeBatchFillerPermission(address(this), true);
 
@@ -585,7 +582,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
@@ -659,7 +656,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
@@ -731,7 +728,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
@@ -814,7 +811,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(BOB.balance, uint256(0));
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call 0 and 1 succeeded (approve and eth transfer)
@@ -888,7 +885,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -959,7 +956,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -1027,7 +1024,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -1109,7 +1106,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         );
 
         // Op was processed but call result has reentry failure message
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed
@@ -1218,7 +1215,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         );
 
         // Op was processed but call result has reentry failure message
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -1331,7 +1328,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         );
 
         // Op was processed but call result has reentry failure message
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed, handleOperation only
@@ -1451,7 +1448,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         );
 
         // Op was processed but call result has reentry failure message
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed
@@ -1533,7 +1530,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         // Use Bob as bundler for this call
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed
@@ -1614,7 +1611,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // op processed = false, whole op reverted
@@ -1725,7 +1722,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -1822,7 +1819,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -1933,7 +1930,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
         assertEq(erc20In.balanceOf(address(swapper)), uint256(0));
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -2041,7 +2038,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             true
         );
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, approve call and swap call both succeeded
@@ -2129,7 +2126,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         // Get total leaf count before bundle
         uint256 totalCount = handler.totalCount();
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed, assets unwrapped
@@ -2197,7 +2194,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             })
         );
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, not processed, no assets unwrapped
@@ -2260,7 +2257,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             })
         );
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, not processed, failure reason for approve check failure
@@ -2333,7 +2330,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             })
         );
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, not processed, failure reason for approve check failure
@@ -2402,7 +2399,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             })
         );
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, not processed, failure reason for approve check failure
@@ -2486,7 +2483,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             true
         );
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, not processed, no assets unwrapped
@@ -2551,7 +2548,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(teller)), PER_NOTE_AMOUNT);
         assertEq(token.balanceOf(address(BOB)), 0);
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed (too few gas tokens)
@@ -2615,7 +2612,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(token.balanceOf(address(teller)), 2 * PER_NOTE_AMOUNT);
         assertEq(token.balanceOf(address(BOB)), 0);
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, processed = false
@@ -2709,7 +2706,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             })
         );
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         vm.expectRevert("expired deadline");
         teller.processBundle(bundle);
     }
@@ -2798,7 +2795,7 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
             })
         );
 
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         (, OperationResult[] memory opResults) = teller.processBundle(bundle);
 
         // One op, not processed, failure reason zero code
@@ -2808,357 +2805,6 @@ contract TellerAndHandlerTest is Test, PoseidonDeployer {
         assertEq(opResults[0].failureReason, "!zero code");
         assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
         assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount + 3);
-    }
-
-    function testForcedExitSuccess() public {
-        // Alice starts with 1 notes worth of tokens in teller
-        SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
-
-        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
-
-        // Create operation to transfer all tokens back to self
-        Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatOperation(
-            FormatOperationArgs({
-                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    address(token)
-                ),
-                joinSplitRefundValues: new uint256[](1),
-                gasToken: address(token),
-                root: handler.root(),
-                joinSplitsPublicSpends: NocturneUtils
-                    ._publicSpendsArrayOfOnePublicSpendArray(
-                        NocturneUtils.fillJoinSplitPublicSpends(
-                            PER_NOTE_AMOUNT,
-                            1
-                        )
-                    ),
-                trackedRefundAssets: trackedRefundAssets,
-                gasAssetRefundThreshold: 0,
-                executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0, // no gas comp, since alice is self-submitting
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    address(token),
-                    ALICE, // transfer all to self
-                    PER_NOTE_AMOUNT
-                ),
-                atomicActions: false,
-                operationFailureType: OperationFailureType.NONE
-            })
-        );
-
-        // Dummy joinsplit info used for forcedExit
-        JoinSplitInfo[] memory joinSplitInfo = new JoinSplitInfo[](1);
-        joinSplitInfo[0] = JoinSplitInfo({
-            compressedSenderCanonAddr: 1,
-            compressedReceiverCanonAddr: 2,
-            oldMerkleIndicesWithSignBits: 3,
-            newNoteValueA: 0,
-            newNoteValueB: 0,
-            nonce: 6
-        });
-
-        JoinSplitInfo[][] memory joinSplitInfos = new JoinSplitInfo[][](1);
-        joinSplitInfos[0] = joinSplitInfo;
-
-        // Set op joinsplit info commitment to match hash of passed in joinsplit info
-        uint256 joinSplitInfoCommitment = _poseidonExtT7.poseidonExt(
-            uint256(teller.JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR()),
-            [
-                joinSplitInfo[0].compressedSenderCanonAddr,
-                joinSplitInfo[0].compressedReceiverCanonAddr,
-                joinSplitInfo[0].oldMerkleIndicesWithSignBits,
-                joinSplitInfo[0].newNoteValueA,
-                joinSplitInfo[0].newNoteValueB,
-                joinSplitInfo[0].nonce
-            ]
-        );
-        bundle
-            .operations[0]
-            .pubJoinSplits[0]
-            .joinSplit
-            .joinSplitInfoCommitment = joinSplitInfoCommitment;
-        bundle.operations[0].isForcedExit = true;
-
-        // Pre process checks
-        assertEq(token.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
-        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 for prefill
-        assertEq(token.balanceOf(address(ALICE)), uint256(0));
-
-        // Expect ForcedExit event
-        uint256[] memory opDigests = new uint256[](1);
-        opDigests[0] = teller.computeDigest(bundle.operations[0]);
-        vm.expectEmit(true, true, true, true);
-        emit ForcedExit(opDigests, joinSplitInfos);
-
-        uint256 preOpMerkleCount = handler.totalCount();
-
-        vm.prank(ALICE); // ALICE self submitting, not bundler
-        OperationResult[] memory opResults = teller.forcedExit(
-            bundle,
-            joinSplitInfos
-        );
-
-        // One op, processed = true, call[0] succeeded
-        assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, true);
-        assertEq(opResults[0].assetsUnwrapped, true);
-        assertEq(opResults[0].callSuccesses.length, uint256(1));
-        assertEq(opResults[0].callSuccesses[0], true);
-        assertEq(opResults[0].callResults.length, uint256(1));
-
-        // ensure no new merkle leaves added
-        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
-        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount);
-        assertEq(handler.totalCount() == preOpMerkleCount, true);
-
-        // Expect ALICE to have all the notes
-        // Expect teller to have 0
-        assertEq(token.balanceOf(address(teller)), 0);
-        assertEq(token.balanceOf(address(handler)), uint256(1));
-        assertEq(token.balanceOf(ALICE), PER_NOTE_AMOUNT);
-    }
-
-    function testForcedExitWithLeftoverFunds() public {
-        // Alice starts with 1 notes worth of tokens in teller
-        SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
-
-        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
-
-        // Create operation to unwrap all tokens but only transfer out half
-        Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatOperation(
-            FormatOperationArgs({
-                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    address(token)
-                ),
-                joinSplitRefundValues: new uint256[](1),
-                gasToken: address(token),
-                root: handler.root(),
-                joinSplitsPublicSpends: NocturneUtils
-                    ._publicSpendsArrayOfOnePublicSpendArray(
-                        NocturneUtils.fillJoinSplitPublicSpends(
-                            PER_NOTE_AMOUNT * 2,
-                            1
-                        )
-                    ),
-                trackedRefundAssets: trackedRefundAssets,
-                gasAssetRefundThreshold: 0,
-                executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0, // no gas comp, since alice is self-submitting
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    address(token),
-                    ALICE, // transfer HALF to self
-                    PER_NOTE_AMOUNT
-                ),
-                atomicActions: false,
-                operationFailureType: OperationFailureType.NONE
-            })
-        );
-
-        // Dummy joinsplit info used for forcedExit
-        JoinSplitInfo[] memory joinSplitInfo = new JoinSplitInfo[](1);
-        joinSplitInfo[0] = JoinSplitInfo({
-            compressedSenderCanonAddr: 1,
-            compressedReceiverCanonAddr: 2,
-            oldMerkleIndicesWithSignBits: 3,
-            newNoteValueA: 0,
-            newNoteValueB: 0,
-            nonce: 6
-        });
-
-        JoinSplitInfo[][] memory joinSplitInfos = new JoinSplitInfo[][](1);
-        joinSplitInfos[0] = joinSplitInfo;
-
-        // Set op joinsplit info commitment to match hash of passed in joinsplit info
-        uint256 joinSplitInfoCommitment = _poseidonExtT7.poseidonExt(
-            uint256(teller.JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR()),
-            [
-                joinSplitInfo[0].compressedSenderCanonAddr,
-                joinSplitInfo[0].compressedReceiverCanonAddr,
-                joinSplitInfo[0].oldMerkleIndicesWithSignBits,
-                joinSplitInfo[0].newNoteValueA,
-                joinSplitInfo[0].newNoteValueB,
-                joinSplitInfo[0].nonce
-            ]
-        );
-        bundle
-            .operations[0]
-            .pubJoinSplits[0]
-            .joinSplit
-            .joinSplitInfoCommitment = joinSplitInfoCommitment;
-
-        bundle.operations[0].isForcedExit = true;
-
-        // Pre process checks
-        assertEq(
-            token.balanceOf(address(teller)),
-            uint256(PER_NOTE_AMOUNT * 2)
-        );
-        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 for prefill
-        assertEq(token.balanceOf(address(ALICE)), uint256(0));
-
-        // Expect ForcedExit event
-        uint256[] memory opDigests = new uint256[](1);
-        opDigests[0] = teller.computeDigest(bundle.operations[0]);
-        vm.expectEmit(true, true, true, true);
-        emit ForcedExit(opDigests, joinSplitInfos);
-
-        uint256 preOpMerkleCount = handler.totalCount();
-
-        vm.prank(ALICE); // ALICE self submitting, not bundler
-        OperationResult[] memory opResults = teller.forcedExit(
-            bundle,
-            joinSplitInfos
-        );
-
-        // One op, processed = true, call[0] succeeded
-        assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, true);
-        assertEq(opResults[0].assetsUnwrapped, true);
-        assertEq(opResults[0].callSuccesses.length, uint256(1));
-        assertEq(opResults[0].callSuccesses[0], true);
-        assertEq(opResults[0].callResults.length, uint256(1));
-
-        // ensure no new merkle leaves added
-        assertEq(opResults[0].preOpMerkleCount, preOpMerkleCount);
-        assertEq(opResults[0].postOpMerkleCount, preOpMerkleCount);
-        assertEq(handler.totalCount() == preOpMerkleCount, true);
-
-        // Expect ALICE to have half the tokens
-        // Expect teller to have 0
-        // Expect handler to have other half of the tokens + prefill
-        assertEq(token.balanceOf(address(teller)), 0);
-        assertEq(token.balanceOf(address(handler)), PER_NOTE_AMOUNT + 1);
-        assertEq(token.balanceOf(ALICE), PER_NOTE_AMOUNT);
-    }
-
-    function testForcedExitFailsGivenWrongFlag() public {
-        // Alice starts with 1 notes worth of tokens in teller
-        SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
-
-        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
-
-        // Create operation to unwrap and transfer all tokens to alice
-        Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatOperation(
-            FormatOperationArgs({
-                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    address(token)
-                ),
-                joinSplitRefundValues: new uint256[](1),
-                gasToken: address(token),
-                root: handler.root(),
-                joinSplitsPublicSpends: NocturneUtils
-                    ._publicSpendsArrayOfOnePublicSpendArray(
-                        NocturneUtils.fillJoinSplitPublicSpends(
-                            PER_NOTE_AMOUNT,
-                            1
-                        )
-                    ),
-                trackedRefundAssets: trackedRefundAssets,
-                gasAssetRefundThreshold: 0,
-                executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0, // no gas comp, since alice is self-submitting
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    address(token),
-                    ALICE, // transfer all to self
-                    PER_NOTE_AMOUNT
-                ),
-                atomicActions: false,
-                operationFailureType: OperationFailureType.NONE
-            })
-        );
-
-        // Dummy joinsplit info used for forcedExit
-        JoinSplitInfo[] memory joinSplitInfo = new JoinSplitInfo[](1);
-        joinSplitInfo[0] = JoinSplitInfo({
-            compressedSenderCanonAddr: 1,
-            compressedReceiverCanonAddr: 2,
-            oldMerkleIndicesWithSignBits: 3,
-            newNoteValueA: 0,
-            newNoteValueB: 0,
-            nonce: 6
-        });
-
-        JoinSplitInfo[][] memory joinSplitInfos = new JoinSplitInfo[][](1);
-        joinSplitInfos[0] = joinSplitInfo;
-
-        // Set op joinsplit info commitment to match hash of passed in joinsplit info
-        uint256 joinSplitInfoCommitment = _poseidonExtT7.poseidonExt(
-            uint256(teller.JOINSPLIT_INFO_COMMITMENT_DOMAIN_SEPARATOR()),
-            [
-                joinSplitInfo[0].compressedSenderCanonAddr,
-                joinSplitInfo[0].compressedReceiverCanonAddr,
-                joinSplitInfo[0].oldMerkleIndicesWithSignBits,
-                joinSplitInfo[0].newNoteValueA,
-                joinSplitInfo[0].newNoteValueB,
-                joinSplitInfo[0].nonce
-            ]
-        );
-        bundle
-            .operations[0]
-            .pubJoinSplits[0]
-            .joinSplit
-            .joinSplitInfoCommitment = joinSplitInfoCommitment;
-
-        bundle.operations[0].isForcedExit = false; // set isForcedExit to false
-
-        // Expect revert
-        vm.expectRevert("!op type");
-
-        vm.prank(ALICE); // ALICE self submitting, not bundler
-        teller.forcedExit(bundle, joinSplitInfos);
-    }
-
-    function testProcessBundleFailsIfForcedExitFlagTrue() public {
-        // Alice starts with 1 notes worth of tokens in teller
-        SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
-
-        TrackedAsset[] memory trackedRefundAssets = new TrackedAsset[](0);
-
-        // Create operation to unwrap and transfer all tokens to alice
-        Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatOperation(
-            FormatOperationArgs({
-                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    address(token)
-                ),
-                joinSplitRefundValues: new uint256[](1),
-                gasToken: address(token),
-                root: handler.root(),
-                joinSplitsPublicSpends: NocturneUtils
-                    ._publicSpendsArrayOfOnePublicSpendArray(
-                        NocturneUtils.fillJoinSplitPublicSpends(
-                            PER_NOTE_AMOUNT,
-                            1
-                        )
-                    ),
-                trackedRefundAssets: trackedRefundAssets,
-                gasAssetRefundThreshold: 0,
-                executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    address(token),
-                    ALICE, // transfer all to self
-                    PER_NOTE_AMOUNT
-                ),
-                atomicActions: false,
-                operationFailureType: OperationFailureType.NONE
-            })
-        );
-
-        bundle.operations[0].isForcedExit = true; // set isForcedExit to true
-
-        // Expect revert
-        vm.expectRevert("!op type");
-
-        vm.prank(BUNDLER);
-        teller.processBundle(bundle);
     }
 
     // TODO: add testcase for leftover tokens in handler sent to leftover holder
