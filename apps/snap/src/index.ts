@@ -91,18 +91,21 @@ async function handleRpcRequest({
     (await getNocturneSignerFromDb()) ?? (await getNocturneSignerFromBIP44());
 
   console.log("Switching on method: ", request.method);
-  console.log("Request Params:", request.params);
   switch (request.method) {
+    case "nocturne_spendKeyIsSet":
+      return kvStore.containsKey(SPEND_KEY_DB_KEY);
     case "nocturne_setSpendKey":
       const { spendKey } = request.params;
+      const sk = ethers.utils.hexlify(spendKey);
 
       // Can only set spend key if not already set, only way to reset is to clear snap db and
       // regenerate key
+      // Return error string if spend key already set
       if (await kvStore.getString(SPEND_KEY_DB_KEY)) {
-        throw new Error("Spend key already set");
+        return "Error: Spend key already set";
       }
 
-      await kvStore.putString(SPEND_KEY_DB_KEY, spendKey);
+      await kvStore.putString(SPEND_KEY_DB_KEY, sk);
       return;
     case "nocturne_requestViewingKey":
       const viewer = signer.viewer();

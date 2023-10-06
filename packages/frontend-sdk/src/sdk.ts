@@ -57,6 +57,8 @@ import {
   newOpRequestBuilder,
   OperationRequestWithMetadata,
   ActionMetadata,
+  SetSpendKeyMethod,
+  SpendKeyIsSetMethod,
 } from "@nocturne-xyz/client";
 import {
   WasmCanonAddrSigCheckProver,
@@ -102,6 +104,7 @@ import {
 import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
 import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
+import { generateNocturneSpendKey } from "./keygen";
 
 export interface NocturneSdkOptions {
   // interface for fetching deposit data from subgraph and screener
@@ -259,6 +262,49 @@ export class NocturneSdk implements NocturneSdkApi {
   protected async getWindowSigner(): Promise<ethers.Signer> {
     await this.provider.send("eth_requestAccounts", []);
     return this.provider.getSigner();
+  }
+
+  /**
+   * Check if snap's spend key is set.
+   * @returns true if the user has a spend key set, false otherwise
+   */
+  async spendKeyIsSet(): Promise<boolean> {
+    return this.invokeSnap<SpendKeyIsSetMethod>({
+      method: "nocturne_spendKeyIsSet",
+      params: undefined,
+    });
+  }
+
+  /**
+   * Generate spend key based on Ethereum private key signature, then pass to snap
+   * to store/manage.
+   * @dev Spend key is Uint8Array because we can zero out the array's memory after its been
+   * passed to the snap.
+   */
+  async generateAndStoreSpendKey(): Promise<void> {
+    // Return early if spend key already set
+    if (await this.spendKeyIsSet()) {
+      return;
+    }
+
+    // Generate spend key and attempt to set in snap
+    const signer = await this.getWindowSigner();
+    let spendKey = await generateNocturneSpendKey(signer);
+
+    const maybeErrorString = await this.invokeSnap<SetSpendKeyMethod>({
+      method: "nocturne_setSpendKey",
+      params: {
+        spendKey,
+      },
+    });
+
+    // Clear the spend key from memory
+    spendKey.fill(0);
+
+    // Notify consumer if spend key was not actually set (in case of some race condition where it was set between the first spendKeyIsSet check and the setSpendKey call)
+    if (maybeErrorString) {
+      throw new Error(maybeErrorString);
+    }
   }
 
   /**
@@ -904,7 +950,7 @@ export class NocturneSdk implements NocturneSdkApi {
   private async invokeSnap<RpcMethod extends RpcRequestMethod>(
     request: Omit<RpcMethod, "return">
   ): Promise<RpcMethod["return"]> {
-    console.log("[fe-sdk] invoking snap with request:", request);
+    console.log("[fe-sdk] invoking snap method:", request.method);
     const stringifiedParams = request.params
       ? stringifyObjectValues(request.params)
       : undefined;
@@ -918,7 +964,6 @@ export class NocturneSdk implements NocturneSdkApi {
         },
       },
     };
-    console.log("[fe-sdk] jsonRpcRequest", jsonRpcRequest);
     const response = await window.ethereum.request<RpcMethod["return"]>(
       jsonRpcRequest
     );
