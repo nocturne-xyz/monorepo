@@ -10,9 +10,10 @@ import {
 } from "@nocturne-xyz/client";
 import { ethers } from "ethers";
 import ERC20_ABI from "../abis/ERC20.json";
-import { getSwapRoute } from "./helpers";
+import { currencyAmountToBigInt, getSwapRoute } from "./helpers";
 import { Percent } from "@uniswap/sdk-core";
 import { IUniswapV3__factory } from "@nocturne-xyz/contracts";
+import { ExactInputParams, ExactInputSingleParams } from "./types";
 
 const UNISWAP_V3_NAME = "uniswapV3";
 
@@ -70,6 +71,8 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               maxSlippageBps,
             });
 
+            console.log("swapRoute", JSON.stringify(swapRoute));
+
             if (!swapRoute) {
               throw new Error(
                 `No route found for swap. Token in: ${tokenIn}, Token out: ${tokenOut}. Amount in: ${inAmount}`
@@ -81,10 +84,8 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
 
             const route = swapRoute.route[0];
             const pools = route.route.pools;
-            const minimumAmountWithSlippage = BigInt(
-              swapRoute.trade
-                .minimumAmountOut(new Percent(50, 10_000))
-                .toExact()
+            const minimumAmountWithSlippage = currencyAmountToBigInt(
+              swapRoute.trade.minimumAmountOut(new Percent(50, 10_000))
             );
 
             let swapParams: ExactInputSingleParams | ExactInputParams;
@@ -101,6 +102,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 sqrtPriceLimitX96: 0,
               };
             } else {
+              // NOTE: v3 swap routes are of order 1->2, 3->2, 4->3, etc.
               throw new Error("TODO: not supporting multi hop");
             }
 

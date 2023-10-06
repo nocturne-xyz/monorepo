@@ -1,6 +1,6 @@
 import { AlphaRouter } from "@uniswap/smart-order-router";
 import { ethers } from "ethers";
-import { getSwapRoute } from "../src/UniswapV3Plugin";
+import { currencyAmountToBigInt, getSwapRoute } from "../src/UniswapV3Plugin";
 import { Percent } from "@uniswap/sdk-core";
 import dotenv from "dotenv";
 
@@ -17,9 +17,9 @@ async function run() {
     chainId: 1n,
     provider,
     fromAddress: "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
-    tokenInAddress: "0x046EeE2cc3188071C02BfC1745A6b17c656e3f3d", // RLB address
+    tokenInAddress: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH address
     amountIn: 1000000000000000000n, // 1 ETH
-    tokenOutAddress: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", // WBTC address
+    tokenOutAddress: "0x6B175474E89094C44Da98b954EedeAC495271d0F", // DAI address
     maxSlippageBps: 50,
   });
   if (!route) {
@@ -34,6 +34,17 @@ async function run() {
   console.log("QUOTE 1 weth for usdc:" + route.quote.toExact());
   console.log("to:", route.methodParameters?.to);
   console.log("calldata:", route.methodParameters?.calldata);
+
+  console.log("out amount FIXED", route.trade.outputAmount.toFixed());
+  console.log("out amount EXACT", route.trade.outputAmount.toExact());
+  console.log(
+    "out amount SIGNIFICANT",
+    route.trade.outputAmount.toSignificant()
+  );
+  console.log(
+    "amount out CORRECT",
+    currencyAmountToBigInt(route.trade.outputAmount)
+  );
 }
 run().catch((error) => {
   console.error("An error occurred:", error);

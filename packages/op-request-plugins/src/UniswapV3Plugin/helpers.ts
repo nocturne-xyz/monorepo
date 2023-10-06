@@ -1,6 +1,7 @@
 import { Address } from "@nocturne-xyz/core";
 import {
   ChainId,
+  Currency,
   CurrencyAmount,
   Percent,
   Token,
@@ -124,4 +125,10 @@ export async function getSwapQuote(
     ),
     priceImpactBps: Number(route.trade.priceImpact.toSignificant(4)),
   };
+}
+
+export function currencyAmountToBigInt<T extends Currency>(
+  currencyAmount: CurrencyAmount<T>
+): bigint {
+  return BigInt(currencyAmount.numerator.toString());
 }

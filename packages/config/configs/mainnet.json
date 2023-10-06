@@ -1,0 +1,180 @@
+{
+  "contracts": {
+    "network": { "name": "mainnet", "chainId": 1 },
+    "startBlock": 18293663,
+    "owners": {
+      "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "tellerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "handlerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "depositManagerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4"
+    },
+    "proxyAdmin": "0xb74aFCBeF4f6249A05d7Ed5C0206971ce9F20488",
+    "finalityBlocks": 4,
+    "canonicalAddressRegistryProxy": {
+      "kind": "Transparent",
+      "proxy": "0x4a4C187398B098D7E808Cb09Df849Ca9Ed4FB096",
+      "implementation": "0x6EB15e5e72aC08635baCb0f56FB74eF34dDFfb83"
+    },
+    "depositManagerProxy": {
+      "kind": "Transparent",
+      "proxy": "0xE9917d5b9351096a445b68528441D61E447155CC",
+      "implementation": "0xE8f16728389Add27103658E6b14c7c369C1fF91C"
+    },
+    "tellerProxy": {
+      "kind": "Transparent",
+      "proxy": "0x37fa8145F63A39B55b5a98bdF14Ae505CA4087f2",
+      "implementation": "0xf65aA71C329E604A370599cf2818aFcE6d6Fa9d4"
+    },
+    "handlerProxy": {
+      "kind": "Transparent",
+      "proxy": "0x558978937F2808116b077973ec5BB459Cd5143F4",
+      "implementation": "0x9843a5b8880855c73Af62224E2dCe775d8e6645D"
+    },
+    "poseidonExtT7Address": "0x5DeFdab963EBe48D623F6c2A396135e473Fa011f",
+    "joinSplitVerifierAddress": "0x492c8F3B0eA7B39705AA92B1dFc2E85736449555",
+    "subtreeUpdateVerifierAddress": "0xEf8cE405505ac8eB428838e050662CAfFA95C9BA",
+    "canonAddrSigCheckVerifierAddress": "0x849bc22A08eD7D24f1d5a566Ba7125fb671F9c4c",
+    "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
+    "depositSources": ["0xE9917d5b9351096a445b68528441D61E447155CC"]
+  },
+  "erc20s": [
+    [
+      "TEST-TOKEN",
+      {
+        "address": "0x72C1f4ABA89daC80393A0fb75f00C5bFc869cF2B",
+        "globalCapWholeTokens": "1000000n",
+        "maxDepositSizeWholeTokens": "1000n",
+        "resetWindowHours": "4n",
+        "precision": "18n",
+        "isGasAsset": true
+      }
+    ],
+    [
+      "weth",
+      {
+        "address": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+        "globalCapWholeTokens": "1000n",
+        "maxDepositSizeWholeTokens": "100n",
+        "resetWindowHours": "4n",
+        "precision": "18n",
+        "isGasAsset": true
+      }
+    ],
+    [
+      "dai",
+      {
+        "address": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844",
+        "globalCapWholeTokens": "1000000n",
+        "maxDepositSizeWholeTokens": "100000n",
+        "resetWindowHours": "4n",
+        "precision": "18n",
+        "isGasAsset": true
+      }
+    ],
+    [
+      "wsteth",
+      {
+        "address": "0x6320cD32aA674d2898A68ec82e869385Fc5f7E2f",
+        "globalCapWholeTokens": "1000n",
+        "maxDepositSizeWholeTokens": "100n",
+        "resetWindowHours": "4n",
+        "precision": "18n",
+        "isGasAsset": false
+      }
+    ],
+    [
+      "reth",
+      {
+        "address": "0xae78736Cd615f374D3085123A210448E74Fc6393",
+        "globalCapWholeTokens": "1000n",
+        "maxDepositSizeWholeTokens": "100n",
+        "resetWindowHours": "4n",
+        "precision": "18n",
+        "isGasAsset": false
+      }
+    ]
+  ],
+  "protocolAllowlist": [
+    [
+      "uniswapV3",
+      {
+        "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        "functionSignatures": [
+          "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))",
+          "exactInput((bytes,address,uint256,uint256,uint256))"
+        ]
+      }
+    ],
+    [
+      "TEST-TOKEN",
+      {
+        "address": "0x72C1f4ABA89daC80393A0fb75f00C5bFc869cF2B",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "weth",
+      {
+        "address": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "dai",
+      {
+        "address": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "wsteth",
+      {
+        "address": "0x6320cD32aA674d2898A68ec82e869385Fc5f7E2f",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "reth",
+      {
+        "address": "0xae78736Cd615f374D3085123A210448E74Fc6393",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "ethTransferAdapter",
+      {
+        "address": "0x36A0189f1783d835De23a403d02392dC48F2f69A",
+        "functionSignatures": ["transfer(address,uint256)"]
+      }
+    ],
+    [
+      "wstethAdapter",
+      {
+        "address": "0x760F975F3134D3B776f18f3432c8E99E8922a69f",
+        "functionSignatures": ["deposit(uint256)"]
+      }
+    ],
+    [
+      "rethAdapter",
+      {
+        "address": "0xBe57F068aB017DDd0634F2e294e87Cded53864A5",
+        "functionSignatures": ["deposit(uint256)"]
+      }
+    ]
+  ]
+}

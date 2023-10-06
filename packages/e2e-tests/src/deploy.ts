@@ -22,11 +22,12 @@ import {
   SDKSyncAdapter,
   Address,
   sleep,
-  thunk,
+  // thunk,
   Asset,
   AssetTrait,
   range,
   CanonAddrSigCheckProver,
+  thunk,
 } from "@nocturne-xyz/core";
 
 import {
@@ -52,7 +53,7 @@ import {
   WasmJoinSplitProver,
 } from "@nocturne-xyz/local-prover";
 import { NocturneConfig } from "@nocturne-xyz/config";
-import { startHardhat } from "./hardhat";
+import { ForkNetwork, startHardhat } from "./hardhat";
 import { BundlerConfig, startBundler } from "./bundler";
 import { DepositScreenerConfig, startDepositScreener } from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
@@ -176,12 +177,13 @@ const DEFAULT_INSERTION_WRITER_CONFIG: InsertionWriterConfig = {
 };
 
 // we want to only start anvil once, so we wrap `startAnvil` in a thunk
-const hhThunk = thunk(() => startHardhat());
+const hhThunk = thunk((forkNetwork?: ForkNetwork) => startHardhat(forkNetwork));
 
 // returns an async function that should be called for teardown
 // if include is not given, no off-chain actors will be deployed
 export async function setupTestDeployment(
-  config: TestActorsConfig
+  config: TestActorsConfig,
+  forkNetwork?: ForkNetwork
 ): Promise<TestDeployment> {
   // hardhat has to go up first,
   // then contracts,
@@ -191,7 +193,7 @@ export async function setupTestDeployment(
 
   // spin up anvil
   console.log("starting hardhat...");
-  const resetHardhat = await hhThunk();
+  const resetHardhat = await hhThunk(forkNetwork);
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);

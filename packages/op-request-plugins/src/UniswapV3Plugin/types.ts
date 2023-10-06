@@ -1,4 +1,4 @@
-interface ExactInputSingleParams {
+export interface ExactInputSingleParams {
   tokenIn: string;
   tokenOut: string;
   fee: number;
@@ -9,7 +9,7 @@ interface ExactInputSingleParams {
   sqrtPriceLimitX96: number;
 }
 
-interface ExactInputParams {
+export interface ExactInputParams {
   path: string;
   recipient: string;
   deadline: number;
