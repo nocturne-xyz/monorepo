@@ -134,7 +134,6 @@ export interface BaseOperation {
   gasPrice: bigint;
   deadline: bigint;
   atomicActions: boolean;
-  isForcedExit: boolean;
 }
 
 export interface PreSignOperation extends BaseOperation {

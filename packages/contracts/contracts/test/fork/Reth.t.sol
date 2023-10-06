@@ -35,9 +35,6 @@ contract RethTest is ForkBase {
 
         rethAdapter = new RethAdapter(address(weth), address(rocketStorage));
 
-        // Whitelist bundler
-        teller.setBundlerPermission(BUNDLER, true);
-
         // Whitelist weth, reth, reth adapter
         handler.setContractPermission(address(weth), true);
         handler.setContractPermission(address(reth), true);
@@ -133,7 +130,7 @@ contract RethTest is ForkBase {
         assertEq(reth.balanceOf(address(teller)), 0);
 
         // Execute operation
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         teller.processBundle(bundle);
 
         // Check post op balances
@@ -224,7 +221,7 @@ contract RethTest is ForkBase {
         assertEq(reth.balanceOf(address(teller)), 0);
 
         // Execute operation
-        vm.prank(BUNDLER);
+        vm.prank(BUNDLER, BUNDLER);
         teller.processBundle(bundle);
 
         // Check post op balances

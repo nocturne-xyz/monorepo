@@ -92,11 +92,6 @@ struct TrackedAsset {
     uint256 minRefundValue;
 }
 
-enum OperationType {
-    Standard,
-    ForcedExit
-}
-
 struct Operation {
     PublicJoinSplit[] pubJoinSplits;
     JoinSplit[] confJoinSplits;
@@ -109,7 +104,6 @@ struct Operation {
     uint256 gasPrice;
     uint256 deadline;
     bool atomicActions;
-    bool isForcedExit;
 }
 
 // An operation is processed if its joinsplitTxs are processed.
