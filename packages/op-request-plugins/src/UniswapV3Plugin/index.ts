@@ -13,6 +13,7 @@ import JSBI from "jsbi";
 import ERC20_ABI from "../abis/ERC20.json";
 import { getSwapRoute } from "./helpers";
 import { Percent } from "@uniswap/sdk-core";
+import { IUniswapV3__factory } from "@nocturne-xyz/contracts";
 
 const UNISWAP_V3_NAME = "uniswapV3";
 
@@ -104,6 +105,12 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               throw new Error("TODO: not supporting multi hop");
             }
 
+            const encodedFunction =
+              IUniswapV3__factory.createInterface().encodeFunctionData(
+                "exactInputSingle",
+                [swapParams]
+              );
+
             const unwrap: UnwrapRequest = {
               asset: AssetTrait.erc20AddressToAsset(tokenIn),
               unwrapValue: inAmount,
@@ -111,17 +118,12 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
 
             const swapAction: Action = {
               contractAddress: swapRouterAddress,
-              encodedFunction: swapRoute.methodParameters!.calldata,
+              encodedFunction: encodedFunction,
             };
 
             const refund: RefundRequest = {
               asset: AssetTrait.erc20AddressToAsset(tokenOut),
-              minRefundValue: BigInt(
-                JSBI.divide(
-                  route.quote.numerator,
-                  route.quote.denominator
-                ).toString()
-              ), // TODO: this may not be forgiving accounting for slippage, may cause swap reverts
+              minRefundValue: minimumAmountWithSlippage,
             };
 
             const metadata: OperationMetadataItem = {
@@ -136,6 +138,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               ERC20_ABI,
               this.provider
             );
+
             // If router contract doesn't have high enough allowance, set to max for handler ->
             // router. Anyone can set allowance on handler so might as well set to max.
             if (
