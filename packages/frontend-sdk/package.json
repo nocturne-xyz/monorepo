@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/frontend-sdk",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,8 +13,8 @@
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "codegen": "yarn codegen:subgraph",
-    "codegen:subgraph": "graphql-codegen --config ./graphql-codegen-configs/subgraph.ts",
     "codegen:hasura": "graphql-codegen --config ./graphql-codegen-configs/hasura.ts",
+    "codegen:subgraph": "graphql-codegen --config ./graphql-codegen-configs/subgraph.ts",
     "copy-circuit-artifacts": "yarn copy-wasm && yarn copy-zkey && yarn copy-vkey",
     "copy-vkey": "cp ../../circuit-artifacts/joinsplit/joinsplit_cpp/vkey.json ./circuit-artifacts/joinsplit/joinsplitVkey.json",
     "copy-wasm": "cp ../../circuit-artifacts/joinsplit/joinsplit_js/joinsplit.wasm ./circuit-artifacts/joinsplit/joinsplit.wasm",

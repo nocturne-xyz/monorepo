@@ -42,4 +42,10 @@ export {
   Snap,
 } from "./metamask/types";
 
-export { DepositAdapter, HasuraDepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
+export {
+  DepositAdapter,
+  HasuraDepositAdapter,
+  SubgraphDepositAdapter,
+} from "./depositFetching";
+
+export { AnonErc20SwapQuote } from "@nocturne-xyz/op-request-plugins";
