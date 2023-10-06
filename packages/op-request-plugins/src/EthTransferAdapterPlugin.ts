@@ -3,7 +3,7 @@ import {
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
-  OperationMetadataItem,
+  ActionMetadata,
   BuilderItemToProcess,
   UnwrapRequest,
 } from "@nocturne-xyz/client";
@@ -80,11 +80,17 @@ export function EthTransferAdapterPlugin<EInner extends BaseOpRequestBuilder>(
             ),
         };
 
-        const metadata: OperationMetadataItem = {
-          type: "Action",
-          actionType: "Transfer ETH",
-          to,
-          value,
+        const metadata: ActionMetadata = {
+          summary: `Transfer ${ethers.utils.formatEther(value)} ETH to ${to}`,
+          pluginInfo: {
+            name: "EthTransferAdapterPlugin",
+            source: "@nocturne-xyz/op-request-plugins",
+          },
+          details: {
+            recipient: to,
+            amountWei: value.toString(),
+            adapterContractAddress: ethTransferAdapterAddress,
+          },
         };
 
         resolve({

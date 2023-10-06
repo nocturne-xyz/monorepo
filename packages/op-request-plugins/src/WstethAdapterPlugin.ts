@@ -3,7 +3,7 @@ import {
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
-  OperationMetadataItem,
+  ActionMetadata,
   BuilderItemToProcess,
   UnwrapRequest,
   RefundRequest,
@@ -95,10 +95,18 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           minRefundValue: amount, // TODO: should there be some buffer for some kind of slippage?
         };
 
-        const metadata: OperationMetadataItem = {
-          type: "Action",
-          actionType: "Weth To Wsteth",
-          amount,
+        const metadata: ActionMetadata = {
+          summary: `Deposit ${ethers.utils.formatEther(
+            amount
+          )} WETH into Lido for wstETH`,
+          pluginInfo: {
+            name: "WstethAdapterPlugin",
+            source: "@nocturne-xyz/op-request-plugins",
+          },
+          details: {
+            amount: amount.toString(),
+            adapterContractAddress: wstethAdapterAddress,
+          },
         };
 
         resolve({

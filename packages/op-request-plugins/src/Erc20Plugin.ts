@@ -4,11 +4,12 @@ import {
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
-  OperationMetadataItem,
+  ActionMetadata,
   BuilderItemToProcess,
   UnwrapRequest,
 } from "@nocturne-xyz/client";
 import ERC20_ABI from "./abis/ERC20.json";
+import { findInfoByAddressFromConfig, Erc20TokenInfo } from "./utils";
 
 export interface Erc20PluginMethods {
   // adds an ERC20 transfer to the operation
@@ -16,7 +17,9 @@ export interface Erc20PluginMethods {
   erc20Transfer(
     contractAddress: Address,
     recipient: Address,
-    amount: bigint
+    amount: bigint,
+    // optional token info to use for formatting metadata
+    tokenInfo?: Erc20TokenInfo
   ): this;
 }
 
@@ -41,7 +44,10 @@ export function Erc20Plugin<EInner extends BaseOpRequestBuilder>(
     erc20Transfer(
       tokenContractAddress: Address,
       recipient: Address,
-      amount: bigint
+      amount: bigint,
+      // optional token info to use for formatting metadata
+      // TODO store JSON with infos for common tokens and use that so this is only necessary for "long-tail" tokens
+      tokenInfo?: Erc20TokenInfo
     ) {
       const prom = new Promise<BuilderItemToProcess>((resolve) => {
         const encodedErc20 =
@@ -67,12 +73,32 @@ export function Erc20Plugin<EInner extends BaseOpRequestBuilder>(
           encodedFunction,
         };
 
-        const metadata: OperationMetadataItem = {
-          type: "Action",
-          actionType: "Transfer",
-          recipientAddress: recipient,
-          erc20Address: tokenContractAddress,
-          amount,
+        const displayTokenInfo =
+          tokenInfo ??
+          findInfoByAddressFromConfig(this.config, tokenContractAddress);
+        const displayTokenName =
+          displayTokenInfo?.symbol ?? tokenContractAddress;
+        const displayAmount = tokenInfo
+          ? ethers.utils.formatUnits(amount, tokenInfo.decimals)
+          : amount.toString();
+
+        const metadata: ActionMetadata = {
+          summary: `Transfer ${displayAmount} ${displayTokenName} to ${recipient}`,
+          pluginInfo: {
+            name: "Erc20Plugin",
+            source: "@nocturne-xyz/op-request-plugins",
+          },
+          details: {
+            tokenContractAddress: tokenContractAddress,
+            recipientAddress: recipient,
+            amount: amount.toString(),
+            ...(tokenInfo
+              ? {
+                  symbol: tokenInfo.symbol,
+                  decimals: tokenInfo.decimals.toString(),
+                }
+              : {}),
+          },
         };
 
         resolve({

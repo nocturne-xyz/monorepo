@@ -1,10 +1,10 @@
 import { Action, Address, AssetTrait } from "@nocturne-xyz/core";
 import {
+  ActionMetadata,
   BaseOpRequestBuilder,
   BuilderItemToProcess,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
-  OperationMetadataItem,
   RefundRequest,
   UnwrapRequest,
 } from "@nocturne-xyz/client";
@@ -12,6 +12,7 @@ import { ethers } from "ethers";
 import JSBI from "jsbi";
 import ERC20_ABI from "../abis/ERC20.json";
 import { getSwapRoute } from "./helpers";
+import { findInfoByAddressFromConfig, Erc20TokenInfo } from "../utils";
 
 const UNISWAP_V3_NAME = "uniswapV3";
 
@@ -20,7 +21,12 @@ export interface UniswapV3PluginMethods {
     tokenIn: Address,
     inAmount: bigint,
     tokenOut: Address,
-    maxSlippageBps?: number
+    maxSlippageBps?: number,
+    // optional token info to use for formatting metadata
+    tokenInfos?: {
+      tokenIn?: Erc20TokenInfo;
+      tokenOut?: Erc20TokenInfo;
+    }
   ): this;
 }
 
@@ -47,7 +53,13 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
       tokenIn: Address,
       inAmount: bigint,
       tokenOut: Address,
-      maxSlippageBps = 50
+      maxSlippageBps = 50,
+      // TODO store JSON with infos for common tokens and use that so this is only necessary for "long-tail" tokens
+      // optional token info to use for formatting metadata
+      tokenInfos?: {
+        tokenIn?: Erc20TokenInfo;
+        tokenOut?: Erc20TokenInfo;
+      }
     ) {
       const prom = new Promise<BuilderItemToProcess>(
         async (resolve, reject) => {
@@ -94,13 +106,42 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               ), // TODO: this may not be forgiving accounting for slippage, may cause swap reverts
             };
 
-            const metadata: OperationMetadataItem = {
-              type: "Action",
-              actionType: "UniswapV3 Swap",
-              tokenIn,
-              inAmount,
-              tokenOut,
+            const tokenInInfo =
+              tokenInfos?.tokenIn ??
+              findInfoByAddressFromConfig(this.config, tokenIn);
+            const tokenOutInfo =
+              tokenInfos?.tokenOut ??
+              findInfoByAddressFromConfig(this.config, tokenOut);
+
+            const displayTokenInName = tokenInInfo?.symbol ?? tokenIn;
+            const displayTokenOutName = tokenOutInfo?.symbol ?? tokenOut;
+
+            const displayTokenInAmount = tokenInInfo
+              ? ethers.utils.formatUnits(inAmount, tokenInInfo.decimals)
+              : inAmount.toString();
+            const displayEstimatedTokenOutAmount = tokenOutInfo
+              ? ethers.utils.formatUnits(
+                  refund.minRefundValue,
+                  tokenOutInfo.decimals
+                )
+              : refund.minRefundValue.toString();
+
+            const metadata: ActionMetadata = {
+              summary: `Swap ${displayTokenInAmount} ${displayTokenInName} for ~${displayEstimatedTokenOutAmount} ${displayTokenOutName}}`,
+              pluginInfo: {
+                name: "UniswapV3Plugin",
+                source: "@nocturne-xyz/op-request-plugins",
+              },
+              details: {
+                tokenInContractAddress: tokenIn,
+                tokenOutContractAddress: tokenOut,
+                amountIn: inAmount.toString(),
+                expectedAmountOut: refund.minRefundValue.toString(),
+                maxSlippageBps: maxSlippageBps.toString(),
+                swapRouterAddress: swapRouterAddress,
+              },
             };
+
             const erc20InContract = new ethers.Contract(
               tokenIn,
               ERC20_ABI,
