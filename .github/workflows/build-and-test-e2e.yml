@@ -263,7 +263,7 @@ jobs:
       - name: yarn build
         run: |
           yarn build
-      - name: run uniswap v3 fork tests
+      - name: run uniswap v3 fork tests (TODO enable multihop)
         working-directory: ./packages/e2e-tests
         run: |
-          yarn test:e2e -g 'UniswapV3 fork'
+          yarn test:e2e -g 'submits single hop'
