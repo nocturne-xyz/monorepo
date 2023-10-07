@@ -1,5 +1,4 @@
 import { Address, NocturneContractDeployment } from "./deployment";
-import * as mainnet from "../configs/mainnet.json";
 import * as goerli from "../configs/goerli.json";
 import * as localhost from "../configs/localhost.json";
 import * as exampleNetwork from "../configs/example-network.json";
@@ -120,8 +119,6 @@ export function loadNocturneConfig(
 
 export function loadNocturneConfigBuiltin(name: string): NocturneConfig {
   switch (name) {
-    case "mainnet":
-      return NocturneConfig.fromObject(mainnet as any);
     case "goerli":
       return NocturneConfig.fromObject(goerli as any);
     case "localhost":

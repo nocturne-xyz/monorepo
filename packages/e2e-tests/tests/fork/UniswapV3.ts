@@ -1,12 +1,13 @@
-import chai from "chai";
+import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { setupTestDeployment } from "../../src/deploy";
 import { ethers } from "ethers";
 import { newOpRequestBuilder } from "@nocturne-xyz/client";
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { UniswapV3Plugin } from "@nocturne-xyz/op-request-plugins";
-import { WETH9__factory } from "@nocturne-xyz/contracts";
+import { Handler, WETH9__factory } from "@nocturne-xyz/contracts";
 import { ProtocolAddressWithMethods } from "@nocturne-xyz/config";
+import ERC20_ABI from "../../abis/ERC20.json";
 
 chai.use(chaiAsPromised);
 
@@ -20,6 +21,8 @@ describe("UniswapV3", async () => {
 
   let provider: ethers.providers.JsonRpcProvider;
   let aliceEoa: ethers.Wallet;
+
+  let handler: Handler;
   let config: NocturneConfig;
 
   beforeEach(async () => {
@@ -51,7 +54,7 @@ describe("UniswapV3", async () => {
       "mainnet"
     );
 
-    ({ provider, teardown, config, aliceEoa } = testDeployment);
+    ({ provider, teardown, config, handler, aliceEoa } = testDeployment);
   });
 
   afterEach(async () => {
@@ -82,6 +85,7 @@ describe("UniswapV3", async () => {
     } = opRequestWithMetadata.request.actions[1];
 
     const weth = WETH9__factory.connect(MAINNET_WETH_ADDRESS, aliceEoa);
+    const dai = new ethers.Contract(MAINNET_DAI_ADDRESS, ERC20_ABI, aliceEoa);
 
     console.log("depositing ETH into WETH");
     await weth.deposit({ value: 2000000000000000000n }); // 2 ETH
@@ -99,6 +103,13 @@ describe("UniswapV3", async () => {
     });
 
     console.log("tx response:", swapTx);
+
+    expect((await weth.balanceOf(aliceEoa.address)).toBigInt()).to.equal(
+      ONE_ETHER
+    );
+    expect(Number(await dai.balanceOf(handler.address))).to.gt(
+      1_000 * 10 ** 18
+    ); // > 1000 DAI (dumb estimate, so we don't have to estimate quote twice given latency)
   });
 
   it("submits multihop request to UniswapV3 without Nocturne", async () => {
@@ -125,6 +136,7 @@ describe("UniswapV3", async () => {
     } = opRequestWithMetadata.request.actions[1];
 
     const weth = WETH9__factory.connect(MAINNET_WETH_ADDRESS, aliceEoa);
+    const susd = new ethers.Contract(MAINNET_SUSD_ADDRESS, ERC20_ABI, aliceEoa);
 
     console.log("depositing ETH into WETH");
     await weth.deposit({ value: 2000000000000000000n }); // 2 ETH
@@ -142,5 +154,12 @@ describe("UniswapV3", async () => {
     });
 
     console.log("tx response:", swapTx);
+
+    expect((await weth.balanceOf(aliceEoa.address)).toBigInt()).to.equal(
+      ONE_ETHER
+    );
+    expect(Number(await susd.balanceOf(handler.address))).to.gt(
+      1_000 * 10 ** 18
+    ); // > 1000 SUSD (dumb estimate, so we don't have to estimate quote twice given latency)
   });
 });

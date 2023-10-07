@@ -22,7 +22,6 @@ import {
   SDKSyncAdapter,
   Address,
   sleep,
-  // thunk,
   Asset,
   AssetTrait,
   range,
