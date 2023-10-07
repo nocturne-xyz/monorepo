@@ -16,7 +16,7 @@ const MAINNET_DAI_ADDRESS = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
 const MAINNET_SUSD_ADDRESS = "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51";
 const ONE_ETHER = 1000000000000000000n;
 
-describe("UniswapV3", async () => {
+describe("UniswapV3 fork", async () => {
   let teardown: () => Promise<void>;
 
   let provider: ethers.providers.JsonRpcProvider;
