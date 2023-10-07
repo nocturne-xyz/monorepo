@@ -12,22 +12,22 @@
     "finalityBlocks": 4,
     "canonicalAddressRegistryProxy": {
       "kind": "Transparent",
-      "proxy": "0x4a4C187398B098D7E808Cb09Df849Ca9Ed4FB096",
+      "proxy": "0x1Dbbf529D78d6507B0dd71F6c02f41138d828990",
       "implementation": "0x6EB15e5e72aC08635baCb0f56FB74eF34dDFfb83"
     },
     "depositManagerProxy": {
       "kind": "Transparent",
-      "proxy": "0xE9917d5b9351096a445b68528441D61E447155CC",
+      "proxy": "0x9eb52339B52e71B1EFD5537947e75D23b3a7719B",
       "implementation": "0xE8f16728389Add27103658E6b14c7c369C1fF91C"
     },
     "tellerProxy": {
       "kind": "Transparent",
-      "proxy": "0x37fa8145F63A39B55b5a98bdF14Ae505CA4087f2",
+      "proxy": "0x32cd5ecdA7f2B8633C00A0434DE28Db111E60636",
       "implementation": "0xf65aA71C329E604A370599cf2818aFcE6d6Fa9d4"
     },
     "handlerProxy": {
       "kind": "Transparent",
-      "proxy": "0x558978937F2808116b077973ec5BB459Cd5143F4",
+      "proxy": "0x3489745eff9525CCC3d8c648102FE2cf3485e228",
       "implementation": "0x9843a5b8880855c73Af62224E2dCe775d8e6645D"
     },
     "poseidonExtT7Address": "0x5DeFdab963EBe48D623F6c2A396135e473Fa011f",

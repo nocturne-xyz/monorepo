@@ -1,3 +1,5 @@
+export type UniswapProtocol = "V2" | "V3";
+
 export interface ExactInputSingleParams {
   tokenIn: string;
   tokenOut: string;
@@ -13,6 +15,6 @@ export interface ExactInputParams {
   path: string;
   recipient: string;
   deadline: number;
-  amountIn: number;
-  amountOutMinimum: number;
+  amountIn: bigint;
+  amountOutMinimum: bigint;
 }

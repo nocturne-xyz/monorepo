@@ -15,6 +15,8 @@ import {
 } from "@uniswap/smart-order-router";
 import { ethers } from "ethers";
 import ERC20_ABI from "../abis/ERC20.json";
+import { UniswapProtocol } from "./types";
+import { Protocol } from "@uniswap/router-sdk";
 
 export type GetSwapRouteParams = {
   chainId: bigint;
@@ -25,6 +27,8 @@ export type GetSwapRouteParams = {
   tokenOutAddress: Address;
   maxSlippageBps: number;
   router?: AlphaRouter;
+
+  protocols?: UniswapProtocol[];
 };
 
 export async function getSwapRoute({
@@ -36,6 +40,7 @@ export async function getSwapRoute({
   tokenOutAddress,
   maxSlippageBps,
   router,
+  protocols = ["V3"],
 }: GetSwapRouteParams): Promise<SwapRoute | null> {
   const uniswapChainId = chainIdToUniswapChainIdType(chainId);
   const swapRouter =
@@ -78,7 +83,10 @@ export async function getSwapRoute({
     CurrencyAmount.fromRawAmount(tokenIn, amountIn.toString()),
     tokenOut,
     TradeType.EXACT_INPUT,
-    swapOpts
+    swapOpts,
+    {
+      protocols: protocols?.map((p) => Protocol[p]) ?? [],
+    }
   );
   return route;
 }

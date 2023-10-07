@@ -14,6 +14,7 @@ import { currencyAmountToBigInt, getSwapRoute } from "./helpers";
 import { Percent } from "@uniswap/sdk-core";
 import { IUniswapV3__factory } from "@nocturne-xyz/contracts";
 import { ExactInputParams, ExactInputSingleParams } from "./types";
+import * as JSON from "bigint-json-serialization";
 
 const UNISWAP_V3_NAME = "uniswapV3";
 
@@ -89,6 +90,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             );
 
             let swapParams: ExactInputSingleParams | ExactInputParams;
+            let encodedFunction: string;
             if (pools.length == 1) {
               const pool = pools[0];
               swapParams = {
@@ -96,21 +98,61 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 tokenOut: tokenOut,
                 fee: pool.fee,
                 recipient: this.config.handlerAddress,
-                deadline: Math.floor(Date.now() / 1000) + 60 * 20,
+                deadline: Date.now() + 3_600,
                 amountIn: inAmount,
                 amountOutMinimum: minimumAmountWithSlippage,
                 sqrtPriceLimitX96: 0,
               };
-            } else {
-              // NOTE: v3 swap routes are of order 1->2, 3->2, 4->3, etc.
-              throw new Error("TODO: not supporting multi hop");
-            }
 
-            const encodedFunction =
-              IUniswapV3__factory.createInterface().encodeFunctionData(
-                "exactInputSingle",
-                [swapParams]
-              );
+              encodedFunction =
+                IUniswapV3__factory.createInterface().encodeFunctionData(
+                  "exactInputSingle",
+                  [swapParams]
+                );
+            } else {
+              // NOTE: v3 swap routes are of order 1<-0, 2<-1, 3<-2, etc.
+              swapParams = {
+                path: "0x",
+                recipient: this.config.handlerAddress,
+                deadline: Date.now() + 3_600,
+                amountIn: inAmount,
+                amountOutMinimum: minimumAmountWithSlippage,
+              };
+              for (let i = 0; i < pools.length; i++) {
+                const pool = pools[i];
+                if (i == 0) {
+                  console.log(
+                    `address1: ${pool.token1.address} \n fee: ${pool.fee} \n address2: ${pool.token0.address}`
+                  );
+                  const component = ethers.utils
+                    .solidityPack(
+                      ["address", "uint24", "address"],
+                      [pool.token1.address, pool.fee, pool.token0.address]
+                    )
+                    .slice(2);
+                  swapParams.path += component;
+                } else {
+                  console.log(
+                    `fee: ${pool.fee} \n address2: ${pool.token0.address}`
+                  );
+                  const component = ethers.utils
+                    .solidityPack(
+                      ["uint24", "address"],
+                      [pool.fee, pool.token0.address]
+                    )
+                    .slice(2);
+                  swapParams.path += component;
+                }
+              }
+
+              console.log("swapParams:", JSON.stringify(swapParams));
+
+              encodedFunction =
+                IUniswapV3__factory.createInterface().encodeFunctionData(
+                  "exactInput",
+                  [swapParams]
+                );
+            }
 
             const unwrap: UnwrapRequest = {
               asset: AssetTrait.erc20AddressToAsset(tokenIn),

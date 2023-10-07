@@ -66,6 +66,7 @@ chai.use(chaiAsPromised);
 // const PER_NOTE_AMOUNT = 100n * 1_000_000n;
 const MAINNET_WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 const MAINNET_DAI_ADDRESS = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
+const MAINNET_SUSD_ADDRESS = "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51";
 
 describe("UniswapV3", async () => {
   let teardown: () => Promise<void>;
@@ -186,7 +187,7 @@ describe("UniswapV3", async () => {
   //   expect(expectedResult.expectedBundlerStatus).to.eql(status);
   // }
 
-  it("submits raw swap request to UniswapV3 without Nocturne", async () => {
+  it("submits single hop request to UniswapV3 without Nocturne", async () => {
     console.log("creating op request");
     const chainId = 1n;
     const opRequestWithMetadata = await newOpRequestBuilder(provider, chainId)
@@ -198,6 +199,52 @@ describe("UniswapV3", async () => {
         50
       )
       .build();
+
+    console.log("opRequestWithMetadata:", opRequestWithMetadata);
+
+    const {
+      contractAddress: wethAddress,
+      encodedFunction: approveEncodedFunction,
+    } = opRequestWithMetadata.request.actions[0];
+    const {
+      contractAddress: swapRouterAddress,
+      encodedFunction: swapEncodedFunction,
+    } = opRequestWithMetadata.request.actions[1];
+
+    const weth = WETH9__factory.connect(MAINNET_WETH_ADDRESS, aliceEoa);
+
+    console.log("depositing ETH into WETH");
+    await weth.deposit({ value: 2000000000000000000n }); // 2 ETH
+
+    console.log("approving weth to uniswap");
+    await aliceEoa.sendTransaction({
+      to: wethAddress,
+      data: approveEncodedFunction,
+    });
+
+    console.log("sending swap tx");
+    const swapTx = await aliceEoa.sendTransaction({
+      to: swapRouterAddress,
+      data: swapEncodedFunction,
+    });
+
+    console.log("tx response:", swapTx);
+  });
+
+  it("submits multihop request to UniswapV3 without Nocturne", async () => {
+    console.log("creating op request");
+    const chainId = 1n;
+    const opRequestWithMetadata = await newOpRequestBuilder(provider, chainId)
+      .use(UniswapV3Plugin)
+      .swap(
+        MAINNET_WETH_ADDRESS,
+        1000000000000000000n, // 1 ETH
+        MAINNET_SUSD_ADDRESS,
+        50
+      )
+      .build();
+
+    console.log("opRequestWithMetadata:", opRequestWithMetadata);
 
     const {
       contractAddress: wethAddress,
