@@ -52,7 +52,10 @@ import {
   WasmCanonAddrSigCheckProver,
   WasmJoinSplitProver,
 } from "@nocturne-xyz/local-prover";
-import { NocturneConfig } from "@nocturne-xyz/config";
+import {
+  NocturneConfig,
+  ProtocolAddressWithMethods,
+} from "@nocturne-xyz/config";
 import { ForkNetwork, startHardhat } from "./hardhat";
 import { BundlerConfig, startBundler } from "./bundler";
 import { DepositScreenerConfig, startDepositScreener } from "./screener";
@@ -84,6 +87,7 @@ const SIG_CHECK_VKEY = JSON.parse(
 export interface TestDeployArgs {
   screeners: Address[];
   subtreeBatchFillers: Address[];
+  protocolAllowlist: Map<string, ProtocolAddressWithMethods>;
 }
 
 export interface TestActorsConfig {
@@ -182,7 +186,8 @@ const hhThunk = thunk((forkNetwork?: ForkNetwork) => startHardhat(forkNetwork));
 // returns an async function that should be called for teardown
 // if include is not given, no off-chain actors will be deployed
 export async function setupTestDeployment(
-  config: TestActorsConfig,
+  actorsConfig: TestActorsConfig,
+  protocolAllowlist: Map<string, ProtocolAddressWithMethods> = new Map(),
   forkNetwork?: ForkNetwork
 ): Promise<TestDeployment> {
   // hardhat has to go up first,
@@ -199,7 +204,7 @@ export async function setupTestDeployment(
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
 
   // keep track of any modified configs
-  const actorConfig: TestActorsConfig = structuredClone(config);
+  const actorConfig: TestActorsConfig = structuredClone(actorsConfig);
   actorConfig.configs = actorConfig.configs ?? {};
 
   const [
@@ -218,13 +223,14 @@ export async function setupTestDeployment(
   ] = await deployContractsWithDummyConfig(deployerEoa, {
     screeners: [screenerEoa.address],
     subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
+    protocolAllowlist: protocolAllowlist,
   });
 
   console.log("erc20s:", deployment.erc20s);
   // Deploy subgraph first, as other services depend on it
   let stopSubgraph: undefined | (() => Promise<void>);
-  if (config.include.subgraph) {
-    const givenSubgraphConfig = config.configs?.subgraph ?? {};
+  if (actorsConfig.include.subgraph) {
+    const givenSubgraphConfig = actorsConfig.configs?.subgraph ?? {};
     const subgraphConfig = {
       ...DEFAULT_SUBGRAPH_CONFIG,
       ...givenSubgraphConfig,
@@ -238,8 +244,8 @@ export async function setupTestDeployment(
 
   // deploy everything else
   const proms = [];
-  if (config.include.bundler) {
-    const givenBundlerConfig = config.configs?.bundler ?? {};
+  if (actorsConfig.include.bundler) {
+    const givenBundlerConfig = actorsConfig.configs?.bundler ?? {};
     const bundlerConfig: BundlerConfig = {
       ...DEFAULT_BUNDLER_CONFIG,
       ...givenBundlerConfig,
@@ -253,8 +259,9 @@ export async function setupTestDeployment(
     proms.push(startBundler(bundlerConfig));
   }
 
-  if (config.include.depositScreener) {
-    const givenDepositScreenerConfig = config.configs?.depositScreener ?? {};
+  if (actorsConfig.include.depositScreener) {
+    const givenDepositScreenerConfig =
+      actorsConfig.configs?.depositScreener ?? {};
     const depositScreenerConfig: DepositScreenerConfig = {
       ...DEFAULT_DEPOSIT_SCREENER_CONFIG,
       ...givenDepositScreenerConfig,
@@ -268,9 +275,10 @@ export async function setupTestDeployment(
   }
 
   // deploy subtree updater & insertion writer if requested
-  if (config.include.subtreeUpdater) {
+  if (actorsConfig.include.subtreeUpdater) {
     // subtree updater
-    const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
+    const givenSubtreeUpdaterConfig =
+      actorsConfig.configs?.subtreeUpdater ?? {};
     const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
       ...DEFAULT_SUBTREE_UPDATER_CONFIG,
       ...givenSubtreeUpdaterConfig,
@@ -344,7 +352,7 @@ export async function setupTestDeployment(
     }
 
     // wait for subgraph / subtree updater
-    if (config.configs?.subtreeUpdater?.useRapidsnark) {
+    if (actorsConfig.configs?.subtreeUpdater?.useRapidsnark) {
       await sleep(30_000);
     } else {
       await sleep(10_000);
@@ -420,7 +428,7 @@ export async function deployContractsWithDummyConfig(
         },
       ],
     ]),
-    protocolAllowlist: new Map(),
+    protocolAllowlist: args.protocolAllowlist,
     leftoverTokenHolder: "0x0000000000000000000000000000000000000123",
     opts: {
       useMockSubtreeUpdateVerifier:
