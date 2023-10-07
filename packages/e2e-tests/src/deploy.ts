@@ -200,7 +200,10 @@ export async function setupTestDeployment(
   const resetHardhat = await hhThunk(forkNetwork);
 
   // deploy contracts
-  const provider = new ethers.providers.JsonRpcProvider(HH_URL);
+  const provider = new ethers.providers.JsonRpcProvider({
+    url: HH_URL,
+    timeout: 300_000,
+  });
 
   // keep track of any modified configs
   const actorConfig: TestActorsConfig = structuredClone(actorsConfig);
