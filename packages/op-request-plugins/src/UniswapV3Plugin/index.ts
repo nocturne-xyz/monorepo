@@ -80,7 +80,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               );
             }
             if (swapRoute.route[0].protocol !== "V3") {
-              throw new Error("Not supporting non-V3 routes");
+              throw new Error("Not currently supporting non-V3 routes");
             }
 
             const route = swapRoute.route[0];
@@ -110,7 +110,8 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                   [swapParams]
                 );
             } else {
-              // NOTE: v3 swap routes are of order 1<-0, 2<-1, 3<-2, etc.
+              // NOTE: v3 swap route for A->D with structure (token0, token1) will be
+              // (B, A), (C, B), (D, C)
               swapParams = {
                 path: "0x",
                 recipient: this.config.handlerAddress,
