@@ -1,13 +1,13 @@
 import { ValidateFunction } from "ajv";
 import { ErrString } from "./types";
-import fetch, { RequestInfo, RequestInit } from "node-fetch";
+import fetch, { Response, RequestInfo, RequestInit } from "node-fetch";
 import retry from "async-retry";
 import IORedis from "ioredis";
 import { createHash } from "crypto";
 import * as JSON from "bigint-json-serialization";
 
 export type CachedFetchOptions = {
-  tryReadFromCache?: boolean; // default to false
+  skipCacheRead?: boolean; // default to false
   ttlSeconds?: number; // in seconds, default to 2 hours
   retries?: number; // default to 5
 };
@@ -32,42 +32,36 @@ export async function cachedFetchWithRetry(
   requestInfo: RequestInfo,
   requestInit: RequestInit,
   redis: IORedis,
-  options: CachedFetchOptions
-): Promise<any> {
-  // NOTE: we default to false for tryReadFromCache to avoid cases in screener where dev forgets to
-  // set `tryReadFromCache` to false for final screening check, as using cache for final screening
-  // check could cause false negative screening results
-  const {
-    tryReadFromCache = false,
-    ttlSeconds = 60 * 60,
-    retries = 5,
-  } = options;
+  options: CachedFetchOptions = {}
+): Promise<Response> {
+  const { skipCacheRead = false, ttlSeconds = 60 * 60, retries = 5 } = options;
 
   // Generate a cache key based on URL and request payload
-  const cacheKeyData = `${
+  const cacheKeyData = `CACHE_${
     typeof requestInfo === "string" ? requestInfo : requestInfo.url
   }-${JSON.stringify(requestInit.body)}`;
   const cacheKey = createHash("sha256").update(cacheKeyData).digest("hex");
 
-  // Check cache if tryReadFromCache set to true, return cached data if so
-  if (tryReadFromCache) {
+  // Check cache if skipCacheRead false or undefined, return cached data if so
+  if (!skipCacheRead) {
     const cachedData = await redis.get(cacheKey);
     if (cachedData) {
-      return cachedData;
+      return JSON.parse(cachedData);
     }
   }
 
   // Fetch data with retry logic
-  const fetchData = async () => {
-    const response = await fetch(requestInfo, requestInit);
-    return response.json();
-  };
-  const data = await retry(fetchData, { retries });
+  const response = await retry(
+    async () => {
+      return fetch(requestInfo, requestInit);
+    },
+    { retries }
+  );
 
   // Cache successful responses (only GET for simplicity, but this can be modified)
   if (requestInit.method === "GET") {
-    await redis.setex(cacheKey, ttlSeconds, JSON.stringify(data));
+    await redis.setex(cacheKey, ttlSeconds, JSON.stringify(response));
   }
 
-  return data;
+  return response;
 }

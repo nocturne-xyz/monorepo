@@ -1,4 +1,9 @@
+import {
+  CachedFetchOptions,
+  cachedFetchWithRetry,
+} from "@nocturne-xyz/offchain-utils";
 import { ScreeningDepositRequest } from "..";
+import IORedis from "ioredis";
 import "dotenv/config";
 
 export interface TrmAddressRiskIndicator {
@@ -95,7 +100,9 @@ const MISTTRACK_API_KEY = process.env.MISTTRACK_API_KEY ?? "";
 
 export const API_CALL_MAP = {
   TRM_SCREENING_ADDRESSES: async (
-    deposit: ScreeningDepositRequest
+    deposit: ScreeningDepositRequest,
+    cache: IORedis,
+    cacheOptions: CachedFetchOptions = {}
   ): Promise<TrmData> => {
     const body = JSON.stringify([
       {
@@ -103,17 +110,23 @@ export const API_CALL_MAP = {
         chain: "ethereum",
       },
     ]);
-    const response = await fetch(`${TRM_BASE_URL}/screening/addresses`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization:
-          "Basic " +
-          Buffer.from(`${TRM_API_KEY}:${TRM_API_KEY}`).toString("base64"),
+    const response = await cachedFetchWithRetry(
+      `${TRM_BASE_URL}/screening/addresses`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization:
+            "Basic " +
+            Buffer.from(`${TRM_API_KEY}:${TRM_API_KEY}`).toString("base64"),
+        },
+        body,
       },
-      body,
-    });
-    const jsonResponse = await response.json();
+      cache,
+      cacheOptions
+    );
+
+    const jsonResponse = (await response.json()) as any; // TODO: any cast
     if (jsonResponse["code"] === 400) {
       throw new Error(`Bad Request: ${JSON.stringify(jsonResponse["errors"])}`);
     }
@@ -122,12 +135,18 @@ export const API_CALL_MAP = {
     return data;
   },
   MISTTRACK_ADDRESS_OVERVIEW: async (
-    deposit: ScreeningDepositRequest
+    deposit: ScreeningDepositRequest,
+    cache: IORedis,
+    cacheOptions: CachedFetchOptions = {}
   ): Promise<MisttrackAddressOverviewData> => {
     const token = "ETH";
-    const response = await fetch(
-      `${MISTTRACK_BASE_URL}/address_overview?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+    const response = await cachedFetchWithRetry(
+      `${MISTTRACK_BASE_URL}/address_overview?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`,
+      {},
+      cache,
+      cacheOptions
     );
+
     const misttrackResponse =
       (await response.json()) as MisttrackApiResponse<MisttrackAddressOverviewData>;
     if (!misttrackResponse.success) {
@@ -141,11 +160,17 @@ export const API_CALL_MAP = {
 
   MISTTRACK_ADDRESS_LABELS: async (
     deposit: ScreeningDepositRequest,
+    cache: IORedis,
+    cacheOptions: CachedFetchOptions = {},
     token = "ETH"
   ): Promise<MisttrackLabelsData> => {
-    const response = await fetch(
-      `${MISTTRACK_BASE_URL}/address_labels?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+    const response = await cachedFetchWithRetry(
+      `${MISTTRACK_BASE_URL}/address_labels?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`,
+      {},
+      cache,
+      cacheOptions
     );
+
     // check the content type before parsing json
     if (!response.headers.get("content-type")?.includes("application/json")) {
       console.log(await response.text());
@@ -166,11 +191,17 @@ export const API_CALL_MAP = {
 
   MISTTRACK_ADDRESS_RISK_SCORE: async (
     deposit: ScreeningDepositRequest,
+    cache: IORedis,
+    cacheOptions: CachedFetchOptions = {},
     token = "ETH"
   ): Promise<MisttrackRiskScoreData> => {
-    const response = await fetch(
-      `${MISTTRACK_BASE_URL}/risk_score?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`
+    const response = await cachedFetchWithRetry(
+      `${MISTTRACK_BASE_URL}/risk_score?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`,
+      {},
+      cache,
+      cacheOptions
     );
+
     // check the content type before parsing json
     if (!response.headers.get("content-type")?.includes("application/json")) {
       console.log(await response.text());
