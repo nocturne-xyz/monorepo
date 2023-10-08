@@ -108,8 +108,7 @@ export class SnapStateSdk implements SnapStateApi {
     * Will throw an error if the snap already has a key stored.
     * This function should only be used an alternative to the default key generation using the
     * snap's internal seed phrase when portability is required.
-    * @dev WARNING: 
-    * @dev WARNING: The spending key will momentarily exist in memory
+    * @dev WARNING: The spending key will momentarily exist in memory.
     */
    private async generateAndStoreSpendKeyFromEoaSigIfNotAlreadySet(): Promise<void> {
      // Return early if spend key already set

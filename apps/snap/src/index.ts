@@ -37,8 +37,7 @@ async function getNocturneSignerFromDb(): Promise<NocturneSigner | undefined> {
   return new NocturneSigner(ethers.utils.arrayify(spendKey));
 }
 
-async function getSigner(): Promise<NocturneSigner> {
-  // Attempt to get signer from db first, if empty get from bip44 which always returns a value
+async function mustGetSigner(): Promise<NocturneSigner> {
   const signer = await getNocturneSignerFromDb();
   if (!signer) {
     throw new Error("Nocturne key not set");
@@ -101,7 +100,7 @@ async function handleRpcRequest({
       return;
     }
     case "nocturne_requestViewingKey": {
-      const signer = await getSigner();
+      const signer = await mustGetSigner();
       const viewer = signer.viewer();
       return {
         vk: viewer.vk,
@@ -109,7 +108,7 @@ async function handleRpcRequest({
       };
     }
     case "nocturne_signCanonAddrRegistryEntry": {
-      const signer = await getSigner();
+      const signer = await mustGetSigner();
       const { entry, chainId, registryAddress } = request.params;
 
       const { heading: registryHeading, text: registryText } =
@@ -145,7 +144,7 @@ async function handleRpcRequest({
       };
     }
     case "nocturne_signOperation": {
-      const signer = await getSigner();
+      const signer = await mustGetSigner();
       const { op, metadata } = request.params;
       const contentItems = makeSignOperationContent(
         // specifies nothing about ordering

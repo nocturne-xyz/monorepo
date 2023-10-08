@@ -619,8 +619,6 @@ export class NocturneSdk implements NocturneSdkApi {
       params: { op: preSignOp, metadata: opMeta },
     });
 
-    console.log("SignedOperation:", op);
-
     await client.applyOptimisticRecordsForOp(op, opMeta);
 
     return op;
@@ -634,7 +632,6 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   async verifyProvenOperation(operation: ProvenOperation): Promise<boolean> {
-    console.log("ProvenOperation:", operation);
     const opDigest = OperationTrait.computeDigest(operation);
 
     const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] =
@@ -741,7 +738,6 @@ export class NocturneSdk implements NocturneSdkApi {
    * if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
    */
   async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
-    console.log("[fe-sdk] getAllBalances with params:", opts);
     const client = await this.clientThunk();
 
     await this.syncMutex.runExclusive(async () => await client.sync());
