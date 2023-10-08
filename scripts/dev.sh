@@ -35,13 +35,25 @@ npx hardhat node &> "$LOG_DIR/hardhat" &
 HARDHAT_PID=$!
 popd
 
+
+echo 'starting bundler redis'
+docker run -d --name bundler-redis -p 6379:6379 --rm redis redis-server --port 6379 --loglevel warning
+
+echo 'starting screener redis'
+docker run -d --name deposit-screener-redis -p 6380:6380 --rm redis redis-server --port 6380 --loglevel warning
+
+echo 'starting insertion log redis'
+docker run -d --name insertion-log-redis -p 6381:6381 --rm redis redis-server --port 6381 --loglevel warning
+
+
 sleep 1
+
 
 echo "starting graph-node..."
 docker-compose -f graph-node/docker/docker-compose.yml up &> "$LOG_DIR/graph-node" &
 GRAPH_NODE_PID=$!
 
-sleep 3
+sleep 5
 
 echo "running turbo dev script..."
 yarn turbo run dev

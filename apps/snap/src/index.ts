@@ -1,4 +1,3 @@
-import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
 import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { heading, panel, text } from "@metamask/snaps-ui";
 import {
@@ -24,27 +23,10 @@ import { SnapKvStore } from "./snapdb";
 // To build locally, invoke `yarn build:local` from snap directory
 // Goerli
 
-const NOCTURNE_BIP44_COINTYPE = 6789;
 const SPEND_KEY_DB_KEY = "nocturne_spend_key";
 
 const config = loadNocturneConfigBuiltin("goerli");
 const kvStore = new SnapKvStore();
-
-async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
-  const nocturneNode = await snap.request({
-    method: "snap_getBip44Entropy",
-    params: {
-      coinType: NOCTURNE_BIP44_COINTYPE,
-    },
-  });
-  const addressKeyDeriver = await getBIP44AddressKeyDeriver(
-    nocturneNode as any
-  );
-  const keyNode = await addressKeyDeriver(0);
-  const sk = ethers.utils.keccak256(ethers.utils.arrayify(keyNode.privateKey!));
-  const nocturnePrivKey = new NocturneSigner(ethers.utils.arrayify(sk));
-  return nocturnePrivKey;
-}
 
 async function getNocturneSignerFromDb(): Promise<NocturneSigner | undefined> {
   const spendKey = await kvStore.getString(SPEND_KEY_DB_KEY);
@@ -53,6 +35,16 @@ async function getNocturneSignerFromDb(): Promise<NocturneSigner | undefined> {
   }
 
   return new NocturneSigner(ethers.utils.arrayify(spendKey));
+}
+
+async function getSigner(): Promise<NocturneSigner> {
+  // Attempt to get signer from db first, if empty get from bip44 which always returns a value
+  const signer = await getNocturneSignerFromDb();
+  if (!signer) {
+    throw new Error("Nocturne key not set");
+  }
+
+  return signer;
 }
 
 /**
@@ -86,15 +78,12 @@ async function handleRpcRequest({
     ? parseObjectValues(request.params)
     : undefined;
 
-  // Attempt to get signer from db first, if empty get from bip44 which always returns a value
-  const signer =
-    (await getNocturneSignerFromDb()) ?? (await getNocturneSignerFromBIP44());
-
   console.log("Switching on method: ", request.method);
   switch (request.method) {
-    case "nocturne_spendKeyIsSet":
+    case "nocturne_spendKeyIsSet": {
       return await kvStore.containsKey(SPEND_KEY_DB_KEY);
-    case "nocturne_setSpendKey":
+    }
+    case "nocturne_setSpendKey": {
       const spendKey = new Uint8Array(request.params.spendKey);
 
       // Can only set spend key if not already set, only way to reset is to clear snap db and
@@ -110,13 +99,17 @@ async function handleRpcRequest({
       spendKey.fill(0);
 
       return;
-    case "nocturne_requestViewingKey":
+    }
+    case "nocturne_requestViewingKey": {
+      const signer = await getSigner();
       const viewer = signer.viewer();
       return {
         vk: viewer.vk,
         vkNonce: viewer.vkNonce,
       };
-    case "nocturne_signCanonAddrRegistryEntry":
+    }
+    case "nocturne_signCanonAddrRegistryEntry": {
+      const signer = await getSigner();
       const { entry, chainId, registryAddress } = request.params;
 
       const { heading: registryHeading, text: registryText } =
@@ -150,7 +143,9 @@ async function handleRpcRequest({
         spendPubkey,
         vkNonce,
       };
-    case "nocturne_signOperation":
+    }
+    case "nocturne_signOperation": {
+      const signer = await getSigner();
       const { op, metadata } = request.params;
       const contentItems = makeSignOperationContent(
         // specifies nothing about ordering
@@ -179,6 +174,7 @@ async function handleRpcRequest({
         console.log("Error getting pre-proof operation:", err);
         throw err;
       }
+    }
     default:
       assertAllRpcMethodsHandled(request);
   }

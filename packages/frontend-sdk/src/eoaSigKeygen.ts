@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 
 const SPEND_KEY_FIXED_MESSAGE = Buffer.from(
-  "Sign this message to generate your Nocturne Spending Key. This key lets the application spend your funds in Nocturne.\n\nIMPORTANT: ONLY SIGN THIS MESSAGE IF YOU TRUST THE APPLICATION.\n\nBE SURE TO CHECK THE APPLICATION'S URL BEFORE SIGNING"
+  "Sign this message to generate your Nocturne Spending Key. This key lets the application spend your funds in Nocturne.\n\nIMPORTANT: ONLY SIGN THIS MESSAGE IF YOU TRUST THE APPLICATION.\n\nBE SURE TO CHECK THE APPLICATION'S URL BEFORE SIGNING."
 );
 
 export async function generateNocturneSpendKeyFromEoaSig(

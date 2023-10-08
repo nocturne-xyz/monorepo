@@ -50,15 +50,11 @@ import {
   BundlerOpTracker,
   RequestViewingKeyMethod,
   proveOperation,
-  stringifyObjectValues,
   SyncOpts,
-  RpcRequestMethod,
   SignOperationMethod,
   newOpRequestBuilder,
   OperationRequestWithMetadata,
   ActionMetadata,
-  SetSpendKeyMethod,
-  SpendKeyIsSetMethod,
 } from "@nocturne-xyz/client";
 import {
   WasmCanonAddrSigCheckProver,
@@ -75,7 +71,7 @@ import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
 import { NocturneSdkApi, SnapStateApi } from "./api";
-import { SnapStateSdk } from "./metamask";
+import { SnapStateSdk, getSigner } from "./metamask";
 import { GetSnapOptions } from "./metamask/types";
 import {
   AnonErc20SwapQuoteResponse,
@@ -104,7 +100,6 @@ import {
 import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
 import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
-import { generateNocturneSpendKeyFromEoaSig } from "./eoaSigKeygen";
 
 export interface NocturneSdkOptions {
   // interface for fetching deposit data from subgraph and screener
@@ -135,8 +130,6 @@ export class NocturneSdk implements NocturneSdkApi {
   protected _snap: SnapStateApi;
   protected depositAdapter: DepositAdapter;
   protected syncMutex: Mutex;
-
-  protected db: NocturneDB;
 
   protected signerThunk: Thunk<ethers.Signer>;
   protected depositManagerContractThunk: Thunk<DepositManager>;
@@ -180,10 +173,10 @@ export class NocturneSdk implements NocturneSdkApi {
     this.endpoints = sdkConfig.endpoints;
     this.sdkConfig = sdkConfig;
     this._provider = options.provider;
-    this._snap = new SnapStateSdk(snapOptions?.version, snapOptions?.snapId);
+    this._snap = new SnapStateSdk(() => this.provider, snapOptions?.version, snapOptions?.snapId);
     this.syncMutex = new Mutex();
 
-    this.signerThunk = thunk(() => this.getWindowSigner());
+    this.signerThunk = thunk(() => getSigner(this.provider));
     this.depositManagerContractThunk = thunk(async () =>
       DepositManager__factory.connect(
         this.sdkConfig.config.depositManagerAddress,
@@ -210,21 +203,27 @@ export class NocturneSdk implements NocturneSdkApi {
         this.endpoints.screenerEndpoint
       );
 
-    const kv = new IdbKvStore(`nocturne-fe-sdk-${networkName}`);
-    this.db = new NocturneDB(kv);
 
     this.clientThunk = thunk(async () => {
-      const { vk, vkNonce } = await this.invokeSnap<RequestViewingKeyMethod>({
+      console.log("[fe-sdk] executing client thunk");
+      const { vk, vkNonce } = await this.snap.invoke<RequestViewingKeyMethod>({
         method: "nocturne_requestViewingKey",
         params: undefined,
       });
 
+      const viewer = new NocturneViewer(vk, vkNonce);
+      const { x, y } = viewer.canonicalAddress();
+      const canonAddr = JSON.stringify({ x, y });
+      const canonAddrHash = ethers.utils.sha256(ethers.utils.toUtf8Bytes(canonAddr));
+      const kv = new IdbKvStore(`nocturne-fe-sdk-${networkName}-${canonAddrHash}`);
+      const db = new NocturneDB(kv);
+
       return new NocturneClient(
-        new NocturneViewer(vk, vkNonce),
+        viewer,
         this.provider,
         this.sdkConfig.config,
         await SparseMerkleProver.loadFromKV(kv),
-        this.db,
+        db,
         options.syncAdapter ??
           new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
         new MockEthToTokenConverter(),
@@ -258,58 +257,7 @@ export class NocturneSdk implements NocturneSdkApi {
   get opRequestBuilder(): OpRequestBuilder {
     return newOpRequestBuilder(this.provider, this.sdkConfig.config.chainId);
   }
-
-  protected async getWindowSigner(): Promise<ethers.Signer> {
-    await this.provider.send("eth_requestAccounts", []);
-    return this.provider.getSigner();
-  }
-
-  /**
-   * Check if snap's spend key is set.
-   * @returns true if the user has a spend key set, false otherwise
-   */
-  async snapSpendKeyIsSet(): Promise<boolean> {
-    return this.invokeSnap<SpendKeyIsSetMethod>({
-      method: "nocturne_spendKeyIsSet",
-      params: undefined,
-    });
-  }
-
-  /**
-   * Generate spend key based on Ethereum private key signature, then pass to snap
-   * to store/manage.
-   * Will throw an error if the snap already has a key stored.
-   * This function should only be used an alternative to the default key generation using the
-   * snap's internal seed phrase when portability is required.
-   * @dev WARNING: 
-   * @dev WARNING: The spending key will momentarily exist in memory
-   */
-  async generateAndStoreSpendKeyFromEoaSig(): Promise<void> {
-    // Return early if spend key already set
-    if (await this.snapSpendKeyIsSet()) {
-      throw new Error("Spend key already set");
-    }
-
-    // Generate spend key and attempt to set in snap
-    const signer = await this.getWindowSigner();
-    const spendKey = await generateNocturneSpendKeyFromEoaSig(signer);
-
-    const maybeErrorString = await this.invokeSnap<SetSpendKeyMethod>({
-      method: "nocturne_setSpendKey",
-      params: {
-        spendKey,
-      },
-    });
-
-    // Clear the spend key from memory
-    spendKey.fill(0);
-
-    // Notify consumer if spend key was not actually set (in case of some race condition where it was set between the first spendKeyIsSet check and the setSpendKey call)
-    if (maybeErrorString) {
-      throw new Error(maybeErrorString);
-    }
-  }
-
+  
   /**
    * Call `depositManager.instantiateErc20MultiDeposit` given the provided
    * `erc20Address`, `valuse`, and `gasCompPerDeposit`.
@@ -321,7 +269,7 @@ export class NocturneSdk implements NocturneSdkApi {
     values: bigint[],
     gasCompensationPerDeposit: bigint
   ): Promise<DepositHandleWithReceipt[]> {
-    const signer = await this.getWindowSigner();
+    const signer = await getSigner(this.provider);
 
     const ethToWrap = values.reduce((acc, val) => acc + val, 0n);
     const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
@@ -345,13 +293,13 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   async getAllDeposits(): Promise<DepositHandle[]> {
-    const spender = await (await this.getWindowSigner()).getAddress();
+    const spender = await (await getSigner(this.provider)).getAddress();
     return await this.depositAdapter.fetchDepositRequestsBySpender(spender);
   }
 
   // TODO: use this method in interface
   async registerCanonicalAddress(): Promise<ethers.ContractTransaction> {
-    const ethSigner = await this.getWindowSigner();
+    const ethSigner = await getSigner(this.provider);
     const client = await this.clientThunk();
     const registry = await this.canonAddrRegistryThunk();
     const prover = await this.canonAddrSigCheckProverThunk();
@@ -363,7 +311,7 @@ export class NocturneSdk implements NocturneSdkApi {
     ).toBigInt();
 
     const { digest, sig, spendPubkey, vkNonce } =
-      await this.invokeSnap<SignCanonAddrRegistryEntryMethod>({
+      await this.snap.invoke<SignCanonAddrRegistryEntryMethod>({
         method: "nocturne_signCanonAddrRegistryEntry",
         params: {
           entry: {
@@ -395,7 +343,7 @@ export class NocturneSdk implements NocturneSdkApi {
     values: bigint[],
     gasCompensationPerDeposit: bigint
   ): Promise<DepositHandleWithReceipt[]> {
-    const signer = await this.getWindowSigner();
+    const signer = await getSigner(this.provider);
     const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
 
     const signerBalance = (await signer.getBalance()).toBigInt();
@@ -522,7 +470,7 @@ export class NocturneSdk implements NocturneSdkApi {
     displayRequest: DisplayDepositRequest,
     retrieveEthDepositsAs: "ETH" | "WETH" = "ETH"
   ): Promise<ContractTransaction> {
-    const signer = await this.getWindowSigner();
+    const signer = await getSigner(this.provider);
     const signerAddress = await signer.getAddress();
     if (signerAddress.toLowerCase() !== displayRequest.spender.toLowerCase()) {
       throw new Error("Spender and signer addresses do not match");
@@ -571,7 +519,7 @@ export class NocturneSdk implements NocturneSdkApi {
     erc20Address: Address,
     totalValue: bigint
   ): Promise<DepositQuoteResponse> {
-    const signer = await this.getWindowSigner();
+    const signer = await getSigner(this.provider);
     const spender = await signer.getAddress();
 
     return await retry(
@@ -667,7 +615,7 @@ export class NocturneSdk implements NocturneSdkApi {
       throw e;
     }
 
-    const op = await this.invokeSnap<SignOperationMethod>({
+    const op = await this.snap.invoke<SignOperationMethod>({
       method: "nocturne_signOperation",
       params: { op: preSignOp, metadata: opMeta },
     });
@@ -948,29 +896,6 @@ export class NocturneSdk implements NocturneSdkApi {
         retries: 5, // TODO later scope: this should probably be configurable by the caller
       }
     );
-  }
-
-  private async invokeSnap<RpcMethod extends RpcRequestMethod>(
-    request: Omit<RpcMethod, "return">
-  ): Promise<RpcMethod["return"]> {
-    console.log("[fe-sdk] invoking snap method:", request.method);
-    const stringifiedParams = request.params
-      ? stringifyObjectValues(request.params)
-      : undefined;
-    const jsonRpcRequest = {
-      method: "wallet_invokeSnap",
-      params: {
-        snapId: this._snap.snapId,
-        request: {
-          method: request.method,
-          params: stringifiedParams,
-        },
-      },
-    };
-    const response = await window.ethereum.request<RpcMethod["return"]>(
-      jsonRpcRequest
-    );
-    return response ? JSON.parse(response as unknown as string) : undefined;
   }
 
   private async formDepositHandlesWithTxReceipt(
