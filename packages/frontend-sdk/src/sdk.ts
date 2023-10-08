@@ -205,7 +205,6 @@ export class NocturneSdk implements NocturneSdkApi {
 
 
     this.clientThunk = thunk(async () => {
-      console.log("[fe-sdk] executing client thunk");
       const { vk, vkNonce } = await this.snap.invoke<RequestViewingKeyMethod>({
         method: "nocturne_requestViewingKey",
         params: undefined,

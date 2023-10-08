@@ -118,7 +118,7 @@ export class SnapStateSdk implements SnapStateApi {
         params: undefined,
       });
      if (snapKeyAlreadySet) {
-        return
+        return;
      }
   
      // Generate spend key and attempt to set in snap
