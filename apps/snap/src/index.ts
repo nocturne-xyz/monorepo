@@ -71,6 +71,7 @@ export const onRpcRequest: OnRpcRequestHandler = async (args) => {
 
 async function handleRpcRequest({
   request,
+  origin,
 }: SnapRpcRequestHandlerArgs): Promise<RpcRequestMethod["return"]> {
   //@ts-ignore
   request.params = request.params
@@ -152,7 +153,7 @@ async function handleRpcRequest({
         method: "snap_dialog",
         params: {
           type: "confirmation",
-          content: makeSignOperationContent(metadata ?? { items: [] }),
+          content: makeSignOperationContent(origin, metadata ?? { items: [] }),
         },
       });
 

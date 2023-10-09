@@ -29,34 +29,28 @@ export const makeSignCanonAddrRegistryEntryContent = (
 };
 
 export const makeSignOperationContent = (
+  origin: string,
   opMetadata: OperationMetadata
 ): Panel => {
-  const [summaries, details] = unzip(
-    opMetadata.items.map((item) => {
-      if (item.type === "ConfidentialPayment") {
-        return [
-          text(
-            formatConfPaymentMetadataSummary(
-              item.metadata as ConfidentialPaymentMetadata
-            )
-          ),
-          makeConfidentialPaymentMetadataDetails(
-            item.metadata as ConfidentialPaymentMetadata
-          ),
-        ];
-      } else {
-        return [
-          text((item.metadata as ActionMetadata).summary),
-          makeActionMetadataDetails(item.metadata as ActionMetadata),
-        ];
-      }
-    })
-  );
+  const summaries = opMetadata.items.map((item) => {
+    if (item.type === "ConfidentialPayment") {
+      return text(
+        formatConfPaymentMetadataSummary(
+          item.metadata as ConfidentialPaymentMetadata
+        )
+      );
+    } else {
+      return text((item.metadata as ActionMetadata).summary);
+    }
+  });
 
   return panel([
-    panel([heading("Summary"), ...summaries]),
-    divider(),
-    panel([heading("Details"), ...details]),
+    panel([
+      heading(`${origin} would like to perform the following operation:"`),
+      divider(),
+      ...summaries,
+      divider(),
+    ]),
   ]);
 };
 
@@ -71,41 +65,4 @@ const formatConfPaymentMetadataSummary = ({
   return `Send ${displayAmount} ${displayAsset} to ${formatCanonAddr(
     recipient
   )}`;
-};
-
-const makeConfidentialPaymentMetadataDetails = (
-  meta: ConfidentialPaymentMetadata
-): Panel => {
-  const summary = formatConfPaymentMetadataSummary(meta);
-
-  const { asset, amount, recipient } = meta;
-  return panel([
-    heading(summary),
-    panel([
-      heading("Details"),
-      text(`assetType: ${asset.assetType}`),
-      text(`assetContractAddress: ${asset.assetAddr}`),
-      text(`assetId: ${asset.id}`),
-      text(`amount: ${amount}`),
-      text(`recipient: ${formatCanonAddr(recipient)}`),
-    ]),
-  ]);
-};
-
-const makeActionMetadataDetails = (meta: ActionMetadata): Panel => {
-  const { summary, pluginInfo, details } = meta;
-
-  const { name, source } = pluginInfo;
-  const pluginInfoNode = text(
-    `created by plugin ${name} (${source ?? "not open source"})`
-  );
-
-  const detailsNodes = details
-    ? Object.keys(details).map((key) => text(`${key}: ${details[key]}`))
-    : [];
-
-  return panel([
-    heading(summary),
-    panel([heading("details"), ...detailsNodes, pluginInfoNode]),
-  ]);
 };
