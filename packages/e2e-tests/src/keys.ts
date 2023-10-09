@@ -16,6 +16,10 @@ export const KEYS = [
   "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6", // anvil #9
 ];
 
+export const ADDRESSES = KEYS.map(
+  (k) => new ethers.Wallet(k).connect(ethers.getDefaultProvider()).address
+);
+
 export function KEYS_TO_WALLETS(
   provider: ethers.providers.Provider
 ): ethers.Wallet[] {

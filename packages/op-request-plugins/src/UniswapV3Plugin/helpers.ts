@@ -1,6 +1,7 @@
 import { Address } from "@nocturne-xyz/core";
 import {
   ChainId,
+  Currency,
   CurrencyAmount,
   Percent,
   Token,
@@ -14,6 +15,8 @@ import {
 } from "@uniswap/smart-order-router";
 import { ethers } from "ethers";
 import ERC20_ABI from "../abis/ERC20.json";
+import { UniswapProtocol } from "./types";
+import { Protocol } from "@uniswap/router-sdk";
 
 export type GetSwapRouteParams = {
   chainId: bigint;
@@ -24,6 +27,8 @@ export type GetSwapRouteParams = {
   tokenOutAddress: Address;
   maxSlippageBps: number;
   router?: AlphaRouter;
+
+  protocols?: UniswapProtocol[];
 };
 
 export async function getSwapRoute({
@@ -35,6 +40,7 @@ export async function getSwapRoute({
   tokenOutAddress,
   maxSlippageBps,
   router,
+  protocols = ["V3"],
 }: GetSwapRouteParams): Promise<SwapRoute | null> {
   const uniswapChainId = chainIdToUniswapChainIdType(chainId);
   const swapRouter =
@@ -77,7 +83,10 @@ export async function getSwapRoute({
     CurrencyAmount.fromRawAmount(tokenIn, amountIn.toString()),
     tokenOut,
     TradeType.EXACT_INPUT,
-    swapOpts
+    swapOpts,
+    {
+      protocols: protocols?.map((p) => Protocol[p]) ?? [],
+    }
   );
   return route;
 }
@@ -108,20 +117,17 @@ export async function getSwapQuote(
   if (!route) {
     return null;
   }
-  const erc20OutContract = new ethers.Contract(
-    params.tokenOutAddress,
-    ERC20_ABI,
-    params.provider
-  );
   return {
-    exactQuoteWei: BigInt(
-      Number(route.quote.toExact()) *
-        Math.pow(10, await erc20OutContract.decimals())
-    ),
-    minimumAmountOutWei: BigInt(
-      Number(route.trade.minimumAmountOut(new Percent(50, 10_000)).toExact()) *
-        Math.pow(10, await erc20OutContract.decimals())
+    exactQuoteWei: currencyAmountToBigInt(route.quote),
+    minimumAmountOutWei: currencyAmountToBigInt(
+      route.trade.minimumAmountOut(new Percent(params.maxSlippageBps, 10_000))
     ),
     priceImpactBps: Number(route.trade.priceImpact.toSignificant(4)),
   };
+}
+
+export function currencyAmountToBigInt<T extends Currency>(
+  currencyAmount: CurrencyAmount<T>
+): bigint {
+  return BigInt(currencyAmount.numerator.toString());
 }

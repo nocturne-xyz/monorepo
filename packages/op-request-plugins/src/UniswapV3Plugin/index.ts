@@ -9,9 +9,12 @@ import {
   UnwrapRequest,
 } from "@nocturne-xyz/client";
 import { ethers } from "ethers";
-import JSBI from "jsbi";
 import ERC20_ABI from "../abis/ERC20.json";
-import { getSwapRoute } from "./helpers";
+import { currencyAmountToBigInt, getSwapRoute } from "./helpers";
+import { Percent } from "@uniswap/sdk-core";
+import { IUniswapV3__factory } from "@nocturne-xyz/contracts";
+import { ExactInputParams, ExactInputSingleParams } from "./types";
+import * as JSON from "bigint-json-serialization";
 
 const UNISWAP_V3_NAME = "uniswapV3";
 
@@ -59,7 +62,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 `UniswapV3 not supported on chain with id: ${this._op.chainId}`
               );
             }
-            const route = await getSwapRoute({
+            const swapRoute = await getSwapRoute({
               chainId: this._op.chainId,
               provider: this.provider,
               fromAddress: this.config.handlerAddress,
@@ -68,10 +71,90 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               tokenOutAddress: tokenOut,
               maxSlippageBps,
             });
-            if (!route) {
+
+            console.log("swapRoute", JSON.stringify(swapRoute));
+
+            if (!swapRoute) {
               throw new Error(
                 `No route found for swap. Token in: ${tokenIn}, Token out: ${tokenOut}. Amount in: ${inAmount}`
               );
+            }
+            if (swapRoute.route[0].protocol !== "V3") {
+              throw new Error("Only supporting uniswap v3");
+            }
+
+            const route = swapRoute.route[0];
+            const pools = route.route.pools;
+            const minimumAmountWithSlippage = currencyAmountToBigInt(
+              swapRoute.trade.minimumAmountOut(
+                new Percent(maxSlippageBps, 10_000)
+              )
+            );
+
+            let swapParams: ExactInputSingleParams | ExactInputParams;
+            let encodedFunction: string;
+            if (pools.length == 1) {
+              const pool = pools[0];
+              swapParams = {
+                tokenIn: tokenIn,
+                tokenOut: tokenOut,
+                fee: pool.fee,
+                recipient: this.config.handlerAddress,
+                deadline: Date.now() + 3_600,
+                amountIn: inAmount,
+                amountOutMinimum: minimumAmountWithSlippage,
+                sqrtPriceLimitX96: 0,
+              };
+
+              encodedFunction =
+                IUniswapV3__factory.createInterface().encodeFunctionData(
+                  "exactInputSingle",
+                  [swapParams]
+                );
+            } else {
+              // NOTE: v3 swap route for A->D with structure (token0, token1) will be
+              // (B, A), (C, B), (D, C)
+              swapParams = {
+                path: "0x",
+                recipient: this.config.handlerAddress,
+                deadline: Date.now() + 3_600,
+                amountIn: inAmount,
+                amountOutMinimum: minimumAmountWithSlippage,
+              };
+              for (let i = 0; i < pools.length; i++) {
+                const pool = pools[i];
+                if (i == 0) {
+                  console.log(
+                    `address1: ${pool.token1.address} \n fee: ${pool.fee} \n address2: ${pool.token0.address}`
+                  );
+                  const component = ethers.utils
+                    .solidityPack(
+                      ["address", "uint24", "address"],
+                      [pool.token1.address, pool.fee, pool.token0.address]
+                    )
+                    .slice(2);
+                  swapParams.path += component;
+                } else {
+                  console.log(
+                    `fee: ${pool.fee} \n address2: ${pool.token0.address}`
+                  );
+                  const component = ethers.utils
+                    .solidityPack(
+                      ["uint24", "address"],
+                      [pool.fee, pool.token0.address]
+                    )
+                    .slice(2);
+                  swapParams.path += component;
+                }
+              }
+
+              console.log("swapParams:", JSON.stringify(swapParams));
+
+              encodedFunction =
+                IUniswapV3__factory.createInterface().encodeFunctionData(
+                  "exactInput",
+                  [swapParams]
+                );
             }
 
             const unwrap: UnwrapRequest = {
@@ -81,17 +164,12 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
 
             const swapAction: Action = {
               contractAddress: swapRouterAddress,
-              encodedFunction: route.methodParameters!.calldata,
+              encodedFunction: encodedFunction,
             };
 
             const refund: RefundRequest = {
               asset: AssetTrait.erc20AddressToAsset(tokenOut),
-              minRefundValue: BigInt(
-                JSBI.divide(
-                  route.quote.numerator,
-                  route.quote.denominator
-                ).toString()
-              ), // TODO: this may not be forgiving accounting for slippage, may cause swap reverts
+              minRefundValue: minimumAmountWithSlippage,
             };
 
             const metadata: OperationMetadataItem = {
@@ -106,6 +184,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               ERC20_ABI,
               this.provider
             );
+
             // If router contract doesn't have high enough allowance, set to max for handler ->
             // router. Anyone can set allowance on handler so might as well set to max.
             if (
