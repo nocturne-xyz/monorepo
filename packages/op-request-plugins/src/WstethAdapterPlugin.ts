@@ -114,7 +114,12 @@ export function WstethAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           confidentialPayments: [],
           actions: [approveAction, depositAction],
           refunds: [refund],
-          metadatas: [metadata],
+          metadatas: [
+            {
+              type: "Action",
+              metadata,
+            },
+          ],
         });
       });
 

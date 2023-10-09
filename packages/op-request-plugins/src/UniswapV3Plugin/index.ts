@@ -1,10 +1,17 @@
-import { Action, Address, AssetTrait } from "@nocturne-xyz/core";
+import {
+  Action,
+  Address,
+  AssetTrait,
+  findInfoByAddressFromConfig,
+  Erc20TokenInfo,
+} from "@nocturne-xyz/core";
 import {
   ActionMetadata,
   BaseOpRequestBuilder,
   BuilderItemToProcess,
   OpRequestBuilderExt,
   OpRequestBuilderPlugin,
+  OperationMetadataItem,
   RefundRequest,
   UnwrapRequest,
 } from "@nocturne-xyz/client";
@@ -12,7 +19,6 @@ import { ethers } from "ethers";
 import JSBI from "jsbi";
 import ERC20_ABI from "../abis/ERC20.json";
 import { getSwapRoute } from "./helpers";
-import { findInfoByAddressFromConfig, Erc20TokenInfo } from "../utils";
 
 const UNISWAP_V3_NAME = "uniswapV3";
 
@@ -139,7 +145,12 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 expectedAmountOut: refund.minRefundValue.toString(),
                 maxSlippageBps: maxSlippageBps.toString(),
                 swapRouterAddress: swapRouterAddress,
+                // TODO: add full route
               },
+            };
+            const metadataItem: OperationMetadataItem = {
+              type: "Action",
+              metadata,
             };
 
             const erc20InContract = new ethers.Contract(
@@ -170,7 +181,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 confidentialPayments: [],
                 actions: [approveAction, swapAction], // enqueue approve + swap
                 refunds: [refund],
-                metadatas: [metadata],
+                metadatas: [metadataItem],
               });
             } else {
               resolve({
@@ -178,7 +189,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 confidentialPayments: [],
                 actions: [swapAction],
                 refunds: [refund],
-                metadatas: [metadata],
+                metadatas: [metadataItem],
               });
             }
           } catch (e) {

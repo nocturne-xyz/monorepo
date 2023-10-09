@@ -18,6 +18,7 @@ import {
   Asset,
   AssetTrait,
   MapWithObjectKeys,
+  findInfoByAddressFromConfig,
 } from "@nocturne-xyz/core";
 import { ethers } from "ethers";
 import { OperationMetadata, OperationMetadataItem } from "../types";
@@ -287,11 +288,23 @@ export function newOpRequestBuilder(
             existingConfPayments.concat({ value, receiver })
           );
 
+          // `tokenInfo` should be `undefined` for unsupported ERC20 tokens and all non-ERC20 assets
+          const tokenInfo = findInfoByAddressFromConfig(
+            this.config,
+            asset.assetAddr
+          );
           metadata.items.push({
             type: "ConfidentialPayment",
-            recipient: receiver,
-            asset,
-            amount: value,
+            metadata: {
+              displayAsset: tokenInfo?.symbol ?? asset.assetAddr,
+              displayAmount: tokenInfo
+                ? ethers.utils.formatUnits(value, tokenInfo.decimals)
+                : value.toString(),
+
+              asset,
+              amount: value,
+              recipient: receiver,
+            },
           });
         }
         for (const { contractAddress, encodedFunction } of result.actions) {

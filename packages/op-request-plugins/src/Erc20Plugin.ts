@@ -1,5 +1,11 @@
 import { ethers } from "ethers";
-import { Action, Address, AssetTrait } from "@nocturne-xyz/core";
+import {
+  Action,
+  Address,
+  AssetTrait,
+  findInfoByAddressFromConfig,
+  Erc20TokenInfo,
+} from "@nocturne-xyz/core";
 import {
   BaseOpRequestBuilder,
   OpRequestBuilderExt,
@@ -9,7 +15,6 @@ import {
   UnwrapRequest,
 } from "@nocturne-xyz/client";
 import ERC20_ABI from "./abis/ERC20.json";
-import { findInfoByAddressFromConfig, Erc20TokenInfo } from "./utils";
 
 export interface Erc20PluginMethods {
   // adds an ERC20 transfer to the operation
@@ -106,7 +111,12 @@ export function Erc20Plugin<EInner extends BaseOpRequestBuilder>(
           confidentialPayments: [],
           actions: [action],
           refunds: [],
-          metadatas: [metadata],
+          metadatas: [
+            {
+              type: "Action",
+              metadata,
+            },
+          ],
         });
       });
 

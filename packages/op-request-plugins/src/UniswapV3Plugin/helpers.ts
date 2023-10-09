@@ -102,9 +102,13 @@ export interface AnonErc20SwapQuote {
 }
 
 export async function getSwapQuote(
-  params: GetSwapRouteParams
+  params: Omit<GetSwapRouteParams, "fromAddress">
 ): Promise<AnonErc20SwapQuote | null> {
-  const route = await getSwapRoute(params);
+  const route = await getSwapRoute({
+    ...params,
+    // fromAddress doesn't matter here because we're just getting a quote
+    fromAddress: "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+  });
   if (!route) {
     return null;
   }

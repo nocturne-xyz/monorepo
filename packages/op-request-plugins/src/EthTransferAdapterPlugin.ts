@@ -98,7 +98,12 @@ export function EthTransferAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           confidentialPayments: [],
           actions: [approveAction, transferAction],
           refunds: [],
-          metadatas: [metadata],
+          metadatas: [
+            {
+              type: "Action",
+              metadata,
+            },
+          ],
         });
       });
 

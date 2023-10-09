@@ -54,18 +54,11 @@ import {
   SignOperationMethod,
   newOpRequestBuilder,
   OperationRequestWithMetadata,
-  ActionMetadata,
 } from "@nocturne-xyz/client";
 import {
   WasmCanonAddrSigCheckProver,
   WasmJoinSplitProver,
 } from "@nocturne-xyz/local-prover";
-import {
-  Erc20Plugin,
-  EthTransferAdapterPlugin,
-  UniswapV3Plugin,
-  getSwapQuote,
-} from "@nocturne-xyz/op-request-plugins";
 import { Mutex } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
@@ -74,8 +67,6 @@ import { NocturneSdkApi, SnapStateApi } from "./api";
 import { SnapStateSdk, getSigner } from "./metamask";
 import { GetSnapOptions } from "./metamask/types";
 import {
-  AnonErc20SwapQuoteResponse,
-  AnonSwapRequestParams,
   DepositHandle,
   DepositHandleWithReceipt,
   DisplayDepositRequest,
@@ -84,11 +75,9 @@ import {
   GetBalanceOpts,
   NocturneSdkConfig,
   OnChainDepositRequestStatus,
-  OpRequestParams,
   OperationHandle,
   SupportedNetwork,
   SupportedProvider,
-  SwapTypes,
   SyncWithProgressOutput,
 } from "./types";
 import {
@@ -375,93 +364,24 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   /**
-   * Format and submit a proven operation to transfer funds out of Nocturne to a specified recipient address.
-   * @param erc20Address Asset address
-   * @param amount Asset amount
-   * @param recipientAddress Recipient address
-   */
-  async initiateAnonErc20Transfer(
-    erc20Address: Address,
-    amount: bigint,
-    recipientAddress: Address
-  ): Promise<OperationHandle> {
-    return this.createOpRequest({
-      type: "ANON_TRANSFER",
-      erc20Address,
-      recipientAddress,
-      amount,
-    });
-  }
-
-  /**
-   * Format and submit a proven operation to transfer WETH out of Nocturne to a specified
-   * recipient address as ETH.
-   * @param to Recipient address
-   * @param value ETH amount to transfer
-   * @returns Operation handle
-   */
-  async initiateAnonEthTransfer(
-    to: Address,
-    value: bigint
-  ): Promise<OperationHandle> {
-    const operationRequest = await this.opRequestBuilder
-      .use(EthTransferAdapterPlugin)
-      .transferEth(to, value)
-      .build();
-
-    const actionMeta: ActionMetadata = {
-      type: "Action",
-      actionType: "Transfer ETH",
-      to,
-      value,
-    };
-
-    return this.performOperation(operationRequest, [actionMeta]);
-  }
-
-  async initiateAnonErc20Swap({
-    protocol = "UNISWAP_V3",
-    ...params
-  }: AnonSwapRequestParams): Promise<OperationHandle> {
-    let type: SwapTypes;
-    switch (protocol) {
-      case "UNISWAP_V3":
-        type = "UNISWAP_V3_SWAP";
-        break;
-      default:
-        throw new Error(`Unsupported protocol: ${protocol}`);
-    }
-    return this.createOpRequest({
-      type,
-      ...params,
-    });
-  }
-
-  /**
-   * Take an operation request OR submittable operation. If the former, sign and prove the operation
-   * and submit it to the bundler. If the latter, directly submit it to the bundler.
-   * @param opOrOpRequest Submittable operation or operation request
+   * Take an operation request, prepare it, and submit it.
+   * @param opRequest operation request
    * @param actionsMetadata Metadata for each action in the operation
    * @returns Operation handle
    */
   async performOperation(
-    opOrOpRequest:
-      | SubmittableOperationWithNetworkInfo
-      | OperationRequestWithMetadata,
-    actionsMetadata: ActionMetadata[]
+    opRequest: OperationRequestWithMetadata,
   ): Promise<OperationHandle> {
-    const submittableOperation =
-      "request" in opOrOpRequest
-        ? await this.signAndProveOperation({
-            ...opOrOpRequest,
-            meta: { items: actionsMetadata },
-          })
-        : opOrOpRequest;
+    const { items } = opRequest.meta;
+    const submittableOperation = await this.signAndProveOperation({
+      ...opRequest,
+      meta: { items },
+    });
 
     const opHandleWithoutMetadata = this.submitOperation(submittableOperation);
     return {
       ...opHandleWithoutMetadata,
-      meta: { items: actionsMetadata },
+      meta: { items },
     };
   }
 
@@ -542,40 +462,6 @@ export class NocturneSdk implements NocturneSdkApi {
     );
   }
 
-  async getAnonErc20SwapQuote({
-    tokenIn,
-    tokenOut,
-    amountIn,
-    maxSlippageBps = 50,
-    protocol = "UNISWAP_V3",
-  }: AnonSwapRequestParams): Promise<AnonErc20SwapQuoteResponse> {
-    let response: AnonErc20SwapQuoteResponse;
-    switch (protocol) {
-      case "UNISWAP_V3":
-        const quote = await getSwapQuote({
-          chainId: this.sdkConfig.config.chainId,
-          provider: this.provider,
-          fromAddress: this.sdkConfig.config.handlerAddress,
-          tokenInAddress: tokenIn,
-          amountIn,
-          tokenOutAddress: tokenOut,
-          maxSlippageBps,
-        });
-        response = quote
-          ? {
-              success: true,
-              quote,
-            }
-          : {
-              success: false,
-              message: `No route found for swap. Token in: ${tokenIn}, Token out: ${tokenOut}. Amount in: ${amountIn}`,
-            };
-        break;
-      default:
-        throw new Error(`Unsupported protocol: ${protocol}`);
-    }
-    return response;
-  }
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
    * This includes all joinsplit tx inputs.
@@ -941,49 +827,5 @@ export class NocturneSdk implements NocturneSdkApi {
         };
       })
     );
-  }
-
-  private async createOpRequest(
-    params: OpRequestParams
-  ): Promise<OperationHandle> {
-    const chainId = BigInt((await this.provider.getNetwork()).chainId);
-    const builder = newOpRequestBuilder(this.provider, chainId);
-    let operationRequest: OperationRequestWithMetadata;
-    let action: ActionMetadata;
-    switch (params.type) {
-      case "ANON_TRANSFER": {
-        const { erc20Address, amount, recipientAddress } = params;
-
-        operationRequest = await builder
-          .use(Erc20Plugin)
-          .erc20Transfer(erc20Address, recipientAddress, amount)
-          .build();
-
-        action = {
-          type: "Action",
-          actionType: "Transfer",
-          recipientAddress,
-          erc20Address,
-          amount,
-        };
-        break;
-      }
-      case "UNISWAP_V3_SWAP": {
-        const { tokenIn, amountIn, tokenOut, maxSlippageBps } = params;
-        operationRequest = await builder
-          .use(UniswapV3Plugin)
-          .swap(tokenIn, amountIn, tokenOut, maxSlippageBps)
-          .build();
-        action = {
-          type: "Action",
-          actionType: "UniswapV3 Swap",
-          tokenIn,
-          inAmount: amountIn,
-          tokenOut,
-        };
-        break;
-      }
-    }
-    return this.performOperation(operationRequest, [action]);
   }
 }

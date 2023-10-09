@@ -5,7 +5,6 @@ import {
   ClosableAsyncIterator,
   OperationStatusResponse,
 } from "@nocturne-xyz/core";
-import { AnonErc20SwapQuote } from "@nocturne-xyz/op-request-plugins";
 import { BigNumber, ContractReceipt, ethers } from "ethers";
 
 export interface Endpoints {
@@ -153,45 +152,7 @@ export interface GetBalanceOpts {
   ignoreOptimisticNFs?: boolean;
 }
 
-export interface AnonSwapRequestParams {
-  tokenIn: string;
-  amountIn: bigint;
-  tokenOut: string;
-  protocol?: "UNISWAP_V3";
-  maxSlippageBps?: number;
-}
-
-export type UniswapV3SwapOpRequestParams = Omit<
-  AnonSwapRequestParams,
-  "protocol"
-> & {
-  type: "UNISWAP_V3_SWAP";
-};
-
-export type SwapTypes = UniswapV3SwapOpRequestParams["type"];
-
-export interface AnonTransferOpRequestParams {
-  type: "ANON_TRANSFER";
-  erc20Address: string;
-  recipientAddress: string;
-  amount: bigint;
-}
-
-export type OpRequestParams =
-  | AnonTransferOpRequestParams
-  | UniswapV3SwapOpRequestParams;
-
 export interface DisplayDepositRequestWithMetadataAndStatus
   extends DisplayDepositRequestWithMetadata {
   onChainStatus?: OnChainDepositRequestStatus;
 }
-
-export type AnonErc20SwapQuoteResponse =
-  | {
-      success: true;
-      quote: AnonErc20SwapQuote;
-    }
-  | {
-      success: false;
-      message: string;
-    };

@@ -20,9 +20,10 @@ export interface OperationMetadata {
 // 2. actions
 // they will be rendered in the UI in the order they appear in the array, listing first the summaries in order
 // and then longer descriptions of each item below
-export type OperationMetadataItem =
-  | ConfidentialPaymentMetadata
-  | ActionMetadata;
+export type OperationMetadataItem = {
+  type: "ConfidentialPayment" | "Action";
+  metadata: ConfidentialPaymentMetadata | ActionMetadata;
+};
 
 // metadata describing an arbitrary action
 export type ActionMetadata = {
@@ -31,7 +32,7 @@ export type ActionMetadata = {
   // e.g. "Transfer 2 ETH to Alice" or "Swap 1 ETH for 100 DAI"
   summary: string;
 
-  // info the plugin that created this action
+  // info about the plugin that created this action
   pluginInfo: {
     // e.g. "Erc20Plugin"
     name: string;
@@ -41,13 +42,14 @@ export type ActionMetadata = {
     source?: string;
   };
 
-  // details about the action.
+  // details about the action (contracts being interacted with, swap path, etc).
   // optional, but strongly recommended
   details?: Record<string, string>;
 };
 
 export interface ConfidentialPaymentMetadata {
-  type: "ConfidentialPayment";
+  displayAsset: string;
+  displayAmount: string;
   recipient: CanonAddress;
   asset: Asset;
   amount: bigint;

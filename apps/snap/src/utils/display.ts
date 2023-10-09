@@ -1,20 +1,15 @@
-import { Erc20Config } from "@nocturne-xyz/config";
-import { Address, CanonAddrRegistryEntry } from "@nocturne-xyz/core";
-import { OperationMetadata } from "@nocturne-xyz/client";
-import { formatUnits } from "ethers/lib/utils";
-
-const lookupTickerByAddress = (
-  address: string,
-  erc20s: Map<string, Erc20Config>
-): string | undefined => {
-  const addressToTicker = Array.from(erc20s.entries()).reduce(
-    (acc: Map<string, string>, [ticker, asset]) =>
-      acc.set(asset.address.toLowerCase(), ticker.toUpperCase()),
-    new Map<string, string>()
-  );
-
-  return addressToTicker.get(address.toLowerCase());
-};
+import {
+  Address,
+  CanonAddrRegistryEntry,
+  CanonAddress,
+  unzip,
+} from "@nocturne-xyz/core";
+import {
+  ActionMetadata,
+  ConfidentialPaymentMetadata,
+  OperationMetadata,
+} from "@nocturne-xyz/client";
+import { Panel, divider, heading, panel, text } from "@metamask/snaps-ui";
 
 export const makeSignCanonAddrRegistryEntryContent = (
   entry: CanonAddrRegistryEntry,
@@ -34,46 +29,83 @@ export const makeSignCanonAddrRegistryEntryContent = (
 };
 
 export const makeSignOperationContent = (
-  opMetadata: OperationMetadata,
-  erc20s: Map<string, Erc20Config>
-): {
-  heading: string;
-  text: string;
-}[] => {
-  return opMetadata.items.map((item) => {
-    if (item.type === "ConfidentialPayment")
-      throw new Error(`${item.type} snap display not yet supported`);
+  opMetadata: OperationMetadata
+): Panel => {
+  const [summaries, details] = unzip(
+    opMetadata.items.map((item) => {
+      if (item.type === "ConfidentialPayment") {
+        return [
+          text(
+            formatConfPaymentMetadataSummary(
+              item.metadata as ConfidentialPaymentMetadata
+            )
+          ),
+          makeConfidentialPaymentMetadataDetails(
+            item.metadata as ConfidentialPaymentMetadata
+          ),
+        ];
+      } else {
+        return [
+          text((item.metadata as ActionMetadata).summary),
+          makeActionMetadataDetails(item.metadata as ActionMetadata),
+        ];
+      }
+    })
+  );
 
-    // TODO support non-erc20 transfer metadata
-    const {
-      //@ts-ignore
-      amount: amountSmallestUnits,
-      //@ts-ignore
-      recipientAddress,
-      //@ts-ignore
-      erc20Address,
-      actionType: operationType,
-    } = item;
+  return panel([
+    panel([heading("Summary"), ...summaries]),
+    divider(),
+    panel([heading("Details"), ...details]),
+  ]);
+};
 
-    if (operationType !== "Transfer") {
-      throw new Error(`Operation type ${operationType} not yet supported!`);
-    }
+// TODO: standard formatting for canon addrss in core
+const formatCanonAddr = ({ x, y }: CanonAddress): string =>
+  JSON.stringify({ x: x.toString(), y: y.toString() }, undefined, 2);
+const formatConfPaymentMetadataSummary = ({
+  displayAsset,
+  displayAmount,
+  recipient,
+}: ConfidentialPaymentMetadata): string => {
+  return `Send ${displayAmount} ${displayAsset} to ${formatCanonAddr(
+    recipient
+  )}`;
+};
 
-    const ticker = lookupTickerByAddress(erc20Address, erc20s);
-    const displayAmount = formatUnits(amountSmallestUnits);
-    const recognizedTicker = `Action: Send **${displayAmount} ${ticker}**
-  Recipient Address: ${recipientAddress}`;
-    const unrecognizedTicker = `Amount: ${displayAmount}
-Asset token address: ${erc20Address} _(Unrecognized asset)_
-Recipient Address: ${recipientAddress}
-`;
+const makeConfidentialPaymentMetadataDetails = (
+  meta: ConfidentialPaymentMetadata
+): Panel => {
+  const summary = formatConfPaymentMetadataSummary(meta);
 
-    const heading = "Confirm transfer from your Nocturne account";
-    const text = ticker ? recognizedTicker : unrecognizedTicker;
+  const { asset, amount, recipient } = meta;
+  return panel([
+    heading(summary),
+    panel([
+      heading("Details"),
+      text(`assetType: ${asset.assetType}`),
+      text(`assetContractAddress: ${asset.assetAddr}`),
+      text(`assetId: ${asset.id}`),
+      text(`amount: ${amount}`),
+      text(`recipient: ${formatCanonAddr(recipient)}`),
+    ]),
+  ]);
+};
 
-    return {
-      heading,
-      text,
-    };
-  });
+const makeActionMetadataDetails = (meta: ActionMetadata): Panel => {
+  const { summary, pluginInfo, details } = meta;
+
+  const { name, source } = pluginInfo;
+  const pluginInfoNode = text(
+    `created by plugin ${name} (${source ?? "not open source"})`
+  );
+
+  const detailsNodes = details
+    ? Object.keys(details).map((key) => text(`${key}: ${details[key]}`))
+    : [];
+
+  return panel([
+    heading(summary),
+    panel([heading("details"), ...detailsNodes, pluginInfoNode]),
+  ]);
 };

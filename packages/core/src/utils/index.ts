@@ -17,6 +17,7 @@ export {
   consecutiveChunks,
   omitIndices,
 } from "./functional";
+export { Erc20TokenInfo, findInfoByAddressFromConfig } from "./tokenInfo";
 export { numberToStringPadded } from "./strings";
 export { assertOrErr } from "./error";
 export {

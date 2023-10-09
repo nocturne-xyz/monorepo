@@ -9,6 +9,7 @@ import {
   SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/core";
 import {
+  OpRequestBuilder,
   OperationRequestWithMetadata,
   RpcRequestMethod,
   SyncOpts,
@@ -16,8 +17,6 @@ import {
 import { ContractTransaction } from "ethers";
 import { GetSnapsResponse, Snap } from "./metamask/types";
 import {
-  AnonErc20SwapQuoteResponse,
-  AnonSwapRequestParams,
   DepositHandle,
   DepositHandleWithReceipt,
   DisplayDepositRequest,
@@ -75,20 +74,8 @@ export interface NocturneSdkApi {
 
   // *** OPERATION METHODS *** //
 
-  /**
-   * Format and submit a `ProvenOperation` to transfer funds out of Nocturne to a specified recipient address.
-   * @param erc20Address Asset address
-   * @param amount Asset amount
-   * @param recipientAddress Recipient address
-   */
-  initiateAnonErc20Transfer(
-    erc20Address: Address,
-    amount: bigint,
-    recipientAddress: Address
-  ): Promise<OperationHandle>;
-
-  initiateAnonErc20Swap(
-    params: AnonSwapRequestParams
+  performOperation(
+    operationRequest: OperationRequestWithMetadata
   ): Promise<OperationHandle>;
 
   submitOperation(
@@ -148,15 +135,13 @@ export interface NocturneSdkApi {
    */
   clearSyncState(): Promise<void>;
 
-  getAnonErc20SwapQuote(
-    params: AnonSwapRequestParams
-  ): Promise<AnonErc20SwapQuoteResponse>;
-
   // *** ACCESSOR METHODS *** //
 
   snap: SnapStateApi;
 
   getAvailableErc20s(): Map<string, Erc20Config>;
+
+  get opRequestBuilder(): OpRequestBuilder;
 }
 
 // *** SNAP STATE METHODS *** //

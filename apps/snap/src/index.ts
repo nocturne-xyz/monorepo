@@ -146,19 +146,13 @@ async function handleRpcRequest({
     case "nocturne_signOperation": {
       const signer = await mustGetSigner();
       const { op, metadata } = request.params;
-      const contentItems = makeSignOperationContent(
-        // specifies nothing about ordering
-        metadata ?? { items: [] },
-        config.erc20s
-      ).flatMap((item) => {
-        return [heading(item.heading), text(item.text)];
-      });
+
       // Confirm spend sig auth
       const opConfirmRes = await snap.request({
         method: "snap_dialog",
         params: {
           type: "confirmation",
-          content: panel(contentItems),
+          content: makeSignOperationContent(metadata ?? { items: [] }),
         },
       });
 

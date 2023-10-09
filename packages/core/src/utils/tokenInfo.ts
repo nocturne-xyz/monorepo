@@ -1,5 +1,5 @@
 import { NocturneConfig } from "@nocturne-xyz/config";
-import { Address } from "@nocturne-xyz/core";
+import { Address } from "../primitives";
 
 export interface Erc20TokenInfo {
   symbol: string;
