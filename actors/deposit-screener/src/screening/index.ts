@@ -13,7 +13,7 @@ export interface ScreeningDepositRequest {
 export interface ScreeningCheckerApi {
   checkDeposit(
     depositInfo: ScreeningDepositRequest,
-    longStandingCacheOptions?: CachedFetchOptions
+    cachedFetchOptions?: CachedFetchOptions
   ): Promise<Rejection | Delay>;
 }
 
@@ -26,9 +26,9 @@ export class ConcreteScreeningChecker implements ScreeningCheckerApi {
 
   async checkDeposit(
     depositInfo: ScreeningDepositRequest,
-    longStandingCacheOptions: CachedFetchOptions = {}
+    cachedFetchOptions: CachedFetchOptions = {}
   ): Promise<Rejection | Delay> {
-    return this.ruleset.check(depositInfo, longStandingCacheOptions);
+    return this.ruleset.check(depositInfo, cachedFetchOptions);
   }
 }
 
