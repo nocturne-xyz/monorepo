@@ -80,7 +80,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               );
             }
             if (swapRoute.route[0].protocol !== "V3") {
-              throw new Error("Not currently supporting non-V3 routes");
+              throw new Error("Only supporting uniswap v3");
             }
 
             const route = swapRoute.route[0];
