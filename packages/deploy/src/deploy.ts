@@ -134,7 +134,7 @@ export async function deployNocturne(
   }
 
   // Whitelist eth transfer adapter
-  config.protocolAllowlist.set("ethTransferAdapter", {
+  config.protocolAllowlist.set("ETHTransferAdapter", {
     address: ethTransferAdapter.address,
     functionSignatures: ["transfer(address,uint256)"],
   });
@@ -145,14 +145,14 @@ export async function deployNocturne(
       address: maybeWstethAdapter.address,
       functionSignatures: ["deposit(uint256)"],
     };
-    config.protocolAllowlist.set("wstethAdapter", addressWithSignature);
+    config.protocolAllowlist.set("wstETHAdapter", addressWithSignature);
   }
   if (maybeRethAdapter) {
     const addressWithSignature: ProtocolAddressWithMethods = {
       address: maybeRethAdapter.address,
       functionSignatures: ["deposit(uint256)"],
     };
-    config.protocolAllowlist.set("rethAdapter", addressWithSignature);
+    config.protocolAllowlist.set("rETHAdapter", addressWithSignature);
   }
 
   await whitelistTokens(connectedSigner, tokens, handler);

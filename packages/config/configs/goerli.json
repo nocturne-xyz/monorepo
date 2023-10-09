@@ -1,47 +1,47 @@
 {
   "contracts": {
     "network": { "name": "goerli", "chainId": 5 },
-    "startBlock": 9785807,
+    "startBlock": 9837145,
     "owners": {
       "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "tellerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "handlerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "depositManagerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4"
     },
-    "proxyAdmin": "0xb74aFCBeF4f6249A05d7Ed5C0206971ce9F20488",
+    "proxyAdmin": "0xEe7A73E2fA2FcD68F4a6d15B648daBc31bAf63d3",
     "finalityBlocks": 4,
     "canonicalAddressRegistryProxy": {
       "kind": "Transparent",
-      "proxy": "0x4a4C187398B098D7E808Cb09Df849Ca9Ed4FB096",
-      "implementation": "0x6EB15e5e72aC08635baCb0f56FB74eF34dDFfb83"
+      "proxy": "0x72Ad2Ef391e870A94C3A849727f1A5C27E426195",
+      "implementation": "0x0b37f68d472a4aC6C6FeC26e0cb689011595E833"
     },
     "depositManagerProxy": {
       "kind": "Transparent",
-      "proxy": "0xE9917d5b9351096a445b68528441D61E447155CC",
-      "implementation": "0xE8f16728389Add27103658E6b14c7c369C1fF91C"
+      "proxy": "0x55315794F0F10897B00dC69C6aab626FcE2a910a",
+      "implementation": "0x102DbB232998C4441a0614AB757aa5100244f146"
     },
     "tellerProxy": {
       "kind": "Transparent",
-      "proxy": "0x37fa8145F63A39B55b5a98bdF14Ae505CA4087f2",
-      "implementation": "0xf65aA71C329E604A370599cf2818aFcE6d6Fa9d4"
+      "proxy": "0x03061749176cBBD98bE278EF9Aa1EE846155E25F",
+      "implementation": "0xB1a82cCD0DA693E479cA0EEaaC28333676fF89d2"
     },
     "handlerProxy": {
       "kind": "Transparent",
-      "proxy": "0x558978937F2808116b077973ec5BB459Cd5143F4",
-      "implementation": "0x9843a5b8880855c73Af62224E2dCe775d8e6645D"
+      "proxy": "0xC23a1525F71Bb58d6161C54Db54714148BeD4d8b",
+      "implementation": "0x8bDF03a7ED22C49eCc7F91F4C22d7Ca46d6e59DF"
     },
-    "poseidonExtT7Address": "0x5DeFdab963EBe48D623F6c2A396135e473Fa011f",
-    "joinSplitVerifierAddress": "0x492c8F3B0eA7B39705AA92B1dFc2E85736449555",
-    "subtreeUpdateVerifierAddress": "0xEf8cE405505ac8eB428838e050662CAfFA95C9BA",
-    "canonAddrSigCheckVerifierAddress": "0x849bc22A08eD7D24f1d5a566Ba7125fb671F9c4c",
+    "poseidonExtT7Address": "0x9a286F6EF70Ba8fd8f08D827D5faA34695A7E489",
+    "joinSplitVerifierAddress": "0x729ABfe83809a7E81771Ee49d5b4f4Cd5d0aD390",
+    "subtreeUpdateVerifierAddress": "0x7a7A92523f084aefeE6b30B3f6aa4193B2a6BDB0",
+    "canonAddrSigCheckVerifierAddress": "0xf967e5ba8de7131B52d47C2c0b1a7b4681a9f12a",
     "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
-    "depositSources": ["0xE9917d5b9351096a445b68528441D61E447155CC"]
+    "depositSources": ["0x55315794F0F10897B00dC69C6aab626FcE2a910a"]
   },
   "erc20s": [
     [
       "TEST-TOKEN",
       {
-        "address": "0x72C1f4ABA89daC80393A0fb75f00C5bFc869cF2B",
+        "address": "0xe64eB26847EE4e0BbbBEdd5f8b0ba7868a307e32",
         "globalCapWholeTokens": "1000000n",
         "maxDepositSizeWholeTokens": "1000n",
         "resetWindowHours": "4n",
@@ -50,7 +50,7 @@
       }
     ],
     [
-      "weth",
+      "WETH",
       {
         "address": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
         "globalCapWholeTokens": "1000n",
@@ -61,7 +61,7 @@
       }
     ],
     [
-      "dai",
+      "DAI",
       {
         "address": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844",
         "globalCapWholeTokens": "1000000n",
@@ -72,7 +72,7 @@
       }
     ],
     [
-      "wsteth",
+      "wstETH",
       {
         "address": "0x6320cD32aA674d2898A68ec82e869385Fc5f7E2f",
         "globalCapWholeTokens": "1000n",
@@ -83,7 +83,7 @@
       }
     ],
     [
-      "reth",
+      "rETH",
       {
         "address": "0xae78736Cd615f374D3085123A210448E74Fc6393",
         "globalCapWholeTokens": "1000n",
@@ -96,7 +96,7 @@
   ],
   "protocolAllowlist": [
     [
-      "uniswapV3",
+      "UniswapV3",
       {
         "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
         "functionSignatures": [
@@ -108,7 +108,7 @@
     [
       "TEST-TOKEN",
       {
-        "address": "0x72C1f4ABA89daC80393A0fb75f00C5bFc869cF2B",
+        "address": "0xe64eB26847EE4e0BbbBEdd5f8b0ba7868a307e32",
         "functionSignatures": [
           "approve(address,uint256)",
           "transfer(address,uint256)"
@@ -116,7 +116,7 @@
       }
     ],
     [
-      "weth",
+      "WETH",
       {
         "address": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
         "functionSignatures": [
@@ -126,7 +126,7 @@
       }
     ],
     [
-      "dai",
+      "DAI",
       {
         "address": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844",
         "functionSignatures": [
@@ -136,7 +136,7 @@
       }
     ],
     [
-      "wsteth",
+      "wstETH",
       {
         "address": "0x6320cD32aA674d2898A68ec82e869385Fc5f7E2f",
         "functionSignatures": [
@@ -146,7 +146,7 @@
       }
     ],
     [
-      "reth",
+      "rETH",
       {
         "address": "0xae78736Cd615f374D3085123A210448E74Fc6393",
         "functionSignatures": [
@@ -156,23 +156,23 @@
       }
     ],
     [
-      "ethTransferAdapter",
+      "ETHTransferAdapter",
       {
-        "address": "0x36A0189f1783d835De23a403d02392dC48F2f69A",
+        "address": "0x585F49A0D31DC7d38D480453d3D475464427198d",
         "functionSignatures": ["transfer(address,uint256)"]
       }
     ],
     [
-      "wstethAdapter",
+      "wstETHAdapter",
       {
-        "address": "0x760F975F3134D3B776f18f3432c8E99E8922a69f",
+        "address": "0x3289E0B946af3a8cB66b4AEc8f25b845fCD0A763",
         "functionSignatures": ["deposit(uint256)"]
       }
     ],
     [
-      "rethAdapter",
+      "rETHAdapter",
       {
-        "address": "0xBe57F068aB017DDd0634F2e294e87Cded53864A5",
+        "address": "0x10a2116C3217D4B464aA88fe381aF552d006aAF1",
         "functionSignatures": ["deposit(uint256)"]
       }
     ]

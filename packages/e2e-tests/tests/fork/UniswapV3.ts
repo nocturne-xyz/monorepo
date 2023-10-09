@@ -29,7 +29,7 @@ describe("UniswapV3 fork", async () => {
     // Add uniswap to protocol allowlist
     const protocolAllowlist: Map<string, ProtocolAddressWithMethods> = new Map([
       [
-        "uniswapV3",
+        "UniswapV3",
         {
           address: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
           functionSignatures: [
