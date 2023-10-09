@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.8.0
+
+### Minor Changes
+
+- c717e4d9: Revert forcedExit changes across the stack
+
+### Patch Changes
+
+- Updated dependencies [c717e4d9]
+- Updated dependencies [d89a77e4]
+- Updated dependencies [a94caaec]
+- Updated dependencies [c717e4d9]
+  - @nocturne-xyz/contracts@1.2.0
+  - @nocturne-xyz/config@1.3.0
+  - @nocturne-xyz/core@3.1.0
+  - @nocturne-xyz/client@3.0.1
+  - @nocturne-xyz/offchain-utils@0.1.18
+
 ## 0.7.0
 
 ### Minor Changes

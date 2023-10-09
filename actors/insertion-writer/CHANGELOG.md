@@ -1,5 +1,18 @@
 # @nocturne-xyz/insertion-writer
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [d89a77e4]
+- Updated dependencies [a94caaec]
+- Updated dependencies [c717e4d9]
+  - @nocturne-xyz/config@1.3.0
+  - @nocturne-xyz/core@3.1.0
+  - @nocturne-xyz/persistent-log@0.1.8
+  - @nocturne-xyz/subgraph-sync-adapters@0.3.1
+  - @nocturne-xyz/offchain-utils@0.1.18
+
 ## 0.4.0
 
 ### Minor Changes

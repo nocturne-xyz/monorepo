@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.1
+
+### Patch Changes
+
+- 4a8bb5eb: Fix uniswap plugin to directly call exactInput and exactInputSingle
+- Updated dependencies [c717e4d9]
+- Updated dependencies [d89a77e4]
+- Updated dependencies [a94caaec]
+- Updated dependencies [c717e4d9]
+  - @nocturne-xyz/contracts@1.2.0
+  - @nocturne-xyz/config@1.3.0
+  - @nocturne-xyz/core@3.1.0
+  - @nocturne-xyz/client@3.0.1
+
 ## 2.0.0
 
 ### Major Changes

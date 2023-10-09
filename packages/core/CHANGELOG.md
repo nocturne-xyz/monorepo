@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.1.0
+
+### Minor Changes
+
+- c717e4d9: Revert forcedExit changes across the stack
+
+### Patch Changes
+
+- a94caaec: wrap `thunk` executor in mutex
+- Updated dependencies [c717e4d9]
+- Updated dependencies [c717e4d9]
+  - @nocturne-xyz/contracts@1.2.0
+
 ## 3.0.0
 
 ### Major Changes

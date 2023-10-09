@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+### Minor Changes
+
+- d89a77e4: Redeploy goerli with permissionless bundler mid-audit
+
 ## 1.2.0
 
 ### Minor Changes

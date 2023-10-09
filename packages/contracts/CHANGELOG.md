@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0
+
+### Minor Changes
+
+- c717e4d9: Revert forcedExit changes across the stack
+
+### Patch Changes
+
+- c717e4d9: Add onlyEoa check for processBundle to ensure processBundle cannot be called atomically with another action like a DEX imbalance
+
 ## 1.1.1
 
 ### Patch Changes

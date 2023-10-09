@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.1.0
+
+### Minor Changes
+
+- a94caaec: - postfix indexed db name with hash of user's canonical address to separate notes created under different keys
+  - make `SnapStateSdk` ensure key is generated and set in snap before caller can invoke the snap
+- a94caaec: add method for deriving key from an EOA sig and storing it in snap
+
+### Patch Changes
+
+- Updated dependencies [c717e4d9]
+- Updated dependencies [d89a77e4]
+- Updated dependencies [4a8bb5eb]
+- Updated dependencies [a94caaec]
+- Updated dependencies [c717e4d9]
+  - @nocturne-xyz/contracts@1.2.0
+  - @nocturne-xyz/config@1.3.0
+  - @nocturne-xyz/op-request-plugins@2.0.1
+  - @nocturne-xyz/core@3.1.0
+  - @nocturne-xyz/client@3.0.1
+  - @nocturne-xyz/idb-kv-store@0.4.7
+  - @nocturne-xyz/local-prover@0.4.7
+  - @nocturne-xyz/subgraph-sync-adapters@0.3.1
+
 ## 3.0.0
 
 ### Major Changes
