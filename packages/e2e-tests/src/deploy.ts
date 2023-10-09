@@ -86,7 +86,7 @@ const SIG_CHECK_VKEY = JSON.parse(
 export interface TestDeployArgs {
   screeners: Address[];
   subtreeBatchFillers: Address[];
-  protocolAllowlist: Map<string, ProtocolAddressWithMethods>;
+  protocolAllowlist?: Map<string, ProtocolAddressWithMethods>;
 }
 
 export interface TestActorsConfig {
@@ -430,7 +430,7 @@ export async function deployContractsWithDummyConfig(
         },
       ],
     ]),
-    protocolAllowlist: args.protocolAllowlist,
+    protocolAllowlist: args.protocolAllowlist ?? new Map(),
     leftoverTokenHolder: "0x0000000000000000000000000000000000000123",
     opts: {
       useMockSubtreeUpdateVerifier:
