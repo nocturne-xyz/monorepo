@@ -12,6 +12,14 @@ import {
   ViewingKey,
 } from "@nocturne-xyz/crypto";
 
+export interface SetSpendKeyMethod {
+  method: "nocturne_setSpendKey";
+  params: {
+    spendKey: Uint8Array;
+  };
+  return: string | undefined; // error string or undefined
+}
+
 export interface SignCanonAddrRegistryEntryMethod {
   method: "nocturne_signCanonAddrRegistryEntry";
   params: {
@@ -34,6 +42,12 @@ export interface SignOperationMethod {
   return: SignedOperation;
 }
 
+export interface SpendKeyIsSetMethod {
+  method: "nocturne_spendKeyIsSet";
+  params: undefined;
+  return: boolean;
+}
+
 export interface RequestViewingKeyMethodResponse {
   vk: ViewingKey;
   vkNonce: bigint;
@@ -46,9 +60,11 @@ export interface RequestViewingKeyMethod {
 }
 
 export type RpcRequestMethod =
+  | SetSpendKeyMethod
   | SignCanonAddrRegistryEntryMethod
   | SignOperationMethod
-  | RequestViewingKeyMethod;
+  | RequestViewingKeyMethod
+  | SpendKeyIsSetMethod;
 
 export type SnapRpcRequestHandlerArgs = {
   origin: string;

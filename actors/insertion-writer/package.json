@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "dev": "yarn dev:env && concurrently --kill-others \"yarn dev:writer\"",
+    "dev": "yarn dev:env && yarn dev:writer",
     "dev:env": "cp .env.dev .env",
     "dev:writer": "nodemon src/cli/index.ts run insertion-writer --config-name-or-path localhost --throttle-on-empty-ms 5000 --log-dir ../../logs/insertion-writer --stdout-log-level info",
     "check": "tsc --noEmit",

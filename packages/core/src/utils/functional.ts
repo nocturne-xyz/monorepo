@@ -1,3 +1,4 @@
+import { Mutex } from "async-mutex";
 import { SetWithObjectKeys } from "./collections";
 import { assertOrErr } from "./error";
 import * as JSON from "bigint-json-serialization";
@@ -134,17 +135,19 @@ export type Thunk<T, P extends any[] = any[]> = (...args: P) => Promise<T>;
 export function thunk<T, P extends any[] = any[]>(
   fn: (...args: P) => Promise<T>
 ): Thunk<T, P> {
+  const mutex = new Mutex();
   const cache = new Map<string, T>(); // cached based on computed result from varying args
 
-  return async (...args: P) => {
-    const cacheKey = JSON.stringify(args);
-    if (!cache.has(cacheKey)) {
-      const result = await fn(...args);
-      cache.set(cacheKey, result);
-    }
+  return async (...args: P) =>
+    await mutex.runExclusive(async () => {
+      const cacheKey = JSON.stringify(args);
+      if (!cache.has(cacheKey)) {
+        const result = await fn(...args);
+        cache.set(cacheKey, result);
+      }
 
-    return cache.get(cacheKey)!;
-  };
+      return cache.get(cacheKey)!;
+    });
 }
 
 export function consecutiveChunks<T>(

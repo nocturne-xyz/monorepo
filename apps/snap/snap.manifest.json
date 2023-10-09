@@ -3,7 +3,7 @@
   "description": "Nocturne Snap",
   "proposedName": "Nocturne Snap",
   "source": {
-    "shasum": "dh+qYcp6n06ZhBCl2zINw30x7C3n3UdxPGv3N7cEIQM=",
+    "shasum": "nw9+alWTaAss8Snl8CYvt341OHFvSSunV96FYWzFo34=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -20,12 +20,7 @@
     "snap_dialog": {},
     "endowment:network-access": {},
     "endowment:long-running": {},
-    "snap_manageState": {},
-    "snap_getBip44Entropy": [
-      {
-        "coinType": 6789
-      }
-    ]
+    "snap_manageState": {}
   },
   "manifestVersion": "0.1"
 }

@@ -1,4 +1,3 @@
-import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
 import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { heading, panel, text } from "@metamask/snaps-ui";
 import {
@@ -19,27 +18,32 @@ import {
   makeSignOperationContent,
 } from "./utils/display";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
+import { SnapKvStore } from "./snapdb";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Goerli
 
-const NOCTURNE_BIP44_COINTYPE = 6789;
-const config = loadNocturneConfigBuiltin("goerli");
+const SPEND_KEY_DB_KEY = "nocturne_spend_key";
 
-async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
-  const nocturneNode = await snap.request({
-    method: "snap_getBip44Entropy",
-    params: {
-      coinType: NOCTURNE_BIP44_COINTYPE,
-    },
-  });
-  const addressKeyDeriver = await getBIP44AddressKeyDeriver(
-    nocturneNode as any
-  );
-  const keyNode = await addressKeyDeriver(0);
-  const sk = ethers.utils.keccak256(ethers.utils.arrayify(keyNode.privateKey!));
-  const nocturnePrivKey = new NocturneSigner(ethers.utils.arrayify(sk));
-  return nocturnePrivKey;
+const config = loadNocturneConfigBuiltin("goerli");
+const kvStore = new SnapKvStore();
+
+async function getNocturneSignerFromDb(): Promise<NocturneSigner | undefined> {
+  const spendKey = await kvStore.getString(SPEND_KEY_DB_KEY);
+  if (!spendKey) {
+    return undefined;
+  }
+
+  return new NocturneSigner(ethers.utils.arrayify(spendKey));
+}
+
+async function mustGetSigner(): Promise<NocturneSigner> {
+  const signer = await getNocturneSignerFromDb();
+  if (!signer) {
+    throw new Error("Nocturne key not set");
+  }
+
+  return signer;
 }
 
 /**
@@ -53,7 +57,6 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
  * @throws If the request method is not valid for this snap.
  * @throws If the `snap_dialog` call failed.
  */
-
 export const onRpcRequest: OnRpcRequestHandler = async (args) => {
   try {
     const handledResponse = await handleRpcRequest(
@@ -74,18 +77,38 @@ async function handleRpcRequest({
     ? parseObjectValues(request.params)
     : undefined;
 
-  const signer = await getNocturneSignerFromBIP44();
-
   console.log("Switching on method: ", request.method);
-  console.log("Request Params:", request.params);
   switch (request.method) {
-    case "nocturne_requestViewingKey":
+    case "nocturne_spendKeyIsSet": {
+      return await kvStore.containsKey(SPEND_KEY_DB_KEY);
+    }
+    case "nocturne_setSpendKey": {
+      const spendKey = new Uint8Array(request.params.spendKey);
+
+      // Can only set spend key if not already set, only way to reset is to clear snap db and
+      // regenerate key
+      // Return error string if spend key already set
+      if (await kvStore.getString(SPEND_KEY_DB_KEY)) {
+        return "Error: Spend key already set";
+      }
+
+      await kvStore.putString(SPEND_KEY_DB_KEY, ethers.utils.hexlify(spendKey));
+
+      // Zero out spend key memory
+      spendKey.fill(0);
+
+      return;
+    }
+    case "nocturne_requestViewingKey": {
+      const signer = await mustGetSigner();
       const viewer = signer.viewer();
       return {
         vk: viewer.vk,
         vkNonce: viewer.vkNonce,
       };
-    case "nocturne_signCanonAddrRegistryEntry":
+    }
+    case "nocturne_signCanonAddrRegistryEntry": {
+      const signer = await mustGetSigner();
       const { entry, chainId, registryAddress } = request.params;
 
       const { heading: registryHeading, text: registryText } =
@@ -119,9 +142,9 @@ async function handleRpcRequest({
         spendPubkey,
         vkNonce,
       };
-    case "nocturne_signOperation":
-      console.log("Request params: ", request.params);
-
+    }
+    case "nocturne_signOperation": {
+      const signer = await mustGetSigner();
       const { op, metadata } = request.params;
       const contentItems = makeSignOperationContent(
         // specifies nothing about ordering
@@ -143,18 +166,14 @@ async function handleRpcRequest({
         throw new Error("snap request rejected by user");
       }
 
-      console.log("signing operation:", op);
       try {
         const signedOp = signOperation(signer, op);
-        console.log(
-          "PreProofOperationInputsAndProofInputs: ",
-          JSON.stringify(signedOp)
-        );
         return signedOp;
       } catch (err) {
         console.log("Error getting pre-proof operation:", err);
         throw err;
       }
+    }
     default:
       assertAllRpcMethodsHandled(request);
   }

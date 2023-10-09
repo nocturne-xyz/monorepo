@@ -10,6 +10,7 @@ import {
 } from "@nocturne-xyz/core";
 import {
   OperationRequestWithMetadata,
+  RpcRequestMethod,
   SyncOpts,
 } from "@nocturne-xyz/client";
 import { ContractTransaction } from "ethers";
@@ -191,4 +192,8 @@ export interface SnapStateApi {
    * @returns The snap object returned by the extension.
    */
   get(): Promise<Snap | undefined>;
+
+  invoke<RpcMethod extends RpcRequestMethod>(
+    request: Omit<RpcMethod, "return">
+  ): Promise<RpcMethod["return"]>;
 }
