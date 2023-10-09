@@ -86,7 +86,9 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             const route = swapRoute.route[0];
             const pools = route.route.pools;
             const minimumAmountWithSlippage = currencyAmountToBigInt(
-              swapRoute.trade.minimumAmountOut(new Percent(50, 10_000))
+              swapRoute.trade.minimumAmountOut(
+                new Percent(maxSlippageBps, 10_000)
+              )
             );
 
             let swapParams: ExactInputSingleParams | ExactInputParams;
