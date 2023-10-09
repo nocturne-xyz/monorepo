@@ -37,12 +37,7 @@ export async function cachedFetchWithRetry(
   const { skipCacheRead = false, ttlSeconds = 60 * 60, retries = 5 } = options;
 
   // Generate a cache key based on URL and request payload
-  const cacheKeyData = `${
-    typeof requestInfo === "string" ? requestInfo : requestInfo.url
-  }-${JSON.stringify(requestInit.body)}`;
-  const cacheKey = `CACHE_${createHash("sha256")
-    .update(cacheKeyData)
-    .digest("hex")}`;
+  const cacheKey = formatCachedFetchCacheKey(requestInfo, requestInit);
 
   // Check cache if skipCacheRead false or undefined, return cached data if so
   if (!skipCacheRead) {
@@ -66,4 +61,14 @@ export async function cachedFetchWithRetry(
   }
 
   return response;
+}
+
+export function formatCachedFetchCacheKey(
+  requestInfo: RequestInfo,
+  requestInit: RequestInit
+): string {
+  const cacheKeyData = `${
+    typeof requestInfo === "string" ? requestInfo : requestInfo.url
+  }-${JSON.stringify(requestInit.body)}`;
+  return `CACHE_${createHash("sha256").update(cacheKeyData).digest("hex")}`;
 }

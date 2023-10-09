@@ -14,19 +14,19 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "dev": "yarn dev:env && concurrently --kill-others \"yarn dev:server\" \"yarn dev:processor\"",
-    "dev:env": "cp .env.dev .env",
-    "dev:server": "nodemon src/cli/index.ts run server --config-name-or-path localhost --port 3001 --log-dir ../../logs/deposit-screener-server --stdout-log-level info",
-    "dev:processor": "nodemon src/cli/index.ts run processor --config-name-or-path localhost --log-dir ../../logs/deposit-screener-processor --stdout-log-level info",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
+    "dev": "yarn dev:env && concurrently --kill-others \"yarn dev:server\" \"yarn dev:processor\"",
+    "dev:env": "cp .env.dev .env",
+    "dev:processor": "nodemon src/cli/index.ts run processor --config-name-or-path localhost --log-dir ../../logs/deposit-screener-processor --stdout-log-level info",
+    "dev:server": "nodemon src/cli/index.ts run server --config-name-or-path localhost --port 3001 --log-dir ../../logs/deposit-screener-server --stdout-log-level info",
     "gen-test-cases:depositrequest": "npx ts-node ./scripts/genSignedDepositRequestTestCase.ts",
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src",
     "prettier:write": "prettier --write ./src",
     "screener-cli": "npx ts-node src/cli/index.ts",
-    "test:unit": "mocha --timeout 20000 -r ts-node/register test/**/*.test.ts -r dotenv/config",
-    "test:generate-snapshot": "npx ts-node ./test/scripts/generateRulesetV1CallsSnapshot.ts"
+    "test:generate-snapshot": "npx ts-node ./test/scripts/generateRulesetV1CallsSnapshot.ts",
+    "test:unit": "mocha --timeout 20000 -r ts-node/register test/**/*.test.ts -r dotenv/config"
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
@@ -82,6 +82,7 @@
     "mocha": "^10.1.0",
     "nodemon": "^3.0.1",
     "prettier": "^2.8.8",
+    "redis-memory-server": "^0.6.0",
     "sinon": "^15.0.1",
     "sinon-chai": "^3.7.0",
     "ts-node": "^10.9.1",

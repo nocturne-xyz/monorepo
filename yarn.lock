@@ -4183,6 +4183,7 @@ __metadata:
     nodemon: ^3.0.1
     prettier: ^2.8.8
     randombytes: ^2.1.0
+    redis-memory-server: ^0.6.0
     sinon: ^15.0.1
     sinon-chai: ^3.7.0
     sorted-btree: ^1.8.1

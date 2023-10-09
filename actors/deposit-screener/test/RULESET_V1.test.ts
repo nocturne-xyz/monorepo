@@ -11,24 +11,49 @@ import {
   REJECT_ADDRESSES,
 } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
-import { isRejection } from "../src/screening/checks/RuleSet";
+import { isRejection, RuleSet } from "../src/screening/checks/RuleSet";
+import RedisMemoryServer from "redis-memory-server";
+import IORedis from "ioredis";
 
 describe("RULESET_V1", () => {
-  let snapshotData: AddressDataSnapshot = {};
+  let server: RedisMemoryServer;
+  let redis: IORedis;
+  let ruleset: RuleSet;
+
   before(async () => {
+    server = await RedisMemoryServer.create();
+
+    const host = await server.getHost();
+    const port = await server.getPort();
+    redis = new IORedis(port, host);
+
+    populateRedisCache();
+
+    ruleset = RULESET_V1(redis);
+  });
+
+  async function populateRedisCache(): Promise<void> {
+    // Pull snapshot data from the latest snapshot folder
     const maybeFolderPath = await getLatestSnapshotFolder("./snapshots");
     const filePath = path.join(
       `${findWorkspaceRoot()!}/actors/deposit-screener/test`,
       maybeFolderPath ?? "",
       "snapshot.json"
     );
+
+    let snapshotData: { [address: string]: AddressDataSnapshot };
     if (fs.existsSync(filePath)) {
       const rawData = fs.readFileSync(filePath, "utf-8");
       snapshotData = JSON.parse(rawData);
     } else {
       throw new Error("No snapshot files found");
     }
-  });
+
+    // Populate Redis cache with snapshot data
+    for (const address of Object.keys(snapshotData)) {
+      await redis.set(address, JSON.stringify(snapshotData[address]));
+    }
+  }
 
   describe("Bulk Tests", () => {
     for (const testCase of BULK_TEST_CASES) {
@@ -40,7 +65,7 @@ describe("RULESET_V1", () => {
             `mockedResponse is not found for address=${address}`
           ).to.be.ok;
 
-          const result = await RULESET_V1.check(
+          const result = await ruleset.check(
             formDepositInfo(address),
             snapshotData[address]
           );
@@ -57,7 +82,7 @@ describe("RULESET_V1", () => {
 
   describe("Rejections", () => {
     it("should reject RocketSwap exploiter", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(REJECT_ADDRESSES.ROCKETSWAP),
         snapshotData[REJECT_ADDRESSES.ROCKETSWAP]
       );
@@ -65,7 +90,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should reject Zunami exploiter", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(REJECT_ADDRESSES.ZUNAMI),
         snapshotData[REJECT_ADDRESSES.ZUNAMI]
       );
@@ -73,7 +98,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should reject Zunami 2nd Degree exploiter", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(REJECT_ADDRESSES.ZUNAMI_2ND_DEGREE),
         snapshotData[REJECT_ADDRESSES.ZUNAMI_2ND_DEGREE]
       );
@@ -81,7 +106,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should reject Steadefi exploiter", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(REJECT_ADDRESSES.STEADEFI),
         snapshotData[REJECT_ADDRESSES.STEADEFI]
       );
@@ -89,7 +114,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should reject Earning.Farm exploiter", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(REJECT_ADDRESSES.EARNING_FARM),
         snapshotData[REJECT_ADDRESSES.EARNING_FARM]
       );
@@ -97,7 +122,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should reject suspicious TC user", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(REJECT_ADDRESSES.SUS_TC_USER),
         snapshotData[REJECT_ADDRESSES.SUS_TC_USER]
       );
@@ -105,7 +130,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should reject Swirlend exploiter", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(REJECT_ADDRESSES.SWIRLEND),
         snapshotData[REJECT_ADDRESSES.SWIRLEND]
       );
@@ -113,7 +138,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should reject Aztec user 4 due to TRM_HIGH_INDIRECT_REJECT", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(REJECT_ADDRESSES.AZTEC_4),
         snapshotData[REJECT_ADDRESSES.AZTEC_4]
       );
@@ -124,7 +149,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should reject TC user 1 due to MISTTRACK_RISK_REJECT", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(REJECT_ADDRESSES.TC_1),
         snapshotData[REJECT_ADDRESSES.TC_1]
       );
@@ -135,7 +160,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should reject TC user 4 due to MISTTRACK_RISK_REJECT", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(REJECT_ADDRESSES.TC_4),
         snapshotData[REJECT_ADDRESSES.TC_4]
       );
@@ -146,7 +171,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should reject TC user 6 due to MISTTRACK_RISK_REJECT", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(REJECT_ADDRESSES.TC_6),
         snapshotData[REJECT_ADDRESSES.TC_6]
       );
@@ -156,7 +181,7 @@ describe("RULESET_V1", () => {
       });
     });
     it("should reject TC user 7 due to MISTTRACK_RISK_REJECT", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(REJECT_ADDRESSES.TC_7),
         snapshotData[REJECT_ADDRESSES.TC_7]
       );
@@ -169,7 +194,7 @@ describe("RULESET_V1", () => {
 
   describe("Approvals", () => {
     it("should approve Vitalik", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(APPROVE_ADDRESSES.VITALIK),
         snapshotData[APPROVE_ADDRESSES.VITALIK]
       );
@@ -177,14 +202,14 @@ describe("RULESET_V1", () => {
     });
 
     it("should approve Beiko", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(APPROVE_ADDRESSES.BEIKO),
         snapshotData[APPROVE_ADDRESSES.BEIKO]
       );
       expect(result.type).to.equal("Delay");
     });
     it("should approve TC user 2", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(APPROVE_ADDRESSES.TC_2),
         snapshotData[APPROVE_ADDRESSES.TC_2]
       );
@@ -194,7 +219,7 @@ describe("RULESET_V1", () => {
       });
     });
     it("should approve TC user 3", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(APPROVE_ADDRESSES.TC_3),
         snapshotData[APPROVE_ADDRESSES.TC_3]
       );
@@ -205,7 +230,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should approve TC user 5", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(APPROVE_ADDRESSES.TC_5),
         snapshotData[APPROVE_ADDRESSES.TC_5]
       );
@@ -216,7 +241,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should approve Aztec user 1", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(APPROVE_ADDRESSES.AZTEC_1),
         snapshotData[APPROVE_ADDRESSES.AZTEC_1]
       );
@@ -227,7 +252,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should approve Aztec user 2", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(APPROVE_ADDRESSES.AZTEC_2),
         snapshotData[APPROVE_ADDRESSES.AZTEC_2]
       );
@@ -238,7 +263,7 @@ describe("RULESET_V1", () => {
     });
 
     it("should approve Aztec user 3", async () => {
-      const result = await RULESET_V1.check(
+      const result = await ruleset.check(
         formDepositInfo(APPROVE_ADDRESSES.AZTEC_3),
         snapshotData[APPROVE_ADDRESSES.AZTEC_3]
       );
