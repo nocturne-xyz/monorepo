@@ -17,7 +17,7 @@
       }
     ],
     [
-      "weth",
+      "WETH",
       {
         "address": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
         "globalCapWholeTokens": "1000n",
@@ -28,7 +28,7 @@
       }
     ],
     [
-      "dai",
+      "DAI",
       {
         "address": "0x3e622317f8c93f7328350cf0b56d9ed4c620c5d6",
         "globalCapWholeTokens": "1000000n",
