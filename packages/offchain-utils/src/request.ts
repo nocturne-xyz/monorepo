@@ -55,17 +55,17 @@ export async function cachedFetchWithRetry<T>(
     { retries }
   );
 
-  // Cache successful responses (only GET for simplicity, but this can be modified)
-  if (requestInit.method === "GET") {
-    await redis.setex(cacheKey, ttlSeconds, JSON.stringify(response));
-  }
-
   if (!response.headers.get("content-type")?.includes("application/json")) {
     console.log(await response.text());
     throw new Error(`Call failed with message: ${response.statusText}`);
   }
 
-  return responseExtractor(await response.json());
+  const extractedResponse = responseExtractor(await response.json());
+
+  // Cache extracted response
+  await redis.setex(cacheKey, ttlSeconds, JSON.stringify(extractedResponse));
+
+  return extractedResponse;
 }
 
 export function formatCachedFetchCacheKey(

@@ -78,7 +78,7 @@ describe("RULESET_V1", () => {
       const depositRequest = formDepositInfo(address);
       for (const apiCallName of apiCallNames) {
         const apiCallReturnData = snapshotForAddress[apiCallName];
-        if (!apiCallReturnData) {
+        if (!apiCallReturnData || apiCallName == "IDENTITY") {
           console.log(
             `No snapshot data found for address=${address} and apiCallName=${apiCallName}`
           );

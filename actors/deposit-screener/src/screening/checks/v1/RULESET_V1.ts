@@ -159,6 +159,8 @@ const MISTTRACK_RISK_REJECT: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
       "Involved Phishing Activity",
       "Malicious Address",
     ];
+
+    console.log("MISTTRACK PRE SOME DATA:", data);
     const detailListContainsBanlistItems = data.detail_list.some((item) =>
       banlistItems.includes(item)
     );
@@ -281,6 +283,8 @@ const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
 //     value: 0.25 * BASE_DELAY_SECONDS,
 //   },
 // };
+
+MISTTRACK_RISK_REJECT;
 
 export const RULESET_V1 = (redis: IORedis) => {
   return new RuleSet(redis, {

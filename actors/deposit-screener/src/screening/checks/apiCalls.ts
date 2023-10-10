@@ -167,7 +167,7 @@ export const API_CALL_MAP = {
     );
 
     console.log("Calling cachedFetchWithRetry");
-    const response = await cachedFetchWithRetry<TrmData>(
+    const response = await cachedFetchWithRetry(
       requestInfo,
       requestInit,
       cache,
@@ -175,9 +175,6 @@ export const API_CALL_MAP = {
       cacheOptions
     );
 
-    console.log("Finished calling cachedFetchWithRetry");
-
-    console.log(response);
     return response;
   },
   MISTTRACK_ADDRESS_OVERVIEW: async (
@@ -196,6 +193,8 @@ export const API_CALL_MAP = {
       MISTTRACK_RESPONSE_EXTRACTOR,
       cacheOptions
     );
+
+    console.log("Misttrack response:", misttrackResponse);
 
     return misttrackResponse as MisttrackAddressOverviewData;
   },
