@@ -8,7 +8,6 @@ import {
 } from "../../../screening";
 import { DepositScreenerServer } from "../../../server";
 import { getRedis } from "./utils";
-import { requireApiKeys } from "../../../utils";
 
 const runServer = new Command("server")
   .summary("run deposit screener server")
@@ -58,7 +57,6 @@ const runServer = new Command("server")
       const { dummyScreeningDelay } = options;
       screeningApi = new DummyScreeningApi(dummyScreeningDelay);
     } else {
-      requireApiKeys();
       screeningApi = new ConcreteScreeningChecker();
     }
 

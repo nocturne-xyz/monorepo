@@ -1,6 +1,7 @@
 import { Address } from "@nocturne-xyz/core";
 import { RULESET_V1 } from "./checks/v1/RULESET_V1";
 import { Delay, Rejection } from "./checks/RuleSet";
+import { requireApiKeys } from "../utils";
 
 export interface ScreeningDepositRequest {
   spender: Address;
@@ -15,6 +16,9 @@ export interface ScreeningCheckerApi {
 }
 
 export class ConcreteScreeningChecker implements ScreeningCheckerApi {
+  constructor() {
+    requireApiKeys();
+  }
   async checkDeposit(
     depositInfo: ScreeningDepositRequest
   ): Promise<Rejection | Delay> {
