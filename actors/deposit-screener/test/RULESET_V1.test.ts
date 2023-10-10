@@ -20,6 +20,7 @@ import {
   API_CALL_MAP,
 } from "../src/screening/checks/apiCalls";
 import { formatCachedFetchCacheKey } from "@nocturne-xyz/offchain-utils";
+// import { ScreeningDepositRequest } from "../src";
 
 describe("RULESET_V1", () => {
   let server: RedisMemoryServer;
@@ -33,10 +34,18 @@ describe("RULESET_V1", () => {
     const port = await server.getPort();
     redis = new IORedis(port, host);
 
-    populateRedisCache();
+    await populateRedisCache();
 
     ruleset = RULESET_V1(redis);
   });
+
+  // function formatCacheKeyFromDeposit(deposit: ScreeningDepositRequest): string {
+  //   const { requestInfo, requestInit } = formatRequestData(
+  //     apiCallName,
+  //     depositRequest
+  //   );
+  //   return formatCachedFetchCacheKey(requestInfo, requestInit);
+  // }
 
   async function populateRedisCache(): Promise<void> {
     // Pull snapshot data from the latest snapshot folder
@@ -61,22 +70,36 @@ describe("RULESET_V1", () => {
       API_CALL_MAP
     ) as ApiCallNamesList;
 
+    console.log(snapshotData);
+    console.log("Num snapshot keys:", Object.keys(snapshotData).length);
+    console.log("Num snapshot entries:", Object.entries(snapshotData).length);
+
     for (const [address, snapshotForAddress] of Object.entries(snapshotData)) {
       const depositRequest = formDepositInfo(address);
       for (const apiCallName of apiCallNames) {
+        const apiCallReturnData = snapshotForAddress[apiCallName];
+        if (!apiCallReturnData) {
+          console.log(
+            `No snapshot data found for address=${address} and apiCallName=${apiCallName}`
+          );
+          continue;
+        }
+
         const { requestInfo, requestInit } = formatRequestData(
           apiCallName,
           depositRequest
         );
         const cacheKey = formatCachedFetchCacheKey(requestInfo, requestInit);
-        const apiCallReturnData = snapshotForAddress[apiCallName];
 
+        console.log(`Setting cache entry for address ${address}`);
+        console.log(`cacheKey=${cacheKey}`);
+        console.log(`apiCallReturnData=${JSON.stringify(apiCallReturnData)}`);
         await redis.set(cacheKey, JSON.stringify(apiCallReturnData));
       }
     }
   }
 
-  describe("Bulk Tests", () => {
+  describe("Bulk Tests", async () => {
     for (const testCase of BULK_TEST_CASES) {
       for (const address of testCase.addresses) {
         it(`bulk test: isRejected=${testCase.isRejected}, type=${testCase.type}, address=${address}`, async () => {

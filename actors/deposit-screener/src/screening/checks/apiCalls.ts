@@ -141,6 +141,20 @@ export function formatRequestData(
   };
 }
 
+const TRM_RESPONSE_EXTRACTOR = (response: any): TrmData => {
+  if (response["code"] === 400) {
+    throw new Error(`Bad Request: ${JSON.stringify(response["errors"])}`);
+  }
+  return response[0] as TrmData;
+};
+
+const MISTTRACK_RESPONSE_EXTRACTOR = (response: any): MisttrackData => {
+  if (!response.success) {
+    throw new Error(`Call to misttrack failed with message: ${response.msg}`);
+  }
+  return response.data;
+};
+
 export const API_CALL_MAP = {
   TRM_SCREENING_ADDRESSES: async (
     deposit: ScreeningDepositRequest,
@@ -151,20 +165,20 @@ export const API_CALL_MAP = {
       "TRM_SCREENING_ADDRESSES",
       deposit
     );
-    const response = await cachedFetchWithRetry(
+
+    console.log("Calling cachedFetchWithRetry");
+    const response = await cachedFetchWithRetry<TrmData>(
       requestInfo,
       requestInit,
       cache,
+      TRM_RESPONSE_EXTRACTOR,
       cacheOptions
     );
 
-    const jsonResponse = (await response.json()) as any; // TODO: any cast
-    if (jsonResponse["code"] === 400) {
-      throw new Error(`Bad Request: ${JSON.stringify(jsonResponse["errors"])}`);
-    }
-    const data = jsonResponse[0] as TrmData;
-    console.log(data);
-    return data;
+    console.log("Finished calling cachedFetchWithRetry");
+
+    console.log(response);
+    return response;
   },
   MISTTRACK_ADDRESS_OVERVIEW: async (
     deposit: ScreeningDepositRequest,
@@ -175,22 +189,15 @@ export const API_CALL_MAP = {
       "MISTTRACK_ADDRESS_OVERVIEW",
       deposit
     );
-    const response = await cachedFetchWithRetry(
+    const misttrackResponse = await cachedFetchWithRetry(
       requestInfo,
       requestInit,
       cache,
+      MISTTRACK_RESPONSE_EXTRACTOR,
       cacheOptions
     );
 
-    const misttrackResponse =
-      (await response.json()) as MisttrackApiResponse<MisttrackAddressOverviewData>;
-    if (!misttrackResponse.success) {
-      throw new Error(
-        `Call to misttrack failed with message: ${misttrackResponse.msg}`
-      );
-    }
-    console.log(misttrackResponse.data);
-    return misttrackResponse.data;
+    return misttrackResponse as MisttrackAddressOverviewData;
   },
 
   MISTTRACK_ADDRESS_LABELS: async (
@@ -207,25 +214,11 @@ export const API_CALL_MAP = {
       requestInfo,
       requestInit,
       cache,
+      MISTTRACK_RESPONSE_EXTRACTOR,
       cacheOptions
     );
 
-    // check the content type before parsing json
-    if (!response.headers.get("content-type")?.includes("application/json")) {
-      console.log(await response.text());
-      throw new Error(
-        `Call to misttrack failed with message: ${response.statusText}`
-      );
-    }
-    const misttrackResponse =
-      (await response.json()) as MisttrackApiResponse<MisttrackLabelsData>;
-    if (!misttrackResponse.success) {
-      throw new Error(
-        `Call to misttrack failed with message: ${misttrackResponse.msg}`
-      );
-    }
-    console.log(misttrackResponse.data);
-    return misttrackResponse.data;
+    return response as MisttrackLabelsData;
   },
 
   MISTTRACK_ADDRESS_RISK_SCORE: async (
@@ -242,25 +235,11 @@ export const API_CALL_MAP = {
       requestInfo,
       requestInit,
       cache,
+      MISTTRACK_RESPONSE_EXTRACTOR,
       cacheOptions
     );
 
-    // check the content type before parsing json
-    if (!response.headers.get("content-type")?.includes("application/json")) {
-      console.log(await response.text());
-      throw new Error(
-        `Call to misttrack failed with message: ${response.statusText}`
-      );
-    }
-    const misttrackResponse =
-      (await response.json()) as MisttrackApiResponse<MisttrackRiskScoreData>;
-    if (!misttrackResponse.success) {
-      throw new Error(
-        `Call to misttrack failed with message: ${misttrackResponse.msg}`
-      );
-    }
-    console.log(misttrackResponse.data);
-    return misttrackResponse.data;
+    return response as MisttrackRiskScoreData;
   },
   IDENTITY: async (deposit: ScreeningDepositRequest) => deposit,
 } as const;

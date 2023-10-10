@@ -27,12 +27,13 @@ export function checkInputError<T>(
   return undefined;
 }
 
-export async function cachedFetchWithRetry(
+export async function cachedFetchWithRetry<T>(
   requestInfo: RequestInfo,
   requestInit: RequestInit,
   redis: IORedis,
+  responseExtractor: (response: any) => T = (response) => response,
   options: CachedFetchOptions = {}
-): Promise<Response> {
+): Promise<T> {
   const { skipCacheRead = false, ttlSeconds = 60 * 60, retries = 5 } = options;
 
   // Generate a cache key based on URL and request payload
@@ -59,7 +60,12 @@ export async function cachedFetchWithRetry(
     await redis.setex(cacheKey, ttlSeconds, JSON.stringify(response));
   }
 
-  return response;
+  if (!response.headers.get("content-type")?.includes("application/json")) {
+    console.log(await response.text());
+    throw new Error(`Call failed with message: ${response.statusText}`);
+  }
+
+  return responseExtractor(await response.json());
 }
 
 export function formatCachedFetchCacheKey(
@@ -68,6 +74,6 @@ export function formatCachedFetchCacheKey(
 ): string {
   const cacheKeyData = `${
     typeof requestInfo === "string" ? requestInfo : requestInfo.url
-  }-${JSON.stringify(requestInit.body)}`;
+  }-${JSON.stringify(requestInit.body ?? {})}`;
   return `CACHE_${createHash("sha256").update(cacheKeyData).digest("hex")}`;
 }

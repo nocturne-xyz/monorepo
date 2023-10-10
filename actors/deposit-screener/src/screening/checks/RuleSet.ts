@@ -107,6 +107,8 @@ export class Rule<C extends ApiCallNames> implements RuleLike {
       cachedFetchOptions
     )) as ApiCallToReturnType[C];
 
+    console.log("RuleLike `check` data:", data);
+
     return this.threshold(data) ? this.action : ACTION_NOT_TRIGGERED;
   }
 }
