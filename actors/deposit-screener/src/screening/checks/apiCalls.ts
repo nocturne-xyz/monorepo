@@ -4,7 +4,6 @@ import {
 } from "@nocturne-xyz/offchain-utils";
 import { ScreeningDepositRequest } from "..";
 import IORedis from "ioredis";
-import { RequestInfo, RequestInit } from "node-fetch";
 import "dotenv/config";
 
 export interface TrmAddressRiskIndicator {

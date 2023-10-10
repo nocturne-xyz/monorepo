@@ -1,6 +1,5 @@
 import { ValidateFunction } from "ajv";
 import { ErrString } from "./types";
-import fetch, { Response, RequestInfo, RequestInit } from "node-fetch";
 import retry from "async-retry";
 import IORedis from "ioredis";
 import { createHash } from "crypto";
