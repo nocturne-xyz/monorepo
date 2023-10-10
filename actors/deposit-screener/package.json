@@ -26,7 +26,7 @@
     "prettier:write": "prettier --write ./src",
     "screener-cli": "npx ts-node src/cli/index.ts",
     "test:generate-snapshot": "npx ts-node ./test/scripts/generateRulesetV1CallsSnapshot.ts",
-    "test:unit": "mocha --timeout 20000 -r ts-node/register test/**/*.test.ts -r dotenv/config"
+    "test:unit": "mocha --require ts-node/register  --timeout 20000 test/**/*.test.ts -r dotenv/config"
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",

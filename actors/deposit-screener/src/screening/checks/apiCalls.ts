@@ -4,6 +4,7 @@ import {
 } from "@nocturne-xyz/offchain-utils";
 import { ScreeningDepositRequest } from "..";
 import IORedis from "ioredis";
+import { RequestInfo, RequestInit } from "node-fetch";
 import "dotenv/config";
 
 export interface TrmAddressRiskIndicator {
@@ -98,30 +99,62 @@ const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";
 const TRM_API_KEY = process.env.TRM_API_KEY ?? "";
 const MISTTRACK_API_KEY = process.env.MISTTRACK_API_KEY ?? "";
 
+export interface RequestData {
+  requestInfo: RequestInfo;
+  requestInit: RequestInit;
+}
+
+export function formatRequestData(
+  callType: ApiCallNames,
+  deposit: ScreeningDepositRequest,
+  token = "ETH"
+): RequestData {
+  let url: string;
+  let requestInit = {};
+  if (callType === "TRM_SCREENING_ADDRESSES") {
+    url = `${TRM_BASE_URL}/screening/addresses`;
+    requestInit = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization:
+          "Basic " +
+          Buffer.from(`${TRM_API_KEY}:${TRM_API_KEY}`).toString("base64"),
+      },
+      body: JSON.stringify([
+        {
+          address: deposit.spender,
+          chain: "ethereum",
+        },
+      ]),
+    };
+  } else if (callType === "MISTTRACK_ADDRESS_OVERVIEW") {
+    url = `${MISTTRACK_BASE_URL}/address_overview?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`;
+  } else if (callType === "MISTTRACK_ADDRESS_LABELS") {
+    url = `${MISTTRACK_BASE_URL}/address_labels?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`;
+  } else {
+    url = `${MISTTRACK_BASE_URL}/risk_score?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`;
+  }
+
+  return {
+    requestInfo: url,
+    requestInit,
+  };
+}
+
 export const API_CALL_MAP = {
   TRM_SCREENING_ADDRESSES: async (
     deposit: ScreeningDepositRequest,
     cache: IORedis,
     cacheOptions: CachedFetchOptions = {}
   ): Promise<TrmData> => {
-    const body = JSON.stringify([
-      {
-        address: deposit.spender,
-        chain: "ethereum",
-      },
-    ]);
+    const { requestInfo, requestInit } = formatRequestData(
+      "TRM_SCREENING_ADDRESSES",
+      deposit
+    );
     const response = await cachedFetchWithRetry(
-      `${TRM_BASE_URL}/screening/addresses`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization:
-            "Basic " +
-            Buffer.from(`${TRM_API_KEY}:${TRM_API_KEY}`).toString("base64"),
-        },
-        body,
-      },
+      requestInfo,
+      requestInit,
       cache,
       cacheOptions
     );
@@ -139,10 +172,13 @@ export const API_CALL_MAP = {
     cache: IORedis,
     cacheOptions: CachedFetchOptions = {}
   ): Promise<MisttrackAddressOverviewData> => {
-    const token = "ETH";
+    const { requestInfo, requestInit } = formatRequestData(
+      "MISTTRACK_ADDRESS_OVERVIEW",
+      deposit
+    );
     const response = await cachedFetchWithRetry(
-      `${MISTTRACK_BASE_URL}/address_overview?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`,
-      {},
+      requestInfo,
+      requestInit,
       cache,
       cacheOptions
     );
@@ -164,9 +200,13 @@ export const API_CALL_MAP = {
     cacheOptions: CachedFetchOptions = {},
     token = "ETH"
   ): Promise<MisttrackLabelsData> => {
+    const { requestInfo, requestInit } = formatRequestData(
+      "MISTTRACK_ADDRESS_LABELS",
+      deposit
+    );
     const response = await cachedFetchWithRetry(
-      `${MISTTRACK_BASE_URL}/address_labels?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`,
-      {},
+      requestInfo,
+      requestInit,
       cache,
       cacheOptions
     );
@@ -195,9 +235,13 @@ export const API_CALL_MAP = {
     cacheOptions: CachedFetchOptions = {},
     token = "ETH"
   ): Promise<MisttrackRiskScoreData> => {
+    const { requestInfo, requestInit } = formatRequestData(
+      "MISTTRACK_ADDRESS_RISK_SCORE",
+      deposit
+    );
     const response = await cachedFetchWithRetry(
-      `${MISTTRACK_BASE_URL}/risk_score?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`,
-      {},
+      requestInfo,
+      requestInit,
       cache,
       cacheOptions
     );
