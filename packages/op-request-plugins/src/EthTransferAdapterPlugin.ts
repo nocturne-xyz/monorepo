@@ -12,7 +12,7 @@ import ERC20_ABI from "./abis/ERC20.json";
 import { ethers } from "ethers";
 
 const WETH_NAME = "weth";
-const ETH_TRANSFER_ADAPTER_NAME = "ethTransferAdapter";
+const ETH_TRANSFER_ADAPTER_NAME = "ETHTransferAdapter";
 
 export interface EthTransferAdapterPluginMethods {
   transferEth(to: Address, value: bigint): this;
@@ -44,7 +44,7 @@ export function EthTransferAdapterPlugin<EInner extends BaseOpRequestBuilder>(
 
         if (!ethTransferAdapterAddress) {
           throw new Error(
-            `EthTransferAdapter not supported on chain with id: ${this._op.chainId}`
+            `ETHTransferAdapter not supported on chain with id: ${this._op.chainId}`
           );
         }
 
