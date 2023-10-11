@@ -22,11 +22,15 @@ import {
 
 const ENDPOINTS = {
   goerli: {
-    screenerEndpoint: "https://screener.testnet.nocturnelabs.xyz",
-    bundlerEndpoint: "https://bundler.testnet.nocturnelabs.xyz",
+    screenerEndpoint:
+      process.env.NEXT_PUBLIC_SCREENER_URL ??
+      "https://screener.testnet.nocturnelabs.xyz",
+    bundlerEndpoint:
+      process.env.NEXT_PUBLIC_BUNDLER_URL ??
+      "https://bundler.testnet.nocturnelabs.xyz",
     subgraphEndpoint:
       process.env.NEXT_PUBLIC_SUBGRAPH_URL ??
-      "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.21-testnet/gn",
+      "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.25-testnet/gn",
   },
   localhost: {
     screenerEndpoint: "http://localhost:3001",
@@ -170,8 +174,6 @@ export function getNocturneSdkConfig(
     endpoints,
   };
 }
-
-
 
 export function toDepositRequest(
   displayDepositRequest: DisplayDepositRequest
