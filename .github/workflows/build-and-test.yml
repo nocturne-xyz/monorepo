@@ -35,6 +35,8 @@ jobs:
           version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
       - name: install Rapidsnark dependencies
         run: sudo apt-get install -y build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
+      - name: install docker
+        run: sudo apt-get install -y docker
       - name: yarn install
         run: |
           yarn install --immutable
@@ -47,6 +49,9 @@ jobs:
       - name: yarn build
         run: |
           yarn build
+      - name: docker compose up
+        run: |
+          docker-compose up -d
       - name: yarn test:unit
         run: |
           yarn test:unit
