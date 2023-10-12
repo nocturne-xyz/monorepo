@@ -11,6 +11,7 @@ import {
   OperationTrait,
   range,
 } from "@nocturne-xyz/core";
+import { Mutex } from "async-mutex";
 import { spawn } from "child_process";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -24,7 +25,6 @@ import { thunk } from "@nocturne-xyz/core";
 import { Insertion } from "@nocturne-xyz/persistent-log";
 import { fetchTreeInsertions } from "@nocturne-xyz/subgraph-sync-adapters/src/treeInsertions/fetch";
 import { SUBGRAPH_URL } from "./deploy";
-import * as net from "net";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;
@@ -49,7 +49,7 @@ export const BUNDLER_ENDPOINT = `http://localhost:3000`;
 export type TeardownFn = () => Promise<void>;
 export type ResetFn = () => Promise<void>;
 
-export function sleep(ms: number): Promise<void> {
+export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -217,7 +217,7 @@ export function runCommandBackground(
   cmd: string,
   args: string[],
   opts?: RunCommandDetachedOpts
-): void {
+) {
   const { cwd, onStdOut, onStdErr, onError, onExit, processName } = opts ?? {};
   const child = spawn(cmd, args, { cwd });
   let stdout = "";
@@ -288,37 +288,15 @@ interface RedisHandle {
   clearRedis: () => Promise<void>;
 }
 
-function isPortTaken(port: number): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    const tester: net.Server = net
-      .createServer()
-      .once("error", (err) => {
-        if (err.message !== "EADDRINUSE") {
-          return reject(err.message);
-        }
-        resolve(true);
-      })
-      .once("listening", () =>
-        tester.once("close", () => resolve(false)).close()
-      )
-      .listen(port);
-  });
-}
-
-async function getARandomAvailablePort(retries = 10): Promise<number> {
-  while (retries-- > 0) {
-    const candidate = Math.floor(Math.random() * (65535 - 1024) + 1024);
-    // if the port is available return it
-    if (!(await isPortTaken(candidate))) {
-      return candidate;
-    }
-  }
-  throw new Error(`Could not find an available port after ${retries} retries`);
-}
-
+// HACK specify ports to use up-front to ensure they don't conflict with any of the actors
+const redisPorts = range(6000, 6100);
+const mutex = new Mutex();
 export function makeRedisInstance(): RedisHandle {
   const redisThunk = thunk<[IORedis, RedisMemoryServer]>(async () => {
-    const port = await getARandomAvailablePort();
+    const port = await mutex.runExclusive(() => redisPorts.pop());
+    if (!port)
+      throw new Error("ran out of available ports for redis instances");
+
     const server = await RedisMemoryServer.create({ instance: { port } });
     const host = await server.getHost();
     return [new IORedis(port, host), server];
@@ -329,7 +307,7 @@ export function makeRedisInstance(): RedisHandle {
     getRedis: async () => (await redisThunk())[0],
     clearRedis: async () => {
       const [redis, _] = await redisThunk();
-      await redis.flushall();
+      redis.flushall();
     },
   };
 }

@@ -57,8 +57,5 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "redisMemoryServer": {
-    "debug": "1"
   }
 }
