@@ -117,6 +117,108 @@
       "value": "0n"
     }
   },
+  "0x5f4C21c9Bb73c8B4a296cC256C0cDe324dB146DF": {
+    "TRM_SCREENING_ADDRESSES": {
+      "accountExternalId": null,
+      "address": "0x5f4c21c9bb73c8b4a296cc256c0cde324db146df",
+      "addressIncomingVolumeUsd": "2199013.88038140314081206647888153672218322754",
+      "addressOutgoingVolumeUsd": "2197662.08841060243874000337942220539844131942",
+      "addressRiskIndicators": [
+        {
+          "category": "Hacked or Exploited Funds",
+          "categoryId": "34",
+          "categoryRiskScoreLevel": 15,
+          "categoryRiskScoreLevelLabel": "Severe",
+          "incomingVolumeUsd": "2199013.88038140314081206647888153672218322754",
+          "outgoingVolumeUsd": "2197662.08841060243874000337942220539844131942",
+          "riskType": "OWNERSHIP",
+          "totalVolumeUsd": "4396675.96879200557955206985830374212062454696"
+        },
+        {
+          "category": "Community Complaint",
+          "categoryId": "638",
+          "categoryRiskScoreLevel": 10,
+          "categoryRiskScoreLevelLabel": "High",
+          "incomingVolumeUsd": "2199013.88038140314081206647888153672218322754",
+          "outgoingVolumeUsd": "2197662.08841060243874000337942220539844131942",
+          "riskType": "OWNERSHIP",
+          "totalVolumeUsd": "4396675.96879200557955206985830374212062454696"
+        },
+        {
+          "category": "Decentralized Exchange",
+          "categoryId": "6",
+          "categoryRiskScoreLevel": 1,
+          "categoryRiskScoreLevelLabel": "Low",
+          "incomingVolumeUsd": "1270.70772680823355425152",
+          "outgoingVolumeUsd": "0",
+          "riskType": "COUNTERPARTY",
+          "totalVolumeUsd": "1270.70772680823355425152"
+        },
+        {
+          "category": "Sanctions",
+          "categoryId": "69",
+          "categoryRiskScoreLevel": 5,
+          "categoryRiskScoreLevelLabel": "Medium",
+          "incomingVolumeUsd": "18392.7452296145484875",
+          "outgoingVolumeUsd": "2186350.90200000000008172529319949717319107528",
+          "riskType": "COUNTERPARTY",
+          "totalVolumeUsd": "2204743.64722961454856922529319949717319107528"
+        },
+        {
+          "category": "Decentralized Exchange",
+          "categoryId": "6",
+          "categoryRiskScoreLevel": 1,
+          "categoryRiskScoreLevelLabel": "Low",
+          "incomingVolumeUsd": "2130707.616147403",
+          "outgoingVolumeUsd": "1264.571103585",
+          "riskType": "INDIRECT",
+          "totalVolumeUsd": "2131972.187250988"
+        }
+      ],
+      "addressSubmitted": "0x5f4C21c9Bb73c8B4a296cC256C0cDe324dB146DF",
+      "addressTotalVolumeUsd": "4396675.96879200557955206985830374212062454696",
+      "chain": "ethereum",
+      "entities": [
+        {
+          "category": "Hacked or Exploited Funds",
+          "categoryId": "34",
+          "confidenceScoreLabel": "Moderate Confidence",
+          "entity": "Zunami Exploiter Aug 2023",
+          "riskScoreLevel": 15,
+          "riskScoreLevelLabel": "Severe",
+          "trmAppUrl": "https://my.trmlabs.com/entities/trm/d5b5def7-fee0-4f3a-aed1-e3cf6cbea335",
+          "trmUrn": "/entity/manual/d5b5def7-fee0-4f3a-aed1-e3cf6cbea335"
+        }
+      ],
+      "externalId": "client1",
+      "trmAppUrl": "https://my.trmlabs.com/address/0x5f4c21c9bb73c8b4a296cc256c0cde324db146df/eth"
+    },
+    "MISTTRACK_ADDRESS_RISK_SCORE": {
+      "score": 100,
+      "hacking_event": "Zunami Protocol Exploiter",
+      "detail_list": ["Malicious Address", "Involved Theft Activity"],
+      "risk_level": "Severe",
+      "risk_detail": [
+        {
+          "label": "Zunami Protocol Exploiter",
+          "volume": 0,
+          "percent": 100,
+          "type": "malicious",
+          "address": "0x5f4c21c9bb73c8b4a296cc256c0cde324db146df"
+        }
+      ]
+    },
+    "MISTTRACK_ADDRESS_OVERVIEW": {
+      "balance": 0.091,
+      "txs_count": 40,
+      "first_seen": 1691939939,
+      "last_seen": 1692203327,
+      "total_received": 1189.9146,
+      "total_spent": 1183.8,
+      "received_txs_count": 5,
+      "spent_txs_count": 35
+    }
+  },
   "0xF00d0e11AcCe1eA37658f428d947C3FFFAeaDe70": {
     "TRM_SCREENING_ADDRESSES": [
       {
