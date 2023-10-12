@@ -167,11 +167,13 @@ export const API_CALL_MAP = {
   TRM_SCREENING_ADDRESSES: async (
     deposit: ScreeningDepositRequest,
     cache: IORedis,
-    cachedFetchOptions: CachedFetchOptions = {}
+    cachedFetchOptions: CachedFetchOptions = {},
+    token = "ETH"
   ): Promise<TrmData> => {
     const { requestInfo, requestInit } = formatRequestData(
       "TRM_SCREENING_ADDRESSES",
-      deposit
+      deposit,
+      token
     );
 
     const response = await cachedFetch(
@@ -187,11 +189,13 @@ export const API_CALL_MAP = {
   MISTTRACK_ADDRESS_OVERVIEW: async (
     deposit: ScreeningDepositRequest,
     cache: IORedis,
-    cachedFetchOptions: CachedFetchOptions = {}
+    cachedFetchOptions: CachedFetchOptions = {},
+    token = "ETH"
   ): Promise<MisttrackAddressOverviewData> => {
     const { requestInfo, requestInit } = formatRequestData(
       "MISTTRACK_ADDRESS_OVERVIEW",
-      deposit
+      deposit,
+      token
     );
     const response = await cachedFetch(
       requestInfo,
@@ -211,7 +215,8 @@ export const API_CALL_MAP = {
   ): Promise<MisttrackLabelsData> => {
     const { requestInfo, requestInit } = formatRequestData(
       "MISTTRACK_ADDRESS_LABELS",
-      deposit
+      deposit,
+      token
     );
     const response = await cachedFetch(
       requestInfo,
@@ -231,7 +236,8 @@ export const API_CALL_MAP = {
   ): Promise<MisttrackRiskScoreData> => {
     const { requestInfo, requestInit } = formatRequestData(
       "MISTTRACK_ADDRESS_RISK_SCORE",
-      deposit
+      deposit,
+      token
     );
     const response = await cachedFetch(
       requestInfo,
