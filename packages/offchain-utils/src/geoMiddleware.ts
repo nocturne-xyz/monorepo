@@ -22,6 +22,7 @@ export const geoMiddleware = (options: GeoOptions) => {
       header.startsWith("X-WAF-")
     );
     if (wafHeaders.length > 0) {
+      // todo: store this data in a database
       options.logger.info("WAF tags applied", { wafHeaders });
     }
 
