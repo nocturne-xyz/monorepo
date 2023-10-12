@@ -8502,7 +8502,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"big-integer@npm:^1.6.42, big-integer@npm:^1.6.44":
+"big-integer@npm:^1.6.42, big-integer@npm:^1.6.44, big-integer@npm:^1.6.48":
   version: 1.6.51
   resolution: "big-integer@npm:1.6.51"
   checksum: 3d444173d1b2e20747e2c175568bedeebd8315b0637ea95d75fd27830d3b8e8ba36c6af40374f36bdaea7b5de376dcada1b07587cb2a79a928fccdb6e6e3c518
@@ -9995,6 +9995,13 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
+"commander@npm:^2.19.0":
+  version: 2.20.3
+  resolution: "commander@npm:2.20.3"
+  checksum: ab8c07884e42c3a8dbc5dd9592c606176c7eb5c1ca5ff274bcf907039b2c41de3626f684ea75ccf4d361ba004bbaff1f577d5384c155f3871e456bdf27becf9e
+  languageName: node
+  linkType: hard
+
 "commander@npm:^9.4.1":
   version: 9.5.0
   resolution: "commander@npm:9.5.0"
@@ -10955,6 +10962,13 @@ circomlibjs@nocturne-xyz/circomlibjs:
   dependencies:
     path-type: ^4.0.0
   checksum: fa05e18324510d7283f55862f3161c6759a3f2f8dbce491a2fc14c8324c498286c54282c1f0e933cb930da8419b30679389499b919122952a4f8592362ef4615
+  languageName: node
+  linkType: hard
+
+"discontinuous-range@npm:1.0.0":
+  version: 1.0.0
+  resolution: "discontinuous-range@npm:1.0.0"
+  checksum: 8ee88d7082445b6eadc7c03bebe6dc978f96760c45e9f65d16ca66174d9e086a9e3855ee16acf65625e1a07a846a17de674f02a5964a6aebe5963662baf8b5c8
   languageName: node
   linkType: hard
 
@@ -12068,7 +12082,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
@@ -13436,6 +13450,13 @@ circomlibjs@nocturne-xyz/circomlibjs:
   version: 5.1.1
   resolution: "get-port@npm:5.1.1"
   checksum: 0162663ffe5c09e748cd79d97b74cd70e5a5c84b760a475ce5767b357fb2a57cb821cee412d646aa8a156ed39b78aab88974eddaa9e5ee926173c036c0713787
+  languageName: node
+  linkType: hard
+
+"get-stdin@npm:=8.0.0":
+  version: 8.0.0
+  resolution: "get-stdin@npm:8.0.0"
+  checksum: 40128b6cd25781ddbd233344f1a1e4006d4284906191ed0a7d55ec2c1a3e44d650f280b2c9eeab79c03ac3037da80257476c0e4e5af38ddfb902d6ff06282d77
   languageName: node
   linkType: hard
 
@@ -17206,10 +17227,19 @@ circomlibjs@nocturne-xyz/circomlibjs:
     "@changesets/cli": ^2.26.2
     hardhat: ^2.17.1
     lefthook: ^1.3.8
+    prettier: ^3.0.3
+    prettier-plugin-sql: ^0.15.1
     ts-node: ^10.9.1
     turbo: 1.6.3
   languageName: unknown
   linkType: soft
+
+"moo@npm:^0.5.0":
+  version: 0.5.2
+  resolution: "moo@npm:0.5.2"
+  checksum: 5a41ddf1059fd0feb674d917c4774e41c877f1ca980253be4d3aae1a37f4bc513f88815041243f36f5cf67a62fb39324f3f997cf7fb17b6cb00767c165e7c499
+  languageName: node
+  linkType: hard
 
 "morgan@npm:^1.10.0":
   version: 1.10.0
@@ -17446,6 +17476,23 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
+"nearley@npm:^2.20.1":
+  version: 2.20.1
+  resolution: "nearley@npm:2.20.1"
+  dependencies:
+    commander: ^2.19.0
+    moo: ^0.5.0
+    railroad-diagrams: ^1.0.0
+    randexp: 0.4.6
+  bin:
+    nearley-railroad: bin/nearley-railroad.js
+    nearley-test: bin/nearley-test.js
+    nearley-unparse: bin/nearley-unparse.js
+    nearleyc: bin/nearleyc.js
+  checksum: 42c2c330c13c7991b48221c5df00f4352c2f8851636ae4d1f8ca3c8e193fc1b7668c78011d1cad88cca4c1c4dc087425420629c19cc286d7598ec15533aaef26
+  languageName: node
+  linkType: hard
+
 "negotiator@npm:0.6.3, negotiator@npm:^0.6.3":
   version: 0.6.3
   resolution: "negotiator@npm:0.6.3"
@@ -17635,6 +17682,15 @@ circomlibjs@nocturne-xyz/circomlibjs:
   version: 2.0.13
   resolution: "node-releases@npm:2.0.13"
   checksum: 17ec8f315dba62710cae71a8dad3cd0288ba943d2ece43504b3b1aa8625bf138637798ab470b1d9035b0545996f63000a8a926e0f6d35d0996424f8b6d36dda3
+  languageName: node
+  linkType: hard
+
+"node-sql-parser@npm:^4.7.0":
+  version: 4.11.0
+  resolution: "node-sql-parser@npm:4.11.0"
+  dependencies:
+    big-integer: ^1.6.48
+  checksum: dd8f40e5332570a0b131025aebd1802171d18553bc5cd31f3a090851d03b63ef38a33c0cf5f9b4d2c8c02767ac1556ef20107cd8a8bb7ce8cf4ba5731c5d9c8a
   languageName: node
   linkType: hard
 
@@ -18730,12 +18786,34 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
+"prettier-plugin-sql@npm:^0.15.1":
+  version: 0.15.1
+  resolution: "prettier-plugin-sql@npm:0.15.1"
+  dependencies:
+    node-sql-parser: ^4.7.0
+    sql-formatter: ^12.2.3
+    tslib: ^2.6.0
+  peerDependencies:
+    prettier: ^3.0.0
+  checksum: bb10952608bf83768d097a4dd76ac0dd0304b23f24f10e01daefa280e10efc89105b8f20a85b9b9a8a811b6045734d13c0ca35c24644fb5b948cd8bd0110db8e
+  languageName: node
+  linkType: hard
+
 "prettier@npm:^2.1.2, prettier@npm:^2.2.1, prettier@npm:^2.7.1, prettier@npm:^2.8.0, prettier@npm:^2.8.3, prettier@npm:^2.8.8":
   version: 2.8.8
   resolution: "prettier@npm:2.8.8"
   bin:
     prettier: bin-prettier.js
   checksum: b49e409431bf129dd89238d64299ba80717b57ff5a6d1c1a8b1a28b590d998a34e083fa13573bc732bb8d2305becb4c9a4407f8486c81fa7d55100eb08263cf8
+  languageName: node
+  linkType: hard
+
+"prettier@npm:^3.0.3":
+  version: 3.0.3
+  resolution: "prettier@npm:3.0.3"
+  bin:
+    prettier: bin/prettier.cjs
+  checksum: e10b9af02b281f6c617362ebd2571b1d7fc9fb8a3bd17e371754428cda992e5e8d8b7a046e8f7d3e2da1dcd21aa001e2e3c797402ebb6111b5cd19609dd228e0
   languageName: node
   linkType: hard
 
@@ -19057,6 +19135,23 @@ circomlibjs@nocturne-xyz/circomlibjs:
     fastfile: 0.0.20
     ffjavascript: 0.2.60
   checksum: edeb325b83851a71cbca2e5de56eb622ee5347ecae921b526a5fc484c4825b6b30c73b6fde40e9bc5112b9d21e046af885bf212ed9cee2efbc6de93b8454ec06
+  languageName: node
+  linkType: hard
+
+"railroad-diagrams@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "railroad-diagrams@npm:1.0.0"
+  checksum: 9e312af352b5ed89c2118edc0c06cef2cc039681817f65266719606e4e91ff6ae5374c707cc9033fe29a82c2703edf3c63471664f97f0167c85daf6f93496319
+  languageName: node
+  linkType: hard
+
+"randexp@npm:0.4.6":
+  version: 0.4.6
+  resolution: "randexp@npm:0.4.6"
+  dependencies:
+    discontinuous-range: 1.0.0
+    ret: ~0.1.10
+  checksum: 3c0d440a3f89d6d36844aa4dd57b5cdb0cab938a41956a16da743d3a3578ab32538fc41c16cc0984b6938f2ae4cbc0216967e9829e52191f70e32690d8e3445d
   languageName: node
   linkType: hard
 
@@ -20763,6 +20858,19 @@ circomlibjs@nocturne-xyz/circomlibjs:
   version: 1.0.3
   resolution: "sprintf-js@npm:1.0.3"
   checksum: 19d79aec211f09b99ec3099b5b2ae2f6e9cdefe50bc91ac4c69144b6d3928a640bb6ae5b3def70c2e85a2c3d9f5ec2719921e3a59d3ca3ef4b2fd1a4656a0df3
+  languageName: node
+  linkType: hard
+
+"sql-formatter@npm:^12.2.3":
+  version: 12.2.4
+  resolution: "sql-formatter@npm:12.2.4"
+  dependencies:
+    argparse: ^2.0.1
+    get-stdin: =8.0.0
+    nearley: ^2.20.1
+  bin:
+    sql-formatter: bin/sql-formatter-cli.cjs
+  checksum: b95c36f19aacddc20cfa82ca0f098e8f6c3a0cee99a85e395a9768de3547fbd7e79013a3d32c62bbf47d949f21511e4ef1df19fee769bffba306a3a66b75b2ef
   languageName: node
   linkType: hard
 
