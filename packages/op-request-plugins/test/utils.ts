@@ -33,7 +33,7 @@ export const shitcoin: Asset = {
 export const encodedShitcoin = AssetTrait.encode(shitcoin);
 
 const config = loadNocturneConfigBuiltin("example-network");
-config.erc20s.set("wETH", {
+config.erc20s.set("WETH", {
   address: WETH_ADDRESS,
   globalCapWholeTokens: 100_000_000n,
   maxDepositSizeWholeTokens: 100_000_000n,

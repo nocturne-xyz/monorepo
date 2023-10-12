@@ -45,7 +45,7 @@
       }
     ],
     [
-      "wETH",
+      "WETH",
       {
         "address": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
         "globalCapWholeTokens": "1000n",
@@ -76,7 +76,7 @@
       }
     ],
     [
-      "wETH",
+      "WETH",
       {
         "address": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
         "functionSignatures": [

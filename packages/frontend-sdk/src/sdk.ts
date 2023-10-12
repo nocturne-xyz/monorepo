@@ -239,9 +239,9 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   protected get wethAddress(): string {
-    const address = this.sdkConfig.config.erc20s.get("wETH")?.address;
+    const address = this.sdkConfig.config.erc20s.get("WETH")?.address;
     if (!address) {
-      throw new Error("wETH address not found in Nocturne config");
+      throw new Error("WETH address not found in Nocturne config");
     }
     return address;
   }
