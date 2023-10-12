@@ -25,6 +25,7 @@ import {
 } from "./routes";
 import {
   ActorHandle,
+  geoMiddleware,
   HealthCheckResponse,
   makeCreateCounterFn,
   makeCreateHistogramFn,
@@ -172,6 +173,7 @@ export class BundlerServer {
     app.use(cors());
     app.use(express.json());
     app.use(router);
+    app.use(geoMiddleware({ logger: this.logger }));
 
     const server = app.listen(port, () => {
       this.logger.info(`listening at ${os.hostname()}:${port}`);
