@@ -132,9 +132,11 @@ export function formatRequestData(
     case "MISTTRACK_ADDRESS_LABELS":
       url = `${MISTTRACK_BASE_URL}/address_labels?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`;
       break;
-    default:
+    case "MISTTRACK_ADDRESS_RISK_SCORE":
       url = `${MISTTRACK_BASE_URL}/risk_score?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`;
       break;
+    default:
+      throw new Error(`Unknown callType: ${callType}`);
   }
 
   return {
@@ -143,18 +145,22 @@ export function formatRequestData(
   };
 }
 
-const toTrmData = (response: any): TrmData => {
-  if (response["code"] === 400) {
-    throw new Error(`Bad Request: ${JSON.stringify(response["errors"])}`);
+const toTrmData = async (response: Response): Promise<TrmData> => {
+  const responseJson = await response.json();
+  if (responseJson["code"] === 400) {
+    throw new Error(`Bad Request: ${JSON.stringify(responseJson["errors"])}`);
   }
-  return response[0] as TrmData;
+  return responseJson[0] as TrmData;
 };
 
-const toMistrackData = (response: any): MisttrackData => {
-  if (!response.success) {
-    throw new Error(`Call to misttrack failed with message: ${response.msg}`);
+const toMistrackData = async (response: Response): Promise<MisttrackData> => {
+  const responseJson = await response.json();
+  if (!responseJson.success) {
+    throw new Error(
+      `Call to misttrack failed with message: ${responseJson.msg}`
+    );
   }
-  return response.data;
+  return responseJson.data;
 };
 
 export const API_CALL_MAP = {
@@ -175,8 +181,7 @@ export const API_CALL_MAP = {
       cachedFetchOptions
     );
 
-    const responseJson = await response.json();
-    return toTrmData(responseJson);
+    return toTrmData(response);
   },
 
   MISTTRACK_ADDRESS_OVERVIEW: async (
@@ -195,8 +200,7 @@ export const API_CALL_MAP = {
       cachedFetchOptions
     );
 
-    const responseJson = await response.json();
-    return toMistrackData(responseJson) as MisttrackAddressOverviewData;
+    return (await toMistrackData(response)) as MisttrackAddressOverviewData;
   },
 
   MISTTRACK_ADDRESS_LABELS: async (
@@ -216,8 +220,7 @@ export const API_CALL_MAP = {
       cachedFetchOptions
     );
 
-    const responseJson = await response.json();
-    return toMistrackData(responseJson) as MisttrackLabelsData;
+    return (await toMistrackData(response)) as MisttrackLabelsData;
   },
 
   MISTTRACK_ADDRESS_RISK_SCORE: async (
@@ -237,8 +240,7 @@ export const API_CALL_MAP = {
       cachedFetchOptions
     );
 
-    const responseJson = await response.json();
-    return toMistrackData(responseJson) as MisttrackRiskScoreData;
+    return (await toMistrackData(response)) as MisttrackRiskScoreData;
   },
   IDENTITY: async (deposit: ScreeningDepositRequest) => deposit,
 } as const;
