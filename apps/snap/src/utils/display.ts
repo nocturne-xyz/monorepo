@@ -46,6 +46,9 @@ export const makeSignOperationContent = (
 
     let heading: string;
     const messages: string[] = [];
+
+    const displayUnrecognizedAsset = (asset: Address) =>
+      `${asset} _(Unrecognized asset)_`;
     switch (item.actionType) {
       case "Transfer": {
         const {
@@ -61,7 +64,7 @@ export const makeSignOperationContent = (
           "Action: Transfer",
           `Amount: **${displayAmount}**`,
           `Asset Token: **${
-            ticker ? ticker : `${erc20Address} _(Unrecognized asset)_`
+            ticker ?? displayUnrecognizedAsset(erc20Address)
           }**`,
           `Recipient Address: ${recipientAddress}`
         );
@@ -92,8 +95,8 @@ export const makeSignOperationContent = (
           messages.push(
             "Action: Swap",
             `Amount: **${displayAmountIn}**`,
-            `From token: **${tokenIn} _(Unrecognized asset)_**`,
-            `To token: **${tokenOut} _(Unrecognized asset)_**`
+            `From token: **${tickerIn ?? displayUnrecognizedAsset(tokenIn)}**`,
+            `To token: **${tickerOut ?? displayUnrecognizedAsset(tokenOut)}**`
           );
         }
         break;
