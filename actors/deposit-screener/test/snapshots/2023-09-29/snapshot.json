@@ -1,92 +1,90 @@
 {
   "0x96c0876f573e27636612cf306c9db072d2b13de8": {
-    "TRM_SCREENING_ADDRESSES": [
-      {
-        "accountExternalId": null,
-        "address": "0x96c0876f573e27636612cf306c9db072d2b13de8",
-        "addressIncomingVolumeUsd": "1340791.4804450497794298345400355532968473269",
-        "addressOutgoingVolumeUsd": "1288174.7221221546287537765979047676978554026",
-        "addressRiskIndicators": [
-          {
-            "category": "Hacked or Exploited Funds",
-            "categoryId": "34",
-            "categoryRiskScoreLevel": 15,
-            "categoryRiskScoreLevelLabel": "Severe",
-            "incomingVolumeUsd": "1340791.4804450497794298345400355532968473269",
-            "outgoingVolumeUsd": "1288174.7221221546287537765979047676978554026",
-            "riskType": "OWNERSHIP",
-            "totalVolumeUsd": "2628966.2025672044081836111379403209947027295"
-          },
-          {
-            "category": "Community Complaint",
-            "categoryId": "638",
-            "categoryRiskScoreLevel": 10,
-            "categoryRiskScoreLevelLabel": "High",
-            "incomingVolumeUsd": "1340791.4804450497794298345400355532968473269",
-            "outgoingVolumeUsd": "1288174.7221221546287537765979047676978554026",
-            "riskType": "OWNERSHIP",
-            "totalVolumeUsd": "2628966.2025672044081836111379403209947027295"
-          },
-          {
-            "category": "Decentralized Exchange",
-            "categoryId": "6",
-            "categoryRiskScoreLevel": 1,
-            "categoryRiskScoreLevelLabel": "Low",
-            "incomingVolumeUsd": "471103.28435042447669062514548008582736656272",
-            "outgoingVolumeUsd": "825286.09715234091788019742119697497173558861",
-            "riskType": "COUNTERPARTY",
-            "totalVolumeUsd": "1296389.38150276539457082256667706079910215133"
-          },
-          {
-            "category": "Hacked or Exploited Funds",
-            "categoryId": "34",
-            "categoryRiskScoreLevel": 10,
-            "categoryRiskScoreLevelLabel": "High",
-            "incomingVolumeUsd": "0",
-            "outgoingVolumeUsd": "460666.5",
-            "riskType": "COUNTERPARTY",
-            "totalVolumeUsd": "460666.5"
-          },
-          {
-            "category": "Community Complaint",
-            "categoryId": "638",
-            "categoryRiskScoreLevel": 1,
-            "categoryRiskScoreLevelLabel": "Low",
-            "incomingVolumeUsd": "22.83516354430371491569806696730893235648",
-            "outgoingVolumeUsd": "460666.5",
-            "riskType": "COUNTERPARTY",
-            "totalVolumeUsd": "460689.33516354430371491569806696730893235648"
-          },
-          {
-            "category": "Decentralized Exchange",
-            "categoryId": "6",
-            "categoryRiskScoreLevel": 1,
-            "categoryRiskScoreLevelLabel": "Low",
-            "incomingVolumeUsd": "22.835163544",
-            "outgoingVolumeUsd": "0",
-            "riskType": "INDIRECT",
-            "totalVolumeUsd": "22.835163544"
-          }
-        ],
-        "addressSubmitted": "0x96c0876f573e27636612cf306c9db072d2b13de8",
-        "addressTotalVolumeUsd": "2628966.2025672044081836111379403209947027295",
-        "chain": "ethereum",
-        "entities": [
-          {
-            "category": "Hacked or Exploited Funds",
-            "categoryId": "34",
-            "confidenceScoreLabel": "Moderate Confidence",
-            "entity": "Rocket Swap Exploiter Aug 2023",
-            "riskScoreLevel": 15,
-            "riskScoreLevelLabel": "Severe",
-            "trmAppUrl": "https://my.trmlabs.com/entities/trm/3253fc94-bcee-4d78-9691-b3db86e2a4f4",
-            "trmUrn": "/entity/manual/3253fc94-bcee-4d78-9691-b3db86e2a4f4"
-          }
-        ],
-        "externalId": null,
-        "trmAppUrl": "https://my.trmlabs.com/address/0x96c0876f573e27636612cf306c9db072d2b13de8/eth"
-      }
-    ],
+    "TRM_SCREENING_ADDRESSES": {
+      "accountExternalId": null,
+      "address": "0x96c0876f573e27636612cf306c9db072d2b13de8",
+      "addressIncomingVolumeUsd": "1340791.4804450497794298345400355532968473269",
+      "addressOutgoingVolumeUsd": "1288174.7221221546287537765979047676978554026",
+      "addressRiskIndicators": [
+        {
+          "category": "Hacked or Exploited Funds",
+          "categoryId": "34",
+          "categoryRiskScoreLevel": 15,
+          "categoryRiskScoreLevelLabel": "Severe",
+          "incomingVolumeUsd": "1340791.4804450497794298345400355532968473269",
+          "outgoingVolumeUsd": "1288174.7221221546287537765979047676978554026",
+          "riskType": "OWNERSHIP",
+          "totalVolumeUsd": "2628966.2025672044081836111379403209947027295"
+        },
+        {
+          "category": "Community Complaint",
+          "categoryId": "638",
+          "categoryRiskScoreLevel": 10,
+          "categoryRiskScoreLevelLabel": "High",
+          "incomingVolumeUsd": "1340791.4804450497794298345400355532968473269",
+          "outgoingVolumeUsd": "1288174.7221221546287537765979047676978554026",
+          "riskType": "OWNERSHIP",
+          "totalVolumeUsd": "2628966.2025672044081836111379403209947027295"
+        },
+        {
+          "category": "Decentralized Exchange",
+          "categoryId": "6",
+          "categoryRiskScoreLevel": 1,
+          "categoryRiskScoreLevelLabel": "Low",
+          "incomingVolumeUsd": "471103.28435042447669062514548008582736656272",
+          "outgoingVolumeUsd": "825286.09715234091788019742119697497173558861",
+          "riskType": "COUNTERPARTY",
+          "totalVolumeUsd": "1296389.38150276539457082256667706079910215133"
+        },
+        {
+          "category": "Hacked or Exploited Funds",
+          "categoryId": "34",
+          "categoryRiskScoreLevel": 10,
+          "categoryRiskScoreLevelLabel": "High",
+          "incomingVolumeUsd": "0",
+          "outgoingVolumeUsd": "460666.5",
+          "riskType": "COUNTERPARTY",
+          "totalVolumeUsd": "460666.5"
+        },
+        {
+          "category": "Community Complaint",
+          "categoryId": "638",
+          "categoryRiskScoreLevel": 1,
+          "categoryRiskScoreLevelLabel": "Low",
+          "incomingVolumeUsd": "22.83516354430371491569806696730893235648",
+          "outgoingVolumeUsd": "460666.5",
+          "riskType": "COUNTERPARTY",
+          "totalVolumeUsd": "460689.33516354430371491569806696730893235648"
+        },
+        {
+          "category": "Decentralized Exchange",
+          "categoryId": "6",
+          "categoryRiskScoreLevel": 1,
+          "categoryRiskScoreLevelLabel": "Low",
+          "incomingVolumeUsd": "22.835163544",
+          "outgoingVolumeUsd": "0",
+          "riskType": "INDIRECT",
+          "totalVolumeUsd": "22.835163544"
+        }
+      ],
+      "addressSubmitted": "0x96c0876f573e27636612cf306c9db072d2b13de8",
+      "addressTotalVolumeUsd": "2628966.2025672044081836111379403209947027295",
+      "chain": "ethereum",
+      "entities": [
+        {
+          "category": "Hacked or Exploited Funds",
+          "categoryId": "34",
+          "confidenceScoreLabel": "Moderate Confidence",
+          "entity": "Rocket Swap Exploiter Aug 2023",
+          "riskScoreLevel": 15,
+          "riskScoreLevelLabel": "Severe",
+          "trmAppUrl": "https://my.trmlabs.com/entities/trm/3253fc94-bcee-4d78-9691-b3db86e2a4f4",
+          "trmUrn": "/entity/manual/3253fc94-bcee-4d78-9691-b3db86e2a4f4"
+        }
+      ],
+      "externalId": null,
+      "trmAppUrl": "https://my.trmlabs.com/address/0x96c0876f573e27636612cf306c9db072d2b13de8/eth"
+    },
     "MISTTRACK_ADDRESS_OVERVIEW": {
       "balance": 0.6937,
       "txs_count": 151,

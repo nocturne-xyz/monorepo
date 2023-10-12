@@ -176,6 +176,7 @@ export const API_CALL_MAP = {
 
     console.log("response:", response);
     const responseJson = await response.json();
+    console.log("responseJson:", responseJson);
     return TRM_RESPONSE_EXTRACTOR(responseJson);
   },
   MISTTRACK_ADDRESS_OVERVIEW: async (
