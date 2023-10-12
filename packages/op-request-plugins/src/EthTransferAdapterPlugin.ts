@@ -11,7 +11,7 @@ import { EthTransferAdapter__factory } from "@nocturne-xyz/contracts";
 import ERC20_ABI from "./abis/ERC20.json";
 import { ethers } from "ethers";
 
-const WETH_NAME = "weth";
+const WETH_NAME = "wETH";
 const ETH_TRANSFER_ADAPTER_NAME = "ETHTransferAdapter";
 
 export interface EthTransferAdapterPluginMethods {

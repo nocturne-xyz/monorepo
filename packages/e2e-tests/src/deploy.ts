@@ -419,7 +419,7 @@ export async function deployContractsWithDummyConfig(
         },
       ],
       [
-        "weth",
+        "wETH",
         {
           address: weth.address,
           globalCapWholeTokens: 5000n,
@@ -496,7 +496,7 @@ async function prefillErc20s(
   config: NocturneConfig
 ): Promise<void> {
   for (const [name, erc20] of config.erc20s.entries()) {
-    if (name != "weth") {
+    if (name != "wETH") {
       const token = SimpleERC20Token__factory.connect(
         erc20.address,
         connectedSigner

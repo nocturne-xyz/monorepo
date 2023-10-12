@@ -2,7 +2,7 @@
   "contracts": {
     "network": {
       "name": "sepolia",
-      "chainId": 5, 
+      "chainId": 5,
       "finalityBlocks": 2
     },
     "startBlock": 4058710,
@@ -45,7 +45,7 @@
       }
     ],
     [
-      "weth",
+      "wETH",
       {
         "address": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
         "globalCapWholeTokens": "1000n",
@@ -76,7 +76,7 @@
       }
     ],
     [
-      "weth",
+      "wETH",
       {
         "address": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
         "functionSignatures": [
