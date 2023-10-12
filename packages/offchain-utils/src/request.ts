@@ -57,7 +57,7 @@ export function deserializeToResponseString(
   });
 }
 
-export async function cachedFetchWithRetry(
+export async function cachedFetch(
   requestInfo: RequestInfo,
   requestInit: RequestInit,
   redis: IORedis,

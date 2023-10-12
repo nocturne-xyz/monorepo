@@ -1,7 +1,4 @@
-import {
-  CachedFetchOptions,
-  cachedFetchWithRetry,
-} from "@nocturne-xyz/offchain-utils";
+import { CachedFetchOptions, cachedFetch } from "@nocturne-xyz/offchain-utils";
 import { ScreeningDepositRequest } from "..";
 import IORedis from "ioredis";
 import "dotenv/config";
@@ -164,18 +161,18 @@ export const API_CALL_MAP = {
   TRM_SCREENING_ADDRESSES: async (
     deposit: ScreeningDepositRequest,
     cache: IORedis,
-    cacheOptions: CachedFetchOptions = {}
+    cachedFetchOptions: CachedFetchOptions = {}
   ): Promise<TrmData> => {
     const { requestInfo, requestInit } = formatRequestData(
       "TRM_SCREENING_ADDRESSES",
       deposit
     );
 
-    const response = await cachedFetchWithRetry(
+    const response = await cachedFetch(
       requestInfo,
       requestInit,
       cache,
-      cacheOptions
+      cachedFetchOptions
     );
 
     const responseJson = await response.json();
@@ -185,17 +182,17 @@ export const API_CALL_MAP = {
   MISTTRACK_ADDRESS_OVERVIEW: async (
     deposit: ScreeningDepositRequest,
     cache: IORedis,
-    cacheOptions: CachedFetchOptions = {}
+    cachedFetchOptions: CachedFetchOptions = {}
   ): Promise<MisttrackAddressOverviewData> => {
     const { requestInfo, requestInit } = formatRequestData(
       "MISTTRACK_ADDRESS_OVERVIEW",
       deposit
     );
-    const response = await cachedFetchWithRetry(
+    const response = await cachedFetch(
       requestInfo,
       requestInit,
       cache,
-      cacheOptions
+      cachedFetchOptions
     );
 
     const responseJson = await response.json();
@@ -205,18 +202,18 @@ export const API_CALL_MAP = {
   MISTTRACK_ADDRESS_LABELS: async (
     deposit: ScreeningDepositRequest,
     cache: IORedis,
-    cacheOptions: CachedFetchOptions = {},
+    cachedFetchOptions: CachedFetchOptions = {},
     token = "ETH"
   ): Promise<MisttrackLabelsData> => {
     const { requestInfo, requestInit } = formatRequestData(
       "MISTTRACK_ADDRESS_LABELS",
       deposit
     );
-    const response = await cachedFetchWithRetry(
+    const response = await cachedFetch(
       requestInfo,
       requestInit,
       cache,
-      cacheOptions
+      cachedFetchOptions
     );
 
     const responseJson = await response.json();
@@ -226,18 +223,18 @@ export const API_CALL_MAP = {
   MISTTRACK_ADDRESS_RISK_SCORE: async (
     deposit: ScreeningDepositRequest,
     cache: IORedis,
-    cacheOptions: CachedFetchOptions = {},
+    cachedFetchOptions: CachedFetchOptions = {},
     token = "ETH"
   ): Promise<MisttrackRiskScoreData> => {
     const { requestInfo, requestInit } = formatRequestData(
       "MISTTRACK_ADDRESS_RISK_SCORE",
       deposit
     );
-    const response = await cachedFetchWithRetry(
+    const response = await cachedFetch(
       requestInfo,
       requestInit,
       cache,
-      cacheOptions
+      cachedFetchOptions
     );
 
     const responseJson = await response.json();
