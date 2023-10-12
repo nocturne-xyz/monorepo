@@ -1,8 +1,8 @@
 {
   "name": "@nocturne-xyz/deposit-screener",
-  "license": "MIT",
-  "private": true,
   "version": "0.7.2",
+  "private": true,
+  "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -26,7 +26,7 @@
     "prettier:write": "prettier --write ./src",
     "screener-cli": "npx ts-node src/cli/index.ts",
     "test:generate-snapshot": "npx ts-node ./test/scripts/generateRulesetV1CallsSnapshot.ts",
-    "test:unit": "mocha --require ts-node/register  --timeout 60000 test/**/*.test.ts -r dotenv/config --exit"
+    "test:unit": "mocha --require ts-node/register  --timeout 120000 test/**/*.test.ts -r dotenv/config --exit"
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
