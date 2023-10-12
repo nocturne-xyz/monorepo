@@ -55,7 +55,7 @@
       }
     ],
     [
-      "dai",
+      "DAI",
       {
         "address": "0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6",
         "globalCapWholeTokens": "1000000n",
@@ -86,7 +86,7 @@
       }
     ],
     [
-      "dai",
+      "DAI",
       {
         "address": "0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6",
         "functionSignatures": [
