@@ -110,29 +110,34 @@ export function formatRequestData(
 ): RequestData {
   let url: string;
   let requestInit = {};
-  if (callType === "TRM_SCREENING_ADDRESSES") {
-    url = `${TRM_BASE_URL}/screening/addresses`;
-    requestInit = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization:
-          "Basic " +
-          Buffer.from(`${TRM_API_KEY}:${TRM_API_KEY}`).toString("base64"),
-      },
-      body: JSON.stringify([
-        {
-          address: deposit.spender,
-          chain: "ethereum",
+  switch (callType) {
+    case "TRM_SCREENING_ADDRESSES":
+      url = `${TRM_BASE_URL}/screening/addresses`;
+      requestInit = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization:
+            "Basic " +
+            Buffer.from(`${TRM_API_KEY}:${TRM_API_KEY}`).toString("base64"),
         },
-      ]),
-    };
-  } else if (callType === "MISTTRACK_ADDRESS_OVERVIEW") {
-    url = `${MISTTRACK_BASE_URL}/address_overview?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`;
-  } else if (callType === "MISTTRACK_ADDRESS_LABELS") {
-    url = `${MISTTRACK_BASE_URL}/address_labels?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`;
-  } else {
-    url = `${MISTTRACK_BASE_URL}/risk_score?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`;
+        body: JSON.stringify([
+          {
+            address: deposit.spender,
+            chain: "ethereum",
+          },
+        ]),
+      };
+      break;
+    case "MISTTRACK_ADDRESS_OVERVIEW":
+      url = `${MISTTRACK_BASE_URL}/address_overview?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`;
+      break;
+    case "MISTTRACK_ADDRESS_LABELS":
+      url = `${MISTTRACK_BASE_URL}/address_labels?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`;
+      break;
+    default:
+      url = `${MISTTRACK_BASE_URL}/risk_score?coin=${token}&address=${deposit.spender}&api_key=${MISTTRACK_API_KEY}`;
+      break;
   }
 
   return {

@@ -286,8 +286,6 @@ const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
 //   },
 // };
 
-MISTTRACK_RISK_REJECT;
-
 export const RULESET_V1 = (redis: IORedis) => {
   return new RuleSet(redis, {
     baseDelaySeconds: BASE_DELAY_SECONDS,
