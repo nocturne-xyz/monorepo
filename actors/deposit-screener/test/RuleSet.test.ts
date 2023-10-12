@@ -84,7 +84,7 @@ describe("RuleSet", async () => {
   });
 
   it("should return a delay of 300 seconds", async () => {
-    const DUMMY_RULESET = new RuleSet(redis)
+    const DUMMY_RULESET = new RuleSet({ baseDelaySeconds: 0 }, redis)
       .add(DELAY_50_ALWAYS)
       .add(DELAY_10000000_NEVER);
     const result = await DUMMY_RULESET.check(DUMMY_DEPOSIT_REQUEST);
@@ -95,7 +95,7 @@ describe("RuleSet", async () => {
   });
 
   it("should return a rejection", async () => {
-    const DUMMY_RULESET = new RuleSet(redis)
+    const DUMMY_RULESET = new RuleSet({ baseDelaySeconds: 0 }, redis)
       .add(DELAY_50_ALWAYS)
       .add(REJECT_ALWAYS)
       .add(DELAY_10000000_NEVER);
@@ -105,7 +105,10 @@ describe("RuleSet", async () => {
   });
 
   it("should take a combined rule requiring *any* to be true, and return a delay of 50", async () => {
-    const DUMMY_RULESET = new RuleSet(redis).combineAndAdd(COMBINED_RULE_ANY);
+    const DUMMY_RULESET = new RuleSet(
+      { baseDelaySeconds: 0 },
+      redis
+    ).combineAndAdd(COMBINED_RULE_ANY);
 
     const result = await DUMMY_RULESET.check(DUMMY_DEPOSIT_REQUEST);
     expect(result).to.deep.equal({
@@ -116,7 +119,10 @@ describe("RuleSet", async () => {
 
   it("should take a combined rule requiring *all* to be true, and not apply the action", async () => {
     console.log("COMBINED_RULE_ALL", COMBINED_RULE_ALL);
-    const DUMMY_RULESET = new RuleSet(redis).combineAndAdd(COMBINED_RULE_ALL);
+    const DUMMY_RULESET = new RuleSet(
+      { baseDelaySeconds: 0 },
+      redis
+    ).combineAndAdd(COMBINED_RULE_ALL);
 
     const result = await DUMMY_RULESET.check(DUMMY_DEPOSIT_REQUEST);
     expect(result).to.deep.equal({

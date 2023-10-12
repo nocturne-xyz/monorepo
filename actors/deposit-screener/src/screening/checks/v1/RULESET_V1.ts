@@ -287,9 +287,12 @@ const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
 // };
 
 export const RULESET_V1 = (redis: IORedis) => {
-  return new RuleSet(redis, {
-    baseDelaySeconds: BASE_DELAY_SECONDS,
-  })
+  return new RuleSet(
+    {
+      baseDelaySeconds: BASE_DELAY_SECONDS,
+    },
+    redis
+  )
     .add(TRM_SEVERE_OWNERSHIP_REJECT)
     .combineAndAdd(TRM_HIGH_MIXER_REJECT)
     .combineAndAdd(TRM_HIGH_COUNTERPARTY_REJECT)

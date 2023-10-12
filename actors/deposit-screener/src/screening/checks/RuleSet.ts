@@ -158,8 +158,8 @@ export class RuleSet {
   private cache: IORedis;
 
   constructor(
-    cache: IORedis,
-    { baseDelaySeconds = 0 }: { baseDelaySeconds?: number } = {}
+    { baseDelaySeconds }: { baseDelaySeconds: number },
+    cache: IORedis
   ) {
     this.baseDelaySeconds = baseDelaySeconds;
     this.cache = cache;
