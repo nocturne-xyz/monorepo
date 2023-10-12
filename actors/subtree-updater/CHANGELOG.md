@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [abfab3f2]
+  - @nocturne-xyz/config@1.3.1
+
 ## 0.5.1
 
 ### Patch Changes
