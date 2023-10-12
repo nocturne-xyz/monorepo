@@ -34,8 +34,8 @@ export type ActionMetadata =
   | {
       type: "Action";
       actionType: "Transfer ETH";
-      to: Address;
-      value: bigint;
+      recipientAddress: Address;
+      amount: bigint;
     }
   | {
       type: "Action";

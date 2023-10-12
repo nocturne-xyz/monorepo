@@ -76,6 +76,18 @@ export interface NocturneSdkApi {
   // *** OPERATION METHODS *** //
 
   /**
+   * Format and submit a proven operation to transfer WETH out of Nocturne to a specified
+   * recipient address as ETH.
+   * @param recipientAddress Recipient address
+   * @param amount ETH amount to transfer
+   * @returns Operation handle
+   */
+  initiateAnonEthTransfer(
+    recipientAddress: Address,
+    amount: bigint
+  ): Promise<OperationHandle>;
+
+  /**
    * Format and submit a `ProvenOperation` to transfer funds out of Nocturne to a specified recipient address.
    * @param erc20Address Asset address
    * @param amount Asset amount

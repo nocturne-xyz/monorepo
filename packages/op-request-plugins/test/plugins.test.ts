@@ -39,7 +39,7 @@ describe("OpRequestBuilder", () => {
     const provider =
       ethers.getDefaultProvider() as ethers.providers.JsonRpcProvider;
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
-    const recipient = ethers.utils.getAddress(
+    const recipientAddress = ethers.utils.getAddress(
       "0x1E2cD78882b12d3954a049Fd82FFD691565dC0A5"
     );
 
@@ -48,8 +48,8 @@ describe("OpRequestBuilder", () => {
       .use(EthTransferAdapterPlugin)
       .use(WstethAdapterPlugin)
       .use(UniswapV3Plugin)
-      .transferEth(recipient, 200n)
-      .erc20Transfer(shitcoin.assetAddr, recipient, 100n)
+      .transferEth(recipientAddress, 200n)
+      .erc20Transfer(shitcoin.assetAddr, recipientAddress, 100n)
       .depositWethForWsteth(100n)
       .refundAddr(refundAddr)
       .deadline(2n)
@@ -96,14 +96,14 @@ describe("OpRequestBuilder", () => {
             encodedFunction:
               EthTransferAdapter__factory.createInterface().encodeFunctionData(
                 "transfer",
-                [recipient, 200n]
+                [recipientAddress, 200n]
               ),
           },
           {
             contractAddress: shitcoin.assetAddr,
             encodedFunction: erc20Contract.interface.encodeFunctionData(
               "transfer",
-              [recipient, 100n]
+              [recipientAddress, 100n]
             ),
           },
           {
@@ -131,13 +131,13 @@ describe("OpRequestBuilder", () => {
           {
             type: "Action",
             actionType: "Transfer ETH",
-            to: recipient,
-            value: 200n,
+            recipientAddress,
+            amount: 200n,
           },
           {
             type: "Action",
             actionType: "Transfer",
-            recipientAddress: recipient,
+            recipientAddress,
             erc20Address: shitcoin.assetAddr,
             amount: 100n,
           },
