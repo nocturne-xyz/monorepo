@@ -29,8 +29,6 @@ const TRM_SEVERE_OWNERSHIP_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
   name: "TRM_SEVERE_OWNERSHIP_REJECT",
   call: "TRM_SCREENING_ADDRESSES",
   threshold: (data: TrmData) => {
-    console.log("TRM DATA supposed:", data);
-    console.log("TRM DATA addressRiskIndicators:", data.addressRiskIndicators);
     return data.addressRiskIndicators.some(
       (item) =>
         item.riskType === "OWNERSHIP" &&
@@ -162,7 +160,6 @@ const MISTTRACK_RISK_REJECT: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
       "Malicious Address",
     ];
 
-    console.log("MISTTRACK PRE SOME DATA:", data);
     const detailListContainsBanlistItems = data.detail_list.some((item) =>
       banlistItems.includes(item)
     );

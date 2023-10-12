@@ -72,7 +72,6 @@ export async function cachedFetchWithRetry(
   if (!skipCacheRead) {
     const cachedData = await redis.get(cacheKey);
     if (cachedData) {
-      console.log("IN CACHE response:", JSON.parse(cachedData) as Response);
       return deserializeToResponseString(cachedData);
     }
   }
@@ -86,7 +85,6 @@ export async function cachedFetchWithRetry(
   );
 
   if (!response.headers.get("content-type")?.includes("application/json")) {
-    console.log(await response.text());
     throw new Error(`Call failed with message: ${response.statusText}`);
   }
 

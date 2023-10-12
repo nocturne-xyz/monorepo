@@ -146,14 +146,14 @@ export function formatRequestData(
   };
 }
 
-const TRM_RESPONSE_EXTRACTOR = (response: any): TrmData => {
+const toTrmData = (response: any): TrmData => {
   if (response["code"] === 400) {
     throw new Error(`Bad Request: ${JSON.stringify(response["errors"])}`);
   }
   return response[0] as TrmData;
 };
 
-const MISTTRACK_RESPONSE_EXTRACTOR = (response: any): MisttrackData => {
+const toMistrackData = (response: any): MisttrackData => {
   if (!response.success) {
     throw new Error(`Call to misttrack failed with message: ${response.msg}`);
   }
@@ -171,7 +171,6 @@ export const API_CALL_MAP = {
       deposit
     );
 
-    console.log("Calling cachedFetchWithRetry");
     const response = await cachedFetchWithRetry(
       requestInfo,
       requestInit,
@@ -179,11 +178,10 @@ export const API_CALL_MAP = {
       cacheOptions
     );
 
-    console.log("response:", response);
     const responseJson = await response.json();
-    console.log("responseJson:", responseJson);
-    return TRM_RESPONSE_EXTRACTOR(responseJson);
+    return toTrmData(responseJson);
   },
+
   MISTTRACK_ADDRESS_OVERVIEW: async (
     deposit: ScreeningDepositRequest,
     cache: IORedis,
@@ -200,11 +198,8 @@ export const API_CALL_MAP = {
       cacheOptions
     );
 
-    console.log("response:", response);
     const responseJson = await response.json();
-    return MISTTRACK_RESPONSE_EXTRACTOR(
-      responseJson
-    ) as MisttrackAddressOverviewData;
+    return toMistrackData(responseJson) as MisttrackAddressOverviewData;
   },
 
   MISTTRACK_ADDRESS_LABELS: async (
@@ -224,9 +219,8 @@ export const API_CALL_MAP = {
       cacheOptions
     );
 
-    console.log("response:", response);
     const responseJson = await response.json();
-    return MISTTRACK_RESPONSE_EXTRACTOR(responseJson) as MisttrackLabelsData;
+    return toMistrackData(responseJson) as MisttrackLabelsData;
   },
 
   MISTTRACK_ADDRESS_RISK_SCORE: async (
@@ -246,9 +240,8 @@ export const API_CALL_MAP = {
       cacheOptions
     );
 
-    console.log("response:", response);
     const responseJson = await response.json();
-    return MISTTRACK_RESPONSE_EXTRACTOR(responseJson) as MisttrackRiskScoreData;
+    return toMistrackData(responseJson) as MisttrackRiskScoreData;
   },
   IDENTITY: async (deposit: ScreeningDepositRequest) => deposit,
 } as const;

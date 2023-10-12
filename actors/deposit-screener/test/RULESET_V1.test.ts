@@ -5,14 +5,12 @@ import { RULESET_V1 } from "../src/screening/checks/v1/RULESET_V1";
 import {
   APPROVE_ADDRESSES,
   AddressDataSnapshot,
-  // APPROVE_ADDRESSES,
   BULK_TEST_CASES,
   REJECT_ADDRESSES,
   formDepositInfo,
   getLatestSnapshotFolder,
   toMistrackResponse,
   toTrmResponse,
-  // REJECT_ADDRESSES,
 } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import { isRejection, RuleSet } from "../src/screening/checks/RuleSet";
@@ -20,7 +18,6 @@ import RedisMemoryServer from "redis-memory-server";
 import IORedis from "ioredis";
 import {
   formatRequestData,
-  // ApiCallNames,
   API_CALL_MAP,
   TrmData,
   MisttrackData,
@@ -54,10 +51,6 @@ async function populateRedisCache(redis: IORedis): Promise<void> {
     API_CALL_MAP
   ) as ApiCallNamesList;
 
-  console.log(snapshotData);
-  console.log("Num snapshot keys:", Object.keys(snapshotData).length);
-  console.log("Num snapshot entries:", Object.entries(snapshotData).length);
-
   for (const [address, snapshotForAddress] of Object.entries(snapshotData)) {
     const depositRequest = formDepositInfo(address);
     for (const apiCallName of apiCallNames) {
@@ -74,11 +67,11 @@ async function populateRedisCache(redis: IORedis): Promise<void> {
         response = toTrmResponse(apiCallReturnData as TrmData);
         console.log("TRM RESPONSE:", response);
         console.log("TRM RESPONSE STRINGIFIED:", JSON.stringify(response));
-      } else if (apiCallName == "MISTTRACK_ADDRESS_LABELS") {
-        response = toMistrackResponse(apiCallReturnData as MisttrackData);
-      } else if (apiCallName == "MISTTRACK_ADDRESS_OVERVIEW") {
-        response = toMistrackResponse(apiCallReturnData as MisttrackData);
-      } else if (apiCallName == "MISTTRACK_ADDRESS_RISK_SCORE") {
+      } else if (
+        apiCallName == "MISTTRACK_ADDRESS_LABELS" ||
+        apiCallName == "MISTTRACK_ADDRESS_RISK_SCORE" ||
+        apiCallName == "MISTTRACK_ADDRESS_OVERVIEW"
+      ) {
         response = toMistrackResponse(apiCallReturnData as MisttrackData);
       } else {
         throw new Error(`unknown apiCallName: ${apiCallName}`);
@@ -89,7 +82,6 @@ async function populateRedisCache(redis: IORedis): Promise<void> {
         depositRequest
       );
       const cacheKey = formatCachedFetchCacheKey(requestInfo, requestInit);
-
       const serializedResponse = await serializeResponse(response);
 
       console.log(`Setting cache entry for address ${address}`);
