@@ -27,13 +27,42 @@ export function checkInputError<T>(
   return undefined;
 }
 
-export async function cachedFetchWithRetry<T>(
+export async function serializeResponse(response: Response): Promise<string> {
+  const serialized: any = {
+    status: response.status,
+    statusText: response.statusText,
+    headers: {},
+    body: await response.json(), // assuming response is in JSON format
+  };
+
+  response.headers.forEach((value, name) => {
+    serialized.headers[name] = value;
+  });
+
+  return JSON.stringify(serialized);
+}
+
+export function deserializeToResponseString(
+  serializedResponseString: string
+): Response {
+  const parsedData = JSON.parse(serializedResponseString);
+
+  const responseBody = JSON.stringify(parsedData.body); // Assuming the body was stored as JSON
+  const headers = new Headers(parsedData.headers);
+
+  return new Response(responseBody, {
+    status: parsedData.status,
+    statusText: parsedData.statusText,
+    headers: headers,
+  });
+}
+
+export async function cachedFetchWithRetry(
   requestInfo: RequestInfo,
   requestInit: RequestInit,
   redis: IORedis,
-  responseExtractor: (response: any) => T = (response) => response,
   options: CachedFetchOptions = {}
-): Promise<T> {
+): Promise<Response> {
   const { skipCacheRead = false, ttlSeconds = 60 * 60, retries = 5 } = options;
 
   // Generate a cache key based on URL and request payload
@@ -43,7 +72,8 @@ export async function cachedFetchWithRetry<T>(
   if (!skipCacheRead) {
     const cachedData = await redis.get(cacheKey);
     if (cachedData) {
-      return JSON.parse(cachedData);
+      console.log("IN CACHE response:", JSON.parse(cachedData) as Response);
+      return deserializeToResponseString(cachedData);
     }
   }
 
@@ -60,12 +90,10 @@ export async function cachedFetchWithRetry<T>(
     throw new Error(`Call failed with message: ${response.statusText}`);
   }
 
-  const extractedResponse = responseExtractor(await response.json());
+  // Cache response
+  await redis.setex(cacheKey, ttlSeconds, await serializeResponse(response));
 
-  // Cache extracted response
-  await redis.setex(cacheKey, ttlSeconds, JSON.stringify(extractedResponse));
-
-  return extractedResponse;
+  return response;
 }
 
 export function formatCachedFetchCacheKey(

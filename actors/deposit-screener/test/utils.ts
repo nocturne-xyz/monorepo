@@ -6,7 +6,23 @@ import { ScreeningDepositRequest } from "../src";
 import {
   ApiCallNames,
   ApiCallReturnData,
+  MisttrackData,
+  TrmData,
 } from "../src/screening/checks/apiCalls";
+
+export function toTrmResponse(data: TrmData): Response {
+  return new Response(JSON.stringify([data]));
+}
+
+export function toMistrackResponse(data: MisttrackData): Response {
+  return new Response(
+    JSON.stringify({
+      success: true, // Assume the data is valid
+      data: data,
+      msg: "Success", // Assume success
+    })
+  );
+}
 
 // Address contexts provided in: notion.so/nocturnelabs/Compliance-Provider-Evaluation-9ffe8bbf698f420498eba9e782e93b6d
 

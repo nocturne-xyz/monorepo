@@ -8,6 +8,8 @@ import {
   BULK_TEST_CASES,
   formDepositInfo,
   getLatestSnapshotFolder,
+  toMistrackResponse,
+  toTrmResponse,
   // REJECT_ADDRESSES,
 } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -18,9 +20,14 @@ import {
   formatRequestData,
   // ApiCallNames,
   API_CALL_MAP,
+  TrmData,
+  MisttrackData,
 } from "../src/screening/checks/apiCalls";
-import { formatCachedFetchCacheKey } from "@nocturne-xyz/offchain-utils";
-// import { ScreeningDepositRequest } from "../src";
+import {
+  formatCachedFetchCacheKey,
+  serializeResponse,
+} from "@nocturne-xyz/offchain-utils";
+import * as JSON from "bigint-json-serialization";
 
 describe("RULESET_V1", () => {
   let server: RedisMemoryServer;
@@ -85,16 +92,33 @@ describe("RULESET_V1", () => {
           continue;
         }
 
+        let response: Response;
+        if (apiCallName == "TRM_SCREENING_ADDRESSES") {
+          response = toTrmResponse(apiCallReturnData as TrmData);
+          console.log("TRM RESPONSE:", response);
+          console.log("TRM RESPONSE STRINGIFIED:", JSON.stringify(response));
+        } else if (apiCallName == "MISTTRACK_ADDRESS_LABELS") {
+          response = toMistrackResponse(apiCallReturnData as MisttrackData);
+        } else if (apiCallName == "MISTTRACK_ADDRESS_OVERVIEW") {
+          response = toMistrackResponse(apiCallReturnData as MisttrackData);
+        } else if (apiCallName == "MISTTRACK_ADDRESS_RISK_SCORE") {
+          response = toMistrackResponse(apiCallReturnData as MisttrackData);
+        } else {
+          throw new Error(`unknown apiCallName: ${apiCallName}`);
+        }
+
         const { requestInfo, requestInit } = formatRequestData(
           apiCallName,
           depositRequest
         );
         const cacheKey = formatCachedFetchCacheKey(requestInfo, requestInit);
 
+        const serializedResponse = await serializeResponse(response);
+
         console.log(`Setting cache entry for address ${address}`);
         console.log(`cacheKey=${cacheKey}`);
-        console.log(`apiCallReturnData=${JSON.stringify(apiCallReturnData)}`);
-        await redis.set(cacheKey, JSON.stringify(apiCallReturnData));
+        console.log(`apiCallReturnData=${serializedResponse}`);
+        await redis.set(cacheKey, serializedResponse);
       }
     }
   }
