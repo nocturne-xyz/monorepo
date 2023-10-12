@@ -4178,7 +4178,6 @@ __metadata:
     find-yarn-workspace-root: ^2.0.0
     ioredis: ^5.3.1
     js-sha256: ^0.9.0
-    json-stable-stringify: ^1.0.2
     mocha: ^10.1.0
     morgan: ^1.10.0
     nodemon: ^3.0.1
@@ -4403,6 +4402,7 @@ __metadata:
     bigint-json-serialization: ^1.0.1
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
+    json-stable-stringify: ^1.0.2
     prettier: ^2.8.8
     ts-node: ^10.9.1
     typescript: ^4.8.4

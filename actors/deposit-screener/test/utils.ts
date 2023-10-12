@@ -11,16 +11,20 @@ import {
 } from "../src/screening/checks/apiCalls";
 
 export function toTrmResponse(data: TrmData): Response {
-  return new Response(JSON.stringify([data]));
+  const res = new Response(JSON.stringify([data]));
+  res.headers.set("content-type", "application/json");
+  return res;
 }
 
 export function toMisttrackResponse(data: MisttrackData): Response {
-  return new Response(
+  const res = new Response(
     JSON.stringify({
       success: true, // Assume the data is valid
       data: data,
     })
   );
+  res.headers.set("content-type", "application/json");
+  return res;
 }
 
 // Address contexts provided in: notion.so/nocturnelabs/Compliance-Provider-Evaluation-9ffe8bbf698f420498eba9e782e93b6d
