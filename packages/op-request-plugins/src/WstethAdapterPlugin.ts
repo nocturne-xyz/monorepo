@@ -12,9 +12,9 @@ import { WstethAdapter__factory } from "@nocturne-xyz/contracts";
 import ERC20_ABI from "./abis/ERC20.json";
 import { ethers } from "ethers";
 
-const WETH_NAME = "weth";
-const WSTETH_NAME = "wsteth";
-const WSTETH_ADAPTER_NAME = "wstethAdapter";
+const WETH_NAME = "WETH";
+const WSTETH_NAME = "wstETH";
+const WSTETH_ADAPTER_NAME = "wstETHAdapter";
 
 export interface WstethAdapterPluginMethods {
   // adds an ERC20 transfer to the operation

@@ -17,7 +17,7 @@
       }
     ],
     [
-      "weth",
+      "WETH",
       {
         "address": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
         "globalCapWholeTokens": "1000n",
@@ -28,7 +28,7 @@
       }
     ],
     [
-      "dai",
+      "DAI",
       {
         "address": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844",
         "globalCapWholeTokens": "1000000n",
@@ -39,7 +39,7 @@
       }
     ],
     [
-      "wsteth",
+      "wstETH",
       {
         "address": "0x6320cd32aa674d2898a68ec82e869385fc5f7e2f",
         "globalCapWholeTokens": "1000n",
@@ -50,7 +50,7 @@
       }
     ],
     [
-      "reth",
+      "rETH",
       {
         "address": "0xae78736Cd615f374D3085123A210448E74Fc6393",
         "globalCapWholeTokens": "1000n",
@@ -63,7 +63,7 @@
   ],
   "protocolAllowlist": [
     [
-      "uniswapV3",
+      "UniswapV3",
       {
         "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
         "functionSignatures": [

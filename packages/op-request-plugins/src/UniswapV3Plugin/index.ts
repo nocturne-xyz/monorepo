@@ -16,7 +16,7 @@ import { IUniswapV3__factory } from "@nocturne-xyz/contracts";
 import { ExactInputParams, ExactInputSingleParams } from "./types";
 import * as JSON from "bigint-json-serialization";
 
-const UNISWAP_V3_NAME = "uniswapV3";
+const UNISWAP_V3_NAME = "UniswapV3";
 
 export interface UniswapV3PluginMethods {
   swap(

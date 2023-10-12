@@ -33,7 +33,7 @@ export const shitcoin: Asset = {
 export const encodedShitcoin = AssetTrait.encode(shitcoin);
 
 const config = loadNocturneConfigBuiltin("example-network");
-config.erc20s.set("weth", {
+config.erc20s.set("WETH", {
   address: WETH_ADDRESS,
   globalCapWholeTokens: 100_000_000n,
   maxDepositSizeWholeTokens: 100_000_000n,
@@ -41,7 +41,7 @@ config.erc20s.set("weth", {
   precision: 18n,
   isGasAsset: true,
 });
-config.erc20s.set("wsteth", {
+config.erc20s.set("wstETH", {
   address: WSTETH_ADDRESS,
   globalCapWholeTokens: 100_000_000n,
   maxDepositSizeWholeTokens: 100_000_000n,
@@ -49,11 +49,11 @@ config.erc20s.set("wsteth", {
   precision: 18n,
   isGasAsset: false,
 });
-config.protocolAllowlist.set("ethTransferAdapter", {
+config.protocolAllowlist.set("ETHTransferAdapter", {
   address: ETH_TRANSFER_ADAPTER_ADDRESS,
   functionSignatures: ["transfer(address,uint256)"],
 });
-config.protocolAllowlist.set("wstethAdapter", {
+config.protocolAllowlist.set("wstETHAdapter", {
   address: WSTETH_ADAPTER_ADDRESS,
   functionSignatures: ["deposit(uint256)"],
 });

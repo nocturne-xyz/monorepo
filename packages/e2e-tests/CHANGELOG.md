@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.0
+
+### Minor Changes
+
+- 4a8bb5eb: allow for passing fork network and protocol allowlist to support fork uniswap fork tests
+- c717e4d9: Revert forcedExit changes across the stack
+
+### Patch Changes
+
+- @nocturne-xyz/offchain-utils@0.1.18
+
 ## 0.7.0
 
 ### Minor Changes

@@ -6,7 +6,7 @@
   "wethAddress": "0xb16F35c0Ae2912430DAc15764477E179D9B9EbEa",
   "erc20s": [
     [
-      "simpletoken1",
+      "SimpleToken1",
       {
         "address": "0x0000000000000000000000000000000000000000",
         "globalCapWholeTokens": "500n",
@@ -17,7 +17,7 @@
       }
     ],
     [
-      "simpletoken2",
+      "SimpleToken2",
       {
         "address": "0x0000000000000000000000000000000000000000",
         "globalCapWholeTokens": "500n",
@@ -30,7 +30,7 @@
   ],
   "protocolAllowlist": [
     [
-      "PROTOCOL_NAME",
+      "ProtocolName",
       {
         "address": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
         "functionSignatures": [

@@ -173,7 +173,11 @@ export class NocturneSdk implements NocturneSdkApi {
     this.endpoints = sdkConfig.endpoints;
     this.sdkConfig = sdkConfig;
     this._provider = options.provider;
-    this._snap = new SnapStateSdk(() => this.provider, snapOptions?.version, snapOptions?.snapId);
+    this._snap = new SnapStateSdk(
+      () => this.provider,
+      snapOptions?.version,
+      snapOptions?.snapId
+    );
     this.syncMutex = new Mutex();
 
     this.signerThunk = thunk(() => getSigner(this.provider));
@@ -203,7 +207,6 @@ export class NocturneSdk implements NocturneSdkApi {
         this.endpoints.screenerEndpoint
       );
 
-
     this.clientThunk = thunk(async () => {
       const { vk, vkNonce } = await this.snap.invoke<RequestViewingKeyMethod>({
         method: "nocturne_requestViewingKey",
@@ -213,8 +216,12 @@ export class NocturneSdk implements NocturneSdkApi {
       const viewer = new NocturneViewer(vk, vkNonce);
       const { x, y } = viewer.canonicalAddress();
       const canonAddr = JSON.stringify({ x, y });
-      const canonAddrHash = ethers.utils.sha256(ethers.utils.toUtf8Bytes(canonAddr));
-      const kv = new IdbKvStore(`nocturne-fe-sdk-${networkName}-${canonAddrHash}`);
+      const canonAddrHash = ethers.utils.sha256(
+        ethers.utils.toUtf8Bytes(canonAddr)
+      );
+      const kv = new IdbKvStore(
+        `nocturne-fe-sdk-${networkName}-${canonAddrHash}`
+      );
       const db = new NocturneDB(kv);
 
       return new NocturneClient(
@@ -232,7 +239,7 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   protected get wethAddress(): string {
-    const address = this.sdkConfig.config.erc20s.get("weth")?.address;
+    const address = this.sdkConfig.config.erc20s.get("WETH")?.address;
     if (!address) {
       throw new Error("WETH address not found in Nocturne config");
     }
@@ -256,7 +263,7 @@ export class NocturneSdk implements NocturneSdkApi {
   get opRequestBuilder(): OpRequestBuilder {
     return newOpRequestBuilder(this.provider, this.sdkConfig.config.chainId);
   }
-  
+
   /**
    * Call `depositManager.instantiateErc20MultiDeposit` given the provided
    * `erc20Address`, `valuse`, and `gasCompPerDeposit`.

@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [abfab3f2]
+  - @nocturne-xyz/config@1.3.1
+  - @nocturne-xyz/client@3.0.2
+  - @nocturne-xyz/op-request-plugins@2.0.2
+
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [c717e4d9]
+- Updated dependencies [d89a77e4]
+- Updated dependencies [4a8bb5eb]
+- Updated dependencies [a94caaec]
+- Updated dependencies [c717e4d9]
+  - @nocturne-xyz/contracts@1.2.0
+  - @nocturne-xyz/config@1.3.0
+  - @nocturne-xyz/op-request-plugins@2.0.1
+  - @nocturne-xyz/core@3.1.0
+  - @nocturne-xyz/client@3.0.1
+  - @nocturne-xyz/local-prover@0.4.7
+  - @nocturne-xyz/subgraph-sync-adapters@0.3.1
+  - @nocturne-xyz/offchain-utils@0.1.18
+
 ## 0.5.0
 
 ### Minor Changes

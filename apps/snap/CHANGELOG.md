@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [abfab3f2]
+  - @nocturne-xyz/config@1.3.1
+  - @nocturne-xyz/client@3.0.2
+
+## 0.6.0
+
+### Minor Changes
+
+- a94caaec: - axe bip44
+  - only derive signer in methods where it's needed
+  - throw an error during signer derivation if there's no spend key set in db
+- a94caaec: add method `nocturne_setSpendKey`
+
+### Patch Changes
+
+- Updated dependencies [d89a77e4]
+- Updated dependencies [a94caaec]
+- Updated dependencies [c717e4d9]
+  - @nocturne-xyz/config@1.3.0
+  - @nocturne-xyz/core@3.1.0
+  - @nocturne-xyz/client@3.0.1
+
 ## 0.5.0
 
 ### Minor Changes

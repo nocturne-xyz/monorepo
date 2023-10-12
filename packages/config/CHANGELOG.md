@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.1
+
+### Patch Changes
+
+- abfab3f2: change token and protocol naming in configs to be consistent with accepted names
+
+## 1.3.0
+
+### Minor Changes
+
+- d89a77e4: Redeploy goerli with permissionless bundler mid-audit
+
 ## 1.2.0
 
 ### Minor Changes
