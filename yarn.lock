@@ -4178,6 +4178,7 @@ __metadata:
     find-yarn-workspace-root: ^2.0.0
     ioredis: ^5.3.1
     js-sha256: ^0.9.0
+    json-stable-stringify: ^1.0.2
     mocha: ^10.1.0
     morgan: ^1.10.0
     nodemon: ^3.0.1
@@ -15503,7 +15504,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"json-stable-stringify@npm:^1.0.1":
+"json-stable-stringify@npm:^1.0.1, json-stable-stringify@npm:^1.0.2":
   version: 1.0.2
   resolution: "json-stable-stringify@npm:1.0.2"
   dependencies:

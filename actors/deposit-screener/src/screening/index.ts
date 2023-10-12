@@ -26,7 +26,6 @@ export class ConcreteScreeningChecker implements ScreeningCheckerApi {
 
   async checkDeposit(
     depositInfo: ScreeningDepositRequest
-    // cachedFetchOptions: CachedFetchOptions = {}
   ): Promise<Rejection | Delay> {
     return this.ruleset.check(depositInfo);
   }

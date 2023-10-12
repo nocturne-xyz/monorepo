@@ -14,12 +14,11 @@ export function toTrmResponse(data: TrmData): Response {
   return new Response(JSON.stringify([data]));
 }
 
-export function toMistrackResponse(data: MisttrackData): Response {
+export function toMisttrackResponse(data: MisttrackData): Response {
   return new Response(
     JSON.stringify({
       success: true, // Assume the data is valid
       data: data,
-      msg: "Success", // Assume success
     })
   );
 }

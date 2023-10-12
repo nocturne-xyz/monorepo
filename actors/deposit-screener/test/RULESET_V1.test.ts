@@ -9,7 +9,7 @@ import {
   REJECT_ADDRESSES,
   formDepositInfo,
   getLatestSnapshotFolder,
-  toMistrackResponse,
+  toMisttrackResponse,
   toTrmResponse,
 } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -65,14 +65,12 @@ async function populateRedisCache(redis: IORedis): Promise<void> {
       let response: Response;
       if (apiCallName == "TRM_SCREENING_ADDRESSES") {
         response = toTrmResponse(apiCallReturnData as TrmData);
-        console.log("TRM RESPONSE:", response);
-        console.log("TRM RESPONSE STRINGIFIED:", JSON.stringify(response));
       } else if (
         apiCallName == "MISTTRACK_ADDRESS_LABELS" ||
         apiCallName == "MISTTRACK_ADDRESS_RISK_SCORE" ||
         apiCallName == "MISTTRACK_ADDRESS_OVERVIEW"
       ) {
-        response = toMistrackResponse(apiCallReturnData as MisttrackData);
+        response = toMisttrackResponse(apiCallReturnData as MisttrackData);
       } else {
         throw new Error(`unknown apiCallName: ${apiCallName}`);
       }

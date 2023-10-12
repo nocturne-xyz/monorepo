@@ -4,6 +4,7 @@ import retry from "async-retry";
 import IORedis from "ioredis";
 import { createHash } from "crypto";
 import * as JSON from "bigint-json-serialization";
+import stableStringify from "json-stable-stringify";
 
 export type CachedFetchOptions = {
   skipCacheRead?: boolean; // default to false
@@ -100,6 +101,6 @@ export function formatCachedFetchCacheKey(
 ): string {
   const cacheKeyData = `${
     typeof requestInfo === "string" ? requestInfo : requestInfo.url
-  }-${JSON.stringify(requestInit.body ?? {})}`;
+  }-${stableStringify(requestInit.body ?? {})}`;
   return `CACHE_${createHash("sha256").update(cacheKeyData).digest("hex")}`;
 }
