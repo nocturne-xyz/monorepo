@@ -583,6 +583,7 @@ export class NocturneSdk implements NocturneSdkApi {
     }
     return response;
   }
+
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
    * This includes all joinsplit tx inputs.

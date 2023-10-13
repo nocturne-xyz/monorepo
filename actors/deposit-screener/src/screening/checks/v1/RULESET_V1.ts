@@ -11,6 +11,7 @@ import {
   isCreatedAfterTornadoCashSanction,
   isLessThanOneMonthAgo,
 } from "./utils";
+import IORedis from "ioredis";
 
 /**
  * Ruleset V1 Specification
@@ -158,6 +159,7 @@ const MISTTRACK_RISK_REJECT: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
       "Involved Phishing Activity",
       "Malicious Address",
     ];
+
     const detailListContainsBanlistItems = data.detail_list.some((item) =>
       banlistItems.includes(item)
     );
@@ -281,15 +283,20 @@ const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
 //   },
 // };
 
-export const RULESET_V1 = new RuleSet({
-  baseDelaySeconds: BASE_DELAY_SECONDS,
-})
-  .add(TRM_SEVERE_OWNERSHIP_REJECT)
-  .combineAndAdd(TRM_HIGH_MIXER_REJECT)
-  .combineAndAdd(TRM_HIGH_COUNTERPARTY_REJECT)
-  .combineAndAdd(TRM_HIGH_INDIRECT_REJECT)
-  .add(MISTTRACK_RISK_REJECT)
-  .add(SHORT_WALLET_HISTORY_DELAY)
-  .combineAndAdd(SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY)
-  .combineAndAdd(SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY)
-  .add(MIXER_USAGE_DELAY);
+export const RULESET_V1 = (redis: IORedis): RuleSet => {
+  return new RuleSet(
+    {
+      baseDelaySeconds: BASE_DELAY_SECONDS,
+    },
+    redis
+  )
+    .add(TRM_SEVERE_OWNERSHIP_REJECT)
+    .combineAndAdd(TRM_HIGH_MIXER_REJECT)
+    .combineAndAdd(TRM_HIGH_COUNTERPARTY_REJECT)
+    .combineAndAdd(TRM_HIGH_INDIRECT_REJECT)
+    .add(MISTTRACK_RISK_REJECT)
+    .add(SHORT_WALLET_HISTORY_DELAY)
+    .combineAndAdd(SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY)
+    .combineAndAdd(SHORT_WALLET_HISTORY_AND_MIXER_USAGE_DELAY)
+    .add(MIXER_USAGE_DELAY);
+};

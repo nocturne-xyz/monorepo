@@ -6,7 +6,26 @@ import { ScreeningDepositRequest } from "../src";
 import {
   ApiCallNames,
   ApiCallReturnData,
+  MisttrackData,
+  TrmData,
 } from "../src/screening/checks/apiCalls";
+
+export function toTrmResponse(data: TrmData): Response {
+  const res = new Response(JSON.stringify([data]));
+  res.headers.set("content-type", "application/json");
+  return res;
+}
+
+export function toMisttrackResponse(data: MisttrackData): Response {
+  const res = new Response(
+    JSON.stringify({
+      success: true, // Assume the data is valid
+      data: data,
+    })
+  );
+  res.headers.set("content-type", "application/json");
+  return res;
+}
 
 // Address contexts provided in: notion.so/nocturnelabs/Compliance-Provider-Evaluation-9ffe8bbf698f420498eba9e782e93b6d
 
@@ -23,7 +42,7 @@ export const formDepositInfo = (
 
 export const REJECT_ADDRESSES = {
   ROCKETSWAP: "0x96c0876f573e27636612cf306c9db072d2b13de8",
-  ZUNAMI: "0x96c0876f573e27636612cf306c9db072d2b13de8",
+  ZUNAMI: "0x5f4C21c9Bb73c8B4a296cC256C0cDe324dB146DF",
   ZUNAMI_2ND_DEGREE: "0xF00d0e11AcCe1eA37658f428d947C3FFFAeaDe70",
   STEADEFI: "0xE10d4a5bd440775226C7e1858f573E379d0aca36",
   EARNING_FARM: "0xee4b3dd20902Fa3539706F25005fa51D3b7bDF1b",

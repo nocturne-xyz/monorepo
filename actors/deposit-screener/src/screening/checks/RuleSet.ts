@@ -1,3 +1,4 @@
+import { CachedFetchOptions } from "@nocturne-xyz/offchain-utils";
 import { ScreeningDepositRequest } from "..";
 import {
   API_CALL_MAP,
@@ -5,6 +6,8 @@ import {
   ApiCallToReturnType,
   ApiCallReturnData,
 } from "./apiCalls";
+import IORedis from "ioredis";
+
 export interface Rejection {
   type: "Rejection";
   reason: string;
@@ -71,7 +74,7 @@ export interface RuleLike {
   name: string;
   check: (
     deposit: ScreeningDepositRequest,
-    cache: CachedApiCallData
+    cachedFetchOptions: CachedFetchOptions
   ) => Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED>;
 }
 
@@ -81,22 +84,28 @@ export class Rule<C extends ApiCallNames> implements RuleLike {
   private threshold: RuleParams<C>["threshold"];
   private call: RuleParams<C>["call"];
   private action: RuleParams<C>["action"];
+  private cache: IORedis;
 
-  constructor({ name, call, threshold, action }: RuleParams<C>) {
+  constructor(
+    { name, call, threshold, action }: RuleParams<C>,
+    cache: IORedis
+  ) {
     this.name = name;
     this.call = call;
     this.threshold = threshold;
     this.action = action;
+    this.cache = cache;
   }
 
   async check(
     deposit: ScreeningDepositRequest,
-    cache: CachedApiCallData
+    cachedFetchOptions: CachedFetchOptions
   ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
-    if (!cache[this.call]) {
-      cache[this.call] = await API_CALL_MAP[this.call](deposit);
-    }
-    const data = cache[this.call] as ApiCallToReturnType[C];
+    const data = (await API_CALL_MAP[this.call](
+      deposit,
+      this.cache,
+      cachedFetchOptions
+    )) as ApiCallToReturnType[C];
 
     return this.threshold(data) ? this.action : ACTION_NOT_TRIGGERED;
   }
@@ -110,28 +119,29 @@ export class CompositeRule<T extends ReadonlyArray<ApiCallNames>>
   private partialRules: CombinedRulesParams<T>["partialRules"];
   private action: CombinedRulesParams<T>["action"];
   private predicateFn: "some" | "every"; // corresponds to Array.prototype.some and Array.prototype.every
+  private cache: IORedis;
 
-  constructor(params: CombinedRulesParams<T>) {
+  constructor(params: CombinedRulesParams<T>, cache: IORedis) {
     this.name = `Composite(${params.partialRules
       .map((r) => r.name)
       .join(", ")}):${params.applyIf}`;
     this.partialRules = params.partialRules;
     this.action = params.action;
     this.predicateFn = params.applyIf === "Any" ? "some" : "every";
+    this.cache = cache;
   }
 
   async check(
     deposit: ScreeningDepositRequest,
-    cache: CachedApiCallData
+    cachedFetchOptions: CachedFetchOptions = {}
   ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
     const results = await Promise.all(
       this.partialRules.map(async (partial) => {
-        if (!cache[partial.call]) {
-          cache[partial.call] = await API_CALL_MAP[partial.call](deposit);
-        }
-        const data = cache[
-          partial.call
-        ] as ApiCallToReturnType[typeof partial.call];
+        const data = (await API_CALL_MAP[partial.call](
+          deposit,
+          this.cache,
+          cachedFetchOptions
+        )) as ApiCallToReturnType[typeof partial.call];
 
         return partial.threshold(data);
       })
@@ -145,9 +155,14 @@ export class RuleSet {
   private head: RuleLike | null = null;
   private tail: RuleLike | null = null;
   private readonly baseDelaySeconds;
+  private cache: IORedis;
 
-  constructor({ baseDelaySeconds = 0 }: { baseDelaySeconds?: number } = {}) {
+  constructor(
+    { baseDelaySeconds }: { baseDelaySeconds: number },
+    cache: IORedis
+  ) {
     this.baseDelaySeconds = baseDelaySeconds;
+    this.cache = cache;
   }
 
   private _add(ruleLike: RuleLike) {
@@ -160,7 +175,7 @@ export class RuleSet {
   }
 
   add<C extends ApiCallNames>(ruleParams: RuleParams<C>): RuleSet {
-    const rule = new Rule(ruleParams);
+    const rule = new Rule(ruleParams, this.cache);
     this._add(rule);
     return this;
   }
@@ -168,14 +183,14 @@ export class RuleSet {
   combineAndAdd<T extends ReadonlyArray<ApiCallNames>>(
     compositeParams: CombinedRulesParams<T>
   ): RuleSet {
-    const composite = new CompositeRule(compositeParams);
+    const composite = new CompositeRule(compositeParams, this.cache);
     this._add(composite);
     return this;
   }
 
   async check(
     deposit: ScreeningDepositRequest,
-    cache: CachedApiCallData = {}
+    cachedFetchOptions: CachedFetchOptions = {}
   ): Promise<Rejection | Delay> {
     let delaySeconds = this.baseDelaySeconds;
     let currRule = this.head;
@@ -185,7 +200,7 @@ export class RuleSet {
     }[] = [];
 
     while (currRule !== null) {
-      const result = await currRule.check(deposit, cache);
+      const result = await currRule.check(deposit, cachedFetchOptions);
       rulesLogList.push({
         ruleName: currRule.name,
         result,

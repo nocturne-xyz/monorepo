@@ -4,7 +4,9 @@ import {
   RuleParams,
   RuleSet,
 } from "../src/screening/checks/RuleSet";
+import IORedis from "ioredis";
 import { expect } from "chai";
+import RedisMemoryServer from "redis-memory-server";
 
 const DELAY_50_ALWAYS: RuleParams<"IDENTITY"> = {
   name: "DELAY_50_ALWAYS",
@@ -69,9 +71,20 @@ const DUMMY_DEPOSIT_REQUEST: ScreeningDepositRequest = {
   value: 0n,
 } as const;
 
-describe("RuleSet", () => {
+describe("RuleSet", async () => {
+  let server: RedisMemoryServer;
+  let redis: IORedis;
+
+  before(async () => {
+    server = await RedisMemoryServer.create();
+
+    const host = await server.getHost();
+    const port = await server.getPort();
+    redis = new IORedis(port, host);
+  });
+
   it("should return a delay of 300 seconds", async () => {
-    const DUMMY_RULESET = new RuleSet()
+    const DUMMY_RULESET = new RuleSet({ baseDelaySeconds: 0 }, redis)
       .add(DELAY_50_ALWAYS)
       .add(DELAY_10000000_NEVER);
     const result = await DUMMY_RULESET.check(DUMMY_DEPOSIT_REQUEST);
@@ -82,7 +95,7 @@ describe("RuleSet", () => {
   });
 
   it("should return a rejection", async () => {
-    const DUMMY_RULESET = new RuleSet()
+    const DUMMY_RULESET = new RuleSet({ baseDelaySeconds: 0 }, redis)
       .add(DELAY_50_ALWAYS)
       .add(REJECT_ALWAYS)
       .add(DELAY_10000000_NEVER);
@@ -92,7 +105,10 @@ describe("RuleSet", () => {
   });
 
   it("should take a combined rule requiring *any* to be true, and return a delay of 50", async () => {
-    const DUMMY_RULESET = new RuleSet().combineAndAdd(COMBINED_RULE_ANY);
+    const DUMMY_RULESET = new RuleSet(
+      { baseDelaySeconds: 0 },
+      redis
+    ).combineAndAdd(COMBINED_RULE_ANY);
 
     const result = await DUMMY_RULESET.check(DUMMY_DEPOSIT_REQUEST);
     expect(result).to.deep.equal({
@@ -103,7 +119,10 @@ describe("RuleSet", () => {
 
   it("should take a combined rule requiring *all* to be true, and not apply the action", async () => {
     console.log("COMBINED_RULE_ALL", COMBINED_RULE_ALL);
-    const DUMMY_RULESET = new RuleSet().combineAndAdd(COMBINED_RULE_ALL);
+    const DUMMY_RULESET = new RuleSet(
+      { baseDelaySeconds: 0 },
+      redis
+    ).combineAndAdd(COMBINED_RULE_ALL);
 
     const result = await DUMMY_RULESET.check(DUMMY_DEPOSIT_REQUEST);
     expect(result).to.deep.equal({

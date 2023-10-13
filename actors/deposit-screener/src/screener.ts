@@ -372,11 +372,16 @@ export class DepositScreenerScreener {
         childLogger.debug(
           `checking if deposit request passed second screening`
         );
-        const checkResult = await this.screeningApi.checkDeposit({
-          spender: depositRequest.spender,
-          assetAddr,
-          value: depositRequest.value,
-        });
+        const checkResult = await this.screeningApi.checkDeposit(
+          {
+            spender: depositRequest.spender,
+            assetAddr,
+            value: depositRequest.value,
+          },
+          {
+            skipCacheRead: true, // NOTE: we never resort to cache on final screening check
+          }
+        );
 
         if (checkResult.type === "Rejection") {
           childLogger.warn(
