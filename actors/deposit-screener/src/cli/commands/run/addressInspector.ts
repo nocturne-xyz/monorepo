@@ -11,6 +11,7 @@ import {
 import path from "path";
 import { Logger } from "winston";
 import * as crypto from "crypto";
+import IORedis from "ioredis";
 
 /**
  * Example
@@ -107,6 +108,21 @@ async function main(options: any): Promise<void> {
     throw new Error(`Cannot write to output directory ${outputDir}`);
   }
 
+  const redis = new IORedis({ port: 6380, password: "baka" });
+  try {
+    // wait for the state to be connected
+    let retries = 10;
+    while (redis.status !== "ready" && retries-- > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  } catch (err) {
+    throw new Error(
+      `Cannot connect to redis, from the deposit screener folder try 'docker compose up -d redis' if it is not running. ${err}`
+    );
+  }
+
+  const ruleset = RULESET_V1(redis);
+
   logger.info(`Starting inspection for addresses from ${inputCsv}`);
   // read the entire csv input files into memory
   const inputFileText = await fs.promises.readFile(inputCsv, "utf-8");
@@ -147,7 +163,7 @@ async function main(options: any): Promise<void> {
       }
     }
 
-    const result = await RULESET_V1.check(formDepositInfo(address), cache);
+    const result = await ruleset.check(formDepositInfo(address));
 
     // open the data folder and store the cache by <address>.json
     if (dataFolder) {

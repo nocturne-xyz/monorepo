@@ -90,15 +90,21 @@ export async function cachedFetch(
   }
 
   // Cache response
-  await redis.setex(cacheKey, ttlSeconds, await serializeResponse(response));
+  await redis.setex(
+    cacheKey,
+    ttlSeconds,
+    await serializeResponse(response.clone())
+  );
 
-  return response;
+  return response.clone();
 }
 
 export function formatCachedFetchCacheKey(
   requestInfo: RequestInfo,
   requestInit: RequestInit
 ): string {
+  // to avoid "body already used for" error we must clone
+  //const reqeustInitClone = requestInit.clone();
   const cacheKeyData = `${
     typeof requestInfo === "string" ? requestInfo : requestInfo.url
   }-${stableStringify(requestInit.body ?? {})}`;
