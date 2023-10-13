@@ -287,7 +287,10 @@ interface RedisHandle {
 }
 
 export function makeRedisInstance(): RedisHandle {
-  const redis = new IORedisMock.default({});
+  const randomKeyPrefixLong = Math.floor(Math.random() * 10000000000000000);
+  const redis = new IORedisMock.default({
+    keyPrefix: `test/${randomKeyPrefixLong}}/`,
+  });
   return {
     getRedis: async (): Promise<IORedis> => {
       return Promise.resolve(redis as IORedis);
