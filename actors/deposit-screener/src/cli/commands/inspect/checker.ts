@@ -12,9 +12,9 @@ import IORedis from "ioredis";
 
 /**
  * Example
- * npx ts-node src/cli/index.ts run addressInspector --input-csv ./data/addresses.csv --output-data ./data/addresses.json --delay=3 --stdout-log-level=info
+ * npx ts-node src/cli/index.ts run addressChecker --input-csv ./data/addresses.csv --output-data ./data/addresses.json --delay=3 --stdout-log-level=info
  */
-const runInspector = new Command("addressInspector")
+const runChecker = new Command("addressChecker")
   .summary("inspect and analyze addresses from a CSV file")
   .description(
     "analyzes a list of addresses, provides acceptance metrics and rejection reasons"
@@ -30,7 +30,7 @@ const runInspector = new Command("addressInspector")
   .option(
     "--log-dir <string>",
     "directory to write logs to",
-    "./logs/address-inspector"
+    "./logs/address-checker"
   )
   .option(
     "--delay <number>",
@@ -78,8 +78,8 @@ async function main(options: any): Promise<void> {
 
   const logger = makeLogger(
     logDir,
-    "address-inspector",
-    "inspector",
+    "address-checker",
+    "checker",
     stdoutLogLevel
   );
 
@@ -217,4 +217,4 @@ async function main(options: any): Promise<void> {
   );
 }
 
-export default runInspector;
+export default runChecker;
