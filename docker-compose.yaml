@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=nocturne
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+
+    #volumes:
+    #  - postgres-data:/var/lib/postgresql/data
+
+  flyway:
+    image: flyway/flyway
+    depends_on:
+      - postgres
+    volumes:
+      - ./sql:/flyway/sql
+    environment:
+      - FLYWAY_URL=jdbc:postgresql://postgres:5432/nocturne
+      - FLYWAY_USER=postgres
+      - FLYWAY_PASSWORD=password
+      - FLYWAY_SCHEMAS=nocturne
+      - NOCTURNE_DB_USER_PASSWORD=password
+    entrypoint: []
+    command: ["bash", "/flyway/sql/migrate-with-retry.sh"]
+
+
+#volumes:
+#  postgres-data:
