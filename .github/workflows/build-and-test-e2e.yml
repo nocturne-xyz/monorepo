@@ -32,6 +32,9 @@ jobs:
       - name: yarn build
         run: |
           yarn build
+      - name: Start redis with docker compose
+        run: |
+          docker-compose up -d
       - name: run full system test suite
         working-directory: ./packages/e2e-tests
         run: |

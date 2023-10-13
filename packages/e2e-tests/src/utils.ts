@@ -11,7 +11,6 @@ import {
   OperationTrait,
   range,
 } from "@nocturne-xyz/core";
-import { Mutex } from "async-mutex";
 import { spawn } from "child_process";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -20,8 +19,6 @@ import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
 import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import IORedis from "ioredis";
-import { RedisMemoryServer } from "redis-memory-server";
-import { thunk } from "@nocturne-xyz/core";
 import { Insertion } from "@nocturne-xyz/persistent-log";
 import { fetchTreeInsertions } from "@nocturne-xyz/subgraph-sync-adapters/src/treeInsertions/fetch";
 import { SUBGRAPH_URL } from "./deploy";
@@ -49,7 +46,7 @@ export const BUNDLER_ENDPOINT = `http://localhost:3000`;
 export type TeardownFn = () => Promise<void>;
 export type ResetFn = () => Promise<void>;
 
-export function sleep(ms: number) {
+export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -217,7 +214,7 @@ export function runCommandBackground(
   cmd: string,
   args: string[],
   opts?: RunCommandDetachedOpts
-) {
+): void {
   const { cwd, onStdOut, onStdErr, onError, onExit, processName } = opts ?? {};
   const child = spawn(cmd, args, { cwd });
   let stdout = "";
@@ -283,31 +280,28 @@ export function runCommandBackground(
 }
 
 interface RedisHandle {
-  getRedisServer: () => Promise<RedisMemoryServer>;
   getRedis: () => Promise<IORedis>;
   clearRedis: () => Promise<void>;
 }
 
-// HACK specify ports to use up-front to ensure they don't conflict with any of the actors
-const redisPorts = range(6000, 6100);
-const mutex = new Mutex();
 export function makeRedisInstance(): RedisHandle {
-  const redisThunk = thunk<[IORedis, RedisMemoryServer]>(async () => {
-    const port = await mutex.runExclusive(() => redisPorts.pop());
-    if (!port)
-      throw new Error("ran out of available ports for redis instances");
-
-    const server = await RedisMemoryServer.create({ instance: { port } });
-    const host = await server.getHost();
-    return [new IORedis(port, host), server];
+  const randomLongKeyPrefix = Math.floor(Math.random() * 1000000000);
+  const redis = new IORedis({
+    host: "localhost",
+    port: 6379,
+    keyPrefix: `test/${randomLongKeyPrefix}/`,
   });
 
   return {
-    getRedisServer: async () => (await redisThunk())[1],
-    getRedis: async () => (await redisThunk())[0],
+    getRedis: async () => {
+      // if not connected connect
+      if (redis.status === "end") {
+        await redis.connect();
+      }
+      return redis;
+    },
     clearRedis: async () => {
-      const [redis, _] = await redisThunk();
-      redis.flushall();
+      await redis.flushall();
     },
   };
 }

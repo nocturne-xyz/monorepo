@@ -1,8 +1,7 @@
 import { InsertionWriter } from "@nocturne-xyz/insertion-writer";
 import { SubgraphTreeInsertionSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
-import { getInsertionLogRedisServer } from "./subtreeUpdater";
+import { getInsertionLogRedisClient } from "./subtreeUpdater";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
-import IORedis from "ioredis";
 
 export interface InsertionWriterConfig {
   subgraphUrl: string;
@@ -16,8 +15,7 @@ export async function startInsertionWriter(
     config.subgraphUrl,
     logger
   );
-  const server = await getInsertionLogRedisServer();
-  const client = new IORedis(await server.getPort(), await server.getHost());
+  const client = await getInsertionLogRedisClient();
   const insertionWriter = new InsertionWriter(syncAdapter, client, logger);
 
   const { promise, teardown } = await insertionWriter.start({
