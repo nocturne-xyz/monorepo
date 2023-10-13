@@ -28,10 +28,10 @@ export interface SubtreeUpdaterConfig {
   useRapidsnark?: boolean;
 }
 
-const { getRedis, clearRedis, getRedisServer } = makeRedisInstance();
+const { getRedis, clearRedis } = makeRedisInstance();
 
-export const getInsertionLogRedisServer = thunk(async () => {
-  return await getRedisServer();
+export const getInsertionLogRedisClient = thunk(async () => {
+  return await getRedis();
 });
 
 export async function startSubtreeUpdater(

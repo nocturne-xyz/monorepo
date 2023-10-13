@@ -3168,7 +3168,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ioredis/commands@npm:^1.1.1":
+"@ioredis/as-callback@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@ioredis/as-callback@npm:3.0.0"
+  checksum: 2835e39631497fe4f8b07d95576abea165c9f7efef81e9e55c733588051ff4edcb31eeb59f36127923dae0cb1a8e21b4e27ee3ab79a065a0baeecf861c3bc0b1
+  languageName: node
+  linkType: hard
+
+"@ioredis/commands@npm:^1.1.1, @ioredis/commands@npm:^1.2.0":
   version: 1.2.0
   resolution: "@ioredis/commands@npm:1.2.0"
   checksum: 9b20225ba36ef3e5caf69b3c0720597c3016cc9b1e157f519ea388f621dd9037177f84cfe7e25c4c32dad7dd90c70ff9123cd411f747e053cf292193c9c461e2
@@ -4217,6 +4224,7 @@ __metadata:
     "@types/chai": ^4.3.3
     "@types/dockerode": ^3.3.14
     "@types/glob": ^8.0.0
+    "@types/ioredis-mock": ^8.2.3
     "@types/mocha": ^10.0.0
     "@types/uuid": ^9.0.0
     async-mutex: ^0.4.0
@@ -4229,9 +4237,9 @@ __metadata:
     ethers: ^5.7.2
     find-yarn-workspace-root: ^2.0.0
     hardhat: ^2.17.1
+    ioredis-mock: ^8.9.0
     mocha: ^10.1.0
     prettier: ^2.8.8
-    redis-memory-server: ^0.6.0
     ts-node: ^10.9.1
     uuid: ^9.0.0
     winston-humanize-formatter: ^0.1.4
@@ -6076,6 +6084,15 @@ __metadata:
   version: 2.0.2
   resolution: "@types/http-errors@npm:2.0.2"
   checksum: d7f14045240ac4b563725130942b8e5c8080bfabc724c8ff3f166ea928ff7ae02c5194763bc8f6aaf21897e8a44049b0492493b9de3e058247e58fdfe0f86692
+  languageName: node
+  linkType: hard
+
+"@types/ioredis-mock@npm:^8.2.3":
+  version: 8.2.3
+  resolution: "@types/ioredis-mock@npm:8.2.3"
+  dependencies:
+    ioredis: ">=5"
+  checksum: ce33bf4c8a553e0682c2b174a611dd9f546b12729fa45f932b3a4ef4f31e9e66ce1257603bf9e098c6f21008493b7bd635594c49da2a40bd72e0b859441e9fb0
   languageName: node
   linkType: hard
 
@@ -12070,7 +12087,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
@@ -12775,6 +12792,26 @@ circomlibjs@nocturne-xyz/circomlibjs:
   version: 4.2.3
   resolution: "fecha@npm:4.2.3"
   checksum: f94e2fb3acf5a7754165d04549460d3ae6c34830394d20c552197e3e000035d69732d74af04b9bed3283bf29fe2a9ebdcc0085e640b0be3cc3658b9726265e31
+  languageName: node
+  linkType: hard
+
+"fengari-interop@npm:^0.1.3":
+  version: 0.1.3
+  resolution: "fengari-interop@npm:0.1.3"
+  peerDependencies:
+    fengari: ^0.1.0
+  checksum: f483e0aedec3a0b49911ffd3207a55f73c861f95ef84fb7582deb45bc65afa2e7bf8f9fc3734563f6c106a438909f94059b5d08f5a7872ffcc3d45d260a3ee15
+  languageName: node
+  linkType: hard
+
+"fengari@npm:^0.1.4":
+  version: 0.1.4
+  resolution: "fengari@npm:0.1.4"
+  dependencies:
+    readline-sync: ^1.4.9
+    sprintf-js: ^1.1.1
+    tmp: ^0.0.33
+  checksum: bd6b04f9738f9cbb58e3c80684a72bf6f7e74c902d26e4e812b1cfbd69c06da5ffb2a8a67a62ecd75603fc565b6b183c1b72be60f2e60c18aa487aad65b62196
   languageName: node
   linkType: hard
 
@@ -14558,7 +14595,23 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"ioredis@npm:^5.3.1, ioredis@npm:^5.3.2":
+"ioredis-mock@npm:^8.9.0":
+  version: 8.9.0
+  resolution: "ioredis-mock@npm:8.9.0"
+  dependencies:
+    "@ioredis/as-callback": ^3.0.0
+    "@ioredis/commands": ^1.2.0
+    fengari: ^0.1.4
+    fengari-interop: ^0.1.3
+    semver: ^7.5.4
+  peerDependencies:
+    "@types/ioredis-mock": ^8
+    ioredis: ^5
+  checksum: 9d7480f153a5904f2bbb1555ebf2246f80bfd8c89e10442b6db58984809a1a652050c61fc8ad8a1fa86629ee0f6d2bac2929fd66f34e143263d0449bcdf657aa
+  languageName: node
+  linkType: hard
+
+"ioredis@npm:>=5, ioredis@npm:^5.3.1, ioredis@npm:^5.3.2":
   version: 5.3.2
   resolution: "ioredis@npm:5.3.2"
   dependencies:
@@ -19260,6 +19313,13 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
+"readline-sync@npm:^1.4.9":
+  version: 1.4.10
+  resolution: "readline-sync@npm:1.4.10"
+  checksum: 4dbd8925af028dc4cb1bb813f51ca3479035199aa5224886b560eec8e768ab27d7ebf11d69a67ed93d5a130b7c994f0bdb77796326e563cf928bbfd560e3747e
+  languageName: node
+  linkType: hard
+
 "realistic-structured-clone@npm:^3.0.0":
   version: 3.0.0
   resolution: "realistic-structured-clone@npm:3.0.0"
@@ -20758,6 +20818,13 @@ circomlibjs@nocturne-xyz/circomlibjs:
   dependencies:
     tslib: ^2.0.3
   checksum: 64f53d930f63c5a9e59d4cae487c1ffa87d25eab682833b01d572cc885e7e3fdbad4f03409a41f03ecb27f1f8959432253eb48332c7007c3388efddb24ba2792
+  languageName: node
+  linkType: hard
+
+"sprintf-js@npm:^1.1.1":
+  version: 1.1.3
+  resolution: "sprintf-js@npm:1.1.3"
+  checksum: a3fdac7b49643875b70864a9d9b469d87a40dfeaf5d34d9d0c5b1cda5fd7d065531fcb43c76357d62254c57184a7b151954156563a4d6a747015cfb41021cad0
   languageName: node
   linkType: hard
 
