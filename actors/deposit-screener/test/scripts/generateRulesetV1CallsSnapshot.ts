@@ -11,6 +11,7 @@ import {
   saveSnapshot,
 } from "../utils";
 import { requireApiKeys } from "../../src/utils";
+import IORedis from "ioredis";
 
 /**
  * This script is used to generate a snapshot of the API calls for the test addresses.
@@ -29,15 +30,26 @@ import { requireApiKeys } from "../../src/utils";
 async function run() {
   requireApiKeys();
 
+  const redis = new IORedis({ port: 6380, password: "baka" });
+  try {
+    // wait for the state to be connected
+    let retries = 10;
+    while (redis.status !== "ready" && retries-- > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  } catch (err) {
+    throw new Error(
+      `Cannot connect to redis, from the deposit screener folder try 'docker compose up -d redis' if it is not running. ${err}`
+    );
+  }
+
   const numAddresses = ALL_TEST_ADDRESSES.length;
   console.log(`There are ${numAddresses} addresses to snapshot`);
   let snapshotData: AddressDataSnapshot = {};
   let count = 0;
   for (const address of ALL_TEST_ADDRESSES) {
     console.log(
-      `Starting API calls for address: ${address} ——— ${
-        count + 1
-      } of ${numAddresses}`
+      `Starting API calls for address: ${address} ——— ${(count += 1)} of ${numAddresses}`
     );
     const deposit = formDepositInfo(address);
     snapshotData[address] = {};
@@ -47,12 +59,14 @@ async function run() {
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_RISK_SCORE.name ||
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_LABELS.name
       ) {
-        console.log("Sleeping for 5 seconds to avoid Misttrack rate limit...");
-        await sleep(5000);
+        console.log(
+          "Sleeping for 250ms seconds to avoid Misttrack rate limit..."
+        );
+        await sleep(250);
       }
       const addressData = snapshotData[address] as CachedAddressData;
       console.log(`Calling ${callName} for ${address}...`);
-      addressData[callName as ApiCallNames] = await apiCall(deposit);
+      addressData[callName as ApiCallNames] = await apiCall(deposit, redis);
 
       console.log(`Successfully called ${callName} for ${address}`);
     }
@@ -60,6 +74,8 @@ async function run() {
   console.log("All API calls completed, saving snapshot...");
   saveSnapshot(snapshotData);
   console.log("Snapshot saved successfully");
+
+  process.exit(0);
 }
 
 run();

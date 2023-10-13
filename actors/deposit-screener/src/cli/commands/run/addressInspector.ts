@@ -4,10 +4,7 @@ import fs from "fs";
 import { requireApiKeys } from "../../../utils";
 import { RULESET_V1 } from "../../../screening/checks/v1/RULESET_V1";
 import { formDepositInfo } from "../../../../test/utils";
-import {
-  CachedApiCallData,
-  isRejection,
-} from "../../../screening/checks/RuleSet";
+import { isRejection } from "../../../screening/checks/RuleSet";
 import path from "path";
 import { Logger } from "winston";
 import * as crypto from "crypto";
@@ -129,11 +126,13 @@ async function main(options: any): Promise<void> {
   // split the input file into lines
   const inputFileLines = inputFileText.split("\n");
   // take the first column
-  const addresses = inputFileLines.map((line) => line.split(",")[0]);
+  const addresses = inputFileLines.map((line) => line.trim().split(",")[0]);
+  logger.info(`Found ${addresses.length} addresses in the input file`);
   // filter out anything that doesn't look like an address
   const filteredAddresses = addresses.filter((address) => {
-    return address.match(/^0x[0-9a-fA-F]{40}$/);
+    return address.match(/^0x[0-9a-fA-F]{40}$/i);
   });
+
   // deduplicate and sort
   const dedupedAddresses = Array.from(new Set(filteredAddresses)).sort();
   const totalAddresses = dedupedAddresses.length;
@@ -143,25 +142,12 @@ async function main(options: any): Promise<void> {
   let rejectCount = 0;
   let inspectedCount = 0;
   const rejectedAddressData = [];
+  const acceptedAddressData = [];
   const reasonCounts: Record<string, number> = {};
   let fileContentHash: string | null = null;
 
   for (const address of dedupedAddresses) {
     logger.info(`Inspecting ${address}`);
-    // look for the address in the data folder for a pre-existing cache
-    let cache: CachedApiCallData = {};
-    let cacheHit = false;
-    if (dataFolder) {
-      const dataFilePath = path.join(dataFolder, `${address}.json`);
-      const dataFileExists = fs.existsSync(dataFilePath);
-      if (dataFileExists) {
-        const dataFileText = await fs.promises.readFile(dataFilePath, "utf-8");
-        // hash the data file text to see if anything changes later
-        fileContentHash = hashString(dataFileText);
-        cache = JSON.parse(dataFileText);
-        cacheHit = true;
-      }
-    }
 
     const result = await ruleset.check(formDepositInfo(address));
 
@@ -172,19 +158,20 @@ async function main(options: any): Promise<void> {
         fs.mkdirSync(dataFolder, { recursive: true });
       }
       const dataFilePath = path.join(dataFolder, `${address}.json`);
-      const dataToWrite = JSON.stringify(cache, null, 2);
+      const dataToWrite = JSON.stringify(result, null, 2);
       const newHash = hashString(dataToWrite);
       if (newHash !== fileContentHash) {
         logger.info("updating cache file");
         await fs.promises.writeFile(dataFilePath, dataToWrite);
       }
     }
+
     if (isRejection(result)) {
       logger.info(`Rejected ${address} because ${result.reason}`);
       rejectCount++;
       rejectedAddressData.push({
         address,
-        cache,
+        result,
       });
       if (reasonCounts[result.reason]) {
         reasonCounts[result.reason]++;
@@ -194,6 +181,10 @@ async function main(options: any): Promise<void> {
       showReasonCounts(logger, reasonCounts);
     } else {
       logger.info(`Accepted ${address}`);
+      acceptedAddressData.push({
+        address,
+        result,
+      });
       acceptCount++;
     }
     inspectedCount++;
@@ -204,10 +195,7 @@ async function main(options: any): Promise<void> {
       }%)`
     );
 
-    if (!cacheHit) {
-      // wait for the delay to avoid rate limits
-      await new Promise((resolve) => setTimeout(resolve, delayNumber * 1000));
-    }
+    await new Promise((resolve) => setTimeout(resolve, delayNumber * 1000));
   }
 
   const percentAccepted = (acceptCount / totalAddresses) * 100;
@@ -220,8 +208,12 @@ async function main(options: any): Promise<void> {
 
   // write the output data to the output file
   await fs.promises.writeFile(
-    outputData,
+    outputData.replace(".json", "-rejected.json"),
     JSON.stringify(rejectedAddressData, null, 2)
+  );
+  await fs.promises.writeFile(
+    outputData.replace(".json", "-accepted.json"),
+    JSON.stringify(acceptedAddressData, null, 2)
   );
 }
 

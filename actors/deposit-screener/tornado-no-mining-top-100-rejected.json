@@ -1,0 +1,275 @@
+[
+  {
+    "address": "0x0007d40f29c7a1713b251c69f5d999f16ec09dfc",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x0716b258570fb712a02adf56a7382ed562d4fd37",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x10369349a683578d1dfd4195eb41c6450fba0e2c",
+    "result": {
+      "type": "Rejection",
+      "reason": "Counterparty exposure to high risk categories > $150k"
+    }
+  },
+  {
+    "address": "0x118203b0f2a3ef9e749d871c8fef5e5e55ef5c91",
+    "result": {
+      "type": "Rejection",
+      "reason": "Ownership exposure to severe risk categories > $0"
+    }
+  },
+  {
+    "address": "0x12efed3512ea7b76f79bcde4a387216c7bce905e",
+    "result": {
+      "type": "Rejection",
+      "reason": "Ownership exposure to severe risk categories > $0"
+    }
+  },
+  {
+    "address": "0x17e4e3e9591998ad988627f3a11b61c459568cee",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x1a6bbeacb9eb39701d9c08f0a48b1c89ffc8ab0e",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x23289cc0d89f171dc05ca3c40808546b721c6c93",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x2a7b6c20ddcb9411ab2653f6c1fd51127b478e7f",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x376346cc9f76b5e7e261b8c971a8d65052f7b281",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x39e79b7462830da1eb81802663efffa35d0f2244",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x3e1596a814d70f4e63f7f1487c5807a6bb04b967",
+    "result": {
+      "type": "Rejection",
+      "reason": "Counterparty exposure to high risk categories > $150k"
+    }
+  },
+  {
+    "address": "0x41963830c969b8f3b2bab67e79b7d3e019c247ba",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x56b42dce0acc1dae9c4010fe2c9f1802ec51924b",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x5830690cc3c6b1b4a76ce12a115f2c491bee51a4",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x63493e679155c2f0aad5bf96d65725ad6427fac4",
+    "result": {
+      "type": "Rejection",
+      "reason": "Ownership exposure to severe risk categories > $0"
+    }
+  },
+  {
+    "address": "0x6b5a1cfe4f01f380a9f4773b9f41e58f3d42519f",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x6ea72d536c8842646daa95d14a2fd622c258b610",
+    "result": {
+      "type": "Rejection",
+      "reason": "Ownership exposure to severe risk categories > $0"
+    }
+  },
+  {
+    "address": "0x6f6330bd290727c9323aaf8148b6cff78697a008",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x779cca1c713fd321b7f2a2897d0a50dae3cc52dd",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x815c9f2a40dc8233ad9a6058bb819bf9f2220304",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x846efc4ed95bc999824a46ab74f8f197508bae30",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x8f475b04e7c48fa8e66e45e52b01f2783c90adc5",
+    "result": {
+      "type": "Rejection",
+      "reason": "Counterparty exposure to high risk categories > $150k"
+    }
+  },
+  {
+    "address": "0x8f76ea096b8efca1a5c1c724f7d81ad2ecb47f69",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x9313c9fbdb6d3883a4cb59b2c9ad07d8c0764f26",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0x978aad63fe35f7a72573c411c3dff53608aaeac9",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0xa591971b64e8718de38d140013bd7b5bb62f42d8",
+    "result": {
+      "type": "Rejection",
+      "reason": "Counterparty exposure to high risk categories > $150k"
+    }
+  },
+  {
+    "address": "0xae98eea3fc88141b3ad0252aca1695a1e7578479",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0xb2a8b37b1fc3fc0c41ec7d72adcfd47bf85f34c0",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0xbbe4ebd8e7b05f436b04cd4352459a275602cd62",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0xbeb12dbe1998b2dad174954a0145129ed053d46d",
+    "result": {
+      "type": "Rejection",
+      "reason": "Counterparty exposure to high risk categories > $150k"
+    }
+  },
+  {
+    "address": "0xcdc0f019f0ec0a903ca689e2bced3996efc53939",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0xdc887d29f1d662c31472b9c0fafb0aa30672bb22",
+    "result": {
+      "type": "Rejection",
+      "reason": "Counterparty exposure to high risk categories > $150k"
+    }
+  },
+  {
+    "address": "0xdc9659796884c43bf0cba78fc9f27ab07510f865",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0xe0e484dfa7f3aa36733a915d6f07eb5a57a74a11",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0xeb6955cf773de10da86ff7d78af91c163818b8d2",
+    "result": {
+      "type": "Rejection",
+      "reason": "Ownership exposure to severe risk categories > $0"
+    }
+  },
+  {
+    "address": "0xef45e3d772a3e7d0b6127b17c5e14ed13bf3a000",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  },
+  {
+    "address": "0xef967ece5322c0d7d26dab41778acb55ce5bd58b",
+    "result": {
+      "type": "Rejection",
+      "reason": "Ownership exposure to severe risk categories > $0"
+    }
+  },
+  {
+    "address": "0xf22d4c7ca1244b83cc06d7b445294d04fc51c7f1",
+    "result": {
+      "type": "Rejection",
+      "reason": "Score > 80 AND phishing/theft has > 0 attributions"
+    }
+  }
+]

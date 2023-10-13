@@ -1,0 +1,16 @@
+[
+  {
+    "address": "0x96c0876f573e27636612cf306c9db072d2b13de8",
+    "result": {
+      "type": "Rejection",
+      "reason": "Ownership exposure to severe risk categories > $0"
+    }
+  },
+  {
+    "address": "0xee4b3dd20902Fa3539706F25005fa51D3b7bDF1b",
+    "result": {
+      "type": "Rejection",
+      "reason": "Ownership exposure to severe risk categories > $0"
+    }
+  }
+]
