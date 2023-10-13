@@ -29,6 +29,7 @@ export async function startHardhat(
   if (forkNetwork) {
     const url = FORK_NETWORK_MAPPING[forkNetwork];
     args.push("--fork", url);
+    args.push("--fork-block-number", "18337827");
   }
 
   const cmdOpts: RunCommandDetachedOpts = {
