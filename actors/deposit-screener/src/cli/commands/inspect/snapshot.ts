@@ -2,19 +2,20 @@ import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { Command } from "commander";
 import fs from "fs";
 import { requireApiKeys } from "../../../utils";
-import { RULESET_V1 } from "../../../screening/checks/v1/RULESET_V1";
-import { formDepositInfo } from "../../../../test/utils";
-import { isRejection } from "../../../screening/checks/RuleSet";
+import { CachedAddressData, formDepositInfo } from "../../../../test/utils";
 import path from "path";
-import { Logger } from "winston";
+import { createWriteStream } from "fs";
 import IORedis from "ioredis";
+import { API_CALL_MAP, ApiCallNames } from "../../../screening/checks/apiCalls";
+import { sleep } from "@nocturne-xyz/core";
+import * as JSON from "bigint-json-serialization";
 
 /**
  * Example
- * yarn deposit-screener-cli inspect check --input-csv ./data/addresses.csv --output-data ./data/addresses.json --delay=3 --stdout-log-level=info
+ * yarn deposit-screener-cli inspect snapshot --input-csv ./data/addresses.csv --output-data ./data/addresses.json --delay=3 --stdout-log-level=info
  */
-const runChecker = new Command("check")
-  .summary("inspect and analyze addresses from a CSV file")
+const runSnapshot = new Command("snapshot")
+  .summary("create data snapshot for CSV or JSON file of addresses")
   .description(
     "analyzes a list of addresses, provides acceptance metrics and rejection reasons"
   )
@@ -41,23 +42,6 @@ const runChecker = new Command("check")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(main);
-
-function showReasonCounts(
-  logger: Logger,
-  reasonCounts: Record<string, number>
-): void {
-  // if there are no reasons
-  if (Object.keys(reasonCounts).length === 0) {
-    logger.info(`No rejections.`);
-  }
-  const sortedReasonCounts = Object.entries(reasonCounts).sort((a, b) => {
-    return b[1] - a[1];
-  });
-  logger.info(`Sorted reason counts:`);
-  for (const reasonCount of sortedReasonCounts) {
-    logger.info(`${reasonCount[0]}: ${reasonCount[1]}`);
-  }
-}
 
 async function main(options: any): Promise<void> {
   requireApiKeys();
@@ -106,8 +90,6 @@ async function main(options: any): Promise<void> {
     );
   }
 
-  const ruleset = RULESET_V1(redis);
-
   logger.info(`Starting inspection for addresses from ${inputCsv}`);
   // read the entire csv input files into memory
   const inputFileText = await fs.promises.readFile(inputCsv, "utf-8");
@@ -123,70 +105,55 @@ async function main(options: any): Promise<void> {
 
   // deduplicate and sort
   const dedupedAddresses = Array.from(new Set(filteredAddresses)).sort();
-  const totalAddresses = dedupedAddresses.length;
+  const numAddresses = dedupedAddresses.length;
 
-  logger.info(`Found ${totalAddresses} addresses to inspect`);
-  let acceptCount = 0;
-  let rejectCount = 0;
-  let inspectedCount = 0;
-  const rejectedAddressData = [];
-  const acceptedAddressData = [];
-  const reasonCounts: Record<string, number> = {};
+  logger.info(`Found ${numAddresses} addresses to inspect`);
+
+  const writeStream = createWriteStream(outputData, { encoding: "utf-8" });
+  writeStream.write("{");
+
+  console.log(`There are ${numAddresses} addresses to snapshot`);
+  let count = 0;
 
   for (const address of dedupedAddresses) {
-    logger.info(`Inspecting ${address}`);
-
-    const result = await ruleset.check(formDepositInfo(address));
-
-    if (isRejection(result)) {
-      logger.info(`Rejected ${address} because ${result.reason}`);
-      rejectCount++;
-      rejectedAddressData.push({
-        address,
-        result,
-      });
-      if (reasonCounts[result.reason]) {
-        reasonCounts[result.reason]++;
-      } else {
-        reasonCounts[result.reason] = 1;
-      }
-      showReasonCounts(logger, reasonCounts);
-    } else {
-      logger.info(`Accepted ${address}`);
-      acceptedAddressData.push({
-        address,
-        result,
-      });
-      acceptCount++;
-    }
-    inspectedCount++;
-
-    logger.info(
-      `Current acceptance rate is ${acceptCount}/${inspectedCount} (${
-        (acceptCount / inspectedCount) * 100
-      }%)`
+    console.log(
+      `Starting API calls for address: ${address} ——— ${(count += 1)} of ${numAddresses}`
     );
 
-    await new Promise((resolve) => setTimeout(resolve, delayNumber * 1000));
+    const deposit = formDepositInfo(address);
+    let addressData: CachedAddressData = {};
+
+    for (const [callName, apiCall] of Object.entries(API_CALL_MAP)) {
+      if (
+        callName === API_CALL_MAP.MISTTRACK_ADDRESS_OVERVIEW.name ||
+        callName === API_CALL_MAP.MISTTRACK_ADDRESS_RISK_SCORE.name ||
+        callName === API_CALL_MAP.MISTTRACK_ADDRESS_LABELS.name
+      ) {
+        console.log(
+          "Sleeping for 250ms seconds to avoid Misttrack rate limit..."
+        );
+        await sleep(250);
+      }
+
+      console.log(`Calling ${callName} for ${address}...`);
+      addressData[callName as ApiCallNames] = await apiCall(deposit, redis);
+      console.log(`Successfully called ${callName} for ${address}`);
+    }
+
+    writeStream.write(`"${address}": ${JSON.stringify(addressData)}`);
+    // Add a comma only if this is not the last address
+    if (count < numAddresses) {
+      writeStream.write(",");
+    }
   }
 
-  const percentAccepted = (acceptCount / totalAddresses) * 100;
-  const percentRejected = (rejectCount / totalAddresses) * 100;
-  logger.info(
-    `Inspection complete. Accepted ${acceptCount} / ${totalAddresses} addresses (${percentAccepted}%) and rejected ${rejectCount}/${totalAddresses} addresses (${percentRejected}%)`
-  );
-
-  showReasonCounts(logger, reasonCounts);
-
-  // write the output data to the output file
-  await fs.promises.writeFile(
-    outputData.replace(".json", "-rejected.json"),
-    JSON.stringify(rejectedAddressData, null, 2)
-  );
-  await fs.promises.writeFile(
-    outputData.replace(".json", "-accepted.json"),
-    JSON.stringify(acceptedAddressData, null, 2)
-  );
+  // Returning a promise that resolves when writing finishes
+  await new Promise<void>((resolve) => {
+    writeStream.end("}", () => {
+      console.log("Snapshot saved successfully");
+      resolve();
+    });
+  });
 }
 
-export default runChecker;
+export default runSnapshot;
