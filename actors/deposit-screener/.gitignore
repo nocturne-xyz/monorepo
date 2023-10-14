@@ -1,1 +1,3 @@
 *.csv
+*-reject.json*
+*-accept.json

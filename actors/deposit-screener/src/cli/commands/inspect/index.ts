@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import runChecker from "./checker";
+import runChecker from "./check";
 import runSnapshot from "./snapshot";
 
 const run = new Command("inspect").description(

@@ -4,91 +4,19 @@ import path from "path";
 import { RULESET_V1 } from "../src/screening/checks/v1/RULESET_V1";
 import {
   APPROVE_ADDRESSES,
-  AddressDataSnapshot,
   BULK_TEST_CASES,
   REJECT_ADDRESSES,
-  formDepositInfo,
   getLatestSnapshotFolder,
-  toMisttrackResponse,
-  toTrmResponse,
 } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import { isRejection, RuleSet } from "../src/screening/checks/RuleSet";
 import RedisMemoryServer from "redis-memory-server";
 import IORedis from "ioredis";
 import {
-  formatRequestData,
-  API_CALL_MAP,
-  TrmData,
-  MisttrackData,
-} from "../src/screening/checks/apiCalls";
-import {
-  formatCachedFetchCacheKey,
-  serializeResponse,
-} from "@nocturne-xyz/offchain-utils";
-import * as JSON from "bigint-json-serialization";
-
-async function populateRedisCache(redis: IORedis): Promise<void> {
-  // Pull snapshot data from the latest snapshot folder
-  const maybeFolderPath = await getLatestSnapshotFolder("./snapshots");
-  const filePath = path.join(
-    `${findWorkspaceRoot()!}/actors/deposit-screener/test`,
-    maybeFolderPath ?? "",
-    "snapshot.json"
-  );
-
-  let snapshotData: AddressDataSnapshot = {};
-  if (fs.existsSync(filePath)) {
-    const rawData = fs.readFileSync(filePath, "utf-8");
-    snapshotData = JSON.parse(rawData);
-  } else {
-    throw new Error("No snapshot files found");
-  }
-
-  // Populate Redis cache with snapshot data
-  type ApiCallNamesList = Array<keyof typeof API_CALL_MAP>;
-  const apiCallNames: ApiCallNamesList = Object.keys(
-    API_CALL_MAP
-  ) as ApiCallNamesList;
-
-  for (const [address, snapshotForAddress] of Object.entries(snapshotData)) {
-    const depositRequest = formDepositInfo(address);
-    for (const apiCallName of apiCallNames) {
-      const apiCallReturnData = snapshotForAddress[apiCallName];
-      if (!apiCallReturnData || apiCallName == "IDENTITY") {
-        console.log(
-          `No snapshot data found for address=${address} and apiCallName=${apiCallName}`
-        );
-        continue;
-      }
-
-      let response: Response;
-      if (apiCallName == "TRM_SCREENING_ADDRESSES") {
-        response = toTrmResponse(apiCallReturnData as TrmData);
-      } else if (
-        apiCallName == "MISTTRACK_ADDRESS_LABELS" ||
-        apiCallName == "MISTTRACK_ADDRESS_RISK_SCORE" ||
-        apiCallName == "MISTTRACK_ADDRESS_OVERVIEW"
-      ) {
-        response = toMisttrackResponse(apiCallReturnData as MisttrackData);
-      } else {
-        throw new Error(`unknown apiCallName: ${apiCallName}`);
-      }
-
-      const { requestInfo, requestInit } = formatRequestData(
-        apiCallName,
-        depositRequest
-      );
-      const cacheKey = formatCachedFetchCacheKey(requestInfo, requestInit);
-      const serializedResponse = await serializeResponse(response);
-
-      console.log(`Setting cache entry for address ${address}`);
-      console.log(`cacheKey=${cacheKey}`);
-      console.log(`apiCallReturnData=${serializedResponse}`);
-      await redis.set(cacheKey, serializedResponse);
-    }
-  }
-}
+  AddressDataSnapshot,
+  formDepositInfo,
+  populateRedisCache,
+} from "../src/cli/commands/inspect/utils";
 
 describe("RULESET_V1", () => {
   let server: RedisMemoryServer;
@@ -102,7 +30,17 @@ describe("RULESET_V1", () => {
     const port = await server.getPort();
     redis = new IORedis(port, host);
 
-    await populateRedisCache(redis);
+    const maybeFolderPath = await getLatestSnapshotFolder("./snapshots");
+    const filePath = path.join(
+      `${findWorkspaceRoot()!}/actors/deposit-screener/test`,
+      maybeFolderPath ?? "",
+      "snapshot.json"
+    );
+
+    const snapshotData = JSON.parse(
+      fs.readFileSync(filePath, "utf-8")
+    ) as AddressDataSnapshot;
+    await populateRedisCache(snapshotData, redis);
 
     ruleset = RULESET_V1(redis);
   });
@@ -174,7 +112,7 @@ describe("RULESET_V1", () => {
         expect(result.type).to.equal("Rejection");
       });
 
-    it("should reject TC user 1 due to MISTTRACK_RISK_REJECT", async () => {
+      it("should reject TC user 1 due to MISTTRACK_RISK_REJECT", async () => {
         const result = await ruleset.check(
           formDepositInfo(REJECT_ADDRESSES.TC_1)
         );
@@ -217,13 +155,13 @@ describe("RULESET_V1", () => {
 
     describe("Approvals", () => {
       it("should approve Aztec user 4", async () => {
-      const result = await ruleset.check(
-        formDepositInfo(APPROVE_ADDRESSES.AZTEC_4)
-      );
-      expect(result.type).to.equal("Delay");
-    });
+        const result = await ruleset.check(
+          formDepositInfo(APPROVE_ADDRESSES.AZTEC_4)
+        );
+        expect(result.type).to.equal("Delay");
+      });
 
-    it("should approve Vitalik", async () => {
+      it("should approve Vitalik", async () => {
         const result = await ruleset.check(
           formDepositInfo(APPROVE_ADDRESSES.VITALIK)
         );

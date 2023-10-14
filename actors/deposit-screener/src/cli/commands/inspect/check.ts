@@ -3,28 +3,33 @@ import { Command } from "commander";
 import fs from "fs";
 import { requireApiKeys } from "../../../utils";
 import { RULESET_V1 } from "../../../screening/checks/v1/RULESET_V1";
-import { formDepositInfo } from "../../../../test/utils";
 import { isRejection } from "../../../screening/checks/RuleSet";
-import path from "path";
 import { Logger } from "winston";
-import IORedis from "ioredis";
+import {
+  AddressDataSnapshot,
+  formDepositInfo,
+  getLocalRedis,
+  populateRedisCache,
+} from "./utils";
+import * as JSON from "bigint-json-serialization";
+import path from "path";
 
 /**
  * Example
  * yarn deposit-screener-cli inspect check --input-csv ./data/addresses.csv --output-data ./data/addresses.json --delay=3 --stdout-log-level=info
  */
 const runChecker = new Command("check")
-  .summary("inspect and analyze addresses from a CSV file")
+  .summary("inspect and analyze addresses from a snapshot JSON file")
   .description(
     "analyzes a list of addresses, provides acceptance metrics and rejection reasons"
   )
   .requiredOption(
-    "--input-csv <path>",
-    "path to the CSV file containing addresses to inspect, first column contains the addresses to verify"
+    "--snapshot-json-path <path>",
+    "path to the snapshot JSON file"
   )
   .requiredOption(
-    "--output-data <path>",
-    "path to the JSON file to write the output data to"
+    "--output-dir <path>",
+    "path to output accept and reject json files"
   )
   .option(
     "--log-dir <string>",
@@ -62,7 +67,8 @@ function showReasonCounts(
 async function main(options: any): Promise<void> {
   requireApiKeys();
 
-  const { inputCsv, outputData, logDir, stdoutLogLevel, delay } = options;
+  const { snapshotJsonPath, outputDir, logDir, stdoutLogLevel, delay } =
+    options;
 
   const logger = makeLogger(
     logDir,
@@ -71,9 +77,19 @@ async function main(options: any): Promise<void> {
     stdoutLogLevel
   );
 
-  if (!fs.existsSync(inputCsv)) {
-    throw new Error(`Input file ${inputCsv} does not exist`);
+  if (!fs.existsSync(snapshotJsonPath)) {
+    throw new Error(`Snapshot file ${snapshotJsonPath} does not exist`);
   }
+
+  const redis = await getLocalRedis();
+  const ruleset = RULESET_V1(redis);
+
+  // Populate redis cache with snapshot file contents
+  logger.info(`Populating redis cache with data from ${snapshotJsonPath}`);
+  const snapshotData = JSON.parse(
+    fs.readFileSync(snapshotJsonPath, "utf-8")
+  ) as AddressDataSnapshot;
+  await populateRedisCache(snapshotData, redis);
 
   const delayNumber = Number(delay);
   if (isNaN(delayNumber)) {
@@ -81,7 +97,6 @@ async function main(options: any): Promise<void> {
   }
 
   // check that the dir where we are going to output to exists using the path library, if not, create it
-  const outputDir = path.dirname(outputData);
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
@@ -93,36 +108,11 @@ async function main(options: any): Promise<void> {
     throw new Error(`Cannot write to output directory ${outputDir}`);
   }
 
-  const redis = new IORedis({ port: 6380, password: "baka" });
-  try {
-    // wait for the state to be connected
-    let retries = 10;
-    while (redis.status !== "ready" && retries-- > 0) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-  } catch (err) {
-    throw new Error(
-      `Cannot connect to redis, from the deposit screener folder try 'docker compose up -d redis' if it is not running. ${err}`
-    );
-  }
-
-  const ruleset = RULESET_V1(redis);
-
-  logger.info(`Starting inspection for addresses from ${inputCsv}`);
-  // read the entire csv input files into memory
-  const inputFileText = await fs.promises.readFile(inputCsv, "utf-8");
-  // split the input file into lines
-  const inputFileLines = inputFileText.split("\n");
-  // take the first column
-  const addresses = inputFileLines.map((line) => line.trim().split(",")[0]);
-  logger.info(`Found ${addresses.length} addresses in the input file`);
-  // filter out anything that doesn't look like an address
-  const filteredAddresses = addresses.filter((address) => {
-    return address.match(/^0x[0-9a-fA-F]{40}$/i);
-  });
+  logger.info(`Starting inspection for addresses from ${snapshotJsonPath}`);
 
   // deduplicate and sort
-  const dedupedAddresses = Array.from(new Set(filteredAddresses)).sort();
+  const allAddresses = Object.keys(snapshotData);
+  const dedupedAddresses = Array.from(new Set(allAddresses)).sort();
   const totalAddresses = dedupedAddresses.length;
 
   logger.info(`Found ${totalAddresses} addresses to inspect`);
@@ -166,8 +156,6 @@ async function main(options: any): Promise<void> {
         (acceptCount / inspectedCount) * 100
       }%)`
     );
-
-    await new Promise((resolve) => setTimeout(resolve, delayNumber * 1000));
   }
 
   const percentAccepted = (acceptCount / totalAddresses) * 100;
@@ -179,14 +167,19 @@ async function main(options: any): Promise<void> {
   showReasonCounts(logger, reasonCounts);
 
   // write the output data to the output file
-  await fs.promises.writeFile(
-    outputData.replace(".json", "-rejected.json"),
-    JSON.stringify(rejectedAddressData, null, 2)
-  );
-  await fs.promises.writeFile(
-    outputData.replace(".json", "-accepted.json"),
-    JSON.stringify(acceptedAddressData, null, 2)
-  );
+  const rejectedOutputFile = path.join(outputDir, "rejected.json");
+  const acceptedOutputFile = path.join(outputDir, "accepted.json");
+
+  await Promise.all([
+    fs.promises.writeFile(
+      rejectedOutputFile,
+      JSON.stringify(rejectedAddressData)
+    ),
+    fs.promises.writeFile(
+      acceptedOutputFile,
+      JSON.stringify(acceptedAddressData)
+    ),
+  ]);
 }
 
 export default runChecker;

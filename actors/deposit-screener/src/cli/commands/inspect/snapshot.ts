@@ -2,13 +2,12 @@ import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { Command } from "commander";
 import fs from "fs";
 import { requireApiKeys } from "../../../utils";
-import { CachedAddressData, formDepositInfo } from "../../../../test/utils";
 import path from "path";
 import { createWriteStream } from "fs";
-import IORedis from "ioredis";
 import { API_CALL_MAP, ApiCallNames } from "../../../screening/checks/apiCalls";
 import { sleep } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
+import { CachedAddressData, formDepositInfo, getLocalRedis } from "./utils";
 
 /**
  * Example
@@ -30,7 +29,7 @@ const runSnapshot = new Command("snapshot")
   .option(
     "--log-dir <string>",
     "directory to write logs to",
-    "./logs/address-checker"
+    "./logs/address-snapshot"
   )
   .option(
     "--delay <number>",
@@ -77,18 +76,7 @@ async function main(options: any): Promise<void> {
     throw new Error(`Cannot write to output directory ${outputDir}`);
   }
 
-  const redis = new IORedis({ port: 6380, password: "baka" });
-  try {
-    // wait for the state to be connected
-    let retries = 10;
-    while (redis.status !== "ready" && retries-- > 0) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-  } catch (err) {
-    throw new Error(
-      `Cannot connect to redis, from the deposit screener folder try 'docker compose up -d redis' if it is not running. ${err}`
-    );
-  }
+  const redis = await getLocalRedis();
 
   logger.info(`Starting inspection for addresses from ${inputCsv}`);
   // read the entire csv input files into memory

@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import runProcessor from "./processor";
 import runServer from "./server";
-import runInspector from "../inspect/checker";
+import runInspector from "../inspect/check";
 
 const run = new Command("run").description(
   "run a deposit screener component (run server or processor)"

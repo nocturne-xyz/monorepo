@@ -3,15 +3,15 @@ import {
   API_CALL_MAP,
   ApiCallNames,
 } from "../../src/screening/checks/apiCalls";
-import {
-  AddressDataSnapshot,
-  ALL_TEST_ADDRESSES,
-  CachedAddressData,
-  formDepositInfo,
-  saveSnapshot,
-} from "../utils";
+import { ALL_TEST_ADDRESSES, saveSnapshot } from "../utils";
 import { requireApiKeys } from "../../src/utils";
 import IORedis from "ioredis";
+import {
+  AddressDataSnapshot,
+  CachedAddressData,
+  formDepositInfo,
+  getLocalRedis,
+} from "../../src/cli/commands/inspect/utils";
 
 /**
  * This script is used to generate a snapshot of the API calls for the test addresses.
@@ -30,18 +30,7 @@ import IORedis from "ioredis";
 async function run() {
   requireApiKeys();
 
-  const redis = new IORedis({ port: 6380, password: "baka" });
-  try {
-    // wait for the state to be connected
-    let retries = 10;
-    while (redis.status !== "ready" && retries-- > 0) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-  } catch (err) {
-    throw new Error(
-      `Cannot connect to redis, from the deposit screener folder try 'docker compose up -d redis' if it is not running. ${err}`
-    );
-  }
+  const redis = await getLocalRedis();
 
   const numAddresses = ALL_TEST_ADDRESSES.length;
   console.log(`There are ${numAddresses} addresses to snapshot`);
