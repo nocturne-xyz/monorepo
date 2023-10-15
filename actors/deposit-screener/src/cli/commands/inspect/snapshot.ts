@@ -5,13 +5,13 @@ import { requireApiKeys } from "../../../utils";
 import path from "path";
 import { createWriteStream } from "fs";
 import { API_CALL_MAP, ApiCallNames } from "../../../screening/checks/apiCalls";
-import { sleep } from "@nocturne-xyz/core";
+import { Address, sleep } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 import { CachedAddressData, formDepositInfo, getLocalRedis } from "./utils";
 
 /**
  * Example
- * yarn deposit-screener-cli inspect snapshot --input-csv ./data/addresses.csv --output-data ./data/addresses.json --delay=3 --stdout-log-level=info
+ * yarn deposit-screener-cli inspect snapshot --input-csv ./data/addresses.csv --output-data ./data/addresses.json --delay-ms=3000 --stdout-log-level=info
  */
 const runSnapshot = new Command("snapshot")
   .summary("create data snapshot for CSV or JSON file of addresses")
@@ -32,7 +32,7 @@ const runSnapshot = new Command("snapshot")
     "./logs/address-snapshot"
   )
   .option(
-    "--delay <number>",
+    "--delay-ms <number>",
     "delay between requests to avoid rate limits (in ms)",
     "500"
   )
@@ -41,6 +41,30 @@ const runSnapshot = new Command("snapshot")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(main);
+
+async function parseAndFilterCsvOfAddresses(path: string): Promise<Address[]> {
+  const inputFileText = await fs.promises.readFile(path, "utf-8");
+  // split the input file into lines
+  const inputFileLines = inputFileText.split("\n");
+  // take the first column
+  const addresses = inputFileLines.map((line) => line.trim().split(",")[0]);
+  // filter out anything that doesn't look like an address
+  const filteredAddresses = addresses.filter((address) => {
+    return address.match(/^0x[0-9a-fA-F]{40}$/i);
+  });
+
+  // deduplicate and sort
+  const uniqueAddresses = new Set();
+  const dedupedAddresses = [];
+  for (const address of filteredAddresses) {
+    if (!uniqueAddresses.has(address)) {
+      uniqueAddresses.add(address);
+      dedupedAddresses.push(address);
+    }
+  }
+
+  return dedupedAddresses;
+}
 
 async function main(options: any): Promise<void> {
   requireApiKeys();
@@ -79,27 +103,7 @@ async function main(options: any): Promise<void> {
   const redis = await getLocalRedis();
 
   logger.info(`Starting inspection for addresses from ${inputCsv}`);
-  // read the entire csv input files into memory
-  const inputFileText = await fs.promises.readFile(inputCsv, "utf-8");
-  // split the input file into lines
-  const inputFileLines = inputFileText.split("\n");
-  // take the first column
-  const addresses = inputFileLines.map((line) => line.trim().split(",")[0]);
-  logger.info(`Found ${addresses.length} addresses in the input file`);
-  // filter out anything that doesn't look like an address
-  const filteredAddresses = addresses.filter((address) => {
-    return address.match(/^0x[0-9a-fA-F]{40}$/i);
-  });
-
-  // deduplicate and sort
-  const uniqueAddresses = new Set();
-  const dedupedAddresses = [];
-  for (const address of filteredAddresses) {
-    if (!uniqueAddresses.has(address)) {
-      uniqueAddresses.add(address);
-      dedupedAddresses.push(address);
-    }
-  }
+  const dedupedAddresses = await parseAndFilterCsvOfAddresses(inputCsv);
   const numAddresses = dedupedAddresses.length;
 
   logger.info(`Found ${numAddresses} addresses to inspect`);
@@ -125,7 +129,7 @@ async function main(options: any): Promise<void> {
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_LABELS.name
       ) {
         console.log(
-          `Sleeping for ${delay} seconds to avoid Misttrack rate limit...`
+          `Sleeping for ${delay} ms to avoid Misttrack rate limit...`
         );
         await sleep(delay);
       }

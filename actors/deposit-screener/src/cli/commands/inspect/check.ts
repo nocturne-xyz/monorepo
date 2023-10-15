@@ -16,7 +16,7 @@ import path from "path";
 
 /**
  * Example
- * yarn deposit-screener-cli inspect check --input-csv ./data/addresses.csv --output-data ./data/addresses.json --delay=3 --stdout-log-level=info
+ * yarn deposit-screener-cli inspect check --snapshot-input-dir ./snapshot/addresses.json --output-data output --stdout-log-level=info
  */
 const runChecker = new Command("check")
   .summary("inspect and analyze addresses from a snapshot JSON file")
@@ -35,11 +35,6 @@ const runChecker = new Command("check")
     "--log-dir <string>",
     "directory to write logs to",
     "./logs/address-checker"
-  )
-  .option(
-    "--delay <number>",
-    "delay between requests to avoid rate limits (in seconds)",
-    "1"
   )
   .option(
     "--stdout-log-level <string>",
@@ -67,8 +62,7 @@ function showReasonCounts(
 async function main(options: any): Promise<void> {
   requireApiKeys();
 
-  const { snapshotJsonPath, outputDir, logDir, stdoutLogLevel, delay } =
-    options;
+  const { snapshotJsonPath, outputDir, logDir, stdoutLogLevel } = options;
 
   const logger = makeLogger(
     logDir,
@@ -90,11 +84,6 @@ async function main(options: any): Promise<void> {
     fs.readFileSync(snapshotJsonPath, "utf-8")
   ) as AddressDataSnapshot;
   await populateRedisCache(snapshotData, redis);
-
-  const delayNumber = Number(delay);
-  if (isNaN(delayNumber)) {
-    throw new Error(`Delay ${delay} is not a number`);
-  }
 
   // check that the dir where we are going to output to exists using the path library, if not, create it
   if (!fs.existsSync(outputDir)) {
