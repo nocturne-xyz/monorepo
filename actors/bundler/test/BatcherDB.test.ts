@@ -12,7 +12,11 @@ describe("BatcherDB", async () => {
   let batcherDB: BatcherDB<string>;
 
   before(async () => {
-    server = await RedisMemoryServer.create();
+    server = await RedisMemoryServer.create({
+      binary: {
+        version: "7.2.0",
+      },
+    });
 
     const host = await server.getHost();
     const port = await server.getPort();

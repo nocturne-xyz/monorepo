@@ -297,7 +297,10 @@ export function makeRedisInstance(): RedisHandle {
     if (!port)
       throw new Error("ran out of available ports for redis instances");
 
-    const server = await RedisMemoryServer.create({ instance: { port } });
+    const server = await RedisMemoryServer.create({
+      instance: { port },
+      binary: { version: "7.2" },
+    });
     const host = await server.getHost();
     return [new IORedis(port, host), server];
   });

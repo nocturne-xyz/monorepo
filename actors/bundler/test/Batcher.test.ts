@@ -28,7 +28,11 @@ describe("BundlerBatcher", async () => {
   const logger = makeTestLogger("bundler", "batcher");
 
   before(async () => {
-    server = await RedisMemoryServer.create();
+    server = await RedisMemoryServer.create({
+      binary: {
+        version: "7.2.0",
+      },
+    });
 
     const host = await server.getHost();
     const port = await server.getPort();

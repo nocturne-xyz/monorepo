@@ -101,7 +101,11 @@ describe("InsertionWriter", () => {
 
 // returns redises and a teardown function
 async function makeRedis(): Promise<IORedis> {
-  const server = await RedisMemoryServer.create();
+  const server = await RedisMemoryServer.create({
+    binary: {
+      version: "7.2.0",
+    },
+  });
   const host = await server.getHost();
   const port = await server.getPort();
   return new IORedis(port, host);

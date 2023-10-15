@@ -39,7 +39,11 @@ describe("InsertionLog", () => {
   let redis: IORedis;
 
   before(async () => {
-    const server = await RedisMemoryServer.create();
+    const server = await RedisMemoryServer.create({
+      binary: {
+        version: "7.2.0",
+      },
+    });
     const host = await server.getHost();
     const port = await server.getPort();
     redis = new IORedis(port, host);
