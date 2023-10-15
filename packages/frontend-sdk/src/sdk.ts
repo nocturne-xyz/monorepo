@@ -400,27 +400,20 @@ export class NocturneSdk implements NocturneSdkApi {
     });
   }
 
-  /**
-   * Format and submit a proven operation to transfer WETH out of Nocturne to a specified
-   * recipient address as ETH.
-   * @param to Recipient address
-   * @param value ETH amount to transfer
-   * @returns Operation handle
-   */
   async initiateAnonEthTransfer(
-    to: Address,
-    value: bigint
+    recipientAddress: Address,
+    amount: bigint
   ): Promise<OperationHandle> {
     const operationRequest = await this.opRequestBuilder
       .use(EthTransferAdapterPlugin)
-      .transferEth(to, value)
+      .transferEth(recipientAddress, amount)
       .build();
 
     const actionMeta: ActionMetadata = {
       type: "Action",
       actionType: "Transfer ETH",
-      to,
-      value,
+      recipientAddress,
+      amount,
     };
 
     return this.performOperation(operationRequest, [actionMeta]);

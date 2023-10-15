@@ -151,7 +151,7 @@ async function handleRpcRequest({
         metadata ?? { items: [] },
         config.erc20s
       ).flatMap((item) => {
-        return [heading(item.heading), text(item.text)];
+        return [heading(item.heading), ...item.messages.map((m) => text(m))];
       });
       // Confirm spend sig auth
       const opConfirmRes = await snap.request({

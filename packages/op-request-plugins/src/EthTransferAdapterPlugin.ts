@@ -15,7 +15,7 @@ const WETH_NAME = "WETH";
 const ETH_TRANSFER_ADAPTER_NAME = "ETHTransferAdapter";
 
 export interface EthTransferAdapterPluginMethods {
-  transferEth(to: Address, value: bigint): this;
+  transferEth(recipientAddress: Address, amount: bigint): this;
 }
 
 export type EthTransferAdapterPluginExt<T extends BaseOpRequestBuilder> = T &
@@ -36,7 +36,7 @@ export function EthTransferAdapterPlugin<EInner extends BaseOpRequestBuilder>(
   return {
     ...inner,
     use: use,
-    transferEth(to: Address, value: bigint) {
+    transferEth(recipientAddress: Address, amount: bigint) {
       const prom = new Promise<BuilderItemToProcess>((resolve) => {
         const ethTransferAdapterAddress = this.config.protocolAllowlist.get(
           ETH_TRANSFER_ADAPTER_NAME
@@ -60,14 +60,14 @@ export function EthTransferAdapterPlugin<EInner extends BaseOpRequestBuilder>(
 
         const unwrap: UnwrapRequest = {
           asset: wethAsset,
-          unwrapValue: value,
+          unwrapValue: amount,
         };
 
         const approveAction: Action = {
           contractAddress: wethAddress,
           encodedFunction: wethInterface.encodeFunctionData("approve", [
             ethTransferAdapterAddress,
-            value,
+            amount,
           ]),
         };
 
@@ -76,15 +76,15 @@ export function EthTransferAdapterPlugin<EInner extends BaseOpRequestBuilder>(
           encodedFunction:
             EthTransferAdapter__factory.createInterface().encodeFunctionData(
               "transfer",
-              [to, value]
+              [recipientAddress, amount]
             ),
         };
 
         const metadata: OperationMetadataItem = {
           type: "Action",
           actionType: "Transfer ETH",
-          to,
-          value,
+          recipientAddress,
+          amount,
         };
 
         resolve({

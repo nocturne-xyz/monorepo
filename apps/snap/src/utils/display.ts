@@ -38,42 +38,76 @@ export const makeSignOperationContent = (
   erc20s: Map<string, Erc20Config>
 ): {
   heading: string;
-  text: string;
+  messages: string[];
 }[] => {
   return opMetadata.items.map((item) => {
-    if (item.type === "ConfidentialPayment")
+    if (item.type !== "Action")
       throw new Error(`${item.type} snap display not yet supported`);
 
-    // TODO support non-erc20 transfer metadata
-    const {
-      //@ts-ignore
-      amount: amountSmallestUnits,
-      //@ts-ignore
-      recipientAddress,
-      //@ts-ignore
-      erc20Address,
-      actionType: operationType,
-    } = item;
+    let heading: string;
+    const messages: string[] = [];
 
-    if (operationType !== "Transfer") {
-      throw new Error(`Operation type ${operationType} not yet supported!`);
+    const displayUnrecognizedAsset = (asset: Address) =>
+      `${asset} _(Unrecognized asset)_`;
+    switch (item.actionType) {
+      case "Transfer": {
+        const {
+          amount: amountSmallestUnits,
+          recipientAddress,
+          erc20Address,
+        } = item;
+        const ticker = lookupTickerByAddress(erc20Address, erc20s);
+        const displayAmount = formatUnits(amountSmallestUnits);
+
+        heading = "Confirm transfer from your Nocturne account";
+        messages.push(
+          "Action: Transfer",
+          `Amount: **${displayAmount}**`,
+          `Asset Token: **${
+            ticker ?? displayUnrecognizedAsset(erc20Address)
+          }**`,
+          `Recipient Address: ${recipientAddress}`
+        );
+        break;
+      }
+      case "Transfer ETH": {
+        const { recipientAddress, amount: amountSmallestUnits } = item;
+        const displayAmountEth = formatUnits(amountSmallestUnits);
+        heading = "Confirm transfer from your Nocturne account";
+        messages.push(
+          `Action: Send **${displayAmountEth} ETH**`,
+          `Recipient Address: ${recipientAddress}`
+        );
+        break;
+      }
+      case "UniswapV3 Swap": {
+        const { tokenIn, inAmount: amountSmallestUnits, tokenOut } = item;
+        const tickerIn = lookupTickerByAddress(tokenIn, erc20s);
+        const tickerOut = lookupTickerByAddress(tokenOut, erc20s);
+        const displayAmountIn = formatUnits(amountSmallestUnits);
+        heading = "Confirm token swap";
+
+        if (tickerIn && tickerOut) {
+          messages.push(
+            `Action: Swap **${displayAmountIn} ${tickerIn}** for **${tickerOut}**`
+          );
+        } else {
+          messages.push(
+            "Action: Swap",
+            `Amount: **${displayAmountIn}**`,
+            `From token: **${tickerIn ?? displayUnrecognizedAsset(tokenIn)}**`,
+            `To token: **${tickerOut ?? displayUnrecognizedAsset(tokenOut)}**`
+          );
+        }
+        break;
+      }
+      default:
+        throw new Error(`Operation type ${item.actionType} not yet supported!`);
     }
-
-    const ticker = lookupTickerByAddress(erc20Address, erc20s);
-    const displayAmount = formatUnits(amountSmallestUnits);
-    const recognizedTicker = `Action: Send **${displayAmount} ${ticker}**
-  Recipient Address: ${recipientAddress}`;
-    const unrecognizedTicker = `Amount: ${displayAmount}
-Asset token address: ${erc20Address} _(Unrecognized asset)_
-Recipient Address: ${recipientAddress}
-`;
-
-    const heading = "Confirm transfer from your Nocturne account";
-    const text = ticker ? recognizedTicker : unrecognizedTicker;
 
     return {
       heading,
-      text,
+      messages,
     };
   });
 };
