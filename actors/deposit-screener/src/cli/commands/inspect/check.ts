@@ -7,6 +7,7 @@ import { isRejection } from "../../../screening/checks/RuleSet";
 import { Logger } from "winston";
 import {
   AddressDataSnapshot,
+  dedupAddressesInOrder,
   formDepositInfo,
   getLocalRedis,
   populateRedisCache,
@@ -59,31 +60,13 @@ function showReasonCounts(
   }
 }
 
-async function main(options: any): Promise<void> {
-  requireApiKeys();
-
-  const { snapshotJsonPath, outputDir, logDir, stdoutLogLevel } = options;
-
-  const logger = makeLogger(
-    logDir,
-    "address-checker",
-    "checker",
-    stdoutLogLevel
-  );
-
+function ensureDirectoriesExist(
+  snapshotJsonPath: string,
+  outputDir: string
+): void {
   if (!fs.existsSync(snapshotJsonPath)) {
     throw new Error(`Snapshot file ${snapshotJsonPath} does not exist`);
   }
-
-  const redis = await getLocalRedis();
-  const ruleset = RULESET_V1(redis);
-
-  // Populate redis cache with snapshot file contents
-  logger.info(`Populating redis cache with data from ${snapshotJsonPath}`);
-  const snapshotData = JSON.parse(
-    fs.readFileSync(snapshotJsonPath, "utf-8")
-  ) as AddressDataSnapshot;
-  await populateRedisCache(snapshotData, redis);
 
   // check that the dir where we are going to output to exists using the path library, if not, create it
   if (!fs.existsSync(outputDir)) {
@@ -96,12 +79,34 @@ async function main(options: any): Promise<void> {
   } catch (err) {
     throw new Error(`Cannot write to output directory ${outputDir}`);
   }
+}
 
-  logger.info(`Starting inspection for addresses from ${snapshotJsonPath}`);
+async function main(options: any): Promise<void> {
+  requireApiKeys();
+
+  const { snapshotJsonPath, outputDir, logDir, stdoutLogLevel } = options;
+  ensureDirectoriesExist(snapshotJsonPath, outputDir);
+
+  const logger = makeLogger(
+    logDir,
+    "address-checker",
+    "checker",
+    stdoutLogLevel
+  );
+
+  const redis = await getLocalRedis();
+  const ruleset = RULESET_V1(redis);
+
+  // Populate redis cache with snapshot file contents
+  logger.info(`Populating redis cache with data from ${snapshotJsonPath}`);
+  const snapshotData = JSON.parse(
+    fs.readFileSync(snapshotJsonPath, "utf-8")
+  ) as AddressDataSnapshot;
+  await populateRedisCache(snapshotData, redis);
 
   // deduplicate and sort
   const allAddresses = Object.keys(snapshotData);
-  const dedupedAddresses = Array.from(new Set(allAddresses)).sort();
+  const dedupedAddresses = dedupAddressesInOrder(allAddresses);
   const totalAddresses = dedupedAddresses.length;
 
   logger.info(`Found ${totalAddresses} addresses to inspect`);
@@ -129,7 +134,6 @@ async function main(options: any): Promise<void> {
       } else {
         reasonCounts[result.reason] = 1;
       }
-      showReasonCounts(logger, reasonCounts);
     } else {
       logger.info(`Accepted ${address}`);
       acceptedAddressData.push({
@@ -138,13 +142,13 @@ async function main(options: any): Promise<void> {
       });
       acceptCount++;
     }
-    inspectedCount++;
 
     logger.info(
       `Current acceptance rate is ${acceptCount}/${inspectedCount} (${
         (acceptCount / inspectedCount) * 100
       }%)`
     );
+    inspectedCount++;
   }
 
   const percentAccepted = (acceptCount / totalAddresses) * 100;

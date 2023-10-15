@@ -7,7 +7,12 @@ import { createWriteStream } from "fs";
 import { API_CALL_MAP, ApiCallNames } from "../../../screening/checks/apiCalls";
 import { Address, sleep } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
-import { CachedAddressData, formDepositInfo, getLocalRedis } from "./utils";
+import {
+  CachedAddressData,
+  dedupAddressesInOrder,
+  formDepositInfo,
+  getLocalRedis,
+} from "./utils";
 
 /**
  * Example
@@ -54,37 +59,12 @@ async function parseAndFilterCsvOfAddresses(path: string): Promise<Address[]> {
   });
 
   // deduplicate and sort
-  const uniqueAddresses = new Set();
-  const dedupedAddresses = [];
-  for (const address of filteredAddresses) {
-    if (!uniqueAddresses.has(address)) {
-      uniqueAddresses.add(address);
-      dedupedAddresses.push(address);
-    }
-  }
-
-  return dedupedAddresses;
+  return dedupAddressesInOrder(filteredAddresses);
 }
 
-async function main(options: any): Promise<void> {
-  requireApiKeys();
-
-  const { inputCsv, outputData, logDir, stdoutLogLevel, delayMs } = options;
-
-  const logger = makeLogger(
-    logDir,
-    "address-checker",
-    "checker",
-    stdoutLogLevel
-  );
-
+function ensureDirectoriesExist(inputCsv: string, outputData: string): void {
   if (!fs.existsSync(inputCsv)) {
     throw new Error(`Input file ${inputCsv} does not exist`);
-  }
-
-  const delayNumber = Number(delayMs);
-  if (isNaN(delayNumber)) {
-    throw new Error(`Delay ${delayMs} is not a number`);
   }
 
   // check that the dir where we are going to output to exists using the path library, if not, create it
@@ -99,14 +79,24 @@ async function main(options: any): Promise<void> {
   } catch (err) {
     throw new Error(`Cannot write to output directory ${outputDir}`);
   }
+}
 
-  const redis = await getLocalRedis();
+async function main(options: any): Promise<void> {
+  requireApiKeys();
 
-  logger.info(`Starting inspection for addresses from ${inputCsv}`);
+  const { inputCsv, outputData, logDir, stdoutLogLevel, delayMs } = options;
+  ensureDirectoriesExist(inputCsv, outputData);
+
+  const logger = makeLogger(
+    logDir,
+    "address-checker",
+    "checker",
+    stdoutLogLevel
+  );
+
+  logger.info(`Starting snapshot for addresses from ${inputCsv}`);
   const dedupedAddresses = await parseAndFilterCsvOfAddresses(inputCsv);
   const numAddresses = dedupedAddresses.length;
-
-  logger.info(`Found ${numAddresses} addresses to inspect`);
 
   const writeStream = createWriteStream(outputData, { encoding: "utf-8" });
   writeStream.write("{");
@@ -121,7 +111,6 @@ async function main(options: any): Promise<void> {
 
     const deposit = formDepositInfo(address);
     let addressData: CachedAddressData = {};
-
     for (const [callName, apiCall] of Object.entries(API_CALL_MAP)) {
       if (
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_OVERVIEW.name ||
@@ -135,6 +124,7 @@ async function main(options: any): Promise<void> {
       }
 
       console.log(`Calling ${callName} for ${address}...`);
+      const redis = await getLocalRedis();
       addressData[callName as ApiCallNames] = await apiCall(deposit, redis, {
         ttlSeconds: 48 * 60 * 60,
       });

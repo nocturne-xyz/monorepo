@@ -46,6 +46,20 @@ export function toMisttrackResponse(data: MisttrackData): Response {
   return res;
 }
 
+export function dedupAddressesInOrder(addresses: string[]): string[] {
+  // deduplicate and sort
+  const uniqueAddresses = new Set();
+  const dedupedAddresses = [];
+  for (const address of addresses) {
+    if (!uniqueAddresses.has(address)) {
+      uniqueAddresses.add(address);
+      dedupedAddresses.push(address);
+    }
+  }
+
+  return dedupedAddresses;
+}
+
 export async function getLocalRedis(): Promise<IORedis> {
   const redis = new IORedis({ port: 6380, password: "baka" });
   try {
