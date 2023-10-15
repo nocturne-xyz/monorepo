@@ -19,6 +19,8 @@ import {
 } from "./utils/display";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import { SnapKvStore } from "./snapdb";
+import { assert } from "superstruct";
+import { SetSpendKeyParams } from "./validation";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Goerli
@@ -90,6 +92,8 @@ async function handleRpcRequest({
       return await kvStore.containsKey(SPEND_KEY_DB_KEY);
     }
     case "nocturne_setSpendKey": {
+      assert(request.params, SetSpendKeyParams);
+
       if (!ALLOWED_ORIGINS.includes(origin)) {
         throw new Error(
           `Non-allowed origin cannot set spend key. Origin: ${origin}`
@@ -121,6 +125,7 @@ async function handleRpcRequest({
       };
     }
     case "nocturne_signCanonAddrRegistryEntry": {
+      // TODO: validate inputs
       const signer = await mustGetSigner();
       const { entry, chainId, registryAddress } = request.params;
 
@@ -157,6 +162,7 @@ async function handleRpcRequest({
       };
     }
     case "nocturne_signOperation": {
+      // TODO: validate inputs
       const signer = await mustGetSigner();
       const { op, metadata } = request.params;
       const contentItems = makeSignOperationContent(
