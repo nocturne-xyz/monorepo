@@ -3,6 +3,8 @@ import { Address, CanonAddrRegistryEntry } from "@nocturne-xyz/core";
 import { OperationMetadata } from "@nocturne-xyz/client";
 import { formatUnits } from "ethers/lib/utils";
 
+const NEWLINE_AND_CARRIAGE_RETURN_REGEX = /[\r\n]+/g;
+
 const lookupTickerByAddress = (
   address: string,
   erc20s: Map<string, Erc20Config>
@@ -29,7 +31,7 @@ export const makeSignCanonAddrRegistryEntryContent = (
 
   return {
     heading,
-    text,
+    text: text.replace(NEWLINE_AND_CARRIAGE_RETURN_REGEX, ""), // Strip newlines + carriage returns
   };
 };
 
@@ -107,7 +109,9 @@ export const makeSignOperationContent = (
 
     return {
       heading,
-      messages,
+      messages: messages.map(
+        (m) => m.replace(NEWLINE_AND_CARRIAGE_RETURN_REGEX, "") // Strip newlines and carriage returns
+      ),
     };
   });
 };

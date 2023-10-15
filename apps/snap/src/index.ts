@@ -23,6 +23,12 @@ import { SnapKvStore } from "./snapdb";
 // To build locally, invoke `yarn build:local` from snap directory
 // Goerli
 
+const ALLOWED_ORIGINS = [
+  "http://localhost:4001",
+  "https://veil.nocturnelabs.xyz",
+  "https://app.nocturnelabs.xyz",
+];
+
 const SPEND_KEY_DB_KEY = "nocturne_spend_key";
 
 const config = loadNocturneConfigBuiltin("goerli");
@@ -70,6 +76,7 @@ export const onRpcRequest: OnRpcRequestHandler = async (args) => {
 };
 
 async function handleRpcRequest({
+  origin,
   request,
 }: SnapRpcRequestHandlerArgs): Promise<RpcRequestMethod["return"]> {
   //@ts-ignore
@@ -83,6 +90,12 @@ async function handleRpcRequest({
       return await kvStore.containsKey(SPEND_KEY_DB_KEY);
     }
     case "nocturne_setSpendKey": {
+      if (!ALLOWED_ORIGINS.includes(origin)) {
+        throw new Error(
+          `Non-allowed origin cannot set spend key. Origin: ${origin}`
+        );
+      }
+
       const spendKey = new Uint8Array(request.params.spendKey);
 
       // Can only set spend key if not already set, only way to reset is to clear snap db and
