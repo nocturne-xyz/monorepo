@@ -33,8 +33,8 @@ const runSnapshot = new Command("snapshot")
   )
   .option(
     "--delay <number>",
-    "delay between requests to avoid rate limits (in seconds)",
-    "1"
+    "delay between requests to avoid rate limits (in ms)",
+    "500"
   )
   .option(
     "--stdout-log-level <string>",
@@ -92,7 +92,14 @@ async function main(options: any): Promise<void> {
   });
 
   // deduplicate and sort
-  const dedupedAddresses = Array.from(new Set(filteredAddresses)).sort();
+  const uniqueAddresses = new Set();
+  const dedupedAddresses = [];
+  for (const address of filteredAddresses) {
+    if (!uniqueAddresses.has(address)) {
+      uniqueAddresses.add(address);
+      dedupedAddresses.push(address);
+    }
+  }
   const numAddresses = dedupedAddresses.length;
 
   logger.info(`Found ${numAddresses} addresses to inspect`);
@@ -118,13 +125,15 @@ async function main(options: any): Promise<void> {
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_LABELS.name
       ) {
         console.log(
-          "Sleeping for 250ms seconds to avoid Misttrack rate limit..."
+          `Sleeping for ${delay} seconds to avoid Misttrack rate limit...`
         );
-        await sleep(250);
+        await sleep(delay);
       }
 
       console.log(`Calling ${callName} for ${address}...`);
-      addressData[callName as ApiCallNames] = await apiCall(deposit, redis);
+      addressData[callName as ApiCallNames] = await apiCall(deposit, redis, {
+        ttlSeconds: 48 * 60 * 60,
+      });
       console.log(`Successfully called ${callName} for ${address}`);
     }
 
