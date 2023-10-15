@@ -1,18 +1,26 @@
-import { sleep } from "@nocturne-xyz/core";
-import {
-  API_CALL_MAP,
-  ApiCallNames,
-} from "../../src/screening/checks/apiCalls";
-import { ALL_TEST_ADDRESSES, saveSnapshot } from "../utils";
-import { requireApiKeys } from "../../src/utils";
-import IORedis from "ioredis";
-import {
-  AddressDataSnapshot,
-  CachedAddressData,
-  formDepositInfo,
-  getLocalRedis,
-} from "../../src/cli/commands/inspect/utils";
+import { ALL_TEST_ADDRESSES } from "../snapshotTestCases";
+import { promises as fs } from "fs";
+import { spawn } from "child_process";
+import { getNewSnapshotFolderPath } from "../utils";
 
+async function execAsync(command: string) {
+  return new Promise<void>((resolve, reject) => {
+    // spawn child process that inherits stdio from parent so logger has correct output
+    const child = spawn(command, { shell: true, stdio: "inherit" });
+
+    child.on("error", (err) => {
+      reject(err);
+    });
+
+    child.on("exit", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Command "${command}" exited with code ${code}`));
+      }
+    });
+  });
+}
 /**
  * This script is used to generate a snapshot of the API calls for the test addresses.
  *
@@ -28,41 +36,17 @@ import {
  *   still in git history if we need them.
  */
 async function run() {
-  requireApiKeys();
+  // Convert array to CSV format (each address on a new line)
+  const csvContent = ALL_TEST_ADDRESSES.join("\n");
 
-  const redis = await getLocalRedis();
+  // Write CSV to file
+  await fs.writeFile("snapshotTestCases.csv", csvContent);
 
-  const numAddresses = ALL_TEST_ADDRESSES.length;
-  console.log(`There are ${numAddresses} addresses to snapshot`);
-  let snapshotData: AddressDataSnapshot = {};
-  let count = 0;
-  for (const address of ALL_TEST_ADDRESSES) {
-    console.log(
-      `Starting API calls for address: ${address} ——— ${(count += 1)} of ${numAddresses}`
-    );
-    const deposit = formDepositInfo(address);
-    snapshotData[address] = {};
-    for (const [callName, apiCall] of Object.entries(API_CALL_MAP)) {
-      if (
-        callName === API_CALL_MAP.MISTTRACK_ADDRESS_OVERVIEW.name ||
-        callName === API_CALL_MAP.MISTTRACK_ADDRESS_RISK_SCORE.name ||
-        callName === API_CALL_MAP.MISTTRACK_ADDRESS_LABELS.name
-      ) {
-        console.log(
-          "Sleeping for 250ms seconds to avoid Misttrack rate limit..."
-        );
-        await sleep(250);
-      }
-      const addressData = snapshotData[address] as CachedAddressData;
-      console.log(`Calling ${callName} for ${address}...`);
-      addressData[callName as ApiCallNames] = await apiCall(deposit, redis);
+  const outputPath = getNewSnapshotFolderPath();
 
-      console.log(`Successfully called ${callName} for ${address}`);
-    }
-  }
-  console.log("All API calls completed, saving snapshot...");
-  saveSnapshot(snapshotData);
-  console.log("Snapshot saved successfully");
+  await execAsync(
+    `yarn build && yarn deposit-screener-cli inspect snapshot --input-csv ./snapshotTestCases.csv --output-data ${outputPath}/snapshot.json --delay-ms ${800} --stdout-log-level debug`
+  );
 
   process.exit(0);
 }

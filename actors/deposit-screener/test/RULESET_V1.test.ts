@@ -6,8 +6,7 @@ import {
   APPROVE_ADDRESSES,
   BULK_TEST_CASES,
   REJECT_ADDRESSES,
-  getLatestSnapshotFolder,
-} from "./utils";
+} from "./snapshotTestCases";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import { isRejection, RuleSet } from "../src/screening/checks/RuleSet";
 import RedisMemoryServer from "redis-memory-server";
@@ -17,6 +16,7 @@ import {
   formDepositInfo,
   populateRedisCache,
 } from "../src/cli/commands/inspect/utils";
+import { getLatestSnapshotFolder } from "./utils";
 
 describe("RULESET_V1", () => {
   let server: RedisMemoryServer;

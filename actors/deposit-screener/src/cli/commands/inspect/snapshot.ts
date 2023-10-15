@@ -33,7 +33,7 @@ const runSnapshot = new Command("snapshot")
   )
   .option(
     "--delay-ms <number>",
-    "delay between requests to avoid rate limits (in ms)",
+    "delay ms between requests to avoid rate limits (in ms)",
     "500"
   )
   .option(
@@ -69,7 +69,7 @@ async function parseAndFilterCsvOfAddresses(path: string): Promise<Address[]> {
 async function main(options: any): Promise<void> {
   requireApiKeys();
 
-  const { inputCsv, outputData, logDir, stdoutLogLevel, delay } = options;
+  const { inputCsv, outputData, logDir, stdoutLogLevel, delayMs } = options;
 
   const logger = makeLogger(
     logDir,
@@ -82,9 +82,9 @@ async function main(options: any): Promise<void> {
     throw new Error(`Input file ${inputCsv} does not exist`);
   }
 
-  const delayNumber = Number(delay);
+  const delayNumber = Number(delayMs);
   if (isNaN(delayNumber)) {
-    throw new Error(`Delay ${delay} is not a number`);
+    throw new Error(`Delay ${delayMs} is not a number`);
   }
 
   // check that the dir where we are going to output to exists using the path library, if not, create it
@@ -129,9 +129,9 @@ async function main(options: any): Promise<void> {
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_LABELS.name
       ) {
         console.log(
-          `Sleeping for ${delay} ms to avoid Misttrack rate limit...`
+          `Sleeping for ${delayMs} ms to avoid Misttrack rate limit...`
         );
-        await sleep(delay);
+        await sleep(delayMs);
       }
 
       console.log(`Calling ${callName} for ${address}...`);
