@@ -130,6 +130,7 @@ export class CompositeRule<T extends ReadonlyArray<ApiCallNames>>
     this.predicateFn = params.applyIf === "Any" ? "some" : "every";
     this.cache = cache;
   }
+
   async check(
     deposit: ScreeningDepositRequest,
     cachedFetchOptions: CachedFetchOptions = {}

@@ -16,7 +16,7 @@ import {
 
 /**
  * Example
- * yarn deposit-screener-cli inspect snapshot --input-csv ./data/addresses.csv --output-data ./data/addresses.json --delay-ms=3000 --stdout-log-level=info
+ * yarn deposit-screener-cli inspect snapshot --input-csv ./data/addresses.csv --output-data ./data/addresses.json --delay-ms 3000 --stdout-log-level info
  */
 const runSnapshot = new Command("snapshot")
   .summary("create data snapshot for CSV or JSON file of addresses")

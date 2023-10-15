@@ -103,8 +103,6 @@ export function formatCachedFetchCacheKey(
   requestInfo: RequestInfo,
   requestInit: RequestInit
 ): string {
-  // to avoid "body already used for" error we must clone
-  //const reqeustInitClone = requestInit.clone();
   const cacheKeyData = `${
     typeof requestInfo === "string" ? requestInfo : requestInfo.url
   }-${stableStringify(requestInit.body ?? {})}`;

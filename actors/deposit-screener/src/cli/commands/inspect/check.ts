@@ -17,7 +17,7 @@ import path from "path";
 
 /**
  * Example
- * yarn deposit-screener-cli inspect check --snapshot-input-dir ./snapshot/addresses.json --output-data output --stdout-log-level=info
+ * yarn deposit-screener-cli inspect check --snapshot-json-path ./snapshot/addresses.json --output-dir output --stdout-log-level=info
  */
 const runChecker = new Command("check")
   .summary("inspect and analyze addresses from a snapshot JSON file")
