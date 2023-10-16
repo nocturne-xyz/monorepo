@@ -48,59 +48,6 @@ it("validates SignCanonAddrRegistryEntryParams", () => {
   chaiAssert.throws(() => assert(badData, SignCanonAddrRegistryEntryParams));
 });
 
-/**
- * export interface BaseJoinSplit {
-  commitmentTreeRoot: bigint;
-  nullifierA: bigint;
-  nullifierB: bigint;
-  newNoteACommitment: bigint;
-  newNoteBCommitment: bigint;
-  senderCommitment: bigint;
-  joinSplitInfoCommitment: bigint;
-  encodedAsset: EncodedAsset;
-  publicSpend: bigint;
-  newNoteAEncrypted: EncryptedNote;
-  newNoteBEncrypted: EncryptedNote;
-}
-
-export interface PreSignJoinSplit extends BaseJoinSplit {
-  receiver: CanonAddress;
-  oldNoteA: IncludedNote;
-  oldNoteB: IncludedNote;
-  newNoteA: Note;
-  newNoteB: Note;
-  merkleProofA: MerkleProofInput;
-  merkleProofB: MerkleProofInput;
-  refundAddr: CompressedStealthAddress;
-}
-
-const EncryptedNoteType = object({
-  ciphertextBytes: array(number()),
-  encapsulatedSecretBytes: array(number()),
-});
-export interface Note {
-  owner: StealthAddress;
-  nonce: bigint;
-  asset: Asset;
-  value: bigint;
-}
-
-export interface IncludedNote extends Note {
-  merkleIndex: number;
-}
-
-export interface MerkleProofInput {
-  path: bigint[];
-  siblings: bigint[][];
-}
-
-export interface StealthAddress {
-  h1X: bigint;
-  h1Y: bigint;
-  h2X: bigint;
-  h2Y: bigint;
-}
- */
 it("validates SignOperationParams", () => {
   const data = {
     op: {
