@@ -20,7 +20,11 @@ import {
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import { SnapKvStore } from "./snapdb";
 import { assert } from "superstruct";
-import { SetSpendKeyParams } from "./validation";
+import {
+  SetSpendKeyParams,
+  SignCanonAddrRegistryEntryParams,
+  SignOperationParams,
+} from "./validation";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Goerli
@@ -125,7 +129,8 @@ async function handleRpcRequest({
       };
     }
     case "nocturne_signCanonAddrRegistryEntry": {
-      // TODO: validate inputs
+      assert(request.params, SignCanonAddrRegistryEntryParams);
+
       const signer = await mustGetSigner();
       const { entry, chainId, registryAddress } = request.params;
 
@@ -162,7 +167,8 @@ async function handleRpcRequest({
       };
     }
     case "nocturne_signOperation": {
-      // TODO: validate inputs
+      assert(request.params, SignOperationParams);
+
       const signer = await mustGetSigner();
       const { op, metadata } = request.params;
       const contentItems = makeSignOperationContent(
