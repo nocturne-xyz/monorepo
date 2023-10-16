@@ -33,7 +33,7 @@ export class InsertionWriter {
 
     this.logger.debug("starting iterator");
     const newInsertionBatches = this.adapter.iterInsertions(
-      logTip ?? 0,
+      logTip !== undefined ? logTip + 1 : 0,
       syncOpts
     );
 
