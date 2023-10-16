@@ -39,12 +39,19 @@ export class DepositScreenerServer {
     this.redis = redis;
     this.db = new DepositScreenerDB(redis);
     this.screeningApi = screeningApi;
-    this.screenerQueue = new Queue(SCREENER_DELAY_QUEUE, { connection: redis });
+    const options = { ...this.redis.options, keyPrefix: undefined };
+    const redisForBullmq = new IORedis(options);
+    this.screenerQueue = new Queue(SCREENER_DELAY_QUEUE, {
+      connection: redisForBullmq,
+    });
+
     this.fulfillerQueues = new Map(
       Array.from(supportedAssetRateLimits.keys()).map((address) => {
         return [
           address,
-          new Queue(getFulfillmentQueueName(address), { connection: redis }),
+          new Queue(getFulfillmentQueueName(address), {
+            connection: redisForBullmq,
+          }),
         ];
       })
     );

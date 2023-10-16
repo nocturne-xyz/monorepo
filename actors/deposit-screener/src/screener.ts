@@ -86,8 +86,9 @@ export class DepositScreenerScreener {
 
     this.db = new DepositScreenerDB(redis);
 
+    const options = { ...this.redis.options, keyPrefix: undefined };
     this.screenerDelayQueue = new Queue(SCREENER_DELAY_QUEUE, {
-      connection: redis,
+      connection: options,
     });
 
     this.screeningApi = screeningApi;
@@ -403,8 +404,9 @@ export class DepositScreenerScreener {
         };
 
         // figure out which fulfillment queue to add to
+        const options = { ...this.redis.options, keyPrefix: undefined };
         const fulfillmentQueue = new Queue(getFulfillmentQueueName(assetAddr), {
-          connection: this.redis,
+          connection: options,
         });
 
         const jobTag = getFulfillmentJobTag(assetAddr);

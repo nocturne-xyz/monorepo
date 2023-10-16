@@ -62,8 +62,10 @@ export class BundlerBatcher {
     this.logger = logger;
     this.statusDB = new StatusDB(redis);
     this.batcherDB = new BatcherDB(redis);
+    // use this.redis.options to get host and port but remove keyPrefix
+    const options = { ...this.redis.options, keyPrefix: undefined };
     this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, {
-      connection: redis,
+      connection: options,
     });
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);

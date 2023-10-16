@@ -64,7 +64,10 @@ export class BundlerServer {
     ignoreGas?: boolean
   ) {
     this.redis = redis;
-    this.queue = new Queue(SUBMITTABLE_OPERATION_QUEUE, { connection: redis });
+    const options = { ...this.redis.options, keyPrefix: undefined };
+    this.queue = new Queue(SUBMITTABLE_OPERATION_QUEUE, {
+      connection: options,
+    });
     this.statusDB = new StatusDB(redis);
     this.nullifierDB = new NullifierDB(redis);
     this.logger = logger;
