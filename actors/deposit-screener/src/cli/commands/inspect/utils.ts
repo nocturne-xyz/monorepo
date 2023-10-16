@@ -12,6 +12,8 @@ import {
   formatCachedFetchCacheKey,
   serializeResponse,
 } from "@nocturne-xyz/offchain-utils";
+import fs from "fs";
+import path from "path";
 
 export type CachedAddressData = Partial<
   Record<ApiCallNames, ApiCallReturnData>
@@ -58,6 +60,28 @@ export function dedupAddressesInOrder(addresses: string[]): string[] {
   }
 
   return dedupedAddresses;
+}
+
+export function ensureDirectoriesExist(
+  inputPath: string,
+  outputPath: string
+): void {
+  if (!fs.existsSync(inputPath)) {
+    throw new Error(`Input file ${inputPath} does not exist`);
+  }
+
+  // check that the dir where we are going to output to exists using the path library, if not, create it
+  const outputDir = path.dirname(outputPath);
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  // check if we can write to the output directory
+  try {
+    fs.accessSync(outputDir, fs.constants.W_OK);
+  } catch (err) {
+    throw new Error(`Cannot write to output directory ${outputDir}`);
+  }
 }
 
 export async function getLocalRedis(): Promise<IORedis> {

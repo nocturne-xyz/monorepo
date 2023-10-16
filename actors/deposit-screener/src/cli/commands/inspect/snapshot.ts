@@ -2,7 +2,6 @@ import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { Command } from "commander";
 import fs from "fs";
 import { requireApiKeys } from "../../../utils";
-import path from "path";
 import { createWriteStream } from "fs";
 import { API_CALL_MAP, ApiCallNames } from "../../../screening/checks/apiCalls";
 import { Address, sleep } from "@nocturne-xyz/core";
@@ -10,6 +9,7 @@ import * as JSON from "bigint-json-serialization";
 import {
   CachedAddressData,
   dedupAddressesInOrder,
+  ensureDirectoriesExist,
   formDepositInfo,
   getLocalRedis,
 } from "./utils";
@@ -62,25 +62,6 @@ async function parseAndFilterCsvOfAddresses(path: string): Promise<Address[]> {
   return dedupAddressesInOrder(filteredAddresses);
 }
 
-function ensureDirectoriesExist(inputCsv: string, outputData: string): void {
-  if (!fs.existsSync(inputCsv)) {
-    throw new Error(`Input file ${inputCsv} does not exist`);
-  }
-
-  // check that the dir where we are going to output to exists using the path library, if not, create it
-  const outputDir = path.dirname(outputData);
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
-
-  // check if we can write to the output directory
-  try {
-    fs.accessSync(outputDir, fs.constants.W_OK);
-  } catch (err) {
-    throw new Error(`Cannot write to output directory ${outputDir}`);
-  }
-}
-
 async function main(options: any): Promise<void> {
   requireApiKeys();
 
@@ -100,6 +81,17 @@ async function main(options: any): Promise<void> {
 
   const writeStream = createWriteStream(outputData, { encoding: "utf-8" });
   writeStream.write("{");
+
+  process.on("SIGINT", async () => {
+    console.log("Caught interrupt signal");
+    await new Promise<void>((resolve) => {
+      writeStream.end("}", () => {
+        console.log("Snapshot saved successfully");
+        resolve();
+      });
+    });
+    process.exit(0);
+  });
 
   console.log(`There are ${numAddresses} addresses to snapshot`);
   let count = 0;
@@ -125,10 +117,16 @@ async function main(options: any): Promise<void> {
 
       console.log(`Calling ${callName} for ${address}...`);
       const redis = await getLocalRedis();
-      addressData[callName as ApiCallNames] = await apiCall(deposit, redis, {
-        ttlSeconds: 48 * 60 * 60,
-      });
-      console.log(`Successfully called ${callName} for ${address}`);
+      try {
+        addressData[callName as ApiCallNames] = await apiCall(deposit, redis, {
+          ttlSeconds: 48 * 60 * 60,
+        });
+        console.log(`Successfully called ${callName} for ${address}`);
+      } catch (err) {
+        console.error(`Failed to call ${callName} for ${address}: ${err}`);
+        console.log(`Exiting snapshot run early!`);
+        break;
+      }
     }
 
     writeStream.write(`"${address}": ${JSON.stringify(addressData)}`);

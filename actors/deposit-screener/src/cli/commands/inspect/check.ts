@@ -8,6 +8,7 @@ import { Logger } from "winston";
 import {
   AddressDataSnapshot,
   dedupAddressesInOrder,
+  ensureDirectoriesExist,
   formDepositInfo,
   getLocalRedis,
   populateRedisCache,
@@ -57,27 +58,6 @@ function showReasonCounts(
   logger.info(`Sorted reason counts:`);
   for (const reasonCount of sortedReasonCounts) {
     logger.info(`${reasonCount[0]}: ${reasonCount[1]}`);
-  }
-}
-
-function ensureDirectoriesExist(
-  snapshotJsonPath: string,
-  outputDir: string
-): void {
-  if (!fs.existsSync(snapshotJsonPath)) {
-    throw new Error(`Snapshot file ${snapshotJsonPath} does not exist`);
-  }
-
-  // check that the dir where we are going to output to exists using the path library, if not, create it
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
-
-  // check if we can write to the output directory
-  try {
-    fs.accessSync(outputDir, fs.constants.W_OK);
-  } catch (err) {
-    throw new Error(`Cannot write to output directory ${outputDir}`);
   }
 }
 
