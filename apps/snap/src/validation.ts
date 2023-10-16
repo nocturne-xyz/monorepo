@@ -1,23 +1,34 @@
 import {
   object,
-  define,
   string,
   bigint,
   array,
   boolean,
   enums,
   union,
+  define,
 } from "superstruct";
 
-const Uint8ArrayType = define(
-  "Uint8Array",
-  (value: any): value is Uint8Array => {
-    return value instanceof Uint8Array;
+const isStringifiedUint8Array = (value: any) => {
+  if (typeof value !== "object" || Array.isArray(value)) return false;
+
+  const keys = Object.keys(value)
+    .map((k) => parseInt(k, 10))
+    .sort((a, b) => a - b);
+  for (let i = 0; i < keys.length; i++) {
+    if (keys[i] !== i) return false;
   }
+
+  return true;
+};
+
+const StringifiedUint8ArrayType = define(
+  `StringifiedUint8ArrayType`,
+  isStringifiedUint8Array
 );
 
 export const SetSpendKeyParams = object({
-  spendKey: Uint8ArrayType,
+  spendKey: StringifiedUint8ArrayType, // Originally Uint8Array but serialized to number[] when passed to snap
 });
 
 export const SignCanonAddrRegistryEntryParams = object({

@@ -9,10 +9,15 @@ import {
 
 it("validates SetSpendKeyParams", () => {
   const data = {
-    spendKey: new Uint8Array([1, 2, 3, 4]),
+    spendKey: {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+      "3": 4,
+    },
   };
   const badData = {
-    spendKey: "not a Uint8Array",
+    spendKey: [1, 2, 3, 4], // plain number[], not how uint8array is serialized
   };
 
   assert(data, SetSpendKeyParams);

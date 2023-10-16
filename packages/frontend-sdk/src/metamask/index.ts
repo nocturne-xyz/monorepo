@@ -2,7 +2,12 @@ import * as JSON from "bigint-json-serialization";
 import { SnapStateApi } from "../api";
 import { GetSnapsResponse, Snap } from "./types";
 import { generateNocturneSpendKeyFromEoaSig } from "../eoaSigKeygen";
-import { RpcRequestMethod, SetSpendKeyMethod, SpendKeyIsSetMethod, stringifyObjectValues } from "@nocturne-xyz/client";
+import {
+  RpcRequestMethod,
+  SetSpendKeyMethod,
+  SpendKeyIsSetMethod,
+  stringifyObjectValues,
+} from "@nocturne-xyz/client";
 import { SupportedProvider } from "../types";
 import { getSigner } from "./utils";
 
@@ -15,7 +20,7 @@ export class SnapStateSdk implements SnapStateApi {
     // this is lazy so it plays nice with server components
     readonly getProvider: () => SupportedProvider,
     readonly version?: string,
-    readonly snapId: string = NOCTURNE_SNAP_ORIGIN,
+    readonly snapId: string = NOCTURNE_SNAP_ORIGIN
   ) {}
 
   async isFlask(): Promise<boolean> {
@@ -66,7 +71,6 @@ export class SnapStateSdk implements SnapStateApi {
     }
   }
 
-
   async invoke<RpcMethod extends RpcRequestMethod>(
     request: Omit<RpcMethod, "return">
   ): Promise<RpcMethod["return"]> {
@@ -90,53 +94,53 @@ export class SnapStateSdk implements SnapStateApi {
     return response ? JSON.parse(response as unknown as string) : undefined;
   }
 
-    /**
+  /**
    * Get the installed snaps in MetaMask.
    * https://docs.metamask.io/snaps/reference/rpc-api/#wallet_getsnaps
    *
    * @returns The snaps installed in MetaMask.
    */
-    protected async getSnaps(): Promise<GetSnapsResponse> {
-      return (await window.ethereum.request({
-        method: "wallet_getSnaps",
-      })) as unknown as GetSnapsResponse;
+  protected async getSnaps(): Promise<GetSnapsResponse> {
+    return (await window.ethereum.request({
+      method: "wallet_getSnaps",
+    })) as unknown as GetSnapsResponse;
+  }
+
+  /**
+   * Generate spend key based on Ethereum private key signature, then pass to snap
+   * to store/manage.
+   * Will throw an error if the snap already has a key stored.
+   * This function should only be used an alternative to the default key generation using the
+   * snap's internal seed phrase when portability is required.
+   * @dev WARNING: The spending key will momentarily exist in memory.
+   */
+  private async generateAndStoreSpendKeyFromEoaSigIfNotAlreadySet(): Promise<void> {
+    // Return early if spend key already set
+    const snapKeyAlreadySet = await this.invoke<SpendKeyIsSetMethod>({
+      method: "nocturne_spendKeyIsSet",
+      params: undefined,
+    });
+    if (snapKeyAlreadySet) {
+      return;
     }
 
-    /**
-    * Generate spend key based on Ethereum private key signature, then pass to snap
-    * to store/manage.
-    * Will throw an error if the snap already has a key stored.
-    * This function should only be used an alternative to the default key generation using the
-    * snap's internal seed phrase when portability is required.
-    * @dev WARNING: The spending key will momentarily exist in memory.
-    */
-   private async generateAndStoreSpendKeyFromEoaSigIfNotAlreadySet(): Promise<void> {
-     // Return early if spend key already set
-      const snapKeyAlreadySet = await this.invoke<SpendKeyIsSetMethod>({
-        method: "nocturne_spendKeyIsSet",
-        params: undefined,
-      });
-     if (snapKeyAlreadySet) {
-        return;
-     }
-  
-     // Generate spend key and attempt to set in snap
-     const signer = await getSigner(this.getProvider());
-     const spendKey = await generateNocturneSpendKeyFromEoaSig(signer);
-  
-     const maybeErrorString = await this.invoke<SetSpendKeyMethod>({
-       method: "nocturne_setSpendKey",
-       params: {
-         spendKey,
-       },
-     });
-  
-     // Clear the spend key from memory
-     spendKey.fill(0);
-  
-     // Notify consumer if spend key was not actually set (in case of some race condition where it was set between the first spendKeyIsSet check and the setSpendKey call)
-     if (maybeErrorString) {
-       throw new Error(maybeErrorString);
-     }
-   }
+    // Generate spend key and attempt to set in snap
+    const signer = await getSigner(this.getProvider());
+    const spendKey = await generateNocturneSpendKeyFromEoaSig(signer);
+
+    const maybeErrorString = await this.invoke<SetSpendKeyMethod>({
+      method: "nocturne_setSpendKey",
+      params: {
+        spendKey,
+      },
+    });
+
+    // Clear the spend key from memory
+    spendKey.fill(0);
+
+    // Notify consumer if spend key was not actually set (in case of some race condition where it was set between the first spendKeyIsSet check and the setSpendKey call)
+    if (maybeErrorString) {
+      throw new Error(maybeErrorString);
+    }
+  }
 }

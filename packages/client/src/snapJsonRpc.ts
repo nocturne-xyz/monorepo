@@ -15,7 +15,7 @@ import {
 export interface SetSpendKeyMethod {
   method: "nocturne_setSpendKey";
   params: {
-    spendKey: Uint8Array;
+    spendKey: Uint8Array; // converted to number[] serialized for snap
   };
   return: string | undefined; // error string or undefined
 }
