@@ -47,7 +47,7 @@ export class SubgraphTreeInsertionSyncAdapter
       // if `fetchTeiFromMerkleIndex returned undefined, either an error occurred or `startMerkleIndex` is in the future
       // the latter case is an edge case that's not worth the complexity to handle, so we'll just throw an error
       if (_from === undefined) {
-        throw new Error("invalid start merkle index");
+        throw new Error(`invalid start merkle index ${_from}`);
       }
 
       // hack to get typescript to recognize that `_from` can't be `undefined` at this point
@@ -105,7 +105,13 @@ export class SubgraphTreeInsertionSyncAdapter
                 merkleIndex: startIndex + i,
               }));
 
-              yield batch;
+              // filter out any insertions whose merkle indices < `startMerkleIndex`
+              // this can occurr if this is the first iteration of the generator loop
+              // and `startMerkleIndex` did not correspond exactly to an entity, which
+              // can only occur if `startmerkleIndex` falls somewhere in the middle of a batch of zeros
+              yield batch.filter(
+                ({ merkleIndex }) => merkleIndex >= startMerkleIndex
+              );
             } else if (NoteTrait.isEncryptedNote(insertion)) {
               // if it's an `EncryptedNote`, yield the note's commitment
               const noteCommitment = (insertion as IncludedEncryptedNote)

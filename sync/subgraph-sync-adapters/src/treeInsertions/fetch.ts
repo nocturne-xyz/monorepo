@@ -232,36 +232,44 @@ export async function fetchLatestSubtreeIndex(
 }
 
 interface FetchTeiVars {
-  merkleIndex: number;
+  merkleIndex: string;
+}
+
+interface FetchTeiNoteResponse {
+  id: string;
+  merkleIndex: string;
+}
+
+interface FetchTeiBatchResponse {
+  id: string;
+  startIndex: string;
 }
 
 interface FetchTeiResponse {
   data: {
-    encodedOrEncryptedNotes: {
-      id: string;
-    }[];
-    filledBatchWithZerosEvents: {
-      id: string;
-    }[];
+    encodedOrEncryptedNotes: FetchTeiNoteResponse[];
+    filledBatchWithZerosEvents: FetchTeiBatchResponse[];
   };
 }
 
 const fetchTeiQuery = `
-query fetchTeiFromMerkleIndex($merkleIndex: Int!) {
-	encodedOrEncryptedNotes(where:{merkleIndex: $merkleIndex}) {
+query fetchTeiFromMerkleIndex($merkleIndex: BigInt!) {
+	encodedOrEncryptedNotes(where:{merkleIndex_lte: $merkleIndex}, first:1, orderBy:merkleIndex, orderDirection:desc) {
 		id
+    merkleIndex
 	}
-	filledBatchWithZerosEvents(where:{startIndex: $merkleIndex}) {
+	filledBatchWithZerosEvents(where:{startIndex_lte: $merkleIndex},  first:1, orderBy:startIndex, orderDirection:desc) {
 		id
+    startIndex 
 	}
 }`;
 
-// if `merkleIndex` has been seen in by some tree insertion
-// event in the subgraph, will return the corresponding TEI
+// if `merkleIndex` has been "included" some tree insertion
+// event in the subgraph, will return the TEI of the corresponding entity
 // otherwise, it will return undefined.
 //
-// NOTE: if `merkleIndex` corresponds to a `FilledBatchWithZerosEvent`,
-// and it's not the startIndex, this function will also return undefined
+// Note: if `merkleIndex` falls in the middle of a batch of zeros, this will
+// return the start index of the batch.
 export async function fetchTeiFromMerkleIndex(
   endpoint: string,
   merkleIndex: number
@@ -271,7 +279,7 @@ export async function fetchTeiFromMerkleIndex(
     fetchTeiQuery,
     "TeiFromMerkleIndex"
   );
-  const res = await query({ merkleIndex });
+  const res = await query({ merkleIndex: merkleIndex.toString() });
   if (
     !res.data ||
     (res.data.encodedOrEncryptedNotes.length === 0 &&
@@ -280,17 +288,25 @@ export async function fetchTeiFromMerkleIndex(
     return undefined;
   }
 
-  // if we got a result, it's guaranteed that exactly one of these two sub-queries will return exactly one result
-  // this is because, between these two events, we have a total ordering on merkle indices - that is, each merkle index
-  // will correspond to exactly one of an `EncodedOrEncryptedNote` or a `FilledBatchWithZerosEvent` (not both or neither).
-  if (res.data.encodedOrEncryptedNotes.length === 1) {
-    return BigInt(res.data.encodedOrEncryptedNotes[0].id);
-  } else if (res.data.filledBatchWithZerosEvents.length === 1) {
-    return BigInt(res.data.filledBatchWithZerosEvents[0].id);
-  } else {
-    // ! should never happen!
-    throw new Error(
-      "shit's fucked - found multiple tree insertion events with the same merkle index!"
-    );
+  // pick the result with the greatest merkle index
+  const note =
+    res.data.encodedOrEncryptedNotes.length > 0
+      ? res.data.encodedOrEncryptedNotes[0]
+      : undefined;
+  const batch =
+    res.data.filledBatchWithZerosEvents.length > 0
+      ? res.data.filledBatchWithZerosEvents[0]
+      : undefined;
+  if (!note) {
+    // only batch defined
+    return BigInt((batch as FetchTeiBatchResponse).id);
+  } else if (!batch) {
+    // only note defined
+    return BigInt(note.id);
   }
+
+  // both defined
+  const max =
+    parseInt(note.merkleIndex) > parseInt(batch.startIndex) ? note : batch;
+  return BigInt(max.id);
 }
