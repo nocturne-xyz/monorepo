@@ -1,16 +1,26 @@
-import { sleep } from "@nocturne-xyz/core";
-import {
-  API_CALL_MAP,
-  ApiCallNames,
-} from "../../src/screening/checks/apiCalls";
-import {
-  AddressDataSnapshot,
-  CachedAddressData,
-  formDepositInfo,
-  saveSnapshot,
-  ALL_TEST_ADDRESSES,
-} from "../utils";
+import { ALL_TEST_ADDRESSES } from "../snapshotTestCases";
+import { promises as fs } from "fs";
+import { spawn } from "child_process";
+import { getNewSnapshotFolderPath } from "../utils";
 
+async function execAsync(command: string) {
+  return new Promise<void>((resolve, reject) => {
+    // spawn child process that inherits stdio from parent so logger has correct output
+    const child = spawn(command, { shell: true, stdio: "inherit" });
+
+    child.on("error", (err) => {
+      reject(err);
+    });
+
+    child.on("exit", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Command "${command}" exited with code ${code}`));
+      }
+    });
+  });
+}
 /**
  * This script is used to generate a snapshot of the API calls for the test addresses.
  *
@@ -26,44 +36,19 @@ import {
  *   still in git history if we need them.
  */
 async function run() {
-  const numAddresses = ALL_TEST_ADDRESSES.length;
-  console.log(`There are ${numAddresses} addresses to snapshot`);
+  // Convert array to CSV format (each address on a new line)
+  const csvContent = ALL_TEST_ADDRESSES.join("\n");
 
-  if (!process.env.MISTTRACK_API_KEY) {
-    throw new Error("MISTTRACK_API_KEY not set");
-  }
-  if (!process.env.TRM_API_KEY) {
-    throw new Error("TRM_API_KEY not set");
-  }
-  let snapshotData: AddressDataSnapshot = {};
-  let count = 0;
-  for (const address of ALL_TEST_ADDRESSES) {
-    console.log(
-      `Starting API calls for address: ${address} ——— ${
-        count + 1
-      } of ${numAddresses}`
-    );
-    const deposit = formDepositInfo(address);
-    snapshotData[address] = {};
-    for (const [callName, apiCall] of Object.entries(API_CALL_MAP)) {
-      if (
-        callName === API_CALL_MAP.MISTTRACK_ADDRESS_OVERVIEW.name ||
-        callName === API_CALL_MAP.MISTTRACK_ADDRESS_RISK_SCORE.name ||
-        callName === API_CALL_MAP.MISTTRACK_ADDRESS_LABELS.name
-      ) {
-        console.log("Sleeping for 5 seconds to avoid Misttrack rate limit...");
-        await sleep(5000);
-      }
-      const addressData = snapshotData[address] as CachedAddressData;
-      console.log(`Calling ${callName} for ${address}...`);
-      addressData[callName as ApiCallNames] = await apiCall(deposit);
+  // Write CSV to file
+  await fs.writeFile("snapshotTestCases.csv", csvContent);
 
-      console.log(`Successfully called ${callName} for ${address}`);
-    }
-  }
-  console.log("All API calls completed, saving snapshot...");
-  saveSnapshot(snapshotData);
-  console.log("Snapshot saved successfully");
+  const outputPath = getNewSnapshotFolderPath();
+
+  await execAsync(
+    `yarn build && yarn deposit-screener-cli inspect snapshot --input-csv ./snapshotTestCases.csv --output-data ${outputPath}/snapshot.json --delay-ms ${800} --stdout-log-level debug`
+  );
+
+  process.exit(0);
 }
 
 run();

@@ -16,6 +16,7 @@
     "build": "tsc --build",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
+    "cli": "npx ts-node src/cli/index.ts",
     "dev": "yarn dev:env && concurrently --kill-others \"yarn dev:server\" \"yarn dev:processor\"",
     "dev:env": "cp .env.dev .env",
     "dev:processor": "nodemon src/cli/index.ts run processor --config-name-or-path localhost --log-dir ../../logs/deposit-screener-processor --stdout-log-level info",

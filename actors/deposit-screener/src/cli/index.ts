@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 
 import { program } from "commander";
+import inspect from "./commands/inspect";
 import run from "./commands/run";
 import * as dotenv from "dotenv";
 import { setupDefaultInstrumentation } from "@nocturne-xyz/offchain-utils";
@@ -13,6 +14,7 @@ export default async function main(): Promise<void> {
   program
     .name("screener-cli")
     .description("CLI for running/debugging deposit-screener components")
+    .addCommand(inspect)
     .addCommand(run);
   await program.parseAsync(process.argv);
 }

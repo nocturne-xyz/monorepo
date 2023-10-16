@@ -146,6 +146,7 @@ export class CompositeRule<T extends ReadonlyArray<ApiCallNames>>
         return partial.threshold(data);
       })
     );
+
     const shouldApplyRule = results[this.predicateFn]((_) => _);
     return shouldApplyRule ? this.action : ACTION_NOT_TRIGGERED;
   }
