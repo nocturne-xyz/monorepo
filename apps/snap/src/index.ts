@@ -171,6 +171,7 @@ async function handleRpcRequest({
 
       const signer = await mustGetSigner();
       const { op, metadata } = request.params;
+      console.log("PreSignOperation:", op);
       const contentItems = makeSignOperationContent(
         // specifies nothing about ordering
         metadata ?? { items: [] },

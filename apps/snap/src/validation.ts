@@ -2,6 +2,7 @@ import {
   object,
   string,
   bigint,
+  number,
   array,
   boolean,
   enums,
@@ -46,6 +47,13 @@ const NetworkInfoType = object({
   tellerContract: string(),
 });
 
+const SteathAddressType = object({
+  h1X: bigint(),
+  h1Y: bigint(),
+  h2X: bigint(),
+  h2Y: bigint(),
+});
+
 const CompressedStealthAddressType = object({
   h1: bigint(),
   h2: bigint(),
@@ -79,6 +87,96 @@ const AssetType = object({
   id: bigint(),
 });
 
+/*
+export interface BaseJoinSplit {
+  commitmentTreeRoot: bigint;
+  nullifierA: bigint;
+  nullifierB: bigint;
+  newNoteACommitment: bigint;
+  newNoteBCommitment: bigint;
+  senderCommitment: bigint;
+  joinSplitInfoCommitment: bigint;
+  encodedAsset: EncodedAsset;
+  publicSpend: bigint;
+  newNoteAEncrypted: EncryptedNote;
+  newNoteBEncrypted: EncryptedNote;
+}
+
+export interface PreSignJoinSplit extends BaseJoinSplit {
+  receiver: CanonAddress;
+  oldNoteA: IncludedNote;
+  oldNoteB: IncludedNote;
+  newNoteA: Note;
+  newNoteB: Note;
+  merkleProofA: MerkleProofInput;
+  merkleProofB: MerkleProofInput;
+  refundAddr: CompressedStealthAddress;
+}
+
+export interface Note {
+  owner: StealthAddress;
+  nonce: bigint;
+  asset: Asset;
+  value: bigint;
+}
+
+export interface IncludedNote extends Note {
+  merkleIndex: number;
+}
+
+export interface MerkleProofInput {
+  path: bigint[];
+  siblings: bigint[][];
+}
+ */
+
+const EncryptedNoteType = object({
+  ciphertextBytes: array(number()),
+  encapsulatedSecretBytes: array(number()),
+});
+
+const NoteType = object({
+  owner: SteathAddressType,
+  nonce: bigint(),
+  asset: AssetType,
+  value: bigint(),
+});
+
+const IncludedNoteType = object({
+  owner: SteathAddressType,
+  nonce: bigint(),
+  asset: AssetType,
+  value: bigint(),
+  merkleIndex: number(),
+});
+
+const MerkleProofInputType = object({
+  path: array(bigint()),
+  siblings: array(array(bigint())),
+});
+
+const PreSignJoinSplitType = object({
+  commitmentTreeRoot: bigint(),
+  nullifierA: bigint(),
+  nullifierB: bigint(),
+  newNoteACommitment: bigint(),
+  newNoteBCommitment: bigint(),
+  senderCommitment: bigint(),
+  joinSplitInfoCommitment: bigint(),
+  encodedAsset: EncodedAssetType,
+  publicSpend: bigint(),
+  newNoteAEncrypted: EncryptedNoteType,
+  newNoteBEncrypted: EncryptedNoteType,
+  receiver: CanonAddressType,
+  oldNoteA: IncludedNoteType,
+  oldNoteB: IncludedNoteType,
+  newNoteA: NoteType,
+  newNoteB: NoteType,
+  merkleProofA: MerkleProofInputType,
+  merkleProofB: MerkleProofInputType,
+  refundAddr: CompressedStealthAddressType,
+});
+
 const PreSignOperationType = object({
   networkInfo: NetworkInfoType,
   refundAddr: CompressedStealthAddressType,
@@ -90,6 +188,7 @@ const PreSignOperationType = object({
   gasPrice: bigint(),
   deadline: bigint(),
   atomicActions: boolean(),
+  joinSplits: array(PreSignJoinSplitType),
 });
 
 // ConfidentialPaymentMetadata structure

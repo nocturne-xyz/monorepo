@@ -48,6 +48,59 @@ it("validates SignCanonAddrRegistryEntryParams", () => {
   chaiAssert.throws(() => assert(badData, SignCanonAddrRegistryEntryParams));
 });
 
+/**
+ * export interface BaseJoinSplit {
+  commitmentTreeRoot: bigint;
+  nullifierA: bigint;
+  nullifierB: bigint;
+  newNoteACommitment: bigint;
+  newNoteBCommitment: bigint;
+  senderCommitment: bigint;
+  joinSplitInfoCommitment: bigint;
+  encodedAsset: EncodedAsset;
+  publicSpend: bigint;
+  newNoteAEncrypted: EncryptedNote;
+  newNoteBEncrypted: EncryptedNote;
+}
+
+export interface PreSignJoinSplit extends BaseJoinSplit {
+  receiver: CanonAddress;
+  oldNoteA: IncludedNote;
+  oldNoteB: IncludedNote;
+  newNoteA: Note;
+  newNoteB: Note;
+  merkleProofA: MerkleProofInput;
+  merkleProofB: MerkleProofInput;
+  refundAddr: CompressedStealthAddress;
+}
+
+const EncryptedNoteType = object({
+  ciphertextBytes: array(number()),
+  encapsulatedSecretBytes: array(number()),
+});
+export interface Note {
+  owner: StealthAddress;
+  nonce: bigint;
+  asset: Asset;
+  value: bigint;
+}
+
+export interface IncludedNote extends Note {
+  merkleIndex: number;
+}
+
+export interface MerkleProofInput {
+  path: bigint[];
+  siblings: bigint[][];
+}
+
+export interface StealthAddress {
+  h1X: bigint;
+  h1Y: bigint;
+  h2X: bigint;
+  h2Y: bigint;
+}
+ */
 it("validates SignOperationParams", () => {
   const data = {
     op: {
@@ -83,6 +136,108 @@ it("validates SignOperationParams", () => {
       gasPrice: 1234n,
       deadline: 1234n,
       atomicActions: true,
+      joinSplits: [
+        {
+          commitmentTreeRoot: 1234n,
+          nullifierA: 1234n,
+          nullifierB: 1234n,
+          newNoteACommitment: 1234n,
+          newNoteBCommitment: 1234n,
+          senderCommitment: 1234n,
+          joinSplitInfoCommitment: 1234n,
+          encodedAsset: {
+            encodedAssetAddr: 1234n,
+            encodedAssetId: 1234n,
+          },
+          publicSpend: 1234n,
+          newNoteAEncrypted: {
+            ciphertextBytes: [1234],
+            encapsulatedSecretBytes: [1234],
+          },
+          newNoteBEncrypted: {
+            ciphertextBytes: [1234],
+            encapsulatedSecretBytes: [1234],
+          },
+          receiver: {
+            x: 1234n,
+            y: 1234n,
+          },
+          oldNoteA: {
+            owner: {
+              h1X: 1234n,
+              h1Y: 1234n,
+              h2X: 1234n,
+              h2Y: 1234n,
+            },
+            nonce: 1234n,
+            asset: {
+              assetType: "ERC20",
+              assetAddr: "0x1234",
+              id: 1234n,
+            },
+            value: 1234n,
+            merkleIndex: 1234,
+          },
+          oldNoteB: {
+            owner: {
+              h1X: 1234n,
+              h1Y: 1234n,
+              h2X: 1234n,
+              h2Y: 1234n,
+            },
+            nonce: 1234n,
+            asset: {
+              assetType: "ERC20",
+              assetAddr: "0x1234",
+              id: 1234n,
+            },
+            value: 1234n,
+            merkleIndex: 1234,
+          },
+          newNoteA: {
+            owner: {
+              h1X: 1234n,
+              h1Y: 1234n,
+              h2X: 1234n,
+              h2Y: 1234n,
+            },
+            nonce: 1234n,
+            asset: {
+              assetType: "ERC20",
+              assetAddr: "0x1234",
+              id: 1234n,
+            },
+            value: 1234n,
+          },
+          newNoteB: {
+            owner: {
+              h1X: 1234n,
+              h1Y: 1234n,
+              h2X: 1234n,
+              h2Y: 1234n,
+            },
+            nonce: 1234n,
+            asset: {
+              assetType: "ERC20",
+              assetAddr: "0x1234",
+              id: 1234n,
+            },
+            value: 1234n,
+          },
+          merkleProofA: {
+            path: [1234n],
+            siblings: [[1234n]],
+          },
+          merkleProofB: {
+            path: [1234n],
+            siblings: [[1234n]],
+          },
+          refundAddr: {
+            h1: 1234n,
+            h2: 1234n,
+          },
+        },
+      ],
     },
     metadata: {
       items: [
@@ -130,6 +285,7 @@ it("validates SignOperationParams", () => {
       gasPrice: 1234n,
       deadline: 1234n,
       atomicActions: true,
+      // Missing joinsplits
     },
     metadata: {
       items: [
