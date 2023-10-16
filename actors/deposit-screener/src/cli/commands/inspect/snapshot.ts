@@ -102,7 +102,7 @@ async function main(options: any): Promise<void> {
     );
 
     const deposit = formDepositInfo(address);
-    let addressData: CachedAddressData = {};
+    const addressData: CachedAddressData = {};
     for (const [callName, apiCall] of Object.entries(API_CALL_MAP)) {
       if (
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_OVERVIEW.name ||
