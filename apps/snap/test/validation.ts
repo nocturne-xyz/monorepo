@@ -171,7 +171,7 @@ it("validates SignOperationParams", () => {
             },
             nonce: 1234n,
             asset: {
-              assetType: "ERC20",
+              assetType: 0,
               assetAddr: "0x1234",
               id: 1234n,
             },
@@ -187,7 +187,7 @@ it("validates SignOperationParams", () => {
             },
             nonce: 1234n,
             asset: {
-              assetType: "ERC20",
+              assetType: 0,
               assetAddr: "0x1234",
               id: 1234n,
             },
@@ -203,7 +203,7 @@ it("validates SignOperationParams", () => {
             },
             nonce: 1234n,
             asset: {
-              assetType: "ERC20",
+              assetType: 0,
               assetAddr: "0x1234",
               id: 1234n,
             },
@@ -218,7 +218,7 @@ it("validates SignOperationParams", () => {
             },
             nonce: 1234n,
             asset: {
-              assetType: "ERC20",
+              assetType: 0,
               assetAddr: "0x1234",
               id: 1234n,
             },

@@ -10,6 +10,7 @@ import {
   define,
 } from "superstruct";
 
+// This is how Uint8Array is serialized when passed to snap
 const isStringifiedUint8Array = (value: any) => {
   if (typeof value !== "object" || Array.isArray(value)) return false;
 
@@ -29,7 +30,7 @@ const StringifiedUint8ArrayType = define(
 );
 
 export const SetSpendKeyParams = object({
-  spendKey: StringifiedUint8ArrayType, // Originally Uint8Array but serialized to number[] when passed to snap
+  spendKey: StringifiedUint8ArrayType,
 });
 
 export const SignCanonAddrRegistryEntryParams = object({
@@ -79,56 +80,13 @@ const CanonAddressType = object({
   y: bigint(),
 });
 
-const AssetTypeType = enums(["ERC20", "ERC721", "ERC1155"]);
+const AssetTypeType = enums([0, 1, 2]);
 
 const AssetType = object({
   assetType: AssetTypeType,
   assetAddr: string(),
   id: bigint(),
 });
-
-/*
-export interface BaseJoinSplit {
-  commitmentTreeRoot: bigint;
-  nullifierA: bigint;
-  nullifierB: bigint;
-  newNoteACommitment: bigint;
-  newNoteBCommitment: bigint;
-  senderCommitment: bigint;
-  joinSplitInfoCommitment: bigint;
-  encodedAsset: EncodedAsset;
-  publicSpend: bigint;
-  newNoteAEncrypted: EncryptedNote;
-  newNoteBEncrypted: EncryptedNote;
-}
-
-export interface PreSignJoinSplit extends BaseJoinSplit {
-  receiver: CanonAddress;
-  oldNoteA: IncludedNote;
-  oldNoteB: IncludedNote;
-  newNoteA: Note;
-  newNoteB: Note;
-  merkleProofA: MerkleProofInput;
-  merkleProofB: MerkleProofInput;
-  refundAddr: CompressedStealthAddress;
-}
-
-export interface Note {
-  owner: StealthAddress;
-  nonce: bigint;
-  asset: Asset;
-  value: bigint;
-}
-
-export interface IncludedNote extends Note {
-  merkleIndex: number;
-}
-
-export interface MerkleProofInput {
-  path: bigint[];
-  siblings: bigint[][];
-}
- */
 
 const EncryptedNoteType = object({
   ciphertextBytes: array(number()),
@@ -229,7 +187,6 @@ const UniswapV3SwapAction = object({
   tokenOut: string(),
 });
 
-// Union type for ActionMetadata
 const ActionMetadataType = union([
   TransferAction,
   WethToWstethAction,
@@ -237,13 +194,11 @@ const ActionMetadataType = union([
   UniswapV3SwapAction,
 ]);
 
-// OperationMetadataItem union type
 const OperationMetadataItem = union([
   ConfidentialPaymentMetadata,
   ActionMetadataType,
 ]);
 
-// OperationMetadata structure
 const OperationMetadataType = object({
   items: array(OperationMetadataItem),
 });
@@ -252,27 +207,3 @@ export const SignOperationParams = object({
   op: PreSignOperationType,
   metadata: OperationMetadataType,
 });
-
-/*
-export interface SignOperationMethod {
-  method: "nocturne_signOperation";
-  params:  {
-    op: T;
-    metadata?: OperationMetadata;
-  }
-  return: SignedOperation;
-}
-
-
-export type RpcRequestMethod =
-  | SetSpendKeyMethod
-  | SignCanonAddrRegistryEntryMethod
-  | SignOperationMethod
-  | RequestViewingKeyMethod
-  | SpendKeyIsSetMethod;
-
-export type SnapRpcRequestHandlerArgs = {
-  origin: string;
-  request: RpcRequestMethod;
-};
-*/

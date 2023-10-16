@@ -80,19 +80,22 @@ export async function prepareOperation(
     AssetTrait.encodedAssetToString(joinSplit.encodedAsset)
   ).flat();
 
-  // construct op.
+  // construct op
   const op: PreSignOperation = {
-    ...opRequest,
     networkInfo: { chainId, tellerContract },
     refundAddr,
     joinSplits,
+    actions: opRequest.actions,
     refunds,
     encodedGasAsset,
+    gasAssetRefundThreshold: opRequest.gasAssetRefundThreshold,
+    executionGasLimit: opRequest.executionGasLimit,
+    gasPrice: opRequest.gasPrice,
     deadline,
     atomicActions: true, // always default to atomic until we find reason not to
   };
 
-  return op as PreSignOperation;
+  return op;
 }
 
 async function prepareJoinSplits(
