@@ -332,10 +332,14 @@ export class SubtreeUpdater {
       return;
     }
 
-    clearTimeout(this.fillBatchTimeout);
-
-    // if the insertion we got is not at a batch boundry, re-set the timeout because we haven't organically filled the batch yet
-    if ((newInsertionMerkleIndex + 1) % BATCH_SIZE !== 0) {
+    // if the insertion we got "completes" a batch, clear the timeout
+    // otherwise, if the insertion we got is the first insertion of a new batch, start a timer
+    if (
+      this.fillBatchTimeout &&
+      (newInsertionMerkleIndex + 1) % BATCH_SIZE === 0
+    ) {
+      clearTimeout(this.fillBatchTimeout);
+    } else if (newInsertionMerkleIndex % BATCH_SIZE === 0) {
       this.fillBatchTimeout = setTimeout(
         () =>
           this.fillBatchWithZeros(this.logger.child({ function: "fillBatch" })),
