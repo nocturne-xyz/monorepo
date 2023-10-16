@@ -134,6 +134,7 @@ export class DepositScreenerFulfiller {
 
           const window = await this.getErc20RateLimitWindow(address);
 
+          const options = { ...this.redis.options, keyPrefix: undefined };
           // make a worker listening to the current asset's fulfillment queue
           const worker = new Worker(
             getFulfillmentQueueName(address),
@@ -214,7 +215,7 @@ export class DepositScreenerFulfiller {
 
               window.add({ amount: depositRequest.value, timestamp });
             },
-            { connection: this.redis, autorun: true }
+            { connection: options, autorun: true }
           );
 
           const prom = new Promise<void>((resolve) => {

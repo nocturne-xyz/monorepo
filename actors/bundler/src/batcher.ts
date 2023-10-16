@@ -195,6 +195,7 @@ export class BundlerBatcher {
   startQueuer(): ActorHandle {
     const logger = this.logger.child({ function: "queuer" });
     logger.info("starting queuer...");
+    const options = { ...this.redis.options, keyPrefix: undefined };
     const queuer = new Worker(
       SUBMITTABLE_OPERATION_QUEUE,
       async (job: Job<OperationJobData>) => {
@@ -225,7 +226,7 @@ export class BundlerBatcher {
         this.metrics.relayRequestsEnqueuedInBatcherDBCounter.add(1);
       },
       {
-        connection: this.redis,
+        connection: options,
         autorun: true,
       }
     );

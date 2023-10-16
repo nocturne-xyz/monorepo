@@ -94,6 +94,7 @@ export class BundlerSubmitter {
   }
 
   start(): ActorHandle {
+    const options = { ...this.redis.options, keyPrefix: undefined };
     const worker = new Worker(
       OPERATION_BATCH_QUEUE,
       async (job: Job<OperationBatchJobData>) => {
@@ -116,7 +117,7 @@ export class BundlerSubmitter {
         this.metrics.operationsSubmittedCounter.add(operations.length);
         this.metrics.bundlesSubmittedCounter.add(1);
       },
-      { connection: this.redis, autorun: true }
+      { connection: options, autorun: true }
     );
 
     this.logger.info(

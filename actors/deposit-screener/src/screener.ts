@@ -333,6 +333,7 @@ export class DepositScreenerScreener {
   startArbiter(logger: Logger): Worker<DepositRequestJobData, any, string> {
     logger.info("starting arbiter...");
 
+    const options = { ...this.redis.options, keyPrefix: undefined };
     return new Worker(
       SCREENER_DELAY_QUEUE,
       async (job: Job<DepositRequestJobData>) => {
@@ -428,7 +429,7 @@ export class DepositScreenerScreener {
           attributes
         );
       },
-      { connection: this.redis, autorun: true }
+      { connection: options, autorun: true }
     );
   }
 }
