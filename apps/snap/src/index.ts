@@ -24,6 +24,7 @@ import {
   SetSpendKeyParams,
   SignCanonAddrRegistryEntryParams,
   SignOperationParams,
+  UndefinedType,
 } from "./validation";
 
 // To build locally, invoke `yarn build:local` from snap directory
@@ -93,6 +94,7 @@ async function handleRpcRequest({
   console.log("Switching on method: ", request.method);
   switch (request.method) {
     case "nocturne_spendKeyIsSet": {
+      assert(request.params, UndefinedType);
       return await kvStore.containsKey(SPEND_KEY_DB_KEY);
     }
     case "nocturne_setSpendKey": {
@@ -121,6 +123,7 @@ async function handleRpcRequest({
       return;
     }
     case "nocturne_requestViewingKey": {
+      assert(request.params, UndefinedType);
       const signer = await mustGetSigner();
       const viewer = signer.viewer();
       return {

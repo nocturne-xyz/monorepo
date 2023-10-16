@@ -10,6 +10,11 @@ import {
   define,
 } from "superstruct";
 
+export const UndefinedType = define(
+  "Undefined",
+  (value) => value === undefined
+);
+
 // This is how Uint8Array is serialized when passed to snap
 const isStringifiedUint8Array = (value: any) => {
   if (typeof value !== "object" || Array.isArray(value)) return false;
