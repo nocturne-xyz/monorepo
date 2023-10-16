@@ -154,16 +154,14 @@ const PreSignOperationType = object({
   joinSplits: array(PreSignJoinSplitType),
 });
 
-// ConfidentialPaymentMetadata structure
-const ConfidentialPaymentMetadata = object({
+const ConfidentialPaymentMetadataType = object({
   type: enums(["ConfidentialPayment"]),
   recipient: CanonAddressType,
   asset: AssetType,
   amount: bigint(),
 });
 
-// ActionMetadata structures
-const TransferAction = object({
+const TransferActionMetadataType = object({
   type: enums(["Action"]),
   actionType: enums(["Transfer"]),
   recipientAddress: string(),
@@ -171,20 +169,20 @@ const TransferAction = object({
   amount: bigint(),
 });
 
-const WethToWstethAction = object({
+const WethToWstethActionMetadataType = object({
   type: enums(["Action"]),
   actionType: enums(["Weth To Wsteth"]),
   amount: bigint(),
 });
 
-const TransferETHAction = object({
+const TransferETHActionMetadataType = object({
   type: enums(["Action"]),
   actionType: enums(["Transfer ETH"]),
   recipientAddress: string(),
   amount: bigint(),
 });
 
-const UniswapV3SwapAction = object({
+const UniswapV3SwapActionMetadataType = object({
   type: enums(["Action"]),
   actionType: enums(["UniswapV3 Swap"]),
   tokenIn: string(),
@@ -193,19 +191,19 @@ const UniswapV3SwapAction = object({
 });
 
 const ActionMetadataType = union([
-  TransferAction,
-  WethToWstethAction,
-  TransferETHAction,
-  UniswapV3SwapAction,
+  TransferActionMetadataType,
+  WethToWstethActionMetadataType,
+  TransferETHActionMetadataType,
+  UniswapV3SwapActionMetadataType,
 ]);
 
-const OperationMetadataItem = union([
-  ConfidentialPaymentMetadata,
+const OperationMetadataItemType = union([
+  ConfidentialPaymentMetadataType,
   ActionMetadataType,
 ]);
 
 const OperationMetadataType = object({
-  items: array(OperationMetadataItem),
+  items: array(OperationMetadataItemType),
 });
 
 export const SignOperationParams = object({
