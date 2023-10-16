@@ -19,9 +19,22 @@ import {
 } from "./utils/display";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import { SnapKvStore } from "./snapdb";
+import { assert } from "superstruct";
+import {
+  SetSpendKeyParams,
+  SignCanonAddrRegistryEntryParams,
+  SignOperationParams,
+  UndefinedType,
+} from "./validation";
 
 // To build locally, invoke `yarn build:local` from snap directory
 // Goerli
+
+const ALLOWED_ORIGINS = [
+  "http://localhost:4001",
+  "https://veil.nocturnelabs.xyz",
+  "https://app.nocturnelabs.xyz",
+];
 
 const SPEND_KEY_DB_KEY = "nocturne_spend_key";
 
@@ -70,6 +83,7 @@ export const onRpcRequest: OnRpcRequestHandler = async (args) => {
 };
 
 async function handleRpcRequest({
+  origin,
   request,
 }: SnapRpcRequestHandlerArgs): Promise<RpcRequestMethod["return"]> {
   //@ts-ignore
@@ -80,9 +94,18 @@ async function handleRpcRequest({
   console.log("Switching on method: ", request.method);
   switch (request.method) {
     case "nocturne_spendKeyIsSet": {
+      assert(request.params, UndefinedType);
       return await kvStore.containsKey(SPEND_KEY_DB_KEY);
     }
     case "nocturne_setSpendKey": {
+      assert(request.params, SetSpendKeyParams);
+
+      if (!ALLOWED_ORIGINS.includes(origin)) {
+        throw new Error(
+          `Non-allowed origin cannot set spend key. Origin: ${origin}`
+        );
+      }
+
       const spendKey = new Uint8Array(request.params.spendKey);
 
       // Can only set spend key if not already set, only way to reset is to clear snap db and
@@ -100,6 +123,7 @@ async function handleRpcRequest({
       return;
     }
     case "nocturne_requestViewingKey": {
+      assert(request.params, UndefinedType);
       const signer = await mustGetSigner();
       const viewer = signer.viewer();
       return {
@@ -108,6 +132,8 @@ async function handleRpcRequest({
       };
     }
     case "nocturne_signCanonAddrRegistryEntry": {
+      assert(request.params, SignCanonAddrRegistryEntryParams);
+
       const signer = await mustGetSigner();
       const { entry, chainId, registryAddress } = request.params;
 
@@ -144,6 +170,8 @@ async function handleRpcRequest({
       };
     }
     case "nocturne_signOperation": {
+      assert(request.params, SignOperationParams);
+
       const signer = await mustGetSigner();
       const { op, metadata } = request.params;
       const contentItems = makeSignOperationContent(

@@ -27,7 +27,7 @@
     "publish": "yarn build:clean && yarn npm publish --access public",
     "serve": "mm-snap serve",
     "start": "mm-snap watch",
-    "test:unit": ""
+    "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit"
   },
   "dependencies": {
     "@metamask/snaps-ui": "^0.32.2",
@@ -36,7 +36,8 @@
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/crypto": "workspace:^",
     "bigint-json-serialization": "^1.0.1",
-    "buffer": "^6.0.3"
+    "buffer": "^6.0.3",
+    "superstruct": "^1.0.3"
   },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^2.0.3",
