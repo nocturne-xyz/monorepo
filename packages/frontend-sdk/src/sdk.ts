@@ -41,6 +41,7 @@ import {
   SDKSyncAdapter,
   OperationTrait,
   OperationStatus,
+  GAS_PER_DEPOSIT,
 } from "@nocturne-xyz/core";
 import {
   NocturneClient,
@@ -104,6 +105,8 @@ import {
 import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
 import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
+
+const FE_SDK_DEPOSIT_COMP_RATIO = (estimate: bigint) => (12n * estimate) / 10n;
 
 export interface NocturneSdkOptions {
   // interface for fetching deposit data from subgraph and screener
@@ -278,12 +281,15 @@ export class NocturneSdk implements NocturneSdkApi {
    */
   async initiateEthDeposits(
     values: bigint[],
-    gasCompensationPerDeposit: bigint,
+    gasCompensationPerDeposit?: bigint
   ): Promise<DepositHandleWithReceipt[]> {
     const signer = await getSigner(this.provider);
 
     const ethToWrap = values.reduce((acc, val) => acc + val, 0n);
-    const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
+    const gasCompRequired = gasCompensationPerDeposit ? gasCompensationPerDeposit * BigInt(values.length) : (
+      BigInt(values.length) * await this.estimateGasPerDeposit()
+    );
+
     const totalValue = ethToWrap + gasCompRequired;
 
     const signerBalance = (await signer.getBalance()).toBigInt();
@@ -349,13 +355,23 @@ export class NocturneSdk implements NocturneSdkApi {
     );
   }
 
+  protected async estimateGasPerDeposit(): Promise<bigint> {
+    const gasPrice = await this.provider.getGasPrice();
+    return FE_SDK_DEPOSIT_COMP_RATIO(
+      gasPrice.toBigInt() * GAS_PER_DEPOSIT
+    );
+  }
+
   async initiateErc20Deposits(
     erc20Address: Address,
     values: bigint[],
-    gasCompensationPerDeposit: bigint,
+    gasCompensationPerDeposit?: bigint
   ): Promise<DepositHandleWithReceipt[]> {
     const signer = await getSigner(this.provider);
-    const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
+
+    const gasCompRequired = gasCompensationPerDeposit ? gasCompensationPerDeposit * BigInt(values.length) : (
+      BigInt(values.length) * await this.estimateGasPerDeposit()
+    );
 
     const signerBalance = (await signer.getBalance()).toBigInt();
     if (signerBalance < gasCompRequired) {
