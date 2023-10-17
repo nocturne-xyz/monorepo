@@ -184,26 +184,24 @@ export class SubtreeUpdater {
     );
 
     const proofInputInfos = allInsertions
+      // metrics
+      .tap((insertion) => {
+        logger.info(`got insertion at merkleIndex ${insertion.merkleIndex}`, {
+          insertion,
+        });
+
+        const noteOrCommitment = NoteTrait.isCommitment(insertion)
+          ? "commitment"
+          : "note";
+
+        this.metrics.insertionsReceivedCounter.add(1, { noteOrCommitment });
+      })
       // update fill batch timer if necessary
       .tap(({ merkleIndex }) => {
         this.maybeScheduleFillBatch(merkleIndex);
       })
       // make batches
       .batches(BATCH_SIZE, true)
-      // metrics
-      .tap((batch) => {
-        for (const insertion of batch) {
-          logger.info(`got insertion at merkleIndex ${insertion.merkleIndex}`, {
-            insertion,
-          });
-
-          const noteOrCommitment = NoteTrait.isCommitment(insertion)
-            ? "commitment"
-            : "note";
-
-          this.metrics.insertionsReceivedCounter.add(1, { noteOrCommitment });
-        }
-      })
       // flatten batch into leaves + additional info needed for proof gen
       .map(batchInfoFromInsertions)
       // insert batches into in-memory tree
@@ -340,6 +338,7 @@ export class SubtreeUpdater {
     ) {
       clearTimeout(this.fillBatchTimeout);
     } else if (newInsertionMerkleIndex % BATCH_SIZE === 0) {
+      this.logger.info(`scheduling fill batch in ${this.fillBatchLatency}ms`);
       this.fillBatchTimeout = setTimeout(
         () =>
           this.fillBatchWithZeros(this.logger.child({ function: "fillBatch" })),
