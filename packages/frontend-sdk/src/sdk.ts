@@ -381,7 +381,7 @@ export class NocturneSdk implements NocturneSdkApi {
     }
 
     const depositAmount = values.reduce((acc, val) => acc + val, 0n);
-    const totalValue = depositAmount + gasCompRequired;
+    const totalValue = depositAmount;
 
     const erc20Contract = getTokenContract(
       AssetType.ERC20,
@@ -398,6 +398,12 @@ export class NocturneSdk implements NocturneSdkApi {
       erc20Address,
       values,
       depositAddr,
+<<<<<<< HEAD
+=======
+      {
+        value: gasCompRequired,
+      }
+>>>>>>> 712a3934 (fix initiateErc20Deposits)
     );
     return this.formDepositHandlesWithTxReceipt(tx);
   }
