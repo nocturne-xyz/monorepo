@@ -184,26 +184,24 @@ export class SubtreeUpdater {
     );
 
     const proofInputInfos = allInsertions
+      // metrics
+      .tap((insertion) => {
+        logger.info(`got insertion at merkleIndex ${insertion.merkleIndex}`, {
+          insertion,
+        });
+
+        const noteOrCommitment = NoteTrait.isCommitment(insertion)
+          ? "commitment"
+          : "note";
+
+        this.metrics.insertionsReceivedCounter.add(1, { noteOrCommitment });
+      })
       // update fill batch timer if necessary
       .tap(({ merkleIndex }) => {
-        this.maybeScheduleFillBatch(merkleIndex);
+        this.updateFillBatchTimer(merkleIndex);
       })
       // make batches
       .batches(BATCH_SIZE, true)
-      // metrics
-      .tap((batch) => {
-        for (const insertion of batch) {
-          logger.info(`got insertion at merkleIndex ${insertion.merkleIndex}`, {
-            insertion,
-          });
-
-          const noteOrCommitment = NoteTrait.isCommitment(insertion)
-            ? "commitment"
-            : "note";
-
-          this.metrics.insertionsReceivedCounter.add(1, { noteOrCommitment });
-        }
-      })
       // flatten batch into leaves + additional info needed for proof gen
       .map(batchInfoFromInsertions)
       // insert batches into in-memory tree
@@ -327,15 +325,20 @@ export class SubtreeUpdater {
   }
 
   // update fill batch timer upon reciept of a new insertion at index `newInsertionMerkleIndex`
-  private maybeScheduleFillBatch(newInsertionMerkleIndex: number): void {
+  private updateFillBatchTimer(newInsertionMerkleIndex: number): void {
     if (!this.fillBatchLatency) {
       return;
     }
 
-    clearTimeout(this.fillBatchTimeout);
-
-    // if the insertion we got is not at a batch boundry, re-set the timeout because we haven't organically filled the batch yet
-    if ((newInsertionMerkleIndex + 1) % BATCH_SIZE !== 0) {
+    // if the insertion we got "completes" a batch, clear the timeout
+    // otherwise, if the insertion we got is the first insertion of a new batch, start a timer
+    if (
+      this.fillBatchTimeout &&
+      (newInsertionMerkleIndex + 1) % BATCH_SIZE === 0
+    ) {
+      clearTimeout(this.fillBatchTimeout);
+    } else if (newInsertionMerkleIndex % BATCH_SIZE === 0) {
+      this.logger.info(`scheduling fill batch in ${this.fillBatchLatency}ms`);
       this.fillBatchTimeout = setTimeout(
         () =>
           this.fillBatchWithZeros(this.logger.child({ function: "fillBatch" })),
