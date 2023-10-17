@@ -106,7 +106,7 @@ import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
 import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
 
-const FE_SDK_DEPOSIT_COMP_RATIO = (estimate: bigint) => (12n * estimate) / 10n;
+const FE_SDK_DEPOSIT_COMP_RATIO = (estimate: bigint) => 2n * estimate;
 
 export interface NocturneSdkOptions {
   // interface for fetching deposit data from subgraph and screener
