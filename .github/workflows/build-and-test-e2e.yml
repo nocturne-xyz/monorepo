@@ -55,6 +55,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install redis
 
+      - name: install docker
+        run: sudo apt-get install -y docker
+
+      - name: docker compose up
+        run: |
+          docker-compose up -d
+
       - name: install node
         uses: actions/setup-node@v3
         with:
