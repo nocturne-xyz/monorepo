@@ -198,7 +198,7 @@ export class SubtreeUpdater {
       })
       // update fill batch timer if necessary
       .tap(({ merkleIndex }) => {
-        this.maybeScheduleFillBatch(merkleIndex);
+        this.updateFillBatchTimer(merkleIndex);
       })
       // make batches
       .batches(BATCH_SIZE, true)
@@ -325,7 +325,7 @@ export class SubtreeUpdater {
   }
 
   // update fill batch timer upon reciept of a new insertion at index `newInsertionMerkleIndex`
-  private maybeScheduleFillBatch(newInsertionMerkleIndex: number): void {
+  private updateFillBatchTimer(newInsertionMerkleIndex: number): void {
     if (!this.fillBatchLatency) {
       return;
     }
