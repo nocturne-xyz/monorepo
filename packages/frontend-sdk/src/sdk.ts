@@ -55,6 +55,7 @@ import {
   newOpRequestBuilder,
   OperationRequestWithMetadata,
   ActionMetadata,
+  OperationMetadata,
 } from "@nocturne-xyz/client";
 import {
   WasmCanonAddrSigCheckProver,
@@ -136,6 +137,7 @@ export class NocturneSdk implements NocturneSdkApi {
   protected handlerContractThunk: Thunk<Handler>;
   protected canonAddrRegistryThunk: Thunk<CanonicalAddressRegistry>;
   protected clientThunk: Thunk<NocturneClient>;
+  protected inFlightOperations: Map<bigint, OperationMetadata>;
 
   // Caller MUST conform to EIP-1193 spec (window.ethereum) https://eips.ethereum.org/EIPS/eip-1193
   constructor(options: NocturneSdkOptions = {}) {
@@ -236,6 +238,8 @@ export class NocturneSdk implements NocturneSdkApi {
         new BundlerOpTracker(this.endpoints.bundlerEndpoint)
       );
     });
+
+    this.inFlightOperations = new Map();
   }
 
   protected get wethAddress(): string {
@@ -458,10 +462,12 @@ export class NocturneSdk implements NocturneSdkApi {
           })
         : opOrOpRequest;
 
-    const opHandleWithoutMetadata = this.submitOperation(submittableOperation);
+    const opHandleWithoutMetadata = await this.submitOperation(submittableOperation);
+    this.inFlightOperations.set(opHandleWithoutMetadata.digest, { items: actionsMetadata });
+
     return {
       ...opHandleWithoutMetadata,
-      meta: { items: actionsMetadata },
+      metadata: { items: actionsMetadata },
     };
   }
 
@@ -758,18 +764,12 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   async getInFlightOperations(): Promise<OperationHandle[]> {
-    const client = await this.clientThunk();
-    const opDigestsWithMetadata =
-      await client.getAllOptimisticOpDigestsWithMetadata();
-    const operationHandles = opDigestsWithMetadata.map(
-      ({ opDigest: digest, metadata }) => {
-        return {
-          digest,
-          metadata,
-          getStatus: () => this.fetchBundlerOperationStatus(digest),
-        };
-      }
-    );
+    const operationHandles = [...this.inFlightOperations.entries()].map(([digest, metadata]) => ({
+      digest,
+      metadata,
+      getStatus: () => this.fetchBundlerOperationStatus(digest),
+    }));
+
     return operationHandles;
   }
 
@@ -836,6 +836,12 @@ export class NocturneSdk implements NocturneSdkApi {
         async () => await client.sync({ ...syncOpts, timing: true })
       );
       await client.updateOptimisticNullifiers();
+
+      // prune completed in-flight operations
+      const optimisticNfRecords = await client.getAllOptimisticOpDigestsWithMetadata();
+      for (const { opDigest } of optimisticNfRecords) {
+        this.inFlightOperations.delete(opDigest);
+      }
     } catch (e) {
       console.log("Error syncing notes: ", e);
       throw e;
