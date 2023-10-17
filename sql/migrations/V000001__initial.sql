@@ -3,6 +3,10 @@ WITH
   PASSWORD '${nocturne_db_user_password}' NOCREATEDB NOCREATEROLE LOGIN
 ;
 
+GRANT USAGE
+, CREATE ON SCHEMA nocturne TO nocturne_db_user
+;
+
 CREATE TABLE
   test (id INT, NAME TEXT, foo TEXT)
 ;
