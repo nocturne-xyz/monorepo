@@ -1,0 +1,29 @@
+name: Run Migrations
+
+on:
+  push:
+    branches:
+      - wayne/test-buildspec-migration
+
+jobs:
+  run-migrations:
+    name: Run Migrations
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_S3_UPLOAD }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_S3_UPLOAD }}
+        aws-region: us-east-2
+
+    # Step to zip the source code
+    - name: Zip source code
+      run: zip -r monorepo.zip .
+
+    # Step to upload the zipped file to S3 bucket
+    - name: Upload to S3
+      run: aws s3 cp monorepo.zip s3://monorepo-source-code/monorepo.zip

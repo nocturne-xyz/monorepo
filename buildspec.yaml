@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 18
+    commands:
+      - echo "Installing Docker" # I don't think there is actually anything to do here
+
+
+  pre_build:
+    commands:
+      - echo "Pulling flyway Docker image"
+      - docker pull flyway/flyway
+
+  build:
+    commands:
+      - echo "Running Flyway Migrations"
+      - docker run --rm
+          -e FLYWAY_URL=jdbc:your_database_url
+          -e FLYWAY_USER=your_database_user
+          -e FLYWAY_PASSWORD=your_database_password
+          -v /path/to/your/sql/migrations:/flyway/sql
+          flyway/flyway migrate
+
+  post_build:
+    commands:
+      - echo "Migration done!"
