@@ -34,8 +34,8 @@ export class BalanceMonitor {
   constructor() {
     this.actorAddresses = this.getActorAddresses();
     this.provider = this.getProvider();
-    this.metrics = this.getAndRegisterMetrics();
     this.weth = this.getWeth();
+    this.metrics = this.getAndRegisterMetrics();
   }
 
   private getWeth(): WETH9 {
@@ -106,33 +106,49 @@ export class BalanceMonitor {
     );
 
     bundlerEthBalanceGauge.addCallback(async (observableResult) => {
-      const balance = await this.provider.getBalance(
-        this.actorAddresses.bundler
-      );
-      console.log("bundler ETH balance", balance.toNumber());
-      observableResult.observe(balance.toNumber());
+      try {
+        const balance = await this.provider.getBalance(
+          this.actorAddresses.bundler
+        );
+        console.log("bundler ETH balance", balance.toNumber());
+        observableResult.observe(balance.toNumber());
+      } catch (e) {
+        console.log("error fetching bundler ETH balance", e);
+      }
     });
 
     bundlerWethBalanceGauge.addCallback(async (observableResult) => {
-      const balance = await this.weth.balanceOf(this.actorAddresses.bundler);
-      console.log("bundler WETH balance", balance.toNumber());
-      observableResult.observe(balance.toNumber());
+      try {
+        const balance = await this.weth.balanceOf(this.actorAddresses.bundler);
+        console.log("bundler WETH balance", balance.toNumber());
+        observableResult.observe(balance.toNumber());
+      } catch (e) {
+        console.log("error fetching bundler WETH balance", e);
+      }
     });
 
     updaterEthBalanceGauge.addCallback(async (observableResult) => {
-      const balance = await this.provider.getBalance(
-        this.actorAddresses.updater
-      );
-      console.log("updater ETH balance", balance.toNumber());
-      observableResult.observe(balance.toNumber());
+      try {
+        const balance = await this.provider.getBalance(
+          this.actorAddresses.updater
+        );
+        console.log("updater ETH balance", balance.toNumber());
+        observableResult.observe(balance.toNumber());
+      } catch (e) {
+        console.log("error fetching updater ETH balance", e);
+      }
     });
 
     screenerEthBalanceGauge.addCallback(async (observableResult) => {
-      const balance = await this.provider.getBalance(
-        this.actorAddresses.screener
-      );
-      console.log("screener ETH balance", balance.toNumber());
-      observableResult.observe(balance.toNumber());
+      try {
+        const balance = await this.provider.getBalance(
+          this.actorAddresses.screener
+        );
+        console.log("screener ETH balance", balance.toNumber());
+        observableResult.observe(balance.toNumber());
+      } catch (e) {
+        console.log("error fetching screener ETH balance", e);
+      }
     });
 
     return {
