@@ -110,8 +110,11 @@ export class BalanceMonitor {
         const balance = await this.provider.getBalance(
           this.actorAddresses.bundler
         );
-        console.log("bundler ETH balance", balance.toNumber());
-        observableResult.observe(balance.toNumber());
+        const balanceEther = parseFloat(
+          ethers.utils.formatUnits(balance, "ether")
+        );
+        console.log("bundler ETH balance ether", balanceEther);
+        observableResult.observe(balanceEther);
       } catch (e) {
         console.log("error fetching bundler ETH balance", e);
       }
@@ -120,8 +123,11 @@ export class BalanceMonitor {
     bundlerWethBalanceGauge.addCallback(async (observableResult) => {
       try {
         const balance = await this.weth.balanceOf(this.actorAddresses.bundler);
-        console.log("bundler WETH balance", balance.toNumber());
-        observableResult.observe(balance.toNumber());
+        const balanceEther = parseFloat(
+          ethers.utils.formatUnits(balance, "ether")
+        );
+        console.log("bundler WETH balance ether", balance);
+        observableResult.observe(balanceEther);
       } catch (e) {
         console.log("error fetching bundler WETH balance", e);
       }
@@ -132,8 +138,11 @@ export class BalanceMonitor {
         const balance = await this.provider.getBalance(
           this.actorAddresses.updater
         );
-        console.log("updater ETH balance", balance.toNumber());
-        observableResult.observe(balance.toNumber());
+        const balanceEther = parseFloat(
+          ethers.utils.formatUnits(balance, "ether")
+        );
+        console.log("updater ETH balance", balanceEther);
+        observableResult.observe(balanceEther);
       } catch (e) {
         console.log("error fetching updater ETH balance", e);
       }
@@ -144,8 +153,11 @@ export class BalanceMonitor {
         const balance = await this.provider.getBalance(
           this.actorAddresses.screener
         );
-        console.log("screener ETH balance", balance.toNumber());
-        observableResult.observe(balance.toNumber());
+        const balanceEther = parseFloat(
+          ethers.utils.formatUnits(balance, "ether")
+        );
+        console.log("screener ETH balance", balanceEther);
+        observableResult.observe(balanceEther);
       } catch (e) {
         console.log("error fetching screener ETH balance", e);
       }
