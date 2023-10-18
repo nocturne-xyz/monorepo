@@ -6,7 +6,7 @@ import {
   makeCreateObservableGaugeFn,
   setupDefaultInstrumentation,
 } from "@nocturne-xyz/offchain-utils";
-import { WETH9, WETH9__factory } from "@nocturne-xyz/contracts";
+import ERC20_ABI from "./abis/ERC20.json";
 
 const ACTOR_NAME = "balance-monitor";
 const COMPONENT_NAME = "monitor";
@@ -19,7 +19,7 @@ interface ActorAddresses {
 
 interface BalanceMonitorMetrics {
   bundlerEthBalanceGauge: ot.ObservableGauge;
-  bundlerWethBalanceGauge: ot.ObservableGauge;
+  bundlerGasTokenBalanceGauge: ot.ObservableGauge;
   updaterEthBalanceGauge: ot.ObservableGauge;
   screenerEthBalanceGauge: ot.ObservableGauge;
 }
@@ -27,24 +27,29 @@ interface BalanceMonitorMetrics {
 export class BalanceMonitor {
   private provider: ethers.providers.Provider;
   private actorAddresses: ActorAddresses;
-  private weth: WETH9;
+  private gasToken: ethers.Contract;
   private metrics: BalanceMonitorMetrics;
   private isMonitoring: boolean = false;
 
   constructor() {
     this.actorAddresses = this.getActorAddresses();
     this.provider = this.getProvider();
-    this.weth = this.getWeth();
+    this.gasToken = this.getGasToken();
     this.metrics = this.getAndRegisterMetrics();
   }
 
-  private getWeth(): WETH9 {
+  private getGasToken(): ethers.Contract {
     if (!process.env.CONFIG_NAME) {
       throw new Error("missing CONFIG_NAME environment variable");
     }
     const config = loadNocturneConfig(process.env.CONFIG_NAME);
-    const wethAddress = config.erc20s.get("WETH")!.address;
-    return WETH9__factory.connect(wethAddress, this.provider);
+
+    if (!process.env.GAS_TOKEN) {
+      throw new Error("missing GAS_TOKEN environment variable");
+    }
+    const gasTokenAddress = config.erc20s.get(process.env.GAS_TOKEN)!.address;
+
+    return new ethers.Contract(gasTokenAddress, ERC20_ABI);
   }
 
   private getActorAddresses(): ActorAddresses {
@@ -89,10 +94,10 @@ export class BalanceMonitor {
       "ETH balance of bundler",
       "ETH"
     );
-    const bundlerWethBalanceGauge = createObservableGauge(
-      "bundler_weth_balance",
-      "WETH balance of bundler",
-      "WETH"
+    const bundlerGasTokenBalanceGauge = createObservableGauge(
+      "bundler_gas_token_balance",
+      "gas token balance of bundler",
+      "gas token"
     );
     const updaterEthBalanceGauge = createObservableGauge(
       "updater_eth_balance",
@@ -120,16 +125,18 @@ export class BalanceMonitor {
       }
     });
 
-    bundlerWethBalanceGauge.addCallback(async (observableResult) => {
+    bundlerGasTokenBalanceGauge.addCallback(async (observableResult) => {
       try {
-        const balance = await this.weth.balanceOf(this.actorAddresses.bundler);
+        const balance = await this.gasToken.balanceOf(
+          this.actorAddresses.bundler
+        );
         const balanceEther = parseFloat(
           ethers.utils.formatUnits(balance, "ether")
         );
-        console.log("bundler WETH balance ether", balance);
+        console.log("bundler gas token balance ether", balanceEther);
         observableResult.observe(balanceEther);
       } catch (e) {
-        console.log("error fetching bundler WETH balance", e);
+        console.log("error fetching bundler gas token balance", e);
       }
     });
 
@@ -165,7 +172,7 @@ export class BalanceMonitor {
 
     return {
       bundlerEthBalanceGauge,
-      bundlerWethBalanceGauge,
+      bundlerGasTokenBalanceGauge,
       updaterEthBalanceGauge,
       screenerEthBalanceGauge,
     };
