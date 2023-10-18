@@ -3877,6 +3877,39 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nocturne-xyz/balance-monitor@workspace:actors/balance-monitor":
+  version: 0.0.0-use.local
+  resolution: "@nocturne-xyz/balance-monitor@workspace:actors/balance-monitor"
+  dependencies:
+    "@nocturne-xyz/config": "workspace:^"
+    "@nocturne-xyz/core": "workspace:^"
+    "@nocturne-xyz/offchain-utils": "workspace:^"
+    "@opentelemetry/api": ^1.4.1
+    "@types/bn.js": ^5.1.1
+    "@types/chai": ^4.3.3
+    "@types/chai-as-promised": ^7.1.5
+    "@types/mocha": ^10.0.0
+    "@types/node": ^18.8.0
+    "@types/randombytes": ^2.0.0
+    "@types/sinon": ^10.0.13
+    "@types/sinon-chai": ^3.2.9
+    "@typescript-eslint/eslint-plugin": ^5.20.0
+    "@typescript-eslint/parser": ^5.20.0
+    chai: ^4.3.6
+    chai-as-promised: ^7.1.1
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.8.0
+    ethers: ^5.7.2
+    find-yarn-workspace-root: ^2.0.0
+    mocha: ^10.1.0
+    prettier: ^2.8.8
+    sinon: ^15.0.1
+    sinon-chai: ^3.7.0
+    ts-node: ^10.9.1
+    typescript: ^4.8.4
+  languageName: unknown
+  linkType: soft
+
 "@nocturne-xyz/bundler@workspace:^, @nocturne-xyz/bundler@workspace:actors/bundler":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/bundler@workspace:actors/bundler"
@@ -12134,7 +12167,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
+  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
   languageName: node
   linkType: hard
 

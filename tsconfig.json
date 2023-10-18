@@ -32,6 +32,9 @@
       "path": "./apps/snap"
     },
     {
+      "path": "./actors/balance-monitor"
+    },
+    {
       "path": "./actors/bundler"
     },
     {
@@ -60,9 +63,6 @@
     },
     {
       "path": "./packages/op-request-plugins"
-    },
-    {
-      "path": "./packages/crypto-utils"
     },
     {
       "path": "./packages/crypto"

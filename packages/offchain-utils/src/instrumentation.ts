@@ -7,12 +7,10 @@ import { Resource } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 
-let SERVICE_METER_PROVIDER: MeterProvider;
-
 export function setupDefaultInstrumentation(
   serviceName: string,
   serviceVersion = "0.1.0"
-): void {
+): MeterProvider {
   const resource = Resource.default().merge(
     new Resource({
       [SemanticResourceAttributes.SERVICE_NAME]: serviceName,
@@ -26,13 +24,15 @@ export function setupDefaultInstrumentation(
     exportIntervalMillis: 30_000,
   });
 
-  SERVICE_METER_PROVIDER = new MeterProvider({
+  const meterProvider = new MeterProvider({
     resource: resource,
   });
 
-  SERVICE_METER_PROVIDER.addMetricReader(metricReader);
-  ot.metrics.setGlobalMeterProvider(SERVICE_METER_PROVIDER);
+  meterProvider.addMetricReader(metricReader);
+  ot.metrics.setGlobalMeterProvider(meterProvider);
+
   console.log("Instrumentation setup complete");
+  return meterProvider;
 }
 
 export function makeCreateCounterFn(
@@ -67,8 +67,4 @@ export function formatMetricLabel(
   label: string
 ): string {
   return `nocturne.${actor}.${component}.${label}`;
-}
-
-export function forceFlushAll(): Promise<void> {
-  return SERVICE_METER_PROVIDER.forceFlush();
 }
