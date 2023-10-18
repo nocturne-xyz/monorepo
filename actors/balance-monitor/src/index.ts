@@ -1,191 +1,161 @@
-import {
-  Erc20Config,
-  NocturneConfig,
-  loadNocturneConfig,
-} from "@nocturne-xyz/config";
-import ERC20_ABI from "./abis/erc20.json";
+import { loadNocturneConfig } from "@nocturne-xyz/config";
 import { Address } from "@nocturne-xyz/core";
 import * as ethers from "ethers";
 import * as ot from "@opentelemetry/api";
 import {
-  makeCreateHistogramFn,
+  makeCreateObservableGaugeFn,
   setupDefaultInstrumentation,
 } from "@nocturne-xyz/offchain-utils";
+import { WETH9, WETH9__factory } from "@nocturne-xyz/contracts";
 
-const ACTOR_NAME = "balance_cron_job";
-const COMPONENT_NAME = "balance_cron_job";
+const ACTOR_NAME = "balance-monitor";
+const COMPONENT_NAME = "monitor";
 
-interface GasTokenInfo {
-  config: Erc20Config;
-
-  // [numerator, denominator]
-  // TODO: make this dollar-denominated and use an API to get current price
-  exchangeRateToEth: [bigint, bigint];
-}
-
-interface ActorAddrs {
+interface ActorAddresses {
   bundler: Address;
   updater: Address;
   screener: Address;
 }
 
 interface BalanceMonitorMetrics {
-  bundlerEffectiveEthBalanceHistogram: ot.Histogram;
-  screenerEffectiveEthBalanceHistogram: ot.Histogram;
-  flush: () => Promise<void>;
+  bundlerEthBalanceGauge: ot.ObservableGauge;
+  bundlerWethBalanceGauge: ot.ObservableGauge;
+  updaterEthBalanceGauge: ot.ObservableGauge;
+  screenerEthBalanceGauge: ot.ObservableGauge;
 }
 
-console.log("otlp endoint:", process.env.OTEL_EXPORTER_OTLP_ENDPOINT);
+export class BalanceMonitor {
+  private provider: ethers.providers.Provider;
+  private actorAddresses: ActorAddresses;
+  private weth: WETH9;
+  private metrics: BalanceMonitorMetrics;
+  private isMonitoring: boolean = false;
 
-export async function main() {
-  const { bundler, updater, screener } = getAddrs();
-  const provider = getProvider();
-  const config = getConfig();
-  const gasTokens = getGasTokens(config);
-
-  // effective balance of bundler is balance of bundler + balance of updater
-  // because we expect bundler gas compensation to pay for updater gas
-  let bundlerEffectiveWeiBalance = 0n;
-
-  // get bundler balance in gas tokens and convert to ETH
-  for (const [token, { config, exchangeRateToEth }] of gasTokens.entries()) {
-    const contract = new ethers.Contract(config.address, ERC20_ABI, provider);
-
-    const bundlerBalance = await contract.balanceOf(bundler);
-
-    console.log(`bundler ${bundler} has ${bundlerBalance} ${token}`);
-
-    const [exchangeRateNum, exchangeRateDenom] = exchangeRateToEth;
-    bundlerEffectiveWeiBalance +=
-      (bundlerBalance.toBigInt() * exchangeRateNum) / exchangeRateDenom;
+  constructor() {
+    this.actorAddresses = this.getActorAddresses();
+    this.provider = this.getProvider();
+    this.metrics = this.getAndRegisterMetrics();
+    this.weth = this.getWeth();
   }
 
-  // get updater and screener balance in ETH
-  const [updaterBalance, screenerBalanceWei] = await Promise.all([
-    provider.getBalance(updater),
-    provider.getBalance(screener),
-  ]);
-
-  // add updater balance to effective bundler balance
-  bundlerEffectiveWeiBalance += updaterBalance.toBigInt();
-
-  // record effective balances
-  const bundlerEffectiveEthBalance = parseFloat(
-    ethers.utils.formatEther(bundlerEffectiveWeiBalance)
-  );
-  const screenerEffectiveEthBalance = parseFloat(
-    ethers.utils.formatEther(screenerBalanceWei.toBigInt())
-  );
-
-  console.log(
-    `bundler ${bundler}'s effective balance is ${bundlerEffectiveEthBalance} ETH`
-  );
-  console.log(
-    `screener ${screener}'s effective balance is ${screenerEffectiveEthBalance} ETH`
-  );
-
-  const {
-    bundlerEffectiveEthBalanceHistogram,
-    screenerEffectiveEthBalanceHistogram,
-    flush,
-  } = await getHistograms();
-  bundlerEffectiveEthBalanceHistogram.record(bundlerEffectiveEthBalance);
-  screenerEffectiveEthBalanceHistogram.record(screenerEffectiveEthBalance);
-
-  await flush();
-}
-
-function getAddrs(): ActorAddrs {
-  if (!process.env.BUNDLER_ADDRESS) {
-    throw new Error("missing BUNDLER_ADDRESS environment variable");
+  private getWeth(): WETH9 {
+    if (!process.env.CONFIG_NAME) {
+      throw new Error("missing CONFIG_NAME environment variable");
+    }
+    const config = loadNocturneConfig(process.env.CONFIG_NAME);
+    const wethAddress = config.erc20s.get("WETH")!.address;
+    return WETH9__factory.connect(wethAddress, this.provider);
   }
 
-  if (!process.env.UPDATER_ADDRESS) {
-    throw new Error("missing UPDATER_ADDRESS environment variable");
+  private getActorAddresses(): ActorAddresses {
+    // Logic for getAddrs function
+    if (!process.env.BUNDLER_ADDRESS) {
+      throw new Error("missing BUNDLER_ADDRESS environment variable");
+    }
+    if (!process.env.UPDATER_ADDRESS) {
+      throw new Error("missing UPDATER_ADDRESS environment variable");
+    }
+    if (!process.env.SCREENER_ADDRESS) {
+      throw new Error("missing SCREENER_ADDRESS environment variable");
+    }
+
+    return {
+      bundler: ethers.utils.getAddress(process.env.BUNDLER_ADDRESS),
+      updater: ethers.utils.getAddress(process.env.UPDATER_ADDRESS),
+      screener: ethers.utils.getAddress(process.env.SCREENER_ADDRESS),
+    };
   }
 
-  if (!process.env.SCREENER_ADDRESS) {
-    throw new Error("missing SCREENER_ADDRESS environment variable");
+  private getProvider(): ethers.providers.Provider {
+    // Logic for getProvider function
+    if (!process.env.RPC_URL) {
+      throw new Error("missing RPC_URL environment variable");
+    }
+    return new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
   }
 
-  return {
-    bundler: ethers.utils.getAddress(process.env.BUNDLER_ADDRESS),
-    updater: ethers.utils.getAddress(process.env.UPDATER_ADDRESS),
-    screener: ethers.utils.getAddress(process.env.SCREENER_ADDRESS),
-  };
-}
-
-function getProvider(): ethers.providers.Provider {
-  if (!process.env.RPC_URL) {
-    throw new Error("missing RPC_URL environment variable");
-  }
-
-  return new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
-}
-
-function getConfig(): NocturneConfig {
-  if (!process.env.CONFIG_NAME) {
-    throw new Error("missing CONFIG_NAME environment variable");
-  }
-
-  return loadNocturneConfig(process.env.CONFIG_NAME);
-}
-
-function getGasTokens(config: NocturneConfig): Map<string, GasTokenInfo> {
-  if (!process.env.GAS_TOKEN_TICKERS) {
-    throw new Error("missing GAS_TOKEN_TICKERS environment variable");
-  }
-
-  const GAS_TOKEN_TICKERS = process.env.GAS_TOKEN_TICKERS.replace(
-    /\s/g,
-    ""
-  ).split(",");
-  if (!GAS_TOKEN_TICKERS.every((ticker) => ticker.length > 0)) {
-    throw new Error(
-      'GAS_TOKEN_TICKERS must be a comma-separated list of non-empty strings, e.g. "weth, dai, usdc"'
+  private getAndRegisterMetrics(): BalanceMonitorMetrics {
+    // Metrics default setup exports every 30s
+    setupDefaultInstrumentation(ACTOR_NAME);
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createObservableGauge = makeCreateObservableGaugeFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
     );
+
+    const bundlerEthBalanceGauge = createObservableGauge(
+      "bundler_eth_balance",
+      "ETH balance of bundler",
+      "ETH"
+    );
+    const bundlerWethBalanceGauge = createObservableGauge(
+      "bundler_weth_balance",
+      "WETH balance of bundler",
+      "WETH"
+    );
+    const updaterEthBalanceGauge = createObservableGauge(
+      "updater_eth_balance",
+      "ETH balance of updater",
+      "ETH"
+    );
+    const screenerEthBalanceGauge = createObservableGauge(
+      "screener_eth_balance",
+      "ETH balance of screener",
+      "ETH"
+    );
+
+    bundlerEthBalanceGauge.addCallback(async (observableResult) => {
+      const balance = await this.provider.getBalance(
+        this.actorAddresses.bundler
+      );
+      console.log("bundler ETH balance", balance.toNumber());
+      observableResult.observe(balance.toNumber());
+    });
+
+    bundlerWethBalanceGauge.addCallback(async (observableResult) => {
+      const balance = await this.weth.balanceOf(this.actorAddresses.bundler);
+      console.log("bundler WETH balance", balance.toNumber());
+      observableResult.observe(balance.toNumber());
+    });
+
+    updaterEthBalanceGauge.addCallback(async (observableResult) => {
+      const balance = await this.provider.getBalance(
+        this.actorAddresses.updater
+      );
+      console.log("updater ETH balance", balance.toNumber());
+      observableResult.observe(balance.toNumber());
+    });
+
+    screenerEthBalanceGauge.addCallback(async (observableResult) => {
+      const balance = await this.provider.getBalance(
+        this.actorAddresses.screener
+      );
+      console.log("screener ETH balance", balance.toNumber());
+      observableResult.observe(balance.toNumber());
+    });
+
+    return {
+      bundlerEthBalanceGauge,
+      bundlerWethBalanceGauge,
+      updaterEthBalanceGauge,
+      screenerEthBalanceGauge,
+    };
   }
 
-  return new Map(
-    GAS_TOKEN_TICKERS.map((ticker) => {
-      const c = config.erc20(ticker);
-      if (!c) {
-        throw new Error(`missing config for ${ticker}`);
-      }
+  public async start() {
+    this.isMonitoring = true;
+    this.metrics;
 
-      return [
-        ticker,
-        {
-          config: c,
+    console.log(
+      "Balance Monitor started. Piping balance metrics every 30 seconds"
+    );
+    while (this.isMonitoring) {
+      await new Promise((resolve) => setTimeout(resolve, 60_000)); // Sleep for 60 seconds
+    }
+  }
 
-          // TODO get exchange rates from an API
-          exchangeRateToEth: [1n, 1n] as [bigint, bigint],
-        },
-      ];
-    })
-  );
-}
-
-async function getHistograms(): Promise<BalanceMonitorMetrics> {
-  const meterProvider = setupDefaultInstrumentation(ACTOR_NAME);
-  const meter = ot.metrics.getMeter(COMPONENT_NAME);
-  const createHistogram = makeCreateHistogramFn(
-    meter,
-    ACTOR_NAME,
-    COMPONENT_NAME
-  );
-
-  return {
-    bundlerEffectiveEthBalanceHistogram: createHistogram(
-      "bundler_effective_eth_balance",
-      "effective ETH balance of bundler",
-      "ETH"
-    ),
-    screenerEffectiveEthBalanceHistogram: createHistogram(
-      "screener_effective_eth_balance",
-      "effective ETH balance of screener",
-      "ETH"
-    ),
-    flush: async () => meterProvider.forceFlush(),
-  };
+  public stop() {
+    this.isMonitoring = false;
+  }
 }

@@ -16,10 +16,8 @@ COPY . .
 
 # install deps & build
 RUN yarn install
-RUN yarn turbo run build --filter="@nocturne-xyz/test-actor..."
+RUN yarn turbo run build --filter="@nocturne-xyz/balance-monitor..."
 
-# setup CLI
-WORKDIR /app/actors/test-actor
-RUN npm i -g 
+WORKDIR /app/actors/balance-monitor
 
-ENTRYPOINT ["test-actor-cli"]
+ENTRYPOINT ["node", "dist/index.js"]

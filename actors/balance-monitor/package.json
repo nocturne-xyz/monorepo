@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
+    "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/offchain-utils": "workspace:^",
     "@opentelemetry/api": "^1.4.1",

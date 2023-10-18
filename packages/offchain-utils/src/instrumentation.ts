@@ -9,7 +9,8 @@ import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 
 export function setupDefaultInstrumentation(
   serviceName: string,
-  serviceVersion = "0.1.0"
+  serviceVersion = "0.1.0",
+  exportIntervalMillis = 30_000
 ): MeterProvider {
   const resource = Resource.default().merge(
     new Resource({
@@ -21,7 +22,7 @@ export function setupDefaultInstrumentation(
   const metricExporter = new OTLPMetricExporter();
   const metricReader = new PeriodicExportingMetricReader({
     exporter: metricExporter,
-    exportIntervalMillis: 30_000,
+    exportIntervalMillis,
   });
 
   const meterProvider = new MeterProvider({
@@ -58,6 +59,22 @@ export function makeCreateHistogramFn(
       description,
       unit,
     });
+  };
+}
+
+export function makeCreateObservableGaugeFn(
+  meter: ot.Meter,
+  actor: string,
+  component: string
+): (label: string, description: string, unit?: string) => ot.ObservableGauge {
+  return (label: string, description: string, unit?: string) => {
+    return meter.createObservableGauge(
+      formatMetricLabel(actor, component, label),
+      {
+        description,
+        unit,
+      }
+    );
   };
 }
 
