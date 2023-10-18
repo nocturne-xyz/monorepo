@@ -79,6 +79,7 @@ else
     BUILD_DEPOSIT_SCREENER=true
     BUILD_TEST_ACTOR=true
     BUILD_INSERTION_WRITER=true
+    BUILD_BALANCE_MONITOR=true
 fi
 
 # build subtree updater
