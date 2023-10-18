@@ -5,8 +5,8 @@
 - Run `yarn install`
 - Run `git submodule init`
 - Run `git submodule update`
-- Run `scripts/install_base_deps.sh`
-- Run `scripts/install_foundry_deps.sh`
+- clone https://github.com/nocturne-xyz/protocol into the same dir as the monorepo
+- Run `yarn copy-circuit-artifacts`
 
 ## Build
 
