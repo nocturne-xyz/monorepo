@@ -14,3 +14,8 @@ SELECT
 , UPDATE
 , DELETE ON requests TO nocturne_db_user
 ;
+
+GRANT USAGE
+, SELECT
+  ON SEQUENCE requests_id_seq TO nocturne_db_user
+;

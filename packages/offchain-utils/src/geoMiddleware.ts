@@ -2,12 +2,12 @@ import { Request, Response, NextFunction } from "express";
 import { Logger } from "winston";
 import { Knex } from "knex";
 
-interface GeoOptions {
+export interface GeoOptions {
   logger: Logger;
   pool: Knex;
 }
 
-interface CleanRequest {
+export interface CleanRequest {
   method: string;
   url: string;
   headers: { [key: string]: string };
@@ -18,13 +18,20 @@ interface CleanRequest {
   xForwardedFor?: string; // Hoisted X-Forwarded-For
 }
 
+export interface DbRequest {
+  id: string;
+  request: CleanRequest;
+  is_flagged: boolean;
+  created_at: Date;
+}
+
 /**
  * This function takes a request and returns a JSON object with the data
  * from the request that we want to store in the database.
  *
  * @param request
  */
-function requestToCleanJson(request: Request): CleanRequest {
+export function requestToCleanJson(request: Request): CleanRequest {
   // This header code may seem a little odd but due to the way http headers are
   //  represented in the http protocol there may be more than one value for a
   //  given header.
@@ -34,15 +41,11 @@ function requestToCleanJson(request: Request): CleanRequest {
     if (!value) {
       continue;
     }
-    if (key.toLowerCase() === "x-forwarded-for" && value.length > 0) {
-      xForwardedFor = value[value.length - 1];
-      continue;
-    }
-    if (value.length > 0) {
-      // this is a heuristic, the last value should be the most trusted if any client
-      //  decided to try to spoof a header. The last one should be the one that
-      //  the load balancer set.
-      cleanHeaders[key.toLowerCase()] = value[value.length - 1];
+    const valuesArray = Array.isArray(value) ? value : [value];
+    const finalValue = valuesArray[valuesArray.length - 1];
+    cleanHeaders[key] = finalValue;
+    if (key.toLowerCase() === "x-forwarded-for") {
+      xForwardedFor = finalValue;
     }
   }
 
@@ -86,9 +89,9 @@ export const geoMiddleware = (options: GeoOptions) => {
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    const wafHeaders = Object.keys(req.headers).filter((header) =>
-      header.startsWith("X-WAF-")
-    );
+    const wafHeaders = Object.entries(req.headers).filter((h) => {
+      return h[0].toLowerCase().startsWith("x-waf-");
+    });
 
     // note - for now we only store waf tagged requests - this could change
     if (wafHeaders.length > 0) {
