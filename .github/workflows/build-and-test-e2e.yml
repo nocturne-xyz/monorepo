@@ -76,6 +76,10 @@ jobs:
         working-directory: ./protocol
         run: yarn install --immutable
 
+      - name: yarn install-deps in protocol
+        working-directory: ./protocol
+        run: yarn install-deps
+
       - name: yarn build in protocol
         working-directory: ./protocol
         run: yarn build
