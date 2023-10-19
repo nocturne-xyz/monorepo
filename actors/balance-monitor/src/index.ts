@@ -44,10 +44,12 @@ export class BalanceMonitor {
     }
     const config = loadNocturneConfig(process.env.CONFIG_NAME);
 
-    if (!process.env.GAS_TOKEN) {
-      throw new Error("missing GAS_TOKEN environment variable");
+    if (!process.env.GAS_TOKEN_TICKER) {
+      throw new Error("missing GAS_TOKEN_TICKER environment variable");
     }
-    const gasTokenAddress = config.erc20s.get(process.env.GAS_TOKEN)!.address;
+    const gasTokenAddress = config.erc20s.get(
+      process.env.GAS_TOKEN_TICKER
+    )!.address;
 
     return new ethers.Contract(gasTokenAddress, ERC20_ABI);
   }
@@ -178,7 +180,7 @@ export class BalanceMonitor {
     };
   }
 
-  public async start() {
+  public async start(): Promise<void> {
     this.isMonitoring = true;
     this.metrics;
 
@@ -190,7 +192,7 @@ export class BalanceMonitor {
     }
   }
 
-  public stop() {
+  public stop(): void {
     this.isMonitoring = false;
   }
 }
