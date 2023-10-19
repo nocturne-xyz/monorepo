@@ -25,7 +25,7 @@ interface BalanceMonitorMetrics {
 }
 
 export class BalanceMonitor {
-  private provider: ethers.providers.Provider;
+  private provider: ethers.providers.JsonRpcProvider;
   private actorAddresses: ActorAddresses;
   private gasToken: ethers.Contract;
   private metrics: BalanceMonitorMetrics;
@@ -34,24 +34,16 @@ export class BalanceMonitor {
   constructor() {
     this.actorAddresses = this.getActorAddresses();
     this.provider = this.getProvider();
-    this.gasToken = this.getGasToken();
+    this.gasToken = this.getGasToken(this.provider);
     this.metrics = this.getAndRegisterMetrics();
   }
 
-  private getGasToken(): ethers.Contract {
-    if (!process.env.CONFIG_NAME) {
-      throw new Error("missing CONFIG_NAME environment variable");
+  private getProvider(): ethers.providers.JsonRpcProvider {
+    // Logic for getProvider function
+    if (!process.env.RPC_URL) {
+      throw new Error("missing RPC_URL environment variable");
     }
-    const config = loadNocturneConfig(process.env.CONFIG_NAME);
-
-    if (!process.env.GAS_TOKEN_TICKER) {
-      throw new Error("missing GAS_TOKEN_TICKER environment variable");
-    }
-    const gasTokenAddress = config.erc20s.get(
-      process.env.GAS_TOKEN_TICKER
-    )!.address;
-
-    return new ethers.Contract(gasTokenAddress, ERC20_ABI, this.provider);
+    return new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
   }
 
   private getActorAddresses(): ActorAddresses {
@@ -73,12 +65,22 @@ export class BalanceMonitor {
     };
   }
 
-  private getProvider(): ethers.providers.Provider {
-    // Logic for getProvider function
-    if (!process.env.RPC_URL) {
-      throw new Error("missing RPC_URL environment variable");
+  private getGasToken(
+    provider: ethers.providers.JsonRpcProvider
+  ): ethers.Contract {
+    if (!process.env.CONFIG_NAME) {
+      throw new Error("missing CONFIG_NAME environment variable");
     }
-    return new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+    const config = loadNocturneConfig(process.env.CONFIG_NAME);
+
+    if (!process.env.GAS_TOKEN_TICKER) {
+      throw new Error("missing GAS_TOKEN_TICKER environment variable");
+    }
+    const gasTokenAddress = config.erc20s.get(
+      process.env.GAS_TOKEN_TICKER
+    )!.address;
+
+    return new ethers.Contract(gasTokenAddress, ERC20_ABI, provider);
   }
 
   private getAndRegisterMetrics(): BalanceMonitorMetrics {
