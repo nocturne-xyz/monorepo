@@ -84,6 +84,10 @@ jobs:
         working-directory: ./protocol
         run: yarn build
 
+      - name: yarn install in monorepo
+      - working-directory: ./monorepo
+        run: yarn install --immutable
+
       - name: yarn link in monorepo
         working-directory: ./monorepo
         run: yarn link:protocol
