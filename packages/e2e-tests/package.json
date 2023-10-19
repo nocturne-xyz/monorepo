@@ -23,7 +23,7 @@
     "@nocturne-xyz/bundler": "workspace:^",
     "@nocturne-xyz/client": "workspace:^",
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/contracts": "^1.2.0",
+    "@nocturne-xyz/contracts": "^1.2.1",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/deploy": "workspace:^",
     "@nocturne-xyz/deposit-screener": "workspace:^",

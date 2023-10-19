@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/contracts": "^1.2.0",
+    "@nocturne-xyz/contracts": "^1.2.1",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/offchain-utils": "workspace:^",
     "@nocturne-xyz/persistent-log": "workspace:^",
