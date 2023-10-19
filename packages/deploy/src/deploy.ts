@@ -634,6 +634,7 @@ async function deployProxiedContract<
     contractName: contractName,
     address: proxy.address,
     implementationAddress: implementation.address,
+    constructorArgs: proxyConstructorArgs as string[],
   };
 
   return new ProxiedContract<C, TransparentProxyAddresses>(
