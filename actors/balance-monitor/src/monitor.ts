@@ -31,7 +31,7 @@ export class BalanceMonitor {
   private actorAddresses: ActorAddresses;
   private gasToken: ethers.Contract;
   private logger: Logger;
-  private isMonitoring: boolean = false;
+  private isMonitoring = false;
 
   constructor() {
     const configName = process.env.CONFIG_NAME;
