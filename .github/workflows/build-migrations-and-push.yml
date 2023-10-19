@@ -1,0 +1,44 @@
+name: Build flyway migrations and push to ECR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build flyway migrations and push to ECR
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
+
+      - name: Login to AWS ECR
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_FLYWAY_ECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_FLYWAY_ECR }}
+          aws-region: us-east-2
+
+      - name: ECR Docker login
+        run: aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-flyway
+
+      - name: Build Docker image
+        run: docker build -t 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-flyway:latest -f ./flyway.Dockerfile .
+
+      - name: Push image with latest tag
+        run: docker push 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-flyway:latest
+
+      - name: Tag and push image with commit SHA
+        run: |
+          docker tag 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-flyway:latest 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-flyway:${{ github.sha }}
+          docker push 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-flyway:${{ github.sha }}
+
+      - name: Tag and push image with branch name
+        run: |
+          docker tag 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-flyway:latest 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-flyway:$BRANCH_NAME
+          docker push 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-flyway:$BRANCH_NAME
