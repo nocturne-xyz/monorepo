@@ -51,7 +51,7 @@ export class BalanceMonitor {
       process.env.GAS_TOKEN_TICKER
     )!.address;
 
-    return new ethers.Contract(gasTokenAddress, ERC20_ABI);
+    return new ethers.Contract(gasTokenAddress, ERC20_ABI, this.provider);
   }
 
   private getActorAddresses(): ActorAddresses {
