@@ -58,16 +58,24 @@ export class NocturneDeploymentVerification {
   }
 
   async verify(): Promise<void> {
-    const proms = [];
-    for (const proxy of Object.values(this.verificationData.proxies)) {
-      proms.push(verifyProxyContract(this.verificationData.chain, proxy));
-    }
-    for (const other of Object.values(this.verificationData.others)) {
-      console.log(`Verifying contract: ${other.contractName}`);
-      proms.push(verifyContract(this.verificationData.chain, other));
+    // NOTE: we verify in batches of 2 to avoid Etherscan rate limits
+    const proxies = Object.values(this.verificationData.proxies);
+    for (let i = 0; i < proxies.length; i += 2) {
+      const batch = proxies.slice(i, i + 2);
+      const batchProms = batch.map((proxy) =>
+        verifyProxyContract(this.verificationData.chain, proxy)
+      );
+      await Promise.all(batchProms);
     }
 
-    await Promise.all(proms);
+    const others = Object.values(this.verificationData.others);
+    for (let i = 0; i < others.length; i += 2) {
+      const batch = others.slice(i, i + 2);
+      const batchProms = batch.map((other) =>
+        verifyContract(this.verificationData.chain, other)
+      );
+      await Promise.all(batchProms);
+    }
   }
 
   toString(): string {
@@ -120,6 +128,9 @@ export async function verifyContract<T>(
   if (constructorArgs) {
     args = args.concat(` ${constructorArgs.join(" ")}`);
   }
+
+  console.log(`constructor args: ${args}`);
+  console.log(`verifying contract. adddress: ${address}. args: ${args}`);
   await execAsync(
     `${ROOT_DIR}/packages/deploy/scripts/verify.sh ${args} --network ${network}`
   );

@@ -1,10 +1,25 @@
-import { exec } from "child_process";
+import { spawn } from "child_process";
 import { ethers } from "ethers";
-import { promisify } from "util";
 
 import { Address } from "@nocturne-xyz/core";
 
-export const execAsync = promisify(exec);
+export async function execAsync(command: string): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const child = spawn(command, { shell: true, stdio: "inherit" });
+
+    child.on("error", (err) => {
+      reject(err);
+    });
+
+    child.on("exit", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Command "${command}" exited with code ${code}`));
+      }
+    });
+  });
+}
 
 export function assertOrErr(condition: boolean, error?: string): void {
   if (!condition) {
