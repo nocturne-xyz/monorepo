@@ -61,6 +61,7 @@ jobs:
         with:
           node-version: "v18.12.1"
           cache: "yarn"
+          cache-dependency-path: ./monorepo/yarn.lock
 
       - name: corepack enable
         run: corepack enable
