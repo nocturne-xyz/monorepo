@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 
 import { Address } from "@nocturne-xyz/core";
 
-export async function execAsync(command: string) {
+export async function execAsync(command: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const child = spawn(command, { shell: true, stdio: "inherit" });
 
