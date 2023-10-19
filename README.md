@@ -15,7 +15,7 @@
 ## Run Tests
 
 - Unit tests + contract invariant/fork tests: `yarn test:unit`
-- E2E tests: `yarn test:e2e`
+- E2E tests: `yarn link:protocol && yarn test:e2e`.
 
 ## Building the new docker container
 
