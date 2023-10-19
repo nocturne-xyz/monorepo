@@ -9,8 +9,9 @@ import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 
 export function setupDefaultInstrumentation(
   serviceName: string,
-  serviceVersion = "0.1.0"
-): void {
+  serviceVersion = "0.1.0",
+  exportIntervalMillis = 30_000
+): MeterProvider {
   const resource = Resource.default().merge(
     new Resource({
       [SemanticResourceAttributes.SERVICE_NAME]: serviceName,
@@ -21,16 +22,18 @@ export function setupDefaultInstrumentation(
   const metricExporter = new OTLPMetricExporter();
   const metricReader = new PeriodicExportingMetricReader({
     exporter: metricExporter,
-    exportIntervalMillis: 30_000,
+    exportIntervalMillis,
   });
 
-  const myServiceMeterProvider = new MeterProvider({
+  const meterProvider = new MeterProvider({
     resource: resource,
   });
 
-  myServiceMeterProvider.addMetricReader(metricReader);
-  ot.metrics.setGlobalMeterProvider(myServiceMeterProvider);
+  meterProvider.addMetricReader(metricReader);
+  ot.metrics.setGlobalMeterProvider(meterProvider);
+
   console.log("Instrumentation setup complete");
+  return meterProvider;
 }
 
 export function makeCreateCounterFn(
@@ -56,6 +59,22 @@ export function makeCreateHistogramFn(
       description,
       unit,
     });
+  };
+}
+
+export function makeCreateObservableGaugeFn(
+  meter: ot.Meter,
+  actor: string,
+  component: string
+): (label: string, description: string, unit?: string) => ot.ObservableGauge {
+  return (label: string, description: string, unit?: string) => {
+    return meter.createObservableGauge(
+      formatMetricLabel(actor, component, label),
+      {
+        description,
+        unit,
+      }
+    );
   };
 }
 

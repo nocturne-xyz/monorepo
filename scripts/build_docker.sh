@@ -71,12 +71,15 @@ elif [ "$BUILD_ONLY" == "test-actor" ]; then
     BUILD_TEST_ACTOR=true
 elif [ "$BUILD_ONLY" == "insertion-writer" ]; then
     BUILD_INSERTION_WRITER=true
+elif [ "$BUILD_ONLY" == "balance-monitor" ]; then
+    BUILD_BALANCE_MONITOR=true
 else
     BUILD_SUBTREE_UPDATER=true
     BUILD_BUNDLER=true
     BUILD_DEPOSIT_SCREENER=true
     BUILD_TEST_ACTOR=true
     BUILD_INSERTION_WRITER=true
+    BUILD_BALANCE_MONITOR=true
 fi
 
 # build subtree updater
@@ -116,4 +119,12 @@ if [ "$BUILD_INSERTION_WRITER" == "true" ]; then
     docker build -f actors/insertion-writer/Dockerfile -t nocturnelabs/insertion-writer:$COMMIT_HASH .
 else
     echo "skipping insertion-writer..."
+fi
+
+# build balance-monitor
+if [ "$BUILD_BALANCE_MONITOR" == "true" ]; then
+    echo "building balance-monitor..."
+    docker build -f actors/balance-monitor/Dockerfile -t nocturnelabs/balance-monitor:$COMMIT_HASH .
+else
+    echo "skipping balance-monitor..."
 fi

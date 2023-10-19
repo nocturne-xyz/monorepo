@@ -31,12 +31,15 @@ elif [ "$PUSH_ONLY" == "test-actor" ]; then
     PUSH_TEST_ACTOR=true
 elif [ "$PUSH_ONLY" == "insertion-writer" ]; then
     PUSH_INSERTION_WRITER=true
+elif [ "$PUSH_ONLY" == "balance-monitor" ]; then
+    PUSH_BALANCE_MONITOR=true
 else
     PUSH_SUBTREE_UPDATER=true
     PUSH_BUNDLER=true
     PUSH_DEPOSIT_SCREENER=true
     PUSH_TEST_ACTOR=true
     PUSH_INSERTION_WRITER=true
+    PUSH_BALANCE_MONITOR=true
 fi
 
 
@@ -69,4 +72,10 @@ if [ "$PUSH_INSERTION_WRITER" == "true" ]; then
     docker push "nocturnelabs/insertion-writer:$COMMIT_HASH"
 else 
     echo "skipping insertion-writer..."
+fi
+
+if [ "$PUSH_BALANCE_MONITOR" == "true" ]; then
+    docker push "nocturnelabs/balance-monitor:$COMMIT_HASH"
+else 
+    echo "skipping balance-monitor..."
 fi
