@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: nocturne-xyz/protocol
-          ref: "debug-monorepo-ci"
+          ref: "seb/debug-monorepo-ci"
           path: ./protocol
 
       - name: cache dependencies
