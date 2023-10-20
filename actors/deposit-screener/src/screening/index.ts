@@ -3,6 +3,7 @@ import { RULESET_V1 } from "./checks/v1/RULESET_V1";
 import { Delay, Rejection, RuleSet } from "./checks/RuleSet";
 import IORedis from "ioredis";
 import { CachedFetchOptions } from "@nocturne-xyz/offchain-utils";
+import { requireApiKeys } from "../utils";
 
 export interface ScreeningDepositRequest {
   spender: Address;
@@ -21,6 +22,7 @@ export class ConcreteScreeningChecker implements ScreeningCheckerApi {
   private ruleset: RuleSet;
 
   constructor(redis: IORedis) {
+    requireApiKeys();
     this.ruleset = RULESET_V1(redis);
   }
 

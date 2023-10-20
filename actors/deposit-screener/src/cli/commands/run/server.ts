@@ -1,7 +1,11 @@
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { Command } from "commander";
-import { DummyScreeningApi, ScreeningCheckerApi } from "../../../screening";
+import {
+  ConcreteScreeningChecker,
+  DummyScreeningApi,
+  ScreeningCheckerApi,
+} from "../../../screening";
 import { DepositScreenerServer } from "../../../server";
 import { getRedis } from "./utils";
 
@@ -48,12 +52,13 @@ const runServer = new Command("server")
       ])
     );
 
+    const redis = getRedis();
     let screeningApi: ScreeningCheckerApi;
     if (env === "local" || env == "development") {
       const { dummyScreeningDelay } = options;
       screeningApi = new DummyScreeningApi(dummyScreeningDelay);
     } else {
-      throw new Error(`Not currently supporting non-dummy screening`);
+      screeningApi = new ConcreteScreeningChecker(redis);
     }
 
     console.log("making logger");
@@ -66,7 +71,7 @@ const runServer = new Command("server")
     );
     const server = new DepositScreenerServer(
       logger,
-      getRedis(),
+      redis,
       // TODO: use real screening api and delay calculator
       screeningApi,
       supportedAssetRateLimits

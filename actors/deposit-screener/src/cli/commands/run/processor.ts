@@ -8,7 +8,11 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
 import { DepositScreenerScreener } from "../../../screener";
-import { DummyScreeningApi, ScreeningCheckerApi } from "../../../screening";
+import {
+  ConcreteScreeningChecker,
+  DummyScreeningApi,
+  ScreeningCheckerApi,
+} from "../../../screening";
 import { SubgraphDepositEventSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { getRedis } from "./utils";
 import { Speed } from "@openzeppelin/defender-relay-client";
@@ -114,21 +118,22 @@ const runProcess = new Command("processor")
       Array.from(config.erc20s.values()).map(({ address }) => address)
     );
 
+    const redis = getRedis();
+
     let screeningApi: ScreeningCheckerApi;
     if (env === "local" || env == "development") {
       const { dummyScreeningDelay } = options;
       screeningApi = new DummyScreeningApi(dummyScreeningDelay);
     } else {
-      throw new Error(`Not currently supporting non-dummy screening`);
+      screeningApi = new ConcreteScreeningChecker(redis);
     }
 
     const screener = new DepositScreenerScreener(
       adapter,
       config.depositManagerAddress,
       provider,
-      getRedis(),
+      redis,
       logger,
-      // TODO: use real screening api and delay calculator
       screeningApi,
       supportedAssets,
       config.contracts.startBlock
