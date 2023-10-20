@@ -1,14 +1,13 @@
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { Command } from "commander";
 import fs from "fs";
-import { requireApiKeys } from "../../../utils";
 import { RULESET_V1 } from "../../../screening/checks/v1/RULESET_V1";
 import { isRejection } from "../../../screening/checks/RuleSet";
 import { Logger } from "winston";
 import {
   AddressDataSnapshot,
   dedupAddressesInOrder,
-  ensureDirectoriesExist,
+  ensureExists,
   formDepositInfo,
   getLocalRedis,
   populateRedisCache,
@@ -62,10 +61,11 @@ function showReasonCounts(
 }
 
 async function main(options: any): Promise<void> {
-  requireApiKeys();
-
   const { snapshotJsonPath, outputDir, logDir, stdoutLogLevel } = options;
-  ensureDirectoriesExist(snapshotJsonPath, outputDir);
+  ensureExists(snapshotJsonPath, {
+    path: outputDir,
+    type: "DIRECTORY",
+  });
 
   const logger = makeLogger(
     logDir,
