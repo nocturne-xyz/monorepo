@@ -8,7 +8,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
-    "build": "yarn build:deps && yarn build:foundry && yarn build:hardhat",
+    "build": "yarn build:deps && yarn build:foundry && yarn build:hardhat && ./scripts/shasum.sh",
     "build:deps": "../../scripts/install_foundry_deps.sh",
     "build:foundry": "FOUNDRY_PROFILE=contracts forge build --sizes",
     "build:hardhat": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions",
