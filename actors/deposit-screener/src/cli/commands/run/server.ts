@@ -8,7 +8,7 @@ import {
 } from "../../../screening";
 import { DepositScreenerServer } from "../../../server";
 import { getRedis } from "./utils";
-import { createPool } from "@nocturne-xyz/offchain-utils/dist/src/db";
+import { createPool } from "@nocturne-xyz/offchain-utils";
 
 const runServer = new Command("server")
   .summary("run deposit screener server")
