@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@nocturne-xyz/offchain-utils": "workspace:^",
+    "knex": "^3.0.1",
     "winston-humanize-formatter": "^0.1.4"
   },
   "devDependencies": {

@@ -7,10 +7,11 @@ import {
   DummyScreeningApi,
 } from "@nocturne-xyz/deposit-screener";
 import { SubgraphDepositEventSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
-import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
+import { createPool, makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { ethers } from "ethers";
 import IORedis from "ioredis";
 import { TeardownFn, makeRedisInstance } from "./utils";
+import { Knex } from "knex";
 
 export interface DepositScreenerConfig {
   depositManagerAddress: string;
@@ -28,6 +29,7 @@ export async function startDepositScreener(
   supportedAssets: Map<string, Erc20Config>
 ): Promise<TeardownFn> {
   const redis = await getRedis();
+  const pool = createPool();
 
   const supportedAssetsSet = new Set(
     Array.from(supportedAssets.values()).map((config) => config.address)
@@ -52,6 +54,7 @@ export async function startDepositScreener(
   const stopServer = startDepositScreenerServer(
     config,
     redis,
+    pool,
     supportedAssetRateLimits
   );
 
@@ -124,6 +127,7 @@ async function startDepositScreenerFulfiller(
 function startDepositScreenerServer(
   config: DepositScreenerConfig,
   redis: IORedis,
+  pool: Knex,
   supportedAssetRateLimits: Map<Address, bigint>
 ): TeardownFn {
   const logger = makeTestLogger("deposit-screener", "server");
@@ -131,6 +135,7 @@ function startDepositScreenerServer(
   const server = new DepositScreenerServer(
     logger,
     redis,
+    pool,
     new DummyScreeningApi(config.dummyScreeningDelaySeconds ?? 5),
     supportedAssetRateLimits
   );

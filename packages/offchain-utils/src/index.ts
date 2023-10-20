@@ -4,3 +4,4 @@ export * from "./types";
 export * from "./instrumentation";
 export * from "./geoMiddleware";
 export * from "./ethersHelpers";
+export * from "./db";

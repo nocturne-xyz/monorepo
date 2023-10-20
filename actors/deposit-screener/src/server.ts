@@ -19,10 +19,12 @@ import {
   SCREENER_DELAY_QUEUE,
   getFulfillmentQueueName,
 } from "./types";
+import { Knex } from "knex";
 
 export class DepositScreenerServer {
   logger: Logger;
   redis: IORedis;
+  pool: Knex;
   db: DepositScreenerDB;
   screeningApi: ScreeningCheckerApi;
   screenerQueue: Queue<DepositRequestJobData>;
@@ -32,12 +34,14 @@ export class DepositScreenerServer {
   constructor(
     logger: Logger,
     redis: IORedis,
+    pool: Knex,
     screeningApi: ScreeningCheckerApi,
     supportedAssetRateLimits: Map<Address, bigint>
   ) {
     this.logger = logger;
     this.redis = redis;
     this.db = new DepositScreenerDB(redis);
+    this.pool = pool;
     this.screeningApi = screeningApi;
     this.screenerQueue = new Queue(SCREENER_DELAY_QUEUE, { connection: redis });
     this.fulfillerQueues = new Map(
@@ -102,7 +106,7 @@ export class DepositScreenerServer {
     app.use(logMiddleware);
     app.use(cors());
     app.use(express.json());
-    app.use(geoMiddleware({ logger: this.logger }));
+    app.use(geoMiddleware({ logger: this.logger, pool: this.pool }));
     app.use(router);
 
     const server = app.listen(port, () => {
