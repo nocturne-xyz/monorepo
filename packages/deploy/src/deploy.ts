@@ -1,4 +1,3 @@
-import * as fs from "fs";
 import { ethers } from "ethers";
 import {
   JoinSplitVerifier__factory,
@@ -23,6 +22,7 @@ import {
   RethAdapter,
   RethAdapter__factory,
   IPoseidonExtT7__factory,
+  getPoseidonBytecode,
 } from "@nocturne-xyz/contracts";
 import {
   ProxyKind,
@@ -46,13 +46,6 @@ import {
   isNocturneOther,
   isNocturneProxy,
 } from "./verification";
-
-import findWorkspaceRoot from "find-yarn-workspace-root";
-const ROOT_DIR = findWorkspaceRoot()!;
-const POSEIDON_EXT_T7_BYTECODE = fs.readFileSync(
-  `${ROOT_DIR}/packages/contracts/poseidon-bytecode/PoseidonExtT7.txt`,
-  "utf-8"
-);
 
 export interface NocturneContractDeploymentAndVerificationData {
   contracts: NocturneContractDeployment;
@@ -238,9 +231,10 @@ export async function deployNocturneCoreContracts(
   // NOTE: poseidonExtT7 is an exception where we need to deploy manually, not calling
   // deployContract() because it doesn't have a typed contract factory (its just bytecode)
   console.log("\ndeploying poseidonExtT7...");
+  const poseidonExtT7Bytecode = await getPoseidonBytecode("PoseidonExtT7");
   const poseidonExtT7 = await new ethers.ContractFactory(
     IPoseidonExtT7__factory.createInterface(),
-    POSEIDON_EXT_T7_BYTECODE,
+    poseidonExtT7Bytecode,
     connectedSigner
   ).deploy();
   await poseidonExtT7.deployTransaction.wait(opts?.confirmations);

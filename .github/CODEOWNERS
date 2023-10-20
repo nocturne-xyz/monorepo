@@ -1,11 +1,3 @@
-# contracts 
-
-packages/contracts @luketchang
-
-# circuits 
-
-packages/circuits @Sladuca
-
 # apps
 
 packages/snap @luketchang @Sladuca

@@ -31,9 +31,16 @@ jobs:
 
     steps:
       - name: checkout repo and get submodules
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
+          path: ./monorepo
+
+      - name: Checkout protocol repo
+        uses: actions/checkout@v4
+        with:
+          repository: nocturne-xyz/protocol
+          path: ./protocol
 
       - name: cache dependencies
         uses: actions/cache@v2
@@ -54,6 +61,7 @@ jobs:
         with:
           node-version: "v18.12.1"
           cache: "yarn"
+          cache-dependency-path: ./monorepo/yarn.lock
 
       - name: corepack enable
         run: corepack enable
@@ -63,14 +71,32 @@ jobs:
         with:
           version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
 
-      - name: yarn install
+      - name: yarn install in protocol
+        working-directory: ./protocol
         run: yarn install --immutable
 
-      - name: yarn build
+      - name: yarn install-deps in protocol
+        working-directory: ./protocol
+        run: yarn install-deps
+
+      - name: yarn build in protocol
+        working-directory: ./protocol
+        run: yarn build
+
+      - name: yarn install in monorepo
+        working-directory: ./monorepo
+        run: yarn install --immutable
+
+      - name: yarn link in monorepo
+        working-directory: ./monorepo
+        run: yarn link:protocol
+
+      - name: yarn build in monorepo
+        working-directory: ./monorepo
         run: yarn build
 
       - name: run ${{ matrix.test_suite.name }}
-        working-directory: ./packages/e2e-tests
+        working-directory: ./monorepo/packages/e2e-tests
         env:
           REDISMS_SYSTEM_BINARY: "/usr/bin/redis-server"
         run: yarn test:e2e -g '${{ matrix.test_suite.command }}'

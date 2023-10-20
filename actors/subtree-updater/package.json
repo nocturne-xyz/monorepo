@@ -23,12 +23,12 @@
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test",
     "server": "yarn ts-node ./server.ts",
-    "setup-rapidsnark": "../../packages/circuits/scripts/setup_rapidsnark_prover.sh",
+    "setup-rapidsnark": "./setup_rapidsnark_prover.sh",
     "test:unit": "yarn setup-rapidsnark && mocha --timeout 500000 --require ts-node/register --exit test/**"
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/contracts": "workspace:^",
+    "@nocturne-xyz/contracts": "^1.2.1",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/offchain-utils": "workspace:^",
     "@nocturne-xyz/persistent-log": "workspace:^",

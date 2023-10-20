@@ -50,13 +50,7 @@
       "path": "./actors/insertion-writer"
     },
     {
-      "path": "./packages/contracts"
-    },
-    {
       "path": "./packages/config"
-    },
-    {
-      "path": "./packages/circuits"
     },
     {
       "path": "./packages/core"

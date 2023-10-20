@@ -8,10 +8,10 @@
     "sync/*"
   ],
   "scripts": {
+    "copy-circuit-artifacts": "cp -r ../protocol/circuit-artifacts .",
     "build": "yarn turbo run --no-daemon build",
     "build:docker": "scripts/build_docker.sh",
     "build:nocache": "yarn turbo run --no-daemon build --force",
-    "circuits:build": "yarn workspaces foreach run build-all-circuits --include @nocturne-xyz/circuits",
     "clean": "yarn workspaces foreach run clean && rm -rf ./node_modules/.cache/turbo",
     "deploy-and-deposit": "cd packages/e2e-tests && ts-node ./scripts/deployAndDeposit.ts",
     "deploy-subgraph": "sleep 5 && cd subgraph && yarn install && yarn build && yarn create-local && yarn deploy-local",
@@ -23,10 +23,12 @@
     "publish-packages": "yarn clean && yarn build && changeset version && yarn workspaces foreach --no-private --from '@nocturne-xyz/*' npm publish --access public --tolerate-republish && yarn changeset tag",
     "push:docker": "scripts/push_docker.sh",
     "rebuild-circuits-and-test-cases": "yarn circuits:build && yarn local-prover:gen-test-cases",
-    "test": "yarn turbo run --no-daemon test --filter=!@nocturne-xyz/circuits...",
+    "test": "yarn turbo run --no-daemon test",
     "test:e2e": "yarn turbo run --no-daemon test:e2e --filter=@nocturne-xyz/e2e-tests",
     "test:fork": "yarn turbo run --no-daemon test:fork --filter=@nocturne-xyz/contracts",
-    "test:unit": "yarn turbo run --no-daemon test:unit"
+    "test:unit": "yarn turbo run --no-daemon test:unit",
+    "link:protocol": "yarn link -A -r ../protocol",
+    "unlink:protocol": "yarn unlink -A ../protocol"
   },
   "resolutions": {
     "@uniswap/sdk-core": "^4.0.3"
