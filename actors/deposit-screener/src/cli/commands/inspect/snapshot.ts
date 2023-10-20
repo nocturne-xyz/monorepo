@@ -9,7 +9,7 @@ import * as JSON from "bigint-json-serialization";
 import {
   CachedAddressData,
   dedupAddressesInOrder,
-  ensureDirectoriesExist,
+  ensureExists,
   formDepositInfo,
   getLocalRedis,
 } from "./utils";
@@ -66,7 +66,7 @@ async function main(options: any): Promise<void> {
   requireApiKeys();
 
   const { inputCsv, outputData, logDir, stdoutLogLevel, delayMs } = options;
-  ensureDirectoriesExist(inputCsv, outputData);
+  ensureExists(inputCsv, { path: outputData, type: "FILE" });
 
   const logger = makeLogger(
     logDir,

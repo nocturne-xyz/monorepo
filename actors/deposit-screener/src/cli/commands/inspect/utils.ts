@@ -15,6 +15,11 @@ import {
 import fs from "fs";
 import path from "path";
 
+export type OutputItem = {
+  path: string;
+  type: "FILE" | "DIRECTORY";
+};
+
 export type CachedAddressData = Partial<
   Record<ApiCallNames, ApiCallReturnData>
 >;
@@ -62,25 +67,41 @@ export function dedupAddressesInOrder(addresses: string[]): string[] {
   return dedupedAddresses;
 }
 
-export function ensureDirectoriesExist(
+export function ensureExists(
   inputPath: string,
-  outputPath: string
+  { path: outputPath, type }: OutputItem
 ): void {
   if (!fs.existsSync(inputPath)) {
     throw new Error(`Input file ${inputPath} does not exist`);
   }
 
-  // check that the dir where we are going to output to exists using the path library, if not, create it
-  const outputDir = path.dirname(outputPath);
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
+  if (type === "DIRECTORY") {
+    // check that the dir where we are going to output to exists using the path library, if not, create it
+    if (!fs.existsSync(outputPath)) {
+      fs.mkdirSync(outputPath, { recursive: true });
+    }
 
-  // check if we can write to the output directory
-  try {
-    fs.accessSync(outputDir, fs.constants.W_OK);
-  } catch (err) {
-    throw new Error(`Cannot write to output directory ${outputDir}`);
+    // check if we can write to the output directory
+    try {
+      fs.accessSync(outputPath, fs.constants.W_OK);
+    } catch (err) {
+      throw new Error(`Cannot write to output directory ${outputPath}`);
+    }
+  } else if (type === "FILE") {
+    // check that the directory where we are going to output to exists using the path library, if not, create it
+    const outputDir = path.dirname(outputPath);
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    // check if we can write to the output file
+    try {
+      fs.accessSync(outputDir, fs.constants.W_OK);
+    } catch (err) {
+      throw new Error(`Cannot write to output file ${outputPath}`);
+    }
+  } else {
+    throw new Error(`Invalid type parameter: ${type}`);
   }
 }
 
