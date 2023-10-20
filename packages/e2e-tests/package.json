@@ -7,7 +7,7 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "build": "",
+    "build": "npx tsc --noEmit",
     "clean": "rm -rf .turbo cache artifacts db",
     "prettier:check": "prettier --check ./tests ./src",
     "prettier:write": "prettier --write ./tests ./src",
