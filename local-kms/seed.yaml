@@ -1,0 +1,12 @@
+Keys:
+  Asymmetric:
+    Ecc:
+      - Metadata:
+          KeyId: bc436485-5092-42b8-92a3-0aa8b93536dc
+          KeyUsage: SIGN_VERIFY
+          Description: ECC key with curve secp256k1 (0xf73c93906C64e426eB93b97fa1986899bB1263EF)
+        PrivateKeyHex: 44c79cf6774a67e09eff8ae056f6b87d2718014bb4bb963c08a2d4631b1a7108
+
+Aliases:
+  - AliasName: alias/testing
+    TargetKeyId: bc436485-5092-42b8-92a3-0aa8b93536dc
