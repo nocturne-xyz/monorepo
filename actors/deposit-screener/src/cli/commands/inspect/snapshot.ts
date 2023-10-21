@@ -12,7 +12,7 @@ import {
   ensureExists,
   formDepositInfo,
   getLocalRedis,
-} from "./utils";
+} from "./helpers/utils";
 
 /**
  * Example

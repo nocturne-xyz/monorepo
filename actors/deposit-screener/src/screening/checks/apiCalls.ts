@@ -2,6 +2,7 @@ import { CachedFetchOptions, cachedFetch } from "@nocturne-xyz/offchain-utils";
 import { ScreeningDepositRequest } from "..";
 import IORedis from "ioredis";
 import "dotenv/config";
+import { RequestData } from "../../utils";
 
 export interface TrmAddressRiskIndicator {
   category: string;
@@ -94,11 +95,6 @@ const TRM_BASE_URL = "https://api.trmlabs.com/public/v2";
 const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";
 const TRM_API_KEY = process.env.TRM_API_KEY ?? "";
 const MISTTRACK_API_KEY = process.env.MISTTRACK_API_KEY ?? "";
-
-export interface RequestData {
-  requestInfo: RequestInfo;
-  requestInit: RequestInit;
-}
 
 function assertAllApiCallNamesHandled(callName: never): never {
   throw new Error("API Callname not handled: " + callName);

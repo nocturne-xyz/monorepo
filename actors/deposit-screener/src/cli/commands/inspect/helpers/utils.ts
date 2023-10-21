@@ -6,14 +6,19 @@ import {
   MisttrackData,
   TrmData,
   formatRequestData,
-} from "../../../screening/checks/apiCalls";
-import { ScreeningDepositRequest } from "../../../screening";
+} from "../../../../screening/checks/apiCalls";
+import { ScreeningDepositRequest } from "../../../../screening";
 import {
   formatCachedFetchCacheKey,
   serializeResponse,
 } from "@nocturne-xyz/offchain-utils";
 import fs from "fs";
 import path from "path";
+import {
+  EtherscanErc20TransfersResponse,
+  EtherscanInternalTxResponse,
+} from "./etherscan";
+import { TRMTransferRequest } from "./trm";
 
 export type OutputItem = {
   path: string;
@@ -25,6 +30,11 @@ export type CachedAddressData = Partial<
 >;
 export type AddressDataSnapshot = Record<string, CachedAddressData>;
 
+export function unixTimestampToISO8601(unixTimestamp: number) {
+  const date = new Date(unixTimestamp * 1000);
+  return date.toISOString();
+}
+
 export const formDepositInfo = (
   spender: string,
   value = 0n
@@ -35,6 +45,50 @@ export const formDepositInfo = (
     value,
   } as const;
 };
+
+export function etherscanErc20ToTrmRequest(
+  response: EtherscanErc20TransfersResponse,
+  accountExternalId: string
+): TRMTransferRequest[] {
+  return response.result.map((tx) => ({
+    accountExternalId: accountExternalId,
+    asset: tx.tokenSymbol,
+    assetAmount: tx.value,
+    chain: "ethereum",
+    destinationAddress: tx.to,
+    externalId: tx.hash,
+    fiatCurrency: "USD",
+    fiatValue: null, // Assuming fiatValue is not directly provided in Etherscan's response
+    onchainReference: tx.hash,
+    timestamp: unixTimestampToISO8601(Number(tx.timeStamp)),
+    transferType:
+      tx.from === "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b"
+        ? "CRYPTO_WITHDRAWAL"
+        : "CRYPTO_DEPOSIT",
+  }));
+}
+
+export function etherscanInternalToTrmRequest(
+  response: EtherscanInternalTxResponse,
+  accountExternalId: string
+): TRMTransferRequest[] {
+  return response.result.map((tx) => ({
+    accountExternalId: accountExternalId,
+    asset: "ETH",
+    assetAmount: tx.value,
+    chain: "ethereum",
+    destinationAddress: tx.to,
+    externalId: tx.hash,
+    fiatCurrency: "USD",
+    fiatValue: null, // Assuming fiatValue is not directly provided in Etherscan's response
+    onchainReference: tx.hash,
+    timestamp: unixTimestampToISO8601(Number(tx.timeStamp)),
+    transferType:
+      tx.from === "0x47CE0C6eD5B0Ce3d3A51fdb1C52DC66a7c3c2936"
+        ? "CRYPTO_WITHDRAWAL"
+        : "CRYPTO_DEPOSIT",
+  }));
+}
 
 export function toTrmResponse(data: TrmData): Response {
   const res = new Response(JSON.stringify([data]));
