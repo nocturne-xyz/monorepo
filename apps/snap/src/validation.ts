@@ -1,5 +1,4 @@
 import {
-  object,
   string,
   bigint,
   number,
@@ -8,6 +7,7 @@ import {
   enums,
   union,
   define,
+  type,
 } from "superstruct";
 
 export const UndefinedType = define(
@@ -34,12 +34,12 @@ const StringifiedUint8ArrayType = define(
   isStringifiedUint8Array
 );
 
-export const SetSpendKeyParams = object({
+export const SetSpendKeyParams = type({
   spendKey: StringifiedUint8ArrayType,
 });
 
-export const SignCanonAddrRegistryEntryParams = object({
-  entry: object({
+export const SignCanonAddrRegistryEntryParams = type({
+  entry: type({
     ethAddress: string(),
     compressedCanonAddr: bigint(),
     perCanonAddrNonce: bigint(),
@@ -48,64 +48,64 @@ export const SignCanonAddrRegistryEntryParams = object({
   registryAddress: string(),
 });
 
-const NetworkInfoType = object({
+const NetworkInfoType = type({
   chainId: bigint(),
   tellerContract: string(),
 });
 
-const SteathAddressType = object({
+const SteathAddressType = type({
   h1X: bigint(),
   h1Y: bigint(),
   h2X: bigint(),
   h2Y: bigint(),
 });
 
-const CompressedStealthAddressType = object({
+const CompressedStealthAddressType = type({
   h1: bigint(),
   h2: bigint(),
 });
 
-const EncodedAssetType = object({
+const EncodedAssetType = type({
   encodedAssetAddr: bigint(),
   encodedAssetId: bigint(),
 });
 
-const TrackedAssetType = object({
+const TrackedAssetType = type({
   encodedAsset: EncodedAssetType,
   minRefundValue: bigint(),
 });
 
-const ActionType = object({
+const ActionType = type({
   contractAddress: string(),
   encodedFunction: string(),
 });
 
-const CanonAddressType = object({
+const CanonAddressType = type({
   x: bigint(),
   y: bigint(),
 });
 
 const AssetTypeType = enums([0, 1, 2]);
 
-const AssetType = object({
+const AssetType = type({
   assetType: AssetTypeType,
   assetAddr: string(),
   id: bigint(),
 });
 
-const EncryptedNoteType = object({
+const EncryptedNoteType = type({
   ciphertextBytes: array(number()),
   encapsulatedSecretBytes: array(number()),
 });
 
-const NoteType = object({
+const NoteType = type({
   owner: SteathAddressType,
   nonce: bigint(),
   asset: AssetType,
   value: bigint(),
 });
 
-const IncludedNoteType = object({
+const IncludedNoteType = type({
   owner: SteathAddressType,
   nonce: bigint(),
   asset: AssetType,
@@ -113,12 +113,12 @@ const IncludedNoteType = object({
   merkleIndex: number(),
 });
 
-const MerkleProofInputType = object({
+const MerkleProofInputType = type({
   path: array(bigint()),
   siblings: array(array(bigint())),
 });
 
-const PreSignJoinSplitType = object({
+const PreSignJoinSplitType = type({
   commitmentTreeRoot: bigint(),
   nullifierA: bigint(),
   nullifierB: bigint(),
@@ -140,7 +140,7 @@ const PreSignJoinSplitType = object({
   refundAddr: CompressedStealthAddressType,
 });
 
-const PreSignOperationType = object({
+const PreSignOperationType = type({
   networkInfo: NetworkInfoType,
   refundAddr: CompressedStealthAddressType,
   refunds: array(TrackedAssetType),
@@ -154,14 +154,14 @@ const PreSignOperationType = object({
   joinSplits: array(PreSignJoinSplitType),
 });
 
-const ConfidentialPaymentMetadataType = object({
+const ConfidentialPaymentMetadataType = type({
   type: enums(["ConfidentialPayment"]),
   recipient: CanonAddressType,
   asset: AssetType,
   amount: bigint(),
 });
 
-const TransferActionMetadataType = object({
+const TransferActionMetadataType = type({
   type: enums(["Action"]),
   actionType: enums(["Transfer"]),
   recipientAddress: string(),
@@ -169,20 +169,20 @@ const TransferActionMetadataType = object({
   amount: bigint(),
 });
 
-const WethToWstethActionMetadataType = object({
+const WethToWstethActionMetadataType = type({
   type: enums(["Action"]),
   actionType: enums(["Weth To Wsteth"]),
   amount: bigint(),
 });
 
-const TransferETHActionMetadataType = object({
+const TransferETHActionMetadataType = type({
   type: enums(["Action"]),
   actionType: enums(["Transfer ETH"]),
   recipientAddress: string(),
   amount: bigint(),
 });
 
-const UniswapV3SwapActionMetadataType = object({
+const UniswapV3SwapActionMetadataType = type({
   type: enums(["Action"]),
   actionType: enums(["UniswapV3 Swap"]),
   tokenIn: string(),
@@ -202,11 +202,11 @@ const OperationMetadataItemType = union([
   ActionMetadataType,
 ]);
 
-const OperationMetadataType = object({
+const OperationMetadataType = type({
   items: array(OperationMetadataItemType),
 });
 
-export const SignOperationParams = object({
+export const SignOperationParams = type({
   op: PreSignOperationType,
   metadata: OperationMetadataType,
 });
