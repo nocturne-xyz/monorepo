@@ -8,6 +8,8 @@ import {
   union,
   define,
   type,
+  object,
+  optional,
 } from "superstruct";
 
 export const UndefinedType = define(
@@ -48,77 +50,79 @@ export const SignCanonAddrRegistryEntryParams = type({
   registryAddress: string(),
 });
 
-const NetworkInfoType = type({
+const NetworkInfoType = object({
   chainId: bigint(),
   tellerContract: string(),
 });
 
-const SteathAddressType = type({
+const SteathAddressType = object({
   h1X: bigint(),
   h1Y: bigint(),
   h2X: bigint(),
   h2Y: bigint(),
 });
 
-const CompressedStealthAddressType = type({
+const CompressedStealthAddressType = object({
   h1: bigint(),
   h2: bigint(),
 });
 
-const EncodedAssetType = type({
+const EncodedAssetType = object({
   encodedAssetAddr: bigint(),
   encodedAssetId: bigint(),
 });
 
-const TrackedAssetType = type({
+const TrackedAssetType = object({
   encodedAsset: EncodedAssetType,
   minRefundValue: bigint(),
 });
 
-const ActionType = type({
+const ActionType = object({
   contractAddress: string(),
   encodedFunction: string(),
 });
 
-const CanonAddressType = type({
+const CanonAddressType = object({
   x: bigint(),
   y: bigint(),
 });
 
 const AssetTypeType = enums([0, 1, 2]);
 
-const AssetType = type({
+const AssetType = object({
   assetType: AssetTypeType,
   assetAddr: string(),
   id: bigint(),
 });
 
-const EncryptedNoteType = type({
+const EncryptedNoteType = object({
   ciphertextBytes: array(number()),
   encapsulatedSecretBytes: array(number()),
 });
 
-const NoteType = type({
+const NoteType = object({
   owner: SteathAddressType,
+  sender: optional(CanonAddressType),
   nonce: bigint(),
   asset: AssetType,
   value: bigint(),
 });
 
-const IncludedNoteType = type({
+const IncludedNoteType = object({
   owner: SteathAddressType,
+  sender: optional(CanonAddressType),
   nonce: bigint(),
   asset: AssetType,
   value: bigint(),
   merkleIndex: number(),
 });
 
-const MerkleProofInputType = type({
+const MerkleProofInputType = object({
   path: array(bigint()),
   siblings: array(array(bigint())),
 });
 
-const PreSignJoinSplitType = type({
+const PreSignJoinSplitType = object({
   commitmentTreeRoot: bigint(),
   nullifierA: bigint(),
   nullifierB: bigint(),
@@ -140,7 +144,7 @@ const PreSignJoinSplitType = type({
   refundAddr: CompressedStealthAddressType,
 });
 
-const PreSignOperationType = type({
+const PreSignOperationType = object({
   networkInfo: NetworkInfoType,
   refundAddr: CompressedStealthAddressType,
   refunds: array(TrackedAssetType),
@@ -154,14 +158,14 @@ const PreSignOperationType = type({
   joinSplits: array(PreSignJoinSplitType),
 });
 
-const ConfidentialPaymentMetadataType = type({
+const ConfidentialPaymentMetadataType = object({
   type: enums(["ConfidentialPayment"]),
   recipient: CanonAddressType,
   asset: AssetType,
   amount: bigint(),
 });
 
-const TransferActionMetadataType = type({
+const TransferActionMetadataType = object({
   type: enums(["Action"]),
   actionType: enums(["Transfer"]),
   recipientAddress: string(),
@@ -169,20 +173,20 @@ const TransferActionMetadataType = type({
   amount: bigint(),
 });
 
-const WethToWstethActionMetadataType = type({
+const WethToWstethActionMetadataType = object({
   type: enums(["Action"]),
   actionType: enums(["Weth To Wsteth"]),
   amount: bigint(),
 });
 
-const TransferETHActionMetadataType = type({
+const TransferETHActionMetadataType = object({
   type: enums(["Action"]),
   actionType: enums(["Transfer ETH"]),
   recipientAddress: string(),
   amount: bigint(),
 });
 
-const UniswapV3SwapActionMetadataType = type({
+const UniswapV3SwapActionMetadataType = object({
   type: enums(["Action"]),
   actionType: enums(["UniswapV3 Swap"]),
   tokenIn: string(),
@@ -202,11 +206,11 @@ const OperationMetadataItemType = union([
   ActionMetadataType,
 ]);
 
-const OperationMetadataType = type({
+const OperationMetadataType = object({
   items: array(OperationMetadataItemType),
 });
 
-export const SignOperationParams = type({
+export const SignOperationParams = object({
   op: PreSignOperationType,
   metadata: OperationMetadataType,
 });
