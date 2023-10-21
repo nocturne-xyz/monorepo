@@ -7,7 +7,6 @@ import {
   enums,
   union,
   define,
-  type,
   object,
   optional,
 } from "superstruct";
@@ -36,12 +35,12 @@ const StringifiedUint8ArrayType = define(
   isStringifiedUint8Array
 );
 
-export const SetSpendKeyParams = type({
+export const SetSpendKeyParams = object({
   spendKey: StringifiedUint8ArrayType,
 });
 
-export const SignCanonAddrRegistryEntryParams = type({
-  entry: type({
+export const SignCanonAddrRegistryEntryParams = object({
+  entry: object({
     ethAddress: string(),
     compressedCanonAddr: bigint(),
     perCanonAddrNonce: bigint(),
