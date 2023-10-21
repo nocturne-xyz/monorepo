@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.3
+
+### Patch Changes
+
+- 6fddaaa2: prepareOperation does not use spread syntax to avoid adding extra fields to PreSignOperation
+- b49fd71f: Update ActionMetadata types to be consistent
+
 ## 3.0.2
 
 ### Patch Changes

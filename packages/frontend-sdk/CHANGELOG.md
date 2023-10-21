@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.1.2
+
+### Patch Changes
+
+- b49fd71f: Update ActionMetadata types to be consistent
+- Updated dependencies [6fddaaa2]
+- Updated dependencies [b49fd71f]
+- Updated dependencies [a72e2077]
+  - @nocturne-xyz/client@3.0.3
+  - @nocturne-xyz/op-request-plugins@2.0.3
+  - @nocturne-xyz/subgraph-sync-adapters@0.3.2
+
 ## 3.1.1
 
 ### Patch Changes

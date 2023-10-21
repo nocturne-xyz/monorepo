@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.8.0
+
+### Minor Changes
+
+- 3bdcf85e: Add inspect top level CLI command with snapshot and check commands
+- 717ebcba: integrate cachedFetch into ruleset and update tests
+
+### Patch Changes
+
+- 66cbfb14: Tweak screener limits
+- 3bdcf85e: Replace snapshot gen script with call to deposit-screener-cli snapshot call
+- 026718d2: Fix bug in screener inspect CLI where output dir/files were not being correctly created before command run
+- Updated dependencies [26c43e44]
+- Updated dependencies [2c465f4e]
+- Updated dependencies [717ebcba]
+- Updated dependencies [a72e2077]
+  - @nocturne-xyz/offchain-utils@0.2.0
+  - @nocturne-xyz/subgraph-sync-adapters@0.3.2
+
 ## 0.7.2
 
 ### Patch Changes

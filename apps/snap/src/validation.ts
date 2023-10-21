@@ -1,5 +1,4 @@
 import {
-  object,
   string,
   bigint,
   number,
@@ -8,6 +7,8 @@ import {
   enums,
   union,
   define,
+  object,
+  optional,
 } from "superstruct";
 
 export const UndefinedType = define(
@@ -100,6 +101,7 @@ const EncryptedNoteType = object({
 
 const NoteType = object({
   owner: SteathAddressType,
+  sender: optional(CanonAddressType),
   nonce: bigint(),
   asset: AssetType,
   value: bigint(),
@@ -107,6 +109,7 @@ const NoteType = object({
 
 const IncludedNoteType = object({
   owner: SteathAddressType,
+  sender: optional(CanonAddressType),
   nonce: bigint(),
   asset: AssetType,
   value: bigint(),

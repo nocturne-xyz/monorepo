@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2
+
+### Patch Changes
+
+- a72e2077: fix unnecessary error when startMerkleIndex in middle of batch
+
 ## 0.3.1
 
 ### Patch Changes

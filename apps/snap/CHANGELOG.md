@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.7.1
+
+### Patch Changes
+
+- 915801c2: Add optional sender field to included note superstruct to accomodate decrypted note with sender case
+
+## 0.7.0
+
+### Minor Changes
+
+- 6fddaaa2: Address audit findings, strip newlines/carriage returns, check set spend key origin, add superstruct validation to params
+
+### Patch Changes
+
+- b49fd71f: Update snap content to account for new action types
+- b49fd71f: Update ActionMetadata types to be consistent
+- Updated dependencies [6fddaaa2]
+- Updated dependencies [b49fd71f]
+  - @nocturne-xyz/client@3.0.3
+
 ## 0.6.1
 
 ### Patch Changes
