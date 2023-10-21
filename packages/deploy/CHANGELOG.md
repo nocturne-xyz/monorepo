@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.2
+
+### Patch Changes
+
+- 79ef1b31: proxy deployment attaches prev missing constructor args, send verifications to etherscan in batches of 2 to avoid rate limits
+- 79ef1b31: execAsync sends logs to stdout when running hardhat verify
+
 ## 0.9.1
 
 ### Patch Changes

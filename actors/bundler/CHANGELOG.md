@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.2
+
+### Patch Changes
+
+- Updated dependencies [26c43e44]
+- Updated dependencies [2c465f4e]
+- Updated dependencies [717ebcba]
+- Updated dependencies [6fddaaa2]
+- Updated dependencies [b49fd71f]
+  - @nocturne-xyz/offchain-utils@0.2.0
+  - @nocturne-xyz/client@3.0.3
+
 ## 0.8.1
 
 ### Patch Changes

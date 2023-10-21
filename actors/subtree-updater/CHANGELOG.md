@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.3
+
+### Patch Changes
+
+- 1a824e1e: only schedule fillBatch on the first insertion of batch
+- Updated dependencies [26c43e44]
+- Updated dependencies [2c465f4e]
+- Updated dependencies [717ebcba]
+  - @nocturne-xyz/offchain-utils@0.2.0
+
 ## 0.5.2
 
 ### Patch Changes

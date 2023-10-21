@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.3
+
+### Patch Changes
+
+- b49fd71f: Update ActionMetadata types to be consistent
+- Updated dependencies [6fddaaa2]
+- Updated dependencies [b49fd71f]
+  - @nocturne-xyz/client@3.0.3
+
 ## 2.0.2
 
 ### Patch Changes

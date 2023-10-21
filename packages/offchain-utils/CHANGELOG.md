@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- 26c43e44: Expose method for creating observable gauge
+- 717ebcba: add cachedFetch method to ser/deser and read/write reponses to redis cache
+
+### Patch Changes
+
+- 2c465f4e: Initial postgres support
+
 ## 0.1.18
 
 ### Patch Changes
