@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1
+
+### Patch Changes
+
+- 915801c2: Add optional sender field to included note superstruct to accomodate decrypted note with sender case
+
 ## 0.7.0
 
 ### Minor Changes
