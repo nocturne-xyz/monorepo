@@ -3,13 +3,14 @@ import { Command } from "commander";
 import {
   EtherscanErc20Transfer,
   getEtherscanErc20Transfers,
-  getEtherscanInternalTxs,
+  getEtherscanInternalEthTransfers,
 } from "./helpers/etherscan";
 import {
   etherscanErc20ToTrmRequest,
-  etherscanInternalToTrmRequest,
+  etherscanInternalEthTransferToTrmRequest,
 } from "./helpers/utils";
 import * as JSON from "bigint-json-serialization";
+import { submitTrmTransfer } from "./helpers/trm";
 
 /**
  * Example
@@ -60,8 +61,8 @@ async function main(options: any): Promise<void> {
 
   const logger = makeLogger(
     logDir,
-    "address-checker",
-    "checker",
+    "trm-tx-monitor",
+    "monitor",
     stdoutLogLevel
   );
 
@@ -86,7 +87,7 @@ async function main(options: any): Promise<void> {
     throw new Error("not implemented yet");
   } else if (ethTransferStyle == "internal") {
     ethOutflowsProms.push(
-      getEtherscanInternalTxs(fromAddress, startBlock, endBlock)
+      getEtherscanInternalEthTransfers(fromAddress, startBlock, endBlock)
     );
   } else if (ethTransferStyle == "both") {
     throw new Error("not implemented yet");
@@ -101,14 +102,22 @@ async function main(options: any): Promise<void> {
     logger.info(`ETH outflow: ${JSON.stringify(outflow)}`);
   });
 
-  const trmErc20Requests = etherscanErc20ToTrmRequest(erc20Outflows);
+  const trmErc20Requests = await etherscanErc20ToTrmRequest(erc20Outflows);
   for (const trmRequest of trmErc20Requests) {
-    logger.info(`TRM ERC-20 request: ${JSON.stringify(trmRequest)}`);
+    logger.info(
+      `Submitting ERC-20 transfer to TRM: ${JSON.stringify(trmRequest)}`
+    );
+    const res = await submitTrmTransfer(trmRequest);
+    logger.info(`TRM response: ${JSON.stringify(res)}`);
   }
 
-  const trmEthRequests = etherscanInternalToTrmRequest(ethOutflows);
+  const trmEthRequests = await etherscanInternalEthTransferToTrmRequest(
+    ethOutflows
+  );
   for (const trmRequest of trmEthRequests) {
     logger.info(`TRM ETH request: ${JSON.stringify(trmRequest)}`);
+    const res = await submitTrmTransfer(trmRequest);
+    logger.info(`TRM response: ${JSON.stringify(res)}`);
   }
 }
 

@@ -1,3 +1,7 @@
+import { TRM_BASE_URL } from "../../../../screening/checks/apiCalls";
+import { RequestData } from "../../../../utils";
+import * as JSON from "bigint-json-serialization";
+
 export interface TRMTransferRequest {
   accountExternalId: string; // Represents the account-external-id, ensuring no PII
   asset: string; // Supported crypto asset symbol
@@ -45,4 +49,33 @@ export interface CounterpartyMini {
   trmUrn: string; // Assuming 'trm-urn' is a string, adjust if needed
 }
 
-// TODO: expose methods to submit requests to TRM
+export async function submitTrmTransfer(
+  transfer: TRMTransferRequest
+): Promise<TRMTransferResponse> {
+  const { requestInfo, requestInit } = formatTrmTransferRequest(transfer);
+  return fetch(requestInfo, requestInit).then((res) => res.json());
+}
+
+function mustGetTrmApiKey(): string {
+  if (!process.env.TRM_API_KEY) {
+    throw new Error("TRM_API_KEY not set");
+  }
+
+  return process.env.TRM_API_KEY;
+}
+
+function formatTrmTransferRequest(transfer: TRMTransferRequest): RequestData {
+  const apiKey = mustGetTrmApiKey();
+  const requestInfo = `${TRM_BASE_URL}/tm/transfers`;
+  const requestInit = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization:
+        "Basic " + Buffer.from(`${apiKey}:${apiKey}`).toString("base64"),
+    },
+    body: JSON.stringify({ ...transfer }),
+  };
+
+  return { requestInfo, requestInit };
+}

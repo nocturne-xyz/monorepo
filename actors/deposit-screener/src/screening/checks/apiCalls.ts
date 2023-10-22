@@ -91,8 +91,9 @@ export type MisttrackApiResponse<T extends MisttrackData> =
       data: T;
     };
 
-const TRM_BASE_URL = "https://api.trmlabs.com/public/v2";
-const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";
+export const TRM_BASE_URL = "https://api.trmlabs.com/public/v2";
+export const MISTTRACK_BASE_URL = "https://openapi.misttrack.io/v1";
+
 const TRM_API_KEY = process.env.TRM_API_KEY ?? "";
 const MISTTRACK_API_KEY = process.env.MISTTRACK_API_KEY ?? "";
 

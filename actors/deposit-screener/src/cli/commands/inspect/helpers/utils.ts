@@ -16,6 +16,7 @@ import fs from "fs";
 import path from "path";
 import { EtherscanErc20Transfer, EtherscanInternalTx } from "./etherscan";
 import { TRMTransferRequest } from "./trm";
+import { getCoinMarketCapPriceConversion } from "./coinmarketcap";
 
 export type OutputItem = {
   path: string;
@@ -27,7 +28,7 @@ export type CachedAddressData = Partial<
 >;
 export type AddressDataSnapshot = Record<string, CachedAddressData>;
 
-export function unixTimestampToISO8601(unixTimestamp: number) {
+export function unixTimestampToISO8601(unixTimestamp: number): string {
   const date = new Date(unixTimestamp * 1000);
   return date.toISOString();
 }
@@ -45,44 +46,73 @@ export const formDepositInfo = (
 
 export function etherscanErc20ToTrmRequest(
   transfers: EtherscanErc20Transfer[]
-): TRMTransferRequest[] {
-  return transfers.map((tx) => ({
-    accountExternalId: tx.from,
-    asset: tx.tokenSymbol,
-    assetAmount: tx.value,
-    chain: "ethereum",
-    destinationAddress: tx.to,
-    externalId: tx.hash,
-    fiatCurrency: "USD",
-    fiatValue: null, // Assuming fiatValue is not directly provided in Etherscan's response
-    onchainReference: tx.hash,
-    timestamp: unixTimestampToISO8601(Number(tx.timeStamp)),
-    transferType:
-      tx.from === "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b"
-        ? "CRYPTO_WITHDRAWAL"
-        : "CRYPTO_DEPOSIT",
-  }));
+): Promise<TRMTransferRequest[]> {
+  return Promise.all(
+    transfers.map(async (transfer) => {
+      const wholeTokensAmount =
+        Number(transfer.value) / Number(transfer.tokenDecimal);
+      const res = await getCoinMarketCapPriceConversion({
+        symbol: transfer.tokenSymbol,
+        amount: wholeTokensAmount,
+        convert: "USD",
+      });
+      console.log("CMC response: ", res.data);
+
+      const fiatValue = res.data[0].quote.USD.price;
+      return {
+        accountExternalId: transfer.from,
+        asset: transfer.tokenSymbol.toLowerCase(),
+        assetAmount: wholeTokensAmount.toString(),
+        chain: "ethereum", // TODO: allow more chains
+        destinationAddress: transfer.to,
+        externalId: transfer.hash,
+        fiatCurrency: "USD",
+        fiatValue: fiatValue.toString(), // Assuming fiatValue is not directly provided in Etherscan's response
+        onchainReference: transfer.hash,
+        timestamp: unixTimestampToISO8601(Number(transfer.timeStamp)),
+        transferType:
+          transfer.from === "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b"
+            ? "CRYPTO_WITHDRAWAL"
+            : "CRYPTO_DEPOSIT",
+      };
+    })
+  );
 }
 
-export function etherscanInternalToTrmRequest(
+export async function etherscanInternalEthTransferToTrmRequest(
   internalTxs: EtherscanInternalTx[]
-): TRMTransferRequest[] {
-  return internalTxs.map((tx) => ({
-    accountExternalId: tx.from,
-    asset: "ETH",
-    assetAmount: tx.value,
-    chain: "ethereum",
-    destinationAddress: tx.to,
-    externalId: tx.hash,
-    fiatCurrency: "USD",
-    fiatValue: null, // Assuming fiatValue is not directly provided in Etherscan's response
-    onchainReference: tx.hash,
-    timestamp: unixTimestampToISO8601(Number(tx.timeStamp)),
-    transferType:
-      tx.from === "0x47CE0C6eD5B0Ce3d3A51fdb1C52DC66a7c3c2936"
-        ? "CRYPTO_WITHDRAWAL"
-        : "CRYPTO_DEPOSIT",
-  }));
+): Promise<TRMTransferRequest[]> {
+  return Promise.all(
+    internalTxs.map(async (tx) => {
+      const wholeAmount = Number(tx.value) / 10 ** 18;
+      const res = await getCoinMarketCapPriceConversion({
+        symbol: "ETH",
+        amount: wholeAmount,
+        convert: "USD",
+      });
+
+      console.log("CMC response: ", res.data);
+
+      const fiatValue = res.data[0].quote.USD.price;
+
+      return {
+        accountExternalId: tx.from,
+        asset: "eth",
+        assetAmount: wholeAmount.toString(),
+        chain: "ethereum",
+        destinationAddress: tx.to,
+        externalId: tx.hash,
+        fiatCurrency: "USD",
+        fiatValue: fiatValue.toString(),
+        onchainReference: tx.hash,
+        timestamp: unixTimestampToISO8601(Number(tx.timeStamp)),
+        transferType:
+          tx.from === "0x47CE0C6eD5B0Ce3d3A51fdb1C52DC66a7c3c2936"
+            ? "CRYPTO_WITHDRAWAL"
+            : "CRYPTO_DEPOSIT",
+      };
+    })
+  );
 }
 
 export function toTrmResponse(data: TrmData): Response {

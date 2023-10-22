@@ -4,10 +4,37 @@ export interface PriceConversionParams {
   convert: string;
 }
 
+interface PriceConversionResponse {
+  data: [
+    {
+      symbol: string;
+      id: string;
+      name: string;
+      amount: number;
+      last_updated: string;
+      quote: {
+        [key: string]: {
+          price: number;
+          last_updated: string;
+        };
+      };
+    }
+  ];
+  status: {
+    timestamp: string;
+    error_code: number;
+    error_message: string;
+    elapsed: number;
+    credit_count: number;
+    notice: string;
+  };
+}
+
 export async function getCoinMarketCapPriceConversion(
   params: PriceConversionParams
-): Promise<any> {
+): Promise<PriceConversionResponse> {
   const { requestInfo, requestInit } = getCoinMarketCapRequestData(params);
+  console.log("CMC request info", requestInfo);
   return fetch(requestInfo, requestInit).then((res) => res.json());
 }
 

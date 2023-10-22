@@ -70,7 +70,7 @@ export async function getEtherscanErc20Transfers(
   return fetch(requestInfo, requestInit).then((res) => res.json());
 }
 
-export async function getEtherscanInternalTxs(
+export async function getEtherscanInternalEthTransfers(
   address: string,
   startBlock: number,
   endBlock: number
