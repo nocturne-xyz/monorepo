@@ -86,7 +86,7 @@ async function main(options: any): Promise<void> {
   }
 
   logger.info(`Checking outflows for ETH`);
-  let ethOutflowsProms = [];
+  const ethOutflowsProms = [];
   if (!ethTransferStyle) {
     logger.info(`No eth transfer style given, skipping eth checks`);
   } else if (ethTransferStyle == "direct") {

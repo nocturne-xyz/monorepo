@@ -106,8 +106,8 @@ function mustGetEtherscanApiKey(): string {
 function getEtherscanTokenTxRequestData(
   contractAddress: string,
   address: string,
-  page: number = 1,
-  offset: number = 100,
+  page = 1,
+  offset = 100,
   startBlock: number,
   endBlock: number
 ): RequestData {
@@ -126,8 +126,8 @@ function getEtherscanInternalTxRequestData(
   address: string,
   startBlock: number,
   endBlock: number,
-  page: number = 1,
-  offset: number = 100
+  page = 1,
+  offset = 100
 ): RequestData {
   const apiKey = mustGetEtherscanApiKey();
   const requestInfo = `${ETHERSCAN_API_BASE_URL}?module=account&action=txlistinternal&address=${address}&startblock=${startBlock}&endblock=${endBlock}&page=${page}&offset=${offset}&sort=asc&apikey=${apiKey}`;
