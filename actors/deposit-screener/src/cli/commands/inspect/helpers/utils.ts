@@ -14,10 +14,7 @@ import {
 } from "@nocturne-xyz/offchain-utils";
 import fs from "fs";
 import path from "path";
-import {
-  EtherscanErc20TransfersResponse,
-  EtherscanInternalTxResponse,
-} from "./etherscan";
+import { EtherscanErc20Transfer, EtherscanInternalTx } from "./etherscan";
 import { TRMTransferRequest } from "./trm";
 
 export type OutputItem = {
@@ -47,11 +44,10 @@ export const formDepositInfo = (
 };
 
 export function etherscanErc20ToTrmRequest(
-  response: EtherscanErc20TransfersResponse,
-  accountExternalId: string
+  transfers: EtherscanErc20Transfer[]
 ): TRMTransferRequest[] {
-  return response.result.map((tx) => ({
-    accountExternalId: accountExternalId,
+  return transfers.map((tx) => ({
+    accountExternalId: tx.from,
     asset: tx.tokenSymbol,
     assetAmount: tx.value,
     chain: "ethereum",
@@ -69,11 +65,10 @@ export function etherscanErc20ToTrmRequest(
 }
 
 export function etherscanInternalToTrmRequest(
-  response: EtherscanInternalTxResponse,
-  accountExternalId: string
+  internalTxs: EtherscanInternalTx[]
 ): TRMTransferRequest[] {
-  return response.result.map((tx) => ({
-    accountExternalId: accountExternalId,
+  return internalTxs.map((tx) => ({
+    accountExternalId: tx.from,
     asset: "ETH",
     assetAmount: tx.value,
     chain: "ethereum",
