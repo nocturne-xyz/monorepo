@@ -83,7 +83,9 @@ async function main(options: any): Promise<void> {
 
   logger.info(`Checking outflows for ETH`);
   let ethOutflowsProms = [];
-  if (ethTransferStyle == "direct") {
+  if (!ethTransferStyle) {
+    logger.info(`No eth transfer style given, skipping eth checks`);
+  } else if (ethTransferStyle == "direct") {
     throw new Error("not implemented yet");
   } else if (ethTransferStyle == "internal") {
     ethOutflowsProms.push(

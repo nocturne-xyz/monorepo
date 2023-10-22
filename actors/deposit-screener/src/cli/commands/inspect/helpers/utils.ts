@@ -49,8 +49,9 @@ export function etherscanErc20ToTrmRequest(
 ): Promise<TRMTransferRequest[]> {
   return Promise.all(
     transfers.map(async (transfer) => {
-      const wholeTokensAmount =
-        Number(transfer.value) / Number(transfer.tokenDecimal);
+      const wholeTokensAmount = Number(
+        Number(transfer.value) / 10 ** Number(transfer.tokenDecimal)
+      );
       const res = await getCoinMarketCapPriceConversion({
         symbol: transfer.tokenSymbol,
         amount: wholeTokensAmount,
