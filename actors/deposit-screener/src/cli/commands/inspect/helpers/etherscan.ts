@@ -1,4 +1,6 @@
+import { cachedFetch } from "@nocturne-xyz/offchain-utils";
 import { RequestData } from "../../../../utils";
+import IORedis from "ioredis";
 
 const ETHERSCAN_API_BASE_URL = "https://api.etherscan.io/api";
 
@@ -57,7 +59,8 @@ export async function getEtherscanErc20Transfers(
   tokenAddress: string,
   fromAddress: string,
   startBlock: number,
-  endBlock: number
+  endBlock: number,
+  redis: IORedis
 ): Promise<EtherscanErc20TransfersResponse> {
   const { requestInfo, requestInit } = getEtherscanTokenTxRequestData(
     tokenAddress,
@@ -67,13 +70,14 @@ export async function getEtherscanErc20Transfers(
     startBlock,
     endBlock
   );
-  return fetch(requestInfo, requestInit).then((res) => res.json());
+  return cachedFetch(requestInfo, requestInit, redis).then((res) => res.json());
 }
 
 export async function getEtherscanInternalEthTransfers(
   address: string,
   startBlock: number,
-  endBlock: number
+  endBlock: number,
+  redis: IORedis
 ): Promise<EtherscanInternalTxResponse> {
   const { requestInfo, requestInit } = getEtherscanInternalTxRequestData(
     address,
@@ -82,7 +86,7 @@ export async function getEtherscanInternalEthTransfers(
     1,
     100
   );
-  return fetch(requestInfo, requestInit).then((res) => res.json());
+  return cachedFetch(requestInfo, requestInit, redis).then((res) => res.json());
 }
 
 function mustGetEtherscanApiKey(): string {

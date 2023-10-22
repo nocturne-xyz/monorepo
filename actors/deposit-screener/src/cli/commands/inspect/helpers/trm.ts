@@ -1,6 +1,8 @@
 import { TRM_BASE_URL } from "../../../../screening/checks/apiCalls";
 import { RequestData } from "../../../../utils";
+import IORedis from "ioredis";
 import * as JSON from "bigint-json-serialization";
+import { cachedFetch } from "@nocturne-xyz/offchain-utils";
 
 export interface TRMTransferRequest {
   accountExternalId: string; // Represents the account-external-id, ensuring no PII
@@ -50,10 +52,11 @@ export interface CounterpartyMini {
 }
 
 export async function submitTrmTransfer(
-  transfer: TRMTransferRequest
+  transfer: TRMTransferRequest,
+  redis: IORedis
 ): Promise<TRMTransferResponse> {
   const { requestInfo, requestInit } = formatTrmTransferRequest(transfer);
-  return fetch(requestInfo, requestInit).then((res) => res.json());
+  return cachedFetch(requestInfo, requestInit, redis).then((res) => res.json());
 }
 
 function mustGetTrmApiKey(): string {

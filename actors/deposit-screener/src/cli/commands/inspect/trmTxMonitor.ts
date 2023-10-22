@@ -8,6 +8,7 @@ import {
 import {
   etherscanErc20ToTrmRequest,
   etherscanInternalEthTransferToTrmRequest,
+  getLocalRedis,
 } from "./helpers/utils";
 import * as JSON from "bigint-json-serialization";
 import { submitTrmTransfer } from "./helpers/trm";
@@ -66,6 +67,8 @@ async function main(options: any): Promise<void> {
     stdoutLogLevel
   );
 
+  const redis = await getLocalRedis();
+
   let erc20Outflows: EtherscanErc20Transfer[] = [];
   if (tokenAddress) {
     logger.info(`Checking outflows for token address: ${tokenAddress}`);
@@ -73,7 +76,8 @@ async function main(options: any): Promise<void> {
       tokenAddress,
       fromAddress,
       startBlock,
-      endBlock
+      endBlock,
+      redis
     );
     erc20Outflows = response.result;
     erc20Outflows.forEach((tx) => {
@@ -89,7 +93,7 @@ async function main(options: any): Promise<void> {
     throw new Error("not implemented yet");
   } else if (ethTransferStyle == "internal") {
     ethOutflowsProms.push(
-      getEtherscanInternalEthTransfers(fromAddress, startBlock, endBlock)
+      getEtherscanInternalEthTransfers(fromAddress, startBlock, endBlock, redis)
     );
   } else if (ethTransferStyle == "both") {
     throw new Error("not implemented yet");
@@ -109,7 +113,7 @@ async function main(options: any): Promise<void> {
     logger.info(
       `Submitting ERC-20 transfer to TRM: ${JSON.stringify(trmRequest)}`
     );
-    const res = await submitTrmTransfer(trmRequest);
+    const res = await submitTrmTransfer(trmRequest, redis);
     logger.info(`TRM response: ${JSON.stringify(res)}`);
   }
 
@@ -118,7 +122,7 @@ async function main(options: any): Promise<void> {
   );
   for (const trmRequest of trmEthRequests) {
     logger.info(`TRM ETH request: ${JSON.stringify(trmRequest)}`);
-    const res = await submitTrmTransfer(trmRequest);
+    const res = await submitTrmTransfer(trmRequest, redis);
     logger.info(`TRM response: ${JSON.stringify(res)}`);
   }
 }
