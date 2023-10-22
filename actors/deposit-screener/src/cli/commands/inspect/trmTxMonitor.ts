@@ -6,8 +6,8 @@ import {
   getEtherscanInternalEthTransfers,
 } from "./helpers/etherscan";
 import {
-  etherscanErc20ToTrmRequest,
-  etherscanInternalEthTransferToTrmRequest,
+  etherscanErc20ToTrmTransferRequest,
+  etherscanInternalEthTransferToTrmTransferRequest,
   getLocalRedis,
 } from "./helpers/utils";
 import * as JSON from "bigint-json-serialization";
@@ -69,17 +69,17 @@ async function main(options: any): Promise<void> {
 
   const redis = await getLocalRedis();
 
+  // TODO: generalize to handle multiple tokens
   let erc20Outflows: EtherscanErc20Transfer[] = [];
   if (tokenAddress) {
     logger.info(`Checking outflows for token address: ${tokenAddress}`);
-    const response = await getEtherscanErc20Transfers(
+    erc20Outflows = await getEtherscanErc20Transfers(
       tokenAddress,
       fromAddress,
       startBlock,
       endBlock,
       redis
     );
-    erc20Outflows = response.result;
     erc20Outflows.forEach((tx) => {
       logger.info(`ERC-20 outflow: ${JSON.stringify(tx)}`);
     });
@@ -101,14 +101,14 @@ async function main(options: any): Promise<void> {
     throw new Error(`Invalid eth transfer style: ${ethTransferStyle}`);
   }
 
-  const ethOutflows = (await Promise.all(ethOutflowsProms))
-    .map((response) => response.result)
-    .flat();
+  const ethOutflows = (await Promise.all(ethOutflowsProms)).flat();
   ethOutflows.forEach((outflow) => {
     logger.info(`ETH outflow: ${JSON.stringify(outflow)}`);
   });
 
-  const trmErc20Requests = await etherscanErc20ToTrmRequest(erc20Outflows);
+  const trmErc20Requests = await etherscanErc20ToTrmTransferRequest(
+    erc20Outflows
+  );
   for (const trmRequest of trmErc20Requests) {
     logger.info(
       `Submitting ERC-20 transfer to TRM: ${JSON.stringify(trmRequest)}`
@@ -117,7 +117,7 @@ async function main(options: any): Promise<void> {
     logger.info(`TRM response: ${JSON.stringify(res)}`);
   }
 
-  const trmEthRequests = await etherscanInternalEthTransferToTrmRequest(
+  const trmEthRequests = await etherscanInternalEthTransferToTrmTransferRequest(
     ethOutflows
   );
   for (const trmRequest of trmEthRequests) {

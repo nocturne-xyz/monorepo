@@ -61,7 +61,7 @@ export async function getEtherscanErc20Transfers(
   startBlock: number,
   endBlock: number,
   redis: IORedis
-): Promise<EtherscanErc20TransfersResponse> {
+): Promise<EtherscanErc20Transfer[]> {
   const { requestInfo, requestInit } = getEtherscanTokenTxRequestData(
     tokenAddress,
     fromAddress,
@@ -70,7 +70,10 @@ export async function getEtherscanErc20Transfers(
     startBlock,
     endBlock
   );
-  return cachedFetch(requestInfo, requestInit, redis).then((res) => res.json());
+  const res = (await cachedFetch(requestInfo, requestInit, redis).then((res) =>
+    res.json()
+  )) as EtherscanErc20TransfersResponse;
+  return res.result.map((tx) => tx);
 }
 
 export async function getEtherscanInternalEthTransfers(
@@ -78,7 +81,7 @@ export async function getEtherscanInternalEthTransfers(
   startBlock: number,
   endBlock: number,
   redis: IORedis
-): Promise<EtherscanInternalTxResponse> {
+): Promise<EtherscanInternalTx[]> {
   const { requestInfo, requestInit } = getEtherscanInternalTxRequestData(
     address,
     startBlock,
@@ -86,7 +89,10 @@ export async function getEtherscanInternalEthTransfers(
     1,
     100
   );
-  return cachedFetch(requestInfo, requestInit, redis).then((res) => res.json());
+  const res = (await cachedFetch(requestInfo, requestInit, redis).then((res) =>
+    res.json()
+  )) as EtherscanInternalTxResponse;
+  return res.result.filter((tx) => Number(tx.value) > 0);
 }
 
 function mustGetEtherscanApiKey(): string {
@@ -97,7 +103,6 @@ function mustGetEtherscanApiKey(): string {
   return process.env.ETHERSCAN_API_KEY;
 }
 
-// Helper function for ERC-20 token transfers
 function getEtherscanTokenTxRequestData(
   contractAddress: string,
   address: string,
@@ -117,7 +122,6 @@ function getEtherscanTokenTxRequestData(
   return { requestInfo, requestInit };
 }
 
-// Helper function for internal transactions
 function getEtherscanInternalTxRequestData(
   address: string,
   startBlock: number,

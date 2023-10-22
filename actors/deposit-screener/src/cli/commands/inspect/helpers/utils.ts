@@ -44,7 +44,7 @@ export const formDepositInfo = (
   } as const;
 };
 
-export function etherscanErc20ToTrmRequest(
+export function etherscanErc20ToTrmTransferRequest(
   transfers: EtherscanErc20Transfer[]
 ): Promise<TRMTransferRequest[]> {
   return Promise.all(
@@ -80,7 +80,7 @@ export function etherscanErc20ToTrmRequest(
   );
 }
 
-export async function etherscanInternalEthTransferToTrmRequest(
+export async function etherscanInternalEthTransferToTrmTransferRequest(
   internalTxs: EtherscanInternalTx[]
 ): Promise<TRMTransferRequest[]> {
   return Promise.all(

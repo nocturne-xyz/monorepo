@@ -34,7 +34,6 @@ export async function getCoinMarketCapPriceConversion(
   params: PriceConversionParams
 ): Promise<PriceConversionResponse> {
   const { requestInfo, requestInit } = getCoinMarketCapRequestData(params);
-  console.log("CMC request info", requestInfo);
   return fetch(requestInfo, requestInit).then((res) => res.json());
 }
 
