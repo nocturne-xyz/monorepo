@@ -45,18 +45,22 @@ export const formDepositInfo = (
 };
 
 export function etherscanErc20ToTrmTransferRequest(
-  transfers: EtherscanErc20Transfer[]
+  transfers: EtherscanErc20Transfer[],
+  redis: IORedis
 ): Promise<TRMTransferRequest[]> {
   return Promise.all(
     transfers.map(async (transfer) => {
       const wholeTokensAmount = Number(
         Number(transfer.value) / 10 ** Number(transfer.tokenDecimal)
       );
-      const res = await getCoinMarketCapPriceConversion({
-        symbol: transfer.tokenSymbol,
-        amount: wholeTokensAmount,
-        convert: "USD",
-      });
+      const res = await getCoinMarketCapPriceConversion(
+        {
+          symbol: transfer.tokenSymbol,
+          amount: wholeTokensAmount,
+          convert: "USD",
+        },
+        redis
+      );
       console.log("CMC response: ", res.data);
 
       const fiatValue = res.data[0].quote.USD.price;
@@ -81,16 +85,20 @@ export function etherscanErc20ToTrmTransferRequest(
 }
 
 export async function etherscanInternalEthTransferToTrmTransferRequest(
-  internalTxs: EtherscanInternalTx[]
+  internalTxs: EtherscanInternalTx[],
+  redis: IORedis
 ): Promise<TRMTransferRequest[]> {
   return Promise.all(
     internalTxs.map(async (tx) => {
       const wholeAmount = Number(tx.value) / 10 ** 18;
-      const res = await getCoinMarketCapPriceConversion({
-        symbol: "ETH",
-        amount: wholeAmount,
-        convert: "USD",
-      });
+      const res = await getCoinMarketCapPriceConversion(
+        {
+          symbol: "ETH",
+          amount: wholeAmount,
+          convert: "USD",
+        },
+        redis
+      );
 
       console.log("CMC response: ", res.data);
 

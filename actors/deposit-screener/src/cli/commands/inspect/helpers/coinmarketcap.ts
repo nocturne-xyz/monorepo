@@ -1,3 +1,6 @@
+import { cachedFetch } from "@nocturne-xyz/offchain-utils";
+import IORedis from "ioredis";
+
 export interface PriceConversionParams {
   amount: number;
   symbol: string;
@@ -31,10 +34,11 @@ interface PriceConversionResponse {
 }
 
 export async function getCoinMarketCapPriceConversion(
-  params: PriceConversionParams
+  params: PriceConversionParams,
+  redis: IORedis
 ): Promise<PriceConversionResponse> {
   const { requestInfo, requestInit } = getCoinMarketCapRequestData(params);
-  return fetch(requestInfo, requestInit).then((res) => res.json());
+  return cachedFetch(requestInfo, requestInit, redis).then((res) => res.json());
 }
 
 function mustGetCoinMarketCapApiKey(): string {

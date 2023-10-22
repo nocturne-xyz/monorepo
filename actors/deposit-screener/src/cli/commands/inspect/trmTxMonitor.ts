@@ -107,7 +107,8 @@ async function main(options: any): Promise<void> {
   });
 
   const trmErc20Requests = await etherscanErc20ToTrmTransferRequest(
-    erc20Outflows
+    erc20Outflows,
+    redis
   );
   for (const trmRequest of trmErc20Requests) {
     logger.info(
@@ -118,7 +119,8 @@ async function main(options: any): Promise<void> {
   }
 
   const trmEthRequests = await etherscanInternalEthTransferToTrmTransferRequest(
-    ethOutflows
+    ethOutflows,
+    redis
   );
   for (const trmRequest of trmEthRequests) {
     logger.info(`TRM ETH request: ${JSON.stringify(trmRequest)}`);
