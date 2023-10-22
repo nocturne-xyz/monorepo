@@ -44,3 +44,5 @@ export interface CounterpartyMini {
   displayName: string | null;
   trmUrn: string; // Assuming 'trm-urn' is a string, adjust if needed
 }
+
+// TODO: expose methods to submit requests to TRM

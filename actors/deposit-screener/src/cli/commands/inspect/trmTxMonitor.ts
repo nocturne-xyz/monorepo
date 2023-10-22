@@ -102,14 +102,14 @@ async function main(options: any): Promise<void> {
   });
 
   const trmErc20Requests = etherscanErc20ToTrmRequest(erc20Outflows);
-  trmErc20Requests.forEach((request) => {
-    logger.info(`TRM ERC-20 request: ${request}`);
-  });
+  for (const trmRequest of trmErc20Requests) {
+    logger.info(`TRM ERC-20 request: ${JSON.stringify(trmRequest)}`);
+  }
 
   const trmEthRequests = etherscanInternalToTrmRequest(ethOutflows);
-  trmEthRequests.forEach((request) => {
-    logger.info(`TRM ETH request: ${JSON.stringify(request)}`);
-  });
+  for (const trmRequest of trmEthRequests) {
+    logger.info(`TRM ETH request: ${JSON.stringify(trmRequest)}`);
+  }
 }
 
 export default runTrmTxMonitor;
