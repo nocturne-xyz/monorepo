@@ -15,7 +15,7 @@ import {
   AddressDataSnapshot,
   formDepositInfo,
   populateRedisCache,
-} from "../src/cli/commands/inspect/utils";
+} from "../src/cli/commands/inspect/helpers";
 import { getLatestSnapshotFolder } from "./utils";
 
 describe("RULESET_V1", () => {
