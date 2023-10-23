@@ -31,7 +31,7 @@ docker build .
 ```
 
 ## Updating the new ECR
-    
+
 login to ECR with 
 
 ```
