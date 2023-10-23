@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "copy-circuit-artifacts": "cp -r ../protocol/circuit-artifacts .",
-    "build": "yarn turbo run --no-daemon build; yarn migrate",
+    "build": "yarn turbo run --no-daemon build",
     "build:docker": "scripts/build_docker.sh",
     "build:nocache": "yarn turbo run --no-daemon build --force",
     "clean": "yarn workspaces foreach run clean && rm -rf ./node_modules/.cache/turbo",
