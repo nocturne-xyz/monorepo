@@ -23,6 +23,10 @@ import {
   DefenderRelaySigner,
 } from "@openzeppelin/defender-relay-client/lib/ethers";
 import { Speed } from "@openzeppelin/defender-relay-client";
+import * as https from "https";
+import { intFromEnv } from "@nocturne-xyz/offchain-utils/dist/src/configuration";
+
+const DEFAULT_HTTP_TIMEOUT_MS = 3000;
 
 export const run = new Command("run")
   .summary("run test actor")
@@ -126,15 +130,24 @@ export const run = new Command("run")
 
     const privateKey = process.env.TX_SIGNER_KEY;
     const rpcUrl = process.env.RPC_URL;
+    const httpTimeout =
+      intFromEnv("HTTP_TIMEOUT_MS") ?? DEFAULT_HTTP_TIMEOUT_MS;
 
     let provider: ethers.providers.JsonRpcProvider;
     let signer: ethers.Signer;
+
     if (relayerApiKey && relayerApiSecret) {
       const credentials = {
         apiKey: relayerApiKey,
         apiSecret: relayerApiSecret,
       };
-      provider = new DefenderRelayProvider(credentials);
+      provider = new DefenderRelayProvider({
+        ...credentials,
+        httpsAgent: new https.Agent({
+          keepAlive: true,
+          timeout: httpTimeout,
+        }),
+      });
       signer = new DefenderRelaySigner(credentials, provider, {
         speed: (relayerSpeed as Speed) ?? "safeLow",
       });
