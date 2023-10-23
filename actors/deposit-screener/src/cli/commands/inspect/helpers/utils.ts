@@ -16,7 +16,6 @@ import fs from "fs";
 import path from "path";
 import { EtherscanErc20Transfer, EtherscanInternalTx } from "./etherscan";
 import { TRMTransferRequest } from "./trm";
-import { getCoinMarketCapPriceConversion } from "./coinmarketcap";
 
 export type OutputItem = {
   path: string;
@@ -46,82 +45,52 @@ export const formDepositInfo = (
 
 export function etherscanErc20ToTrmTransferRequest(
   transfers: EtherscanErc20Transfer[],
-  redis: IORedis
-): Promise<TRMTransferRequest[]> {
-  return Promise.all(
-    transfers.map(async (transfer) => {
-      const wholeTokensAmount = Number(
-        Number(transfer.value) / 10 ** Number(transfer.tokenDecimal)
-      );
-      const res = await getCoinMarketCapPriceConversion(
-        {
-          symbol: transfer.tokenSymbol,
-          amount: wholeTokensAmount,
-          convert: "USD",
-        },
-        redis
-      );
-      console.log("CMC response: ", res.data);
+  usdPricePerToken: number
+): TRMTransferRequest[] {
+  return transfers.map((transfer) => {
+    const wholeTokensAmount = Number(
+      Number(transfer.value) / 10 ** Number(transfer.tokenDecimal)
+    );
+    const fiatValue = wholeTokensAmount * usdPricePerToken;
 
-      const fiatValue = res.data[0].quote.USD.price;
-      return {
-        accountExternalId: transfer.from,
-        asset: transfer.tokenSymbol.toLowerCase(),
-        assetAmount: wholeTokensAmount.toString(),
-        chain: "ethereum", // TODO: allow more chains
-        destinationAddress: transfer.to,
-        externalId: transfer.hash,
-        fiatCurrency: "USD",
-        fiatValue: fiatValue.toString(), // Assuming fiatValue is not directly provided in Etherscan's response
-        onchainReference: transfer.hash,
-        timestamp: unixTimestampToISO8601(Number(transfer.timeStamp)),
-        transferType:
-          transfer.from === "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b"
-            ? "CRYPTO_WITHDRAWAL"
-            : "CRYPTO_DEPOSIT",
-      };
-    })
-  );
+    return {
+      accountExternalId: transfer.from,
+      asset: transfer.tokenSymbol.toLowerCase(),
+      assetAmount: wholeTokensAmount.toString(),
+      chain: "ethereum", // TODO: allow more chains
+      destinationAddress: transfer.to,
+      externalId: transfer.hash,
+      fiatCurrency: "USD",
+      fiatValue: fiatValue.toString(), // Assuming fiatValue is not directly provided in Etherscan's response
+      onchainReference: transfer.hash,
+      timestamp: unixTimestampToISO8601(Number(transfer.timeStamp)),
+      transferType: "CRYPTO_WITHDRAWAL",
+    };
+  });
 }
 
-export async function etherscanInternalEthTransferToTrmTransferRequest(
+export function etherscanInternalEthTransferToTrmTransferRequest(
   internalTxs: EtherscanInternalTx[],
-  redis: IORedis
-): Promise<TRMTransferRequest[]> {
-  return Promise.all(
-    internalTxs.map(async (tx) => {
-      const wholeAmount = Number(tx.value) / 10 ** 18;
-      const res = await getCoinMarketCapPriceConversion(
-        {
-          symbol: "ETH",
-          amount: wholeAmount,
-          convert: "USD",
-        },
-        redis
-      );
+  ethPriceUsd: number
+): TRMTransferRequest[] {
+  return internalTxs.map((tx) => {
+    const wholeAmount = Number(tx.value) / 10 ** 18;
+    const fiatValue = wholeAmount * ethPriceUsd;
 
-      console.log("CMC response: ", res.data);
-
-      const fiatValue = res.data[0].quote.USD.price;
-
-      return {
-        accountExternalId: tx.from,
-        asset: "eth",
-        assetAmount: wholeAmount.toString(),
-        chain: "ethereum",
-        destinationAddress: tx.to,
-        externalId: tx.hash,
-        fiatCurrency: "USD",
-        fiatValue: fiatValue.toString(),
-        onchainReference: tx.hash,
-        timestamp: unixTimestampToISO8601(Number(tx.timeStamp)),
-        transferType:
-          tx.from === "0x47CE0C6eD5B0Ce3d3A51fdb1C52DC66a7c3c2936"
-            ? "CRYPTO_WITHDRAWAL"
-            : "CRYPTO_DEPOSIT",
-      };
-    })
-  );
+    return {
+      accountExternalId: tx.from,
+      asset: "eth",
+      assetAmount: wholeAmount.toString(),
+      chain: "ethereum",
+      destinationAddress: tx.to,
+      externalId: tx.hash,
+      fiatCurrency: "USD",
+      fiatValue: fiatValue.toString(),
+      onchainReference: tx.hash,
+      timestamp: unixTimestampToISO8601(Number(tx.timeStamp)),
+      transferType: "CRYPTO_WITHDRAWAL",
+    };
+  });
 }
 
 export function toTrmResponse(data: TrmData): Response {

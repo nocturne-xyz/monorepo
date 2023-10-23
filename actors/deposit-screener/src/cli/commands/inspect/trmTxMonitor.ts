@@ -12,6 +12,7 @@ import {
 } from "./helpers/utils";
 import * as JSON from "bigint-json-serialization";
 import { submitTrmTransfer } from "./helpers/trm";
+import { getCoinMarketCapPriceConversion } from "./helpers";
 
 /**
  * Example
@@ -106,26 +107,50 @@ async function main(options: any): Promise<void> {
     logger.info(`ETH outflow: ${JSON.stringify(outflow)}`);
   });
 
-  const trmErc20Requests = await etherscanErc20ToTrmTransferRequest(
-    erc20Outflows,
-    redis
-  );
-  for (const trmRequest of trmErc20Requests) {
-    logger.info(
-      `Submitting ERC-20 transfer to TRM: ${JSON.stringify(trmRequest)}`
+  if (erc20Outflows.length > 0) {
+    const tokenPriceUsdRes = await getCoinMarketCapPriceConversion(
+      {
+        symbol: erc20Outflows[0].tokenSymbol,
+        amount: 1,
+        convert: "USD",
+      },
+      redis
     );
-    const res = await submitTrmTransfer(trmRequest, redis);
-    logger.info(`TRM response: ${JSON.stringify(res)}`);
+    const tokenPriceUsd = tokenPriceUsdRes.data[0].quote.USD.price;
+
+    const trmErc20Requests = etherscanErc20ToTrmTransferRequest(
+      erc20Outflows,
+      tokenPriceUsd
+    );
+    for (const trmRequest of trmErc20Requests) {
+      logger.info(
+        `Submitting ERC-20 transfer to TRM: ${JSON.stringify(trmRequest)}`
+      );
+      const res = await submitTrmTransfer(trmRequest, redis);
+      logger.info(`TRM response: ${JSON.stringify(res)}`);
+    }
   }
 
-  const trmEthRequests = await etherscanInternalEthTransferToTrmTransferRequest(
-    ethOutflows,
-    redis
-  );
-  for (const trmRequest of trmEthRequests) {
-    logger.info(`TRM ETH request: ${JSON.stringify(trmRequest)}`);
-    const res = await submitTrmTransfer(trmRequest, redis);
-    logger.info(`TRM response: ${JSON.stringify(res)}`);
+  if (ethOutflows.length > 0) {
+    const tokenPriceUsdRes = await getCoinMarketCapPriceConversion(
+      {
+        symbol: "ETH",
+        amount: 1,
+        convert: "USD",
+      },
+      redis
+    );
+    const tokenPriceUsd = tokenPriceUsdRes.data[0].quote.USD.price;
+
+    const trmEthRequests = etherscanInternalEthTransferToTrmTransferRequest(
+      ethOutflows,
+      tokenPriceUsd
+    );
+    for (const trmRequest of trmEthRequests) {
+      logger.info(`TRM ETH request: ${JSON.stringify(trmRequest)}`);
+      const res = await submitTrmTransfer(trmRequest, redis);
+      logger.info(`TRM response: ${JSON.stringify(res)}`);
+    }
   }
 }
 
