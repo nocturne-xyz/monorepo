@@ -9,20 +9,10 @@
 - Run `yarn copy-circuit-artifacts`
 
 Database:
-- Set up Postgres locally: `brew install postgresql; brew services start postgresql` for macOS
-- Download Flyway CLI: https://documentation.red-gate.com/fd/command-line-184127404.html
+- Install Postgres: `brew install postgresql; brew services start postgresql`
+- Install Flyway CLI: https://documentation.red-gate.com/fd/command-line-184127404.html
 - Install Java: https://www.java.com/en/download/
-- Symlink your Flyway installation to run via CLI: `ln -s /<path>/<to>/<your>/<flyway>/<flyway> /usr/local/bin/flyway`
-- Replace the following in flyway.conf:
-    - `flyway.url=jdbc:postgresql://localhost:5432/nocturne`
-    - `flyway.user=postgres`
-    - `flyway.password=postgres`
-- `createdb nocturne; psql -d nocturne`
-- Run:
-    - `CREATE USER postgres WITH ENCRYPTED PASSWORD 'postgres';`
-    - `GRANT ALL PRIVILEGES ON DATABASE nocturne TO postgres;`
-    - `ALTER USER postgres CREATEROLE CREATEDB;`
-- Run `flyway migrate -placeholders.nocturne_db_user_password=password` to verify successful installation and setup
+- Run `chmod +x setup-dev.sh; ./setup-dev.sh </path/to/your/flyway/flyway>`
 
 ## Build
 
