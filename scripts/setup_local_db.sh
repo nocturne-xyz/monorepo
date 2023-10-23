@@ -26,4 +26,4 @@ psql -d nocturne -c "ALTER USER postgres CREATEROLE CREATEDB;"
 flyway migrate -placeholders.nocturne_db_user_password=password
 
 # done
-echo "Dev environment setup complete!✅"
+echo "local db env setup complete!✅"
