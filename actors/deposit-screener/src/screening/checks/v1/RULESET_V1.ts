@@ -70,7 +70,7 @@ const TRM_SEVERE_COUNTERPARTY_REJECT: CombinedRulesParams<
           (item) =>
             item.riskType === "COUNTERPARTY" &&
             item.categoryRiskScoreLevelLabel === "Severe" &&
-            Number(item.totalVolumeUsd) > 10_000
+            Number(item.totalVolumeUsd) > 30_000
         );
       },
     },
@@ -78,7 +78,7 @@ const TRM_SEVERE_COUNTERPARTY_REJECT: CombinedRulesParams<
   ],
   action: {
     type: "Rejection",
-    reason: "Counterparty exposure to high risk categories > $10k",
+    reason: "Counterparty exposure to severe risk categories > $30k",
   },
   applyIf: "All",
 };
