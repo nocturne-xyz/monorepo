@@ -18,11 +18,7 @@ import { TestActor } from "../actor";
 import * as fs from "fs";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { LMDBKVStore } from "../lmdb";
-import {
-  DefenderRelayProvider,
-  DefenderRelaySigner,
-} from "@openzeppelin/defender-relay-client/lib/ethers";
-import { Speed } from "@openzeppelin/defender-relay-client";
+import { getEthersProviderAndSignerFromEnvConfiguration } from "@nocturne-xyz/offchain-utils/dist/src/ethersHelpers";
 
 export const run = new Command("run")
   .summary("run test actor")
@@ -120,32 +116,8 @@ export const run = new Command("run")
       throw new Error("NOCTURNE_SPENDING_KEY must be 32 bytes");
     }
 
-    const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
-    const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
-    const relayerSpeed = process.env.OZ_RELAYER_SPEED;
-
-    const privateKey = process.env.TX_SIGNER_KEY;
-    const rpcUrl = process.env.RPC_URL;
-
-    let provider: ethers.providers.JsonRpcProvider;
-    let signer: ethers.Signer;
-    if (relayerApiKey && relayerApiSecret) {
-      const credentials = {
-        apiKey: relayerApiKey,
-        apiSecret: relayerApiSecret,
-      };
-      provider = new DefenderRelayProvider(credentials);
-      signer = new DefenderRelaySigner(credentials, provider, {
-        speed: (relayerSpeed as Speed) ?? "safeLow",
-      });
-    } else if (rpcUrl && privateKey) {
-      provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-      signer = new ethers.Wallet(privateKey, provider);
-    } else {
-      throw new Error(
-        "missing RPC_URL/PRIVATE_KEY or OZ_RELAYER_API_KEY/OZ_RELAYER_API_SECRET"
-      );
-    }
+    const { signer, provider } =
+      getEthersProviderAndSignerFromEnvConfiguration();
 
     const teller = Teller__factory.connect(config.tellerAddress, signer);
     const depositManager = DepositManager__factory.connect(

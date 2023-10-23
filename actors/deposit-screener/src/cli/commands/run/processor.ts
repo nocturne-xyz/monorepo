@@ -1,9 +1,5 @@
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
-import {
-  DefenderRelayProvider,
-  DefenderRelaySigner,
-} from "@openzeppelin/defender-relay-client/lib/ethers";
 import { Command } from "commander";
 import { ethers } from "ethers";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
@@ -15,7 +11,7 @@ import {
 } from "../../../screening";
 import { SubgraphDepositEventSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { getRedis } from "./utils";
-import { Speed } from "@openzeppelin/defender-relay-client";
+import { getEthersProviderAndSignerFromEnvConfiguration } from "@nocturne-xyz/offchain-utils/dist/src/ethersHelpers";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
@@ -81,32 +77,8 @@ const runProcess = new Command("processor")
       logger.child({ function: "SubgraphDepositEventSyncAdapter" })
     );
 
-    const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
-    const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
-    const relayerSpeed = process.env.OZ_RELAYER_SPEED;
-
-    const privateKey = process.env.TX_SIGNER_KEY;
-    const rpcUrl = process.env.RPC_URL;
-
-    let provider: ethers.providers.Provider;
-    let signer: ethers.Signer;
-    if (relayerApiKey && relayerApiSecret) {
-      const credentials = {
-        apiKey: relayerApiKey,
-        apiSecret: relayerApiSecret,
-      };
-      provider = new DefenderRelayProvider(credentials);
-      signer = new DefenderRelaySigner(credentials, provider, {
-        speed: (relayerSpeed as Speed) ?? "safeLow",
-      });
-    } else if (rpcUrl && privateKey) {
-      provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-      signer = new ethers.Wallet(privateKey, provider);
-    } else {
-      throw new Error(
-        "missing RPC_URL/PRIVATE_KEY or OZ_RELAYER_API_KEY/OZ_RELAYER_API_SECRET"
-      );
-    }
+    const { signer, provider } =
+      getEthersProviderAndSignerFromEnvConfiguration();
 
     const attestationSignerKey = process.env.ATTESTATION_SIGNER_KEY;
     if (!attestationSignerKey) {

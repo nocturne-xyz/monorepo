@@ -1,5 +1,4 @@
 import { Command } from "commander";
-import { ethers } from "ethers";
 import { SubtreeUpdater } from "../../../subtreeUpdater";
 import { getRedis } from "../utils";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
@@ -11,11 +10,7 @@ import {
   assertOrErr,
 } from "@nocturne-xyz/core";
 import { RapidsnarkSubtreeUpdateProver } from "../../../rapidsnarkProver";
-import {
-  DefenderRelayProvider,
-  DefenderRelaySigner,
-} from "@openzeppelin/defender-relay-client/lib/ethers";
-import { Speed } from "@openzeppelin/defender-relay-client";
+import { getEthersProviderAndSignerFromEnvConfiguration } from "@nocturne-xyz/offchain-utils/dist/src/ethersHelpers";
 
 export const runSubtreeUpdater = new Command("subtree-updater")
   .summary("run subtree updater service")
@@ -86,31 +81,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       throw new Error("missing SUBGRAPH_URL");
     }
 
-    const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
-    const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
-    const relayerSpeed = process.env.OZ_RELAYER_SPEED;
-
-    const privateKey = process.env.TX_SIGNER_KEY;
-    const rpcUrl = process.env.RPC_URL;
-
-    let signer: ethers.Signer;
-    if (relayerApiKey && relayerApiSecret) {
-      const credentials = {
-        apiKey: relayerApiKey,
-        apiSecret: relayerApiSecret,
-      };
-      const provider = new DefenderRelayProvider(credentials);
-      signer = new DefenderRelaySigner(credentials, provider, {
-        speed: (relayerSpeed as Speed) ?? "safeLow",
-      });
-    } else if (rpcUrl && privateKey) {
-      const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-      signer = new ethers.Wallet(privateKey, provider);
-    } else {
-      throw new Error(
-        "missing RPC_URL/PRIVATE_KEY or OZ_RELAYER_API_KEY/OZ_RELAYER_API_SECRET"
-      );
-    }
+    const { signer } = getEthersProviderAndSignerFromEnvConfiguration();
 
     const handlerContract = Handler__factory.connect(
       config.handlerAddress,

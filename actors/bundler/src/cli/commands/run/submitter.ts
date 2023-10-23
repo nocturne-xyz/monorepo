@@ -1,14 +1,9 @@
 import { Command } from "commander";
-import { ethers } from "ethers";
 import { BundlerSubmitter } from "../../../submitter";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { getRedis } from "./utils";
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
-import {
-  DefenderRelayProvider,
-  DefenderRelaySigner,
-} from "@openzeppelin/defender-relay-client/lib/ethers";
-import { Speed } from "@openzeppelin/defender-relay-client";
+import { getEthersProviderAndSignerFromEnvConfiguration } from "@nocturne-xyz/offchain-utils/dist/src/ethersHelpers";
 
 const runSubmitter = new Command("submitter")
   .summary("run bundler submitter")
@@ -38,31 +33,7 @@ const runSubmitter = new Command("submitter")
       options;
     const config = loadNocturneConfig(configNameOrPath);
 
-    const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
-    const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
-    const relayerSpeed = process.env.OZ_RELAYER_SPEED;
-
-    const privateKey = process.env.TX_SIGNER_KEY;
-    const rpcUrl = process.env.RPC_URL;
-
-    let signer: ethers.Signer;
-    if (relayerApiKey && relayerApiSecret) {
-      const credentials = {
-        apiKey: relayerApiKey,
-        apiSecret: relayerApiSecret,
-      };
-      const provider = new DefenderRelayProvider(credentials);
-      signer = new DefenderRelaySigner(credentials, provider, {
-        speed: (relayerSpeed as Speed) ?? "safeLow",
-      });
-    } else if (rpcUrl && privateKey) {
-      const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-      signer = new ethers.Wallet(privateKey, provider);
-    } else {
-      throw new Error(
-        "missing RPC_URL/PRIVATE_KEY or OZ_RELAYER_API_KEY/OZ_RELAYER_API_SECRET"
-      );
-    }
+    const { signer } = getEthersProviderAndSignerFromEnvConfiguration();
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
