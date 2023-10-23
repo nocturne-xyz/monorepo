@@ -4,7 +4,7 @@ WITH
 ;
 
 GRANT USAGE
-, CREATE ON SCHEMA nocturne TO nocturne_db_user
+, CREATE ON SCHEMA public TO nocturne_db_user
 ;
 
 CREATE TABLE

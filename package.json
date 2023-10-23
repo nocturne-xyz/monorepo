@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "copy-circuit-artifacts": "cp -r ../protocol/circuit-artifacts .",
-    "build": "yarn turbo run --no-daemon build",
+    "build": "yarn turbo run --no-daemon build; yarn migrate",
     "build:docker": "scripts/build_docker.sh",
     "build:nocache": "yarn turbo run --no-daemon build --force",
     "clean": "yarn workspaces foreach run clean && rm -rf ./node_modules/.cache/turbo",
@@ -18,6 +18,7 @@
     "dev": "./scripts/dev.sh",
     "lint": "yarn turbo run --no-daemon lint",
     "local-prover:gen-test-cases": "yarn workspaces foreach run gen-test-cases --include @nocturne-xyz/local-prover",
+    "migrate": "flyway -reportEnabled=false migrate",
     "prettier:check": "npx prettier --check ./sql/**/*.sql && yarn workspaces foreach run prettier:check",
     "prettier:write": "npx prettier --write ./sql/**/*.sql && yarn workspaces foreach run prettier:write",
     "publish-packages": "yarn clean && yarn build && changeset version && yarn workspaces foreach --no-private --from '@nocturne-xyz/*' npm publish --access public --tolerate-republish && yarn changeset tag",
