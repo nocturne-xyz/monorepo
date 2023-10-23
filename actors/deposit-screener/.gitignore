@@ -1,3 +1,4 @@
 *.csv
+!*risk_engine_**.csv
 *-reject.json*
 *-accept.json
