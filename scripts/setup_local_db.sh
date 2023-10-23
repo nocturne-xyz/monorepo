@@ -3,7 +3,7 @@
 # Validates input
 if [ -z "$1" ]
 then
-  echo "Usage: ./setup-dev.sh /path/to/your/flyway/flyway"
+  echo "Usage: ./scripts/setup_local_db.sh </path/to/your/flyway/flyway>"
   exit 1
 fi
 
