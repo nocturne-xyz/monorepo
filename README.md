@@ -10,7 +10,6 @@
 
 Database:
 - Set up Postgres locally: `brew install postgresql; brew services start postgresql` for macOS
-- `sudo -i -u postgres; psql`
 - Download Flyway CLI: https://documentation.red-gate.com/fd/command-line-184127404.html
 - Install Java: https://www.java.com/en/download/
 - Symlink your Flyway installation to run via CLI: `ln -s /<path>/<to>/<your>/<flyway>/<flyway> /usr/local/bin/flyway`
