@@ -122,3 +122,27 @@ RULESET.combineAndAdd(COMBINED_RULE);
 ```
 
 This rule will fire if _any_ of the specified partial rules evaluate to true. It can also be specified such that it would only fire if _all_ of the rules were true.
+
+## Current Ruleset Accept/Reject Ratios
+
+Commit Hash: `650b3d2f`
+
+Tornado Top 1000 Depositors Post-Anonymity-Mining:
+
+- Accepted 860 / 1015 addresses (84.72906403940887%)
+- Rejected 155/1015 addresses (15.270935960591133%)
+
+Top 500 DEX Traders by 24h Volume on 10-14-2023
+
+- Accepted 480 / 500 addresses (96%)
+- Rejected 20/500 addresses (4%)
+
+Top 700 NFT Traders by 24h Volume 10-14-2023
+
+- Accepted 673 / 690 addresses (97.53623188405797%)
+- Rejected 17/690 addresses (2.4637681159420293%)
+
+Top 500 GMX Traders with > $1M Notional 10-2023
+
+- Accepted 531 / 536 addresses (99.06716417910447%)
+- Rejected 5/536 addresses (0.9328358208955223%)
