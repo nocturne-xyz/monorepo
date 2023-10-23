@@ -42,3 +42,6 @@ jobs:
         run: |
           docker tag 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-flyway:latest 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-flyway:$BRANCH_NAME
           docker push 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-flyway:$BRANCH_NAME
+
+      - name: Trigger migrations run with AWS EventBridge
+        run: aws events put-events --entries '[{"EventBusName":"nocturne_event_bus", "DetailType":"flyway_migration", "Detail":"{}", "Source":"nocturne"}]' --region us-east-2
