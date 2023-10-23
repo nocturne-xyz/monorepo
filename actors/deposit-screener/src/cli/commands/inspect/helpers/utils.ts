@@ -6,14 +6,16 @@ import {
   MisttrackData,
   TrmData,
   formatRequestData,
-} from "../../../screening/checks/apiCalls";
-import { ScreeningDepositRequest } from "../../../screening";
+} from "../../../../screening/checks/apiCalls";
+import { ScreeningDepositRequest } from "../../../../screening";
 import {
   formatCachedFetchCacheKey,
   serializeResponse,
 } from "@nocturne-xyz/offchain-utils";
 import fs from "fs";
 import path from "path";
+import { EtherscanErc20Transfer, EtherscanInternalTx } from "./etherscan";
+import { TRMTransferRequest } from "./trm";
 
 export type OutputItem = {
   path: string;
@@ -25,6 +27,11 @@ export type CachedAddressData = Partial<
 >;
 export type AddressDataSnapshot = Record<string, CachedAddressData>;
 
+export function unixTimestampToISO8601(unixTimestamp: number): string {
+  const date = new Date(unixTimestamp * 1000);
+  return date.toISOString();
+}
+
 export const formDepositInfo = (
   spender: string,
   value = 0n
@@ -35,6 +42,56 @@ export const formDepositInfo = (
     value,
   } as const;
 };
+
+export function etherscanErc20ToTrmTransferRequest(
+  transfers: EtherscanErc20Transfer[],
+  usdPricePerToken: number
+): TRMTransferRequest[] {
+  return transfers.map((transfer) => {
+    const wholeTokensAmount = Number(
+      Number(transfer.value) / 10 ** Number(transfer.tokenDecimal)
+    );
+    const fiatValue = wholeTokensAmount * usdPricePerToken;
+
+    return {
+      accountExternalId: transfer.from,
+      asset: transfer.tokenSymbol.toLowerCase(),
+      assetAmount: wholeTokensAmount.toString(),
+      chain: "ethereum", // TODO: allow more chains
+      destinationAddress: transfer.to,
+      externalId: transfer.hash,
+      fiatCurrency: "USD",
+      fiatValue: fiatValue.toString(), // Assuming fiatValue is not directly provided in Etherscan's response
+      onchainReference: transfer.hash,
+      timestamp: unixTimestampToISO8601(Number(transfer.timeStamp)),
+      transferType: "CRYPTO_WITHDRAWAL",
+    };
+  });
+}
+
+export function etherscanInternalEthTransferToTrmTransferRequest(
+  internalTxs: EtherscanInternalTx[],
+  ethPriceUsd: number
+): TRMTransferRequest[] {
+  return internalTxs.map((tx) => {
+    const wholeAmount = Number(tx.value) / 10 ** 18;
+    const fiatValue = wholeAmount * ethPriceUsd;
+
+    return {
+      accountExternalId: tx.from,
+      asset: "eth",
+      assetAmount: wholeAmount.toString(),
+      chain: "ethereum",
+      destinationAddress: tx.to,
+      externalId: tx.hash,
+      fiatCurrency: "USD",
+      fiatValue: fiatValue.toString(),
+      onchainReference: tx.hash,
+      timestamp: unixTimestampToISO8601(Number(tx.timeStamp)),
+      transferType: "CRYPTO_WITHDRAWAL",
+    };
+  });
+}
 
 export function toTrmResponse(data: TrmData): Response {
   const res = new Response(JSON.stringify([data]));

@@ -11,7 +11,7 @@ import {
   formDepositInfo,
   getLocalRedis,
   populateRedisCache,
-} from "./utils";
+} from "./helpers/utils";
 import * as JSON from "bigint-json-serialization";
 import path from "path";
 

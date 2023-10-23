@@ -1,5 +1,5 @@
 import path from "path";
-import { AddressDataSnapshot } from "../src/cli/commands/inspect/utils";
+import { AddressDataSnapshot } from "../src/cli/commands/inspect/helpers";
 import fs from "fs";
 import { promisify } from "util";
 
