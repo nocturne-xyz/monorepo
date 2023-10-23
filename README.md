@@ -9,10 +9,9 @@
 - Run `yarn copy-circuit-artifacts`
 
 Database:
-- Install Postgres: `brew install postgresql; brew services start postgresql`
 - Install Flyway CLI: https://documentation.red-gate.com/fd/command-line-184127404.html
 - Install Java: https://www.java.com/en/download/
-- Run `chmod +x setup-dev.sh; ./setup-dev.sh </path/to/your/flyway/flyway>`
+- Run `chmod +x ./scripts/setup_local_db.sh; ./scripts/setup_local_db.sh </path/to/your/flyway/flyway>`
 
 ## Build
 
