@@ -26,8 +26,8 @@ COPY --from=circuit-artifacts ./subtreeupdate ./circuit-artifacts/subtreeupdate
 RUN yarn install
 
 # build witness generator
-WORKDIR /app/packages/circuits
-RUN ./scripts/build_witness_generator.sh
+WORKDIR /app/actors/subtree-updater
+RUN ./build_witness_generator.sh
 
 
 # build
