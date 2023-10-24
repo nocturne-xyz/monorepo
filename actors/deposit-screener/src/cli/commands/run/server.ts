@@ -57,7 +57,6 @@ const runServer = new Command("server")
       screeningApi = new ConcreteScreeningChecker(redis);
     }
 
-    console.log("making logger");
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
       configName,

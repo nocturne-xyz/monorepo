@@ -80,21 +80,21 @@ async function main(options: any): Promise<void> {
   writeStream.write("{");
 
   process.on("SIGINT", async () => {
-    console.log("Caught interrupt signal");
+    logger.info("Caught interrupt signal");
     await new Promise<void>((resolve) => {
       writeStream.end("}", () => {
-        console.log("Snapshot saved successfully");
+        logger.info("Snapshot saved successfully");
         resolve();
       });
     });
     process.exit(0);
   });
 
-  console.log(`There are ${numAddresses} addresses to snapshot`);
+  logger.info(`There are ${numAddresses} addresses to snapshot`);
   let count = 0;
 
   for (const address of dedupedAddresses) {
-    console.log(
+    logger.info(
       `Starting API calls for address: ${address} ——— ${(count += 1)} of ${numAddresses}`
     );
 
@@ -106,22 +106,22 @@ async function main(options: any): Promise<void> {
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_RISK_SCORE.name ||
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_LABELS.name
       ) {
-        console.log(
+        logger.debug(
           `Sleeping for ${delayMs} ms to avoid Misttrack rate limit...`
         );
         await sleep(delayMs);
       }
 
-      console.log(`Calling ${callName} for ${address}...`);
+      logger.info(`Calling ${callName} for ${address}...`);
       const redis = await getLocalRedis();
       try {
         addressData[callName as ApiCallNames] = await apiCall(deposit, redis, {
           ttlSeconds: 48 * 60 * 60,
         });
-        console.log(`Successfully called ${callName} for ${address}`);
+        logger.info(`Successfully called ${callName} for ${address}`);
       } catch (err) {
-        console.error(`Failed to call ${callName} for ${address}: ${err}`);
-        console.log(`Exiting snapshot run early!`);
+        logger.error(`Failed to call ${callName} for ${address}: ${err}`);
+        logger.warn(`Exiting snapshot run early!`);
         break;
       }
     }
@@ -136,7 +136,7 @@ async function main(options: any): Promise<void> {
   // Returning a promise that resolves when writing finishes
   await new Promise<void>((resolve) => {
     writeStream.end("}", () => {
-      console.log("Snapshot saved successfully");
+      logger.info("Snapshot saved successfully");
       resolve();
     });
   });

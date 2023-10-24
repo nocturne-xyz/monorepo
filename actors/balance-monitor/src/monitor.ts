@@ -193,7 +193,7 @@ export class BalanceMonitor {
   public async start(): Promise<void> {
     this.isMonitoring = true;
 
-    console.log(
+    this.logger.info(
       "Balance Monitor started. Piping balance metrics every 30 seconds"
     );
     this.registerMetrics();
