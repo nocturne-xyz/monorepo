@@ -1,4 +1,4 @@
 *.csv
-!*risk_engine_**.csv
+!*risk_engine**.csv
 *-reject.json*
 *-accept.json
