@@ -9,6 +9,12 @@ import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 const INSERTION_LOG_STREAM_NAME = "insertion-log";
 
+type InsertionBatchLogMeta = {
+  batchSize: number;
+  startMerkleIndex?: number;
+  endMerkleIndex?: number;
+};
+
 export class InsertionWriter {
   adapter: TreeInsertionSyncAdapter;
   logger: Logger;
@@ -40,10 +46,17 @@ export class InsertionWriter {
     const runProm = (async () => {
       this.logger.debug("starting main loop");
       for await (const insertions of newInsertionBatches.iter) {
-        const meta = {
-          startMerkleIndex: insertions[0].merkleIndex,
-          endMerkleIndex: insertions[insertions.length - 1].merkleIndex,
+        let meta: InsertionBatchLogMeta = {
+          batchSize: insertions.length,
         };
+
+        if (insertions.length > 0) {
+          meta = {
+            ...meta,
+            startMerkleIndex: insertions[0].merkleIndex,
+            endMerkleIndex: insertions[insertions.length - 1].merkleIndex,
+          };
+        }
 
         this.logger.info(`got batch of ${insertions.length} insertions`, meta);
         await this.insertionLog.push(insertions);
