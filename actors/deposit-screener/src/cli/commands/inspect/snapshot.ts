@@ -33,18 +33,14 @@ const runSnapshot = new Command("snapshot")
   )
   .option(
     "--log-dir <string>",
-    "directory to write logs to",
-    "./logs/address-snapshot"
+    "directory to write logs to. if not given, logs will only be emitted to stdout."
   )
   .option(
     "--delay-ms <number>",
     "delay ms between requests to avoid rate limits (in ms)",
     "500"
   )
-  .option(
-    "--log-level <string>",
-    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
-  )
+  .option("--log-level <string>", "min log importance to log to stdout.")
   .action(main);
 
 async function parseAndFilterCsvOfAddresses(path: string): Promise<Address[]> {
@@ -68,7 +64,13 @@ async function main(options: any): Promise<void> {
   const { inputCsv, outputData, logDir, logLevel, delayMs } = options;
   ensureExists(inputCsv, { path: outputData, type: "FILE" });
 
-  const logger = makeLogger(logDir, "address-checker", "checker", logLevel);
+  const logger = makeLogger(
+    "dev",
+    "address-checker",
+    "checker",
+    logLevel,
+    logDir
+  );
 
   logger.info(`Starting snapshot for addresses from ${inputCsv}`);
   const dedupedAddresses = await parseAndFilterCsvOfAddresses(inputCsv);

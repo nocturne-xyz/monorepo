@@ -41,13 +41,9 @@ const runTrmTxMonitor = new Command("trmTxMonitor")
   )
   .option(
     "--log-dir <string>",
-    "directory to write logs to",
-    "./logs/address-checker"
+    "directory to write logs to. if not given, logs will only be emitted to stdout."
   )
-  .option(
-    "--log-level <string>",
-    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
-  )
+  .option("--log-level <string>", "min log importance to log to stdout.")
   .action(main);
 
 async function main(options: any): Promise<void> {
@@ -61,7 +57,13 @@ async function main(options: any): Promise<void> {
     logLevel,
   } = options;
 
-  const logger = makeLogger(logDir, "trm-tx-monitor", "monitor", logLevel);
+  const logger = makeLogger(
+    "dev",
+    "trm-tx-monitor",
+    "monitor",
+    logLevel,
+    logDir
+  );
 
   const redis = await getLocalRedis();
 

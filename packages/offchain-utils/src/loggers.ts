@@ -6,10 +6,11 @@ import { presets } from "winston-humanize-formatter";
 // if `consoleLevel` is undefined, no logs will be emitted to console
 // if `consoleLevel` is defined, logs at least as important `consoleLevel` will be emitted to console
 export function makeLogger(
-  logDir: string,
-  service: string,
+  env: string,
+  actor: string,
   process: string,
-  consoleLevel?: string
+  level = "debug",
+  logDir?: string
 ): Logger {
   const infoOrWarnFilter = format((info) => {
     return info.level === "info" || info.level === "warn" ? info : false;
@@ -24,64 +25,74 @@ export function makeLogger(
   });
 
   const logTransports: Transport[] = [
-    // write `error` logs to `error.log`
-    new transports.File({
-      format: format.combine(errorFilter(), format.timestamp(), format.json()),
-      filename: path.join(logDir, "error.log"),
-      level: "error",
+    new transports.Console({
+      format: format.combine(format.timestamp(), format.json()),
+      level,
     }),
-
-    // write `warn` and `info` logs to `info.log`
-    new transports.File({
-      format: format.combine(
-        infoOrWarnFilter(),
-        format.timestamp(),
-        format.json()
-      ),
-      filename: path.join(logDir, "info.log"),
-      level: "info",
-    }),
-    // write `debug` logs `debug.log`
-    new transports.File({
-      format: (debugFilter(), format.timestamp(), format.json()),
-      filename: path.join(logDir, "debug.log"),
-      level: "debug",
-    }),
-
-    // in the future, we'll add a transport for our logging service (datadog, axiom, etc) here
   ];
 
   const exceptionHandlers: Transport[] = [
-    new transports.File({
-      filename: path.join(logDir, "uncaughtExpections.log"),
+    new transports.Console({
+      format: format.combine(format.timestamp(), format.json()),
     }),
   ];
+
   const rejectionHandlers: Transport[] = [
-    new transports.File({
-      filename: path.join(logDir, "uncaughtRejections.log"),
+    new transports.Console({
+      format: format.combine(format.timestamp(), format.json()),
     }),
   ];
 
-  if (consoleLevel) {
-    const consoleTransport = new transports.Console({
-      format: format.combine(format.timestamp(), format.json()),
-      level: consoleLevel,
-    });
+  if (logDir) {
+    logTransports.push(
+      // write `error` logs to `error.log`
+      new transports.File({
+        format: format.combine(
+          errorFilter(),
+          format.timestamp(),
+          format.json()
+        ),
+        filename: path.join(logDir, "error.log"),
+        level: "error",
+      }),
 
-    logTransports.push(consoleTransport);
+      // write `warn` and `info` logs to `info.log`
+      new transports.File({
+        format: format.combine(
+          infoOrWarnFilter(),
+          format.timestamp(),
+          format.json()
+        ),
+        filename: path.join(logDir, "info.log"),
+        level: "info",
+      }),
 
-    const consoleErrorTransport = new transports.Console({
-      format: format.combine(format.timestamp(), format.json()),
-    });
-    exceptionHandlers.push(consoleErrorTransport);
-    rejectionHandlers.push(consoleErrorTransport);
+      // write `debug` logs `debug.log`
+      new transports.File({
+        format: (debugFilter(), format.timestamp(), format.json()),
+        filename: path.join(logDir, "debug.log"),
+        level: "debug",
+      })
+    );
+
+    exceptionHandlers.push(
+      new transports.File({
+        filename: path.join(logDir, "uncaughtExpections.log"),
+      })
+    );
+
+    rejectionHandlers.push(
+      new transports.File({
+        filename: path.join(logDir, "uncaughtRejections.log"),
+      })
+    );
   }
 
   return createLogger({
     // default format
     format: format.combine(format.timestamp(), format.json()),
-    // add metadata saying which process this log is coming from
-    defaultMeta: { service, process },
+    // add metadata saying which deployment, actor, and process this log is coming from
+    defaultMeta: { env, actor, process },
     // write all uncaught exceptions to `uncaughtExceptions.log`
     exceptionHandlers,
     // write all uncaught promise rejections to `uncaughtRejections.log`
@@ -90,7 +101,7 @@ export function makeLogger(
   });
 }
 
-export function makeTestLogger(service: string, processName: string): Logger {
+export function makeTestLogger(actor: string, processName: string): Logger {
   let logLevel = "info";
   if (process.env.LOG_LEVEL) {
     logLevel = process.env.LOG_LEVEL;
@@ -99,7 +110,7 @@ export function makeTestLogger(service: string, processName: string): Logger {
   return createLogger({
     format: presets.cli.dev,
     // add metadata saying which process this log is coming from
-    defaultMeta: { service, process: processName },
+    defaultMeta: { actor, process: processName },
     exceptionHandlers: [new transports.Console()],
     rejectionHandlers: [new transports.Console()],
     transports: [

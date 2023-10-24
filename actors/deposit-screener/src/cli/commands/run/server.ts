@@ -25,13 +25,9 @@ const runServer = new Command("server")
   )
   .option(
     "--log-dir <string>",
-    "directory to write logs to",
-    "./logs/deposit-screener"
+    "directory to write logs to. if not given, logs will only be emitted to stdout."
   )
-  .option(
-    "--log-level <string>",
-    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
-  )
+  .option("--log-level <string>", "min log importance to log to stdout.")
   .action(async (options) => {
     const env = process.env.ENVIRONMENT;
     if (!env) {
@@ -64,10 +60,11 @@ const runServer = new Command("server")
     console.log("making logger");
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
-      logDir,
-      `${configName}-deposit-screener`,
+      configName,
+      "deposit-screener",
       "server",
-      logLevel
+      logLevel,
+      logDir
     );
     const server = new DepositScreenerServer(
       logger,

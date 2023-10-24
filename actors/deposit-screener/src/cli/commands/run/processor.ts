@@ -30,8 +30,7 @@ const runProcess = new Command("processor")
   )
   .option(
     "--log-dir <string>",
-    "directory to write logs to",
-    "./logs/deposit-screener-processor"
+    "directory to write logs to. if not given, logs will only be emitted to stdout."
   )
   .option(
     "--throttle-ms <number>",
@@ -43,10 +42,7 @@ const runProcess = new Command("processor")
     "number of confirmations to wait before processing new deposit requests",
     parseInt
   )
-  .option(
-    "--log-level <string>",
-    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
-  )
+  .option("--log-level <string>", "min log importance to log to stdout.")
   .action(async (options) => {
     const env = process.env.ENVIRONMENT;
     if (!env) {
@@ -60,10 +56,11 @@ const runProcess = new Command("processor")
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
-      logDir,
-      `${configName}-deposit-screener`,
+      configName,
+      "deposit-screener",
       "processor",
-      logLevel
+      logLevel,
+      logDir
     );
 
     const config = loadNocturneConfig(configNameOrPath);

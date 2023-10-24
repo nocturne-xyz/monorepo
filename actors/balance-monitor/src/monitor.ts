@@ -39,8 +39,8 @@ export class BalanceMonitor {
       throw new Error("missing CONFIG_NAME environment variable");
     }
     this.logger = makeLogger(
-      "logs",
-      `${configName}-balance-monitor`,
+      configName,
+      "balance-monitor",
       "monitor",
       process.env.STDOUT_LOG_LEVEL ?? "info"
     );

@@ -46,13 +46,9 @@ export const runSubtreeUpdater = new Command("subtree-updater")
   )
   .option(
     "--log-dir <string>",
-    "directory to write logs to",
-    "./logs/subtree-updater"
+    "directory to write logs to. if not given, logs will only be emitted to stdout."
   )
-  .option(
-    "--log-level <string>",
-    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
-  )
+  .option("--log-level <string>", "min log importance to log to stdout.")
   .action(async (options) => {
     const {
       configNameOrPath,
@@ -68,10 +64,11 @@ export const runSubtreeUpdater = new Command("subtree-updater")
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
-      logDir,
-      `${configName}-subtree-updater`,
+      configName,
       "subtree-updater",
-      logLevel
+      "subtree-updater",
+      logLevel,
+      logDir
     );
 
     const config = loadNocturneConfig(configNameOrPath);

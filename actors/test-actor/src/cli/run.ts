@@ -61,13 +61,9 @@ export const run = new Command("run")
   .option("--only-operations", "only perform operations")
   .option(
     "--log-dir <string>",
-    "directory to write logs to",
-    "./logs/test-actor"
+    "directory to write logs to. if not given, logs will only be emitted to stdout."
   )
-  .option(
-    "--log-level <string>",
-    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
-  )
+  .option("--log-level <string>", "min log importance to log to stdout.")
   .action(async (options) => {
     const {
       configNameOrPath,
@@ -87,10 +83,11 @@ export const run = new Command("run")
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
-      logDir,
-      `${configName}-test-actor`,
+      configName,
+      "test-actor",
       "actor",
-      logLevel
+      logLevel,
+      logDir
     );
 
     const config = loadNocturneConfig(configNameOrPath);
