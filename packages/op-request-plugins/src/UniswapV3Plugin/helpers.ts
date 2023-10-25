@@ -1,4 +1,5 @@
 import { Address } from "@nocturne-xyz/core";
+import { Protocol } from "@uniswap/router-sdk";
 import {
   ChainId,
   Currency,
@@ -16,7 +17,6 @@ import {
 import { ethers } from "ethers";
 import ERC20_ABI from "../abis/ERC20.json";
 import { UniswapProtocol } from "./types";
-import { Protocol } from "@uniswap/router-sdk";
 
 export type GetSwapRouteParams = {
   chainId: bigint;
@@ -122,7 +122,7 @@ export async function getSwapQuote(
     minimumAmountOutWei: currencyAmountToBigInt(
       route.trade.minimumAmountOut(new Percent(params.maxSlippageBps, 10_000))
     ),
-    priceImpactBps: Number(route.trade.priceImpact.toSignificant(4)),
+    priceImpactBps: Number(route.trade.priceImpact.toSignificant(4)) * 10_000,
   };
 }
 
