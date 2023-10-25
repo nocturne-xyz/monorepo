@@ -45,7 +45,7 @@ async function run() {
   const outputPath = getNewSnapshotFolderPath();
 
   await execAsync(
-    `yarn build && yarn deposit-screener-cli inspect snapshot --input-csv ./snapshotTestCases.csv --output-data ${outputPath}/snapshot.json --delay-ms ${800} --stdout-log-level debug`
+    `yarn build && yarn deposit-screener-cli inspect snapshot --input-csv ./snapshotTestCases.csv --output-data ${outputPath}/snapshot.json --delay-ms ${800} --log-level debug`
   );
 
   process.exit(0);

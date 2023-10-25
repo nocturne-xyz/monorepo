@@ -42,7 +42,7 @@ const runProcess = new Command("processor")
     parseInt
   )
   .option(
-    "--stdout-log-level <string>",
+    "--log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
@@ -54,14 +54,14 @@ const runProcess = new Command("processor")
       throw new Error(`ENVIRONMENT env var set to invalid value: ${env}`);
     }
 
-    const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
+    const { configNameOrPath, logDir, throttleMs, logLevel } = options;
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
       logDir,
       `${configName}-deposit-screener`,
       "processor",
-      stdoutLogLevel
+      logLevel
     );
 
     const config = loadNocturneConfig(configNameOrPath);

@@ -33,7 +33,7 @@ export const runInsertionWriter = new Command("insertion-writer")
     parseInt
   )
   .option(
-    "--stdout-log-level <string>",
+    "--log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
@@ -42,7 +42,7 @@ export const runInsertionWriter = new Command("insertion-writer")
       logDir,
       throttleMs,
       throttleOnEmptyMs,
-      stdoutLogLevel,
+      logLevel,
       finalityBlocks,
     } = options;
 
@@ -51,7 +51,7 @@ export const runInsertionWriter = new Command("insertion-writer")
       logDir,
       `${configName}-insertion-writer`,
       "insertion-writer",
-      stdoutLogLevel
+      logLevel
     );
 
     const config = loadNocturneConfig(configNameOrPath);

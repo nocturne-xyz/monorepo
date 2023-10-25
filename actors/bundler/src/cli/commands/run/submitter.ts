@@ -20,7 +20,7 @@ const runSubmitter = new Command("submitter")
     "./logs/bundler-submitter"
   )
   .option(
-    "--stdout-log-level <string>",
+    "--log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .option(
@@ -29,8 +29,7 @@ const runSubmitter = new Command("submitter")
     parseInt
   )
   .action(async (options) => {
-    const { configNameOrPath, logDir, stdoutLogLevel, finalityBlocks } =
-      options;
+    const { configNameOrPath, logDir, logLevel, finalityBlocks } = options;
     const config = loadNocturneConfig(configNameOrPath);
 
     const { signer } = getEthersProviderAndSignerFromEnvConfiguration();
@@ -40,7 +39,7 @@ const runSubmitter = new Command("submitter")
       logDir,
       `${configName}-bundler`,
       "submitter",
-      stdoutLogLevel
+      logLevel
     );
     const submitter = new BundlerSubmitter(
       config.tellerAddress,

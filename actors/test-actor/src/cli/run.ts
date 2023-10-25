@@ -63,7 +63,7 @@ export const run = new Command("run")
     "./logs/test-actor"
   )
   .option(
-    "--stdout-log-level <string>",
+    "--log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
@@ -79,7 +79,7 @@ export const run = new Command("run")
       onlyDeposits,
       onlyOperations,
       logDir,
-      stdoutLogLevel,
+      logLevel,
       finalityBlocks,
     } = options;
 
@@ -88,7 +88,7 @@ export const run = new Command("run")
       logDir,
       `${configName}-test-actor`,
       "actor",
-      stdoutLogLevel
+      logLevel
     );
 
     const config = loadNocturneConfig(configNameOrPath);

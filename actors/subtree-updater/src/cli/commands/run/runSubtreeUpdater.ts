@@ -48,7 +48,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
     "./logs/subtree-updater"
   )
   .option(
-    "--stdout-log-level <string>",
+    "--log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
@@ -61,7 +61,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       witnessGeneratorPath,
       zkeyPath,
       vkeyPath,
-      stdoutLogLevel,
+      logLevel,
     } = options;
 
     const configName = extractConfigName(configNameOrPath);
@@ -69,7 +69,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       logDir,
       `${configName}-subtree-updater`,
       "subtree-updater",
-      stdoutLogLevel
+      logLevel
     );
 
     const config = loadNocturneConfig(configNameOrPath);

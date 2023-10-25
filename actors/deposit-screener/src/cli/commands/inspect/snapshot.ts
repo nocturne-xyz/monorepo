@@ -16,7 +16,7 @@ import {
 
 /**
  * Example
- * yarn deposit-screener-cli inspect snapshot --input-csv ./data/addresses.csv --output-data ./data/addresses.json --delay-ms 3000 --stdout-log-level info
+ * yarn deposit-screener-cli inspect snapshot --input-csv ./data/addresses.csv --output-data ./data/addresses.json --delay-ms 3000 --log-level info
  */
 const runSnapshot = new Command("snapshot")
   .summary("create data snapshot for CSV or JSON file of addresses")
@@ -42,7 +42,7 @@ const runSnapshot = new Command("snapshot")
     "500"
   )
   .option(
-    "--stdout-log-level <string>",
+    "--log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(main);
@@ -65,15 +65,10 @@ async function parseAndFilterCsvOfAddresses(path: string): Promise<Address[]> {
 async function main(options: any): Promise<void> {
   requireApiKeys();
 
-  const { inputCsv, outputData, logDir, stdoutLogLevel, delayMs } = options;
+  const { inputCsv, outputData, logDir, logLevel, delayMs } = options;
   ensureExists(inputCsv, { path: outputData, type: "FILE" });
 
-  const logger = makeLogger(
-    logDir,
-    "address-checker",
-    "checker",
-    stdoutLogLevel
-  );
+  const logger = makeLogger(logDir, "address-checker", "checker", logLevel);
 
   logger.info(`Starting snapshot for addresses from ${inputCsv}`);
   const dedupedAddresses = await parseAndFilterCsvOfAddresses(inputCsv);
