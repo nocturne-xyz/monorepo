@@ -66,7 +66,7 @@ import {
   UniswapV3Plugin,
   getSwapQuote,
 } from "@nocturne-xyz/op-request-plugins";
-import { Mutex } from "async-mutex";
+import { Mutex, tryAcquire, E_ALREADY_LOCKED } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
@@ -95,6 +95,7 @@ import {
   getCircuitArtifactUrls,
   getNocturneSdkConfig,
   getTokenContract,
+  runExclusiveIfNotAlreadyLocked,
   toDepositRequest,
 } from "./utils";
 import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
@@ -587,18 +588,19 @@ export class NocturneSdk implements NocturneSdkApi {
     operationRequest: OperationRequestWithMetadata
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", operationRequest.meta);
-    const client = await this.clientThunk();
-
     // NOTE: we should never end up in situation where this is called before normal nocturne_sync, otherwise there will be long delay
     const warnTimeout = setTimeout(() => {
       console.warn(
         "[fe-sdk] the SDK has not yet been synced. This may cause a long delay until `signOperation` returns. It's strongly reccomended to explicitly use `sync` or `syncWithProgress` to ensure the SDK is fully synced before calling `signOperation`"
       );
     }, 5000);
-    await this.syncMutex.runExclusive(async () => await client.sync());
+
+    // if we're not already syncing, sync
+    await runExclusiveIfNotAlreadyLocked(this.syncMutex)(() => this.syncInner());
+
     clearTimeout(warnTimeout);
 
-    await client.updateOptimisticNullifiers();
+    const client = await this.clientThunk();
 
     const { meta: opMeta, request: opRequest } = operationRequest;
 
@@ -739,9 +741,10 @@ export class NocturneSdk implements NocturneSdkApi {
    * if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
    */
   async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
-    const client = await this.clientThunk();
+    // if we're not already syncing, sync
+    await runExclusiveIfNotAlreadyLocked(this.syncMutex)(() => this.syncInner());
 
-    await this.syncMutex.runExclusive(async () => await client.sync());
+    const client = await this.clientThunk();
     return await client.getAllAssetBalances(opts);
   }
 
@@ -751,9 +754,11 @@ export class NocturneSdk implements NocturneSdkApi {
     opts?: GetBalanceOpts
   ): Promise<bigint> {
     const asset = AssetTrait.erc20AddressToAsset(erc20Address);
-    const client = await this.clientThunk();
 
-    await this.syncMutex.runExclusive(async () => await client.sync());
+    // if we're not already syncing, sync
+    await runExclusiveIfNotAlreadyLocked(this.syncMutex)(() => this.syncInner());
+
+    const client = await this.clientThunk();
     return client.getBalanceForAsset(asset, opts);
   }
 
@@ -778,57 +783,64 @@ export class NocturneSdk implements NocturneSdkApi {
    * returning newly synced merkle indices as syncing process occurs.
    */
   async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
-    const handlerContract = await this.handlerContractThunk();
-    let latestMerkleIndexOnChain =
-      (await handlerContract.totalCount()).toNumber() - 1;
-    let latestSyncedMerkleIndex =
-      (await this.getLatestSyncedMerkleIndex()) ?? 0;
+    return await this.syncMutex.runExclusive(async () => {
+      const handlerContract = await this.handlerContractThunk();
+      let latestMerkleIndexOnChain =
+        (await handlerContract.totalCount()).toNumber() - 1;
+      let latestSyncedMerkleIndex =
+        (await this.getLatestSyncedMerkleIndex()) ?? 0;
 
-    const NUM_REFETCHES = 5;
-    const refetchEvery = Math.floor(
-      (latestMerkleIndexOnChain - latestSyncedMerkleIndex) / NUM_REFETCHES
-    );
+      const NUM_REFETCHES = 5;
+      const refetchEvery = Math.floor(
+        (latestMerkleIndexOnChain - latestSyncedMerkleIndex) / NUM_REFETCHES
+      );
 
-    let closed = false;
-    const generator = async function* (
-      sdk: NocturneSdk,
-      client: NocturneClient
-    ) {
-      let count = 0;
-      while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
-        latestSyncedMerkleIndex =
-          (await client.sync({ ...syncOpts, timing: true })) ?? 0;
+      let closed = false;
+      const generator = async function* (
+        sdk: NocturneSdk,
+      ) {
+        let count = 0;
+        while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
+          latestSyncedMerkleIndex = (await sdk.syncInner({ ...syncOpts, timing: true })) ?? 0;
 
-        if (count % refetchEvery === 0) {
-          latestMerkleIndexOnChain =
-            (await (await sdk.handlerContractThunk()).totalCount()).toNumber() -
-            1;
+          if (count % refetchEvery === 0) {
+            latestMerkleIndexOnChain =
+              (await (await sdk.handlerContractThunk()).totalCount()).toNumber() -
+              1;
+          }
+          count++;
+          yield {
+            latestSyncedMerkleIndex,
+          };
         }
-        count++;
-        yield {
-          latestSyncedMerkleIndex,
-        };
-      }
-    };
+      };
 
-    const progressIter = new ClosableAsyncIterator(
-      generator(this, await this.clientThunk()),
-      async () => {
-        closed = true;
-      }
-    );
+      const progressIter = new ClosableAsyncIterator(
+        generator(this),
+        async () => {
+          closed = true;
+        }
+      );
 
-    return {
-      latestSyncedMerkleIndex,
-      latestMerkleIndexOnChain,
-      progressIter,
-    };
+      return {
+        latestSyncedMerkleIndex,
+        latestMerkleIndexOnChain,
+        progressIter,
+      };
+    });
   }
 
   /**
-   * Invoke snap `syncNotes` method, returning latest synced merkle index.
+   * sync new notes and return latest synced merkle index.
    */
   async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
+    return await this.syncMutex.runExclusive(() => this.syncInner(syncOpts));
+  }
+
+  // syncs new notes and returns latest sync merkle index
+  // NOTE: this method is not safe to call concurrently without wrapping in
+  // a call to syncMutex.runExclusive or runExclusiveIfNotAlreadyLocked(syncMutex)
+  protected async syncInner(syncOpts?: SyncOpts): Promise<number | undefined> {
     let latestSyncedMerkleIndex: number | undefined;
     try {
       const client = await this.clientThunk();
