@@ -2,7 +2,7 @@ import { _TypedDataEncoder } from "ethers/lib/utils";
 import {
   SignableJoinSplit,
   SignableOperationWithNetworkInfo,
-  OperationTrait,
+  OperationTrait
 } from "../src";
 import { __OPERATION_TYPES } from "../src/primitives/operation";
 
@@ -66,6 +66,7 @@ import { __OPERATION_TYPES } from "../src/primitives/operation";
     gasPrice: 1n,
     deadline: 1n,
     atomicActions: true,
+    isForcedExit: false,
   };
 
   console.log("operation", operation);

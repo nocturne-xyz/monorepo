@@ -88,6 +88,10 @@ export interface BaseOpRequestBuilder {
   // TODO: what's the unit?
   deadline(deadline: bigint): this;
 
+  // set the operation's `isForcedExit` flag
+  // CAUTION: only set this flag for an operation that will be a forcedExit
+  forcedExit(isForcedExit: boolean): this;
+
   // Specify gas parameters up-front.
   // this is optional - if not given, the SDK will estimate it for you.
   // it's recommended to just let the SDK estimate this instead.
@@ -234,6 +238,11 @@ export function newOpRequestBuilder(
 
     deadline(deadline: bigint) {
       this._op.deadline = deadline;
+      return this;
+    },
+
+    forcedExit(isForcedExit: boolean) {
+      this._op.isForcedExit = isForcedExit;
       return this;
     },
 

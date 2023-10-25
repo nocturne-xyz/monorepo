@@ -2,6 +2,7 @@
   "proxyAdminOwner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
   "finalityBlocks": 0,
   "screeners": ["0x1DAb396f790699de639cF22d0Ea7744469aCAB1a"],
+  "bundlers": ["0x67f8F9A5d4290325506b119980660624dc7d3bA9"],
   "subtreeBatchFillers": ["0xD20E7a8ADdCB5D983C064f8A184B7aa65ef23f10"],
   "wethAddress": "0xb16F35c0Ae2912430DAc15764477E179D9B9EbEa",
   "erc20s": [

@@ -92,6 +92,7 @@ export async function prepareOperation(
     executionGasLimit: opRequest.executionGasLimit,
     gasPrice: opRequest.gasPrice,
     deadline,
+    isForcedExit: opRequest.isForcedExit ?? false,
     atomicActions: true, // always default to atomic until we find reason not to
   };
 

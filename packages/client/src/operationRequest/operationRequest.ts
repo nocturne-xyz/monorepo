@@ -32,6 +32,7 @@ export interface OperationRequest {
   refundAddr?: StealthAddress;
   executionGasLimit?: bigint;
   gasPrice?: bigint;
+  isForcedExit?: boolean;
 }
 
 export interface OperationRequestWithMetadata {
