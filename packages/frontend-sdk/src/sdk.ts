@@ -66,7 +66,7 @@ import {
   UniswapV3Plugin,
   getSwapQuote,
 } from "@nocturne-xyz/op-request-plugins";
-import { Mutex, tryAcquire, E_ALREADY_LOCKED } from "async-mutex";
+import { Mutex } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
