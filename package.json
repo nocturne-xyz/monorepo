@@ -33,9 +33,7 @@
     "unlink:protocol": "yarn unlink -A ../protocol"
   },
   "resolutions": {
-    "@uniswap/sdk-core": "^4.0.3",
-    "protocol": "portal:../protocol",
-    "@nocturne-xyz/contracts": "portal:../protocol/packages/contracts"
+    "@uniswap/sdk-core": "^4.0.3"
   },
   "devDependencies": {
     "@changesets/cli": "^2.26.2",
