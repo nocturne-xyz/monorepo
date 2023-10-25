@@ -58,6 +58,31 @@ const noPositiveLabelsPartial = {
   },
 } as const;
 
+const TRM_SEVERE_COUNTERPARTY_REJECT: CombinedRulesParams<
+  ["TRM_SCREENING_ADDRESSES", "MISTTRACK_ADDRESS_LABELS"]
+> = {
+  partialRules: [
+    {
+      name: "TRM_SEVERE_COUNTERPARTY_REJECT",
+      call: "TRM_SCREENING_ADDRESSES",
+      threshold: (data: TrmData) => {
+        return data.addressRiskIndicators.some(
+          (item) =>
+            item.riskType === "COUNTERPARTY" &&
+            item.categoryRiskScoreLevelLabel === "Severe" &&
+            Number(item.totalVolumeUsd) > 30_000
+        );
+      },
+    },
+    noPositiveLabelsPartial,
+  ],
+  action: {
+    type: "Rejection",
+    reason: "Counterparty exposure to severe risk categories > $30k",
+  },
+  applyIf: "All",
+};
+
 const TRM_HIGH_COUNTERPARTY_REJECT: CombinedRulesParams<
   ["TRM_SCREENING_ADDRESSES", "MISTTRACK_ADDRESS_LABELS"]
 > = {
@@ -70,7 +95,7 @@ const TRM_HIGH_COUNTERPARTY_REJECT: CombinedRulesParams<
           (item) =>
             item.riskType === "COUNTERPARTY" &&
             item.categoryRiskScoreLevelLabel === "High" &&
-            Number(item.totalVolumeUsd) > 150_000
+            Number(item.totalVolumeUsd) > 50_000
         );
       },
     },
@@ -78,7 +103,7 @@ const TRM_HIGH_COUNTERPARTY_REJECT: CombinedRulesParams<
   ],
   action: {
     type: "Rejection",
-    reason: "Counterparty exposure to high risk categories > $150k",
+    reason: "Counterparty exposure to high risk categories > $50k",
   },
   applyIf: "All",
 };
@@ -299,6 +324,7 @@ export const RULESET_V1 = (redis: IORedis): RuleSet => {
     redis
   )
     .add(TRM_SEVERE_OWNERSHIP_REJECT)
+    .combineAndAdd(TRM_SEVERE_COUNTERPARTY_REJECT)
     .combineAndAdd(TRM_HIGH_MIXER_REJECT)
     .combineAndAdd(TRM_HIGH_COUNTERPARTY_REJECT)
     .combineAndAdd(TRM_HIGH_INDIRECT_REJECT)
