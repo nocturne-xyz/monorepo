@@ -3,3 +3,4 @@ export * from "./request";
 export * from "./types";
 export * from "./instrumentation";
 export * from "./geoMiddleware";
+export * from "./ethersHelpers";

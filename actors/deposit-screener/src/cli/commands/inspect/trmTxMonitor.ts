@@ -16,7 +16,7 @@ import { getCoinMarketCapPriceConversion } from "./helpers";
 
 /**
  * Example
- * yarn deposit-screener-cli inspect trmTxMonitor --token-address 0x6b175474e89094c44da98b954eedeac495271d0f --eth-transfer-style indirect --from-address 0xd90e2f925DA726b50C4Ed8D0Fb90Ad053324F31b --start-block 0 --end-block 27025780 --stdout-log-level=info
+ * yarn deposit-screener-cli inspect trmTxMonitor --token-address 0x6b175474e89094c44da98b954eedeac495271d0f --eth-transfer-style indirect --from-address 0xd90e2f925DA726b50C4Ed8D0Fb90Ad053324F31b --start-block 0 --end-block 27025780 --log-level=info
  */
 const runTrmTxMonitor = new Command("trmTxMonitor")
   .summary(
@@ -45,7 +45,7 @@ const runTrmTxMonitor = new Command("trmTxMonitor")
     "./logs/address-checker"
   )
   .option(
-    "--stdout-log-level <string>",
+    "--log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(main);
@@ -58,15 +58,10 @@ async function main(options: any): Promise<void> {
     startBlock,
     endBlock,
     logDir,
-    stdoutLogLevel,
+    logLevel,
   } = options;
 
-  const logger = makeLogger(
-    logDir,
-    "trm-tx-monitor",
-    "monitor",
-    stdoutLogLevel
-  );
+  const logger = makeLogger(logDir, "trm-tx-monitor", "monitor", logLevel);
 
   const redis = await getLocalRedis();
 

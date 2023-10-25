@@ -29,7 +29,7 @@ const runServer = new Command("server")
     "./logs/deposit-screener"
   )
   .option(
-    "--stdout-log-level <string>",
+    "--log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
@@ -41,7 +41,7 @@ const runServer = new Command("server")
       throw new Error(`ENVIRONMENT env var set to invalid value: ${env}`);
     }
 
-    const { configNameOrPath, port, logDir, stdoutLogLevel } = options;
+    const { configNameOrPath, port, logDir, logLevel } = options;
 
     const config = loadNocturneConfig(configNameOrPath);
 
@@ -67,7 +67,7 @@ const runServer = new Command("server")
       logDir,
       `${configName}-deposit-screener`,
       "server",
-      stdoutLogLevel
+      logLevel
     );
     const server = new DepositScreenerServer(
       logger,

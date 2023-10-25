@@ -1,8 +1,10 @@
 import { Command } from "commander";
-import { ethers } from "ethers";
 import { SubtreeUpdater } from "../../../subtreeUpdater";
 import { getRedis } from "../utils";
-import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import {
+  makeLogger,
+  getEthersProviderAndSignerFromEnvConfiguration,
+} from "@nocturne-xyz/offchain-utils";
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import { Handler__factory } from "@nocturne-xyz/contracts";
 import {
@@ -11,11 +13,6 @@ import {
   assertOrErr,
 } from "@nocturne-xyz/core";
 import { RapidsnarkSubtreeUpdateProver } from "../../../rapidsnarkProver";
-import {
-  DefenderRelayProvider,
-  DefenderRelaySigner,
-} from "@openzeppelin/defender-relay-client/lib/ethers";
-import { Speed } from "@openzeppelin/defender-relay-client";
 
 export const runSubtreeUpdater = new Command("subtree-updater")
   .summary("run subtree updater service")
@@ -53,7 +50,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
     "./logs/subtree-updater"
   )
   .option(
-    "--stdout-log-level <string>",
+    "--log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
@@ -66,7 +63,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       witnessGeneratorPath,
       zkeyPath,
       vkeyPath,
-      stdoutLogLevel,
+      logLevel,
     } = options;
 
     const configName = extractConfigName(configNameOrPath);
@@ -74,7 +71,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       logDir,
       `${configName}-subtree-updater`,
       "subtree-updater",
-      stdoutLogLevel
+      logLevel
     );
 
     const config = loadNocturneConfig(configNameOrPath);
@@ -86,31 +83,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       throw new Error("missing SUBGRAPH_URL");
     }
 
-    const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
-    const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
-    const relayerSpeed = process.env.OZ_RELAYER_SPEED;
-
-    const privateKey = process.env.TX_SIGNER_KEY;
-    const rpcUrl = process.env.RPC_URL;
-
-    let signer: ethers.Signer;
-    if (relayerApiKey && relayerApiSecret) {
-      const credentials = {
-        apiKey: relayerApiKey,
-        apiSecret: relayerApiSecret,
-      };
-      const provider = new DefenderRelayProvider(credentials);
-      signer = new DefenderRelaySigner(credentials, provider, {
-        speed: (relayerSpeed as Speed) ?? "safeLow",
-      });
-    } else if (rpcUrl && privateKey) {
-      const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-      signer = new ethers.Wallet(privateKey, provider);
-    } else {
-      throw new Error(
-        "missing RPC_URL/PRIVATE_KEY or OZ_RELAYER_API_KEY/OZ_RELAYER_API_SECRET"
-      );
-    }
+    const { signer } = getEthersProviderAndSignerFromEnvConfiguration();
 
     const handlerContract = Handler__factory.connect(
       config.handlerAddress,

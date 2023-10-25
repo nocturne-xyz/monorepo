@@ -22,11 +22,11 @@ const runBatcher = new Command("batcher")
     "./logs/bundler-server"
   )
   .option(
-    "--stdout-log-level <string>",
+    "--log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
-    const { configNameOrPath, maxLatency, batchSize, logDir, stdoutLogLevel } =
+    const { configNameOrPath, maxLatency, batchSize, logDir, logLevel } =
       options;
 
     // TODO: consolidate batcher and submitter into one component (batcher doesn't need config name)
@@ -35,7 +35,7 @@ const runBatcher = new Command("batcher")
       logDir,
       `${configName}-bundler`,
       "batcher",
-      stdoutLogLevel
+      logLevel
     );
     const batcher = new BundlerBatcher(
       getRedis(),

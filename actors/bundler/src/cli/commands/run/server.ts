@@ -22,11 +22,11 @@ const runServer = new Command("server")
     "./logs/bundler-server"
   )
   .option(
-    "--stdout-log-level <string>",
+    "--log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
-    const { configNameOrPath, port, bundlerAddress, logDir, stdoutLogLevel } =
+    const { configNameOrPath, port, bundlerAddress, logDir, logLevel } =
       options;
     const config = loadNocturneConfig(configNameOrPath);
 
@@ -41,7 +41,7 @@ const runServer = new Command("server")
       logDir,
       `${configName}-bundler`,
       "server",
-      stdoutLogLevel
+      logLevel
     );
     const server = new BundlerServer(
       bundlerAddress,

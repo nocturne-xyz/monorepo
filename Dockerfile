@@ -15,7 +15,7 @@ COPY . .
 
 RUN yarn install
 
-RUN for component in bundler deposit-screener insertion-writer subtree-updater test-actor; do \
+RUN for component in bundler deposit-screener insertion-writer subtree-updater test-actor balance-monitor; do \
     yarn turbo run build --filter="@nocturne-xyz/$component" \
     # setup CLI using loop
     && cd /app/actors/$component \

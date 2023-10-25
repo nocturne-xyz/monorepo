@@ -17,7 +17,7 @@ import path from "path";
 
 /**
  * Example
- * yarn deposit-screener-cli inspect check --snapshot-json-path ./snapshot/addresses.json --output-dir output --stdout-log-level=info
+ * yarn deposit-screener-cli inspect check --snapshot-json-path ./snapshot/addresses.json --output-dir output --log-level=info
  */
 const runChecker = new Command("check")
   .summary("inspect and analyze addresses from a snapshot JSON file")
@@ -38,7 +38,7 @@ const runChecker = new Command("check")
     "./logs/address-checker"
   )
   .option(
-    "--stdout-log-level <string>",
+    "--log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(main);
@@ -61,18 +61,13 @@ function showReasonCounts(
 }
 
 async function main(options: any): Promise<void> {
-  const { snapshotJsonPath, outputDir, logDir, stdoutLogLevel } = options;
+  const { snapshotJsonPath, outputDir, logDir, logLevel } = options;
   ensureExists(snapshotJsonPath, {
     path: outputDir,
     type: "DIRECTORY",
   });
 
-  const logger = makeLogger(
-    logDir,
-    "address-checker",
-    "checker",
-    stdoutLogLevel
-  );
+  const logger = makeLogger(logDir, "address-checker", "checker", logLevel);
 
   const redis = await getLocalRedis();
   const ruleset = RULESET_V1(redis);
