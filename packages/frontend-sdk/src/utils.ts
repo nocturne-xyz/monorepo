@@ -229,5 +229,5 @@ export function runExclusiveIfNotAlreadyLocked(mutex: Mutex): <T>(fn: MutexInter
     }
 
     throw e;
-  })
+  });
 }

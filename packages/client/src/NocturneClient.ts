@@ -11,7 +11,6 @@ import {
   OperationRequest,
   ensureOpRequestChainInfo,
 } from "./operationRequest/operationRequest";
-import { Mutex } from "async-mutex";
 import { GetNotesOpts, NocturneDB } from "./NocturneDB";
 import { handleGasForOperationRequest } from "./opRequestGas";
 import { prepareOperation } from "./prepareOperation";
@@ -51,7 +50,6 @@ export class NocturneClient {
   protected syncAdapter: SDKSyncAdapter;
   protected tokenConverter: EthToTokenConverter;
   protected opTracker: OpTracker;
-  protected syncMutex: Mutex;
 
   readonly viewer: NocturneViewer;
   readonly gasAssets: Map<string, Asset>;
@@ -93,7 +91,6 @@ export class NocturneClient {
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
     this.opTracker = nulliferChecker;
-    this.syncMutex = new Mutex();
   }
 
   async clearDb(): Promise<void> {
@@ -102,22 +99,20 @@ export class NocturneClient {
 
   // Sync SDK, returning last synced merkle index of last state diff
   async sync(opts?: SyncOpts): Promise<number | undefined> {
-    return await this.syncMutex.runExclusive(async () => {
-      const latestSyncedMerkleIndex = await syncSDK(
-        { viewer: this.viewer },
-        this.syncAdapter,
-        this.db,
-        this.merkleProver,
-        opts
-          ? {
-              ...opts,
-              finalityBlocks: opts.finalityBlocks ?? this.config.finalityBlocks,
-            }
-          : undefined
-      );
+    const latestSyncedMerkleIndex = await syncSDK(
+      { viewer: this.viewer },
+      this.syncAdapter,
+      this.db,
+      this.merkleProver,
+      opts
+        ? {
+            ...opts,
+            finalityBlocks: opts.finalityBlocks ?? this.config.finalityBlocks,
+          }
+        : undefined
+    );
 
-      return latestSyncedMerkleIndex;
-    });
+    return latestSyncedMerkleIndex;
   }
 
   async prepareOperation(
