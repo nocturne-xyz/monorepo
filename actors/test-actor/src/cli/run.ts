@@ -16,9 +16,11 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { TestActor } from "../actor";
 import * as fs from "fs";
-import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import {
+  makeLogger,
+  getEthersProviderAndSignerFromEnvConfiguration,
+} from "@nocturne-xyz/offchain-utils";
 import { LMDBKVStore } from "../lmdb";
-import { getEthersProviderAndSignerFromEnvConfiguration } from "@nocturne-xyz/offchain-utils/dist/src/ethersHelpers";
 
 export const run = new Command("run")
   .summary("run test actor")

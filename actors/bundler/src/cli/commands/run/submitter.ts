@@ -1,9 +1,11 @@
 import { Command } from "commander";
 import { BundlerSubmitter } from "../../../submitter";
-import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import {
+  makeLogger,
+  getEthersProviderAndSignerFromEnvConfiguration,
+} from "@nocturne-xyz/offchain-utils";
 import { getRedis } from "./utils";
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
-import { getEthersProviderAndSignerFromEnvConfiguration } from "@nocturne-xyz/offchain-utils/dist/src/ethersHelpers";
 
 const runSubmitter = new Command("submitter")
   .summary("run bundler submitter")

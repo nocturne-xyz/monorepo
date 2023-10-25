@@ -1,5 +1,8 @@
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
-import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import {
+  makeLogger,
+  getEthersProviderAndSignerFromEnvConfiguration,
+} from "@nocturne-xyz/offchain-utils";
 import { Command } from "commander";
 import { ethers } from "ethers";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
@@ -11,7 +14,6 @@ import {
 } from "../../../screening";
 import { SubgraphDepositEventSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { getRedis } from "./utils";
-import { getEthersProviderAndSignerFromEnvConfiguration } from "@nocturne-xyz/offchain-utils/dist/src/ethersHelpers";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")

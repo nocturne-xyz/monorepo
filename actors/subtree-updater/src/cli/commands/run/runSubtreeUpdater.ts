@@ -1,7 +1,10 @@
 import { Command } from "commander";
 import { SubtreeUpdater } from "../../../subtreeUpdater";
 import { getRedis } from "../utils";
-import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import {
+  makeLogger,
+  getEthersProviderAndSignerFromEnvConfiguration,
+} from "@nocturne-xyz/offchain-utils";
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import { Handler__factory } from "@nocturne-xyz/contracts";
 import {
@@ -10,7 +13,6 @@ import {
   assertOrErr,
 } from "@nocturne-xyz/core";
 import { RapidsnarkSubtreeUpdateProver } from "../../../rapidsnarkProver";
-import { getEthersProviderAndSignerFromEnvConfiguration } from "@nocturne-xyz/offchain-utils/dist/src/ethersHelpers";
 
 export const runSubtreeUpdater = new Command("subtree-updater")
   .summary("run subtree updater service")
