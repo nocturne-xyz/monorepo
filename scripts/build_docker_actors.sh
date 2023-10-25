@@ -9,4 +9,3 @@ COMMIT_HASH=$(git rev-parse --short HEAD)
 
 docker build -t nocturne-actors:$COMMIT_HASH .
 docker tag nocturne-actors:$COMMIT_HASH 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-actors:$COMMIT_HASH
-docker push 714567495486.dkr.ecr.us-east-2.amazonaws.com/nocturne-actors:$COMMIT_HASH

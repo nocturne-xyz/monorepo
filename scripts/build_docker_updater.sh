@@ -54,4 +54,3 @@ else
 fi
 
 docker tag subtree-updater:$COMMIT_HASH 714567495486.dkr.ecr.us-east-2.amazonaws.com/subtree-updater:$COMMIT_HASH
-docker push 714567495486.dkr.ecr.us-east-2.amazonaws.com/subtree-updater:$COMMIT_HASH
