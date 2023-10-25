@@ -10,6 +10,9 @@ const ANVIL_URL = "http://127.0.0.1:8545";
 const ROOT_DIR = findWorkspaceRoot()!;
 const CONFIG_PATH = `${ROOT_DIR}/packages/config/configs/localhost.json`;
 
+// anvil account #4
+const BUNDLER = "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65";
+
 // anvil account #5
 const SUBTREE_BATCH_FILLER = "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc";
 
