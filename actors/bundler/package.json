@@ -20,7 +20,7 @@
     "dev": "yarn dev:env && concurrently --kill-others \"yarn dev:server\" \"yarn dev:batcher\" \"yarn dev:submitter\"",
     "dev:batcher": "nodemon src/cli/index.ts run batcher --config-name-or-path localhost --max-latency 60 --log-dir ../../logs/bundler-batcher",
     "dev:env": "cp .env.dev .env",
-    "dev:server": "nodemon src/cli/index.ts run server --bundler-address 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65 --config-name-or-path localhost --port 3000 --log-dir ../../logs/bundler-server --stdout-log-level info",
+    "dev:server": "nodemon src/cli/index.ts run server --bundler-address 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65 --config-name-or-path localhost --port 3000 --log-dir ../../logs/bundler-server --log-level info",
     "dev:submitter": "nodemon src/cli/index.ts run submitter --config-name-or-path localhost --log-dir ../../logs/bundler-submitter",
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./test",
