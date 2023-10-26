@@ -59,7 +59,7 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
         } = await fetchSdkEventsAndLatestCommittedMerkleIndex(
           client,
           from,
-          toBlock
+          toBlock + 1
         );
 
         // if there are sdk events, produce the requisite diff.

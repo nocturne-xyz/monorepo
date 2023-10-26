@@ -16,7 +16,7 @@
     "build": "tsc --build",
     "dev": "yarn dev:env && yarn dev:updater",
     "dev:env": "cp .env.dev .env",
-    "dev:updater": "nodemon src/cli/index.ts run subtree-updater --config-name-or-path localhost --log-dir ../../logs/subtree-updater --use-mock-prover --fill-batch-latency-ms 3000 --stdout-log-level info",
+    "dev:updater": "nodemon src/cli/index.ts run subtree-updater --config-name-or-path localhost --log-dir ../../logs/subtree-updater --use-mock-prover --fill-batch-latency-ms 3000 --log-level info",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",
