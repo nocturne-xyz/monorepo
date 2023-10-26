@@ -154,6 +154,7 @@ const PreSignOperationType = object({
   gasPrice: bigint(),
   deadline: bigint(),
   atomicActions: boolean(),
+  isForcedExit: boolean(),
   joinSplits: array(PreSignJoinSplitType),
 });
 

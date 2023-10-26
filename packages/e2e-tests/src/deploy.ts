@@ -85,6 +85,7 @@ const SIG_CHECK_VKEY = JSON.parse(
 
 export interface TestDeployArgs {
   screeners: Address[];
+  bundlers: Address[];
   subtreeBatchFillers: Address[];
   protocolAllowlist?: Map<string, ProtocolAddressWithMethods>;
 }
@@ -224,6 +225,7 @@ export async function setupTestDeployment(
     { teller, handler, depositManager, canonAddrRegistry, weth },
   ] = await deployContractsWithDummyConfig(deployerEoa, {
     screeners: [screenerEoa.address],
+    bundlers: [bundlerEoa.address],
     subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
     protocolAllowlist: protocolAllowlist,
   });
@@ -392,6 +394,7 @@ export async function deployContractsWithDummyConfig(
   const deployConfig: NocturneDeployConfig = {
     proxyAdminOwner: connectedSigner.address,
     finalityBlocks: 0,
+    bundlers: args.bundlers,
     screeners: args.screeners,
     subtreeBatchFillers: args.subtreeBatchFillers,
     wethAddress: weth.address,
