@@ -50,3 +50,18 @@ function bigintToBuf(bn: bigint): Uint8Array {
 
   return u8;
 }
+
+// caller must ensure that `s` is a valid hex string
+export function hexStringToUint8Array(s: string): Uint8Array {
+  const hex = s.substring(2);
+  if (hex.length % 2 !== 0) {
+    throw new Error("hex data is odd-length");
+  }
+
+  const result = [];
+  for (let i = 0; i < hex.length; i += 2) {
+    result.push(parseInt(hex.substring(i, i + 2), 16));
+  }
+
+  return Uint8Array.from(result);
+}

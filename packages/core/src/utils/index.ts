@@ -1,4 +1,8 @@
-export { bigInt256ToFieldElems, bigintToBEPadded } from "./bits";
+export {
+  bigInt256ToFieldElems,
+  bigintToBEPadded,
+  hexStringToUint8Array,
+} from "./bits";
 export {
   zip,
   unzip,
