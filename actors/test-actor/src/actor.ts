@@ -218,91 +218,96 @@ export class TestActor {
   }
 
   private async deposit(): Promise<boolean> {
-    // choose a random deposit request and set its nonce
-    this.logger.debug(`${this.erc20s.size} possible erc20s`, {
-      erc20s: Array.from(this.erc20s.entries()),
-    });
-    const [erc20Name, erc20Config] = randomElem(
-      Array.from(this.erc20s.entries())
-    );
-    const randomValue = randomBigintInRange(
-      10n * ONE_ETH_IN_WEI,
-      50n * ONE_ETH_IN_WEI
-    );
-
-    this.logger.info(
-      `reserving ${randomValue} of token "${erc20Config.address}"`,
-      {
-        tokenName: erc20Name,
-        tokenAddress: erc20Config.address,
-        amount: randomValue,
-      }
-    );
-
-    const erc20Token = SimpleERC20Token__factory.connect(
-      erc20Config.address,
-      this.txSigner
-    );
-    const reserveTx = await erc20Token.reserveTokens(
-      this._address!,
-      randomValue
-    );
-    await reserveTx.wait(1);
-
-    this.logger.info(
-      `approving deopsit manager for ${randomValue} of token "${erc20Config.address}"`,
-      {
-        tokenName: erc20Name,
-        tokenAddress: erc20Config.address,
-        amount: randomValue,
-      }
-    );
-
-    const approveTx = await erc20Token.approve(
-      this.depositManager.address,
-      randomValue
-    );
-    await approveTx.wait(1);
-
-    // submit
-    this.logger.info(
-      `instantiating erc20 deposit request for ${randomValue} of token "${erc20Config.address}"`,
-      {
-        tokenName: erc20Name,
-        tokenAddress: erc20Config.address,
-        amount: randomValue,
-      }
-    );
-
-    const instantiateDepositTx =
-      await this.depositManager.instantiateErc20MultiDeposit(
-        erc20Token.address,
-        [randomValue],
-        StealthAddressTrait.compress(
-          this.client.viewer.generateRandomStealthAddress()
-        )
+    try {
+      // choose a random deposit request and set its nonce
+      this.logger.debug(`${this.erc20s.size} possible erc20s`, {
+        erc20s: Array.from(this.erc20s.entries()),
+      });
+      const [erc20Name, erc20Config] = randomElem(
+        Array.from(this.erc20s.entries())
       );
-    const receipt = await instantiateDepositTx.wait(1);
+      const randomValue = randomBigintInRange(
+        10n * ONE_ETH_IN_WEI,
+        50n * ONE_ETH_IN_WEI
+      );
 
-    const matchingEvents = parseEventsFromContractReceipt(
-      receipt,
-      this.depositManager.interface.getEvent("DepositInstantiated")
-    ) as DepositInstantiatedEvent[];
-    this.logger.debug("matching events from transaction receipt", {
-      matchingEvents,
-    });
+      this.logger.info(
+        `reserving ${randomValue} of token "${erc20Config.address}"`,
+        {
+          tokenName: erc20Name,
+          tokenAddress: erc20Config.address,
+          amount: randomValue,
+        }
+      );
 
-    const labels = {
-      spender: this._address!,
-      assetAddr: erc20Token.address,
-    };
-    this.metrics.instantiatedDepositsCounter.add(1, labels);
-    this.metrics.instantiatedDepositsValueHistogram.record(
-      Number(randomValue),
-      labels
-    ); // we assume we cap max deposit size to be < 2^53
+      const erc20Token = SimpleERC20Token__factory.connect(
+        erc20Config.address,
+        this.txSigner
+      );
+      const reserveTx = await erc20Token.reserveTokens(
+        this._address!,
+        randomValue
+      );
+      await reserveTx.wait(1);
 
-    return true;
+      this.logger.info(
+        `approving deopsit manager for ${randomValue} of token "${erc20Config.address}"`,
+        {
+          tokenName: erc20Name,
+          tokenAddress: erc20Config.address,
+          amount: randomValue,
+        }
+      );
+
+      const approveTx = await erc20Token.approve(
+        this.depositManager.address,
+        randomValue
+      );
+      await approveTx.wait(1);
+
+      // submit
+      this.logger.info(
+        `instantiating erc20 deposit request for ${randomValue} of token "${erc20Config.address}"`,
+        {
+          tokenName: erc20Name,
+          tokenAddress: erc20Config.address,
+          amount: randomValue,
+        }
+      );
+
+      const instantiateDepositTx =
+        await this.depositManager.instantiateErc20MultiDeposit(
+          erc20Token.address,
+          [randomValue],
+          StealthAddressTrait.compress(
+            this.client.viewer.generateRandomStealthAddress()
+          )
+        );
+      const receipt = await instantiateDepositTx.wait(1);
+
+      const matchingEvents = parseEventsFromContractReceipt(
+        receipt,
+        this.depositManager.interface.getEvent("DepositInstantiated")
+      ) as DepositInstantiatedEvent[];
+      this.logger.debug("matching events from transaction receipt", {
+        matchingEvents,
+      });
+
+      const labels = {
+        spender: this._address!,
+        assetAddr: erc20Token.address,
+      };
+      this.metrics.instantiatedDepositsCounter.add(1, labels);
+      this.metrics.instantiatedDepositsValueHistogram.record(
+        Number(randomValue),
+        labels
+      ); // we assume we cap max deposit size to be < 2^53
+
+      return true;
+    } catch (err) {
+      this.logger.error(`failed to perform deposit`, { err });
+      return false;
+    }
   }
 
   private async randomOperation(): Promise<boolean> {
