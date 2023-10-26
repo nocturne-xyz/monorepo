@@ -83,6 +83,7 @@ it("validates SignOperationParams", () => {
       gasPrice: 1234n,
       deadline: 1234n,
       atomicActions: true,
+      isForcedExit: false,
       joinSplits: [
         {
           commitmentTreeRoot: 1234n,
