@@ -12,22 +12,24 @@ jobs:
     strategy:
       matrix:
         test_suite:
-          - name: build-and-test-e2e-full-system
-            command: 'full system:'
-          - name: build-and-test-e2e-canon-addr-registry
-            command: 'Canonical Address Registry'
+          - name: full system
+            command: "full system:"
+          - name: forced exit
+            command: "forcedExit"
+          - name: canon addr registry
+            command: "Canonical Address Registry"
           - name: insertion writer test suite
-            command: 'InsertionWriter'
+            command: "InsertionWriter"
           - name: optimistic nf tracking test suite
-            command: 'Optimistic nullifier tracking'
+            command: "Optimistic nullifier tracking"
           - name: build-and-test-e2e-deposit-fetching
-            command: 'Fetching Deposit Events'
+            command: "Fetching Deposit Events"
           - name: rpc sync test suite
-            command: 'syncing NocturneClient with RPCSyncAdapter'
+            command: "syncing NocturneClient with RPCSyncAdapter"
           - name: subgraph sync test suite
-            command: 'syncing NocturneClient with SubgraphSyncAdapter'
+            command: "syncing NocturneClient with SubgraphSyncAdapter"
           - name: uniswap v3 fork tests
-            command: 'submits single hop'
+            command: "submits single hop"
 
     steps:
       - name: checkout monorepo and get submodules
