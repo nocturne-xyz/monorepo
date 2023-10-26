@@ -51,7 +51,7 @@ function bigintToBuf(bn: bigint): Uint8Array {
   return u8;
 }
 
-// caller must ensure that `s` is a valid hex string
+// caller must ensure that `s` is a valid hex string with an '0x` prefix
 export function hexStringToUint8Array(s: string): Uint8Array {
   const hex = s.substring(2);
   if (hex.length % 2 !== 0) {
