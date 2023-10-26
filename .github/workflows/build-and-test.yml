@@ -7,20 +7,19 @@ jobs:
       REDISMS_SYSTEM_BINARY: "/usr/bin/redis-server"
 
     steps:
-      - name: checkout repo and get submodules
+      - name: checkout monorepo and get submodules
         uses: actions/checkout@v4
         with:
           submodules: recursive
           path: ./monorepo
 
-      - name: Attempt checkout of same branch in protocol repo or fallback to main
-        working-directory: ${{ github.workspace }}
-        run: |
-          git clone https://github.com/nocturne-xyz/protocol.git ./protocol
-          cd protocol
-          git checkout ${{ github.head_ref }} || git checkout main
+      - name: Checkout protocol repo
+        uses: actions/checkout@v4
+        with:
+          repository: nocturne-xyz/protocol
+          path: ./protocol
+          ref: luke/audit-changes
 
-      - uses: actions/checkout@v3
       - name: cache dependencies
         uses: actions/cache@v2
         with:

@@ -30,7 +30,7 @@ jobs:
             command: 'submits single hop'
 
     steps:
-      - name: checkout repo and get submodules
+      - name: checkout monorepo and get submodules
         uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -41,6 +41,7 @@ jobs:
         with:
           repository: nocturne-xyz/protocol
           path: ./protocol
+          ref: luke/audit-changes
 
       - name: cache dependencies
         uses: actions/cache@v2
