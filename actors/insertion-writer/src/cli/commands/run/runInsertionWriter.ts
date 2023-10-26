@@ -24,18 +24,14 @@ export const runInsertionWriter = new Command("insertion-writer")
   )
   .option(
     "--log-dir <string>",
-    "directory to write logs to",
-    "./logs/insertion-writer"
+    "directory to write logs to. if not given, logs will only be emitted to stdout."
   )
   .option(
     "--finality-blocks <number>",
     "number of confirmations to wait before fetching new insertions",
     parseInt
   )
-  .option(
-    "--log-level <string>",
-    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
-  )
+  .option("--log-level <string>", "min log importance to log to stdout.")
   .action(async (options) => {
     const {
       configNameOrPath,
@@ -48,10 +44,11 @@ export const runInsertionWriter = new Command("insertion-writer")
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
-      logDir,
-      `${configName}-insertion-writer`,
+      configName,
       "insertion-writer",
-      logLevel
+      "insertion-writer",
+      logLevel,
+      logDir
     );
 
     const config = loadNocturneConfig(configNameOrPath);

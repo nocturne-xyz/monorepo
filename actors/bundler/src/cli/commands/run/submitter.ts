@@ -18,13 +18,9 @@ const runSubmitter = new Command("submitter")
   )
   .option(
     "--log-dir <string>",
-    "directory to write logs to",
-    "./logs/bundler-submitter"
+    "directory to write logs to. if not given, logs will only be emitted to stdout."
   )
-  .option(
-    "--log-level <string>",
-    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
-  )
+  .option("--log-level <string>", "min log importance to log to stdout.")
   .option(
     "--finality-blocks <number>",
     "number of confirmations to wait for before considering a submitted op finalized",
@@ -38,10 +34,11 @@ const runSubmitter = new Command("submitter")
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
-      logDir,
-      `${configName}-bundler`,
+      configName,
+      "bundler",
       "submitter",
-      logLevel
+      logLevel,
+      logDir
     );
     const submitter = new BundlerSubmitter(
       config.tellerAddress,

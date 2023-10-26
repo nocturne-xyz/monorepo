@@ -18,13 +18,9 @@ const runServer = new Command("server")
   .requiredOption("--bundler-address <string>", "bundler submitter address")
   .option(
     "--log-dir <string>",
-    "directory to write logs to",
-    "./logs/bundler-server"
+    "directory to write logs to. if not given, logs will only be emitted to stdout."
   )
-  .option(
-    "--log-level <string>",
-    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
-  )
+  .option("--log-level <string>", "min log importance to log to stdout.")
   .action(async (options) => {
     const { configNameOrPath, port, bundlerAddress, logDir, logLevel } =
       options;
@@ -38,10 +34,11 @@ const runServer = new Command("server")
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
-      logDir,
-      `${configName}-bundler`,
+      configName,
+      "bundler",
       "server",
-      logLevel
+      logLevel,
+      logDir
     );
     const server = new BundlerServer(
       bundlerAddress,

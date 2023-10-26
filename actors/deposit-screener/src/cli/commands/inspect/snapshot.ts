@@ -33,18 +33,14 @@ const runSnapshot = new Command("snapshot")
   )
   .option(
     "--log-dir <string>",
-    "directory to write logs to",
-    "./logs/address-snapshot"
+    "directory to write logs to. if not given, logs will only be emitted to stdout."
   )
   .option(
     "--delay-ms <number>",
     "delay ms between requests to avoid rate limits (in ms)",
     "500"
   )
-  .option(
-    "--log-level <string>",
-    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
-  )
+  .option("--log-level <string>", "min log importance to log to stdout.")
   .action(main);
 
 async function parseAndFilterCsvOfAddresses(path: string): Promise<Address[]> {
@@ -68,7 +64,13 @@ async function main(options: any): Promise<void> {
   const { inputCsv, outputData, logDir, logLevel, delayMs } = options;
   ensureExists(inputCsv, { path: outputData, type: "FILE" });
 
-  const logger = makeLogger(logDir, "address-checker", "checker", logLevel);
+  const logger = makeLogger(
+    "dev",
+    "address-checker",
+    "checker",
+    logLevel,
+    logDir
+  );
 
   logger.info(`Starting snapshot for addresses from ${inputCsv}`);
   const dedupedAddresses = await parseAndFilterCsvOfAddresses(inputCsv);
@@ -78,21 +80,21 @@ async function main(options: any): Promise<void> {
   writeStream.write("{");
 
   process.on("SIGINT", async () => {
-    console.log("Caught interrupt signal");
+    logger.info("Caught interrupt signal");
     await new Promise<void>((resolve) => {
       writeStream.end("}", () => {
-        console.log("Snapshot saved successfully");
+        logger.info("Snapshot saved successfully");
         resolve();
       });
     });
     process.exit(0);
   });
 
-  console.log(`There are ${numAddresses} addresses to snapshot`);
+  logger.info(`There are ${numAddresses} addresses to snapshot`);
   let count = 0;
 
   for (const address of dedupedAddresses) {
-    console.log(
+    logger.info(
       `Starting API calls for address: ${address} ——— ${(count += 1)} of ${numAddresses}`
     );
 
@@ -104,22 +106,22 @@ async function main(options: any): Promise<void> {
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_RISK_SCORE.name ||
         callName === API_CALL_MAP.MISTTRACK_ADDRESS_LABELS.name
       ) {
-        console.log(
+        logger.debug(
           `Sleeping for ${delayMs} ms to avoid Misttrack rate limit...`
         );
         await sleep(delayMs);
       }
 
-      console.log(`Calling ${callName} for ${address}...`);
+      logger.info(`Calling ${callName} for ${address}...`);
       const redis = await getLocalRedis();
       try {
         addressData[callName as ApiCallNames] = await apiCall(deposit, redis, {
           ttlSeconds: 48 * 60 * 60,
         });
-        console.log(`Successfully called ${callName} for ${address}`);
+        logger.info(`Successfully called ${callName} for ${address}`);
       } catch (err) {
-        console.error(`Failed to call ${callName} for ${address}: ${err}`);
-        console.log(`Exiting snapshot run early!`);
+        logger.error(`Failed to call ${callName} for ${address}: ${err}`);
+        logger.warn(`Exiting snapshot run early!`);
         break;
       }
     }
@@ -134,7 +136,7 @@ async function main(options: any): Promise<void> {
   // Returning a promise that resolves when writing finishes
   await new Promise<void>((resolve) => {
     writeStream.end("}", () => {
-      console.log("Snapshot saved successfully");
+      logger.info("Snapshot saved successfully");
       resolve();
     });
   });

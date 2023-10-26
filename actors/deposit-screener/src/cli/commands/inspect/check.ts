@@ -34,13 +34,9 @@ const runChecker = new Command("check")
   )
   .option(
     "--log-dir <string>",
-    "directory to write logs to",
-    "./logs/address-checker"
+    "directory to write logs to. if not given, logs will only be emitted to stdout."
   )
-  .option(
-    "--log-level <string>",
-    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
-  )
+  .option("--log-level <string>", "min log importance to log to stdout.")
   .action(main);
 
 function showReasonCounts(
@@ -67,7 +63,13 @@ async function main(options: any): Promise<void> {
     type: "DIRECTORY",
   });
 
-  const logger = makeLogger(logDir, "address-checker", "checker", logLevel);
+  const logger = makeLogger(
+    "dev",
+    "address-checker",
+    "checker",
+    logLevel,
+    logDir
+  );
 
   const redis = await getLocalRedis();
   const ruleset = RULESET_V1(redis);

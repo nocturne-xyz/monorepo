@@ -39,8 +39,8 @@ export class BalanceMonitor {
       throw new Error("missing CONFIG_NAME environment variable");
     }
     this.logger = makeLogger(
-      "logs",
-      `${configName}-balance-monitor`,
+      configName,
+      "balance-monitor",
       "monitor",
       process.env.STDOUT_LOG_LEVEL ?? "info"
     );
@@ -193,7 +193,7 @@ export class BalanceMonitor {
   public async start(): Promise<void> {
     this.isMonitoring = true;
 
-    console.log(
+    this.logger.info(
       "Balance Monitor started. Piping balance metrics every 30 seconds"
     );
     this.registerMetrics();
