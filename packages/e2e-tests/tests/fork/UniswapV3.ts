@@ -35,60 +35,62 @@ describe("UniswapV3 Adapter fork", async () => {
           depositScreener: false,
         },
       },
-      // Include extra tokens to whitelist in uniswap adapter
-      [
-        [
-          "weth",
-          {
-            address: MAINNET_WETH_ADDRESS,
-            globalCapWholeTokens: 5000n,
-            maxDepositSizeWholeTokens: 1000n,
-            resetWindowHours: 24n,
-            precision: 18n,
-            isGasAsset: true,
-          },
-        ],
-        [
-          "usdc",
-          {
-            address: MAINNET_USDC_ADDRESS,
-            globalCapWholeTokens: 5000n,
-            maxDepositSizeWholeTokens: 1000n,
-            resetWindowHours: 24n,
-            precision: 6n,
-            isGasAsset: false,
-          },
-        ],
-        [
-          "dai",
-          {
-            address: MAINNET_DAI_ADDRESS,
-            globalCapWholeTokens: 5000n,
-            maxDepositSizeWholeTokens: 1000n,
-            resetWindowHours: 24n,
-            precision: 18n,
-            isGasAsset: false,
-          },
-        ],
-        [
-          "susd",
-          {
-            address: MAINNET_SUSD_ADDRESS,
-            globalCapWholeTokens: 5000n,
-            maxDepositSizeWholeTokens: 1000n,
-            resetWindowHours: 24n,
-            precision: 18n,
-            isGasAsset: false,
-          },
-        ],
-      ],
       {
-        // Include UniswapV3Adapter
-        uniswapV3AdapterDeployConfig: {
-          swapRouterAddress: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        // Include extra tokens to whitelist in uniswap adapter
+        additionalErc20s: [
+          [
+            "weth",
+            {
+              address: MAINNET_WETH_ADDRESS,
+              globalCapWholeTokens: 5000n,
+              maxDepositSizeWholeTokens: 1000n,
+              resetWindowHours: 24n,
+              precision: 18n,
+              isGasAsset: true,
+            },
+          ],
+          [
+            "usdc",
+            {
+              address: MAINNET_USDC_ADDRESS,
+              globalCapWholeTokens: 5000n,
+              maxDepositSizeWholeTokens: 1000n,
+              resetWindowHours: 24n,
+              precision: 6n,
+              isGasAsset: false,
+            },
+          ],
+          [
+            "dai",
+            {
+              address: MAINNET_DAI_ADDRESS,
+              globalCapWholeTokens: 5000n,
+              maxDepositSizeWholeTokens: 1000n,
+              resetWindowHours: 24n,
+              precision: 18n,
+              isGasAsset: false,
+            },
+          ],
+          [
+            "susd",
+            {
+              address: MAINNET_SUSD_ADDRESS,
+              globalCapWholeTokens: 5000n,
+              maxDepositSizeWholeTokens: 1000n,
+              resetWindowHours: 24n,
+              precision: 18n,
+              isGasAsset: false,
+            },
+          ],
+        ],
+        deployOpts: {
+          // Include UniswapV3Adapter
+          uniswapV3AdapterDeployConfig: {
+            swapRouterAddress: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+          },
         },
-      },
-      "mainnet"
+        forkNetwork: "mainnet",
+      }
     );
 
     ({ provider, teardown, config, aliceEoa } = testDeployment);

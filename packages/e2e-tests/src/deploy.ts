@@ -84,8 +84,12 @@ const SIG_CHECK_VKEY = JSON.parse(
 export interface TestDeployArgs {
   screeners: Address[];
   subtreeBatchFillers: Address[];
+}
+
+export interface ForkOpts {
   additionalErc20s?: [string, Erc20Config][];
   deployOpts?: NocturneDeployOpts;
+  forkNetwork?: ForkNetwork;
 }
 
 export interface TestActorsConfig {
@@ -185,9 +189,7 @@ const hhThunk = thunk((forkNetwork?: ForkNetwork) => startHardhat(forkNetwork));
 // if include is not given, no off-chain actors will be deployed
 export async function setupTestDeployment(
   actorsConfig: TestActorsConfig,
-  additionalErc20s?: [string, Erc20Config][],
-  deployOpts?: NocturneDeployOpts,
-  forkNetwork?: ForkNetwork
+  forkOpts?: ForkOpts
 ): Promise<TestDeployment> {
   // hardhat has to go up first,
   // then contracts,
@@ -197,7 +199,7 @@ export async function setupTestDeployment(
 
   // spin up anvil
   console.log("starting hardhat...");
-  const resetHardhat = await hhThunk(forkNetwork);
+  const resetHardhat = await hhThunk(forkOpts?.forkNetwork);
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider({
@@ -222,12 +224,14 @@ export async function setupTestDeployment(
     deployment,
     tokens,
     { teller, handler, depositManager, canonAddrRegistry, weth },
-  ] = await deployContractsWithDummyConfig(deployerEoa, {
-    screeners: [screenerEoa.address],
-    subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
-    additionalErc20s,
-    deployOpts: deployOpts,
-  });
+  ] = await deployContractsWithDummyConfig(
+    deployerEoa,
+    {
+      screeners: [screenerEoa.address],
+      subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
+    },
+    forkOpts
+  );
 
   console.log("erc20s:", deployment.erc20s);
   // Deploy subgraph first, as other services depend on it
@@ -385,7 +389,8 @@ export async function setupTestDeployment(
 
 export async function deployContractsWithDummyConfig(
   connectedSigner: ethers.Wallet,
-  args: TestDeployArgs
+  args: TestDeployArgs,
+  forkOpts?: ForkOpts
 ): Promise<[NocturneConfig, TestDeploymentTokens, TestContracts]> {
   const weth = await new WETH9__factory(connectedSigner).deploy();
   console.log("weth address:", weth.address);
@@ -426,8 +431,8 @@ export async function deployContractsWithDummyConfig(
     ],
   ];
 
-  if (args.additionalErc20s) {
-    allErc20s.push(...args.additionalErc20s);
+  if (forkOpts?.additionalErc20s) {
+    allErc20s.push(...forkOpts.additionalErc20s);
   }
 
   const deployConfig: NocturneDeployConfig = {
@@ -441,7 +446,7 @@ export async function deployContractsWithDummyConfig(
     protocolAllowlist: new Map(),
     leftoverTokenHolder: "0x0000000000000000000000000000000000000123",
     opts: {
-      ...args.deployOpts,
+      ...forkOpts?.deployOpts,
       useMockSubtreeUpdateVerifier:
         process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,
       confirmations: 1,
