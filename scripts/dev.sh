@@ -5,9 +5,8 @@ cleanup() {
     docker stop $(docker ps -aq)
     docker rm $(docker ps -aq)
 
-    if  [-n $SNAP_PID ]; then
-        echo "Killing snap process $SNAP_PID"
-        kill $SNAP_PID
+    if  [ -n "$SNAP_PID" ]; then
+        kill $SNAP_PID || true
     fi
 
     pid=$(lsof -t -i:8545)
@@ -64,7 +63,7 @@ echo "running yarn build"
 yarn build
 
 echo "starting snap"
-pushd "$ROOT_DIR/snap"
+pushd "$ROOT_DIR/../snap"
 yarn dev &
 SNAP_PID=$!
 popd
