@@ -803,10 +803,13 @@ export class NocturneSdk implements NocturneSdkApi {
       const generator = async function* (
         sdk: NocturneSdk,
       ) {
+        console.log("[syncWithProgress] starting generator");
         let count = 0;
         while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
           try {
+            console.log("[syncWithProgress] calling syncInner");
             latestSyncedMerkleIndex = (await sdk.syncInner({ ...syncOpts, timing: true })) ?? 0;
+            console.log("[syncWithProgress] latestSyncedMerkleIndex", latestSyncedMerkleIndex);
 
             if (count % refetchEvery === 0) {
               latestMerkleIndexOnChain =
@@ -818,6 +821,7 @@ export class NocturneSdk implements NocturneSdkApi {
               latestSyncedMerkleIndex,
             };
           } catch (err) {
+            console.error(err);
             release();
             throw err;
           }
