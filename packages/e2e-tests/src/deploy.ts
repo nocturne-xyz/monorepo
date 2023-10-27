@@ -391,7 +391,7 @@ export async function deployContractsWithDummyConfig(
 
   const deployConfig: NocturneDeployConfig = {
     proxyAdminOwner: connectedSigner.address,
-    finalityBlocks: 0,
+    finalityBlocks: 1,
     screeners: args.screeners,
     subtreeBatchFillers: args.subtreeBatchFillers,
     wethAddress: weth.address,
