@@ -781,9 +781,13 @@ export class NocturneSdk implements NocturneSdkApi {
   /**
    * Start syncing process, returning current merkle index at tip of chain and iterator
    * returning newly synced merkle indices as syncing process occurs.
+   * NOTE: this method holds a lock on syncing until the returned iterator is closed.
+   *       if the caller does not wish through the entire iterator, they must explicitly close it.
    */
   async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
-    return await this.syncMutex.runExclusive(async () => {
+    const release = await this.syncMutex.acquire();
+
+    try {
       const handlerContract = await this.handlerContractThunk();
       let latestMerkleIndexOnChain =
         (await handlerContract.totalCount()).toNumber() - 1;
@@ -801,18 +805,25 @@ export class NocturneSdk implements NocturneSdkApi {
       ) {
         let count = 0;
         while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
-          latestSyncedMerkleIndex = (await sdk.syncInner({ ...syncOpts, timing: true })) ?? 0;
+          try {
+            latestSyncedMerkleIndex = (await sdk.syncInner({ ...syncOpts, timing: true })) ?? 0;
 
-          if (count % refetchEvery === 0) {
-            latestMerkleIndexOnChain =
-              (await (await sdk.handlerContractThunk()).totalCount()).toNumber() -
-              1;
+            if (count % refetchEvery === 0) {
+              latestMerkleIndexOnChain =
+                (await (await sdk.handlerContractThunk()).totalCount()).toNumber() -
+                1;
+            }
+            count++;
+            yield {
+              latestSyncedMerkleIndex,
+            };
+          } catch (err) {
+            release();
+            throw err;
           }
-          count++;
-          yield {
-            latestSyncedMerkleIndex,
-          };
         }
+
+        release();
       };
 
       const progressIter = new ClosableAsyncIterator(
@@ -827,7 +838,10 @@ export class NocturneSdk implements NocturneSdkApi {
         latestMerkleIndexOnChain,
         progressIter,
       };
-    });
+    } catch (err) {
+      release();
+      throw err;
+    }
   }
 
   /**
