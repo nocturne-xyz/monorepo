@@ -15,7 +15,7 @@ import {
 export interface SetSpendKeyMethod {
   method: "nocturne_setSpendKey";
   params: {
-    spendKey: Uint8Array; // converted to { '0': <number>, '1': <number>, '2': <number>, ... }
+    spendKey: string; // converted to { '0': <number>, '1': <number>, '2': <number>, ... }
   };
   return: string | undefined; // error string or undefined
 }
@@ -81,10 +81,14 @@ export function assertAllRpcMethodsHandled(request: never): never {
 
 export function parseObjectValues(params: object): object {
   return Object.fromEntries(
-    Object.entries(params).map(([key, value]) => [
-      key,
-      typeof value === "string" ? JSON.parse(value) : value,
-    ])
+    Object.entries(params).map(([key, value]) => {
+      const parsedValue = JSON.parse(value);
+      if (parsedValue && parsedValue.__primitive) {
+        return [key, parsedValue.value ?? undefined];
+      } else {
+        return [key, parsedValue];
+      }
+    })
   );
 }
 
@@ -92,7 +96,11 @@ export function stringifyObjectValues(params: object): object {
   return Object.fromEntries(
     Object.entries(params).map(([key, value]) => [
       key,
-      typeof value === "object" ? JSON.stringify(value) : value,
+      JSON.stringify(
+        typeof value === "object"
+          ? value
+          : { __primitive: true, value: value ?? null }
+      ),
     ])
   );
 }

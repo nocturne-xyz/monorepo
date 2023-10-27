@@ -8,19 +8,33 @@ import {
 } from "../src/validation";
 
 it("validates SetSpendKeyParams", () => {
-  const data = {
-    spendKey: {
-      "0": 1,
-      "1": 2,
-      "2": 3,
-      "3": 4,
-    },
-  };
-  const badData = {
-    spendKey: [1, 2, 3, 4], // plain number[], not how uint8array is serialized
-  };
+  const goodData = { spendKey: "0x123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0" };
+  assert(goodData, SetSpendKeyParams);
 
-  assert(data, SetSpendKeyParams);
+  // wrong field name
+  let badData: any = { spendKEY: goodData.spendKey };
+
+  // no 0x
+  badData = { spendKey: "123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0" };
+  chaiAssert.throws(() => assert(badData, SetSpendKeyParams));
+
+  // odd length
+  badData = { spendKey: "0x123456789abcdef0123456789abcdef012345678abcdef0123456789abcdef0" };
+  chaiAssert.throws(() => assert(badData, SetSpendKeyParams));
+
+  // wrong even length
+  badData = { spendKey: "0x123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde" };
+
+  // not hex
+  badData = { spendKey: "0x123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdefg" };
+  chaiAssert.throws(() => assert(badData, SetSpendKeyParams));
+
+  // number 
+  badData = { spendKey: 1234 };
+  chaiAssert.throws(() => assert(badData, SetSpendKeyParams));
+
+  // object
+  badData = { spendKey: goodData };
   chaiAssert.throws(() => assert(badData, SetSpendKeyParams));
 });
 
