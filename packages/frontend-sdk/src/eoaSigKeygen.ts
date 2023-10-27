@@ -6,10 +6,8 @@ const SPEND_KEY_FIXED_MESSAGE = Buffer.from(
 
 export async function generateNocturneSpendKeyFromEoaSig(
   signer: ethers.Signer
-): Promise<Uint8Array> {
-  return ethers.utils.arrayify(
-    ethers.utils.keccak256(
-      ethers.utils.arrayify(await signer.signMessage(SPEND_KEY_FIXED_MESSAGE))
-    )
+): Promise<string> {
+  return ethers.utils.keccak256(
+    await signer.signMessage(SPEND_KEY_FIXED_MESSAGE)
   );
 }

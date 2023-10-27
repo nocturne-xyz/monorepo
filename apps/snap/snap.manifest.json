@@ -3,7 +3,7 @@
   "description": "Nocturne Snap",
   "proposedName": "Nocturne Snap",
   "source": {
-    "shasum": "r7HZQugKwfRJ3FpYnPLJqVVa42EhxrPwR+ahv9oZecc=",
+    "shasum": "y7gabkf6fTlpOFWxmIK9FN4IHKADm8SAdK2mSN+XLf8=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -19,7 +19,6 @@
     },
     "snap_dialog": {},
     "endowment:network-access": {},
-    "endowment:long-running": {},
     "snap_manageState": {}
   },
   "manifestVersion": "0.1"

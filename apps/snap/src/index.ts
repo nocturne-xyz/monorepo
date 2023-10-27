@@ -75,7 +75,7 @@ export const onRpcRequest: OnRpcRequestHandler = async (args) => {
     const handledResponse = await handleRpcRequest(
       args as unknown as SnapRpcRequestHandlerArgs
     );
-    return handledResponse ? JSON.stringify(handledResponse) : undefined;
+    return { res: handledResponse ? JSON.stringify(handledResponse) : null };
   } catch (e) {
     console.error("Snap has thrown error for request: ", args.request);
     throw e;
@@ -106,8 +106,6 @@ async function handleRpcRequest({
         );
       }
 
-      const spendKey = new Uint8Array(request.params.spendKey);
-
       // Can only set spend key if not already set, only way to reset is to clear snap db and
       // regenerate key
       // Return error string if spend key already set
@@ -115,10 +113,10 @@ async function handleRpcRequest({
         return "Error: Spend key already set";
       }
 
-      await kvStore.putString(SPEND_KEY_DB_KEY, ethers.utils.hexlify(spendKey));
-
-      // Zero out spend key memory
-      spendKey.fill(0);
+      await kvStore.putString(
+        SPEND_KEY_DB_KEY,
+        ethers.utils.hexlify(request.params.spendKey)
+      );
 
       return;
     }

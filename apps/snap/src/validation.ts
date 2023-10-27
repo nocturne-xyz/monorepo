@@ -16,27 +16,13 @@ export const UndefinedType = define(
   (value) => value === undefined
 );
 
-// This is how Uint8Array is serialized when passed to snap
-const isStringifiedUint8Array = (value: any) => {
-  if (typeof value !== "object" || Array.isArray(value)) return false;
+const isDataHexString32 = (value: any) =>
+  typeof value === "string" && /^0x[0-9a-fA-F]{64}$/.test(value);
 
-  const keys = Object.keys(value)
-    .map((k) => parseInt(k, 10))
-    .sort((a, b) => a - b);
-  for (let i = 0; i < keys.length; i++) {
-    if (keys[i] !== i) return false;
-  }
-
-  return true;
-};
-
-const StringifiedUint8ArrayType = define(
-  `StringifiedUint8ArrayType`,
-  isStringifiedUint8Array
-);
+const DataHexString32Type = define(`DataHexString32Type`, isDataHexString32);
 
 export const SetSpendKeyParams = object({
-  spendKey: StringifiedUint8ArrayType,
+  spendKey: DataHexString32Type,
 });
 
 export const SignCanonAddrRegistryEntryParams = object({

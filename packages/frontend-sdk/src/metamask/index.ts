@@ -88,10 +88,15 @@ export class SnapStateSdk implements SnapStateApi {
         },
       },
     };
-    const response = await window.ethereum.request<RpcMethod["return"]>(
+    const response = await window.ethereum.request<{ res: string | null }>(
       jsonRpcRequest
     );
-    return response ? JSON.parse(response as unknown as string) : undefined;
+    if (!response) {
+      throw new Error("No response from MetaMask");
+    }
+
+    const { res } = response;
+    return res ? JSON.parse(res) : undefined;
   }
 
   /**
@@ -134,9 +139,6 @@ export class SnapStateSdk implements SnapStateApi {
         spendKey,
       },
     });
-
-    // Clear the spend key from memory
-    spendKey.fill(0);
 
     // Notify consumer if spend key was not actually set (in case of some race condition where it was set between the first spendKeyIsSet check and the setSpendKey call)
     if (maybeErrorString) {
