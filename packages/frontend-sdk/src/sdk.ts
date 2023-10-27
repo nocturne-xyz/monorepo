@@ -800,12 +800,11 @@ export class NocturneSdk implements NocturneSdkApi {
       const generator = async function* (
         sdk: NocturneSdk,
       ) {
-        console.log("[syncWithProgress] starting generator");
+        const release = await sdk.syncMutex.acquire();
         let count = 0;
         while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
-            console.log("[syncWithProgress] calling syncInner");
-            latestSyncedMerkleIndex = await sdk.syncMutex.runExclusive(async () => await sdk.syncInner({ ...syncOpts, timing: true })) ?? 0;
-            console.log("[syncWithProgress] latestSyncedMerkleIndex", latestSyncedMerkleIndex);
+          try {
+            latestSyncedMerkleIndex = (await sdk.syncInner({ ...syncOpts, timing: true })) ?? 0;
 
             if (count % refetchEvery === 0) {
               latestMerkleIndexOnChain =
@@ -816,7 +815,13 @@ export class NocturneSdk implements NocturneSdkApi {
             yield {
               latestSyncedMerkleIndex,
             };
+          } catch (err) {
+            release();
+            throw err;
+          }
         }
+
+        release();
       };
 
     const progressIter = new ClosableAsyncIterator(
@@ -847,9 +852,7 @@ export class NocturneSdk implements NocturneSdkApi {
     let latestSyncedMerkleIndex: number | undefined;
     try {
       const client = await this.clientThunk();
-      latestSyncedMerkleIndex = await this.syncMutex.runExclusive(
-        async () => await client.sync({ ...syncOpts, timing: true })
-      );
+      latestSyncedMerkleIndex = await client.sync({ ...syncOpts, timing: true });
       await client.updateOptimisticNullifiers();
     } catch (e) {
       console.log("Error syncing notes: ", e);
