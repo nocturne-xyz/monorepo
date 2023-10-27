@@ -5,6 +5,11 @@ cleanup() {
     docker stop $(docker ps -aq)
     docker rm $(docker ps -aq)
 
+    if  [-n $SNAP_PID ]; then
+        echo "Killing snap process $SNAP_PID"
+        kill $SNAP_PID
+    fi
+
     pid=$(lsof -t -i:8545)
     if [ -n "$pid" ]; then
         echo "Lurking zombie process on 8545, killing process"
@@ -55,8 +60,19 @@ GRAPH_NODE_PID=$!
 
 sleep 5
 
+echo "running yarn build"
+yarn build
+
+echo "starting snap"
+pushd "$ROOT_DIR/snap"
+yarn dev &
+SNAP_PID=$!
+popd
+
 echo "running turbo dev script..."
 yarn turbo run dev
 
+wait $SNAP_PID
 wait $GRAPH_NODE_PID
 wait $HARDHAT_PID
+
