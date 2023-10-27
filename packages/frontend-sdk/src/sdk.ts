@@ -815,9 +815,8 @@ export class NocturneSdk implements NocturneSdkApi {
             yield {
               latestSyncedMerkleIndex,
             };
-          } catch (err) {
+          } finally {
             release();
-            throw err;
           }
         }
 
