@@ -16,6 +16,7 @@ export type NocturneOthersContractName =
   | "SubtreeUpdateVerifier"
   | "TestSubtreeUpdateVerifier"
   | "CanonAddrSigCheckVerifier"
+  | "UniswapV3Adapter"
   | "EthTransferAdapter"
   | "WstethAdapter"
   | "RethAdapter";
@@ -36,6 +37,7 @@ export function isNocturneOther(name: string): boolean {
     "SubtreeUpdateVerifier",
     "TestSubtreeUpdateVerifier",
     "CanonAddrSigCheckVerifier",
+    "UniswapV3Adapter",
     "EthTransferAdapter",
     "WstethAdapter",
     "RethAdapter",

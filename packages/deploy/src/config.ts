@@ -5,6 +5,7 @@ import * as JSON from "bigint-json-serialization";
 
 export interface NocturneDeployConfigProperties {
   proxyAdminOwner: Address;
+  contractOwner: Address;
   screeners: Address[];
   subtreeBatchFillers: Address[];
   wethAddress: Address;
@@ -17,6 +18,7 @@ export interface NocturneDeployConfigProperties {
 
 export interface NocturneDeployConfig {
   proxyAdminOwner: Address;
+  contractOwner: Address;
   screeners: Address[];
   subtreeBatchFillers: Address[];
   wethAddress: Address;
@@ -29,10 +31,15 @@ export interface NocturneDeployConfig {
 
 export interface NocturneDeployOpts {
   proxyAdmin?: ProxyAdmin;
+  uniswapV3AdapterDeployConfig?: UniswapV3AdapterDeployConfig;
   wstethAdapterDeployConfig?: WstethAdapterDeployConfig;
   rethAdapterDeployConfig?: RethAdapterDeployConfig;
   useMockSubtreeUpdateVerifier?: boolean;
   confirmations?: number;
+}
+
+export interface UniswapV3AdapterDeployConfig {
+  swapRouterAddress: Address;
 }
 
 export interface WstethAdapterDeployConfig {
