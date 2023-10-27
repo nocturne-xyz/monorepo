@@ -19,7 +19,7 @@ import * as JSON from "bigint-json-serialization";
 const UNISWAP_V3_ADAPTER_NAME = "UniswapV3Adapter";
 
 export interface UniswapV3SwapOptions {
-  maxSlippageBps: number;
+  maxSlippageBps?: number;
   recipient?: Address;
 }
 
@@ -55,7 +55,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
       tokenIn: Address,
       inAmount: bigint,
       tokenOut: Address,
-      opts: UniswapV3SwapOptions = { maxSlippageBps: 100 }
+      opts?: UniswapV3SwapOptions
     ) {
       const prom = new Promise<BuilderItemToProcess>(
         async (resolve, reject) => {
@@ -68,6 +68,8 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 `UniswapV3Adapter not supported on chain with id: ${this._op.chainId}`
               );
             }
+
+            const maxSlippageBps = opts?.maxSlippageBps ?? 100;
             const swapRoute = await getSwapRoute({
               chainId: this._op.chainId,
               provider: this.provider,
@@ -75,7 +77,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               tokenInAddress: tokenIn,
               amountIn: inAmount,
               tokenOutAddress: tokenOut,
-              maxSlippageBps: opts.maxSlippageBps,
+              maxSlippageBps,
             });
 
             console.log("swapRoute", JSON.stringify(swapRoute));
@@ -93,9 +95,11 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             const pools = route.route.pools;
             const minimumAmountWithSlippage = currencyAmountToBigInt(
               swapRoute.trade.minimumAmountOut(
-                new Percent(opts.maxSlippageBps, 10_000)
+                new Percent(maxSlippageBps, 10_000)
               )
             );
+
+            const recipient = opts?.recipient ?? this.config.handlerAddress;
 
             let swapParams: ExactInputSingleParams | ExactInputParams;
             let encodedFunction: string;
@@ -105,7 +109,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 tokenIn: tokenIn,
                 tokenOut: tokenOut,
                 fee: pool.fee,
-                recipient: opts.recipient ?? this.config.handlerAddress,
+                recipient,
                 deadline: Date.now() + 3_600,
                 amountIn: inAmount,
                 amountOutMinimum: minimumAmountWithSlippage,
@@ -122,7 +126,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               // (B, A), (C, B), (D, C)
               swapParams = {
                 path: "0x",
-                recipient: opts.recipient ?? this.config.handlerAddress,
+                recipient,
                 deadline: Date.now() + 3_600,
                 amountIn: inAmount,
                 amountOutMinimum: minimumAmountWithSlippage,
