@@ -83,10 +83,11 @@ export async function deployNocturne(
     config.opts
   );
 
-  // Maybe deploy uniswap v3 adapter, depending on deploy config
   const tokens = Array.from(config.erc20s.values()).map(
     (erc20) => erc20.address
   );
+
+  // Maybe deploy uniswap v3 adapter, depending on deploy config
   const maybeUniswapV3Adapter = await maybeDeployUniswapV3Adapter(
     connectedSigner,
     tokens,

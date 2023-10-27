@@ -7,7 +7,19 @@ jobs:
       REDISMS_SYSTEM_BINARY: "/usr/bin/redis-server"
 
     steps:
-      - uses: actions/checkout@v3
+      - name: checkout monorepo and get submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          path: ./monorepo
+
+      - name: checkout protocol repo
+        uses: actions/checkout@v4
+        with:
+          repository: nocturne-xyz/protocol
+          path: ./protocol
+          ref: luke/audit-fixes-2
+
       - name: cache dependencies
         uses: actions/cache@v2
         with:
@@ -27,35 +39,62 @@ jobs:
         with:
           node-version: "v18.12.1"
           cache: "yarn"
+          cache-dependency-path: ./monorepo/yarn.lock
+
       - name: corepack enable
         run: corepack enable
+
       - name: install foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
+
       - name: install Rapidsnark dependencies
         run: sudo apt-get install -y build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
+
       - name: install docker
         run: sudo apt-get install -y docker
 
-      - name: yarn install
-        run: |
-          yarn install --immutable
-      - name: Yarn lint
-        run: |
-          yarn lint
-      - name: yarn prettier
+      - name: yarn install in protocol
+        working-directory: ./protocol
+        run: yarn install --immutable
+
+      - name: yarn install-deps in protocol
+        working-directory: ./protocol
+        run: yarn install-deps
+
+      - name: yarn build in protocol
+        working-directory: ./protocol
+        run: yarn build
+
+      - name: yarn install in monorepo
+        working-directory: ./monorepo
+        run: yarn install --immutable
+
+      - name: yarn link in monorepo
+        working-directory: ./monorepo
+        run: yarn link:protocol
+
+      - name: yarn prettier in monorepo
+        working-directory: ./monorepo
         run: |
           yarn prettier:check
-      - name: yarn build
-        run: |
-          yarn build
-      - name: docker compose up
+
+      - name: yarn build in monorepo
+        working-directory: ./monorepo
+        run: yarn build
+
+      - name: docker compose up in monorepo
+        working-directory: ./monorepo
         run: |
           docker-compose up -d
-      - name: yarn test:unit
+
+      - name: yarn test:unit in monorepo
+        working-directory: ./monorepo
         run: |
           yarn test:unit
-      - name: yarn test:fork
+
+      - name: yarn test:fork in monorepo
+        working-directory: ./monorepo
         run: |
           yarn test:fork

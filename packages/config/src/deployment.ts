@@ -16,7 +16,6 @@ export interface NocturneContractDeployment {
     tellerOwner: Address;
     handlerOwner: Address;
     depositManagerOwner: Address;
-    uniswapV3AdapterAndOwner?: [Address, Address];
   };
   proxyAdmin: Address;
   finalityBlocks: number;
@@ -30,5 +29,4 @@ export interface NocturneContractDeployment {
   canonAddrSigCheckVerifierAddress: Address;
   depositSources: Address[];
   screeners: Address[];
-
 }
