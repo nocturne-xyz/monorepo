@@ -785,9 +785,6 @@ export class NocturneSdk implements NocturneSdkApi {
    *       if the caller does not wish through the entire iterator, they must explicitly close it.
    */
   async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
-    const release = await this.syncMutex.acquire();
-
-    try {
       const handlerContract = await this.handlerContractThunk();
       let latestMerkleIndexOnChain =
         (await handlerContract.totalCount()).toNumber() - 1;
@@ -806,9 +803,8 @@ export class NocturneSdk implements NocturneSdkApi {
         console.log("[syncWithProgress] starting generator");
         let count = 0;
         while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
-          try {
             console.log("[syncWithProgress] calling syncInner");
-            latestSyncedMerkleIndex = (await sdk.syncInner({ ...syncOpts, timing: true })) ?? 0;
+            latestSyncedMerkleIndex = await sdk.syncMutex.runExclusive(async () => await sdk.syncInner({ ...syncOpts, timing: true })) ?? 0;
             console.log("[syncWithProgress] latestSyncedMerkleIndex", latestSyncedMerkleIndex);
 
             if (count % refetchEvery === 0) {
@@ -820,32 +816,21 @@ export class NocturneSdk implements NocturneSdkApi {
             yield {
               latestSyncedMerkleIndex,
             };
-          } catch (err) {
-            console.error(err);
-            release();
-            throw err;
-          }
         }
-
-        release();
       };
 
-      const progressIter = new ClosableAsyncIterator(
-        generator(this),
-        async () => {
-          closed = true;
-        }
-      );
+    const progressIter = new ClosableAsyncIterator(
+      generator(this),
+      async () => {
+        closed = true;
+      }
+    );
 
-      return {
-        latestSyncedMerkleIndex,
-        latestMerkleIndexOnChain,
-        progressIter,
-      };
-    } catch (err) {
-      release();
-      throw err;
-    }
+    return {
+      latestSyncedMerkleIndex,
+      latestMerkleIndexOnChain,
+      progressIter,
+    };
   }
 
   /**
