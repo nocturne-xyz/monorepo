@@ -29,9 +29,6 @@
 
   "references": [
     {
-      "path": "./apps/snap"
-    },
-    {
       "path": "./actors/balance-monitor"
     },
     {
