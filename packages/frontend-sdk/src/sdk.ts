@@ -180,7 +180,7 @@ export class NocturneSdk implements NocturneSdkApi {
     this._snap = new SnapStateSdk(
       () => this.provider,
       snapOptions?.version,
-      snapOptions?.snapId
+      snapOptions?.snapId,
     );
     this.syncMutex = new Mutex();
 
@@ -188,27 +188,27 @@ export class NocturneSdk implements NocturneSdkApi {
     this.depositManagerContractThunk = thunk(async () =>
       DepositManager__factory.connect(
         this.sdkConfig.config.depositManagerAddress,
-        await this.signerThunk()
-      )
+        await this.signerThunk(),
+      ),
     );
     this.handlerContractThunk = thunk(async () =>
       Handler__factory.connect(
         this.sdkConfig.config.handlerAddress,
-        await this.signerThunk()
-      )
+        await this.signerThunk(),
+      ),
     );
     this.canonAddrRegistryThunk = thunk(async () =>
       CanonicalAddressRegistry__factory.connect(
         this.sdkConfig.config.canonicalAddressRegistryAddress,
-        await this.signerThunk()
-      )
+        await this.signerThunk(),
+      ),
     );
 
     this.depositAdapter =
       options.depositAdapter ??
       new SubgraphDepositAdapter(
         this.endpoints.subgraphEndpoint,
-        this.endpoints.screenerEndpoint
+        this.endpoints.screenerEndpoint,
       );
 
     this.clientThunk = thunk(async () => {
@@ -221,10 +221,10 @@ export class NocturneSdk implements NocturneSdkApi {
       const { x, y } = viewer.canonicalAddress();
       const canonAddr = JSON.stringify({ x, y });
       const canonAddrHash = ethers.utils.sha256(
-        ethers.utils.toUtf8Bytes(canonAddr)
+        ethers.utils.toUtf8Bytes(canonAddr),
       );
       const kv = new IdbKvStore(
-        `nocturne-fe-sdk-${networkName}-${canonAddrHash}`
+        `nocturne-fe-sdk-${networkName}-${canonAddrHash}`,
       );
       const db = new NocturneDB(kv);
 
@@ -278,7 +278,7 @@ export class NocturneSdk implements NocturneSdkApi {
    */
   async initiateEthDeposits(
     values: bigint[],
-    gasCompensationPerDeposit: bigint
+    gasCompensationPerDeposit: bigint,
   ): Promise<DepositHandleWithReceipt[]> {
     const signer = await getSigner(this.provider);
 
@@ -289,12 +289,12 @@ export class NocturneSdk implements NocturneSdkApi {
     const signerBalance = (await signer.getBalance()).toBigInt();
     if (signerBalance < totalValue) {
       throw new Error(
-        `signer does not have enough balance for gas comp + eth to wrap. balance: ${signerBalance}. gasComp required: ${gasCompRequired}. eth to wrap: ${ethToWrap}`
+        `signer does not have enough balance for gas comp + eth to wrap. balance: ${signerBalance}. gasComp required: ${gasCompRequired}. eth to wrap: ${ethToWrap}`,
       );
     }
 
     const depositAddr = StealthAddressTrait.compress(
-      await this.getRandomStealthAddress()
+      await this.getRandomStealthAddress(),
     );
     const tx = await (
       await this.depositManagerContractThunk()
@@ -345,14 +345,14 @@ export class NocturneSdk implements NocturneSdkApi {
 
     return registry.setCanonAddr(
       compressedCanonAddr,
-      packToSolidityProof(proof)
+      packToSolidityProof(proof),
     );
   }
 
   async initiateErc20Deposits(
     erc20Address: Address,
     values: bigint[],
-    gasCompensationPerDeposit: bigint
+    gasCompensationPerDeposit: bigint,
   ): Promise<DepositHandleWithReceipt[]> {
     const signer = await getSigner(this.provider);
     const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
@@ -360,7 +360,7 @@ export class NocturneSdk implements NocturneSdkApi {
     const signerBalance = (await signer.getBalance()).toBigInt();
     if (signerBalance < gasCompRequired) {
       throw new Error(
-        `signer does not have enough balance for gas comp. balance: ${signerBalance}. gasComp required: ${gasCompRequired}`
+        `signer does not have enough balance for gas comp. balance: ${signerBalance}. gasComp required: ${gasCompRequired}`,
       );
     }
 
@@ -370,18 +370,18 @@ export class NocturneSdk implements NocturneSdkApi {
     const erc20Contract = getTokenContract(
       AssetType.ERC20,
       erc20Address,
-      signer
+      signer,
     );
     const depositManagerContract = await this.depositManagerContractThunk();
     await erc20Contract.approve(depositManagerContract.address, totalValue);
 
     const depositAddr = StealthAddressTrait.compress(
-      await this.getRandomStealthAddress()
+      await this.getRandomStealthAddress(),
     );
     const tx = await depositManagerContract.instantiateErc20MultiDeposit(
       erc20Address,
       values,
-      depositAddr
+      depositAddr,
     );
     return this.formDepositHandlesWithTxReceipt(tx);
   }
@@ -395,7 +395,7 @@ export class NocturneSdk implements NocturneSdkApi {
   async initiateAnonErc20Transfer(
     erc20Address: Address,
     amount: bigint,
-    recipientAddress: Address
+    recipientAddress: Address,
   ): Promise<OperationHandle> {
     return this.createOpRequest({
       type: "ANON_TRANSFER",
@@ -407,7 +407,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
   async initiateAnonEthTransfer(
     recipientAddress: Address,
-    amount: bigint
+    amount: bigint,
   ): Promise<OperationHandle> {
     const operationRequest = await this.opRequestBuilder
       .use(EthTransferAdapterPlugin)
@@ -453,7 +453,7 @@ export class NocturneSdk implements NocturneSdkApi {
     opOrOpRequest:
       | SubmittableOperationWithNetworkInfo
       | OperationRequestWithMetadata,
-    actionsMetadata: ActionMetadata[]
+    actionsMetadata: ActionMetadata[],
   ): Promise<OperationHandle> {
     const metadata = { items: actionsMetadata };
     const submittableOperation =
@@ -476,7 +476,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
   async retrievePendingDeposit(
     displayRequest: DisplayDepositRequest,
-    retrieveEthDepositsAs: "ETH" | "WETH" = "ETH"
+    retrieveEthDepositsAs: "ETH" | "WETH" = "ETH",
   ): Promise<ContractTransaction> {
     const signer = await getSigner(this.provider);
     const signerAddress = await signer.getAddress();
@@ -487,7 +487,7 @@ export class NocturneSdk implements NocturneSdkApi {
     const depositManagerContract = await this.depositManagerContractThunk();
     const isOutstandingDeposit =
       await depositManagerContract._outstandingDepositHashes(
-        hashDepositRequest(req)
+        hashDepositRequest(req),
       );
     if (!isOutstandingDeposit) {
       throw new Error("Deposit request does not exist");
@@ -508,24 +508,24 @@ export class NocturneSdk implements NocturneSdkApi {
    * @param depositHash Deposit hash
    */
   protected async fetchScreenerDepositRequestStatus(
-    depositHash: string
+    depositHash: string,
   ): Promise<DepositStatusResponse> {
     return (await retry(
       async () => {
         const res = await fetch(
-          `${this.endpoints.screenerEndpoint}/status/${depositHash}`
+          `${this.endpoints.screenerEndpoint}/status/${depositHash}`,
         );
         return (await res.json()) as DepositStatusResponse;
       },
       {
         retries: 5,
-      }
+      },
     )) as DepositStatusResponse;
   }
 
   async getErc20DepositQuote(
     erc20Address: Address,
-    totalValue: bigint
+    totalValue: bigint,
   ): Promise<DepositQuoteResponse> {
     const signer = await getSigner(this.provider);
     const spender = await signer.getAddress();
@@ -547,7 +547,7 @@ export class NocturneSdk implements NocturneSdkApi {
       },
       {
         retries: 5,
-      }
+      },
     );
   }
 
@@ -593,18 +593,20 @@ export class NocturneSdk implements NocturneSdkApi {
    * @param operationRequest Operation request
    */
   async signOperationRequest(
-    operationRequest: OperationRequestWithMetadata
+    operationRequest: OperationRequestWithMetadata,
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", operationRequest.meta);
     // NOTE: we should never end up in situation where this is called before normal nocturne_sync, otherwise there will be long delay
     const warnTimeout = setTimeout(() => {
       console.warn(
-        "[fe-sdk] the SDK has not yet been synced. This may cause a long delay until `signOperation` returns. It's strongly reccomended to explicitly use `sync` or `syncWithProgress` to ensure the SDK is fully synced before calling `signOperation`"
+        "[fe-sdk] the SDK has not yet been synced. This may cause a long delay until `signOperation` returns. It's strongly reccomended to explicitly use `sync` or `syncWithProgress` to ensure the SDK is fully synced before calling `signOperation`",
       );
     }, 5000);
 
     // if we're not already syncing, sync
-    await runExclusiveIfNotAlreadyLocked(this.syncMutex)(() => this.syncInner());
+    await runExclusiveIfNotAlreadyLocked(this.syncMutex)(() =>
+      this.syncInner(),
+    );
 
     clearTimeout(warnTimeout);
 
@@ -636,7 +638,7 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   async proveOperation(
-    op: SignedOperation
+    op: SignedOperation,
   ): Promise<SubmittableOperationWithNetworkInfo> {
     const prover = await this.joinSplitProverThunk();
     return await proveOperation(prover, op);
@@ -652,14 +654,14 @@ export class NocturneSdk implements NocturneSdkApi {
             joinSplit.publicSpend === 0n
               ? 0n
               : joinSplit.encodedAsset.encodedAssetAddr,
-            operation.refundAddr
+            operation.refundAddr,
           );
 
         const [, refundAddrH1CompressedY] = decomposeCompressedPoint(
-          operation.refundAddr.h1
+          operation.refundAddr.h1,
         );
         const [, refundAddrH2CompressedY] = decomposeCompressedPoint(
-          operation.refundAddr.h2
+          operation.refundAddr.h2,
         );
 
         const pubEncodedAssetId =
@@ -692,14 +694,14 @@ export class NocturneSdk implements NocturneSdkApi {
       proofsWithPublicInputs.map(async (proofWithPis) => {
         const prover = await this.joinSplitProverThunk();
         await prover.verifyJoinSplitProof(proofWithPis);
-      })
+      }),
     );
 
     return results.every((result) => result);
   }
 
   async submitOperation(
-    operation: SubmittableOperationWithNetworkInfo
+    operation: SubmittableOperationWithNetworkInfo,
   ): Promise<OperationHandle> {
     const opDigest = (await retry(
       async () => {
@@ -715,8 +717,8 @@ export class NocturneSdk implements NocturneSdkApi {
         if (!res.ok) {
           throw new Error(
             `failed to submit proven operation to bundler: ${JSON.stringify(
-              resJSON
-            )}`
+              resJSON,
+            )}`,
           );
         }
 
@@ -724,7 +726,7 @@ export class NocturneSdk implements NocturneSdkApi {
       },
       {
         retries: 5,
-      }
+      },
     )) as string;
     const digest = BigInt(opDigest);
     const getStatus = this.makeGetStatus(digest);
@@ -756,7 +758,7 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   async signAndProveOperation(
-    operationRequest: OperationRequestWithMetadata
+    operationRequest: OperationRequestWithMetadata,
   ): Promise<SubmittableOperationWithNetworkInfo> {
     const op = await this.signOperationRequest(operationRequest);
 
@@ -771,7 +773,9 @@ export class NocturneSdk implements NocturneSdkApi {
    */
   async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
     // if we're not already syncing, sync
-    await runExclusiveIfNotAlreadyLocked(this.syncMutex)(() => this.syncInner());
+    await runExclusiveIfNotAlreadyLocked(this.syncMutex)(() =>
+      this.syncInner(),
+    );
 
     const client = await this.clientThunk();
     return await client.getAllAssetBalances(opts);
@@ -780,12 +784,14 @@ export class NocturneSdk implements NocturneSdkApi {
   // todo currently core's getBalanceForAsset doesn't distinguish b/t balance not existing, and balance being 0
   async getBalanceForAsset(
     erc20Address: Address,
-    opts?: GetBalanceOpts
+    opts?: GetBalanceOpts,
   ): Promise<bigint> {
     const asset = AssetTrait.erc20AddressToAsset(erc20Address);
 
     // if we're not already syncing, sync
-    await runExclusiveIfNotAlreadyLocked(this.syncMutex)(() => this.syncInner());
+    await runExclusiveIfNotAlreadyLocked(this.syncMutex)(() =>
+      this.syncInner(),
+    );
 
     const client = await this.clientThunk();
     return client.getBalanceForAsset(asset, opts);
@@ -803,7 +809,7 @@ export class NocturneSdk implements NocturneSdkApi {
           metadata,
           getStatus,
         };
-      }
+      },
     );
     return operationHandles;
   }
@@ -815,49 +821,49 @@ export class NocturneSdk implements NocturneSdkApi {
    *       if the caller does not wish through the entire iterator, they must explicitly close it.
    */
   async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
-      const handlerContract = await this.handlerContractThunk();
-      let latestMerkleIndexOnChain =
-        (await handlerContract.totalCount()).toNumber() - 1;
-      let latestSyncedMerkleIndex =
-        (await this.getLatestSyncedMerkleIndex()) ?? 0;
+    const handlerContract = await this.handlerContractThunk();
+    let latestMerkleIndexOnChain =
+      (await handlerContract.totalCount()).toNumber() - 1;
+    let latestSyncedMerkleIndex =
+      (await this.getLatestSyncedMerkleIndex()) ?? 0;
 
-      const NUM_REFETCHES = 5;
-      const refetchEvery = Math.floor(
-        (latestMerkleIndexOnChain - latestSyncedMerkleIndex) / NUM_REFETCHES
-      );
+    const NUM_REFETCHES = 5;
+    const refetchEvery = Math.floor(
+      (latestMerkleIndexOnChain - latestSyncedMerkleIndex) / NUM_REFETCHES,
+    );
 
-      let closed = false;
-      const generator = async function* (
-        sdk: NocturneSdk,
-      ) {
-        const release = await sdk.syncMutex.acquire();
-        let count = 0;
-        while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
-          try {
-            latestSyncedMerkleIndex = (await sdk.syncInner({ ...syncOpts, timing: true })) ?? 0;
+    let closed = false;
+    const generator = async function* (sdk: NocturneSdk) {
+      const release = await sdk.syncMutex.acquire();
+      let count = 0;
+      while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
+        try {
+          latestSyncedMerkleIndex =
+            (await sdk.syncInner({ ...syncOpts, timing: true })) ?? 0;
 
-            if (count % refetchEvery === 0) {
-              latestMerkleIndexOnChain =
-                (await (await sdk.handlerContractThunk()).totalCount()).toNumber() -
-                1;
-            }
-            count++;
-            yield {
-              latestSyncedMerkleIndex,
-            };
-          } finally {
-            release();
+          if (count % refetchEvery === 0) {
+            latestMerkleIndexOnChain =
+              (
+                await (await sdk.handlerContractThunk()).totalCount()
+              ).toNumber() - 1;
           }
+          count++;
+          yield {
+            latestSyncedMerkleIndex,
+          };
+        } finally {
+          release();
         }
+      }
 
-        release();
-      };
+      release();
+    };
 
     const progressIter = new ClosableAsyncIterator(
       generator(this),
       async () => {
         closed = true;
-      }
+      },
     );
 
     return {
@@ -886,7 +892,10 @@ export class NocturneSdk implements NocturneSdkApi {
     let latestSyncedMerkleIndex: number | undefined;
     try {
       const client = await this.clientThunk();
-      latestSyncedMerkleIndex = await client.sync({ ...syncOpts, timing: true });
+      latestSyncedMerkleIndex = await client.sync({
+        ...syncOpts,
+        timing: true,
+      });
       await client.updateOptimisticNullifiers();
     } catch (e) {
       console.log("Error syncing notes: ", e);
@@ -894,7 +903,7 @@ export class NocturneSdk implements NocturneSdkApi {
     }
     console.log(
       "[sync] FE-sdk latestSyncedMerkleIndex, ",
-      latestSyncedMerkleIndex
+      latestSyncedMerkleIndex,
     );
     return latestSyncedMerkleIndex;
   }
@@ -904,7 +913,7 @@ export class NocturneSdk implements NocturneSdkApi {
     const latestSyncedMerkleIndex = await client.getLatestSyncedMerkleIndex();
     console.log(
       "[getLatestSyncedMerkleIndex] FE-SDK latestSyncedMerkleIndex",
-      latestSyncedMerkleIndex
+      latestSyncedMerkleIndex,
     );
     return latestSyncedMerkleIndex;
   }
@@ -931,30 +940,30 @@ export class NocturneSdk implements NocturneSdkApi {
    * Given an operation digest, fetches and returns the operation status, enum'd as OperationStatus.
    */
   protected async fetchBundlerOperationStatus(
-    opDigest: bigint
+    opDigest: bigint,
   ): Promise<OperationStatusResponse> {
     return await retry(
       async () => {
         const res = await fetch(
-          `${this.endpoints.bundlerEndpoint}/operations/${opDigest}`
+          `${this.endpoints.bundlerEndpoint}/operations/${opDigest}`,
         );
         return (await res.json()) as OperationStatusResponse;
       },
       {
         retries: 5, // TODO later scope: this should probably be configurable by the caller
-      }
+      },
     );
   }
 
   private async formDepositHandlesWithTxReceipt(
-    tx: ContractTransaction
+    tx: ContractTransaction,
   ): Promise<DepositHandleWithReceipt[]> {
     const receipt = await tx.wait();
     const events = parseEventsFromContractReceipt(
       receipt,
       (await this.depositManagerContractThunk()).interface.getEvent(
-        "DepositInstantiated"
-      )
+        "DepositInstantiated",
+      ),
     ) as DepositInstantiatedEvent[];
     return Promise.all(
       events.map(async (event) => {
@@ -992,12 +1001,12 @@ export class NocturneSdk implements NocturneSdkApi {
           // TODO restructure and flatten this logic
           handle: await this.depositAdapter.makeDepositHandle(request),
         };
-      })
+      }),
     );
   }
 
   private async createOpRequest(
-    params: OpRequestParams
+    params: OpRequestParams,
   ): Promise<OperationHandle> {
     const chainId = BigInt((await this.provider.getNetwork()).chainId);
     const builder = newOpRequestBuilder(this.provider, chainId);
@@ -1025,7 +1034,7 @@ export class NocturneSdk implements NocturneSdkApi {
         const { tokenIn, amountIn, tokenOut, maxSlippageBps } = params;
         operationRequest = await builder
           .use(UniswapV3Plugin)
-          .swap(tokenIn, amountIn, tokenOut, maxSlippageBps)
+          .swap(tokenIn, amountIn, tokenOut, { maxSlippageBps })
           .build();
         action = {
           type: "Action",

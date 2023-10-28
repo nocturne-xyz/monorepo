@@ -2554,7 +2554,6 @@ __metadata:
     "@types/sinon-chai": ^3.2.9
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
-    async-mutex: ^0.4.0
     big-integer: ^1.6.42
     bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
@@ -2596,15 +2595,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "@nocturne-xyz/contracts@npm:1.2.1"
+"@nocturne-xyz/contracts@portal:../protocol/packages/contracts::locator=monorepo%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@nocturne-xyz/contracts@portal:../protocol/packages/contracts::locator=monorepo%40workspace%3A."
   dependencies:
     "@openzeppelin/contracts": 4.9.2
     "@openzeppelin/contracts-upgradeable": 4.9.2
-  checksum: 47fffc270aefd9fae101e16b5b99aff1b010418ef4a560d567ded62eab44a7c2eddcabf7aa5200a216605d4691438cd87f044ebd7513f7a480be6611be0eb7ad
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "@nocturne-xyz/core@workspace:^, @nocturne-xyz/core@workspace:packages/core":
   version: 0.0.0-use.local

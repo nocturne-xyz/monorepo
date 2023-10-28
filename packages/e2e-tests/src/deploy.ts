@@ -41,6 +41,7 @@ import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 
 import {
   NocturneDeployConfig,
+  NocturneDeployOpts,
   checkNocturneDeployment,
   deployNocturne,
 } from "@nocturne-xyz/deploy";
@@ -51,10 +52,7 @@ import {
   WasmCanonAddrSigCheckProver,
   WasmJoinSplitProver,
 } from "@nocturne-xyz/local-prover";
-import {
-  NocturneConfig,
-  ProtocolAddressWithMethods,
-} from "@nocturne-xyz/config";
+import { Erc20Config, NocturneConfig } from "@nocturne-xyz/config";
 import { ForkNetwork, startHardhat } from "./hardhat";
 import { BundlerConfig, startBundler } from "./bundler";
 import { DepositScreenerConfig, startDepositScreener } from "./screener";
@@ -86,7 +84,12 @@ const SIG_CHECK_VKEY = JSON.parse(
 export interface TestDeployArgs {
   screeners: Address[];
   subtreeBatchFillers: Address[];
-  protocolAllowlist?: Map<string, ProtocolAddressWithMethods>;
+}
+
+export interface ForkOpts {
+  additionalErc20s?: [string, Erc20Config][];
+  deployOpts?: NocturneDeployOpts;
+  forkNetwork?: ForkNetwork;
 }
 
 export interface TestActorsConfig {
@@ -186,8 +189,7 @@ const hhThunk = thunk((forkNetwork?: ForkNetwork) => startHardhat(forkNetwork));
 // if include is not given, no off-chain actors will be deployed
 export async function setupTestDeployment(
   actorsConfig: TestActorsConfig,
-  protocolAllowlist: Map<string, ProtocolAddressWithMethods> = new Map(),
-  forkNetwork?: ForkNetwork
+  forkOpts?: ForkOpts
 ): Promise<TestDeployment> {
   // hardhat has to go up first,
   // then contracts,
@@ -197,7 +199,7 @@ export async function setupTestDeployment(
 
   // spin up anvil
   console.log("starting hardhat...");
-  const resetHardhat = await hhThunk(forkNetwork);
+  const resetHardhat = await hhThunk(forkOpts?.forkNetwork);
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider({
@@ -222,11 +224,14 @@ export async function setupTestDeployment(
     deployment,
     tokens,
     { teller, handler, depositManager, canonAddrRegistry, weth },
-  ] = await deployContractsWithDummyConfig(deployerEoa, {
-    screeners: [screenerEoa.address],
-    subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
-    protocolAllowlist: protocolAllowlist,
-  });
+  ] = await deployContractsWithDummyConfig(
+    deployerEoa,
+    {
+      screeners: [screenerEoa.address],
+      subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
+    },
+    forkOpts
+  );
 
   console.log("erc20s:", deployment.erc20s);
   // Deploy subgraph first, as other services depend on it
@@ -384,55 +389,64 @@ export async function setupTestDeployment(
 
 export async function deployContractsWithDummyConfig(
   connectedSigner: ethers.Wallet,
-  args: TestDeployArgs
+  args: TestDeployArgs,
+  forkOpts?: ForkOpts
 ): Promise<[NocturneConfig, TestDeploymentTokens, TestContracts]> {
   const weth = await new WETH9__factory(connectedSigner).deploy();
   console.log("weth address:", weth.address);
 
+  const allErc20s: [string, Erc20Config][] = [
+    [
+      "erc20-1",
+      {
+        address: "0x0000000000000000000000000000000000000000",
+        globalCapWholeTokens: 5000n,
+        maxDepositSizeWholeTokens: 500n,
+        precision: 18n,
+        resetWindowHours: 3n,
+        isGasAsset: true,
+      } as Erc20Config,
+    ],
+    [
+      "erc20-2",
+      {
+        address: "0x0000000000000000000000000000000000000000",
+        globalCapWholeTokens: 5000n,
+        maxDepositSizeWholeTokens: 500n,
+        precision: 18n,
+        resetWindowHours: 3n,
+        isGasAsset: true,
+      } as Erc20Config,
+    ],
+    [
+      "WETH",
+      {
+        address: weth.address,
+        globalCapWholeTokens: 5000n,
+        maxDepositSizeWholeTokens: 500n,
+        precision: 18n,
+        resetWindowHours: 3n,
+        isGasAsset: true,
+      } as Erc20Config,
+    ],
+  ];
+
+  if (forkOpts?.additionalErc20s) {
+    allErc20s.push(...forkOpts.additionalErc20s);
+  }
+
   const deployConfig: NocturneDeployConfig = {
     proxyAdminOwner: connectedSigner.address,
+    contractOwner: connectedSigner.address,
     finalityBlocks: 1,
     screeners: args.screeners,
     subtreeBatchFillers: args.subtreeBatchFillers,
     wethAddress: weth.address,
-    erc20s: new Map([
-      [
-        "erc20-1",
-        {
-          address: "0x0000000000000000000000000000000000000000",
-          globalCapWholeTokens: 5000n,
-          maxDepositSizeWholeTokens: 500n,
-          precision: 18n,
-          resetWindowHours: 3n,
-          isGasAsset: true,
-        },
-      ],
-      [
-        "erc20-2",
-        {
-          address: "0x0000000000000000000000000000000000000000",
-          globalCapWholeTokens: 5000n,
-          maxDepositSizeWholeTokens: 500n,
-          precision: 18n,
-          resetWindowHours: 3n,
-          isGasAsset: true,
-        },
-      ],
-      [
-        "WETH",
-        {
-          address: weth.address,
-          globalCapWholeTokens: 5000n,
-          maxDepositSizeWholeTokens: 500n,
-          precision: 18n,
-          resetWindowHours: 3n,
-          isGasAsset: true,
-        },
-      ],
-    ]),
-    protocolAllowlist: args.protocolAllowlist ?? new Map(),
+    erc20s: new Map(allErc20s),
+    protocolAllowlist: new Map(),
     leftoverTokenHolder: "0x0000000000000000000000000000000000000123",
     opts: {
+      ...forkOpts?.deployOpts,
       useMockSubtreeUpdateVerifier:
         process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,
       confirmations: 1,
@@ -496,7 +510,7 @@ async function prefillErc20s(
   config: NocturneConfig
 ): Promise<void> {
   for (const [name, erc20] of config.erc20s.entries()) {
-    if (name != "WETH") {
+    if (name.includes("erc20")) {
       const token = SimpleERC20Token__factory.connect(
         erc20.address,
         connectedSigner

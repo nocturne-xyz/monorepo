@@ -12,18 +12,23 @@ import { ethers } from "ethers";
 import ERC20_ABI from "../abis/ERC20.json";
 import { currencyAmountToBigInt, getSwapRoute } from "./helpers";
 import { Percent } from "@uniswap/sdk-core";
-import { IUniswapV3__factory } from "@nocturne-xyz/contracts";
+import { UniswapV3Adapter__factory } from "@nocturne-xyz/contracts";
 import { ExactInputParams, ExactInputSingleParams } from "./types";
 import * as JSON from "bigint-json-serialization";
 
-const UNISWAP_V3_NAME = "UniswapV3";
+const UNISWAP_V3_ADAPTER_NAME = "UniswapV3Adapter";
+
+export interface UniswapV3SwapOptions {
+  maxSlippageBps?: number;
+  recipient?: Address;
+}
 
 export interface UniswapV3PluginMethods {
   swap(
     tokenIn: Address,
     inAmount: bigint,
     tokenOut: Address,
-    maxSlippageBps?: number
+    opts?: UniswapV3SwapOptions
   ): this;
 }
 
@@ -50,18 +55,21 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
       tokenIn: Address,
       inAmount: bigint,
       tokenOut: Address,
-      maxSlippageBps = 50
+      opts?: UniswapV3SwapOptions
     ) {
       const prom = new Promise<BuilderItemToProcess>(
         async (resolve, reject) => {
           try {
-            const swapRouterAddress =
-              this.config.protocolAllowlist.get(UNISWAP_V3_NAME)?.address;
-            if (!swapRouterAddress) {
+            const uniswapV3Adapter = this.config.protocolAllowlist.get(
+              UNISWAP_V3_ADAPTER_NAME
+            )?.address;
+            if (!uniswapV3Adapter) {
               throw new Error(
-                `UniswapV3 not supported on chain with id: ${this._op.chainId}`
+                `UniswapV3Adapter not supported on chain with id: ${this._op.chainId}`
               );
             }
+
+            const maxSlippageBps = opts?.maxSlippageBps ?? 100;
             const swapRoute = await getSwapRoute({
               chainId: this._op.chainId,
               provider: this.provider,
@@ -91,6 +99,8 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               )
             );
 
+            const recipient = opts?.recipient ?? this.config.handlerAddress;
+
             let swapParams: ExactInputSingleParams | ExactInputParams;
             let encodedFunction: string;
             if (pools.length == 1) {
@@ -99,7 +109,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 tokenIn: tokenIn,
                 tokenOut: tokenOut,
                 fee: pool.fee,
-                recipient: this.config.handlerAddress,
+                recipient,
                 deadline: Date.now() + 3_600,
                 amountIn: inAmount,
                 amountOutMinimum: minimumAmountWithSlippage,
@@ -107,7 +117,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               };
 
               encodedFunction =
-                IUniswapV3__factory.createInterface().encodeFunctionData(
+                UniswapV3Adapter__factory.createInterface().encodeFunctionData(
                   "exactInputSingle",
                   [swapParams]
                 );
@@ -116,7 +126,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               // (B, A), (C, B), (D, C)
               swapParams = {
                 path: "0x",
-                recipient: this.config.handlerAddress,
+                recipient,
                 deadline: Date.now() + 3_600,
                 amountIn: inAmount,
                 amountOutMinimum: minimumAmountWithSlippage,
@@ -151,7 +161,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               console.log("swapParams:", JSON.stringify(swapParams));
 
               encodedFunction =
-                IUniswapV3__factory.createInterface().encodeFunctionData(
+                UniswapV3Adapter__factory.createInterface().encodeFunctionData(
                   "exactInput",
                   [swapParams]
                 );
@@ -163,7 +173,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             };
 
             const swapAction: Action = {
-              contractAddress: swapRouterAddress,
+              contractAddress: uniswapV3Adapter,
               encodedFunction: encodedFunction,
             };
 
@@ -191,7 +201,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               (
                 await erc20InContract.allowance(
                   this.config.handlerAddress,
-                  swapRouterAddress
+                  uniswapV3Adapter
                 )
               ).toBigInt() < inAmount
             ) {
@@ -199,7 +209,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
                 contractAddress: tokenIn,
                 encodedFunction: erc20InContract.interface.encodeFunctionData(
                   "approve",
-                  [swapRouterAddress, inAmount]
+                  [uniswapV3Adapter, inAmount]
                 ),
               };
 
