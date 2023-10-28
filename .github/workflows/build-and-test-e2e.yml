@@ -41,7 +41,7 @@ jobs:
         with:
           repository: nocturne-xyz/protocol
           path: ./protocol
-          ref: luke/uniswap-adapter
+          ref: luke/audit-fixes-branch
 
       - name: cache dependencies
         uses: actions/cache@v2
