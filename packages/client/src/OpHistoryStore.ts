@@ -77,7 +77,7 @@ export class OpHistoryStore {
     return await this.mutex.runExclusive(async () => {
       const history = await this.getHistoryArray();
       const records = await Promise.all(
-        history.map((digest) => this.getRecord(BigInt(digest)))
+        history.map((digest) => this.getRecord(digest))
       );
 
       // if any record is missing, sometheing bad happened
