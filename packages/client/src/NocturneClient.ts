@@ -37,13 +37,10 @@ import {
   TotalEntityIndexTrait,
   OperationTrait,
 } from "@nocturne-xyz/core";
+import { OpHistoryStore } from "./OpHistoryStore";
 
 const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000; // 10 minutes
 const BUNDLER_RECEIVED_OP_BUFFER: number = 90 * 1000; // 90 seconds (buffer in case proof gen takes a while)
-
-export type NocturneClientOptions = {
-  persistOpHistory?: boolean;
-};
 
 export class NocturneClient {
   protected provider: ethers.providers.Provider;
@@ -54,6 +51,7 @@ export class NocturneClient {
   protected syncAdapter: SDKSyncAdapter;
   protected tokenConverter: EthToTokenConverter;
   protected opTracker: OpTracker;
+  protected opHistoryStore?: OpHistoryStore;
 
   readonly viewer: NocturneViewer;
   readonly gasAssets: Map<string, Asset>;
@@ -66,7 +64,8 @@ export class NocturneClient {
     db: NocturneDB,
     syncAdapter: SDKSyncAdapter,
     tokenConverter: EthToTokenConverter,
-    nulliferChecker: OpTracker
+    nulliferChecker: OpTracker,
+    opHistoryStore?: OpHistoryStore
   ) {
     if (typeof configOrNetworkName == "string") {
       this.config = loadNocturneConfig(configOrNetworkName);
@@ -95,6 +94,16 @@ export class NocturneClient {
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
     this.opTracker = nulliferChecker;
+
+    this.opHistoryStore = opHistoryStore;
+  }
+
+  get history(): OpHistoryStore {
+    if (!this.opHistoryStore) {
+      throw new Error("OpHistoryStore not given in constructor");
+    }
+
+    return this.opHistoryStore;
   }
 
   async clearDb(): Promise<void> {

@@ -55,6 +55,7 @@ import {
   newOpRequestBuilder,
   OperationRequestWithMetadata,
   ActionMetadata,
+  OpHistoryStore,
 } from "@nocturne-xyz/client";
 import {
   WasmCanonAddrSigCheckProver,
@@ -234,7 +235,8 @@ export class NocturneSdk implements NocturneSdkApi {
         options.syncAdapter ??
           new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
         new MockEthToTokenConverter(),
-        new BundlerOpTracker(this.endpoints.bundlerEndpoint)
+        new BundlerOpTracker(this.endpoints.bundlerEndpoint),
+        new OpHistoryStore(kv)
       );
     });
   }
