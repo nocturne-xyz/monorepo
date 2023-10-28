@@ -41,6 +41,10 @@ import {
 const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000; // 10 minutes
 const BUNDLER_RECEIVED_OP_BUFFER: number = 90 * 1000; // 90 seconds (buffer in case proof gen takes a while)
 
+export type NocturneClientOptions = {
+  persistOpHistory?: boolean;
+};
+
 export class NocturneClient {
   protected provider: ethers.providers.Provider;
   protected config: NocturneConfig;
