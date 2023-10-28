@@ -16,6 +16,7 @@ import {
 import { proxyAdmin, proxyImplementation } from "./proxyUtils";
 import { assertOrErr, getSelector, protocolWhitelistKey } from "./utils";
 
+// TODO: add check for UniswapV3Adapter owner
 export async function checkNocturneDeployment(
   config: NocturneConfig,
   provider: ethers.providers.Provider

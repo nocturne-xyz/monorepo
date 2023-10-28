@@ -20,7 +20,7 @@ dotenv.config();
       MAINNET_WETH_ADDRESS,
       1000000000000000000n, // 1 ETH
       MAINNET_SUSD_ADDRESS,
-      50
+      { maxSlippageBps: 50 }
     )
     .build();
 
