@@ -30,7 +30,7 @@
   "dependencies": {
     "@nocturne-xyz/client": "workspace:^",
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/contracts": "^1.2.1",
+    "@nocturne-xyz/contracts": "^2.0.0",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/offchain-utils": "workspace:^",
     "@openzeppelin/defender-relay-client": "1.47.1",
