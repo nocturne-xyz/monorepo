@@ -2595,14 +2595,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@portal:../protocol/packages/contracts::locator=monorepo%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/contracts@portal:../protocol/packages/contracts::locator=monorepo%40workspace%3A."
+"@nocturne-xyz/contracts@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@nocturne-xyz/contracts@npm:2.0.0"
   dependencies:
     "@openzeppelin/contracts": 4.9.2
     "@openzeppelin/contracts-upgradeable": 4.9.2
+  checksum: f3e26dd1720042bf767da133102aba3c9cc1dc25ce7f4cafe68e2827659b896ce8d0dc05dc497c4882962d7522036071c9c6f25a5d028740a96a86166cf2db7a
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@nocturne-xyz/core@workspace:^, @nocturne-xyz/core@workspace:packages/core":
   version: 0.0.0-use.local
