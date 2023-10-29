@@ -753,6 +753,8 @@ export class NocturneSdk implements NocturneSdkApi {
         } catch (err) {
           if (err instanceof Error && err.message.includes("record not found")) {
             console.warn(`op ${digest} is not in history. skipping history update`);
+          } else {
+            throw err;
           }
         }
       }
