@@ -9,6 +9,7 @@ import {
   SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/core";
 import {
+  OpHistoryRecord,
   OperationRequestWithMetadata,
   RpcRequestMethod,
   SyncOpts,
@@ -169,6 +170,10 @@ export interface NocturneSdkApi {
   snap: SnapStateApi;
 
   getAvailableErc20s(): Map<string, Erc20Config>;
+
+  // *** HISTORY METHODS *** //
+
+  getHistory(): Promise<OpHistoryRecord[]>;
 }
 
 // *** SNAP STATE METHODS *** //

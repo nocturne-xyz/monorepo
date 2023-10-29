@@ -40,6 +40,7 @@ import {
   compressPoint,
   SDKSyncAdapter,
   OperationTrait,
+  OperationStatus,
 } from "@nocturne-xyz/core";
 import {
   NocturneClient,
@@ -55,6 +56,8 @@ import {
   newOpRequestBuilder,
   OperationRequestWithMetadata,
   ActionMetadata,
+  OpHistoryStore,
+  OpHistoryRecord,
 } from "@nocturne-xyz/client";
 import {
   WasmCanonAddrSigCheckProver,
@@ -234,7 +237,8 @@ export class NocturneSdk implements NocturneSdkApi {
         options.syncAdapter ??
           new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
         new MockEthToTokenConverter(),
-        new BundlerOpTracker(this.endpoints.bundlerEndpoint)
+        new BundlerOpTracker(this.endpoints.bundlerEndpoint),
+        new OpHistoryStore(kv)
       );
     });
   }
@@ -451,6 +455,7 @@ export class NocturneSdk implements NocturneSdkApi {
       | OperationRequestWithMetadata,
     actionsMetadata: ActionMetadata[]
   ): Promise<OperationHandle> {
+    const metadata = { items: actionsMetadata };
     const submittableOperation =
       "request" in opOrOpRequest
         ? await this.signAndProveOperation({
@@ -458,11 +463,14 @@ export class NocturneSdk implements NocturneSdkApi {
             meta: { items: actionsMetadata },
           })
         : opOrOpRequest;
+      
+    const client = await this.clientThunk();
+    await client.history.push(submittableOperation, metadata);
 
-    const opHandleWithoutMetadata = this.submitOperation(submittableOperation);
+    const opHandleWithoutMetadata = await this.submitOperation(submittableOperation);
     return {
       ...opHandleWithoutMetadata,
-      meta: { items: actionsMetadata },
+      metadata,
     };
   }
 
@@ -719,10 +727,31 @@ export class NocturneSdk implements NocturneSdkApi {
       }
     )) as string;
     const digest = BigInt(opDigest);
+    const getStatus = this.makeGetStatus(digest);
+
     return {
       digest,
-      getStatus: () => this.fetchBundlerOperationStatus(digest),
+      getStatus,
       metadata: undefined,
+    };
+  }
+
+  protected makeGetStatus(digest: bigint): () => Promise<OperationStatusResponse> {
+    let cachedStatus: OperationStatus | undefined;
+    return async () => {
+      // fetch 
+      const res = await this.fetchBundlerOperationStatus(digest);
+      
+      // update history
+      const { status } = res;
+      if (status !== cachedStatus) {
+        cachedStatus = status;
+        const client = await this.clientThunk();
+        await client.history.setStatus(digest, status);
+      }
+
+      // return
+      return res;
     };
   }
 
@@ -768,10 +797,11 @@ export class NocturneSdk implements NocturneSdkApi {
       await client.getAllOptimisticOpDigestsWithMetadata();
     const operationHandles = opDigestsWithMetadata.map(
       ({ opDigest: digest, metadata }) => {
+        const getStatus = this.makeGetStatus(digest);
         return {
           digest,
           metadata,
-          getStatus: () => this.fetchBundlerOperationStatus(digest),
+          getStatus,
         };
       }
     );
@@ -842,6 +872,11 @@ export class NocturneSdk implements NocturneSdkApi {
    */
   async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
     return await this.syncMutex.runExclusive(() => this.syncInner(syncOpts));
+  }
+
+  async getHistory(): Promise<OpHistoryRecord[]> {
+    const client = await this.clientThunk();
+    return await client.history.getHistory();
   }
 
   // syncs new notes and returns latest sync merkle index

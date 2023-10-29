@@ -2554,6 +2554,7 @@ __metadata:
     "@types/sinon-chai": ^3.2.9
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
+    async-mutex: ^0.4.0
     big-integer: ^1.6.42
     bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
