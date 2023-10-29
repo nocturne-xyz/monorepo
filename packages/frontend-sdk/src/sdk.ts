@@ -752,7 +752,7 @@ export class NocturneSdk implements NocturneSdkApi {
           await client.history.setStatus(digest, status);
         } catch (err) {
           if (err instanceof Error && err.message.includes("record not found")) {
-            console.warn(`op ${digest} is not in history. skipping history update`)
+            console.warn(`op ${digest} is not in history. skipping history update`);
           }
         }
       }
