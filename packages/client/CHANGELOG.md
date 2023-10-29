@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.4
+
+### Patch Changes
+
+- 317a0708: fix snap keygen conversions
+
 ## 3.0.3
 
 ### Patch Changes

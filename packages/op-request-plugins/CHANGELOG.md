@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.0
+
+### Minor Changes
+
+- caf815d8: Modify uniswap plugin to call UniswapV3Adapter instead and take recipient (for testing)
+
+### Patch Changes
+
+- e7dee7e1: Fix priceImpactBps to return Bps
+- Updated dependencies [317a0708]
+  - @nocturne-xyz/client@3.0.4
+
 ## 2.0.3
 
 ### Patch Changes

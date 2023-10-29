@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.0
+
+### Minor Changes
+
+- caf815d8: Separate out contract owner from proxy admin owner for contract ownership transfers
+- caf815d8: Optionally deploy uniswap v3 adapter
+
 ## 0.9.2
 
 ### Patch Changes

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.9.0
+
+### Minor Changes
+
+- 724869eb: - update CLIs to reflect new logger semantics
+  - replace all console logs with logger invocations
+
+### Patch Changes
+
+- 891de7e5: Change log level flag to just --log-level
+- Updated dependencies [724869eb]
+- Updated dependencies [891de7e5]
+- Updated dependencies [317a0708]
+  - @nocturne-xyz/offchain-utils@0.3.0
+  - @nocturne-xyz/client@3.0.4
+
 ## 0.8.2
 
 ### Patch Changes

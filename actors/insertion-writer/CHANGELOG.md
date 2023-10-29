@@ -1,5 +1,20 @@
 # @nocturne-xyz/insertion-writer
 
+## 0.5.0
+
+### Minor Changes
+
+- 724869eb: - update CLIs to reflect new logger semantics
+  - replace all console logs with logger invocations
+
+### Patch Changes
+
+- 891de7e5: Change log level flag to just --log-level
+- b3f201f1: fix bug in metadata formatting for empty insertion batches
+- Updated dependencies [724869eb]
+- Updated dependencies [891de7e5]
+  - @nocturne-xyz/offchain-utils@0.3.0
+
 ## 0.4.3
 
 ### Patch Changes
