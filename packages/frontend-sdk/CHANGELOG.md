@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.1.4
+
+### Patch Changes
+
+- Updated dependencies [fc7fa6c4]
+  - @nocturne-xyz/config@1.4.0
+  - @nocturne-xyz/client@3.0.5
+  - @nocturne-xyz/op-request-plugins@2.1.1
+
 ## 3.1.3
 
 ### Patch Changes
