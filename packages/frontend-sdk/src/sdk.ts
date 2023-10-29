@@ -455,6 +455,7 @@ export class NocturneSdk implements NocturneSdkApi {
       | OperationRequestWithMetadata,
     actionsMetadata: ActionMetadata[]
   ): Promise<OperationHandle> {
+    const metadata = { items: actionsMetadata };
     const submittableOperation =
       "request" in opOrOpRequest
         ? await this.signAndProveOperation({
@@ -462,11 +463,14 @@ export class NocturneSdk implements NocturneSdkApi {
             meta: { items: actionsMetadata },
           })
         : opOrOpRequest;
+      
+    const client = await this.clientThunk();
+    await client.history.push(submittableOperation, metadata);
 
     const opHandleWithoutMetadata = await this.submitOperation(submittableOperation);
     return {
       ...opHandleWithoutMetadata,
-      metadata: { items: actionsMetadata },
+      metadata,
     };
   }
 
