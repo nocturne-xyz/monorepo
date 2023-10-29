@@ -82,7 +82,7 @@ export class OpHistoryStore {
 
       // if any record is missing, sometheing bad happened
       if (records.some((r) => r === undefined)) {
-        throw new Error("missing record!");
+        throw new Error("record not found");
       }
 
       return records as OpHistoryRecord[];

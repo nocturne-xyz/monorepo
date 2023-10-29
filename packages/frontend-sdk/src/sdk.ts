@@ -746,8 +746,15 @@ export class NocturneSdk implements NocturneSdkApi {
       const { status } = res;
       if (status !== cachedStatus) {
         cachedStatus = status;
-        const client = await this.clientThunk();
-        await client.history.setStatus(digest, status);
+
+        try {
+          const client = await this.clientThunk();
+          await client.history.setStatus(digest, status);
+        } catch (err) {
+          if (err instanceof Error && err.message.includes("record not found")) {
+            console.warn(`op ${digest} is not in history. skipping history update`)
+          }
+        }
       }
 
       // return
