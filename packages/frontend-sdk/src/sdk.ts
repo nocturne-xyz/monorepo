@@ -843,7 +843,6 @@ export class NocturneSdk implements NocturneSdkApi {
       });
     } catch (err) {
       if (err == E_ALREADY_LOCKED) {
-        console.log("[syncWithProgress] sync already in progress. waiting for the existing one to complete instead");
         await this.syncMutex.waitForUnlock();
       } else  {
         throw err;
