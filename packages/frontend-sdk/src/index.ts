@@ -11,7 +11,6 @@ export {
   SupportedNetwork,
   SupportedProvider,
   SyncProgress,
-  SyncWithProgressOutput,
 } from "./types";
 
 export {

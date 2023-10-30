@@ -23,7 +23,6 @@ import {
   DepositHandleWithReceipt,
   DisplayDepositRequest,
   OperationHandle,
-  SyncWithProgressOutput,
 } from "./types";
 import { GetNotesOpts } from "@nocturne-xyz/client/dist/src/NocturneDB";
 
@@ -130,15 +129,12 @@ export interface NocturneSdkApi {
   ): Promise<bigint>;
 
   // *** SYNCING METHODS *** //
-
-  // returns an async iterator of progress updates
-  syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput>;
-
-  // returns latest `merkleIndex` synced. Usually can be ignored
-  // by default, syncs to the tip. This can take a long time, so
-  // it's recommended to call `syncWithProgress` instead and
-  // give feedback to the user
-  sync(syncOpts?: SyncOpts): Promise<number | undefined>;
+  
+  // syncs the SDK, taking a callback to report progress
+  // `syncOpts.timoutSeconds` is used as the interval between progress reports. if not given, there will be one progress report at the end.
+  // if another call to `sync` is already in progress, this call will simply wait for that one to finish
+  // TODO this behavior is scuffed, we should re-think it
+  sync(syncOpts?: SyncOpts, handleProgress?: (progress: number) => void): Promise<void>;
 
   // *** LOW LEVEL METHODS *** //
 

@@ -13,7 +13,6 @@ import {
   AssetTrait,
   AssetType,
   AssetWithBalance,
-  ClosableAsyncIterator,
   DepositQuoteResponse,
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
@@ -69,7 +68,7 @@ import {
   UniswapV3Plugin,
   getSwapQuote,
 } from "@nocturne-xyz/op-request-plugins";
-import { Mutex } from "async-mutex";
+import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
@@ -92,9 +91,9 @@ import {
   SupportedNetwork,
   SupportedProvider,
   SwapTypes,
-  SyncWithProgressOutput,
 } from "./types";
 import {
+  getBalanceOptsToGetNotesOpts,
   getCircuitArtifactUrls,
   getNocturneSdkConfig,
   getTokenContract,
@@ -770,7 +769,7 @@ export class NocturneSdk implements NocturneSdkApi {
     await this.sync();
 
     const client = await this.clientThunk();
-    return await client.getAllAssetBalances(opts);
+    return await client.getAllAssetBalances(opts ? getBalanceOptsToGetNotesOpts(opts) : undefined);
   }
 
   // todo currently core's getBalanceForAsset doesn't distinguish b/t balance not existing, and balance being 0
@@ -783,7 +782,7 @@ export class NocturneSdk implements NocturneSdkApi {
     await this.sync();
 
     const client = await this.clientThunk();
-    return client.getBalanceForAsset(asset, opts);
+    return client.getBalanceForAsset(asset, opts ? getBalanceOptsToGetNotesOpts(opts) : undefined);
   }
 
   async getInFlightOperations(): Promise<OperationHandle[]> {
@@ -804,69 +803,52 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   /**
-   * Start syncing process, returning current merkle index at tip of chain and iterator
-   * returning newly synced merkle indices as syncing process occurs.
-   * NOTE: this method holds a lock on syncing until the returned iterator is closed.
-   *       if the caller does not wish through the entire iterator, they must explicitly close it.
+   * sync in increments, passing progress updates back to the caller through a callback
+   * `syncOpts.timoutSeconds` is used as the interval between progress reports. if not given, there will be one progress report at the end.
+   * if another call to this function is in progress, this function will wait for the existing call to complete
    */
-  async syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput> {
-    const handlerContract = await this.handlerContractThunk();
-    let latestMerkleIndexOnChain =
-      (await handlerContract.totalCount()).toNumber() - 1;
-    let latestSyncedMerkleIndex =
-      (await this.getLatestSyncedMerkleIndex()) ?? 0;
+  async sync(syncOpts?: SyncOpts, handleProgress?: (progress: number) => void): Promise<void> {
+    try {
+      await tryAcquire(this.syncMutex).runExclusive(async () => {
+        const handlerContract = await this.handlerContractThunk();
+        let endIndex =
+          (await handlerContract.totalCount()).toNumber() - 1;
 
-    const NUM_REFETCHES = 5;
-    const refetchEvery = Math.floor(
-      (latestMerkleIndexOnChain - latestSyncedMerkleIndex) / NUM_REFETCHES,
-    );
+        const startIndex =
+          (await this.getLatestSyncedMerkleIndex()) ?? 0;
+        let currentIndex = startIndex;
 
-    let closed = false;
-    const generator = async function* (sdk: NocturneSdk) {
-      const release = await sdk.syncMutex.acquire();
-      let count = 0;
-      while (!closed && latestSyncedMerkleIndex < latestMerkleIndexOnChain) {
-        try {
-          latestSyncedMerkleIndex =
-            (await sdk.syncInner({ ...syncOpts, timing: true })) ?? 0;
+        const NUM_REFETCHES = 5;
+        const refetchEvery = Math.floor(
+          (endIndex - startIndex) / NUM_REFETCHES,
+        );
+
+        let count = 0;
+        while (currentIndex < endIndex) {
+          console.log("[syncWithProgress] syncing", { currentIndex, endIndex });
+          currentIndex =
+            (await this.syncInner({ ...syncOpts, timing: true })) ?? 0;
 
           if (count % refetchEvery === 0) {
-            latestMerkleIndexOnChain =
+            endIndex =
               (
-                await (await sdk.handlerContractThunk()).totalCount()
+                await handlerContract.totalCount()
               ).toNumber() - 1;
           }
           count++;
-          yield {
-            latestSyncedMerkleIndex,
-          };
-        } finally {
-          release();
+
+          const progress = ((currentIndex - startIndex) / (endIndex - startIndex)) * 100;
+          handleProgress?.(progress);
         }
+      });
+    } catch (err) {
+      if (err == E_ALREADY_LOCKED) {
+        console.log("[syncWithProgress] sync already in progress. waiting for the existing one to complete instead");
+        await this.syncMutex.waitForUnlock();
+      } else  {
+        throw err;
       }
-
-      release();
-    };
-
-    const progressIter = new ClosableAsyncIterator(
-      generator(this),
-      async () => {
-        closed = true;
-      },
-    );
-
-    return {
-      latestSyncedMerkleIndex,
-      latestMerkleIndexOnChain,
-      progressIter,
-    };
-  }
-
-  /**
-   * sync new notes and return latest synced merkle index.
-   */
-  async sync(syncOpts?: SyncOpts): Promise<number | undefined> {
-    return await this.syncMutex.runExclusive(() => this.syncInner(syncOpts));
+    }
   }
 
   async getHistory(): Promise<OpHistoryRecord[]> {

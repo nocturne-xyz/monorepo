@@ -230,5 +230,5 @@ export function getBalanceOptsToGetNotesOpts(
   return {
     includeUncommitted,
     ignoreOptimisticNFs: !includePending,
-  }
+  };
 }

@@ -2,7 +2,6 @@ import { NocturneConfig } from "@nocturne-xyz/config";
 import { OperationMetadata } from "@nocturne-xyz/client";
 import {
   AssetType,
-  ClosableAsyncIterator,
   OperationStatusResponse,
 } from "@nocturne-xyz/core";
 import { AnonErc20SwapQuote } from "@nocturne-xyz/op-request-plugins";
@@ -21,12 +20,6 @@ export interface ContractAddresses {
 
 export interface SyncProgress {
   latestSyncedMerkleIndex: number;
-}
-
-export interface SyncWithProgressOutput {
-  latestSyncedMerkleIndex: number;
-  latestMerkleIndexOnChain: number;
-  progressIter: ClosableAsyncIterator<SyncProgress>;
 }
 
 export interface NocturneSdkConfig {
