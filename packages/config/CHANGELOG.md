@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+### Minor Changes
+
+- fc7fa6c4: Update goerli config with post audit deployed testnet
+
 ## 1.3.1
 
 ### Patch Changes

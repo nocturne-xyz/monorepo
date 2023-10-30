@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.0
+
+### Minor Changes
+
+- caf815d8: Update uniswap fork tests to use uniswap v3 adapter and take more fork options
+
+### Patch Changes
+
+- Updated dependencies [724869eb]
+- Updated dependencies [891de7e5]
+  - @nocturne-xyz/offchain-utils@0.3.0
+
 ## 0.8.1
 
 ### Patch Changes

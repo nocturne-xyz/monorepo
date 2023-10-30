@@ -3,7 +3,7 @@
   "description": "",
   "license": "ISC",
   "author": "",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,7 @@
     "@nocturne-xyz/bundler": "workspace:^",
     "@nocturne-xyz/client": "workspace:^",
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/contracts": "^1.2.1",
+    "@nocturne-xyz/contracts": "^2.0.0",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/deploy": "workspace:^",
     "@nocturne-xyz/deposit-screener": "workspace:^",

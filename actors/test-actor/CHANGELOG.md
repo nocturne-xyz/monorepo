@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [fc7fa6c4]
+  - @nocturne-xyz/config@1.4.0
+  - @nocturne-xyz/client@3.0.5
+  - @nocturne-xyz/op-request-plugins@2.1.1
+
+## 0.6.0
+
+### Minor Changes
+
+- 724869eb: - update CLIs to reflect new logger semantics
+  - replace all console logs with logger invocations
+
+### Patch Changes
+
+- 2aac7894: deposit() uses try/catch so deposit loop will simply log errors and continue
+- e82ab264: Stop waiting tx confirmation in deposit loop, error handling makes this fine
+- 891de7e5: Change log level flag to just --log-level
+- Updated dependencies [724869eb]
+- Updated dependencies [891de7e5]
+- Updated dependencies [caf815d8]
+- Updated dependencies [e7dee7e1]
+- Updated dependencies [317a0708]
+  - @nocturne-xyz/offchain-utils@0.3.0
+  - @nocturne-xyz/op-request-plugins@2.1.0
+  - @nocturne-xyz/client@3.0.4
+
 ## 0.5.3
 
 ### Patch Changes

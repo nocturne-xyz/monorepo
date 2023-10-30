@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.1.4
+
+### Patch Changes
+
+- Updated dependencies [fc7fa6c4]
+  - @nocturne-xyz/config@1.4.0
+  - @nocturne-xyz/client@3.0.5
+  - @nocturne-xyz/op-request-plugins@2.1.1
+
+## 3.1.3
+
+### Patch Changes
+
+- 0d6f520d: change usage of syncMutex to prevent double sync
+- 317a0708: fix snap keygen conversions
+- Updated dependencies [caf815d8]
+- Updated dependencies [e7dee7e1]
+- Updated dependencies [317a0708]
+  - @nocturne-xyz/op-request-plugins@2.1.0
+  - @nocturne-xyz/client@3.0.4
+
 ## 3.1.2
 
 ### Patch Changes

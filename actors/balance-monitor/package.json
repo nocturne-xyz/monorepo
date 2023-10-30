@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/balance-monitor",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "private": true,
   "license": "MIT",
   "main": "dist/index.js",
@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/contracts": "^1.2.1",
+    "@nocturne-xyz/contracts": "^2.0.0",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/offchain-utils": "workspace:^",
     "@opentelemetry/api": "^1.4.1",

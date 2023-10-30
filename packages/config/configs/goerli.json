@@ -1,47 +1,47 @@
 {
   "contracts": {
     "network": { "name": "goerli", "chainId": 5 },
-    "startBlock": 9837145,
+    "startBlock": 9947170,
     "owners": {
       "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "tellerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "handlerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "depositManagerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4"
     },
-    "proxyAdmin": "0xEe7A73E2fA2FcD68F4a6d15B648daBc31bAf63d3",
+    "proxyAdmin": "0xc8Ffb69a68dF4569c2Fd517fd6f624fc62453b32",
     "finalityBlocks": 4,
     "canonicalAddressRegistryProxy": {
       "kind": "Transparent",
-      "proxy": "0x72Ad2Ef391e870A94C3A849727f1A5C27E426195",
-      "implementation": "0x0b37f68d472a4aC6C6FeC26e0cb689011595E833"
+      "proxy": "0xB2B636CFdDeEE0b99a2ccE209fcF1fcE0D904172",
+      "implementation": "0x48F25ac642aF9fBEaf9aCBB4eafD9a8cb9E935D7"
     },
     "depositManagerProxy": {
       "kind": "Transparent",
-      "proxy": "0x55315794F0F10897B00dC69C6aab626FcE2a910a",
-      "implementation": "0x102DbB232998C4441a0614AB757aa5100244f146"
+      "proxy": "0xf197d92673cCf028bfB0CA121F7E7eB016D6E485",
+      "implementation": "0x24429DCbbD050b4bc53f73da64c3E35BB46a1619"
     },
     "tellerProxy": {
       "kind": "Transparent",
-      "proxy": "0x03061749176cBBD98bE278EF9Aa1EE846155E25F",
-      "implementation": "0xB1a82cCD0DA693E479cA0EEaaC28333676fF89d2"
+      "proxy": "0xFfFdc7dD56B66b882E092233F3E9440fbD66d19E",
+      "implementation": "0x94c6Ce9b8f16D95cFB853FeA7288a31d5d99bDc2"
     },
     "handlerProxy": {
       "kind": "Transparent",
-      "proxy": "0xC23a1525F71Bb58d6161C54Db54714148BeD4d8b",
-      "implementation": "0x8bDF03a7ED22C49eCc7F91F4C22d7Ca46d6e59DF"
+      "proxy": "0xa3649095A431a8D4f0ce8ee12928C1E1e6d05E7F",
+      "implementation": "0xe3c5AbbFdd6e8B81A6050c6F53dE2976db1B5cB9"
     },
-    "poseidonExtT7Address": "0x9a286F6EF70Ba8fd8f08D827D5faA34695A7E489",
-    "joinSplitVerifierAddress": "0x729ABfe83809a7E81771Ee49d5b4f4Cd5d0aD390",
-    "subtreeUpdateVerifierAddress": "0x7a7A92523f084aefeE6b30B3f6aa4193B2a6BDB0",
-    "canonAddrSigCheckVerifierAddress": "0xf967e5ba8de7131B52d47C2c0b1a7b4681a9f12a",
+    "poseidonExtT7Address": "0xe93f7f6a6E96374911953cE5d97Dccf4AFD03343",
+    "joinSplitVerifierAddress": "0x66F06307a7e6f34Da483227C23f0a722cFE28F54",
+    "subtreeUpdateVerifierAddress": "0x2c90FbD3871a815cfE0f059B21499d4Ac58fCD98",
+    "canonAddrSigCheckVerifierAddress": "0x82933e713be587a3fB393450cca6083cec094429",
     "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
-    "depositSources": ["0x55315794F0F10897B00dC69C6aab626FcE2a910a"]
+    "depositSources": ["0xf197d92673cCf028bfB0CA121F7E7eB016D6E485"]
   },
   "erc20s": [
     [
       "TEST-TOKEN",
       {
-        "address": "0xe64eB26847EE4e0BbbBEdd5f8b0ba7868a307e32",
+        "address": "0x72B8A928c4F31FBF111aE956A7804A6aC872F268",
         "globalCapWholeTokens": "1000000n",
         "maxDepositSizeWholeTokens": "1000n",
         "resetWindowHours": "4n",
@@ -96,19 +96,9 @@
   ],
   "protocolAllowlist": [
     [
-      "UniswapV3",
-      {
-        "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
-        "functionSignatures": [
-          "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))",
-          "exactInput((bytes,address,uint256,uint256,uint256))"
-        ]
-      }
-    ],
-    [
       "TEST-TOKEN",
       {
-        "address": "0xe64eB26847EE4e0BbbBEdd5f8b0ba7868a307e32",
+        "address": "0x72B8A928c4F31FBF111aE956A7804A6aC872F268",
         "functionSignatures": [
           "approve(address,uint256)",
           "transfer(address,uint256)"
@@ -158,21 +148,31 @@
     [
       "ETHTransferAdapter",
       {
-        "address": "0x585F49A0D31DC7d38D480453d3D475464427198d",
+        "address": "0xd93663Fd89A7c1CeAE54e214dF2d1Cb92b943C69",
         "functionSignatures": ["transfer(address,uint256)"]
+      }
+    ],
+    [
+      "UniswapV3Adapter",
+      {
+        "address": "0xf3Bb51756AFd8F4ccE462f57cE056631b7d828C4",
+        "functionSignatures": [
+          "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))",
+          "exactInput((bytes,address,uint256,uint256,uint256))"
+        ]
       }
     ],
     [
       "wstETHAdapter",
       {
-        "address": "0x3289E0B946af3a8cB66b4AEc8f25b845fCD0A763",
+        "address": "0xD6dCAF8983E9AA278FF1e75E81DCCc192C7BcC86",
         "functionSignatures": ["deposit(uint256)"]
       }
     ],
     [
       "rETHAdapter",
       {
-        "address": "0x10a2116C3217D4B464aA88fe381aF552d006aAF1",
+        "address": "0x44448Aec93fA4c19aee2a5b2D00d2f3844FEa230",
         "functionSignatures": ["deposit(uint256)"]
       }
     ]
