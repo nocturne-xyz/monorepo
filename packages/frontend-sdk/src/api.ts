@@ -13,6 +13,7 @@ import {
   OperationRequestWithMetadata,
   RpcRequestMethod,
   SyncOpts,
+  GetNotesOpts,
 } from "@nocturne-xyz/client";
 import { ContractTransaction } from "ethers";
 import { GetSnapsResponse, Snap } from "./metamask/types";
@@ -24,7 +25,6 @@ import {
   DisplayDepositRequest,
   OperationHandle,
 } from "./types";
-import { GetNotesOpts } from "@nocturne-xyz/client/dist/src/NocturneDB";
 
 export interface NocturneSdkApi {
   // *** DEPOSIT METHODS *** //
