@@ -22,10 +22,10 @@ import {
   DepositHandle,
   DepositHandleWithReceipt,
   DisplayDepositRequest,
-  GetBalanceOpts,
   OperationHandle,
   SyncWithProgressOutput,
 } from "./types";
+import { GetNotesOpts } from "@nocturne-xyz/client/dist/src/NocturneDB";
 
 export interface NocturneSdkApi {
   // *** DEPOSIT METHODS *** //
@@ -122,11 +122,11 @@ export interface NocturneSdkApi {
    * if ignoreOptimisticNFs is defined and true, then the method will include notes that have been used by the SDK, but may not have been nullified on-chain yet
    * if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
    */
-  getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]>;
+  getAllBalances(opts?: GetNotesOpts): Promise<AssetWithBalance[]>;
 
   getBalanceForAsset(
     erc20Address: Address,
-    opts?: GetBalanceOpts
+    opts?: GetNotesOpts 
   ): Promise<bigint>;
 
   // *** SYNCING METHODS *** //

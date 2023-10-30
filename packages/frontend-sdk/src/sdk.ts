@@ -98,7 +98,6 @@ import {
   getCircuitArtifactUrls,
   getNocturneSdkConfig,
   getTokenContract,
-  runExclusiveIfNotAlreadyLocked,
   toDepositRequest,
 } from "./utils";
 import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
@@ -768,10 +767,7 @@ export class NocturneSdk implements NocturneSdkApi {
    * if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
    */
   async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
-    // if we're not already syncing, sync
-    await runExclusiveIfNotAlreadyLocked(this.syncMutex)(() =>
-      this.syncInner(),
-    );
+    await this.sync();
 
     const client = await this.clientThunk();
     return await client.getAllAssetBalances(opts);
@@ -784,10 +780,7 @@ export class NocturneSdk implements NocturneSdkApi {
   ): Promise<bigint> {
     const asset = AssetTrait.erc20AddressToAsset(erc20Address);
 
-    // if we're not already syncing, sync
-    await runExclusiveIfNotAlreadyLocked(this.syncMutex)(() =>
-      this.syncInner(),
-    );
+    await this.sync();
 
     const client = await this.clientThunk();
     return client.getBalanceForAsset(asset, opts);

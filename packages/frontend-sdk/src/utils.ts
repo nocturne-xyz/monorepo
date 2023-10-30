@@ -6,11 +6,11 @@ import {
   DepositRequest,
   DepositRequestStatus as ScreenerDepositRequestStatus,
 } from "@nocturne-xyz/core";
+import { GetNotesOpts } from "@nocturne-xyz/client";
 import { ethers } from "ethers";
 import ERC1155 from "./abis/ERC1155.json";
 import ERC20 from "./abis/ERC20.json";
 import ERC721 from "./abis/ERC721.json";
-import { Mutex, tryAcquire, E_ALREADY_LOCKED, MutexInterface } from "async-mutex";
 import {
   DepositRequestStatus,
   NocturneSdkConfig,
@@ -19,6 +19,7 @@ import {
   TokenDetails,
   DisplayDepositRequest,
   OnChainDepositRequestStatus,
+  GetBalanceOpts,
 } from "./types";
 
 const ENDPOINTS = {
@@ -222,12 +223,12 @@ export function flattenDepositRequestStatus(
   }
 }
 
-export function runExclusiveIfNotAlreadyLocked(mutex: Mutex): <T>(fn: MutexInterface.Worker<T>) => Promise<T | undefined> {
-  return (fn) => tryAcquire(mutex).runExclusive(fn).catch(e => {
-    if (e === E_ALREADY_LOCKED) {
-      return undefined;
-    }
-
-    throw e;
-  });
+// TODO: flatten these two option types and change all tests to expect new behavior
+export function getBalanceOptsToGetNotesOpts(
+  { includeUncommitted, includePending }: GetBalanceOpts
+): GetNotesOpts {
+  return {
+    includeUncommitted,
+    ignoreOptimisticNFs: !includePending,
+  }
 }
