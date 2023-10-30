@@ -596,19 +596,6 @@ export class NocturneSdk implements NocturneSdkApi {
     operationRequest: OperationRequestWithMetadata,
   ): Promise<SignedOperation> {
     console.log("[fe-sdk] metadata:", operationRequest.meta);
-    // NOTE: we should never end up in situation where this is called before normal nocturne_sync, otherwise there will be long delay
-    const warnTimeout = setTimeout(() => {
-      console.warn(
-        "[fe-sdk] the SDK has not yet been synced. This may cause a long delay until `signOperation` returns. It's strongly reccomended to explicitly use `sync` or `syncWithProgress` to ensure the SDK is fully synced before calling `signOperation`",
-      );
-    }, 5000);
-
-    // if we're not already syncing, sync
-    await runExclusiveIfNotAlreadyLocked(this.syncMutex)(() =>
-      this.syncInner(),
-    );
-
-    clearTimeout(warnTimeout);
 
     const client = await this.clientThunk();
 
