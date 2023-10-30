@@ -1,7 +1,7 @@
 {
   "name": "@nocturne-xyz/subtree-updater",
   "license": "MIT",
-  "version": "0.5.3",
+  "version": "0.6.1",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/contracts": "^1.2.1",
+    "@nocturne-xyz/contracts": "^2.0.0",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/offchain-utils": "workspace:^",
     "@nocturne-xyz/persistent-log": "workspace:^",

@@ -2461,7 +2461,7 @@ __metadata:
   resolution: "@nocturne-xyz/balance-monitor@workspace:actors/balance-monitor"
   dependencies:
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": ^1.2.1
+    "@nocturne-xyz/contracts": ^2.0.0
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
     "@opentelemetry/api": ^1.4.1
@@ -2497,7 +2497,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/client": "workspace:^"
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": ^1.2.1
+    "@nocturne-xyz/contracts": ^2.0.0
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
     "@openzeppelin/defender-relay-client": 1.47.1
@@ -2543,7 +2543,7 @@ __metadata:
   resolution: "@nocturne-xyz/client@workspace:packages/client"
   dependencies:
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": ^1.2.1
+    "@nocturne-xyz/contracts": ^2.0.0
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/crypto": "workspace:^"
     "@types/chai": ^4.3.3
@@ -2596,13 +2596,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "@nocturne-xyz/contracts@npm:1.2.1"
+"@nocturne-xyz/contracts@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@nocturne-xyz/contracts@npm:2.0.0"
   dependencies:
     "@openzeppelin/contracts": 4.9.2
     "@openzeppelin/contracts-upgradeable": 4.9.2
-  checksum: 47fffc270aefd9fae101e16b5b99aff1b010418ef4a560d567ded62eab44a7c2eddcabf7aa5200a216605d4691438cd87f044ebd7513f7a480be6611be0eb7ad
+  checksum: f3e26dd1720042bf767da133102aba3c9cc1dc25ce7f4cafe68e2827659b896ce8d0dc05dc497c4882962d7522036071c9c6f25a5d028740a96a86166cf2db7a
   languageName: node
   linkType: hard
 
@@ -2610,7 +2610,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/core@workspace:packages/core"
   dependencies:
-    "@nocturne-xyz/contracts": ^1.2.1
+    "@nocturne-xyz/contracts": ^2.0.0
     "@nocturne-xyz/crypto": "workspace:^"
     "@types/async-retry": ^1.4.5
     "@types/chai": ^4.3.3
@@ -2689,7 +2689,7 @@ __metadata:
   resolution: "@nocturne-xyz/deploy@workspace:packages/deploy"
   dependencies:
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": ^1.2.1
+    "@nocturne-xyz/contracts": ^2.0.0
     "@nocturne-xyz/core": "workspace:^"
     "@types/chai": ^4.3.3
     "@types/mocha": ^10.0.0
@@ -2713,7 +2713,7 @@ __metadata:
   resolution: "@nocturne-xyz/deposit-screener@workspace:actors/deposit-screener"
   dependencies:
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": ^1.2.1
+    "@nocturne-xyz/contracts": ^2.0.0
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
     "@nocturne-xyz/subgraph-sync-adapters": "workspace:^"
@@ -2780,7 +2780,7 @@ __metadata:
     "@nocturne-xyz/bundler": "workspace:^"
     "@nocturne-xyz/client": "workspace:^"
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": ^1.2.1
+    "@nocturne-xyz/contracts": ^2.0.0
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/deploy": "workspace:^"
     "@nocturne-xyz/deposit-screener": "workspace:^"
@@ -2825,7 +2825,7 @@ __metadata:
     "@metamask/providers": ^11.1.1
     "@nocturne-xyz/client": "workspace:^"
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": ^1.2.1
+    "@nocturne-xyz/contracts": ^2.0.0
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/idb-kv-store": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
@@ -3007,7 +3007,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/client": "workspace:^"
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": ^1.2.1
+    "@nocturne-xyz/contracts": ^2.0.0
     "@nocturne-xyz/core": "workspace:^"
     "@types/async-retry": ^1.4.5
     "@types/bn.js": ^5.1.1
@@ -3074,7 +3074,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/rpc-sync-adapters@workspace:sync/rpc-sync-adapters"
   dependencies:
-    "@nocturne-xyz/contracts": ^1.2.1
+    "@nocturne-xyz/contracts": ^2.0.0
     "@nocturne-xyz/core": "workspace:^"
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
@@ -3110,7 +3110,7 @@ __metadata:
   resolution: "@nocturne-xyz/subtree-updater@workspace:actors/subtree-updater"
   dependencies:
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": ^1.2.1
+    "@nocturne-xyz/contracts": ^2.0.0
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
     "@nocturne-xyz/persistent-log": "workspace:^"
@@ -3155,7 +3155,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/client": "workspace:^"
     "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": ^1.2.1
+    "@nocturne-xyz/contracts": ^2.0.0
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"

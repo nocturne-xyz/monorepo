@@ -23,6 +23,7 @@ import {
   RethAdapter__factory,
   IPoseidonExtT7__factory,
   getPoseidonBytecode,
+  UniswapV3Adapter__factory,
 } from "@nocturne-xyz/contracts";
 import {
   ProxyKind,
@@ -82,6 +83,19 @@ export async function deployNocturne(
     config.opts
   );
 
+  const tokens = Array.from(config.erc20s.values()).map(
+    (erc20) => erc20.address
+  );
+
+  // Maybe deploy uniswap v3 adapter, depending on deploy config
+  const maybeUniswapV3Adapter = await maybeDeployUniswapV3Adapter(
+    connectedSigner,
+    tokens,
+    config.contractOwner,
+    verification.others,
+    config.opts
+  );
+
   // Maybe deploy wsteth adapter, depending on deploy config
   const maybeWstethAdapter = await maybeDeployWstethAdapter(
     connectedSigner,
@@ -111,10 +125,6 @@ export async function deployNocturne(
     connectedSigner
   );
 
-  const tokens = Array.from(config.erc20s.values()).map(
-    (erc20) => erc20.address
-  );
-
   for (const [name, erc20Config] of Array.from(config.erc20s)) {
     const addressWithSignatures: ProtocolAddressWithMethods = {
       address: erc20Config.address,
@@ -132,7 +142,17 @@ export async function deployNocturne(
     functionSignatures: ["transfer(address,uint256)"],
   });
 
-  // Whitelist wsteth/reth adapters if exists
+  // Whitelist uniswap/wsteth/reth adapters if exists
+  if (maybeUniswapV3Adapter) {
+    const addressWithSignature: ProtocolAddressWithMethods = {
+      address: maybeUniswapV3Adapter,
+      functionSignatures: [
+        "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))",
+        "exactInput((bytes,address,uint256,uint256,uint256))",
+      ],
+    };
+    config.protocolAllowlist.set("UniswapV3Adapter", addressWithSignature);
+  }
   if (maybeWstethAdapter) {
     const addressWithSignature: ProtocolAddressWithMethods = {
       address: maybeWstethAdapter.address,
@@ -340,9 +360,9 @@ export async function deployNocturneCoreContracts(
         proxyAdminOwner: config.proxyAdminOwner,
         // Below owners are all anticipated, ownership relinquished after this fn
         // NOTE: if contracts owners don't match proxyAdminOwner, check fn will throw error
-        tellerOwner: config.proxyAdminOwner,
-        handlerOwner: config.proxyAdminOwner,
-        depositManagerOwner: config.proxyAdminOwner,
+        tellerOwner: config.contractOwner,
+        handlerOwner: config.contractOwner,
+        depositManagerOwner: config.contractOwner,
       },
       proxyAdmin: proxyAdmin.address,
       finalityBlocks: config.finalityBlocks,
@@ -365,6 +385,43 @@ export async function deployNocturneCoreContracts(
       others: otherVerifications,
     },
   };
+}
+
+async function maybeDeployUniswapV3Adapter(
+  connectedSigner: ethers.Wallet,
+  tokens: Address[],
+  contractOwner: Address,
+  otherVerifications: {
+    [T in NocturneOthersContractName]: ContractVerification<T>;
+  },
+  opts?: NocturneDeployOpts
+): Promise<Address | undefined> {
+  if (!opts?.uniswapV3AdapterDeployConfig) {
+    return undefined;
+  }
+
+  const { swapRouterAddress } = opts.uniswapV3AdapterDeployConfig;
+
+  console.log("\ndeploying UniswapV3Adapter...");
+  const adapterContract = await deployContract(
+    new UniswapV3Adapter__factory(connectedSigner),
+    [swapRouterAddress],
+    otherVerifications,
+    opts
+  );
+
+  console.log("whitelisting tokens for UniswapV3Adapter...");
+  for (const token of tokens) {
+    console.log(`whitelisting token on UniswapV3Adapter: ${token}`);
+    const tx = await adapterContract.setTokenPermission(token, true);
+    await tx.wait(opts?.confirmations);
+  }
+
+  console.log("setting contract owner for UniswapV3Adapter...");
+  const setOwnerTx = await adapterContract.transferOwnership(contractOwner);
+  await setOwnerTx.wait(opts?.confirmations);
+
+  return adapterContract.address;
 }
 
 async function maybeDeployWstethAdapter(
@@ -528,26 +585,26 @@ export async function relinquishContractOwnership(
   );
 
   console.log(
-    `\nrelinquishing control of teller. new owner: ${config.proxyAdminOwner}.`
+    `\nrelinquishing control of teller. new owner: ${config.contractOwner}.`
   );
   const tellerTransferOwnershipTx = await teller.transferOwnership(
-    config.proxyAdminOwner
+    config.contractOwner
   );
   await tellerTransferOwnershipTx.wait(opts?.confirmations);
 
   console.log(
-    `relinquishing control of handler. new owner: ${config.proxyAdminOwner}.`
+    `relinquishing control of handler. new owner: ${config.contractOwner}.`
   );
   const handlerTransferOwnershipTx = await handler.transferOwnership(
-    config.proxyAdminOwner
+    config.contractOwner
   );
   await handlerTransferOwnershipTx.wait(opts?.confirmations);
 
   console.log(
-    `relinquishing control of deposit manager. new owner: ${config.proxyAdminOwner}.`
+    `relinquishing control of deposit manager. new owner: ${config.contractOwner}.`
   );
   const depositManagerTransferOwnershipTx =
-    await depositManager.transferOwnership(config.proxyAdminOwner);
+    await depositManager.transferOwnership(config.contractOwner);
   await depositManagerTransferOwnershipTx.wait(opts?.confirmations);
 }
 

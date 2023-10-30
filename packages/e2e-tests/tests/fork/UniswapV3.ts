@@ -5,41 +5,26 @@ import { ethers } from "ethers";
 import { newOpRequestBuilder } from "@nocturne-xyz/client";
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { UniswapV3Plugin } from "@nocturne-xyz/op-request-plugins";
-import { Handler, WETH9__factory } from "@nocturne-xyz/contracts";
-import { ProtocolAddressWithMethods } from "@nocturne-xyz/config";
+import { WETH9__factory } from "@nocturne-xyz/contracts";
 import ERC20_ABI from "../../abis/ERC20.json";
 
 chai.use(chaiAsPromised);
 
 const MAINNET_WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+const MAINNET_USDC_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 const MAINNET_DAI_ADDRESS = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
 const MAINNET_SUSD_ADDRESS = "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51";
 const ONE_ETHER = 1000000000000000000n;
 
-describe("UniswapV3 fork", async () => {
+describe("UniswapV3 Adapter fork", async () => {
   let teardown: () => Promise<void>;
 
   let provider: ethers.providers.JsonRpcProvider;
   let aliceEoa: ethers.Wallet;
 
-  let handler: Handler;
   let config: NocturneConfig;
 
   beforeEach(async () => {
-    // Add uniswap to protocol allowlist
-    const protocolAllowlist: Map<string, ProtocolAddressWithMethods> = new Map([
-      [
-        "UniswapV3",
-        {
-          address: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
-          functionSignatures: [
-            "exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))",
-            "exactInput((bytes,address,uint256,uint256,uint256))",
-          ],
-        },
-      ],
-    ]);
-
     // Deploy to hh node as mainnet fork, no actors on
     const testDeployment = await setupTestDeployment(
       {
@@ -50,11 +35,65 @@ describe("UniswapV3 fork", async () => {
           depositScreener: false,
         },
       },
-      protocolAllowlist,
-      "mainnet"
+      {
+        // Include extra tokens to whitelist in uniswap adapter
+        additionalErc20s: [
+          [
+            "weth",
+            {
+              address: MAINNET_WETH_ADDRESS,
+              globalCapWholeTokens: 5000n,
+              maxDepositSizeWholeTokens: 1000n,
+              resetWindowHours: 24n,
+              precision: 18n,
+              isGasAsset: true,
+            },
+          ],
+          [
+            "usdc",
+            {
+              address: MAINNET_USDC_ADDRESS,
+              globalCapWholeTokens: 5000n,
+              maxDepositSizeWholeTokens: 1000n,
+              resetWindowHours: 24n,
+              precision: 6n,
+              isGasAsset: false,
+            },
+          ],
+          [
+            "dai",
+            {
+              address: MAINNET_DAI_ADDRESS,
+              globalCapWholeTokens: 5000n,
+              maxDepositSizeWholeTokens: 1000n,
+              resetWindowHours: 24n,
+              precision: 18n,
+              isGasAsset: false,
+            },
+          ],
+          [
+            "susd",
+            {
+              address: MAINNET_SUSD_ADDRESS,
+              globalCapWholeTokens: 5000n,
+              maxDepositSizeWholeTokens: 1000n,
+              resetWindowHours: 24n,
+              precision: 18n,
+              isGasAsset: false,
+            },
+          ],
+        ],
+        deployOpts: {
+          // Include UniswapV3Adapter
+          uniswapV3AdapterDeployConfig: {
+            swapRouterAddress: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+          },
+        },
+        forkNetwork: "mainnet",
+      }
     );
 
-    ({ provider, teardown, config, handler, aliceEoa } = testDeployment);
+    ({ provider, teardown, config, aliceEoa } = testDeployment);
   });
 
   afterEach(async () => {
@@ -70,7 +109,10 @@ describe("UniswapV3 fork", async () => {
       config
     )
       .use(UniswapV3Plugin)
-      .swap(MAINNET_WETH_ADDRESS, ONE_ETHER, MAINNET_DAI_ADDRESS, 50)
+      .swap(MAINNET_WETH_ADDRESS, ONE_ETHER, MAINNET_DAI_ADDRESS, {
+        maxSlippageBps: 50,
+        recipient: aliceEoa.address,
+      })
       .build();
 
     console.log("opRequestWithMetadata:", opRequestWithMetadata);
@@ -80,7 +122,7 @@ describe("UniswapV3 fork", async () => {
       encodedFunction: approveEncodedFunction,
     } = opRequestWithMetadata.request.actions[0];
     const {
-      contractAddress: swapRouterAddress,
+      contractAddress: uniswapAdapterAddress,
       encodedFunction: swapEncodedFunction,
     } = opRequestWithMetadata.request.actions[1];
 
@@ -97,17 +139,15 @@ describe("UniswapV3 fork", async () => {
     });
 
     console.log("sending swap tx");
-    const swapTx = await aliceEoa.sendTransaction({
-      to: swapRouterAddress,
+    await aliceEoa.sendTransaction({
+      to: uniswapAdapterAddress,
       data: swapEncodedFunction,
     });
-
-    console.log("tx response:", swapTx);
 
     expect((await weth.balanceOf(aliceEoa.address)).toBigInt()).to.equal(
       ONE_ETHER
     );
-    expect(Number(await dai.balanceOf(handler.address))).to.gt(
+    expect(Number(await dai.balanceOf(aliceEoa.address))).to.gt(
       1_000 * 10 ** 18
     ); // > 1000 DAI (dumb estimate, so we don't have to estimate quote twice given latency)
   });
@@ -121,7 +161,10 @@ describe("UniswapV3 fork", async () => {
       config
     )
       .use(UniswapV3Plugin)
-      .swap(MAINNET_WETH_ADDRESS, ONE_ETHER, MAINNET_SUSD_ADDRESS, 50)
+      .swap(MAINNET_WETH_ADDRESS, ONE_ETHER, MAINNET_SUSD_ADDRESS, {
+        maxSlippageBps: 50,
+        recipient: aliceEoa.address,
+      })
       .build();
 
     console.log("opRequestWithMetadata:", opRequestWithMetadata);
@@ -158,7 +201,7 @@ describe("UniswapV3 fork", async () => {
     expect((await weth.balanceOf(aliceEoa.address)).toBigInt()).to.equal(
       ONE_ETHER
     );
-    expect(Number(await susd.balanceOf(handler.address))).to.gt(
+    expect(Number(await susd.balanceOf(aliceEoa.address))).to.gt(
       1_000 * 10 ** 18
     ); // > 1000 SUSD (dumb estimate, so we don't have to estimate quote twice given latency)
   });

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- 724869eb: createLogger defaults to stdout transports and adds file logs if logDir is given
+- 891de7e5: Dry up ethers, defender config code and add to offchain utils
+
 ## 0.2.0
 
 ### Minor Changes
