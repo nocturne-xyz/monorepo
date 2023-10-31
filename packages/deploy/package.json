@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/contracts": "^2.0.0",
+    "@nocturne-xyz/contracts": "^2.0.1",
     "@nocturne-xyz/core": "workspace:^",
     "dotenv": "^16.0.3"
   },
