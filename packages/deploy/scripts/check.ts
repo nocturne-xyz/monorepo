@@ -15,8 +15,8 @@ const DEPLOY_CONFIGS_DIR = `${__dirname}/../configs/`;
 
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
-  const deployConfigName = process.env.CONFIG_NAME;
-  if (!deployConfigName) throw new Error("Missing CONFIG_NAME");
+  const deployConfigName = process.env.DEPLOY_CONFIG_NAME;
+  if (!deployConfigName) throw new Error("Missing DEPLOY_CONFIG_NAME");
 
   const configPath = process.env.CONFIG_PATH;
   if (!configPath) throw new Error("Missing CONFIG_PATH");

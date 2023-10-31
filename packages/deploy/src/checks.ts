@@ -269,6 +269,7 @@ async function checkHandlerStateVars(
   const isPaused = await handlerContract.paused();
   assertOrErr(!isPaused, "handler is paused");
 
+  // Ensure reentrancy guard is set to 1
   const reentrancyGuardStage = (
     await handlerContract.reentrancyGuardStage()
   ).toNumber();
@@ -464,6 +465,7 @@ async function checkNocturneAdapterStateVars(
   config: NocturneConfig,
   provider: ethers.providers.Provider
 ): Promise<void> {
+  // Eth transfer adapter weth matches config
   const ethTransferAdapterAddress =
     config.protocolAllowlist.get("ETHTransferAdapter")!.address;
   const ethTransferAdapter = EthTransferAdapter__factory.connect(
@@ -476,6 +478,7 @@ async function checkNocturneAdapterStateVars(
     "eth transfer adapter weth does not match deployment"
   );
 
+  // Uniswap owner, allowed tokens, and swap router match config
   const maybeUniswapV3AdapterAddress =
     config.protocolAllowlist.get("UniswapV3Adapter")?.address;
   if (maybeUniswapV3AdapterAddress) {
@@ -506,6 +509,7 @@ async function checkNocturneAdapterStateVars(
     );
   }
 
+  // Reth adapter weth and rocket storage match config
   const maybeRethAdapterAddress = config.protocolAllowlist.get("rETHAdapter");
   if (maybeRethAdapterAddress) {
     const rethAdapter = RethAdapter__factory.connect(
@@ -527,9 +531,10 @@ async function checkNocturneAdapterStateVars(
     );
   }
 
-  if (config.protocolAllowlist.get("WsETHAdapter")) {
+  // Wsteth adapter weth and wsteth match config
+  if (config.protocolAllowlist.get("wstETHAdapter")) {
     const wstethAdapter = WstethAdapter__factory.connect(
-      config.protocolAllowlist.get("WsETHAdapter")!.address,
+      config.protocolAllowlist.get("wstETHAdapter")!.address,
       provider
     );
 
