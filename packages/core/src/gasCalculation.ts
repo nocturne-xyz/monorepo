@@ -14,7 +14,7 @@ const GAS_PER_OPERATION_MISC = 100_000n;
 const GAS_BUFFER = 300_000n;
 
 // etherscan shows typical depoit ~182600 gas
-export const GAS_PER_DEPOSIT_COMPLETE = 185_000n;
+export const GAS_PER_DEPOSIT_COMPLETE_COMPLETE = 185_000n;
 
 interface GasCompensationParams {
   executionGasLimit: bigint;

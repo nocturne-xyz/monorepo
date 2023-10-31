@@ -7,7 +7,7 @@ import {
   AssetTrait,
   AssetType,
   DepositRequest,
-  GAS_PER_DEPOSIT,
+  GAS_PER_DEPOSIT_COMPLETE,
   Note,
   StealthAddress,
   StealthAddressTrait,
@@ -31,7 +31,7 @@ export async function depositFundsMultiToken(
   const notes: Note[] = [];
 
   const gasPrice = await depositManager.provider.getGasPrice();
-  gasCompPerDeposit ??= 2n * GAS_PER_DEPOSIT * gasPrice.toBigInt();
+  gasCompPerDeposit ??= 2n * GAS_PER_DEPOSIT_COMPLETE * gasPrice.toBigInt();
 
   for (const [token, amounts] of tokensWithAmounts) {
     const total = amounts.reduce((sum, a) => sum + a);
@@ -106,7 +106,7 @@ export async function depositFundsSingleToken(
   const notes: Note[] = [];
 
   const gasPrice = await depositManager.provider.getGasPrice();
-  gasCompPerDeposit ??= 2n * GAS_PER_DEPOSIT * gasPrice.toBigInt();
+  gasCompPerDeposit ??= 2n * GAS_PER_DEPOSIT_COMPLETE * gasPrice.toBigInt();
 
   for (const [i, amount] of amounts.entries()) {
     const [tx, depositRequest, note] = await makeDeposit(

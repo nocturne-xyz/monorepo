@@ -14,7 +14,7 @@ import {
   DepositEventType,
   DepositEventsBatch,
   DepositEventSyncAdapter,
-  GAS_PER_DEPOSIT,
+  GAS_PER_DEPOSIT_COMPLETE,
 } from "@nocturne-xyz/core";
 import {
   ActorHandle,
@@ -257,7 +257,7 @@ export class DepositScreenerScreener {
         childLogger.debug(`checking deposit request`);
         if (
           depositRequest.gasCompensation <
-          (GAS_PER_DEPOSIT * gasPrice) / 10n
+          (GAS_PER_DEPOSIT_COMPLETE * gasPrice) / 10n
         ) {
           childLogger.warn(
             `ignoring under-gassed deposit request with hash ${hash}`
