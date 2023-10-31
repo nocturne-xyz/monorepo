@@ -40,6 +40,7 @@ import {
   SDKSyncAdapter,
   OperationTrait,
   OperationStatus,
+  GAS_PER_DEPOSIT_COMPLETE,
 } from "@nocturne-xyz/core";
 import {
   NocturneClient,
@@ -276,12 +277,15 @@ export class NocturneSdk implements NocturneSdkApi {
    */
   async initiateEthDeposits(
     values: bigint[],
-    gasCompensationPerDeposit: bigint,
+    gasCompensationPerDeposit?: bigint
   ): Promise<DepositHandleWithReceipt[]> {
     const signer = await getSigner(this.provider);
 
     const ethToWrap = values.reduce((acc, val) => acc + val, 0n);
-    const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
+    const gasCompRequired = gasCompensationPerDeposit ? gasCompensationPerDeposit * BigInt(values.length) : (
+      BigInt(values.length) * await this.estimateGasPerDeposit()
+    );
+
     const totalValue = ethToWrap + gasCompRequired;
 
     const signerBalance = (await signer.getBalance()).toBigInt();
@@ -347,13 +351,21 @@ export class NocturneSdk implements NocturneSdkApi {
     );
   }
 
+  protected async estimateGasPerDeposit(): Promise<bigint> {
+    const gasPrice = await this.provider.getGasPrice();
+    return 2n * gasPrice.toBigInt() * GAS_PER_DEPOSIT_COMPLETE;
+  }
+
   async initiateErc20Deposits(
     erc20Address: Address,
     values: bigint[],
-    gasCompensationPerDeposit: bigint,
+    gasCompensationPerDeposit?: bigint
   ): Promise<DepositHandleWithReceipt[]> {
     const signer = await getSigner(this.provider);
-    const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
+
+    const gasCompRequired = gasCompensationPerDeposit ? gasCompensationPerDeposit * BigInt(values.length) : (
+      BigInt(values.length) * await this.estimateGasPerDeposit()
+    );
 
     const signerBalance = (await signer.getBalance()).toBigInt();
     if (signerBalance < gasCompRequired) {
@@ -363,7 +375,7 @@ export class NocturneSdk implements NocturneSdkApi {
     }
 
     const depositAmount = values.reduce((acc, val) => acc + val, 0n);
-    const totalValue = depositAmount + gasCompRequired;
+    const totalValue = depositAmount;
 
     const erc20Contract = getTokenContract(
       AssetType.ERC20,
@@ -380,6 +392,9 @@ export class NocturneSdk implements NocturneSdkApi {
       erc20Address,
       values,
       depositAddr,
+      {
+        value: gasCompRequired,
+      }
     );
     return this.formDepositHandlesWithTxReceipt(tx);
   }

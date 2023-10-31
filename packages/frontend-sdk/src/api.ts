@@ -50,7 +50,7 @@ export interface NocturneSdkApi {
    */
   initiateEthDeposits(
     values: bigint[],
-    gasCompensationPerDeposit: bigint
+    gasCompensationPerDeposit?: bigint
   ): Promise<DepositHandleWithReceipt[]>;
 
   /**
@@ -61,7 +61,7 @@ export interface NocturneSdkApi {
   initiateErc20Deposits(
     erc20Address: Address,
     values: bigint[],
-    gasCompensationPerDeposit: bigint
+    gasCompensationPerDeposit?: bigint
   ): Promise<DepositHandleWithReceipt[]>;
 
   getAllDeposits(): Promise<DepositHandle[]>;
