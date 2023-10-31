@@ -1,6 +1,6 @@
 {
-  "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
-  "contractOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+  "proxyAdminOwner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "contractOwner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
   "finalityBlocks": 4,
   "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
   "subtreeBatchFillers": ["0x6556186E3E940930c40068C76BC875De95811E42"],

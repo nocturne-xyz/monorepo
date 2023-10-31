@@ -455,7 +455,7 @@ export async function deployContractsWithDummyConfig(
 
   console.log("deploying contracts...");
   const { config } = await deployNocturne(connectedSigner, deployConfig);
-  checkNocturneDeployment(config, connectedSigner.provider);
+  checkNocturneDeployment(deployConfig, config, connectedSigner.provider);
 
   console.log("prefilling");
   await prefillErc20s(connectedSigner, config);

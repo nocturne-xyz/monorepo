@@ -74,6 +74,7 @@ export class NocturneConfig {
   toString(): string {
     return JSON.stringify({
       contracts: this.contracts,
+      offchain: this.offchain,
       erc20s: Array.from(this.erc20s),
       protocolAllowlist: Array.from(this.protocolAllowlist),
     });

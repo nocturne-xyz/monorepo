@@ -22,6 +22,7 @@ import {
 } from "@nocturne-xyz/config";
 import { proxyAdmin, proxyImplementation } from "./proxyUtils";
 import { assertOrErr, getSelector, protocolWhitelistKey } from "./utils";
+import { NocturneDeployConfig } from "./config";
 
 export interface NocturneDeploymentCheckOpts {
   // 2-step ownable requires check to happen after deploy and ownership acceptance
@@ -30,12 +31,13 @@ export interface NocturneDeploymentCheckOpts {
 
 // TODO: add check for UniswapV3Adapter owner
 export async function checkNocturneDeployment(
+  deployConfig: NocturneDeployConfig,
   config: NocturneConfig,
   provider: ethers.providers.Provider,
   opts?: NocturneDeploymentCheckOpts
 ): Promise<void> {
   await checkNocturneCoreContracts(config, provider, opts);
-  await checkNocturneAdapterStateVars(config, provider);
+  await checkNocturneAdapterStateVars(deployConfig, config, provider);
 }
 
 async function checkNocturneCoreContracts(
@@ -458,6 +460,7 @@ async function checkProtocolAllowlist(
 }
 
 async function checkNocturneAdapterStateVars(
+  deployConfig: NocturneDeployConfig,
   config: NocturneConfig,
   provider: ethers.providers.Provider
 ): Promise<void> {
@@ -495,7 +498,12 @@ async function checkNocturneAdapterStateVars(
       );
     }
 
-    // TODO: check swap router address
+    const uniswapV3AdapterSwapRouter = await uniswapV3Adapter._swapRouter();
+    assertOrErr(
+      uniswapV3AdapterSwapRouter ===
+        deployConfig.opts!.uniswapV3AdapterDeployConfig!.swapRouterAddress,
+      "uniswap v3 adapter swap router does not match deployment"
+    );
   }
 
   const maybeRethAdapterAddress = config.protocolAllowlist.get("rETHAdapter");
@@ -511,7 +519,12 @@ async function checkNocturneAdapterStateVars(
       "reth adapter weth does not match deployment"
     );
 
-    // TODO: check rocket storage, currently hard because we don't whitelist it directly
+    const rethAdapterRocketStorage = await rethAdapter._rocketStorage();
+    assertOrErr(
+      rethAdapterRocketStorage ===
+        deployConfig.opts!.rethAdapterDeployConfig!.rocketPoolStorageAddress,
+      "reth adapter rocket storage does not match deployment"
+    );
   }
 
   if (config.protocolAllowlist.get("WsETHAdapter")) {
