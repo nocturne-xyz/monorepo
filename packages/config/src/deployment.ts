@@ -13,9 +13,7 @@ export interface NocturneContractDeployment {
   // TODO: consolidate owners once we've sorted out upgrade admin situation
   owners: {
     proxyAdminOwner: Address;
-    tellerOwner: Address;
-    handlerOwner: Address;
-    depositManagerOwner: Address;
+    contractOwner: Address;
   };
   proxyAdmin: Address;
   canonicalAddressRegistryProxy: ProxyAddresses<any>;

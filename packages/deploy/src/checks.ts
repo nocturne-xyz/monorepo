@@ -4,11 +4,15 @@ import {
   CanonicalAddressRegistry__factory,
   DepositManager,
   DepositManager__factory,
+  EthTransferAdapter__factory,
   Handler,
   Handler__factory,
   ProxyAdmin__factory,
+  RethAdapter__factory,
   Teller,
   Teller__factory,
+  UniswapV3Adapter__factory,
+  WstethAdapter__factory,
 } from "@nocturne-xyz/contracts";
 import {
   NocturneContractDeployment,
@@ -30,7 +34,8 @@ export async function checkNocturneDeployment(
   provider: ethers.providers.Provider,
   opts?: NocturneDeploymentCheckOpts
 ): Promise<void> {
-  await checkNocturneCoreContracts(config, provider);
+  await checkNocturneCoreContracts(config, provider, opts);
+  await checkNocturneAdapterStateVars(config, provider);
 }
 
 async function checkNocturneCoreContracts(
@@ -145,10 +150,10 @@ async function checkCoreStateVars(
   provider: ethers.providers.Provider,
   opts?: NocturneDeploymentCheckOpts
 ): Promise<void> {
-  await checkTellerStateVars(config, provider);
-  await checkHandlerStateVars(config, provider);
-  await checkDepositManagerStateVars(config, provider);
-  await checkCanonicalAddressRegistryStateVars(config, provider);
+  await checkTellerStateVars(config, provider, opts);
+  await checkHandlerStateVars(config, provider, opts);
+  await checkDepositManagerStateVars(config, provider, opts);
+  await checkCanonicalAddressRegistryStateVars(config, provider, opts);
 }
 
 async function checkTellerStateVars(
@@ -164,7 +169,7 @@ async function checkTellerStateVars(
 
   // Teller owner matches config
   if (!opts?.skipOwnersCheck) {
-    const expectedOwner = deployment.owners.tellerOwner;
+    const expectedOwner = deployment.owners.contractOwner;
     const tellerOwner = await tellerContract.owner();
     assertOrErr(
       tellerOwner === expectedOwner,
@@ -223,7 +228,7 @@ async function checkHandlerStateVars(
 
   // Handler owner matches config
   if (!opts?.skipOwnersCheck) {
-    const expectedOwner = deployment.owners.handlerOwner;
+    const expectedOwner = deployment.owners.contractOwner;
     const handlerOwner = await handlerContract.owner();
     assertOrErr(
       handlerOwner === expectedOwner,
@@ -291,7 +296,7 @@ async function checkDepositManagerStateVars(
 
   // Deposit manager owner matches config
   if (!opts?.skipOwnersCheck) {
-    const expectedOwner = deployment.owners.depositManagerOwner;
+    const expectedOwner = deployment.owners.contractOwner;
     const depositManagerOwner = await depositManagerContract.owner();
     assertOrErr(
       depositManagerOwner === expectedOwner,
@@ -449,5 +454,82 @@ async function checkProtocolAllowlist(
         `Protocol ${name} is not on the allowlist. Address: ${address}`
       );
     }
+  }
+}
+
+async function checkNocturneAdapterStateVars(
+  config: NocturneConfig,
+  provider: ethers.providers.Provider
+): Promise<void> {
+  const ethTransferAdapterAddress =
+    config.protocolAllowlist.get("ETHTransferAdapter")!.address;
+  const ethTransferAdapter = EthTransferAdapter__factory.connect(
+    ethTransferAdapterAddress,
+    provider
+  );
+  const ethTransferAdapterWeth = await ethTransferAdapter._weth();
+  assertOrErr(
+    ethTransferAdapterWeth === config.erc20s.get("WETH")!.address,
+    "eth transfer adapter weth does not match deployment"
+  );
+
+  const maybeUniswapV3AdapterAddress =
+    config.protocolAllowlist.get("UniswapV3Adapter")?.address;
+  if (maybeUniswapV3AdapterAddress) {
+    const uniswapV3Adapter = UniswapV3Adapter__factory.connect(
+      maybeUniswapV3AdapterAddress,
+      provider
+    );
+
+    const uniswapV3AdapterOwner = await uniswapV3Adapter.owner();
+    assertOrErr(
+      uniswapV3AdapterOwner === config.contracts.owners.contractOwner,
+      "uniswap v3 adapter owner does not match deployment"
+    );
+
+    for (const { address } of config.erc20s.values()) {
+      const isTokenSupported = await uniswapV3Adapter._allowedTokens(address);
+      assertOrErr(
+        isTokenSupported,
+        `uniswap v3 adapter does not support token ${address}`
+      );
+    }
+
+    // TODO: check swap router address
+  }
+
+  const maybeRethAdapterAddress = config.protocolAllowlist.get("rETHAdapter");
+  if (maybeRethAdapterAddress) {
+    const rethAdapter = RethAdapter__factory.connect(
+      maybeRethAdapterAddress.address,
+      provider
+    );
+
+    const rethAdapterWeth = await rethAdapter._weth();
+    assertOrErr(
+      rethAdapterWeth === config.erc20s.get("WETH")!.address,
+      "reth adapter weth does not match deployment"
+    );
+
+    // TODO: check rocket storage, currently hard because we don't whitelist it directly
+  }
+
+  if (config.protocolAllowlist.get("WsETHAdapter")) {
+    const wstethAdapter = WstethAdapter__factory.connect(
+      config.protocolAllowlist.get("WsETHAdapter")!.address,
+      provider
+    );
+
+    const wstethAdapterWeth = await wstethAdapter._weth();
+    const wstethAdapterWsteth = await wstethAdapter._wsteth();
+
+    assertOrErr(
+      wstethAdapterWeth === config.erc20s.get("WETH")!.address,
+      "wsteth adapter weth does not match deployment"
+    );
+    assertOrErr(
+      wstethAdapterWsteth === config.erc20s.get("wstETH")!.address,
+      "wsteth adapter wsteth does not match deployment"
+    );
   }
 }

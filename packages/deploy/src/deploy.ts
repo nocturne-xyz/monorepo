@@ -366,9 +366,7 @@ export async function deployNocturneCoreContracts(
         proxyAdminOwner: config.proxyAdminOwner,
         // Below owners are all anticipated, ownership relinquished after this fn
         // NOTE: if contracts owners don't match proxyAdminOwner, check fn will throw error
-        tellerOwner: config.contractOwner,
-        handlerOwner: config.contractOwner,
-        depositManagerOwner: config.contractOwner,
+        contractOwner: config.contractOwner,
       },
       proxyAdmin: proxyAdmin.address,
       canonicalAddressRegistryProxy: proxiedCanonAddrRegistry.proxyAddresses,
