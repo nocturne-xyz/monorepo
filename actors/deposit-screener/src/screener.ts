@@ -255,7 +255,10 @@ export class DepositScreenerScreener {
         }
 
         childLogger.debug(`checking deposit request`);
-        if (depositRequest.gasCompensation < GAS_PER_DEPOSIT * gasPrice) {
+        if (
+          depositRequest.gasCompensation <
+          (GAS_PER_DEPOSIT * gasPrice) / 10n
+        ) {
           childLogger.warn(
             `ignoring under-gassed deposit request with hash ${hash}`
           );
