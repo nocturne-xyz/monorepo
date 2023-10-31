@@ -24,6 +24,7 @@
       "proxy": "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9",
       "implementation": "0x9E545E3C0baAB3E08CdfD552C960A1050f373042"
     },
+    "depositSources": ["0xf197d92673cCf028bfB0CA121F7E7eB016D6E485"],
     "leftoverTokensHolder": "0x0000000000000000000000000000000000000000",
     "poseidonExtT7Address": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
     "joinSplitVerifierAddress": "0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8",
@@ -32,7 +33,6 @@
   "offchain": {
     "finalityBlocks": 5,
     "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
-    "depositSources": ["0xf197d92673cCf028bfB0CA121F7E7eB016D6E485"],
     "subtreeBatchFillers": ["0x6556186E3E940930c40068C76BC875De95811E42"]
   },
   "erc20s": [
