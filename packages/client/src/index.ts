@@ -4,7 +4,7 @@ export * from "./operationRequest";
 export * from "./snapJsonRpc";
 
 export { NocturneClient } from "./NocturneClient";
-export { NocturneDB } from "./NocturneDB";
+export { NocturneDB, GetNotesOpts } from "./NocturneDB";
 export { SyncOpts } from "./syncSDK";
 export { BundlerOpTracker } from "./OpTracker";
 export { signOperation } from "./signOperation";

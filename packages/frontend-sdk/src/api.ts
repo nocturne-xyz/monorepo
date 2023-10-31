@@ -13,6 +13,7 @@ import {
   OperationRequestWithMetadata,
   RpcRequestMethod,
   SyncOpts,
+  GetNotesOpts,
 } from "@nocturne-xyz/client";
 import { ContractTransaction } from "ethers";
 import { GetSnapsResponse, Snap } from "./metamask/types";
@@ -22,9 +23,7 @@ import {
   DepositHandle,
   DepositHandleWithReceipt,
   DisplayDepositRequest,
-  GetBalanceOpts,
   OperationHandle,
-  SyncWithProgressOutput,
 } from "./types";
 
 export interface NocturneSdkApi {
@@ -122,23 +121,20 @@ export interface NocturneSdkApi {
    * if ignoreOptimisticNFs is defined and true, then the method will include notes that have been used by the SDK, but may not have been nullified on-chain yet
    * if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
    */
-  getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]>;
+  getAllBalances(opts?: GetNotesOpts): Promise<AssetWithBalance[]>;
 
   getBalanceForAsset(
     erc20Address: Address,
-    opts?: GetBalanceOpts
+    opts?: GetNotesOpts 
   ): Promise<bigint>;
 
   // *** SYNCING METHODS *** //
-
-  // returns an async iterator of progress updates
-  syncWithProgress(syncOpts: SyncOpts): Promise<SyncWithProgressOutput>;
-
-  // returns latest `merkleIndex` synced. Usually can be ignored
-  // by default, syncs to the tip. This can take a long time, so
-  // it's recommended to call `syncWithProgress` instead and
-  // give feedback to the user
-  sync(syncOpts?: SyncOpts): Promise<number | undefined>;
+  
+  // syncs the SDK, taking a callback to report progress
+  // `syncOpts.timoutSeconds` is used as the interval between progress reports. if not given, there will be one progress report at the end.
+  // if another call to `sync` is already in progress, this call will simply wait for that one to finish
+  // TODO this behavior is scuffed, we should re-think it
+  sync(syncOpts?: SyncOpts, handleProgress?: (progress: number) => void): Promise<void>;
 
   // *** LOW LEVEL METHODS *** //
 

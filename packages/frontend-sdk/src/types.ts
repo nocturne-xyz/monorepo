@@ -2,7 +2,6 @@ import { NocturneConfig } from "@nocturne-xyz/config";
 import { OperationMetadata } from "@nocturne-xyz/client";
 import {
   AssetType,
-  ClosableAsyncIterator,
   OperationStatusResponse,
 } from "@nocturne-xyz/core";
 import { AnonErc20SwapQuote } from "@nocturne-xyz/op-request-plugins";
@@ -21,12 +20,6 @@ export interface ContractAddresses {
 
 export interface SyncProgress {
   latestSyncedMerkleIndex: number;
-}
-
-export interface SyncWithProgressOutput {
-  latestSyncedMerkleIndex: number;
-  latestMerkleIndexOnChain: number;
-  progressIter: ClosableAsyncIterator<SyncProgress>;
 }
 
 export interface NocturneSdkConfig {
@@ -148,9 +141,20 @@ export interface DisplayDepositRequestWithMetadata
 
 // *** REQUEST TYPES *** //
 
+// TODO
 export interface GetBalanceOpts {
+  // include notes that have been created
+  // on-chain but not yet inserted into the
+  // commitment tree
+  // defaults to `false`
   includeUncommitted?: boolean;
-  ignoreOptimisticNFs?: boolean;
+
+  // include notes that being spent
+  // by operations that have been signed / proven
+  // by the SDK but may not have been submitted
+  // on-chain by a bundler yet
+  // defaults to `true`
+  includePending?: boolean;
 }
 
 export interface AnonSwapRequestParams {
