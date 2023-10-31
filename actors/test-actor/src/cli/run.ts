@@ -173,6 +173,6 @@ export const run = new Command("run")
       fullBundleEvery: fullBundleEvery ? parseInt(fullBundleEvery) : undefined,
       onlyDeposits,
       onlyOperations,
-      finalityBlocks: finalityBlocks ?? config.finalityBlocks,
+      finalityBlocks: finalityBlocks ?? config.offchain.finalityBlocks,
     });
   });

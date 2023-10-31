@@ -110,7 +110,8 @@ const runProcess = new Command("processor")
       config.contracts.startBlock
     );
 
-    const finalityBlocks = options.finalityBlocks ?? config.finalityBlocks;
+    const finalityBlocks =
+      options.finalityBlocks ?? config.offchain.finalityBlocks;
 
     const fulfiller = new DepositScreenerFulfiller(
       logger,

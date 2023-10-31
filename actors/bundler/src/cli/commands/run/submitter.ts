@@ -45,7 +45,7 @@ const runSubmitter = new Command("submitter")
       signer,
       getRedis(),
       logger,
-      finalityBlocks ?? config.finalityBlocks
+      finalityBlocks ?? config.offchain.finalityBlocks
     );
 
     const { promise } = submitter.start();

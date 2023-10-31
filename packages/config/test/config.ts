@@ -21,7 +21,7 @@ describe("Config", async () => {
     expect(config.contracts.joinSplitVerifierAddress).to.not.be.undefined;
     expect(config.contracts.subtreeUpdateVerifierAddress).to.not.be.undefined;
     expect(config.contracts.depositSources).to.not.be.undefined;
-    expect(config.contracts.screeners).to.not.be.undefined;
+    expect(config.offchain.screeners).to.not.be.undefined;
     expect(config.erc20s.size).to.be.greaterThan(0);
     expect(config.protocolAllowlist.size).to.be.greaterThan(0);
   });
@@ -40,7 +40,7 @@ describe("Config", async () => {
     expect(config.contracts.joinSplitVerifierAddress).to.not.be.undefined;
     expect(config.contracts.subtreeUpdateVerifierAddress).to.not.be.undefined;
     expect(config.contracts.depositSources).to.not.be.undefined;
-    expect(config.contracts.screeners).to.not.be.undefined;
+    expect(config.offchain.screeners).to.not.be.undefined;
     expect(config.erc20s.size).to.be.greaterThan(0);
     expect(config.protocolAllowlist.size).to.be.greaterThan(0);
   });

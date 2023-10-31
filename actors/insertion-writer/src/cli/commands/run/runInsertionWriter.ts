@@ -69,7 +69,7 @@ export const runInsertionWriter = new Command("insertion-writer")
     const { promise } = await writer.start({
       throttleMs,
       throttleOnEmptyMs,
-      finalityBlocks: finalityBlocks ?? config.finalityBlocks,
+      finalityBlocks: finalityBlocks ?? config.offchain.finalityBlocks,
     });
 
     await promise;
