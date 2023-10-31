@@ -398,12 +398,9 @@ export class NocturneSdk implements NocturneSdkApi {
       erc20Address,
       values,
       depositAddr,
-<<<<<<< HEAD
-=======
       {
         value: gasCompRequired,
       }
->>>>>>> 712a3934 (fix initiateErc20Deposits)
     );
     return this.formDepositHandlesWithTxReceipt(tx);
   }
