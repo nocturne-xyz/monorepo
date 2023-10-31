@@ -33,8 +33,10 @@ dotenv.config();
   console.log(config);
   console.log(verification);
 
+  // NOTE: the skip owners check flag is set to TRUE because ownership transfer is 2-step and
+  // cannot have happened by end of deploy script
   console.log("Checking deployment...");
-  await checkNocturneDeployment(config, provider);
+  await checkNocturneDeployment(config, provider, { skipOwnersCheck: true });
   console.log("Checks passed!");
 
   if (!fs.existsSync(DEPLOYS_DIR)) {

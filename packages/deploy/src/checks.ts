@@ -21,7 +21,7 @@ import { assertOrErr, getSelector, protocolWhitelistKey } from "./utils";
 
 export interface NocturneDeploymentCheckOpts {
   // 2-step ownable requires check to happen after deploy and ownership acceptance
-  checkOwners: boolean;
+  skipOwnersCheck: boolean;
 }
 
 // TODO: add check for UniswapV3Adapter owner
@@ -163,7 +163,7 @@ async function checkTellerStateVars(
   );
 
   // Teller owner matches config
-  if (opts?.checkOwners) {
+  if (!opts?.skipOwnersCheck) {
     const expectedOwner = deployment.owners.tellerOwner;
     const tellerOwner = await tellerContract.owner();
     assertOrErr(
@@ -222,7 +222,7 @@ async function checkHandlerStateVars(
   );
 
   // Handler owner matches config
-  if (opts?.checkOwners) {
+  if (!opts?.skipOwnersCheck) {
     const expectedOwner = deployment.owners.handlerOwner;
     const handlerOwner = await handlerContract.owner();
     assertOrErr(
@@ -290,7 +290,7 @@ async function checkDepositManagerStateVars(
   );
 
   // Deposit manager owner matches config
-  if (opts?.checkOwners) {
+  if (!opts?.skipOwnersCheck) {
     const expectedOwner = deployment.owners.depositManagerOwner;
     const depositManagerOwner = await depositManagerContract.owner();
     assertOrErr(
