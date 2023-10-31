@@ -1,10 +1,13 @@
 import { ethers } from "ethers";
 import {
+  CanonicalAddressRegistry,
+  CanonicalAddressRegistry__factory,
   DepositManager,
   DepositManager__factory,
   Handler,
   Handler__factory,
   ProxyAdmin__factory,
+  Teller,
   Teller__factory,
 } from "@nocturne-xyz/contracts";
 import {
@@ -16,46 +19,33 @@ import {
 import { proxyAdmin, proxyImplementation } from "./proxyUtils";
 import { assertOrErr, getSelector, protocolWhitelistKey } from "./utils";
 
+export interface NocturneDeploymentCheckOpts {
+  // 2-step ownable requires check to happen after deploy and ownership acceptance
+  checkOwners: boolean;
+}
+
 // TODO: add check for UniswapV3Adapter owner
 export async function checkNocturneDeployment(
   config: NocturneConfig,
-  provider: ethers.providers.Provider
+  provider: ethers.providers.Provider,
+  opts?: NocturneDeploymentCheckOpts
 ): Promise<void> {
-  const depositManager = DepositManager__factory.connect(
-    config.contracts.depositManagerProxy.proxy,
-    provider
-  );
-  const handler = Handler__factory.connect(
-    config.contracts.handlerProxy.proxy,
-    provider
-  );
-
-  await checkNocturneContracts(config.contracts, provider);
-  await checkErc20Caps(depositManager, config.erc20s);
-  await checkProtocolAllowlist(
-    handler,
-    config.erc20s,
-    config.protocolAllowlist
-  );
+  await checkNocturneCoreContracts(config, provider);
 }
 
-async function checkNocturneContracts(
+async function checkNocturneCoreContracts(
+  config: NocturneConfig,
+  provider: ethers.providers.Provider,
+  opts?: NocturneDeploymentCheckOpts
+): Promise<void> {
+  await checkCoreStateVars(config, provider, opts);
+  await checkProxyInfo(config.contracts, provider);
+}
+
+async function checkProxyInfo(
   deployment: NocturneContractDeployment,
   provider: ethers.providers.Provider
 ): Promise<void> {
-  const tellerContract = Teller__factory.connect(
-    deployment.tellerProxy.proxy,
-    provider
-  );
-  const handlerContract = Handler__factory.connect(
-    deployment.handlerProxy.proxy,
-    provider
-  );
-  const depositManagerContract = DepositManager__factory.connect(
-    deployment.depositManagerProxy.proxy,
-    provider
-  );
-
   // Proxy admin owner matches deployment
   const proxyAdminContract = ProxyAdmin__factory.connect(
     deployment.proxyAdmin,
@@ -143,14 +133,53 @@ async function checkNocturneContracts(
     provider,
     deployment.canonicalAddressRegistryProxy.proxy
   );
-
   assertOrErr(
     canonicalAddressRegistryProxyImplementation ===
       deployment.canonicalAddressRegistryProxy.implementation,
     "canonical address registry proxy implementation does not match deployment"
   );
+}
 
-  // Teller joinsplit verifier matches deployment
+async function checkCoreStateVars(
+  config: NocturneConfig,
+  provider: ethers.providers.Provider,
+  opts?: NocturneDeploymentCheckOpts
+): Promise<void> {
+  await checkTellerStateVars(config, provider);
+  await checkHandlerStateVars(config, provider);
+  await checkDepositManagerStateVars(config, provider);
+  await checkCanonicalAddressRegistryStateVars(config, provider);
+}
+
+async function checkTellerStateVars(
+  config: NocturneConfig,
+  provider: ethers.providers.Provider,
+  opts?: NocturneDeploymentCheckOpts
+): Promise<void> {
+  const deployment = config.contracts;
+  const tellerContract = Teller__factory.connect(
+    deployment.tellerProxy.proxy,
+    provider
+  );
+
+  // Teller owner matches config
+  if (opts?.checkOwners) {
+    const expectedOwner = deployment.owners.tellerOwner;
+    const tellerOwner = await tellerContract.owner();
+    assertOrErr(
+      tellerOwner === expectedOwner,
+      `teller owner does not match config: ${tellerOwner} != ${expectedOwner}`
+    );
+  }
+
+  // Teller handler matches config
+  const tellerHandler = await tellerContract._handler();
+  assertOrErr(
+    tellerHandler === deployment.handlerProxy.proxy,
+    "teller handler does not match deployment"
+  );
+
+  // Teller joinsplit verifier matches config
   const tellerJoinSplitVerifier = await tellerContract._joinSplitVerifier();
   assertOrErr(
     tellerJoinSplitVerifier === deployment.joinSplitVerifierAddress,
@@ -159,15 +188,133 @@ async function checkNocturneContracts(
 
   // Teller whitelisted deposit manager as source
   const hasDepositManager = await tellerContract._depositSources(
-    depositManagerContract.address
+    deployment.depositManagerProxy.proxy
   );
   assertOrErr(
     hasDepositManager,
     "teller did not whitelist deposit manager as deposit source"
   );
 
-  // Deposit manager whitelisted screeners
-  for (const screener of deployment.screeners) {
+  // poseidonExtT7 matches config
+  const poseidonExtT7 = await tellerContract._poseidonExtT7();
+  assertOrErr(
+    poseidonExtT7 === deployment.poseidonExtT7Address,
+    "teller poseidonExtT7 does not match deployment"
+  );
+
+  // Teller is not paused
+  const isPaused = await tellerContract.paused();
+  assertOrErr(!isPaused, "teller is paused");
+
+  // EIP-712 domain matches expected
+  await checkEip712("Teller", tellerContract);
+}
+
+async function checkHandlerStateVars(
+  config: NocturneConfig,
+  provider: ethers.providers.Provider,
+  opts?: NocturneDeploymentCheckOpts
+): Promise<void> {
+  const deployment = config.contracts;
+  const handlerContract = Handler__factory.connect(
+    deployment.handlerProxy.proxy,
+    provider
+  );
+
+  // Handler owner matches config
+  if (opts?.checkOwners) {
+    const expectedOwner = deployment.owners.handlerOwner;
+    const handlerOwner = await handlerContract.owner();
+    assertOrErr(
+      handlerOwner === expectedOwner,
+      `handler owner does not match config: ${handlerOwner} != ${expectedOwner}`
+    );
+  }
+
+  // Handler teller matches config
+  const handlerTeller = await handlerContract._teller();
+  assertOrErr(
+    handlerTeller === deployment.tellerProxy.proxy,
+    "handler teller does not match deployment"
+  );
+
+  // Leftover tokens holder matches config
+  const leftoverTokensHolder = await handlerContract._leftoverTokensHolder();
+  assertOrErr(
+    leftoverTokensHolder === deployment.leftoverTokensHolder,
+    "handler leftover tokens holder does not match deployment"
+  );
+
+  // TODO: is there a way to check subtree update verifier embedded in merkle struct?
+
+  // Subtree batch fillers match config
+  for (const subtreeBatchFiller of config.offchain.subtreeBatchFillers) {
+    const isSubtreeBatchFiller = await handlerContract._subtreeBatchFillers(
+      subtreeBatchFiller
+    );
+    assertOrErr(
+      isSubtreeBatchFiller,
+      `handler did not whitelist subtree batch filler ${subtreeBatchFiller}`
+    );
+  }
+
+  // Handler is not paused
+  const isPaused = await handlerContract.paused();
+  assertOrErr(!isPaused, "handler is paused");
+
+  const reentrancyGuardStage = (
+    await handlerContract.reentrancyGuardStage()
+  ).toNumber();
+  assertOrErr(
+    reentrancyGuardStage === 1,
+    "handler reentrancy guard stage is not 1 (NOT_ENTERED)"
+  );
+
+  // Ensure all protocols on whitelist are allowed
+  await checkProtocolAllowlist(
+    handlerContract,
+    config.erc20s,
+    config.protocolAllowlist
+  );
+}
+
+async function checkDepositManagerStateVars(
+  config: NocturneConfig,
+  provider: ethers.providers.Provider,
+  opts?: NocturneDeploymentCheckOpts
+): Promise<void> {
+  const deployment = config.contracts;
+  const depositManagerContract = DepositManager__factory.connect(
+    deployment.depositManagerProxy.proxy,
+    provider
+  );
+
+  // Deposit manager owner matches config
+  if (opts?.checkOwners) {
+    const expectedOwner = deployment.owners.depositManagerOwner;
+    const depositManagerOwner = await depositManagerContract.owner();
+    assertOrErr(
+      depositManagerOwner === expectedOwner,
+      `deposit manager owner does not match config: ${depositManagerOwner} != ${expectedOwner}`
+    );
+  }
+
+  // Deposit manager weth is set
+  const depositManagerWeth = await depositManagerContract._weth();
+  assertOrErr(
+    depositManagerWeth === config.erc20s.get("WETH")!.address,
+    "deposit manager weth does not match deployment"
+  );
+
+  // Deposit manager teller matches config
+  const depositManagerTeller = await depositManagerContract._teller();
+  assertOrErr(
+    depositManagerTeller === deployment.tellerProxy.proxy,
+    "deposit manager teller does not match deployment"
+  );
+
+  // Screeners are whitelisted
+  for (const screener of config.offchain.screeners) {
     const hasScreener = await depositManagerContract._screeners(screener);
     assertOrErr(
       hasScreener,
@@ -175,26 +322,61 @@ async function checkNocturneContracts(
     );
   }
 
-  // Ensure owners are set
-  const tellerOwner = await tellerContract.owner();
+  // nonce is 0
+  const nonce = (await depositManagerContract._nonce()).toNumber();
+  assertOrErr(nonce === 0, "deposit manager nonce is not 0");
+
+  // Erc20 caps properly set
+  await checkErc20Caps(depositManagerContract, config.erc20s);
+
+  // EIP-712 domain matches expected
+  await checkEip712("DepositManager", depositManagerContract);
+}
+
+async function checkCanonicalAddressRegistryStateVars(
+  config: NocturneConfig,
+  provider: ethers.providers.Provider,
+  _opts?: NocturneDeploymentCheckOpts
+): Promise<void> {
+  const deployment = config.contracts;
+  const canonicalAddressRegistryContract =
+    CanonicalAddressRegistry__factory.connect(
+      deployment.canonicalAddressRegistryProxy.proxy,
+      provider
+    );
+
+  // Sig check verifier is set
+  const sigCheckVerifier =
+    await canonicalAddressRegistryContract._sigCheckVerifier();
   assertOrErr(
-    tellerOwner == deployment.owners.tellerOwner,
-    `on-chain teller owner doesn't match config teller owner. onchain: ${tellerOwner}. config: ${deployment.owners.tellerOwner}.`
+    sigCheckVerifier === deployment.canonAddrSigCheckVerifierAddress,
+    "canonical address registry sig check verifier does not match deployment"
   );
 
-  const handlerOwner = await handlerContract.owner();
-  assertOrErr(
-    handlerOwner == deployment.owners.handlerOwner,
-    `on-chain handler owner doesn't match config handler owner. onchain: ${handlerOwner}. config: ${deployment.owners.handlerOwner}.`
+  // EIP-712 domain matches expected
+  await checkEip712(
+    "CanonicalAddressRegistry",
+    canonicalAddressRegistryContract
   );
+}
 
-  const depositManagerOwner = await depositManagerContract.owner();
+async function checkEip712(
+  contractName: "Teller" | "DepositManager" | "CanonicalAddressRegistry",
+  contract: Teller | DepositManager | CanonicalAddressRegistry
+): Promise<void> {
+  const [, name, version] = await contract.eip712Domain();
+
+  const expectedName = `Nocturne${contractName}`;
+  const expectedVersion = "v1";
+
   assertOrErr(
-    depositManagerOwner == deployment.owners.depositManagerOwner,
-    `on-chain deposit manager owner doesn't match config deposit manager owner. onchain: ${depositManagerOwner}. config: ${deployment.owners.depositManagerOwner}.`
+    name === expectedName,
+    `eip712 name does not match config: ${name} != ${expectedName}`
   );
-
-  // TODO: is there a way to check subtree update verifier?
+  assertOrErr(
+    version === expectedVersion,
+    `eip712 version does not match config: ${version} != ${expectedVersion}`
+  );
 }
 
 async function checkErc20Caps(

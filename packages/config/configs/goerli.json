@@ -9,7 +9,6 @@
       "depositManagerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4"
     },
     "proxyAdmin": "0xc8Ffb69a68dF4569c2Fd517fd6f624fc62453b32",
-    "finalityBlocks": 4,
     "canonicalAddressRegistryProxy": {
       "kind": "Transparent",
       "proxy": "0xB2B636CFdDeEE0b99a2ccE209fcF1fcE0D904172",
@@ -30,12 +29,19 @@
       "proxy": "0xa3649095A431a8D4f0ce8ee12928C1E1e6d05E7F",
       "implementation": "0xe3c5AbbFdd6e8B81A6050c6F53dE2976db1B5cB9"
     },
+    "leftoverTokensHolder": "0x0000000000000000000000000000000000000000",
     "poseidonExtT7Address": "0xe93f7f6a6E96374911953cE5d97Dccf4AFD03343",
     "joinSplitVerifierAddress": "0x66F06307a7e6f34Da483227C23f0a722cFE28F54",
     "subtreeUpdateVerifierAddress": "0x2c90FbD3871a815cfE0f059B21499d4Ac58fCD98",
     "canonAddrSigCheckVerifierAddress": "0x82933e713be587a3fB393450cca6083cec094429",
     "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
     "depositSources": ["0xf197d92673cCf028bfB0CA121F7E7eB016D6E485"]
+  },
+  "offchain": {
+    "finalityBlocks": 4,
+    "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
+    "depositSources": ["0xf197d92673cCf028bfB0CA121F7E7eB016D6E485"],
+    "subtreeBatchFillers": ["0x6556186E3E940930c40068C76BC875De95811E42"]
   },
   "erc20s": [
     [

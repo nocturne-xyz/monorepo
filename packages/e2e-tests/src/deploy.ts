@@ -444,7 +444,7 @@ export async function deployContractsWithDummyConfig(
     wethAddress: weth.address,
     erc20s: new Map(allErc20s),
     protocolAllowlist: new Map(),
-    leftoverTokenHolder: "0x0000000000000000000000000000000000000123",
+    leftoverTokensHolder: "0x0000000000000000000000000000000000000123",
     opts: {
       ...forkOpts?.deployOpts,
       useMockSubtreeUpdateVerifier:

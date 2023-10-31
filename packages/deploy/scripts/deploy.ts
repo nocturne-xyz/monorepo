@@ -33,7 +33,9 @@ dotenv.config();
   console.log(config);
   console.log(verification);
 
+  console.log("Checking deployment...");
   await checkNocturneDeployment(config, provider);
+  console.log("Checks passed!");
 
   if (!fs.existsSync(DEPLOYS_DIR)) {
     fs.mkdirSync(DEPLOYS_DIR);
