@@ -27,7 +27,7 @@ export { encryptNote, decryptNote } from "./noteEncryption";
 export {
   BLOCK_GAS_LIMIT,
   MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
-  GAS_PER_DEPOSIT,
+  GAS_PER_DEPOSIT_COMPLETE,
   maxGasForOperation,
   gasCompensationForParams,
 } from "./gasCalculation";

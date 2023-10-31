@@ -41,7 +41,7 @@ import {
   SDKSyncAdapter,
   OperationTrait,
   OperationStatus,
-  GAS_PER_DEPOSIT,
+  GAS_PER_DEPOSIT_COMPLETE,
 } from "@nocturne-xyz/core";
 import {
   NocturneClient,
@@ -105,8 +105,6 @@ import {
 import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
 import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
-
-const FE_SDK_DEPOSIT_COMP_RATIO = (estimate: bigint) => 2n * estimate;
 
 export interface NocturneSdkOptions {
   // interface for fetching deposit data from subgraph and screener
@@ -357,9 +355,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
   protected async estimateGasPerDeposit(): Promise<bigint> {
     const gasPrice = await this.provider.getGasPrice();
-    return FE_SDK_DEPOSIT_COMP_RATIO(
-      gasPrice.toBigInt() * GAS_PER_DEPOSIT
-    );
+    return 2n * gasPrice.toBigInt() * GAS_PER_DEPOSIT_COMPLETE;
   }
 
   async initiateErc20Deposits(
