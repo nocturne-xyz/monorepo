@@ -180,7 +180,6 @@ export async function deployNocturne(
       offchain: {
         finalityBlocks: config.finalityBlocks,
         screeners: config.screeners,
-        depositSources: [contracts.depositManagerProxy.proxy],
         subtreeBatchFillers: config.subtreeBatchFillers,
       },
       erc20s: Array.from(erc20s.entries()),
@@ -373,6 +372,7 @@ export async function deployNocturneCoreContracts(
       depositManagerProxy: proxiedDepositManager.proxyAddresses,
       tellerProxy: proxiedTeller.proxyAddresses,
       handlerProxy: proxiedHandler.proxyAddresses,
+      depositSources: [proxiedDepositManager.proxyAddresses.proxy],
       leftoverTokensHolder: leftoverTokensHolder,
       poseidonExtT7Address: poseidonExtT7.address,
       joinSplitVerifierAddress: joinSplitVerifier.address,

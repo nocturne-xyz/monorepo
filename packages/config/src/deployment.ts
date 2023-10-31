@@ -20,6 +20,7 @@ export interface NocturneContractDeployment {
   depositManagerProxy: ProxyAddresses<any>;
   tellerProxy: ProxyAddresses<any>;
   handlerProxy: ProxyAddresses<any>;
+  depositSources: Address[];
   leftoverTokensHolder: Address;
   poseidonExtT7Address: Address;
   joinSplitVerifierAddress: Address;

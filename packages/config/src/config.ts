@@ -22,7 +22,6 @@ export interface Erc20Config {
 
 export interface OffchainConfig {
   finalityBlocks: number;
-  depositSources: Address[];
   screeners: Address[];
   subtreeBatchFillers: Address[];
 }
