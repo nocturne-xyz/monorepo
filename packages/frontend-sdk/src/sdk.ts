@@ -40,7 +40,7 @@ import {
   SDKSyncAdapter,
   OperationTrait,
   OperationStatus,
-  GAS_PER_DEPOSIT_COMPLETE_COMPLETE,
+  GAS_PER_DEPOSIT_COMPLETE,
 } from "@nocturne-xyz/core";
 import {
   NocturneClient,
@@ -353,7 +353,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
   protected async estimateGasPerDeposit(): Promise<bigint> {
     const gasPrice = await this.provider.getGasPrice();
-    return 2n * gasPrice.toBigInt() * GAS_PER_DEPOSIT_COMPLETE_COMPLETE;
+    return 2n * gasPrice.toBigInt() * GAS_PER_DEPOSIT_COMPLETE;
   }
 
   async initiateErc20Deposits(
