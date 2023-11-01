@@ -963,7 +963,7 @@ export class NocturneSdk implements NocturneSdkApi {
           return undefined;
         }
 
-        return (await res.json()) as OperationStatusResponse;
+        return (await body) as OperationStatusResponse;
       },
       {
         retries: 5, // TODO later scope: this should probably be configurable by the caller
