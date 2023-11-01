@@ -3,9 +3,9 @@ import { SnapStateApi } from "../api";
 import { GetSnapsResponse, Snap } from "./types";
 import { generateNocturneSpendKeyFromEoaSig } from "../eoaSigKeygen";
 import {
+  RequestSpendKeyEoaMethod,
   RpcRequestMethod,
   SetSpendKeyMethod,
-  SpendKeyIsSetMethod,
   stringifyObjectValues,
 } from "@nocturne-xyz/client";
 import { SupportedProvider } from "../types";
@@ -20,7 +20,7 @@ export class SnapStateSdk implements SnapStateApi {
     // this is lazy so it plays nice with server components
     readonly getProvider: () => SupportedProvider,
     readonly version?: string,
-    readonly snapId: string = NOCTURNE_SNAP_ORIGIN
+    readonly snapId: string = NOCTURNE_SNAP_ORIGIN,
   ) {}
 
   async isFlask(): Promise<boolean> {
@@ -61,7 +61,7 @@ export class SnapStateSdk implements SnapStateApi {
       const snap = Object.values(snaps).find(
         (snap) =>
           snap.id === this.snapId &&
-          (!this.version || snap.version === this.version)
+          (!this.version || snap.version === this.version),
       );
       await this.generateAndStoreSpendKeyFromEoaSigIfNotAlreadySet();
       return snap;
@@ -72,7 +72,7 @@ export class SnapStateSdk implements SnapStateApi {
   }
 
   async invoke<RpcMethod extends RpcRequestMethod>(
-    request: Omit<RpcMethod, "return">
+    request: Omit<RpcMethod, "return">,
   ): Promise<RpcMethod["return"]> {
     console.log("[fe-sdk] invoking snap method:", request.method);
     const stringifiedParams = request.params
@@ -89,7 +89,7 @@ export class SnapStateSdk implements SnapStateApi {
       },
     };
     const response = await window.ethereum.request<{ res: string | null }>(
-      jsonRpcRequest
+      jsonRpcRequest,
     );
     if (!response) {
       throw new Error("No response from MetaMask");
@@ -121,22 +121,24 @@ export class SnapStateSdk implements SnapStateApi {
    */
   private async generateAndStoreSpendKeyFromEoaSigIfNotAlreadySet(): Promise<void> {
     // Return early if spend key already set
-    const snapKeyAlreadySet = await this.invoke<SpendKeyIsSetMethod>({
-      method: "nocturne_spendKeyIsSet",
+    const spendKeyEoa = await this.invoke<RequestSpendKeyEoaMethod>({
+      method: "nocturne_requestSpendKeyEoa",
       params: undefined,
     });
-    if (snapKeyAlreadySet) {
+    if (spendKeyEoa) {
       return;
     }
 
     // Generate spend key and attempt to set in snap
     const signer = await getSigner(this.getProvider());
+    const signerAddress = await signer.getAddress();
     const spendKey = await generateNocturneSpendKeyFromEoaSig(signer);
 
     const maybeErrorString = await this.invoke<SetSpendKeyMethod>({
       method: "nocturne_setSpendKey",
       params: {
         spendKey,
+        eoaAddress: signerAddress,
       },
     });
 

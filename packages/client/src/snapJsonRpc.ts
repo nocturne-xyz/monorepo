@@ -1,6 +1,7 @@
 import * as JSON from "bigint-json-serialization";
 import { OperationWithMetadata } from "./types";
 import {
+  Address,
   CanonAddrRegistryEntry,
   PreSignOperation,
   SignedOperation,
@@ -15,7 +16,8 @@ import {
 export interface SetSpendKeyMethod {
   method: "nocturne_setSpendKey";
   params: {
-    spendKey: string; // converted to { '0': <number>, '1': <number>, '2': <number>, ... }
+    spendKey: string;
+    eoaAddress: Address;
   };
   return: string | undefined; // error string or undefined
 }
@@ -42,10 +44,10 @@ export interface SignOperationMethod {
   return: SignedOperation;
 }
 
-export interface SpendKeyIsSetMethod {
-  method: "nocturne_spendKeyIsSet";
+export interface RequestSpendKeyEoaMethod {
+  method: "nocturne_requestSpendKeyEoa";
   params: undefined;
-  return: boolean;
+  return: Address | undefined;
 }
 
 export interface RequestViewingKeyMethodResponse {
@@ -64,7 +66,7 @@ export type RpcRequestMethod =
   | SignCanonAddrRegistryEntryMethod
   | SignOperationMethod
   | RequestViewingKeyMethod
-  | SpendKeyIsSetMethod;
+  | RequestSpendKeyEoaMethod;
 
 export type SnapRpcRequestHandlerArgs = {
   origin: string;
