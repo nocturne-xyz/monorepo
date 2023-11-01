@@ -7,6 +7,7 @@ import {
   AssetTrait,
   AssetType,
   DepositRequest,
+  GAS_PER_DEPOSIT_COMPLETE,
   Note,
   StealthAddress,
   StealthAddressTrait,
@@ -22,11 +23,16 @@ export async function depositFundsMultiToken(
   tokensWithAmounts: [SimpleERC20Token | WETH9, bigint[]][],
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress,
-  shouldQueryDepositStatus = true
+  shouldQueryDepositStatus = true,
+  gasCompPerDeposit?: bigint
 ): Promise<[DepositRequest, Note][]> {
   const txs: ContractTransaction[] = [];
   const depositRequests: DepositRequest[] = [];
   const notes: Note[] = [];
+
+  const gasPrice = await depositManager.provider.getGasPrice();
+  gasCompPerDeposit ??= 2n * GAS_PER_DEPOSIT_COMPLETE * gasPrice.toBigInt();
+
   for (const [token, amounts] of tokensWithAmounts) {
     const total = amounts.reduce((sum, a) => sum + a);
 
@@ -44,7 +50,8 @@ export async function depositFundsMultiToken(
         stealthAddress,
         token,
         amount,
-        i
+        i,
+        gasCompPerDeposit
       );
       txs.push(tx);
       depositRequests.push(depositRequest);
@@ -81,7 +88,8 @@ export async function depositFundsSingleToken(
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress,
   amounts: bigint[],
-  shouldQueryDepositStatus = true
+  shouldQueryDepositStatus = true,
+  gasCompPerDeposit?: bigint
 ): Promise<[DepositRequest, Note][]> {
   const total = amounts.reduce((sum, a) => sum + a);
 
@@ -96,13 +104,18 @@ export async function depositFundsSingleToken(
   ];
   const depositRequests: DepositRequest[] = [];
   const notes: Note[] = [];
+
+  const gasPrice = await depositManager.provider.getGasPrice();
+  gasCompPerDeposit ??= 2n * GAS_PER_DEPOSIT_COMPLETE * gasPrice.toBigInt();
+
   for (const [i, amount] of amounts.entries()) {
     const [tx, depositRequest, note] = await makeDeposit(
       { depositManager, eoa },
       stealthAddress,
       token,
       amount,
-      i
+      i,
+      gasCompPerDeposit
     );
     txs.push(tx);
     depositRequests.push(depositRequest);
@@ -141,7 +154,8 @@ async function makeDeposit(
   stealthAddress: StealthAddress,
   token: IERC20,
   value: bigint,
-  noteNonce: number
+  noteNonce: number,
+  gasCompensation: bigint
 ): Promise<[ContractTransaction, DepositRequest, Note]> {
   const asset = {
     assetType: AssetType.ERC20,
@@ -158,7 +172,9 @@ async function makeDeposit(
   console.log("instantiating deposit...");
   const instantiateDepositTx = await depositManager
     .connect(eoa)
-    .instantiateErc20MultiDeposit(token.address, [value], depositAddr);
+    .instantiateErc20MultiDeposit(token.address, [value], depositAddr, {
+      value: gasCompensation,
+    });
 
   return [
     instantiateDepositTx,
@@ -168,7 +184,7 @@ async function makeDeposit(
       encodedAsset: AssetTrait.encode(asset),
       depositAddr,
       value,
-      gasCompensation: 0n,
+      gasCompensation,
     },
     {
       owner: stealthAddress,

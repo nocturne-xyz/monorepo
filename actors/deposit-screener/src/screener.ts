@@ -14,6 +14,7 @@ import {
   DepositEventType,
   DepositEventsBatch,
   DepositEventSyncAdapter,
+  GAS_PER_DEPOSIT_COMPLETE,
 } from "@nocturne-xyz/core";
 import {
   ActorHandle,
@@ -213,6 +214,9 @@ export class DepositScreenerScreener {
   ): Promise<void> {
     logger.info("starting screener");
     for await (const batch of depositEvents.iter) {
+      const gasPrice = (
+        await this.depositManagerContract.provider.getGasPrice()
+      ).toBigInt();
       for (const event of batch.depositEvents) {
         const depositRequest: DepositRequest = {
           ...event,
@@ -251,6 +255,16 @@ export class DepositScreenerScreener {
         }
 
         childLogger.debug(`checking deposit request`);
+        if (
+          depositRequest.gasCompensation <
+          (GAS_PER_DEPOSIT_COMPLETE * gasPrice) / 10n
+        ) {
+          childLogger.warn(
+            `ignoring under-gassed deposit request with hash ${hash}`
+          );
+          continue;
+        }
+
         const checkResult = await this.screeningApi.checkDeposit({
           spender: depositRequest.spender,
           assetAddr,
