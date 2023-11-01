@@ -14,6 +14,7 @@
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "deploy": "npx ts-node scripts/deploy.ts",
+    "check-deploy": "npx ts-node scripts/check.ts",
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./scripts",
     "prettier:write": "prettier --write ./src ./scripts",
@@ -22,7 +23,7 @@
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/contracts": "^2.0.0",
+    "@nocturne-xyz/contracts": "^2.0.1",
     "@nocturne-xyz/core": "workspace:^",
     "dotenv": "^16.0.3"
   },

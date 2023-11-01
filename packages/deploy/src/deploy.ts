@@ -177,6 +177,11 @@ export async function deployNocturne(
   return {
     config: NocturneConfig.fromObject({
       contracts,
+      offchain: {
+        finalityBlocks: config.finalityBlocks,
+        screeners: config.screeners,
+        subtreeBatchFillers: config.subtreeBatchFillers,
+      },
       erc20s: Array.from(erc20s.entries()),
       protocolAllowlist: Array.from(config.protocolAllowlist.entries()),
     }),
@@ -202,7 +207,7 @@ export async function deployNocturneCoreContracts(
   } = {} as any;
 
   // Maybe deploy proxy admin
-  const { opts, leftoverTokenHolder } = config;
+  const { opts, leftoverTokensHolder } = config;
   let proxyAdmin = opts?.proxyAdmin;
   if (!proxyAdmin) {
     console.log("\ndeploying ProxyAdmin...");
@@ -243,7 +248,7 @@ export async function deployNocturneCoreContracts(
     new Handler__factory(connectedSigner),
     proxyAdmin,
     proxyVerifications,
-    [subtreeUpdateVerifier.address, leftoverTokenHolder]
+    [subtreeUpdateVerifier.address, leftoverTokensHolder]
   );
   console.log("deployed proxied Handler:", proxiedHandler.proxyAddresses);
 
@@ -360,22 +365,19 @@ export async function deployNocturneCoreContracts(
         proxyAdminOwner: config.proxyAdminOwner,
         // Below owners are all anticipated, ownership relinquished after this fn
         // NOTE: if contracts owners don't match proxyAdminOwner, check fn will throw error
-        tellerOwner: config.contractOwner,
-        handlerOwner: config.contractOwner,
-        depositManagerOwner: config.contractOwner,
+        contractOwner: config.contractOwner,
       },
       proxyAdmin: proxyAdmin.address,
-      finalityBlocks: config.finalityBlocks,
       canonicalAddressRegistryProxy: proxiedCanonAddrRegistry.proxyAddresses,
       depositManagerProxy: proxiedDepositManager.proxyAddresses,
       tellerProxy: proxiedTeller.proxyAddresses,
       handlerProxy: proxiedHandler.proxyAddresses,
+      depositSources: [proxiedDepositManager.proxyAddresses.proxy],
+      leftoverTokensHolder: leftoverTokensHolder,
       poseidonExtT7Address: poseidonExtT7.address,
       joinSplitVerifierAddress: joinSplitVerifier.address,
       subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
       canonAddrSigCheckVerifierAddress: canonAddrSigCheckVerifier.address,
-      screeners: config.screeners,
-      depositSources: [proxiedDepositManager.address],
     },
     verification: {
       chain: name,

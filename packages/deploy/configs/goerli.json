@@ -63,7 +63,7 @@
     ]
   ],
   "protocolAllowlist": [],
-  "leftoverTokenHolder": "0x0000000000000000000000000000000000000000",
+  "leftoverTokensHolder": "0x0000000000000000000000000000000000000000",
   "opts": {
     "useMockSubtreeUpdateVerifier": false,
     "uniswapV3AdapterDeployConfig": {

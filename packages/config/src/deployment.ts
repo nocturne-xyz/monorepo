@@ -13,20 +13,17 @@ export interface NocturneContractDeployment {
   // TODO: consolidate owners once we've sorted out upgrade admin situation
   owners: {
     proxyAdminOwner: Address;
-    tellerOwner: Address;
-    handlerOwner: Address;
-    depositManagerOwner: Address;
+    contractOwner: Address;
   };
   proxyAdmin: Address;
-  finalityBlocks: number;
   canonicalAddressRegistryProxy: ProxyAddresses<any>;
   depositManagerProxy: ProxyAddresses<any>;
   tellerProxy: ProxyAddresses<any>;
   handlerProxy: ProxyAddresses<any>;
+  depositSources: Address[];
+  leftoverTokensHolder: Address;
   poseidonExtT7Address: Address;
   joinSplitVerifierAddress: Address;
   subtreeUpdateVerifierAddress: Address;
   canonAddrSigCheckVerifierAddress: Address;
-  depositSources: Address[];
-  screeners: Address[];
 }

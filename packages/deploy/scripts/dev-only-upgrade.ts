@@ -11,8 +11,8 @@ import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 dotenv.config();
 
 (async () => {
-  const configName = process.env.CONFIG_NAME;
-  if (!configName) throw new Error("Missing CONFIG_NAME");
+  const configName = process.env.DEPLOY_CONFIG_NAME;
+  if (!configName) throw new Error("Missing DEPLOY_CONFIG_NAME");
 
   const deployerKey = process.env.DEPLOYER_KEY;
   if (!deployerKey) throw new Error("Missing DEPLOYER_KEY");

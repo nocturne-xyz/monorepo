@@ -12,8 +12,8 @@ const VERIFICATIONS_DIR = `${__dirname}/../verifications/`;
 dotenv.config();
 
 (async () => {
-  const configName = process.env.CONFIG_NAME;
-  if (!configName) throw new Error("Missing CONFIG_NAME");
+  const configName = process.env.DEPLOY_CONFIG_NAME;
+  if (!configName) throw new Error("Missing DEPLOY_CONFIG_NAME");
 
   const deployerKey = process.env.DEPLOYER_KEY;
   if (!deployerKey) throw new Error("Missing DEPLOYER_KEY");
@@ -33,7 +33,13 @@ dotenv.config();
   console.log(config);
   console.log(verification);
 
-  await checkNocturneDeployment(config, provider);
+  // NOTE: the skip owners check flag is set to TRUE because ownership transfer is 2-step and
+  // cannot have happened by end of deploy script
+  console.log("Checking deployment...");
+  await checkNocturneDeployment(deployConfig, config, provider, {
+    skipOwnersCheck: true,
+  });
+  console.log("Checks passed!");
 
   if (!fs.existsSync(DEPLOYS_DIR)) {
     fs.mkdirSync(DEPLOYS_DIR);
@@ -43,22 +49,20 @@ dotenv.config();
   }
 
   const date = Date.now().toString();
-  fs.writeFileSync(
-    `${DEPLOYS_DIR}/${configName}-${date}.json`,
-    config.toString(),
-    {
-      encoding: "utf8",
-      flag: "w",
-    }
-  );
-  fs.writeFileSync(
-    `${VERIFICATIONS_DIR}/${configName}-${date}.json`,
-    verification.toString(),
-    {
-      encoding: "utf8",
-      flag: "w",
-    }
-  );
+
+  const configFile = `${DEPLOYS_DIR}/${configName}-${date}.json`;
+  console.log(`Writing config file to ${configFile}`);
+  fs.writeFileSync(configFile, config.toString(), {
+    encoding: "utf8",
+    flag: "w",
+  });
+
+  const verificationFile = `${VERIFICATIONS_DIR}/${configName}-${date}.json`;
+  console.log(`Writing verification file to ${verificationFile}`);
+  fs.writeFileSync(verificationFile, verification.toString(), {
+    encoding: "utf8",
+    flag: "w",
+  });
 
   process.exit(0);
 })();

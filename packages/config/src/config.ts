@@ -20,23 +20,33 @@ export interface Erc20Config {
   isGasAsset: boolean;
 }
 
+export interface OffchainConfig {
+  finalityBlocks: number;
+  screeners: Address[];
+  subtreeBatchFillers: Address[];
+}
+
 export interface NocturneConfigProperties {
   contracts: NocturneContractDeployment;
+  offchain: OffchainConfig;
   erc20s: [string, Erc20Config][]; // ticker -> erc20 config
   protocolAllowlist: [string, ProtocolAddressWithMethods][]; // name -> entry
 }
 
 export class NocturneConfig {
   contracts: NocturneContractDeployment;
+  offchain: OffchainConfig;
   erc20s: Map<string, Erc20Config>; // ticker -> erc20 config
   protocolAllowlist: Map<string, ProtocolAddressWithMethods>;
 
   constructor(
     contracts: NocturneContractDeployment,
+    offchain: OffchainConfig,
     erc20s: Map<string, Erc20Config>,
     protocolAllowlist: Map<string, ProtocolAddressWithMethods>
   ) {
     this.contracts = contracts;
+    this.offchain = offchain;
     this.erc20s = erc20s;
     this.protocolAllowlist = protocolAllowlist;
   }
@@ -49,6 +59,7 @@ export class NocturneConfig {
 
     return new NocturneConfig(
       obj.contracts,
+      obj.offchain,
       new Map(obj.erc20s),
       new Map(obj.protocolAllowlist)
     );
@@ -62,6 +73,7 @@ export class NocturneConfig {
   toString(): string {
     return JSON.stringify({
       contracts: this.contracts,
+      offchain: this.offchain,
       erc20s: Array.from(this.erc20s),
       protocolAllowlist: Array.from(this.protocolAllowlist),
     });
@@ -76,7 +88,7 @@ export class NocturneConfig {
   }
 
   get finalityBlocks(): number | undefined {
-    return this.contracts.finalityBlocks;
+    return this.offchain.finalityBlocks;
   }
 
   get startBlock(): number {

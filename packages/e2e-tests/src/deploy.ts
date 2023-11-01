@@ -444,7 +444,7 @@ export async function deployContractsWithDummyConfig(
     wethAddress: weth.address,
     erc20s: new Map(allErc20s),
     protocolAllowlist: new Map(),
-    leftoverTokenHolder: "0x0000000000000000000000000000000000000123",
+    leftoverTokensHolder: "0x0000000000000000000000000000000000000123",
     opts: {
       ...forkOpts?.deployOpts,
       useMockSubtreeUpdateVerifier:
@@ -455,7 +455,7 @@ export async function deployContractsWithDummyConfig(
 
   console.log("deploying contracts...");
   const { config } = await deployNocturne(connectedSigner, deployConfig);
-  checkNocturneDeployment(config, connectedSigner.provider);
+  checkNocturneDeployment(deployConfig, config, connectedSigner.provider);
 
   console.log("prefilling");
   await prefillErc20s(connectedSigner, config);

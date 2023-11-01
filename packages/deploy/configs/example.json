@@ -1,54 +1,76 @@
 {
   "proxyAdminOwner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
   "contractOwner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-  "finalityBlocks": 0,
-  "screeners": ["0x1DAb396f790699de639cF22d0Ea7744469aCAB1a"],
-  "subtreeBatchFillers": ["0xD20E7a8ADdCB5D983C064f8A184B7aa65ef23f10"],
-  "wethAddress": "0xb16F35c0Ae2912430DAc15764477E179D9B9EbEa",
+  "finalityBlocks": 4,
+  "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
+  "subtreeBatchFillers": ["0x6556186E3E940930c40068C76BC875De95811E42"],
+  "wethAddress": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
   "erc20s": [
     [
-      "SimpleToken1",
+      "TEST-TOKEN",
       {
         "address": "0x0000000000000000000000000000000000000000",
-        "globalCapWholeTokens": "500n",
-        "maxDepositSizeWholeTokens": "50n",
-        "resetWindowHours": "24n",
+        "globalCapWholeTokens": "1000000n",
+        "maxDepositSizeWholeTokens": "1000n",
+        "resetWindowHours": "4n",
         "precision": "18n",
         "isGasAsset": true
       }
     ],
     [
-      "SimpleToken2",
+      "WETH",
       {
-        "address": "0x0000000000000000000000000000000000000000",
-        "globalCapWholeTokens": "500n",
-        "maxDepositSizeWholeTokens": "50n",
-        "resetWindowHours": "24n",
+        "address": "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+        "globalCapWholeTokens": "1000n",
+        "maxDepositSizeWholeTokens": "100n",
+        "resetWindowHours": "4n",
         "precision": "18n",
         "isGasAsset": true
       }
-    ]
-  ],
-  "protocolAllowlist": [
+    ],
     [
-      "ProtocolName",
+      "DAI",
       {
-        "address": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
-        "functionSignatures": [
-          "transfer(address,uint256)",
-          "approve(address,uint256)"
-        ]
+        "address": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844",
+        "globalCapWholeTokens": "1000000n",
+        "maxDepositSizeWholeTokens": "100000n",
+        "resetWindowHours": "4n",
+        "precision": "18n",
+        "isGasAsset": true
+      }
+    ],
+    [
+      "wstETH",
+      {
+        "address": "0x6320cd32aa674d2898a68ec82e869385fc5f7e2f",
+        "globalCapWholeTokens": "1000n",
+        "maxDepositSizeWholeTokens": "100n",
+        "resetWindowHours": "4n",
+        "precision": "18n",
+        "isGasAsset": false
+      }
+    ],
+    [
+      "rETH",
+      {
+        "address": "0xae78736Cd615f374D3085123A210448E74Fc6393",
+        "globalCapWholeTokens": "1000n",
+        "maxDepositSizeWholeTokens": "100n",
+        "resetWindowHours": "4n",
+        "precision": "18n",
+        "isGasAsset": false
       }
     ]
   ],
-  "leftoverTokenHolder": "0x0000000000000000000000000000000000000123",
+  "protocolAllowlist": [],
+  "leftoverTokensHolder": "0x0000000000000000000000000000000000000000",
   "opts": {
-    "useMockSubtreeUpdateVerifier": true,
+    "useMockSubtreeUpdateVerifier": false,
     "uniswapV3AdapterDeployConfig": {
-      "swapRouterAddress": "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+      "swapRouterAddress": "0xE592427A0AEce92De3Edee1F18E0157C05861564"
     },
     "wstethAdapterDeployConfig": {
-      "wstethAddress": "0x8b79995e5f793a07bc00c21412e50ecae098e710"
+      "wstethAddress": "0x6320cd32aa674d2898a68ec82e869385fc5f7e2f"
     },
     "rethAdapterDeployConfig": {
       "rocketPoolStorageAddress": "0xa9A6A14A3643690D0286574976F45abBDAD8f505"
