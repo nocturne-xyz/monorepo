@@ -56,8 +56,8 @@ import {
   newOpRequestBuilder,
   OperationRequestWithMetadata,
   ActionMetadata,
-  OpHistoryStore,
   OpHistoryRecord,
+  isTerminalOpStatus,
 } from "@nocturne-xyz/client";
 import {
   WasmCanonAddrSigCheckProver,
@@ -94,6 +94,7 @@ import {
   SwapTypes,
 } from "./types";
 import {
+  BUNDLER_RECEIVED_OP_BUFFER,
   getBalanceOptsToGetNotesOpts,
   getCircuitArtifactUrls,
   getNocturneSdkConfig,
@@ -237,7 +238,6 @@ export class NocturneSdk implements NocturneSdkApi {
           new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
         new MockEthToTokenConverter(),
         new BundlerOpTracker(this.endpoints.bundlerEndpoint),
-        new OpHistoryStore(kv)
       );
     });
   }
@@ -477,9 +477,6 @@ export class NocturneSdk implements NocturneSdkApi {
           })
         : opOrOpRequest;
       
-    const client = await this.clientThunk();
-    await client.history.push(submittableOperation, metadata);
-
     const opHandleWithoutMetadata = await this.submitOperation(submittableOperation);
     return {
       ...opHandleWithoutMetadata,
@@ -632,7 +629,10 @@ export class NocturneSdk implements NocturneSdkApi {
       params: { op: preSignOp, metadata: opMeta },
     });
 
-    await client.applyOptimisticRecordsForOp(op, opMeta);
+    // TODO: do this when we submit, not when we sign
+    // requires refactoring such that we have
+    // merkle indices for spent notes when we submit
+    await client.addOpToHistory(op, opMeta);
 
     return op;
   }
@@ -739,19 +739,41 @@ export class NocturneSdk implements NocturneSdkApi {
   }
 
   protected makeGetStatus(digest: bigint): () => Promise<OperationStatusResponse> {
-    let cachedStatus: OperationStatus | undefined;
     return async () => {
-      // fetch 
-      const res = await this.fetchBundlerOperationStatus(digest);
-      
-      // update history
-      const { status } = res;
-      if (status !== cachedStatus) {
-        cachedStatus = status;
 
+      // check history first. If it's in a terminal status, return that status
+      const client = await this.clientThunk();
+      const historyRecord = await client.getOpHistoryRecord(digest);
+
+      // if there's no history record anymore, return `QUEUED` and, wait for the frontend
+      // to re-fetch the history, and stop calling this function
+      if (!historyRecord) {
+        return { status: OperationStatus.QUEUED };
+      }
+
+      if (historyRecord.status && isTerminalOpStatus(historyRecord.status)) {
+        return { status: historyRecord.status }; 
+      }
+
+      // fetch status
+      const res = await this.fetchBundlerOperationStatus(digest);
+
+      // if the bundler doesn't have it, then check how old the history record is
+      // if it's older than `BUNDLER_RECEIVED_OP_BUFFER`, then assume the bundler dropped it,
+      // remove it from the history, and say its queued.
+      // otherwise, assume bundler is being slow and say it's queued
+      if (!res) {
+        if (historyRecord.createdAt + BUNDLER_RECEIVED_OP_BUFFER < Date.now()) {
+          await client.removeOpFromHistory(digest);
+        }
+        return { status: OperationStatus.QUEUED };
+      }
+
+      // update history with new status if the status is different
+      const { status } = res;
+      if (status !== historyRecord.status) {
         try {
-          const client = await this.clientThunk();
-          await client.history.setStatus(digest, status);
+          await client.setOpStatusInHistory(digest, status);
         } catch (err) {
           if (err instanceof Error && err.message.includes("record not found")) {
             console.warn(`op ${digest} is not in history. skipping history update`);
@@ -800,20 +822,25 @@ export class NocturneSdk implements NocturneSdkApi {
     return client.getBalanceForAsset(asset, opts ? getBalanceOptsToGetNotesOpts(opts) : undefined);
   }
 
-  async getInFlightOperations(): Promise<OperationHandle[]> {
+  async getOpHistory(): Promise<OpHistoryRecord[]> {
     const client = await this.clientThunk();
-    const opDigestsWithMetadata =
-      await client.getAllOptimisticOpDigestsWithMetadata();
-    const operationHandles = opDigestsWithMetadata.map(
-      ({ opDigest: digest, metadata }) => {
-        const getStatus = this.makeGetStatus(digest);
-        return {
-          digest,
-          metadata,
-          getStatus,
-        };
-      },
-    );
+    return await client.getOpHistory();
+  }
+
+  async getInFlightOperations(): Promise<OperationHandle[]> {
+    const history = await this.getOpHistory();
+    const operationHandles = history
+      .filter(({ status }) => !status || !isTerminalOpStatus(status))
+      .map(
+        ({ digest, metadata }) => {
+          const getStatus = this.makeGetStatus(digest);
+          return {
+            digest,
+            metadata,
+            getStatus,
+          };
+        }
+      );
     return operationHandles;
   }
 
@@ -865,11 +892,6 @@ export class NocturneSdk implements NocturneSdkApi {
     }
   }
 
-  async getHistory(): Promise<OpHistoryRecord[]> {
-    const client = await this.clientThunk();
-    return await client.history.getHistory();
-  }
-
   // syncs new notes and returns latest sync merkle index
   // NOTE: this method is not safe to call concurrently without wrapping in
   // a call to syncMutex.runExclusive or runExclusiveIfNotAlreadyLocked(syncMutex)
@@ -881,7 +903,7 @@ export class NocturneSdk implements NocturneSdkApi {
         ...syncOpts,
         timing: true,
       });
-      await client.updateOptimisticNullifiers();
+      await client.pruneOptimisticNullifiers();
     } catch (e) {
       console.log("Error syncing notes: ", e);
       throw e;
@@ -926,12 +948,21 @@ export class NocturneSdk implements NocturneSdkApi {
    */
   protected async fetchBundlerOperationStatus(
     opDigest: bigint,
-  ): Promise<OperationStatusResponse> {
+  ): Promise<OperationStatusResponse | undefined> {
     return await retry(
       async () => {
         const res = await fetch(
           `${this.endpoints.bundlerEndpoint}/operations/${opDigest}`,
         );
+
+        const body = await res.json();
+        if (res.status === 404 && typeof body.error === "string" && body.error.includes("operation not found")) {
+          return undefined;
+        } else if (!res.ok) {
+          console.error("failed to fetch operation status", body);
+          return undefined;
+        }
+
         return (await res.json()) as OperationStatusResponse;
       },
       {

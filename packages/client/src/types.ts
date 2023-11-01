@@ -1,14 +1,27 @@
-import { Address, Asset, CanonAddress, Operation } from "@nocturne-xyz/core";
+import {
+  Address,
+  Asset,
+  CanonAddress,
+  Operation,
+  OperationStatus,
+} from "@nocturne-xyz/core";
 
 export interface OptimisticNFRecord {
   nullifier: bigint;
+  expirationDate: number;
 }
 
-export interface OptimisticOpDigestRecord {
-  merkleIndices: number[];
-  expirationDate: number;
-  metadata?: OperationMetadata;
-}
+export type OpHistoryRecord = {
+  digest: bigint;
+  metadata: OperationMetadata;
+
+  spentNoteMerkleIndices: number[];
+
+  status?: OperationStatus;
+
+  createdAt: number;
+  lastModified: number;
+};
 
 export interface OperationMetadata {
   items: OperationMetadataItem[];

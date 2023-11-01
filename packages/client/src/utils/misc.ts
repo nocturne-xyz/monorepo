@@ -8,6 +8,7 @@ import {
   Asset,
   MapWithObjectKeys,
   merklePathToIndex,
+  OperationStatus,
 } from "@nocturne-xyz/core";
 import { JoinSplitRequest } from "../operationRequest";
 
@@ -89,4 +90,21 @@ export function getMerkleIndicesAndNfsFromOp(
       },
     ];
   });
+}
+
+export function isFailedOpStatus(status: OperationStatus): boolean {
+  return (
+    status === OperationStatus.BUNDLE_REVERTED ||
+    status === OperationStatus.OPERATION_EXECUTION_FAILED ||
+    status === OperationStatus.OPERATION_PROCESSING_FAILED
+  );
+}
+
+export function isTerminalOpStatus(status: OperationStatus): boolean {
+  return (
+    status === OperationStatus.EXECUTED_SUCCESS ||
+    status === OperationStatus.BUNDLE_REVERTED ||
+    status === OperationStatus.OPERATION_EXECUTION_FAILED ||
+    status === OperationStatus.OPERATION_PROCESSING_FAILED
+  );
 }

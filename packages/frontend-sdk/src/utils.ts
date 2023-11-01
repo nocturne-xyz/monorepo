@@ -232,3 +232,5 @@ export function getBalanceOptsToGetNotesOpts(
     ignoreOptimisticNFs: !includePending,
   };
 }
+
+export const BUNDLER_RECEIVED_OP_BUFFER: number = 90 * 1000; // 90 seconds (used to detect dropped ops)

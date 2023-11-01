@@ -169,7 +169,7 @@ export interface NocturneSdkApi {
 
   // *** HISTORY METHODS *** //
 
-  getHistory(): Promise<OpHistoryRecord[]>;
+  getOpHistory(): Promise<OpHistoryRecord[]>;
 }
 
 // *** SNAP STATE METHODS *** //
