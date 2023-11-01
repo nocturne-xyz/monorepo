@@ -287,7 +287,7 @@ export class DepositScreenerFulfiller {
           logger.info(
             `post-dispatch awaiting tx receipt. nonce: ${depositRequest.nonce}. txhash: ${tx.hash}`
           );
-          const receipt = await tx.wait(this.finalityBlocks);
+          const receipt = await tx.wait(1);
           return receipt;
         default:
           throw new Error("currently only supporting erc20 deposits");
