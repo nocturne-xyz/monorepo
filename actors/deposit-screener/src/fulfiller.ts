@@ -276,12 +276,22 @@ export class DepositScreenerFulfiller {
     const receipt = await this.signerMutex.runExclusive(async () => {
       switch (asset.assetType) {
         case AssetType.ERC20:
+          const estimatedGas = (
+            await this.depositManagerContract.estimateGas.completeErc20Deposit(
+              depositRequest,
+              signature
+            )
+          ).toBigInt();
+
           logger.info(
             `pre-dispatch attempting tx submission. nonce ${depositRequest.nonce}`
           );
           const tx = await this.depositManagerContract.completeErc20Deposit(
             depositRequest,
-            signature
+            signature,
+            {
+              gasLimit: (estimatedGas * 3n) / 2n,
+            }
           );
 
           logger.info(
