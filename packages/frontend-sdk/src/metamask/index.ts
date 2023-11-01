@@ -1,14 +1,14 @@
-import * as JSON from "bigint-json-serialization";
-import { SnapStateApi } from "../api";
-import { GetSnapsResponse, Snap } from "./types";
-import { generateNocturneSpendKeyFromEoaSig } from "../eoaSigKeygen";
 import {
   RpcRequestMethod,
   SetSpendKeyMethod,
   SpendKeyIsSetMethod,
   stringifyObjectValues,
 } from "@nocturne-xyz/client";
+import * as JSON from "bigint-json-serialization";
+import { SnapStateApi } from "../api";
+import { generateNocturneSpendKeyFromEoaSig } from "../eoaSigKeygen";
 import { SupportedProvider } from "../types";
+import { GetSnapsResponse, Snap } from "./types";
 import { getSigner } from "./utils";
 
 export * from "./utils";
@@ -20,7 +20,7 @@ export class SnapStateSdk implements SnapStateApi {
     // this is lazy so it plays nice with server components
     readonly getProvider: () => SupportedProvider,
     readonly version?: string,
-    readonly snapId: string = NOCTURNE_SNAP_ORIGIN
+    readonly snapId: string = NOCTURNE_SNAP_ORIGIN,
   ) {}
 
   async isFlask(): Promise<boolean> {
@@ -61,9 +61,8 @@ export class SnapStateSdk implements SnapStateApi {
       const snap = Object.values(snaps).find(
         (snap) =>
           snap.id === this.snapId &&
-          (!this.version || snap.version === this.version)
+          (!this.version || snap.version === this.version),
       );
-      await this.generateAndStoreSpendKeyFromEoaSigIfNotAlreadySet();
       return snap;
     } catch (e) {
       console.log("Failed to obtain installed snap", e);
@@ -72,7 +71,7 @@ export class SnapStateSdk implements SnapStateApi {
   }
 
   async invoke<RpcMethod extends RpcRequestMethod>(
-    request: Omit<RpcMethod, "return">
+    request: Omit<RpcMethod, "return">,
   ): Promise<RpcMethod["return"]> {
     console.log("[fe-sdk] invoking snap method:", request.method);
     const stringifiedParams = request.params
@@ -89,7 +88,7 @@ export class SnapStateSdk implements SnapStateApi {
       },
     };
     const response = await window.ethereum.request<{ res: string | null }>(
-      jsonRpcRequest
+      jsonRpcRequest,
     );
     if (!response) {
       throw new Error("No response from MetaMask");

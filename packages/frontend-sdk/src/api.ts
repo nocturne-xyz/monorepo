@@ -1,20 +1,21 @@
+import {
+  GetNotesOpts,
+  OpHistoryRecord,
+  OperationRequestWithMetadata,
+  RpcRequestMethod,
+  SyncOpts,
+} from "@nocturne-xyz/client";
 import { Erc20Config } from "@nocturne-xyz/config";
 import {
   Address,
   AssetWithBalance,
+  CanonAddress,
   DepositQuoteResponse,
   ProvenOperation,
   SignedOperation,
   StealthAddress,
   SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/core";
-import {
-  OpHistoryRecord,
-  OperationRequestWithMetadata,
-  RpcRequestMethod,
-  SyncOpts,
-  GetNotesOpts,
-} from "@nocturne-xyz/client";
 import { ContractTransaction } from "ethers";
 import { GetSnapsResponse, Snap } from "./metamask/types";
 import {
@@ -36,13 +37,8 @@ export interface NocturneSdkApi {
 
   getErc20DepositQuote(
     erc20Address: Address,
-    totalValue: bigint
+    totalValue: bigint,
   ): Promise<DepositQuoteResponse>;
-
-  /**
-   * Register the user's canonical address from the snap instance against the current signer EOA.
-   */
-  registerCanonicalAddress(): Promise<ContractTransaction>;
 
   /**
    * @param values Asset amounts
@@ -50,7 +46,7 @@ export interface NocturneSdkApi {
    */
   initiateEthDeposits(
     values: bigint[],
-    gasCompensationPerDeposit?: bigint
+    gasCompensationPerDeposit?: bigint,
   ): Promise<DepositHandleWithReceipt[]>;
 
   /**
@@ -61,7 +57,7 @@ export interface NocturneSdkApi {
   initiateErc20Deposits(
     erc20Address: Address,
     values: bigint[],
-    gasCompensationPerDeposit?: bigint
+    gasCompensationPerDeposit?: bigint,
   ): Promise<DepositHandleWithReceipt[]>;
 
   getAllDeposits(): Promise<DepositHandle[]>;
@@ -70,7 +66,7 @@ export interface NocturneSdkApi {
    * Initiates a deposit retrieval from the deposit manager contract.
    */
   retrievePendingDeposit(
-    displayRequest: DisplayDepositRequest
+    displayRequest: DisplayDepositRequest,
   ): Promise<ContractTransaction>;
 
   // *** OPERATION METHODS *** //
@@ -84,7 +80,7 @@ export interface NocturneSdkApi {
    */
   initiateAnonEthTransfer(
     recipientAddress: Address,
-    amount: bigint
+    amount: bigint,
   ): Promise<OperationHandle>;
 
   /**
@@ -96,19 +92,19 @@ export interface NocturneSdkApi {
   initiateAnonErc20Transfer(
     erc20Address: Address,
     amount: bigint,
-    recipientAddress: Address
+    recipientAddress: Address,
   ): Promise<OperationHandle>;
 
   initiateAnonErc20Swap(
-    params: AnonSwapRequestParams
+    params: AnonSwapRequestParams,
   ): Promise<OperationHandle>;
 
   submitOperation(
-    operation: SubmittableOperationWithNetworkInfo
+    operation: SubmittableOperationWithNetworkInfo,
   ): Promise<OperationHandle>;
 
   signAndProveOperation(
-    operationRequest: OperationRequestWithMetadata
+    operationRequest: OperationRequestWithMetadata,
   ): Promise<SubmittableOperationWithNetworkInfo>;
 
   getInFlightOperations(): Promise<OperationHandle[]>;
@@ -125,28 +121,36 @@ export interface NocturneSdkApi {
 
   getBalanceForAsset(
     erc20Address: Address,
-    opts?: GetNotesOpts 
+    opts?: GetNotesOpts,
   ): Promise<bigint>;
 
   // *** SYNCING METHODS *** //
-  
+
   // syncs the SDK, taking a callback to report progress
   // `syncOpts.timoutSeconds` is used as the interval between progress reports. if not given, there will be one progress report at the end.
   // if another call to `sync` is already in progress, this call will simply wait for that one to finish
   // TODO this behavior is scuffed, we should re-think it
-  sync(syncOpts?: SyncOpts, handleProgress?: (progress: number) => void): Promise<void>;
+  sync(
+    syncOpts?: SyncOpts,
+    handleProgress?: (progress: number) => void,
+  ): Promise<void>;
 
   // *** LOW LEVEL METHODS *** //
 
   signOperationRequest(
-    operationRequest: OperationRequestWithMetadata
+    operationRequest: OperationRequestWithMetadata,
   ): Promise<SignedOperation>;
 
   proveOperation(
-    op: SignedOperation
+    op: SignedOperation,
   ): Promise<SubmittableOperationWithNetworkInfo>;
 
   verifyProvenOperation(operation: ProvenOperation): Promise<boolean>;
+
+  /**
+   * Register the user's canonical address from the snap instance against the current signer EOA.
+   */
+  registerCanonicalAddress(): Promise<ContractTransaction>;
 
   getLatestSyncedMerkleIndex(): Promise<number | undefined>;
 
@@ -158,7 +162,7 @@ export interface NocturneSdkApi {
   clearSyncState(): Promise<void>;
 
   getAnonErc20SwapQuote(
-    params: AnonSwapRequestParams
+    params: AnonSwapRequestParams,
   ): Promise<AnonErc20SwapQuoteResponse>;
 
   // *** ACCESSOR METHODS *** //
@@ -166,6 +170,8 @@ export interface NocturneSdkApi {
   snap: SnapStateApi;
 
   getAvailableErc20s(): Map<string, Erc20Config>;
+
+  getCanonicalAddress(): Promise<CanonAddress | undefined>;
 
   // *** HISTORY METHODS *** //
 
@@ -207,6 +213,6 @@ export interface SnapStateApi {
   get(): Promise<Snap | undefined>;
 
   invoke<RpcMethod extends RpcRequestMethod>(
-    request: Omit<RpcMethod, "return">
+    request: Omit<RpcMethod, "return">,
   ): Promise<RpcMethod["return"]>;
 }
