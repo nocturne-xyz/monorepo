@@ -28,6 +28,7 @@ import {
   OPTIMISTIC_RECORD_TTL,
   getMerkleIndicesAndNfsFromOp,
   isFailedOpStatus,
+  isTerminalOpStatus,
 } from "./utils";
 
 const NOTES_BY_INDEX_PREFIX = "NOTES_BY_INDEX";
@@ -157,7 +158,7 @@ export class NocturneDB {
     await this.kv.putString(OP_HISTORY_KEY, value);
   }
 
-  async getHistory(): Promise<OpHistoryRecord[]> {
+  async getHistory(includePending?: boolean): Promise<OpHistoryRecord[]> {
     return await this.mutex.runExclusive(async () => {
       const history = await this.getHistoryArray();
       const records = await Promise.all(
@@ -167,6 +168,12 @@ export class NocturneDB {
       // if any record is missing, sometheing bad happened
       if (records.some((r) => r === undefined)) {
         throw new Error("record not found");
+      }
+
+      if (!includePending) {
+        return records.filter(
+          (r) => r?.status && isTerminalOpStatus(r.status)
+        ) as OpHistoryRecord[];
       }
 
       return records as OpHistoryRecord[];

@@ -193,8 +193,8 @@ export class NocturneClient {
     await this.db.removeOpFromHistory(digest);
   }
 
-  async getOpHistory(): Promise<OpHistoryRecord[]> {
-    return await this.db.getHistory();
+  async getOpHistory(includePending?: boolean): Promise<OpHistoryRecord[]> {
+    return await this.db.getHistory(includePending);
   }
 
   async getOpHistoryRecord(

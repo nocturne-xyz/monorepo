@@ -20,7 +20,7 @@ export {
   OperationRequestWithMetadata,
   SyncOpts,
   isTerminalOpStatus,
-  isFailedOpStatus
+  isFailedOpStatus,
 } from "@nocturne-xyz/client";
 
 export {

@@ -822,13 +822,13 @@ export class NocturneSdk implements NocturneSdkApi {
     return client.getBalanceForAsset(asset, opts ? getBalanceOptsToGetNotesOpts(opts) : undefined);
   }
 
-  async getOpHistory(): Promise<OpHistoryRecord[]> {
+  async getOpHistory(includePending?: boolean): Promise<OpHistoryRecord[]> {
     const client = await this.clientThunk();
-    return await client.getOpHistory();
+    return await client.getOpHistory(includePending);
   }
 
   async getInFlightOperations(): Promise<OperationHandle[]> {
-    const history = await this.getOpHistory();
+    const history = await this.getOpHistory(true);
     const operationHandles = history
       .filter(({ status }) => !status || !isTerminalOpStatus(status))
       .map(
