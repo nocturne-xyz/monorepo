@@ -907,7 +907,10 @@ export class NocturneSdk implements NocturneSdkApi {
     try {
       await tryAcquire(this.syncMutex).runExclusive(async () => {
         const handlerContract = await this.handlerContractThunk();
-        let endIndex = (await handlerContract.totalCount()).toNumber() - 1;
+
+        // TODO: fetch endIndex with a timelag of finalityBlocks somehow
+        let endIndex =
+          (await handlerContract.totalCount()).toNumber() - 1;
 
         const startIndex = (await this.getLatestSyncedMerkleIndex()) ?? 0;
         let currentIndex = startIndex;
