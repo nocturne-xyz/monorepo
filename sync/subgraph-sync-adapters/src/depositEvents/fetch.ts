@@ -69,7 +69,7 @@ function formDepositEventsRawQuery(
   const whereClause = exists ? `where: { ${conditions.join(", ")} }, ` : "";
   return `\
     query fetchDepositEvents${paramsString} {
-      depositEvents(${whereClause}first: 100, orderDirection: asc, orderBy: id) {
+      depositEvents(${whereClause}first: 50, orderDirection: asc, orderBy: id) {
         id
         type
         spender
