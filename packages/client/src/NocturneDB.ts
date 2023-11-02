@@ -165,7 +165,7 @@ export class NocturneDB {
         history.map((digest) => this._getHistoryRecord(digest))
       );
 
-      // if any record is missing, sometheing bad happened
+      // if any record is missing, something bad happened
       if (records.some((r) => r === undefined)) {
         throw new Error("record not found");
       }
@@ -228,13 +228,14 @@ export class NocturneDB {
     );
 
     await this.mutex.runExclusive(async () => {
+      const now = Date.now();
       const record = {
         digest,
         metadata,
         status,
         spentNoteMerkleIndices,
-        createdAt: Date.now(),
-        lastModified: Date.now(),
+        createdAt: now,
+        lastModified: now,
       };
 
       await this._setHistoryRecord(record.digest, record);

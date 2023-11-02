@@ -102,9 +102,6 @@ export function isFailedOpStatus(status: OperationStatus): boolean {
 
 export function isTerminalOpStatus(status: OperationStatus): boolean {
   return (
-    status === OperationStatus.EXECUTED_SUCCESS ||
-    status === OperationStatus.BUNDLE_REVERTED ||
-    status === OperationStatus.OPERATION_EXECUTION_FAILED ||
-    status === OperationStatus.OPERATION_PROCESSING_FAILED
+    status === OperationStatus.EXECUTED_SUCCESS || isFailedOpStatus(status)
   );
 }
