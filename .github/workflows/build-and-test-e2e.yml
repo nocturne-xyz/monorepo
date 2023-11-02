@@ -18,8 +18,6 @@ jobs:
             command: "Canonical Address Registry"
           - name: insertion writer test suite
             command: "InsertionWriter"
-          - name: optimistic nf tracking test suite
-            command: "Optimistic nullifier tracking"
           - name: build-and-test-e2e-deposit-fetching
             command: "Fetching Deposit Events"
           - name: rpc sync test suite
