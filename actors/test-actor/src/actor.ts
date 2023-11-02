@@ -343,7 +343,7 @@ export class TestActor {
     try {
       const preSign = await this.client.prepareOperation(opRequest);
       const signed = signOperation(this.nocturneSigner, preSign);
-      await this.client.applyOptimisticRecordsForOp(signed);
+      await this.client.addOpToHistory(signed, { items: [] });
 
       const opDigest = OperationTrait.computeDigest(signed);
       this.logger.info(`proving operation with digest ${opDigest}`, {
