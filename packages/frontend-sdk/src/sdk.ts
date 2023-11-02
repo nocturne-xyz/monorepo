@@ -1,3 +1,21 @@
+import {
+  ActionMetadata,
+  BundlerOpTracker,
+  MockEthToTokenConverter,
+  NocturneClient,
+  NocturneDB,
+  OpHistoryRecord,
+  OpRequestBuilder,
+  OperationRequestWithMetadata,
+  RequestSpendKeyEoaMethod,
+  RequestViewingKeyMethod,
+  SignCanonAddrRegistryEntryMethod,
+  SignOperationMethod,
+  SyncOpts,
+  newOpRequestBuilder,
+  proveOperation,
+  isTerminalOpStatus
+} from "@nocturne-xyz/client";
 import { Erc20Config } from "@nocturne-xyz/config";
 import {
   CanonicalAddressRegistry,
@@ -13,13 +31,19 @@ import {
   AssetTrait,
   AssetType,
   AssetWithBalance,
+  CanonAddress,
   DepositQuoteResponse,
   DepositStatusResponse,
+  GAS_PER_DEPOSIT_COMPLETE,
   JoinSplitProofWithPublicSignals,
+  NocturneViewer,
+  OperationStatus,
   OperationStatusResponse,
+  OperationTrait,
   PreSignOperation,
   ProvenOperation,
   RelayRequest,
+  SDKSyncAdapter,
   SignedOperation,
   SparseMerkleProver,
   StealthAddress,
@@ -27,7 +51,9 @@ import {
   SubmittableOperationWithNetworkInfo,
   Thunk,
   VerifyingKey,
+  compressPoint,
   decomposeCompressedPoint,
+  decompressPoint,
   encodeEncodedAssetAddrWithSignBitsPI,
   hashDepositRequest,
   joinSplitPublicSignalsToArray,
@@ -35,32 +61,8 @@ import {
   parseEventsFromContractReceipt,
   thunk,
   unpackFromSolidityProof,
-  NocturneViewer,
-  compressPoint,
-  SDKSyncAdapter,
-  OperationTrait,
-  OperationStatus,
-  GAS_PER_DEPOSIT_COMPLETE,
-  CanonAddress,
-  decompressPoint,
 } from "@nocturne-xyz/core";
-import {
-  NocturneClient,
-  OpRequestBuilder,
-  SignCanonAddrRegistryEntryMethod,
-  NocturneDB,
-  MockEthToTokenConverter,
-  BundlerOpTracker,
-  RequestViewingKeyMethod,
-  proveOperation,
-  SyncOpts,
-  SignOperationMethod,
-  newOpRequestBuilder,
-  OperationRequestWithMetadata,
-  ActionMetadata,
-  OpHistoryRecord,
-  isTerminalOpStatus,
-} from "@nocturne-xyz/client";
+import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
 import {
   WasmCanonAddrSigCheckProver,
   WasmJoinSplitProver,
@@ -71,11 +73,13 @@ import {
   UniswapV3Plugin,
   getSwapQuote,
 } from "@nocturne-xyz/op-request-plugins";
+import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
 import { NocturneSdkApi, SnapStateApi } from "./api";
+import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
 import { SnapStateSdk, getSigner } from "./metamask";
 import { GetSnapOptions } from "./metamask/types";
 import {
@@ -103,9 +107,6 @@ import {
   getTokenContract,
   toDepositRequest,
 } from "./utils";
-import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
-import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
-import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
 
 export interface NocturneSdkOptions {
   // interface for fetching deposit data from subgraph and screener
@@ -279,14 +280,14 @@ export class NocturneSdk implements NocturneSdkApi {
    */
   async initiateEthDeposits(
     values: bigint[],
-    gasCompensationPerDeposit?: bigint
+    gasCompensationPerDeposit?: bigint,
   ): Promise<DepositHandleWithReceipt[]> {
     const signer = await getSigner(this.provider);
 
     const ethToWrap = values.reduce((acc, val) => acc + val, 0n);
-    const gasCompRequired = gasCompensationPerDeposit ? gasCompensationPerDeposit * BigInt(values.length) : (
-      BigInt(values.length) * await this.estimateGasPerDeposit()
-    );
+    const gasCompRequired = gasCompensationPerDeposit
+      ? gasCompensationPerDeposit * BigInt(values.length)
+      : BigInt(values.length) * (await this.estimateGasPerDeposit());
 
     const totalValue = ethToWrap + gasCompRequired;
 
@@ -361,13 +362,13 @@ export class NocturneSdk implements NocturneSdkApi {
   async initiateErc20Deposits(
     erc20Address: Address,
     values: bigint[],
-    gasCompensationPerDeposit?: bigint
+    gasCompensationPerDeposit?: bigint,
   ): Promise<DepositHandleWithReceipt[]> {
     const signer = await getSigner(this.provider);
 
-    const gasCompRequired = gasCompensationPerDeposit ? gasCompensationPerDeposit * BigInt(values.length) : (
-      BigInt(values.length) * await this.estimateGasPerDeposit()
-    );
+    const gasCompRequired = gasCompensationPerDeposit
+      ? gasCompensationPerDeposit * BigInt(values.length)
+      : BigInt(values.length) * (await this.estimateGasPerDeposit());
 
     const signerBalance = (await signer.getBalance()).toBigInt();
     if (signerBalance < gasCompRequired) {
@@ -396,7 +397,7 @@ export class NocturneSdk implements NocturneSdkApi {
       depositAddr,
       {
         value: gasCompRequired,
-      }
+      },
     );
     return this.formDepositHandlesWithTxReceipt(tx);
   }
@@ -777,8 +778,13 @@ export class NocturneSdk implements NocturneSdkApi {
         try {
           await client.setOpStatusInHistory(digest, status);
         } catch (err) {
-          if (err instanceof Error && err.message.includes("record not found")) {
-            console.warn(`op ${digest} is not in history. skipping history update`);
+          if (
+            err instanceof Error &&
+            err.message.includes("record not found")
+          ) {
+            console.warn(
+              `op ${digest} is not in history. skipping history update`,
+            );
           } else {
             throw err;
           }
@@ -808,7 +814,9 @@ export class NocturneSdk implements NocturneSdkApi {
     await this.sync();
 
     const client = await this.clientThunk();
-    return await client.getAllAssetBalances(opts ? getBalanceOptsToGetNotesOpts(opts) : undefined);
+    return await client.getAllAssetBalances(
+      opts ? getBalanceOptsToGetNotesOpts(opts) : undefined,
+    );
   }
 
   // todo currently core's getBalanceForAsset doesn't distinguish b/t balance not existing, and balance being 0
@@ -821,7 +829,10 @@ export class NocturneSdk implements NocturneSdkApi {
     await this.sync();
 
     const client = await this.clientThunk();
-    return client.getBalanceForAsset(asset, opts ? getBalanceOptsToGetNotesOpts(opts) : undefined);
+    return client.getBalanceForAsset(
+      asset,
+      opts ? getBalanceOptsToGetNotesOpts(opts) : undefined,
+    );
   }
 
   async getOpHistory(includePending?: boolean): Promise<OpHistoryRecord[]> {
@@ -856,13 +867,13 @@ export class NocturneSdk implements NocturneSdkApi {
     if (!eoaAddr) {
       return undefined;
     }
-   
+
     // check it has corresponding canon addr in registry
     const registry = await this.canonAddrRegistryThunk();
     const maybeCompressedCanonAddr =
-      (await registry._ethAddressToCompressedCanonAddr(
-        eoaAddr,
-      )) as BigNumber | undefined;
+      (await registry._ethAddressToCompressedCanonAddr(eoaAddr)) as
+        | BigNumber
+        | undefined;
 
     if (!maybeCompressedCanonAddr) {
       return undefined;
@@ -871,9 +882,14 @@ export class NocturneSdk implements NocturneSdkApi {
     const canonAddr = decompressPoint(maybeCompressedCanonAddr.toBigInt())!;
 
     // get canon addr from client
-    const canonAddrFromClient = (await this.clientThunk()).viewer.canonicalAddress();
+    const canonAddrFromClient = (
+      await this.clientThunk()
+    ).viewer.canonicalAddress();
 
-    if (canonAddr.x === canonAddrFromClient.x && canonAddr.y === canonAddrFromClient.y) {
+    if (
+      canonAddr.x === canonAddrFromClient.x &&
+      canonAddr.y === canonAddrFromClient.y
+    ) {
       return canonAddr;
     }
     return undefined;
@@ -884,15 +900,16 @@ export class NocturneSdk implements NocturneSdkApi {
    * `syncOpts.timoutSeconds` is used as the interval between progress reports. if not given, there will be one progress report at the end.
    * if another call to this function is in progress, this function will wait for the existing call to complete
    */
-  async sync(syncOpts?: SyncOpts, handleProgress?: (progress: number) => void): Promise<void> {
+  async sync(
+    syncOpts?: SyncOpts,
+    handleProgress?: (progress: number) => void,
+  ): Promise<void> {
     try {
       await tryAcquire(this.syncMutex).runExclusive(async () => {
         const handlerContract = await this.handlerContractThunk();
-        let endIndex =
-          (await handlerContract.totalCount()).toNumber() - 1;
+        let endIndex = (await handlerContract.totalCount()).toNumber() - 1;
 
-        const startIndex =
-          (await this.getLatestSyncedMerkleIndex()) ?? 0;
+        const startIndex = (await this.getLatestSyncedMerkleIndex()) ?? 0;
         let currentIndex = startIndex;
 
         const NUM_REFETCHES = 5;
@@ -907,21 +924,19 @@ export class NocturneSdk implements NocturneSdkApi {
             (await this.syncInner({ ...syncOpts, timing: true })) ?? 0;
 
           if (count % refetchEvery === 0) {
-            endIndex =
-              (
-                await handlerContract.totalCount()
-              ).toNumber() - 1;
+            endIndex = (await handlerContract.totalCount()).toNumber() - 1;
           }
           count++;
 
-          const progress = ((currentIndex - startIndex) / (endIndex - startIndex)) * 100;
+          const progress =
+            ((currentIndex - startIndex) / (endIndex - startIndex)) * 100;
           handleProgress?.(progress);
         }
       });
     } catch (err) {
       if (err == E_ALREADY_LOCKED) {
         await this.syncMutex.waitForUnlock();
-      } else  {
+      } else {
         throw err;
       }
     }

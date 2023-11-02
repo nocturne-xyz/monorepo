@@ -1,5 +1,3 @@
-import * as JSON from "bigint-json-serialization";
-import { OperationWithMetadata } from "./types";
 import {
   Address,
   CanonAddrRegistryEntry,
@@ -12,6 +10,8 @@ import {
   SpendPk,
   ViewingKey,
 } from "@nocturne-xyz/crypto";
+import * as JSON from "bigint-json-serialization";
+import { OperationWithMetadata } from "./types";
 
 export interface SetSpendKeyMethod {
   method: "nocturne_setSpendKey";
@@ -78,7 +78,8 @@ export type SnapRpcRequestHandler = (
 ) => Promise<RpcRequestMethod["return"]>;
 
 export function assertAllRpcMethodsHandled(request: never): never {
-  throw new Error("Snap JSON RPC method not handled: " + request);
+  // @ts-expect-error on request.method—if this fires at runtime, we want to see the method name
+  throw new Error("Snap JSON RPC method not handled: " + request.method);
 }
 
 export function parseObjectValues(params: object): object {

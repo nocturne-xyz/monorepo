@@ -1,14 +1,14 @@
-import * as JSON from "bigint-json-serialization";
-import { SnapStateApi } from "../api";
-import { GetSnapsResponse, Snap } from "./types";
-import { generateNocturneSpendKeyFromEoaSig } from "../eoaSigKeygen";
 import {
   RequestSpendKeyEoaMethod,
   RpcRequestMethod,
   SetSpendKeyMethod,
   stringifyObjectValues,
 } from "@nocturne-xyz/client";
+import * as JSON from "bigint-json-serialization";
+import { SnapStateApi } from "../api";
+import { generateNocturneSpendKeyFromEoaSig } from "../eoaSigKeygen";
 import { SupportedProvider } from "../types";
+import { GetSnapsResponse, Snap } from "./types";
 import { getSigner } from "./utils";
 
 export * from "./utils";
