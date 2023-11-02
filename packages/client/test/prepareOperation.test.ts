@@ -158,9 +158,9 @@ describe("gatherNotes", () => {
     );
 
     // add optimistic NF records for the 30 token note at merkleIndex 0
-    //@ts-ignore
     await nocturneDB.kv.putMany([
-      NocturneDB.makeOptimisticNFRecordKV(0n, {
+      //@ts-ignore
+      NocturneDB.makeOptimisticNFRecordKV(0, {
         nullifier: 420n,
         expirationDate: Date.now() + 1_000_000,
       }),
