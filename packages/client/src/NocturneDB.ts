@@ -274,9 +274,10 @@ export class NocturneDB {
 
   async pruneOptimisticNFs(): Promise<void> {
     const optimsiticNfRecords = await this.getAllOptimisticNFRecords();
+    const now = Date.now();
     const keysToRemove = [...optimsiticNfRecords.entries()].flatMap(
       ([merkleIndex, record]) => {
-        if (Date.now() > record.expirationDate) {
+        if (now > record.expirationDate) {
           return [NocturneDB.formatOptimisticNFRecordKey(merkleIndex)];
         }
 
