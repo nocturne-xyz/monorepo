@@ -41,6 +41,8 @@ import {
   OperationTrait,
   OperationStatus,
   GAS_PER_DEPOSIT_COMPLETE,
+  CanonAddress,
+  decompressPoint,
 } from "@nocturne-xyz/core";
 import {
   NocturneClient,
@@ -842,6 +844,39 @@ export class NocturneSdk implements NocturneSdkApi {
         }
       );
     return operationHandles;
+  }
+
+  async getCanonicalAddress(): Promise<CanonAddress | undefined> {
+    // get EOA address from snap
+    const eoaAddr = await this.snap.invoke<RequestSpendKeyEoaMethod>({
+      method: "nocturne_requestSpendKeyEoa",
+      params: undefined,
+    });
+
+    if (!eoaAddr) {
+      return undefined;
+    }
+   
+    // check it has corresponding canon addr in registry
+    const registry = await this.canonAddrRegistryThunk();
+    const maybeCompressedCanonAddr =
+      (await registry._ethAddressToCompressedCanonAddr(
+        eoaAddr,
+      )) as BigNumber | undefined;
+
+    if (!maybeCompressedCanonAddr) {
+      return undefined;
+    }
+
+    const canonAddr = decompressPoint(maybeCompressedCanonAddr.toBigInt())!;
+
+    // get canon addr from client
+    const canonAddrFromClient = (await this.clientThunk()).viewer.canonicalAddress();
+
+    if (canonAddr.x === canonAddrFromClient.x && canonAddr.y === canonAddrFromClient.y) {
+      return canonAddr;
+    }
+    return undefined;
   }
 
   /**
