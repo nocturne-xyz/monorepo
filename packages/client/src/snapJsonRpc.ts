@@ -1,6 +1,5 @@
-import * as JSON from "bigint-json-serialization";
-import { OperationWithMetadata } from "./types";
 import {
+  Address,
   CanonAddrRegistryEntry,
   PreSignOperation,
   SignedOperation,
@@ -11,11 +10,14 @@ import {
   SpendPk,
   ViewingKey,
 } from "@nocturne-xyz/crypto";
+import * as JSON from "bigint-json-serialization";
+import { OperationWithMetadata } from "./types";
 
 export interface SetSpendKeyMethod {
   method: "nocturne_setSpendKey";
   params: {
-    spendKey: string; // converted to { '0': <number>, '1': <number>, '2': <number>, ... }
+    spendKey: string;
+    eoaAddress: Address;
   };
   return: string | undefined; // error string or undefined
 }
@@ -42,10 +44,10 @@ export interface SignOperationMethod {
   return: SignedOperation;
 }
 
-export interface SpendKeyIsSetMethod {
-  method: "nocturne_spendKeyIsSet";
+export interface RequestSpendKeyEoaMethod {
+  method: "nocturne_requestSpendKeyEoa";
   params: undefined;
-  return: boolean;
+  return: Address | undefined;
 }
 
 export interface RequestViewingKeyMethodResponse {
@@ -64,7 +66,7 @@ export type RpcRequestMethod =
   | SignCanonAddrRegistryEntryMethod
   | SignOperationMethod
   | RequestViewingKeyMethod
-  | SpendKeyIsSetMethod;
+  | RequestSpendKeyEoaMethod;
 
 export type SnapRpcRequestHandlerArgs = {
   origin: string;
@@ -76,7 +78,8 @@ export type SnapRpcRequestHandler = (
 ) => Promise<RpcRequestMethod["return"]>;
 
 export function assertAllRpcMethodsHandled(request: never): never {
-  throw new Error("Snap JSON RPC method not handled: " + request);
+  // @ts-expect-error on request.method—if this fires at runtime, we want to see the method name
+  throw new Error("Snap JSON RPC method not handled: " + request.method);
 }
 
 export function parseObjectValues(params: object): object {
