@@ -294,9 +294,19 @@ export class SubtreeUpdater {
         logger.info(
           `pre-dispatch attempting tx submission. subtreeIndex: ${subtreeIndex}`
         );
+        const estimatedGas = (
+          await this.handlerContract.estimateGas.applySubtreeUpdate(
+            newRoot,
+            solidityProof
+          )
+        ).toBigInt();
+
         const tx = await this.handlerContract.applySubtreeUpdate(
           newRoot,
-          solidityProof
+          solidityProof,
+          {
+            gasLimit: (estimatedGas * 3n) / 2n,
+          }
         );
 
         logger.info(

@@ -267,13 +267,27 @@ export class TestActor {
         }
       );
 
+      const stealthAddress = StealthAddressTrait.compress(
+        this.client.viewer.generateRandomStealthAddress()
+      );
+      const estimatedGas = (
+        await this.depositManager.estimateGas.instantiateErc20MultiDeposit(
+          erc20Token.address,
+          [randomValue],
+          stealthAddress
+        )
+      ).toBigInt();
+
       const instantiateDepositTx =
         await this.depositManager.instantiateErc20MultiDeposit(
           erc20Token.address,
           [randomValue],
           StealthAddressTrait.compress(
             this.client.viewer.generateRandomStealthAddress()
-          )
+          ),
+          {
+            gasLimit: (estimatedGas * 3n) / 2n,
+          }
         );
       const receipt = await instantiateDepositTx.wait(1);
 
