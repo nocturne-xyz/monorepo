@@ -215,7 +215,7 @@ export class BundlerSubmitter {
       );
 
       logger.info(`post-dispatch awaiting tx receipt. txhash: ${tx.hash}`);
-      const receipt = await tx.wait(1);
+      const receipt = await tx.wait(this.finalityBlocks);
       return receipt;
     } catch (err) {
       logger.error("failed to process bundle:", err);
