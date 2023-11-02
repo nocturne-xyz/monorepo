@@ -14,7 +14,7 @@ import {
   SyncOpts,
   newOpRequestBuilder,
   proveOperation,
-  isTerminalOpStatus
+  isTerminalOpStatus,
 } from "@nocturne-xyz/client";
 import { Erc20Config } from "@nocturne-xyz/config";
 import {

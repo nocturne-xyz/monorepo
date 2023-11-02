@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.1.0
+
+### Minor Changes
+
+- 67b9116a: setSpendKey passes along eoa address, checks for spend key exists calls nocturne_requestSpendKeyEoa instead
+- 23243741: (BREAKING) get rid of `optimsiticOpDigest` stuff and replace with OpHistory
+- b56ead58: add `OpHistoryStore`
+
+### Patch Changes
+
+- 85811df6: export `GetNotesOpts`
+- Updated dependencies [b2938fc0]
+- Updated dependencies [45d0719a]
+  - @nocturne-xyz/config@1.5.0
+  - @nocturne-xyz/core@3.1.1
+
 ## 3.0.5
 
 ### Patch Changes

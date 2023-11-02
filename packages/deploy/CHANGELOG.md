@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.11.0
+
+### Minor Changes
+
+- b2938fc0: Refactor deploy script to check all state vars of core AND adapter contracts
+
+### Patch Changes
+
+- Updated dependencies [b2938fc0]
+- Updated dependencies [45d0719a]
+  - @nocturne-xyz/config@1.5.0
+  - @nocturne-xyz/core@3.1.1
+
 ## 0.10.1
 
 ### Patch Changes

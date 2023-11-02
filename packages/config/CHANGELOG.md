@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+### Minor Changes
+
+- b2938fc0: Separate offchain vars from core contract deployment (finality, offchain actor whitelist, etc)
+
 ## 1.4.0
 
 ### Minor Changes

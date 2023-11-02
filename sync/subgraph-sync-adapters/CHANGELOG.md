@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3
+
+### Patch Changes
+
+- ef178c21: reduce batch size to 50 when fetching deposit events
+- Updated dependencies [45d0719a]
+  - @nocturne-xyz/core@3.1.1
+
 ## 0.3.2
 
 ### Patch Changes
