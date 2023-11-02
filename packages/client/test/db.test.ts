@@ -2,56 +2,35 @@ import "mocha";
 import { expect } from "chai";
 import {
   InMemoryKVStore,
-  IncludedNote,
   Asset,
-  zip,
-  range,
-  NoteTrait,
   IncludedNoteWithNullifier,
   AssetTrait,
   WithTotalEntityIndex,
-  unzip,
   NocturneSigner,
+  OperationStatus,
+  OperationTrait,
 } from "@nocturne-xyz/core";
 import { NocturneDB } from "../src/NocturneDB";
-import { DUMMY_ROOT_KEY, ponzi, shitcoin, stablescam } from "./utils";
+import {
+  DUMMY_ROOT_KEY,
+  ponzi,
+  shitcoin,
+  stablescam,
+  dummyNotesAndNfs as _dummyNotesAndNfs,
+  dummyOp as _dummyOp,
+  getNotesAndNfsFromOp,
+} from "./utils";
+import { OperationMetadata } from "../src";
 
 describe("NocturneDB", async () => {
   const kv = new InMemoryKVStore();
   const db = new NocturneDB(kv);
   const viewer = new NocturneSigner(DUMMY_ROOT_KEY).viewer();
 
-  const dummyNotesAndNfs = (
-    notesPerAsset: number,
-    ...assets: Asset[]
-  ): [IncludedNoteWithNullifier[], bigint[]] => {
-    const owner = viewer.generateRandomStealthAddress();
-    const notes: IncludedNoteWithNullifier[] = [];
-    const nullifiers: bigint[] = [];
-    let offset = 0;
-    for (const asset of assets) {
-      const allNotes: IncludedNote[] = range(notesPerAsset).map((i) => ({
-        owner,
-        nonce: BigInt(i + offset),
-        asset,
-        value: 100n,
-        merkleIndex: i + offset,
-      }));
-      const allNfs = allNotes.map((n) => NoteTrait.createNullifier(viewer, n));
-      const notesWithNFs = zip(allNotes, allNfs).map(([n, nf]) =>
-        NoteTrait.toIncludedNoteWithNullifier(n, nf)
-      );
-
-      notes.push(...notesWithNFs);
-      nullifiers.push(
-        ...notes.map((n) => NoteTrait.createNullifier(viewer, n))
-      );
-
-      offset += notesPerAsset;
-    }
-
-    return [notes, nullifiers];
-  };
+  const dummyNotesAndNfs = (notesPerAsset: number, ...assets: Asset[]) =>
+    _dummyNotesAndNfs(viewer, notesPerAsset, ...assets);
+  const dummyOp = (numJoinSplits: number, asset: Asset) =>
+    _dummyOp(viewer, numJoinSplits, asset);
 
   const toIncludedNote = ({ nullifier, ...rest }: IncludedNoteWithNullifier) =>
     rest;
@@ -279,102 +258,91 @@ describe("NocturneDB", async () => {
     }
   });
 
-  it("applies optimistic nullifiers", async () => {
-    // insert 10 notes
-    const [notes, _] = dummyNotesAndNfs(10, shitcoin);
-    await db.storeNotes(withDummyTotalEntityIndices(notes));
+  it("gets and sets op history", async () => {
+    // add a few ops with different assets
+    const ops = [
+      dummyOp(1, shitcoin),
+      dummyOp(2, ponzi),
+      dummyOp(3, stablescam),
+    ];
 
-    // optimistically nullify 5 of them
-    const [merkleIndices, records] = unzip(
-      notes.slice(5).map((note) => {
-        const merkleIndex = note.merkleIndex;
-        const record = {
-          nullifier: note.nullifier,
-        };
-
-        return [merkleIndex, record];
-      })
-    );
-
-    await db.storeOptimisticRecords(
-      0n,
+    const metas: OperationMetadata[] = [
       {
-        expirationDate: 1234567890,
-        merkleIndices,
-        metadata: {
-          items: [
-            {
-              type: "Action",
-              actionType: "Transfer",
-              recipientAddress: "0xdeadbeef",
-              erc20Address: shitcoin.assetAddr,
-              amount: 10n,
-            },
-          ],
-        },
+        items: [
+          {
+            type: "Action",
+            actionType: "Transfer",
+            recipientAddress: "alpha",
+            erc20Address: "bravo",
+            amount: 1n,
+          },
+        ],
       },
-      records
-    );
+      {
+        items: [
+          {
+            type: "Action",
+            actionType: "Transfer",
+            recipientAddress: "bravo",
+            erc20Address: "charlie",
+            amount: 2n,
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            type: "Action",
+            actionType: "Transfer",
+            recipientAddress: "charlie",
+            erc20Address: "delta",
+            amount: 2n,
+          },
+        ],
+      },
+    ];
 
-    // expect to get 5 notes total from `getAllNotes`
-    const allNotes = await db.getAllNotes({ includeUncommitted: true });
-    expect(allNotes.size).to.eql(1);
+    await db.addOpToHistory(ops[0], metas[0], OperationStatus.BUNDLE_REVERTED);
+    await db.addOpToHistory(ops[1], metas[1], OperationStatus.EXECUTED_SUCCESS);
+    await db.addOpToHistory(ops[2], metas[2]);
 
-    const entry = allNotes.get(NocturneDB.formatAssetKey(shitcoin));
-    expect(entry).to.not.be.undefined;
-    expect(entry!.length).to.eql(5);
+    // get history without pending, expect to not have third op
+    {
+      const history = await db.getHistory();
+      expect(history.length).to.eql(2);
+    }
+
+    // get the history
+    const history = await db.getHistory(true);
+    expect(history.length).to.eql(3);
+
+    // check that the op digests match
+    expect(history[0].digest).to.eql(OperationTrait.computeDigest(ops[0]));
+    expect(history[1].digest).to.eql(OperationTrait.computeDigest(ops[1]));
+    expect(history[2].digest).to.eql(OperationTrait.computeDigest(ops[2]));
+
+    // check that metadatas match
+    expect(history[0].metadata).to.eql(metas[0]);
+    expect(history[1].metadata).to.eql(metas[1]);
+    expect(history[2].metadata).to.eql(metas[2]);
+
+    // check statuses match
+    expect(history[0].status).to.eql(OperationStatus.BUNDLE_REVERTED);
+    expect(history[1].status).to.eql(OperationStatus.EXECUTED_SUCCESS);
+    expect(history[2].status).to.be.undefined;
   });
 
-  it("gets all optimistic records", async () => {
-    // insert 10 notes
-    const [notes, _] = dummyNotesAndNfs(10, shitcoin);
-    await db.storeNotes(withDummyTotalEntityIndices(notes));
+  it("applies optimistic nullifiers when adding op to history", async () => {
+    // add an op with 5 joinsplits to history
+    const op = dummyOp(5, shitcoin);
+    const { oldNotes } = getNotesAndNfsFromOp(op);
+    await db.storeNotes(withDummyTotalEntityIndices(oldNotes));
 
-    const expirationDate = 1234567890;
+    await db.addOpToHistory(op, { items: [] });
 
-    // optimistically nullify 5 of them
-    const [merkleIndices, records] = unzip(
-      notes.slice(5).map((note) => {
-        const merkleIndex = note.merkleIndex;
-        const record = {
-          nullifier: note.nullifier,
-          expirationDate,
-        };
-
-        return [merkleIndex, record];
-      })
-    );
-
-    await db.storeOptimisticRecords(
-      0n,
-      {
-        expirationDate,
-        merkleIndices,
-        metadata: undefined,
-      },
-      records
-    );
-
-    const optimisticOpDigestsWithMeta =
-      await db.getAllOptimisticOpDigestRecords();
-    expect(optimisticOpDigestsWithMeta.size).to.eql(1);
-    expect(optimisticOpDigestsWithMeta.get(0n)!.expirationDate);
-    expect(optimisticOpDigestsWithMeta.get(0n)!.merkleIndices).to.eql(
-      merkleIndices
-    );
-    expect(optimisticOpDigestsWithMeta.get(0n)!.metadata).to.be.undefined;
-
-    // get all optimistic nullifiers
-    const optimisticNFs = await db.getAllOptimisticNFRecords();
-
-    // expect to have 5 entries - one for each merkle index 5..=9
-    expect(optimisticNFs.size).to.eql(5);
-
-    expect(optimisticNFs.get(5)).to.not.be.undefined;
-    expect(optimisticNFs.get(6)).to.not.be.undefined;
-    expect(optimisticNFs.get(7)).to.not.be.undefined;
-    expect(optimisticNFs.get(8)).to.not.be.undefined;
-    expect(optimisticNFs.get(9)).to.not.be.undefined;
+    // if the old notes were optimistically nullified, we expect `getAllNotes` to return an empty map
+    const allNotes = await db.getAllNotes({ includeUncommitted: true });
+    expect(allNotes.size).to.eql(0);
   });
 });
 

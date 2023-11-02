@@ -9,7 +9,7 @@ import {
   generateRandomSpendingKey,
   range,
 } from "@nocturne-xyz/core";
-import { newOpRequestBuilder } from "../src";
+import { NocturneDB, newOpRequestBuilder } from "../src";
 import { prepareOperation, __private } from "../src/prepareOperation";
 import { sortNotesByValue } from "../src/utils";
 import {
@@ -158,25 +158,13 @@ describe("gatherNotes", () => {
     );
 
     // add optimistic NF records for the 30 token note at merkleIndex 0
-    await nocturneDB.storeOptimisticRecords(
-      0n,
-      {
+    //@ts-ignore
+    await nocturneDB.kv.putMany([
+      NocturneDB.makeOptimisticNFRecordKV(0n, {
+        nullifier: 420n,
         expirationDate: Date.now() + 1_000_000,
-        merkleIndices: [0],
-        metadata: {
-          items: [
-            {
-              type: "Action",
-              actionType: "Transfer",
-              recipientAddress: "0xdeadbeef",
-              erc20Address: shitcoin.assetAddr,
-              amount: 10n,
-            },
-          ],
-        },
-      },
-      [{ nullifier: 420n }]
-    );
+      }),
+    ]);
 
     // gather notes to spend 30 tokens total
     // we should not get the 30 token note, since it has an optimistic NF record
