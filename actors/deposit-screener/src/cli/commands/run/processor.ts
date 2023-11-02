@@ -42,6 +42,7 @@ const runProcess = new Command("processor")
     "number of confirmations to wait before processing new deposit requests",
     parseInt
   )
+  .option("--skip-undergassed-deposits <boolean>", "skip undergassed deposits")
   .option("--log-level <string>", "min log importance to log to stdout.")
   .action(async (options) => {
     const env = process.env.ENVIRONMENT;
@@ -52,7 +53,13 @@ const runProcess = new Command("processor")
       throw new Error(`ENVIRONMENT env var set to invalid value: ${env}`);
     }
 
-    const { configNameOrPath, logDir, throttleMs, logLevel } = options;
+    const {
+      configNameOrPath,
+      logDir,
+      throttleMs,
+      logLevel,
+      skipUndergassedDeposits,
+    } = options;
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
@@ -107,7 +114,10 @@ const runProcess = new Command("processor")
       logger,
       screeningApi,
       supportedAssets,
-      config.contracts.startBlock
+      {
+        startBlock: config.contracts.startBlock,
+        skipUndergassedDeposits,
+      }
     );
 
     const finalityBlocks =

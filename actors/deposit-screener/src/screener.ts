@@ -52,6 +52,11 @@ interface DepositScreenerScreenerMetrics {
   screeningDelayHistogram: ot.Histogram;
 }
 
+export interface DepositScreenerScreenerOpts {
+  startBlock?: number;
+  skipUndergassedDeposits?: boolean;
+}
+
 export class DepositScreenerScreener {
   adapter: DepositEventSyncAdapter;
   depositManagerContract: DepositManager;
@@ -63,6 +68,7 @@ export class DepositScreenerScreener {
   startBlock: number;
   supportedAssets: Set<Address>;
   metrics: DepositScreenerScreenerMetrics;
+  skipUndergassedDeposits: boolean;
 
   constructor(
     syncAdapter: DepositEventSyncAdapter,
@@ -72,13 +78,14 @@ export class DepositScreenerScreener {
     logger: Logger,
     screeningApi: ScreeningCheckerApi,
     supportedAssets: Set<Address>,
-    startBlock?: number
+    opts?: DepositScreenerScreenerOpts
   ) {
     this.redis = redis;
     this.adapter = syncAdapter;
     this.logger = logger;
 
-    this.startBlock = startBlock ?? 0;
+    this.startBlock = opts?.startBlock ?? 0;
+    this.skipUndergassedDeposits = opts?.skipUndergassedDeposits ?? false;
 
     this.depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
@@ -256,8 +263,9 @@ export class DepositScreenerScreener {
 
         childLogger.debug(`checking deposit request`);
         if (
+          this.skipUndergassedDeposits &&
           depositRequest.gasCompensation <
-          (GAS_PER_DEPOSIT_COMPLETE * gasPrice) / 10n
+            (GAS_PER_DEPOSIT_COMPLETE * gasPrice) / 100n
         ) {
           childLogger.warn(
             `ignoring under-gassed deposit request with hash ${hash}`
