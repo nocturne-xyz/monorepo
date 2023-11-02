@@ -1,7 +1,3 @@
-# apps
-
-packages/snap @luketchang @Sladuca
-
 # actors 
 
 packages/bundler @luketchang @Sladuca
@@ -11,8 +7,9 @@ packages/test-actor @Sladuca @luketchang
 
 # SDKs
 
-packages/core @luketchang @Sladuca
-packages/frontend-sdk @luketchang @Sladuca @panieldark
+packages/core @Sladuca
+packages/client @Sladuca
+packages/frontend-sdk @Sladuca @panieldark
 
 # other packages
 

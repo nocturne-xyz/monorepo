@@ -2,11 +2,7 @@ import ethers from "ethers";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { NocturneViewer } from "@nocturne-xyz/crypto";
-import {
-  OptimisticNFRecord,
-  OperationMetadata,
-  OpDigestWithMetadata,
-} from "./types";
+import { OperationMetadata, OpHistoryRecord } from "./types";
 import {
   OperationRequest,
   ensureOpRequestChainInfo,
@@ -30,17 +26,12 @@ import {
   Asset,
   SparseMerkleProver,
   MapWithObjectKeys,
-  unzip,
   maxArray,
   SDKSyncAdapter,
   TotalEntityIndex,
   TotalEntityIndexTrait,
-  OperationTrait,
+  OperationStatus,
 } from "@nocturne-xyz/core";
-import { OpHistoryStore } from "./OpHistoryStore";
-
-const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000; // 10 minutes
-const BUNDLER_RECEIVED_OP_BUFFER: number = 90 * 1000; // 90 seconds (buffer in case proof gen takes a while)
 
 export class NocturneClient {
   protected provider: ethers.providers.Provider;
@@ -51,7 +42,6 @@ export class NocturneClient {
   protected syncAdapter: SDKSyncAdapter;
   protected tokenConverter: EthToTokenConverter;
   protected opTracker: OpTracker;
-  protected opHistoryStore?: OpHistoryStore;
 
   readonly viewer: NocturneViewer;
   readonly gasAssets: Map<string, Asset>;
@@ -64,8 +54,7 @@ export class NocturneClient {
     db: NocturneDB,
     syncAdapter: SDKSyncAdapter,
     tokenConverter: EthToTokenConverter,
-    nulliferChecker: OpTracker,
-    opHistoryStore?: OpHistoryStore
+    nulliferChecker: OpTracker
   ) {
     if (typeof configOrNetworkName == "string") {
       this.config = loadNocturneConfig(configOrNetworkName);
@@ -94,16 +83,6 @@ export class NocturneClient {
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
     this.opTracker = nulliferChecker;
-
-    this.opHistoryStore = opHistoryStore;
-  }
-
-  get history(): OpHistoryStore {
-    if (!this.opHistoryStore) {
-      throw new Error("OpHistoryStore not given in constructor");
-    }
-
-    return this.opHistoryStore;
   }
 
   async clearDb(): Promise<void> {
@@ -203,82 +182,36 @@ export class NocturneClient {
     );
   }
 
-  async applyOptimisticRecordsForOp(
+  async addOpToHistory(
     op: PreSignOperation | SignedOperation,
-    metadata?: OperationMetadata
+    metadata: OperationMetadata
   ): Promise<void> {
-    // Create op digest record
-    const opDigest = OperationTrait.computeDigest(op);
-    const expirationDate = Date.now() + OPTIMISTIC_RECORD_TTL;
-
-    // Create NF records
-    const [merkleIndices, nfRecords] = unzip(
-      getMerkleIndicesAndNfsFromOp(op).map(({ merkleIndex, nullifier }) => {
-        return [
-          Number(merkleIndex),
-          {
-            nullifier,
-          } as OptimisticNFRecord,
-        ];
-      })
-    );
-
-    console.log(
-      `storing optimistic record for op ${opDigest}. Metadata items: ${metadata?.items}`
-    );
-    await this.db.storeOptimisticRecords(
-      opDigest,
-      {
-        expirationDate,
-        merkleIndices,
-        metadata,
-      },
-      nfRecords
-    );
+    await this.db.addOpToHistory(op, metadata);
   }
 
-  async getAllOptimisticOpDigestsWithMetadata(): Promise<
-    OpDigestWithMetadata[]
-  > {
-    const optimisticOpDigestRecords =
-      await this.db.getAllOptimisticOpDigestRecords();
-    return Array.from(optimisticOpDigestRecords).map(([opDigest, record]) => {
-      return { opDigest, metadata: record.metadata };
-    });
+  async removeOpFromHistory(digest: bigint): Promise<void> {
+    await this.db.removeOpFromHistory(digest);
   }
 
-  async updateOptimisticNullifiers(): Promise<void> {
-    const optimisticOpDigestRecords =
-      await this.db.getAllOptimisticOpDigestRecords();
+  async getOpHistory(includePending?: boolean): Promise<OpHistoryRecord[]> {
+    return await this.db.getHistory(includePending);
+  }
 
-    // get all of merkle indices of records we want to remove
-    const opDigestsToRemove = new Set<bigint>();
-    for (const [opDigest, record] of optimisticOpDigestRecords.entries()) {
-      const now = Date.now();
+  async getOpHistoryRecord(
+    digest: bigint
+  ): Promise<OpHistoryRecord | undefined> {
+    return await this.db.getHistoryRecord(digest);
+  }
 
-      // if it's expired, remove it
-      if (now > record.expirationDate) {
-        opDigestsToRemove.add(opDigest);
-        continue;
-      }
+  async setOpStatusInHistory(
+    digest: bigint,
+    status: OperationStatus
+  ): Promise<void> {
+    await this.db.setStatusForOp(digest, status);
+  }
 
-      // if we're sure bundler received op and bundler doesn't have the nullifier in its DB, remove
-      // its OptimisticNFRecord
-      const bufferMillisAfterOpSubmitted =
-        record.expirationDate -
-        OPTIMISTIC_RECORD_TTL +
-        BUNDLER_RECEIVED_OP_BUFFER;
-      if (
-        now > bufferMillisAfterOpSubmitted &&
-        !(await this.opTracker.operationIsInFlight(opDigest))
-      ) {
-        opDigestsToRemove.add(opDigest);
-      }
-    }
-
-    await this.db.removeOptimisticRecordsForOpDigests(
-      Array.from(opDigestsToRemove)
-    );
+  async pruneOptimisticNullifiers(): Promise<void> {
+    await this.db.pruneOptimisticNFs();
   }
 }
 

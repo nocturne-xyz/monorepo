@@ -1,5 +1,9 @@
 import { ethers } from "ethers";
-import { OptimisticNFRecord, OptimisticOpDigestRecord } from "./types";
+import {
+  OptimisticNFRecord,
+  OpHistoryRecord,
+  OperationMetadata,
+} from "./types";
 import * as JSON from "bigint-json-serialization";
 import {
   Asset,
@@ -7,24 +11,36 @@ import {
   IncludedNote,
   NoteTrait,
   IncludedNoteWithNullifier,
-  zip,
   numberToStringPadded,
   KV,
   KVStore,
   StateDiff,
   TotalEntityIndex,
   WithTotalEntityIndex,
+  OperationStatus,
+  unzip,
+  OperationTrait,
+  PreSignOperation,
+  SignedOperation,
 } from "@nocturne-xyz/core";
+import { Mutex } from "async-mutex";
+import {
+  OPTIMISTIC_RECORD_TTL,
+  getMerkleIndicesAndNfsFromOp,
+  isFailedOpStatus,
+  isTerminalOpStatus,
+} from "./utils";
 
 const NOTES_BY_INDEX_PREFIX = "NOTES_BY_INDEX";
 const NOTES_BY_ASSET_PREFIX = "NOTES_BY_ASSET";
 const NOTES_BY_NULLIFIER_PREFIX = "NOTES_BY_NULLIFIER";
 const MERKLE_INDEX_TIMESTAMP_PREFIX = "MERKLE_INDEX_TIMESTAMP";
 const OPTIMISTIC_NF_RECORD_PREFIX = "OPTIMISTIC_NF_RECORD";
-const OPTIMISTIC_OP_DIGEST_RECORD_PREFIX = "OPTIMISTIC_OP_DIGEST_RECORD";
 const CURRENT_TOTAL_ENTITY_INDEX_KEY = "CURRENT_TOTAL_ENTITY_INDEX";
 const LAST_COMMITTED_MERKLE_INDEX_KEY = "LAST_COMMITTED_MERKLE_INDEX";
 const LAST_SYNCED_MERKLE_INDEX_KEY = "LAST_SYNCED_MERKLE_INDEX";
+const OP_HISTORY_KEY = "OP_HISTORY";
+const OP_DIGEST_PREFIX = "OP_DIGEST_";
 
 // ceil(log10(2^32))
 const MAX_MERKLE_INDEX_DIGITS = 10;
@@ -48,9 +64,11 @@ export class NocturneDB {
   //  asset => merkleIndex[]
   //  nullifier => merkleIndex
   public kv: KVStore;
+  protected mutex: Mutex;
 
   constructor(kv: KVStore) {
     this.kv = kv;
+    this.mutex = new Mutex();
   }
 
   static formatIndexKey(merkleIndex: number): string {
@@ -77,19 +95,15 @@ export class NocturneDB {
     )}`;
   }
 
-  static formatOptimisticOpDigestRecordKey(opDigest: bigint): string {
-    return `${OPTIMISTIC_OP_DIGEST_RECORD_PREFIX}-${opDigest.toString()}`;
-  }
-
-  static parseOpDigestFromOptimisticOpDigestRecordKey(key: string): bigint {
-    return BigInt(key.split("-")[1]);
-  }
-
   static formatOptimisticNFRecordKey(merkleIndex: number): string {
     return `${OPTIMISTIC_NF_RECORD_PREFIX}-${numberToStringPadded(
       merkleIndex,
       MAX_MERKLE_INDEX_DIGITS
     )}`;
+  }
+
+  static formatOpHistoryRecordKey(digest: bigint): string {
+    return `${OP_DIGEST_PREFIX}${digest.toString()}`;
   }
 
   static parseMerkleIndexFromOptimisticNFRecordKey(key: string): number {
@@ -109,68 +123,169 @@ export class NocturneDB {
     };
   }
 
-  async storeOptimisticOpDigestRecords(
-    opDigests: bigint[],
-    records: OptimisticOpDigestRecord[]
-  ): Promise<void> {
-    const kvs = zip(opDigests, records).map(([opDigest, record]) =>
-      NocturneDB.makeOptimisticOpDigestRecordKV(opDigest, record)
-    );
-    await this.kv.putMany(kvs);
-  }
-
-  async getAllOptimisticOpDigestRecords(): Promise<
-    Map<bigint, OptimisticOpDigestRecord>
-  > {
-    const map = new Map<bigint, OptimisticOpDigestRecord>();
-    const kvs = await this.kv.iterPrefix(OPTIMISTIC_OP_DIGEST_RECORD_PREFIX);
-    for await (const [key, value] of kvs) {
-      const opDigest =
-        NocturneDB.parseOpDigestFromOptimisticOpDigestRecordKey(key);
-      const record = JSON.parse(value);
-      map.set(opDigest, record);
+  protected async _getHistoryRecord(
+    digest: bigint
+  ): Promise<OpHistoryRecord | undefined> {
+    const key = NocturneDB.formatOpHistoryRecordKey(digest);
+    const value = await this.kv.getString(key);
+    if (value === undefined) {
+      return undefined;
     }
 
-    return map;
+    return JSON.parse(value);
   }
 
-  // Removes optimistic op digest and NF records for the given op digests
-  async removeOptimisticRecordsForOpDigests(
-    opDigests: bigint[]
+  protected async _setHistoryRecord(
+    digest: bigint,
+    record: OpHistoryRecord
   ): Promise<void> {
-    const opDigestKeys = opDigests.map((digest) =>
-      NocturneDB.formatOptimisticOpDigestRecordKey(digest)
-    );
-    const opDigestKvs = await this.kv.getMany(opDigestKeys);
-    const opDigestRecords: OptimisticOpDigestRecord[] = opDigestKvs.map(
-      ([_key, value]) => JSON.parse(value)
-    );
-
-    const merkleIndicesToRemove = opDigestRecords.flatMap(
-      (record) => record.merkleIndices
-    );
-
-    const nfRecordKeys = merkleIndicesToRemove.map((index) =>
-      NocturneDB.formatOptimisticNFRecordKey(index)
-    );
-
-    await this.kv.removeMany([...opDigestKeys, ...nfRecordKeys]);
+    const key = NocturneDB.formatOpHistoryRecordKey(digest);
+    const value = JSON.stringify(record);
+    await this.kv.putString(key, value);
   }
 
-  async storeOptimisticRecords(
+  protected async getHistoryArray(): Promise<bigint[]> {
+    const value = await this.kv.getString(OP_HISTORY_KEY);
+    if (value === undefined) {
+      return [];
+    }
+
+    return JSON.parse(value);
+  }
+
+  protected async setHistoryArray(history: bigint[]): Promise<void> {
+    const value = JSON.stringify(history);
+    await this.kv.putString(OP_HISTORY_KEY, value);
+  }
+
+  async getHistory(includePending?: boolean): Promise<OpHistoryRecord[]> {
+    return await this.mutex.runExclusive(async () => {
+      const history = await this.getHistoryArray();
+      const records = await Promise.all(
+        history.map((digest) => this._getHistoryRecord(digest))
+      );
+
+      // if any record is missing, something bad happened
+      if (records.some((r) => r === undefined)) {
+        throw new Error("record not found");
+      }
+
+      if (!includePending) {
+        return records.filter(
+          (r) => r?.status && isTerminalOpStatus(r.status)
+        ) as OpHistoryRecord[];
+      }
+
+      return records as OpHistoryRecord[];
+    });
+  }
+
+  async getHistoryRecord(digest: bigint): Promise<OpHistoryRecord | undefined> {
+    return await this.mutex.runExclusive(
+      async () => await this._getHistoryRecord(digest)
+    );
+  }
+
+  async setStatusForOp(
     opDigest: bigint,
-    opDigestRecord: OptimisticOpDigestRecord,
-    nfRecords: OptimisticNFRecord[]
+    status: OperationStatus
   ): Promise<void> {
-    const opDigestKv = NocturneDB.makeOptimisticOpDigestRecordKV(
-      opDigest,
-      opDigestRecord
+    await this.mutex.runExclusive(async () => {
+      const record = await this._getHistoryRecord(opDigest);
+      if (record === undefined) {
+        throw new Error("record not found");
+      }
+
+      record.status = status;
+      record.lastModified = Date.now();
+
+      await this._setHistoryRecord(opDigest, record);
+
+      // remove the corresponding optimistic nf records if op failed
+      if (isFailedOpStatus(status)) {
+        await this.removeOptimisticNFRecords(record.spentNoteMerkleIndices);
+      }
+    });
+  }
+
+  async addOpToHistory(
+    op: PreSignOperation | SignedOperation,
+    metadata: OperationMetadata,
+    status?: OperationStatus
+  ): Promise<void> {
+    const digest = OperationTrait.computeDigest(op);
+    const pairs: [number, bigint][] = getMerkleIndicesAndNfsFromOp(op).map(
+      ({ merkleIndex, nullifier }) => [Number(merkleIndex), nullifier]
     );
-    const nfKvs = zip(opDigestRecord.merkleIndices, nfRecords).map(
-      ([merkleIndex, nfRecord]) =>
-        NocturneDB.makeOptimisticNFRecordKV(merkleIndex, nfRecord)
+    const [spentNoteMerkleIndices] = unzip(pairs);
+
+    const expirationDate = Date.now() + OPTIMISTIC_RECORD_TTL;
+    const optimisticNfKvs = pairs.map(([merkleIndex, nullifier]) =>
+      NocturneDB.makeOptimisticNFRecordKV(merkleIndex, {
+        nullifier,
+        expirationDate,
+      })
     );
-    await this.kv.putMany([opDigestKv, ...nfKvs]);
+
+    await this.mutex.runExclusive(async () => {
+      const now = Date.now();
+      const record = {
+        digest,
+        metadata,
+        status,
+        spentNoteMerkleIndices,
+        createdAt: now,
+        lastModified: now,
+      };
+
+      await this._setHistoryRecord(record.digest, record);
+
+      const history = await this.getHistoryArray();
+      history.push(record.digest);
+      await this.setHistoryArray(history);
+
+      await this.kv.putMany(optimisticNfKvs);
+    });
+  }
+
+  async removeOpFromHistory(
+    digest: bigint,
+    removeOptimisticNFs?: boolean
+  ): Promise<void> {
+    await this.mutex.runExclusive(async () => {
+      const history = await this.getHistoryArray();
+
+      const index = history.indexOf(digest);
+      if (index !== -1) {
+        await this.setHistoryArray(history);
+      } else {
+        console.warn("tried to remove op from history that was not in history");
+      }
+
+      if (removeOptimisticNFs) {
+        const spentIndices =
+          (await this._getHistoryRecord(digest))?.spentNoteMerkleIndices ?? [];
+        await this.removeOptimisticNFRecords(spentIndices);
+      }
+
+      await this.kv.remove(NocturneDB.formatOpHistoryRecordKey(digest));
+    });
+  }
+
+  async pruneOptimisticNFs(): Promise<void> {
+    const optimsiticNfRecords = await this.getAllOptimisticNFRecords();
+    const now = Date.now();
+    const keysToRemove = [...optimsiticNfRecords.entries()].flatMap(
+      ([merkleIndex, record]) => {
+        if (now > record.expirationDate) {
+          return [NocturneDB.formatOptimisticNFRecordKey(merkleIndex)];
+        }
+
+        return [];
+      }
+    );
+
+    await this.kv.removeMany(keysToRemove);
   }
 
   async getOptimisticNFRecord(
@@ -451,15 +566,6 @@ export class NocturneDB {
       NocturneDB.formatMerkleIndexToTotalEntityIndexKey(merkleIndex),
       totalEntityIndex.toString(),
     ];
-  }
-
-  private static makeOptimisticOpDigestRecordKV(
-    opDigest: bigint,
-    record: OptimisticOpDigestRecord
-  ): KV {
-    const key = NocturneDB.formatOptimisticOpDigestRecordKey(opDigest);
-    const value = JSON.stringify(record);
-    return [key, value];
   }
 
   private static makeOptimisticNFRecordKV(

@@ -9,4 +9,4 @@ export { SyncOpts } from "./syncSDK";
 export { BundlerOpTracker } from "./OpTracker";
 export { signOperation } from "./signOperation";
 export { proveOperation } from "./proveOperation";
-export { OpHistoryRecord, OpHistoryStore } from "./OpHistoryStore";
+export { isTerminalOpStatus, isFailedOpStatus } from "./utils";

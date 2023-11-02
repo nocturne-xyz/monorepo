@@ -12,3 +12,5 @@ export function chainIdToNetworkName(chainId: bigint): string {
       throw new Error(`unsupported chainId: ${chainId}`);
   }
 }
+
+export const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000; // 10 minutes
