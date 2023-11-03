@@ -214,4 +214,15 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   async getLatestIndexedBlock(): Promise<number> {
     return await fetchLatestIndexedBlock(this.graphqlEndpoint);
   }
+
+  async getLatestIndexedMerkleIndex(
+    toBlock?: number
+  ): Promise<number | undefined> {
+    return await fetchLatestCommittedMerkleIndex(
+      this.graphqlEndpoint,
+      toBlock
+        ? TotalEntityIndexTrait.fromBlockNumber(toBlock, "THROUGH")
+        : undefined
+    );
+  }
 }

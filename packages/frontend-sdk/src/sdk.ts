@@ -136,6 +136,7 @@ export class NocturneSdk implements NocturneSdkApi {
   protected _provider?: SupportedProvider;
   protected _snap: SnapStateApi;
   protected depositAdapter: DepositAdapter;
+  protected syncAdapter: SDKSyncAdapter;
   protected syncMutex: Mutex;
 
   protected signerThunk: Thunk<ethers.Signer>;
@@ -214,6 +215,8 @@ export class NocturneSdk implements NocturneSdkApi {
         this.endpoints.screenerEndpoint,
       );
 
+    this.syncAdapter = options.syncAdapter ?? new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
+
     this.clientThunk = thunk(async () => {
       const { vk, vkNonce } = await this.snap.invoke<RequestViewingKeyMethod>({
         method: "nocturne_requestViewingKey",
@@ -237,8 +240,7 @@ export class NocturneSdk implements NocturneSdkApi {
         this.sdkConfig.config,
         await SparseMerkleProver.loadFromKV(kv),
         db,
-        options.syncAdapter ??
-          new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
+        this.syncAdapter,
         new MockEthToTokenConverter(),
         new BundlerOpTracker(this.endpoints.bundlerEndpoint),
       );
@@ -900,14 +902,25 @@ export class NocturneSdk implements NocturneSdkApi {
    * `syncOpts.timoutSeconds` is used as the interval between progress reports. if not given, there will be one progress report at the end.
    * if another call to this function is in progress, this function will wait for the existing call to complete
    */
-  async sync(
-    syncOpts?: SyncOpts,
-    handleProgress?: (progress: number) => void,
-  ): Promise<void> {
+  async sync(syncOpts?: SyncOpts, handleProgress?: (progress: number) => void): Promise<void> {
+    const finalityBlocks = this.sdkConfig.config.finalityBlocks;
+    syncOpts = { ...(syncOpts ?? {}), timing: true, finalityBlocks };
     try {
       await tryAcquire(this.syncMutex).runExclusive(async () => {
-        const handlerContract = await this.handlerContractThunk();
-        let endIndex = (await handlerContract.totalCount()).toNumber() - 1;
+        const fetchEndIndex = async () => {
+          if (!finalityBlocks) {
+            return (await this.syncAdapter.getLatestIndexedMerkleIndex()) ?? 0;
+          }
+
+          const currentBlock = await this.provider.getBlockNumber();
+          if (finalityBlocks > currentBlock) {
+            return 0;
+          }
+
+          return (await this.syncAdapter.getLatestIndexedMerkleIndex(currentBlock - finalityBlocks)) ?? 0;
+        };
+
+        let endIndex = await fetchEndIndex();
 
         const startIndex = (await this.getLatestSyncedMerkleIndex()) ?? 0;
         let currentIndex = startIndex;
@@ -924,7 +937,7 @@ export class NocturneSdk implements NocturneSdkApi {
             (await this.syncInner({ ...syncOpts, timing: true })) ?? 0;
 
           if (count % refetchEvery === 0) {
-            endIndex = (await handlerContract.totalCount()).toNumber() - 1;
+            endIndex = await fetchEndIndex();
           }
           count++;
 

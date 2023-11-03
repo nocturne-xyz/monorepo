@@ -191,6 +191,23 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
     const currentBlock = await this.handlerContract.provider.getBlockNumber();
     return currentBlock;
   }
+
+  async getLatestIndexedMerkleIndex(
+    toBlock?: number
+  ): Promise<number | undefined> {
+    // TODO: figure out a way to do this without relying on `blockTag` - not all nodes support this and the ones that do are much more expensive
+    const count = (
+      await this.handlerContract.totalCount({
+        blockTag: toBlock,
+      })
+    ).toNumber();
+
+    if (count === 0) {
+      return undefined;
+    }
+
+    return count - 1;
+  }
 }
 
 function extractNullifiersFromJoinSplitEvents(
