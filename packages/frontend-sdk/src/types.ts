@@ -63,6 +63,12 @@ export enum DepositRequestStatus {
   // user can "retrieve" the deposit
   // from escrow to "cancel" it and
   // get their money back
+  // if the deposit has not yet been picked up by the scerener
+  // it is in the "INITIATED" state
+  // if the deposit has been picked up by the screener and
+  // the screener immediately rejected it,
+  // then it is in the "FAILED_SCREEN" state
+  // otherwise, it is in the "AWAITING_FULFILLMENT" state
   Initiated = "INITIATED",
   FailedScreen = "FAILED_SCREEN",
   AwaitingFulfillment = "AWAITING_FULFILLMENT",
