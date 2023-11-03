@@ -192,17 +192,26 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
     return currentBlock;
   }
 
-  async getLatestIndexedMerkleIndex(finalityBlocks?: number): Promise<number> {
+  async getLatestIndexedMerkleIndex(
+    finalityBlocks?: number
+  ): Promise<number | undefined> {
     // get the latest block number minus `finalityBlocks`, and fetch the current merkle count from the contract at that block
     const currentBlock =
       (await this.handlerContract.provider.getBlockNumber()) -
       (finalityBlocks ?? 0);
 
     // TODO: figure out a way to do this without relying on `blockTag` - not all nodes support this and the ones that do are much more expensive
-    const count = await this.handlerContract.totalCount({
-      blockTag: currentBlock,
-    });
-    return count.toNumber() - 1;
+    const count = (
+      await this.handlerContract.totalCount({
+        blockTag: currentBlock,
+      })
+    ).toNumber();
+
+    if (count === 0) {
+      return undefined;
+    }
+
+    return count - 1;
   }
 }
 

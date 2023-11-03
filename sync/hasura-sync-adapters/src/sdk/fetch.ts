@@ -40,7 +40,7 @@ export async function fetchLatestIndexedBlock(
 export async function fetchLatestIndexedMerkleIndex(
   client: UrqlClient,
   toBlock: number
-): Promise<number> {
+): Promise<number | undefined> {
   const { data, error } = await client.query(LatestIndexedMerkleIndex, {
     toBlock,
   });
@@ -52,11 +52,7 @@ export async function fetchLatestIndexedMerkleIndex(
   const sdkEventMerkleIndex =
     data.sdk_event_aggregate.aggregate?.max?.merkle_index;
 
-  if (!sdkEventMerkleIndex) {
-    throw new Error("returned merkle index should not be null!");
-  }
-
-  return parseInt(sdkEventMerkleIndex);
+  return sdkEventMerkleIndex ? parseInt(sdkEventMerkleIndex) : undefined;
 }
 
 type SdkEvent =

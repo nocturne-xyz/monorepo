@@ -217,13 +217,13 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
 
   async fetchLatestIndexedMerkleIndex(
     finalityBlocks?: number
-  ): Promise<number> {
+  ): Promise<number | undefined> {
     // TODO avoid the extra round trip here
     const currentBlock =
       (await this.getLatestIndexedBlock()) - (finalityBlocks ?? 0);
-    return (await fetchLatestCommittedMerkleIndex(
+    return await fetchLatestCommittedMerkleIndex(
       this.graphqlEndpoint,
       TotalEntityIndexTrait.fromBlockNumber(currentBlock, "THROUGH")
-    ))!;
+    );
   }
 }

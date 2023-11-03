@@ -61,5 +61,8 @@ export interface SDKSyncAdapter {
   getLatestIndexedBlock(): Promise<number>;
 
   // return the latest merkle index the sync adapter can sync to, subject to an optional timelag
-  getLatestIndexedMerkleIndex(finalityBlocks?: number): Promise<number>;
+  // returns undefined if the tree is empty  at the latest indexed block minus the timelag
+  getLatestIndexedMerkleIndex(
+    finalityBlocks?: number
+  ): Promise<number | undefined>;
 }
