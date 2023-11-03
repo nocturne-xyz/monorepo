@@ -907,7 +907,14 @@ export class NocturneSdk implements NocturneSdkApi {
     syncOpts = { ...(syncOpts ?? {}), timing: true, finalityBlocks };
     try {
       await tryAcquire(this.syncMutex).runExclusive(async () => {
-        const fetchEndIndex = async () => (await this.syncAdapter.getLatestIndexedMerkleIndex(finalityBlocks)) ?? 0;
+        const fetchEndIndex = async () => {
+          if (!finalityBlocks) {
+            return (await this.syncAdapter.getLatestIndexedMerkleIndex()) ?? 0;
+          }
+          const currentBlock = await this.provider.getBlockNumber();
+          return (await this.syncAdapter.getLatestIndexedMerkleIndex(currentBlock - finalityBlocks)) ?? 0;
+        };
+
         let endIndex = await fetchEndIndex();
 
         const startIndex = (await this.getLatestSyncedMerkleIndex()) ?? 0;

@@ -17,7 +17,9 @@ const documents = {
     types.FetchSdkEventsDocument,
   "\n  query fetchLatestIndexedBlock {\n    sdk_event_aggregate {\n      aggregate {\n        max {\n          block\n        }\n      }\n    }\n    subtree_commit_aggregate {\n      aggregate {\n        max {\n          block\n        }\n      }\n    }\n  }\n":
     types.FetchLatestIndexedBlockDocument,
-  "\n  query fetchLatestIndexedMerkleIndex($toBlock: Int!) {\n    sdk_event_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n":
+  "\n  query fetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    sdk_event_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n":
+    types.FetchLatestIndexedMerkleIndexUpToBlockDocument,
+  "\n  query fetchLatestIndexedMerkleIndex {\n    sdk_event_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n":
     types.FetchLatestIndexedMerkleIndexDocument,
 };
 
@@ -51,8 +53,14 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: "\n  query fetchLatestIndexedMerkleIndex($toBlock: Int!) {\n    sdk_event_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"
-): (typeof documents)["\n  query fetchLatestIndexedMerkleIndex($toBlock: Int!) {\n    sdk_event_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"];
+  source: "\n  query fetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    sdk_event_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"
+): (typeof documents)["\n  query fetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    sdk_event_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: "\n  query fetchLatestIndexedMerkleIndex {\n    sdk_event_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"
+): (typeof documents)["\n  query fetchLatestIndexedMerkleIndex {\n    sdk_event_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

@@ -161,11 +161,8 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
   }
 
   async getLatestIndexedMerkleIndex(
-    finalityBlocks?: number
+    toBlock?: number
   ): Promise<number | undefined> {
-    // TODO: eliminate this extra round trip
-    const latestBlock = await this.getLatestIndexedBlock();
-    const block = latestBlock - (finalityBlocks ?? 0);
-    return await fetchLatestIndexedMerkleIndex(this.client, block);
+    return await fetchLatestIndexedMerkleIndex(this.client, toBlock);
   }
 }

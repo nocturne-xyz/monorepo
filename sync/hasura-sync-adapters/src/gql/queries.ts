@@ -49,9 +49,21 @@ export const LatestIndexedBlock = graphql(`
   }
 `);
 
-export const LatestIndexedMerkleIndex = graphql(`
-  query fetchLatestIndexedMerkleIndex($toBlock: Int!) {
+export const LatestIndexedMerkleIndexUpToBlock = graphql(`
+  query fetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {
     sdk_event_aggregate(where: { block: { _lte: $toBlock } }) {
+      aggregate {
+        max {
+          merkle_index
+        }
+      }
+    }
+  }
+`);
+
+export const LatestIndexedMerkleIndex = graphql(`
+  query fetchLatestIndexedMerkleIndex {
+    sdk_event_aggregate {
       aggregate {
         max {
           merkle_index

@@ -1793,8 +1793,26 @@ export type FetchLatestIndexedBlockQuery = {
   };
 };
 
-export type FetchLatestIndexedMerkleIndexQueryVariables = Exact<{
+export type FetchLatestIndexedMerkleIndexUpToBlockQueryVariables = Exact<{
   toBlock: Scalars["Int"]["input"];
+}>;
+
+export type FetchLatestIndexedMerkleIndexUpToBlockQuery = {
+  __typename?: "query_root";
+  sdk_event_aggregate: {
+    __typename?: "sdk_event_aggregate";
+    aggregate?: {
+      __typename?: "sdk_event_aggregate_fields";
+      max?: {
+        __typename?: "sdk_event_max_fields";
+        merkle_index?: any | null;
+      } | null;
+    } | null;
+  };
+};
+
+export type FetchLatestIndexedMerkleIndexQueryVariables = Exact<{
+  [key: string]: never;
 }>;
 
 export type FetchLatestIndexedMerkleIndexQuery = {
@@ -2131,13 +2149,13 @@ export const FetchLatestIndexedBlockDocument = {
   FetchLatestIndexedBlockQuery,
   FetchLatestIndexedBlockQueryVariables
 >;
-export const FetchLatestIndexedMerkleIndexDocument = {
+export const FetchLatestIndexedMerkleIndexUpToBlockDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "query",
-      name: { kind: "Name", value: "fetchLatestIndexedMerkleIndex" },
+      name: { kind: "Name", value: "fetchLatestIndexedMerkleIndexUpToBlock" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
@@ -2185,6 +2203,55 @@ export const FetchLatestIndexedMerkleIndexDocument = {
                 },
               },
             ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "aggregate" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "max" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "merkle_index" },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  FetchLatestIndexedMerkleIndexUpToBlockQuery,
+  FetchLatestIndexedMerkleIndexUpToBlockQueryVariables
+>;
+export const FetchLatestIndexedMerkleIndexDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "fetchLatestIndexedMerkleIndex" },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "sdk_event_aggregate" },
             selectionSet: {
               kind: "SelectionSet",
               selections: [
