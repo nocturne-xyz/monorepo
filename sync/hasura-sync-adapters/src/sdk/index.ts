@@ -10,23 +10,28 @@ import {
   maxArray,
   sleep,
   maxNullish,
+  SubgraphUtils,
 } from "@nocturne-xyz/core";
 import { EncryptedStateDiff, SDKIterSyncOpts } from "@nocturne-xyz/core";
 import { Client as UrqlClient, fetchExchange } from "@urql/core";
 import {
   fetchSdkEventsAndLatestCommittedMerkleIndex,
-  fetchLatestIndexedBlock,
   fetchLatestIndexedMerkleIndex,
 } from "./fetch";
 
+const { fetchLatestIndexedBlock } = SubgraphUtils;
+
 export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
   client: UrqlClient;
+  subgraphUrl: string;
 
-  constructor(graphqlEndpoint: string) {
+  constructor(graphqlEndpoint: string, subgraphUrl: string) {
     this.client = new UrqlClient({
       url: graphqlEndpoint,
       exchanges: [fetchExchange],
     });
+
+    this.subgraphUrl = subgraphUrl;
   }
 
   iterStateDiffs(
@@ -157,7 +162,7 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
   }
 
   async getLatestIndexedBlock(): Promise<number> {
-    return await fetchLatestIndexedBlock(this.client);
+    return await fetchLatestIndexedBlock(this.subgraphUrl);
   }
 
   async getLatestIndexedMerkleIndex(

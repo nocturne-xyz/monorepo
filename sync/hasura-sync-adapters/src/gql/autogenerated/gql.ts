@@ -15,8 +15,6 @@ import { TypedDocumentNode as DocumentNode } from "@graphql-typed-document-node/
 const documents = {
   "\n  query fetchSdkEvents($from: String!, $toBlock: Int!, $limit: Int!) {\n    sdk_event(\n      where: { id: { _gte: $from }, block: { _lt: $toBlock } }\n      order_by: { id: asc }\n      limit: $limit\n    ) {\n      id\n      merkle_index\n      encoded_note_encoded_asset_addr\n      encoded_note_encoded_asset_id\n      encoded_note_nonce\n      encoded_note_owner_h1\n      encoded_note_owner_h2\n      encoded_note_value\n      encrypted_note_ciphertext_bytes\n      encrypted_note_commitment\n      encrypted_note_encapsulated_secret_bytes\n      nullifier\n    }\n    subtree_commit(\n      where: { block: { _lt: $toBlock } }\n      limit: 1\n      order_by: { id: desc }\n    ) {\n      subtree_batch_offset\n    }\n  }\n":
     types.FetchSdkEventsDocument,
-  "\n  query fetchLatestIndexedBlock {\n    sdk_event_aggregate {\n      aggregate {\n        max {\n          block\n        }\n      }\n    }\n    subtree_commit_aggregate {\n      aggregate {\n        max {\n          block\n        }\n      }\n    }\n  }\n":
-    types.FetchLatestIndexedBlockDocument,
   "\n  query fetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    sdk_event_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n":
     types.FetchLatestIndexedMerkleIndexUpToBlockDocument,
   "\n  query fetchLatestIndexedMerkleIndex {\n    sdk_event_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n":
@@ -43,12 +41,6 @@ export function graphql(source: string): unknown;
 export function graphql(
   source: "\n  query fetchSdkEvents($from: String!, $toBlock: Int!, $limit: Int!) {\n    sdk_event(\n      where: { id: { _gte: $from }, block: { _lt: $toBlock } }\n      order_by: { id: asc }\n      limit: $limit\n    ) {\n      id\n      merkle_index\n      encoded_note_encoded_asset_addr\n      encoded_note_encoded_asset_id\n      encoded_note_nonce\n      encoded_note_owner_h1\n      encoded_note_owner_h2\n      encoded_note_value\n      encrypted_note_ciphertext_bytes\n      encrypted_note_commitment\n      encrypted_note_encapsulated_secret_bytes\n      nullifier\n    }\n    subtree_commit(\n      where: { block: { _lt: $toBlock } }\n      limit: 1\n      order_by: { id: desc }\n    ) {\n      subtree_batch_offset\n    }\n  }\n"
 ): (typeof documents)["\n  query fetchSdkEvents($from: String!, $toBlock: Int!, $limit: Int!) {\n    sdk_event(\n      where: { id: { _gte: $from }, block: { _lt: $toBlock } }\n      order_by: { id: asc }\n      limit: $limit\n    ) {\n      id\n      merkle_index\n      encoded_note_encoded_asset_addr\n      encoded_note_encoded_asset_id\n      encoded_note_nonce\n      encoded_note_owner_h1\n      encoded_note_owner_h2\n      encoded_note_value\n      encrypted_note_ciphertext_bytes\n      encrypted_note_commitment\n      encrypted_note_encapsulated_secret_bytes\n      nullifier\n    }\n    subtree_commit(\n      where: { block: { _lt: $toBlock } }\n      limit: 1\n      order_by: { id: desc }\n    ) {\n      subtree_batch_offset\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(
-  source: "\n  query fetchLatestIndexedBlock {\n    sdk_event_aggregate {\n      aggregate {\n        max {\n          block\n        }\n      }\n    }\n    subtree_commit_aggregate {\n      aggregate {\n        max {\n          block\n        }\n      }\n    }\n  }\n"
-): (typeof documents)["\n  query fetchLatestIndexedBlock {\n    sdk_event_aggregate {\n      aggregate {\n        max {\n          block\n        }\n      }\n    }\n    subtree_commit_aggregate {\n      aggregate {\n        max {\n          block\n        }\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

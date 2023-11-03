@@ -1765,34 +1765,6 @@ export type FetchSdkEventsQuery = {
   }>;
 };
 
-export type FetchLatestIndexedBlockQueryVariables = Exact<{
-  [key: string]: never;
-}>;
-
-export type FetchLatestIndexedBlockQuery = {
-  __typename?: "query_root";
-  sdk_event_aggregate: {
-    __typename?: "sdk_event_aggregate";
-    aggregate?: {
-      __typename?: "sdk_event_aggregate_fields";
-      max?: {
-        __typename?: "sdk_event_max_fields";
-        block?: number | null;
-      } | null;
-    } | null;
-  };
-  subtree_commit_aggregate: {
-    __typename?: "subtree_commit_aggregate";
-    aggregate?: {
-      __typename?: "subtree_commit_aggregate_fields";
-      max?: {
-        __typename?: "subtree_commit_max_fields";
-        block?: number | null;
-      } | null;
-    } | null;
-  };
-};
-
 export type FetchLatestIndexedMerkleIndexUpToBlockQueryVariables = Exact<{
   toBlock: Scalars["Int"]["input"];
 }>;
@@ -2069,86 +2041,6 @@ export const FetchSdkEventsDocument = {
     },
   ],
 } as unknown as DocumentNode<FetchSdkEventsQuery, FetchSdkEventsQueryVariables>;
-export const FetchLatestIndexedBlockDocument = {
-  kind: "Document",
-  definitions: [
-    {
-      kind: "OperationDefinition",
-      operation: "query",
-      name: { kind: "Name", value: "fetchLatestIndexedBlock" },
-      selectionSet: {
-        kind: "SelectionSet",
-        selections: [
-          {
-            kind: "Field",
-            name: { kind: "Name", value: "sdk_event_aggregate" },
-            selectionSet: {
-              kind: "SelectionSet",
-              selections: [
-                {
-                  kind: "Field",
-                  name: { kind: "Name", value: "aggregate" },
-                  selectionSet: {
-                    kind: "SelectionSet",
-                    selections: [
-                      {
-                        kind: "Field",
-                        name: { kind: "Name", value: "max" },
-                        selectionSet: {
-                          kind: "SelectionSet",
-                          selections: [
-                            {
-                              kind: "Field",
-                              name: { kind: "Name", value: "block" },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-          {
-            kind: "Field",
-            name: { kind: "Name", value: "subtree_commit_aggregate" },
-            selectionSet: {
-              kind: "SelectionSet",
-              selections: [
-                {
-                  kind: "Field",
-                  name: { kind: "Name", value: "aggregate" },
-                  selectionSet: {
-                    kind: "SelectionSet",
-                    selections: [
-                      {
-                        kind: "Field",
-                        name: { kind: "Name", value: "max" },
-                        selectionSet: {
-                          kind: "SelectionSet",
-                          selections: [
-                            {
-                              kind: "Field",
-                              name: { kind: "Name", value: "block" },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  FetchLatestIndexedBlockQuery,
-  FetchLatestIndexedBlockQueryVariables
->;
 export const FetchLatestIndexedMerkleIndexUpToBlockDocument = {
   kind: "Document",
   definitions: [

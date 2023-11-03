@@ -911,7 +911,12 @@ export class NocturneSdk implements NocturneSdkApi {
           if (!finalityBlocks) {
             return (await this.syncAdapter.getLatestIndexedMerkleIndex()) ?? 0;
           }
+
           const currentBlock = await this.provider.getBlockNumber();
+          if (finalityBlocks > currentBlock) {
+            return 0;
+          }
+
           return (await this.syncAdapter.getLatestIndexedMerkleIndex(currentBlock - finalityBlocks)) ?? 0;
         };
 

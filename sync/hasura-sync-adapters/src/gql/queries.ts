@@ -30,25 +30,6 @@ export const SdkEventsPaginatedById = graphql(`
   }
 `);
 
-export const LatestIndexedBlock = graphql(`
-  query fetchLatestIndexedBlock {
-    sdk_event_aggregate {
-      aggregate {
-        max {
-          block
-        }
-      }
-    }
-    subtree_commit_aggregate {
-      aggregate {
-        max {
-          block
-        }
-      }
-    }
-  }
-`);
-
 export const LatestIndexedMerkleIndexUpToBlock = graphql(`
   query fetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {
     sdk_event_aggregate(where: { block: { _lte: $toBlock } }) {
