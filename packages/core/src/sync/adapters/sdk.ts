@@ -59,4 +59,7 @@ export interface SDKSyncAdapter {
 
   // return the latest block the sync adapter can sync to
   getLatestIndexedBlock(): Promise<number>;
+
+  // return the latest merkle index the sync adapter can sync to, subject to an optional timelag
+  getLatestIndexedMerkleIndex(finalityBlocks?: number): Promise<number>;
 }
