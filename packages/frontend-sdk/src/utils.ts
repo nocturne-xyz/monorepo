@@ -205,17 +205,20 @@ export function flattenDepositRequestStatus(
     case OnChainDepositRequestStatus.Retrieved:
       return DepositRequestStatus.Retrieved;
     case OnChainDepositRequestStatus.Completed:
-      // ! TODO need access to logic to distinguish between FULFILLED and COMPLETE. COMPLETE if new note is committed in tree, FULFILLED otherwise
       return DepositRequestStatus.Complete;
     case OnChainDepositRequestStatus.Pending: {
       switch (screenerStatus) {
+        case ScreenerDepositRequestStatus.DoesNotExist:
+          return DepositRequestStatus.Initiated;
         case ScreenerDepositRequestStatus.FailedScreen:
           return DepositRequestStatus.FailedScreen;
         case ScreenerDepositRequestStatus.PassedFirstScreen:
         case ScreenerDepositRequestStatus.AwaitingFulfillment:
           return DepositRequestStatus.AwaitingFulfillment;
+        case ScreenerDepositRequestStatus.Completed:
+          return DepositRequestStatus.Complete;
         default:
-          return DepositRequestStatus.Initiated;
+          throw new Error(`Unknown screener status: ${screenerStatus}`);
       }
     }
     default:
