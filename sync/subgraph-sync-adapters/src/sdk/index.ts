@@ -215,7 +215,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
     return await fetchLatestIndexedBlock(this.graphqlEndpoint);
   }
 
-  async fetchLatestIndexedMerkleIndex(
+  async getLatestIndexedMerkleIndex(
     finalityBlocks?: number
   ): Promise<number | undefined> {
     // TODO avoid the extra round trip here
