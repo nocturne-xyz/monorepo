@@ -1,9 +1,21 @@
 import { CodegenConfig } from "@graphql-codegen/cli";
+import dotenv from "dotenv";
 
-const SUBGRAPH_URL = "https://immune-bunny-99.hasura.app/v1/graphql";
+dotenv.config();
+
+if (!process.env.HASURA_GRAPHQL_ADMIN_SECRET) {
+  throw new Error("HASURA_GRAPHQL_ADMIN_SECRET is not set");
+}
 
 const config: CodegenConfig = {
-  schema: SUBGRAPH_URL,
+  schema: {
+    "https://immune-bunny-99.hasura.app/v1/graphql": {
+      headers: {
+        "content-type": "application/json",
+        "x-hasura-admin-secret": process.env.HASURA_GRAPHQL_ADMIN_SECRET
+      }
+    },
+  },
   documents: ["src/gql/queries.ts"],
   ignoreNoDocuments: true, // for better experience with the watcher
   generates: {
