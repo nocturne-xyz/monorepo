@@ -215,4 +215,6 @@ export interface SnapStateApi {
   invoke<RpcMethod extends RpcRequestMethod>(
     request: Omit<RpcMethod, "return">,
   ): Promise<RpcMethod["return"]>;
+
+  generateAndStoreSpendKeyFromEoaSigIfNotAlreadySet(): Promise<void>;
 }
