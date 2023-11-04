@@ -216,5 +216,5 @@ export interface SnapStateApi {
     request: Omit<RpcMethod, "return">,
   ): Promise<RpcMethod["return"]>;
 
-  genAndSetNewSk(): Promise<void>;
+  genAndSetNewSpendKey(): Promise<void>;
 }
