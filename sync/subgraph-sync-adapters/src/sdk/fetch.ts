@@ -10,6 +10,7 @@ import {
   WithTotalEntityIndex,
   SubgraphUtils,
 } from "@nocturne-xyz/core";
+import { Logger } from "winston";
 
 const { makeSubgraphQuery } = SubgraphUtils;
 
@@ -82,12 +83,14 @@ query fetchSDKEvents($fromIdx: String!) {
 export async function fetchSDKEvents(
   endpoint: string,
   fromTotalEntityIndex: TotalEntityIndex,
-  toTotalEntityIndex?: TotalEntityIndex
+  toTotalEntityIndex?: TotalEntityIndex,
+  logger?: Logger
 ): Promise<WithTotalEntityIndex<SDKEvent>[]> {
   const query = makeSubgraphQuery<FetchSDKEventsVars, SDKEventsResponse>(
     endpoint,
     makeSdkEventsQuery(toTotalEntityIndex),
-    "sdkEvents"
+    "sdkEvents",
+    logger
   );
 
   const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
@@ -282,12 +285,14 @@ query fetchNotes($fromIdx: String!) {
 // gets first 100 notes on or after a given totalEntityIndex
 export async function fetchNotes(
   endpoint: string,
-  fromTotalEntityIndex: TotalEntityIndex
+  fromTotalEntityIndex: TotalEntityIndex,
+  logger?: Logger
 ): Promise<WithTotalEntityIndex<IncludedNote | IncludedEncryptedNote>[]> {
   const query = makeSubgraphQuery<FetchNotesVars, FetchNotesResponse>(
     endpoint,
     notesQuery,
-    "notes"
+    "notes",
+    logger
   );
 
   const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
@@ -390,12 +395,14 @@ const nullifiersQuery = `
 // gets first 100 nullifiers on or after a given totalEntityIndex
 export async function fetchNullifiers(
   endpoint: string,
-  fromTotalEntityIndex: TotalEntityIndex
+  fromTotalEntityIndex: TotalEntityIndex,
+  logger?: Logger
 ): Promise<WithTotalEntityIndex<Nullifier>[]> {
   const query = makeSubgraphQuery<FetchNullifiersVars, FetchNullifiersResponse>(
     endpoint,
     nullifiersQuery,
-    "nullifiers"
+    "nullifiers",
+    logger
   );
 
   const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);

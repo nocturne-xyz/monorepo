@@ -10,6 +10,7 @@ import {
   AssetTrait,
 } from "@nocturne-xyz/core";
 import { ethers } from "ethers";
+import { Logger } from "winston";
 
 const { makeSubgraphQuery, fetchLatestCommittedMerkleIndex } = SubgraphUtils;
 
@@ -96,7 +97,8 @@ query fetchTreeInsertionEvents($fromIdx: String!) {
 export async function fetchTreeInsertions(
   endpoint: string,
   fromTotalEntityIndex: TotalEntityIndex,
-  toTotalEntityIndex?: TotalEntityIndex
+  toTotalEntityIndex?: TotalEntityIndex,
+  logger?: Logger
 ): Promise<WithTotalEntityIndex<TreeInsertion>[]> {
   const query = makeSubgraphQuery<
     FetchTreeInsertionsVars,
@@ -104,7 +106,8 @@ export async function fetchTreeInsertions(
   >(
     endpoint,
     makeTreeInsertionsQuery(toTotalEntityIndex),
-    "treeInsertionEvents"
+    "treeInsertionEvents",
+    logger
   );
 
   const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
@@ -221,10 +224,13 @@ function tryFilledBatchWithZerosEventFromTreeInsertionEventResponse(
 }
 
 export async function fetchLatestSubtreeIndex(
-  endpoint: string
+  endpoint: string,
+  logger?: Logger
 ): Promise<number | undefined> {
   const latestCommittedMerkleIndex = await fetchLatestCommittedMerkleIndex(
-    endpoint
+    endpoint,
+    undefined,
+    logger
   );
   return latestCommittedMerkleIndex
     ? merkleIndexToSubtreeIndex(latestCommittedMerkleIndex)
@@ -272,12 +278,14 @@ query fetchTeiFromMerkleIndex($merkleIndex: BigInt!) {
 // return the start index of the batch.
 export async function fetchTeiFromMerkleIndex(
   endpoint: string,
-  merkleIndex: number
+  merkleIndex: number,
+  logger?: Logger
 ): Promise<bigint | undefined> {
   const query = makeSubgraphQuery<FetchTeiVars, FetchTeiResponse>(
     endpoint,
     fetchTeiQuery,
-    "TeiFromMerkleIndex"
+    "TeiFromMerkleIndex",
+    logger
   );
   const res = await query({ merkleIndex: merkleIndex.toString() });
   if (

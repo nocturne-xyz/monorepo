@@ -160,7 +160,11 @@ export class SubtreeUpdater {
     logger.info("starting subtree updater");
 
     const latestCommittedMerkleIndexAtStart =
-      await fetchLatestCommittedMerkleIndex(this.subgraphEndpoint);
+      await fetchLatestCommittedMerkleIndex(
+        this.subgraphEndpoint,
+        undefined,
+        logger
+      );
 
     if (latestCommittedMerkleIndexAtStart !== undefined) {
       // recover in-memory tree from insertion log up to and including the latest committed subtree

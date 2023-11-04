@@ -49,7 +49,8 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
       let from = startTotalEntityIndex;
       let latestCommittedMerkleIndex = await fetchLatestCommittedMerkleIndex(
         endpoint,
-        from
+        from,
+        logger
       );
 
       const maybeApplyThrottle = async (currentBlock: number) => {
@@ -100,11 +101,15 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         // fetch notes and nfs on or after `from`, will return at most 100 of each
         // if `numConfirmatinos` was set, we will only fetch data from blocks at least `finalityBlocks` blocks behind the tip
         const [sdkEvents, fetchTime] = await timedAsync(() =>
-          fetchSDKEvents(endpoint, from, toTotalEntityIndex)
+          fetchSDKEvents(endpoint, from, toTotalEntityIndex, logger)
         );
 
         const newLatestCommittedMerkleIndex =
-          await fetchLatestCommittedMerkleIndex(endpoint, toTotalEntityIndex);
+          await fetchLatestCommittedMerkleIndex(
+            endpoint,
+            toTotalEntityIndex,
+            logger
+          );
 
         // if we have notes and/or mullifiers, update from and get the last committed merkle index as of the entity index we saw
         if (sdkEvents.length > 0) {
@@ -222,7 +227,8 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
       this.graphqlEndpoint,
       toBlock
         ? TotalEntityIndexTrait.fromBlockNumber(toBlock, "THROUGH")
-        : undefined
+        : undefined,
+      this.logger
     );
   }
 }

@@ -58,7 +58,7 @@ export class SubgraphDepositEventSyncAdapter
           });
 
         const latestIndexedBlock =
-          (await fetchLatestIndexedBlock(endpoint)) -
+          (await fetchLatestIndexedBlock(endpoint, logger)) -
           (opts?.finalityBlocks ?? 0);
         // edge case where latest indexed block is negative due to subtracting finalityBlocks
         if (latestIndexedBlock < 0) {
@@ -78,7 +78,8 @@ export class SubgraphDepositEventSyncAdapter
               latestIndexedBlock + 1,
               "UP_TO"
             ),
-          }
+          },
+          logger
         );
 
         // if we have deposit events, get the greatest total entity index we saw and set from to that, and add one after we yield

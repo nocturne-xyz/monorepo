@@ -8,6 +8,7 @@ import {
   DepositEvent,
   DepositEventType,
 } from "@nocturne-xyz/core";
+import { Logger } from "winston";
 
 const { makeSubgraphQuery } = SubgraphUtils;
 
@@ -91,7 +92,8 @@ export async function fetchDepositEvents(
     fromTotalEntityIndex?: TotalEntityIndex;
     toTotalEntityIndex?: TotalEntityIndex;
     spender?: string;
-  } = {}
+  } = {},
+  logger?: Logger
 ): Promise<WithTotalEntityIndex<DepositEvent>[]> {
   const { type, fromTotalEntityIndex, toTotalEntityIndex, spender } = filter;
   const query = makeSubgraphQuery<
@@ -105,7 +107,8 @@ export async function fetchDepositEvents(
       spender,
       toTotalEntityIndex
     ),
-    "depositEvents"
+    "depositEvents",
+    logger
   );
   const fromIdx = fromTotalEntityIndex
     ? TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex)
