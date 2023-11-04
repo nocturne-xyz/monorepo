@@ -43,7 +43,7 @@ export class SubgraphTreeInsertionSyncAdapter
       const _from =
         startMerkleIndex === 0
           ? 0n
-          : await fetchTeiFromMerkleIndex(endpoint, startMerkleIndex);
+          : await fetchTeiFromMerkleIndex(endpoint, startMerkleIndex, logger);
       // if `fetchTeiFromMerkleIndex returned undefined, either an error occurred or `startMerkleIndex` is in the future
       // the latter case is an edge case that's not worth the complexity to handle, so we'll just throw an error
       if (_from === undefined) {
@@ -73,7 +73,8 @@ export class SubgraphTreeInsertionSyncAdapter
         const insertions = await fetchTreeInsertions(
           endpoint,
           from,
-          TotalEntityIndexTrait.fromBlockNumber(toBlock + 1, "UP_TO")
+          TotalEntityIndexTrait.fromBlockNumber(toBlock + 1, "UP_TO"),
+          logger
         );
 
         const sorted = insertions.sort(

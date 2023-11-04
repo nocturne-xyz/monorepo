@@ -2,6 +2,7 @@ import retry from "async-retry";
 import { TotalEntityIndex, TotalEntityIndexTrait } from "../sync";
 import { maxArray } from "./functional";
 import { batchOffsetToLatestMerkleIndexInBatch } from "./tree";
+import { Logger } from "winston";
 
 // see https://thegraph.com/docs/en/querying/graphql-api/#subgraph-metadata
 const latestIndexedBlockQuery = `
@@ -26,12 +27,14 @@ interface fetchLatestIndexedBlockResponse {
 
 // gets the latest indexed block from the subgraph
 export async function fetchLatestIndexedBlock(
-  endpoint: string
+  endpoint: string,
+  logger?: Logger
 ): Promise<number> {
   const query = makeSubgraphQuery<undefined, fetchLatestIndexedBlockResponse>(
     endpoint,
     latestIndexedBlockQuery,
-    "latest indexed block"
+    "latest indexed block",
+    logger
   );
   const res = await query(undefined);
 
@@ -47,7 +50,7 @@ export async function fetchLatestIndexedBlock(
 }
 
 export const makeSubgraphQuery =
-  <T, U>(endpoint: string, query: string, dataLabel: string) =>
+  <T, U>(endpoint: string, query: string, dataLabel: string, logger?: Logger) =>
   async (variables: T): Promise<U> => {
     return await retry(
       async (bail) => {
@@ -66,23 +69,20 @@ export const makeSubgraphQuery =
 
           if (!response.ok) {
             const text = await response.text();
-            console.error(
-              `failed to query ${dataLabel} from subgraph: ${text}`
-            );
+            const errMsg = `failed to query ${dataLabel} from subgraph: ${text}`;
+            logger && logger.error(errMsg);
 
-            const err = Error(
-              `failed to query ${dataLabel} from subgraph: ${text}`
-            );
+            const error = new Error(errMsg);
             if (response.status === 400) {
-              bail(err);
+              bail(error);
             } else {
-              throw err;
+              throw error;
             }
           }
 
           return (await response.json()) as U;
         } catch (err) {
-          console.error(`could not query ${dataLabel} from subgraph`);
+          logger && logger.error(`could not query ${dataLabel} from subgraph`);
           throw err;
         }
       },
@@ -117,7 +117,8 @@ const subtreeCommitQuery = (params: string, whereClause: string) => `
 // gets last committed merkle index on or before a given totalEntityIndex
 export async function fetchLatestCommittedMerkleIndex(
   endpoint: string,
-  toTotalEntityIndex?: TotalEntityIndex
+  toTotalEntityIndex?: TotalEntityIndex,
+  logger?: Logger
 ): Promise<number | undefined> {
   let params = "";
   let whereClause = "";
@@ -131,7 +132,7 @@ export async function fetchLatestCommittedMerkleIndex(
   const query = makeSubgraphQuery<
     FetchSubtreeCommitsVars,
     FetchSubtreeCommitsResponse
-  >(endpoint, rawQuery, "last committed merkle index");
+  >(endpoint, rawQuery, "last committed merkle index", logger);
 
   const toIdx = toTotalEntityIndex
     ? TotalEntityIndexTrait.toStringPadded(toTotalEntityIndex)
