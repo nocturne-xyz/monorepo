@@ -49,7 +49,7 @@ export class SnapStateSdk implements SnapStateApi {
       },
     })) as unknown as GetSnapsResponse;
 
-    await this.generateAndStoreSpendKeyFromEoaSigIfNotAlreadySet();
+    await this.genAndSetNewSpendKey();
 
     return res;
   }
@@ -63,7 +63,6 @@ export class SnapStateSdk implements SnapStateApi {
           snap.id === this.snapId &&
           (!this.version || snap.version === this.version),
       );
-      await this.generateAndStoreSpendKeyFromEoaSigIfNotAlreadySet();
       return snap;
     } catch (e) {
       console.log("Failed to obtain installed snap", e);
@@ -119,7 +118,7 @@ export class SnapStateSdk implements SnapStateApi {
    * snap's internal seed phrase when portability is required.
    * @dev WARNING: The spending key will momentarily exist in memory.
    */
-  private async generateAndStoreSpendKeyFromEoaSigIfNotAlreadySet(): Promise<void> {
+  async genAndSetNewSpendKey(): Promise<void> {
     // Return early if spend key already set
     const spendKeyEoa = await this.invoke<RequestSpendKeyEoaMethod>({
       method: "nocturne_requestSpendKeyEoa",
