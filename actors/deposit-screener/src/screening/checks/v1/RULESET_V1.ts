@@ -22,8 +22,10 @@ const BASE_DELAY_SECONDS = 60 * 60 * 2; // 2 hours
 
 // - TRM rejects if any of the following are true
 //     - > $0 of ownership exposure to severe risk categories
-//     - > $150k of counterparty exposure to high risk categories (NOTE that mixer is medium risk)
+//     - > $30k of counterparty exposure to severe risk categories
+//     - > $50k of counterparty exposure to high risk categories (NOTE that mixer is medium risk)
 //     - > $300k of indirect exposure to high risk categories
+//     - > 50% of funds owned by wallet from mixer
 
 const TRM_SEVERE_OWNERSHIP_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
   name: "TRM_SEVERE_OWNERSHIP_REJECT",
