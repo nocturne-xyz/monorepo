@@ -139,6 +139,9 @@ export class NocturneSdk implements NocturneSdkApi {
   protected syncAdapter: SDKSyncAdapter;
   protected syncMutex: Mutex;
 
+  protected syncProgressHandlerCounter = 0;
+  protected syncProgressHandlers: Map<number, (progress: number) => void>;
+
   protected signerThunk: Thunk<ethers.Signer>;
   protected depositManagerContractThunk: Thunk<DepositManager>;
   protected handlerContractThunk: Thunk<Handler>;
@@ -187,6 +190,7 @@ export class NocturneSdk implements NocturneSdkApi {
       snapOptions?.snapId,
     );
     this.syncMutex = new Mutex();
+    this.syncProgressHandlers = new Map();
 
     this.signerThunk = thunk(() => getSigner(this.provider));
     this.depositManagerContractThunk = thunk(async () =>
@@ -897,16 +901,31 @@ export class NocturneSdk implements NocturneSdkApi {
     return undefined;
   }
 
+
   /**
    * sync in increments, passing progress updates back to the caller through a callback
-   * `syncOpts.timoutSeconds` is used as the interval between progress reports. if not given, there will be one progress report at the end.
+   * `syncOpts.timeoutSeconds` is used as the interval between progress reports. if not given, there will be one progress report at the end.
    * if another call to this function is in progress, this function will wait for the existing call to complete
    */
   async sync(syncOpts?: SyncOpts, handleProgress?: (progress: number) => void): Promise<void> {
-    const finalityBlocks = this.sdkConfig.config.finalityBlocks;
-    syncOpts = { ...(syncOpts ?? {}), timing: true, finalityBlocks };
+    // TODO: re-architect the SDK with a proper event-based subscription model
+    let handlerIndex: number | undefined;
+    if (handleProgress) {
+      handlerIndex = this.syncProgressHandlerCounter++;
+      this.syncProgressHandlers.set(handlerIndex, handleProgress);
+    }
+
     try {
       await tryAcquire(this.syncMutex).runExclusive(async () => {
+        const finalityBlocks = this.sdkConfig.config.finalityBlocks;
+
+        const opts = syncOpts ? structuredClone(syncOpts) : {};
+        opts.timing ??= true;
+        opts.finalityBlocks ??= finalityBlocks;
+
+        // always override timeoutSeconds 
+        opts.timeoutSeconds = 5;
+
         const fetchEndIndex = async () => {
           if (!finalityBlocks) {
             return (await this.syncAdapter.getLatestIndexedMerkleIndex()) ?? 0;
@@ -932,9 +951,9 @@ export class NocturneSdk implements NocturneSdkApi {
 
         let count = 0;
         while (currentIndex < endIndex) {
-          console.log("[syncWithProgress] syncing", { currentIndex, endIndex });
+          console.log("[sync] syncing", { currentIndex, endIndex, opts });
           currentIndex =
-            (await this.syncInner({ ...syncOpts, timing: true })) ?? 0;
+            (await this.syncInner(opts)) ?? 0;
 
           if (count % refetchEvery === 0) {
             endIndex = await fetchEndIndex();
@@ -943,7 +962,8 @@ export class NocturneSdk implements NocturneSdkApi {
 
           const progress =
             ((currentIndex - startIndex) / (endIndex - startIndex)) * 100;
-          handleProgress?.(progress);
+
+          this.syncProgressHandlers.forEach((handler) => handler(progress));
         }
       });
     } catch (err) {
@@ -951,6 +971,10 @@ export class NocturneSdk implements NocturneSdkApi {
         await this.syncMutex.waitForUnlock();
       } else {
         throw err;
+      }
+    } finally {
+      if (handlerIndex !== undefined) {
+        this.syncProgressHandlers.delete(handlerIndex);
       }
     }
   }
@@ -962,10 +986,7 @@ export class NocturneSdk implements NocturneSdkApi {
     let latestSyncedMerkleIndex: number | undefined;
     try {
       const client = await this.clientThunk();
-      latestSyncedMerkleIndex = await client.sync({
-        ...syncOpts,
-        timing: true,
-      });
+      latestSyncedMerkleIndex = await client.sync(syncOpts ?? { timing: true });
       await client.pruneOptimisticNullifiers();
     } catch (e) {
       console.log("Error syncing notes: ", e);
