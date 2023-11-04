@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @nocturne-xyz/local-prover@0.4.9
+
 ## 0.6.3
 
 ### Patch Changes

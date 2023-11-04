@@ -2957,7 +2957,7 @@ __metadata:
     find-yarn-workspace-root: ^2.0.0
     mocha: ^10.1.0
     prettier: ^2.8.8
-    snarkjs: ^0.7.0
+    snarkjs: ^0.7.2
     ts-node: ^10.9.1
     typescript: ^4.8.4
   languageName: unknown
@@ -7980,6 +7980,17 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
+"ffjavascript@npm:0.2.62":
+  version: 0.2.62
+  resolution: "ffjavascript@npm:0.2.62"
+  dependencies:
+    wasmbuilder: 0.0.16
+    wasmcurves: 0.2.2
+    web-worker: ^1.2.0
+  checksum: c292e88fd160e16aadfac27870fc5532d3ed1f2306f51d77ef37d5077fca0146b475ffa44a52b80a489ce8834f9c1f4853265499dcb5d0b8f0ec551341c318da
+  languageName: node
+  linkType: hard
+
 "figures@npm:^3.0.0":
   version: 3.2.0
   resolution: "figures@npm:3.2.0"
@@ -12961,6 +12972,26 @@ circomlibjs@nocturne-xyz/circomlibjs:
   bin:
     snarkjs: build/cli.cjs
   checksum: a6cf652962d8e53474fad8aecf884ebb11ddca707e237036e268266ca2760687398043bf47e66eb2bc627435e54c795863f4629ddae99311dbec27f3cdc9167f
+  languageName: node
+  linkType: hard
+
+"snarkjs@npm:^0.7.2":
+  version: 0.7.2
+  resolution: "snarkjs@npm:0.7.2"
+  dependencies:
+    "@iden3/binfileutils": 0.0.11
+    bfj: ^7.0.2
+    blake2b-wasm: ^2.4.0
+    circom_runtime: 0.1.24
+    ejs: ^3.1.6
+    fastfile: 0.0.20
+    ffjavascript: 0.2.62
+    js-sha3: ^0.8.0
+    logplease: ^1.2.15
+    r1csfile: 0.0.47
+  bin:
+    snarkjs: build/cli.cjs
+  checksum: c784e2171278403b2356ddc42fac47093e7cf4c48c0ef46ac3c269c308795d2da63a00dd6b92521b166f3d0349d0b8301454f5a9633b5db447755b4568c4b5e7
   languageName: node
   linkType: hard
 

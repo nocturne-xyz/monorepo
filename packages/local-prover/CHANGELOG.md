@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.9
+
+### Patch Changes
+
+- bump snarkjs version
+
 ## 0.4.8
 
 ### Patch Changes
