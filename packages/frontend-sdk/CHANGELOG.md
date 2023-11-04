@@ -1,5 +1,38 @@
 # Changelog
 
+## 4.0.0
+
+### Major Changes
+
+- 85811df6: - collapse `syncWithProgress` and `sync` into a single `sync` method
+  - change behavior of `syncMutex` such that duplicate calls to `sync` wait for the existing one to finish before returning
+
+### Minor Changes
+
+- 67b9116a: setSpendKey passes along eoa address, checks for spend key exists calls nocturne_requestSpendKeyEoa instead
+- 23243741: (BREAKING) get rid of `optimsiticOpDigest` stuff and replace with OpHistory
+- b56ead58: frontend-sdk persists history using `OpHistoryStore`
+
+### Patch Changes
+
+- 438f0e68: don't sync before firing off op
+- 45d0719a: frontend-sdk computes gas comp for deposits if not given
+- d4f6fa7b: getStatus closure returned by `makeGetStatus` gracefully handles edge case where op not in history
+- Updated dependencies [ef178c21]
+- Updated dependencies [85811df6]
+- Updated dependencies [b2938fc0]
+- Updated dependencies [67b9116a]
+- Updated dependencies [23243741]
+- Updated dependencies [b56ead58]
+- Updated dependencies [45d0719a]
+  - @nocturne-xyz/subgraph-sync-adapters@0.3.3
+  - @nocturne-xyz/client@3.1.0
+  - @nocturne-xyz/config@1.5.0
+  - @nocturne-xyz/core@3.1.1
+  - @nocturne-xyz/op-request-plugins@2.1.2
+  - @nocturne-xyz/idb-kv-store@0.4.8
+  - @nocturne-xyz/local-prover@0.4.8
+
 ## 3.1.4
 
 ### Patch Changes

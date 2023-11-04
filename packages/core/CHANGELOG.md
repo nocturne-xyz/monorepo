@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.1.1
+
+### Patch Changes
+
+- 45d0719a: frontend-sdk computes gas comp for deposits if not given
+
 ## 3.1.0
 
 ### Minor Changes
