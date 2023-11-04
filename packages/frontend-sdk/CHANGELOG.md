@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.1.0
+
+### Minor Changes
+
+- 4eddf89d: - keep a map of registered progress handlers for concurrent calls to `sync`
+  - always `sync` with a `timeoutSeconds` of `5` no matter what caller passes in
+- bb303f2d: make `generateAndStoreSpendKeyFromEoaSigIfNotAlreadySet` public
+
+### Patch Changes
+
+- 3961221a: fix edge cases in deposit status checkling logic
+- 5d92ae29: use timelag when syncing for reorg resistance
+
 ## 4.0.0
 
 ### Major Changes
