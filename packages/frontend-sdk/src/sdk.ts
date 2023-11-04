@@ -904,8 +904,8 @@ export class NocturneSdk implements NocturneSdkApi {
 
   /**
    * sync in increments, passing progress updates back to the caller through a callback
-   * `syncOpts.timeoutSeconds` is used as the interval between progress reports. if not given, there will be one progress report at the end.
    * if another call to this function is in progress, this function will wait for the existing call to complete
+   * TODO this behavior is extremely scuffed, this should be replaced by an event emitter in `client`
    */
   async sync(syncOpts?: SyncOpts, handleProgress?: (progress: number) => void): Promise<void> {
     // TODO: re-architect the SDK with a proper event-based subscription model

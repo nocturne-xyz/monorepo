@@ -132,9 +132,8 @@ export interface NocturneSdkApi {
   // *** SYNCING METHODS *** //
 
   // syncs the SDK, taking a callback to report progress
-  // `syncOpts.timoutSeconds` is used as the interval between progress reports. if not given, there will be one progress report at the end.
   // if another call to `sync` is already in progress, this call will simply wait for that one to finish
-  // TODO this behavior is scuffed, we should re-think it
+  // TODO this behavior is extremely scuffed, this should be replaced by an event emitter in `client`
   sync(
     syncOpts?: SyncOpts,
     handleProgress?: (progress: number) => void,
