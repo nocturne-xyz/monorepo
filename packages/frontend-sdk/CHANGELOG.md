@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.1.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @nocturne-xyz/subgraph-sync-adapters@0.4.0
+
 ## 4.1.0
 
 ### Minor Changes

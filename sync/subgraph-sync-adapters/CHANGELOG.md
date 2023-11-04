@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- bump sync adapters again
+
 ## 0.3.3
 
 ### Patch Changes

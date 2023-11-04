@@ -1,7 +1,7 @@
 {
   "name": "@nocturne-xyz/test-actor",
   "license": "MIT",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

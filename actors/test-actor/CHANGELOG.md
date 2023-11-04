@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @nocturne-xyz/subgraph-sync-adapters@0.4.0
+
 ## 0.6.2
 
 ### Patch Changes
