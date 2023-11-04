@@ -216,5 +216,5 @@ export interface SnapStateApi {
     request: Omit<RpcMethod, "return">,
   ): Promise<RpcMethod["return"]>;
 
-  generateAndStoreSpendKeyFromEoaSigIfNotAlreadySet(): Promise<void>;
+  genAndSetNewSk(): Promise<void>;
 }
