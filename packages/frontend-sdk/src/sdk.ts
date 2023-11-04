@@ -919,12 +919,12 @@ export class NocturneSdk implements NocturneSdkApi {
       await tryAcquire(this.syncMutex).runExclusive(async () => {
         const finalityBlocks = this.sdkConfig.config.finalityBlocks;
 
-        const opts = syncOpts ? structuredClone(syncOpts) : {};
-        opts.timing ??= true;
-        opts.finalityBlocks ??= finalityBlocks;
-
-        // always override timeoutSeconds 
-        opts.timeoutSeconds = 5;
+            const opts = {
+            ...syncOpts,
+            timing: syncOpts?.timing ?? true,
+            finalityBlocks: syncOpts?.finalityBlocks ?? finalityBlocks,
+            timeoutSeconds: 5, // always override timeoutSeconds
+          };
 
         const fetchEndIndex = async () => {
           if (!finalityBlocks) {
