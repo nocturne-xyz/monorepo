@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/frontend-sdk",
-  "version": "4.1.0",
+  "version": "4.1.1-type-import",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

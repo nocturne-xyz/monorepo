@@ -63,7 +63,7 @@ import {
   unpackFromSolidityProof,
 } from "@nocturne-xyz/core";
 import { IdbKvStore } from "@nocturne-xyz/idb-kv-store";
-import {
+import type {
   WasmCanonAddrSigCheckProver,
   WasmJoinSplitProver,
 } from "@nocturne-xyz/local-prover";
