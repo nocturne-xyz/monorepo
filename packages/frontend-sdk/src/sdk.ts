@@ -907,7 +907,7 @@ export class NocturneSdk implements NocturneSdkApi {
    * if another call to this function is in progress, this function will wait for the existing call to complete
    * TODO this behavior is extremely scuffed, this should be replaced by an event emitter in `client`
    */
-  async sync(syncOpts?: SyncOpts, handleProgress?: (progress: number) => void): Promise<void> {
+  async sync(syncOpts?: Omit<SyncOpts, "timeoutSeconds">, handleProgress?: (progress: number) => void): Promise<void> {
     // TODO: re-architect the SDK with a proper event-based subscription model
     let handlerIndex: number | undefined;
     if (handleProgress) {
@@ -919,12 +919,12 @@ export class NocturneSdk implements NocturneSdkApi {
       await tryAcquire(this.syncMutex).runExclusive(async () => {
         const finalityBlocks = this.sdkConfig.config.finalityBlocks;
 
-            const opts = {
-            ...syncOpts,
-            timing: syncOpts?.timing ?? true,
-            finalityBlocks: syncOpts?.finalityBlocks ?? finalityBlocks,
-            timeoutSeconds: 5, // always override timeoutSeconds
-          };
+        const opts = {
+        ...syncOpts,
+        timing: syncOpts?.timing ?? true,
+        finalityBlocks: syncOpts?.finalityBlocks ?? finalityBlocks,
+        timeoutSeconds: 5, // always override timeoutSeconds
+      };
 
         const fetchEndIndex = async () => {
           if (!finalityBlocks) {
