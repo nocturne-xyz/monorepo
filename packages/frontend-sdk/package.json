@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/frontend-sdk",
-  "version": "4.0.1-no-dynamic-import",
+  "version": "4.0.1-no-dynamic-import-use-snarkjs-6",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -30,7 +30,7 @@
     "@nocturne-xyz/contracts": "^2.0.1",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/idb-kv-store": "workspace:^",
-    "@nocturne-xyz/local-prover": "workspace:^",
+    "@nocturne-xyz/local-prover": "0.4.9-use-snarkjs-6",
     "@nocturne-xyz/op-request-plugins": "workspace:^",
     "@nocturne-xyz/subgraph-sync-adapters": "workspace:^",
     "@urql/core": "^4.1.1",

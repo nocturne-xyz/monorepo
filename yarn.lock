@@ -2957,7 +2957,7 @@ __metadata:
     find-yarn-workspace-root: ^2.0.0
     mocha: ^10.1.0
     prettier: ^2.8.8
-    snarkjs: ^0.7.0
+    snarkjs: 0.6.11
     ts-node: ^10.9.1
     typescript: ^4.8.4
   languageName: unknown
@@ -6169,6 +6169,17 @@ __metadata:
     inherits: ^2.0.1
     safe-buffer: ^5.0.1
   checksum: 47d3568dbc17431a339bad1fe7dff83ac0891be8206911ace3d3b818fc695f376df809bea406e759cdea07fff4b454fa25f1013e648851bec790c1d75763032e
+  languageName: node
+  linkType: hard
+
+"circom_runtime@npm:0.1.22":
+  version: 0.1.22
+  resolution: "circom_runtime@npm:0.1.22"
+  dependencies:
+    ffjavascript: 0.2.57
+  bin:
+    calcwit: calcwit.js
+  checksum: bf7b2e9f74cd7704ebc45ce686d4df49e58ed09114070a98beaab90e5ff7784d1943468ea3315bd4db638e6a76cda24e8b610aa2cd50be56adb4391e20469366
   languageName: node
   linkType: hard
 
@@ -12030,6 +12041,18 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
+"r1csfile@npm:0.0.45":
+  version: 0.0.45
+  resolution: "r1csfile@npm:0.0.45"
+  dependencies:
+    "@iden3/bigarray": 0.0.2
+    "@iden3/binfileutils": 0.0.11
+    fastfile: 0.0.20
+    ffjavascript: 0.2.57
+  checksum: ae2d7ab3f2c37640aea2b4f45753d1f2258f5d904a51d7aaff67c32a931c3e90d22d257e8f10752044fa36b3ac31516f60e503f858913a625015b9b05575ba47
+  languageName: node
+  linkType: hard
+
 "r1csfile@npm:0.0.47":
   version: 0.0.47
   resolution: "r1csfile@npm:0.0.47"
@@ -12941,6 +12964,26 @@ circomlibjs@nocturne-xyz/circomlibjs:
     dot-case: ^3.0.4
     tslib: ^2.0.3
   checksum: 0a7a79900bbb36f8aaa922cf111702a3647ac6165736d5dc96d3ef367efc50465cac70c53cd172c382b022dac72ec91710608e5393de71f76d7142e6fd80e8a3
+  languageName: node
+  linkType: hard
+
+"snarkjs@npm:0.6.11":
+  version: 0.6.11
+  resolution: "snarkjs@npm:0.6.11"
+  dependencies:
+    "@iden3/binfileutils": 0.0.11
+    bfj: ^7.0.2
+    blake2b-wasm: ^2.4.0
+    circom_runtime: 0.1.22
+    ejs: ^3.1.6
+    fastfile: 0.0.20
+    ffjavascript: 0.2.57
+    js-sha3: ^0.8.0
+    logplease: ^1.2.15
+    r1csfile: 0.0.45
+  bin:
+    snarkjs: build/cli.cjs
+  checksum: 692508b6f8048b6879975844cae4b9a6713713e20fec488ebd21a4b224b7e0318f6aba59ce06d332728d184148c943fa04e3a49e0af173d325011f506e42363e
   languageName: node
   linkType: hard
 

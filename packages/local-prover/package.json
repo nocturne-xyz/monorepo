@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/local-prover",
-  "version": "0.4.8",
+  "version": "0.4.9-use-snarkjs-6",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,7 +27,7 @@
     "@nocturne-xyz/crypto": "workspace:^",
     "bigint-conversion": "^2.3.0",
     "bigint-json-serialization": "^1.0.1",
-    "snarkjs": "^0.7.0"
+    "snarkjs": "0.6.11"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
