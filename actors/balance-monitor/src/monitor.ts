@@ -1,10 +1,10 @@
-import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { NocturneConfig } from "@nocturne-xyz/config";
 import { Address } from "@nocturne-xyz/core";
 import * as ethers from "ethers";
 import * as ot from "@opentelemetry/api";
 import {
+  ActorHandle,
   makeCreateObservableGaugeFn,
-  makeLogger,
   setupDefaultInstrumentation,
 } from "@nocturne-xyz/offchain-utils";
 import ERC20_ABI from "./abis/ERC20.json";
@@ -31,64 +31,21 @@ export class BalanceMonitor {
   private actorAddresses: ActorAddresses;
   private gasToken: ethers.Contract;
   private logger: Logger;
-  private isMonitoring = false;
+  private closed = false;
 
-  constructor() {
-    const configName = process.env.CONFIG_NAME;
-    if (!configName) {
-      throw new Error("missing CONFIG_NAME environment variable");
-    }
-    this.logger = makeLogger(
-      configName,
-      "balance-monitor",
-      "monitor",
-      process.env.STDOUT_LOG_LEVEL ?? "info"
-    );
+  constructor(
+    config: NocturneConfig,
+    provider: ethers.providers.JsonRpcProvider,
+    actorAddresses: ActorAddresses,
+    gasTokenTicker: string,
+    logger: Logger
+  ) {
+    this.logger = logger;
+    this.provider = provider;
+    this.actorAddresses = actorAddresses;
 
-    if (!process.env.RPC_URL) {
-      throw new Error("missing RPC_URL environment variable");
-    }
-    this.provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
-
-    this.actorAddresses = this.getActorAddresses();
-    this.gasToken = this.getGasToken(this.provider);
-  }
-
-  private getActorAddresses(): ActorAddresses {
-    // Logic for getAddrs function
-    if (!process.env.BUNDLER_ADDRESS) {
-      throw new Error("missing BUNDLER_ADDRESS environment variable");
-    }
-    if (!process.env.UPDATER_ADDRESS) {
-      throw new Error("missing UPDATER_ADDRESS environment variable");
-    }
-    if (!process.env.SCREENER_ADDRESS) {
-      throw new Error("missing SCREENER_ADDRESS environment variable");
-    }
-
-    return {
-      bundler: ethers.utils.getAddress(process.env.BUNDLER_ADDRESS),
-      updater: ethers.utils.getAddress(process.env.UPDATER_ADDRESS),
-      screener: ethers.utils.getAddress(process.env.SCREENER_ADDRESS),
-    };
-  }
-
-  private getGasToken(
-    provider: ethers.providers.JsonRpcProvider
-  ): ethers.Contract {
-    if (!process.env.CONFIG_NAME) {
-      throw new Error("missing CONFIG_NAME environment variable");
-    }
-    const config = loadNocturneConfig(process.env.CONFIG_NAME);
-
-    if (!process.env.GAS_TOKEN_TICKER) {
-      throw new Error("missing GAS_TOKEN_TICKER environment variable");
-    }
-    const gasTokenAddress = config.erc20s.get(
-      process.env.GAS_TOKEN_TICKER
-    )!.address;
-
-    return new ethers.Contract(gasTokenAddress, ERC20_ABI, provider);
+    const gasTokenAddress = config.erc20s.get(gasTokenTicker)!.address;
+    this.gasToken = new ethers.Contract(gasTokenAddress, ERC20_ABI, provider);
   }
 
   private registerMetrics(): BalanceMonitorMetrics {
@@ -190,19 +147,33 @@ export class BalanceMonitor {
     };
   }
 
-  public async start(): Promise<void> {
-    this.isMonitoring = true;
-
+  public start(): ActorHandle {
     this.logger.info(
-      "Balance Monitor started. Piping balance metrics every 30 seconds"
+      "Balance Monitor started. Piping balance metrics every 60 seconds."
     );
     this.registerMetrics();
-    while (this.isMonitoring) {
-      await new Promise((resolve) => setTimeout(resolve, 60_000)); // Sleep for 60 seconds
-    }
-  }
 
-  public stop(): void {
-    this.isMonitoring = false;
+    const promise = new Promise<void>((resolve) => {
+      const checkBalanceAndReport = async () => {
+        if (this.closed) {
+          this.logger.info("Balance Monitor stopping...");
+          resolve();
+          return;
+        }
+
+        setTimeout(checkBalanceAndReport, 60_000);
+      };
+
+      checkBalanceAndReport();
+    });
+
+    return {
+      promise,
+      teardown: async () => {
+        this.closed = true;
+        await promise;
+        this.logger.info("Balance Monitor teardown complete");
+      },
+    };
   }
 }
