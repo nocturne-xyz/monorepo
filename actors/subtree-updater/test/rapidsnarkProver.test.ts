@@ -1,6 +1,5 @@
 import "mocha";
 
-import { BinaryPoseidonTree } from "./utils";
 import { expect } from "chai";
 import * as path from "path";
 import {
@@ -10,6 +9,9 @@ import {
   AssetType,
   subtreeUpdateInputsFromBatch,
   range,
+  TreeConstants,
+  SparseMerkleProver,
+  InMemoryKVStore,
 } from "@nocturne-xyz/core";
 import { RapidsnarkSubtreeUpdateProver } from "../src/rapidsnarkProver";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -48,7 +50,7 @@ describe("rapidsnark subtree update prover", async () => {
   }
 
   function dummyBatch(): (Note | bigint)[] {
-    return [...Array(BinaryPoseidonTree.BATCH_SIZE).keys()].map((i) => {
+    return [...Array(TreeConstants.BATCH_SIZE).keys()].map((i) => {
       if (i % 2 == 0) {
         return dummyNote();
       } else {
@@ -68,19 +70,25 @@ describe("rapidsnark subtree update prover", async () => {
         VKEY_PATH,
         TMP_PATH
       );
-      const tree = new BinaryPoseidonTree();
+
+      const kv = new InMemoryKVStore();
+      const tree = new SparseMerkleProver(kv);
       const batch = dummyBatch();
 
       for (let i = 0; i < batch.length; i++) {
         const item = batch[i];
         if (typeof item === "bigint") {
-          tree.insert(item);
+          tree.insertBatch(tree.count(), [item], [true]);
         } else {
-          tree.insert(NoteTrait.toCommitment(item));
+          tree.insertBatch(
+            tree.count(),
+            [NoteTrait.toCommitment(item)],
+            [true]
+          );
         }
       }
 
-      const merkleProof = tree.getProof(tree.count - batch.length);
+      const merkleProof = tree.getProof(tree.count() - batch.length);
       const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
       const proof = await prover.proveSubtreeUpdate(inputs);
 
