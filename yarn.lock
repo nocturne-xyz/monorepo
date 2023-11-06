@@ -2828,7 +2828,7 @@ __metadata:
     "@nocturne-xyz/contracts": ^2.0.1
     "@nocturne-xyz/core": "workspace:^"
     "@nocturne-xyz/idb-kv-store": "workspace:^"
-    "@nocturne-xyz/local-prover": "workspace:^"
+    "@nocturne-xyz/local-prover": 0.4.9-use-snarkjs-6
     "@nocturne-xyz/op-request-plugins": "workspace:^"
     "@nocturne-xyz/subgraph-sync-adapters": "workspace:^"
     "@types/async-retry": ^1.4.5
@@ -2936,7 +2936,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/local-prover@workspace:^, @nocturne-xyz/local-prover@workspace:packages/local-prover":
+"@nocturne-xyz/local-prover@0.4.9-use-snarkjs-6, @nocturne-xyz/local-prover@workspace:^, @nocturne-xyz/local-prover@workspace:packages/local-prover":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/local-prover@workspace:packages/local-prover"
   dependencies:
