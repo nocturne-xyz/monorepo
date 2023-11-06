@@ -156,10 +156,6 @@ export class NocturneSdk implements NocturneSdkApi {
 
     // HACK `@nocturne-xyz/local-prover` doesn't work with server components (imports a lot of unnecessary garbage)
     this.joinSplitProverThunk = thunk(async () => {
-      const { WasmJoinSplitProver } = await import(
-        "@nocturne-xyz/local-prover"
-      );
-
       const urls = getCircuitArtifactUrls(networkName);
       const vkey = (await (
         await fetch(urls.joinSplit.vkey)
@@ -169,10 +165,6 @@ export class NocturneSdk implements NocturneSdkApi {
     });
 
     this.canonAddrSigCheckProverThunk = thunk(async () => {
-      const { WasmCanonAddrSigCheckProver } = await import(
-        "@nocturne-xyz/local-prover"
-      );
-
       const urls = getCircuitArtifactUrls(networkName);
       const vkey = (await (
         await fetch(urls.canonAddrSigCheck.vkey)
