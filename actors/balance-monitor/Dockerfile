@@ -18,6 +18,8 @@ COPY . .
 RUN yarn install
 RUN yarn turbo run build --filter="@nocturne-xyz/balance-monitor..."
 
+# setup CLI
 WORKDIR /app/actors/balance-monitor
+RUN npm i -g 
 
-ENTRYPOINT ["node", "dist/index.js"]
+ENTRYPOINT ["balance-monitor-cli"]
