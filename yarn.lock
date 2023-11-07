@@ -2856,7 +2856,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/hasura-sync-adapters@workspace:sync/hasura-sync-adapters":
+"@nocturne-xyz/hasura-sync-adapters@workspace:^, @nocturne-xyz/hasura-sync-adapters@workspace:sync/hasura-sync-adapters":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/hasura-sync-adapters@workspace:sync/hasura-sync-adapters"
   dependencies:
@@ -3160,10 +3160,10 @@ __metadata:
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": ^3.0.0
     "@nocturne-xyz/core": "workspace:^"
+    "@nocturne-xyz/hasura-sync-adapters": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
     "@nocturne-xyz/op-request-plugins": "workspace:^"
-    "@nocturne-xyz/subgraph-sync-adapters": "workspace:^"
     "@openzeppelin/defender-relay-client": 1.47.1
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
