@@ -1,4 +1,3 @@
-import { Action, Address, AssetTrait } from "@nocturne-xyz/core";
 import {
   BaseOpRequestBuilder,
   BuilderItemToProcess,
@@ -8,13 +7,18 @@ import {
   RefundRequest,
   UnwrapRequest,
 } from "@nocturne-xyz/client";
+import { UniswapV3Adapter__factory } from "@nocturne-xyz/contracts";
+import { Action, Address, AssetTrait } from "@nocturne-xyz/core";
+import { Percent } from "@uniswap/sdk-core";
+import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
 import ERC20_ABI from "../abis/ERC20.json";
-import { currencyAmountToBigInt, getSwapRoute } from "./helpers";
-import { Percent } from "@uniswap/sdk-core";
-import { UniswapV3Adapter__factory } from "@nocturne-xyz/contracts";
+import {
+  currencyAmountToBigInt,
+  formatSwapQuote,
+  getSwapRoute,
+} from "./helpers";
 import { ExactInputParams, ExactInputSingleParams } from "./types";
-import * as JSON from "bigint-json-serialization";
 
 const UNISWAP_V3_ADAPTER_NAME = "UniswapV3Adapter";
 
@@ -182,13 +186,18 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               minRefundValue: minimumAmountWithSlippage,
             };
 
+            const quote = formatSwapQuote(swapRoute, maxSlippageBps);
+
             const metadata: OperationMetadataItem = {
               type: "Action",
               actionType: "UniswapV3 Swap",
               tokenIn,
               inAmount,
               tokenOut,
+              maxSlippageBps,
+              ...quote,
             };
+
             const erc20InContract = new ethers.Contract(
               tokenIn,
               ERC20_ABI,
