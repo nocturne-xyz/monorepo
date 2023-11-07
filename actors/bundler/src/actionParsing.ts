@@ -27,7 +27,7 @@ export function parseTransferAction(action: Action): TransferActionCalldata {
 
   const calldata = ethers.utils.hexDataSlice(action.encodedFunction, 4);
   const { to, amount } = ethers.utils.defaultAbiCoder.decode(
-    ["address", "unit256"],
+    ["address", "uint256"],
     calldata
   ) as unknown as TransferActionCalldata;
 
