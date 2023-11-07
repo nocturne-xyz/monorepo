@@ -3,7 +3,7 @@ import { expect } from "chai";
 import * as ethers from "ethers";
 import { isSanctionedAddress } from "../src/sanctions";
 
-// TODO if we have trouble, pull in from env and setup env vars
+// if we have trouble, pull in from env and setup env vars
 const RPC_URL = "https://eth.llamarpc.com";
 
 describe("SanctionsList", () => {
