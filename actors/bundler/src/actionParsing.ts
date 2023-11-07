@@ -7,20 +7,21 @@ export function getSelector(signature: string): string {
   return ethers.utils.hexDataSlice(hash, 0, 4);
 }
 
-const ERC20_TRANSFER_SELECTOR = getSelector("transfer(address,uint256)");
+// same for both ETHTransferAdapter and ERC20 Transfer
+const TRANSFER_SELECTOR = getSelector("transfer(address,uint256)");
 
-export type Erc20ActionCalldata = {
+export type TransferActionCalldata = {
   to: string;
   amount: string;
 };
 
-export function isErc20TransferAction(action: Action): boolean {
+export function isTransferAction(action: Action): boolean {
   const selector = ethers.utils.hexDataSlice(action.encodedFunction, 0, 4);
-  return selector === ERC20_TRANSFER_SELECTOR;
+  return selector === TRANSFER_SELECTOR;
 }
 
-export function parseErc20Transfer(action: Action): Erc20ActionCalldata {
-  if (!isErc20TransferAction(action)) {
+export function parseTransferAction(action: Action): TransferActionCalldata {
+  if (!isTransferAction(action)) {
     throw new Error("Not an ERC20 transfer action");
   }
 
@@ -28,7 +29,7 @@ export function parseErc20Transfer(action: Action): Erc20ActionCalldata {
   const { to, amount } = ethers.utils.defaultAbiCoder.decode(
     ["address", "unit256"],
     calldata
-  ) as unknown as Erc20ActionCalldata;
+  ) as unknown as TransferActionCalldata;
 
   return { to, amount };
 }

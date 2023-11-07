@@ -16,7 +16,7 @@ import {
 } from "@nocturne-xyz/core";
 import { Handler, Teller } from "@nocturne-xyz/contracts";
 import {
-  checkIsNotErc20TransferToSanctionedAddress,
+  checkIsNotTransferToSanctionedAddress,
   checkNotEnoughGasError,
   checkNullifierConflictError,
   checkRevertError,
@@ -76,15 +76,6 @@ export function makeRelayHandler({
 
     childLogger.debug("checking operation's gas price");
 
-    const sanctionedTransferErr =
-      await checkIsNotErc20TransferToSanctionedAddress(logger, operation);
-    if (sanctionedTransferErr) {
-      logValidationFailure(sanctionedTransferErr);
-      // TODO: add histogram for sanctioned transfers?
-      res.status(400).json(sanctionedTransferErr);
-      return;
-    }
-
     if (!opts.ignoreGas) {
       const gasPriceErr = await checkNotEnoughGasError(
         provider,
@@ -131,6 +122,18 @@ export function makeRelayHandler({
         reason: OpValidationFailure.CallRevert.toString(),
       });
       res.status(400).json(revertErr);
+      return;
+    }
+
+    const sanctionedTransferErr = await checkIsNotTransferToSanctionedAddress(
+      provider,
+      logger,
+      operation
+    );
+    if (sanctionedTransferErr) {
+      logValidationFailure(sanctionedTransferErr);
+      // TODO: add histogram for sanctioned transfers?
+      res.status(400).json(sanctionedTransferErr);
       return;
     }
 

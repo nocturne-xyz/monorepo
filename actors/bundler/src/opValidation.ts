@@ -8,8 +8,8 @@ import { Handler, Teller } from "@nocturne-xyz/contracts";
 import { NullifierDB } from "./db";
 import { Logger } from "winston";
 import { ErrString } from "@nocturne-xyz/offchain-utils";
-import { isErc20TransferAction, parseErc20Transfer } from "./actionParsing";
-import { isSanctionedAddress } from "./sanctions.";
+import { isTransferAction, parseTransferAction } from "./actionParsing";
+import { isSanctionedAddress } from "./sanctions";
 
 export async function checkNullifierConflictError(
   db: NullifierDB,
@@ -105,36 +105,37 @@ export async function checkNotEnoughGasError(
   }
 }
 
-export async function checkIsNotErc20TransferToSanctionedAddress(
+export async function checkIsNotTransferToSanctionedAddress(
+  provider: ethers.providers.Provider,
   logger: Logger,
   operation: SubmittableOperationWithNetworkInfo
 ): Promise<ErrString | undefined> {
   logger.debug(
-    "checking that operation doesn't contain any ERC20 transfers to a sanctioned address"
+    "checking that operation doesn't contain any transfers to a sanctioned address"
   );
 
-  const erc20TransferActions = operation.actions.filter(isErc20TransferAction);
+  const transferActions = operation.actions.filter(isTransferAction);
   const opDigest = OperationTrait.computeDigest(operation).toString();
   const results = await Promise.all(
-    erc20TransferActions.map(async (action, i) => {
-      const { to, amount } = parseErc20Transfer(action);
-      if (await isSanctionedAddress(to)) {
-        logger.alert("detected ERC20 transfer to sanctioned address", {
+    transferActions.map(async (action, i) => {
+      const { to, amount } = parseTransferAction(action);
+      if (await isSanctionedAddress(provider, to)) {
+        logger.alert("detected transfer to sanctioned address", {
           opDigest,
           actionIndex: i,
           recipient: to,
           amount,
-          tokenContract: action.contractAddress,
+          contract: action.contractAddress,
         });
         return true;
-      } else {
-        return false;
       }
+
+      return false;
     })
   );
 
   const sanctionedTransfers = results.filter((result) => result === true);
   if (sanctionedTransfers.length > 0) {
-    return `operation ${opDigest} contains ${sanctionedTransfers.length} ERC20 transfer(s) to sanctioned addresses`;
+    return `operation ${opDigest} contains ${sanctionedTransfers.length} transfer(s) to sanctioned addresses`;
   }
 }
