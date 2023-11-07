@@ -7,7 +7,7 @@
 - Run `git submodule update`
 
 ### IF TESTING AGAINST A PARTICULAR NETWORK
-- Run `yarn checkout-circuit-artifacts $NETWORK_NAME` to pull circuit artifacts for the given network
+- Run `yarn checkout-circuit-artifacts:$NETWORK_NAME` to pull circuit artifacts for the given network
 
 ### IF TESTING LOCAL PROTOCOL CHANGES
 - clone https://github.com/nocturne-xyz/protocol into the same dir as the monorepo
