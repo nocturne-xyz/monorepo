@@ -131,14 +131,7 @@ export class BundlerBatcher {
             // batcherDB.pop
             await this.outboundQueue.add(
               OPERATION_BATCH_JOB_TAG,
-              operationBatchData,
-              {
-                attempts: 3,
-                backoff: {
-                  type: "exponential",
-                  delay: 1000,
-                },
-              }
+              operationBatchData
             );
 
             const popTransaction = this.batcherDB.getPopTransaction(

@@ -25,6 +25,7 @@ import {
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
+import retry from "async-retry";
 
 const COMPONENT_NAME = "submitter";
 
@@ -154,7 +155,10 @@ export class BundlerSubmitter {
     await this.setOpsToInflight(logger, operations);
 
     logger.debug("dispatching bundle...");
-    const receipt = await this.dispatchBundle(logger, operations);
+    const receipt = await retry(
+      async () => await this.dispatchBundle(logger, operations),
+      { retries: 3 }
+    );
     logger.info("dispatch bundle tx receipt: ", { receipt });
 
     if (!receipt) {
