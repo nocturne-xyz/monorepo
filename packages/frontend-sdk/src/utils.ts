@@ -135,7 +135,7 @@ export function getCircuitArtifactUrls(
           zkey: "https://nocturne-circuit-artifacts-mainnet.s3.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey",
           vkey: "https://nocturne-circuit-artifacts-mainnet.s3.amazonaws.com/canonAddrSigCheck/canonAddrSigCheckVkey.json",
         },
-      }
+      };
     case "goerli":
       return {
         joinSplit: {
@@ -161,7 +161,7 @@ export function getCircuitArtifactUrls(
           zkey: "https://nocturne-circuit-artifacts-mainnet.s3.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey",
           vkey: "https://nocturne-circuit-artifacts-mainnet.s3.amazonaws.com/canonAddrSigCheck/canonAddrSigCheckVkey.json",
         },
-      }
+      };
     default:
       throw new Error(`Network not supported: ${networkName}`);
   }
