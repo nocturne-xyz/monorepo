@@ -152,14 +152,14 @@ export function getCircuitArtifactUrls(
     case "localhost":
       return {
         joinSplit: {
-          wasm: "https://nocturne-circuit-artifacts-mainnet.s3.amazonaws.com/joinsplit/joinsplit.wasm",
-          zkey: "https://nocturne-circuit-artifacts-mainnet.s3.amazonaws.com/joinsplit/joinsplit.zkey",
-          vkey: "https://nocturne-circuit-artifacts-mainnet.s3.amazonaws.com/joinsplit/joinsplitVkey.json",
+          wasm: "https://nocturne-circuit-artifacts-localhost.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.wasm",
+          zkey: "https://nocturne-circuit-artifacts-localhost.s3.us-east-2.amazonaws.com/joinsplit/joinsplit.zkey",
+          vkey: "https://nocturne-circuit-artifacts-localhost.s3.us-east-2.amazonaws.com/joinsplit/joinsplitVkey.json",
         },
         canonAddrSigCheck: {
-          wasm: "https://nocturne-circuit-artifacts-mainnet.s3.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.wasm",
-          zkey: "https://nocturne-circuit-artifacts-mainnet.s3.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey",
-          vkey: "https://nocturne-circuit-artifacts-mainnet.s3.amazonaws.com/canonAddrSigCheck/canonAddrSigCheckVkey.json",
+          wasm: "https://nocturne-circuit-artifacts-localhost.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.wasm",
+          zkey: "https://nocturne-circuit-artifacts-localhost.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheck.zkey",
+          vkey: "https://nocturne-circuit-artifacts-localhost.s3.us-east-2.amazonaws.com/canonAddrSigCheck/canonAddrSigCheckVkey.json",
         },
       };
     default:
