@@ -22,7 +22,7 @@
     "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit"
   },
   "dependencies": {
-    "@nocturne-xyz/contracts": "^2.0.1",
+    "@nocturne-xyz/contracts": "^3.0.0",
     "@nocturne-xyz/crypto": "workspace:^",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "async-mutex": "^0.4.0",

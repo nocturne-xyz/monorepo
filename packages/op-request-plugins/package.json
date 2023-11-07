@@ -21,7 +21,7 @@
   "dependencies": {
     "@nocturne-xyz/client": "workspace:^",
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/contracts": "^2.0.1",
+    "@nocturne-xyz/contracts": "^3.0.0",
     "@nocturne-xyz/core": "workspace:^",
     "@types/randombytes": "^2.0.0",
     "@uniswap/router-sdk": "1.7.0",

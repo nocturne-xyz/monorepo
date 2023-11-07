@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
-    "@nocturne-xyz/contracts": "^2.0.1",
+    "@nocturne-xyz/contracts": "^3.0.0",
     "@nocturne-xyz/core": "workspace:^",
     "@nocturne-xyz/crypto": "workspace:^",
     "async-mutex": "^0.4.0",
