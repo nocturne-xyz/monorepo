@@ -164,7 +164,7 @@ export class BalanceMonitor {
         setTimeout(checkBalanceAndReport, 60_000);
       };
 
-      checkBalanceAndReport();
+      void checkBalanceAndReport();
     });
 
     return {
