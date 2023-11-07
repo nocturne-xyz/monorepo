@@ -117,10 +117,17 @@ export async function getSwapQuote(
   if (!route) {
     return null;
   }
+  return formatSwapQuote(route, params.maxSlippageBps);
+}
+
+export function formatSwapQuote(
+  route: SwapRoute,
+  maxSlippageBps: number
+): AnonErc20SwapQuote {
   return {
     exactQuoteWei: currencyAmountToBigInt(route.quote),
     minimumAmountOutWei: currencyAmountToBigInt(
-      route.trade.minimumAmountOut(new Percent(params.maxSlippageBps, 10_000))
+      route.trade.minimumAmountOut(new Percent(maxSlippageBps, 10_000))
     ),
     priceImpactBps: Number(route.trade.priceImpact.toSignificant(4)) * 10_000,
   };

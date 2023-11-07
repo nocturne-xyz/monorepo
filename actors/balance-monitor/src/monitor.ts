@@ -1,14 +1,14 @@
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { Address } from "@nocturne-xyz/core";
-import * as ethers from "ethers";
-import * as ot from "@opentelemetry/api";
 import {
   ActorHandle,
   makeCreateObservableGaugeFn,
   setupDefaultInstrumentation,
 } from "@nocturne-xyz/offchain-utils";
-import ERC20_ABI from "./abis/ERC20.json";
+import * as ot from "@opentelemetry/api";
+import * as ethers from "ethers";
 import { Logger } from "winston";
+import ERC20_ABI from "./abis/ERC20.json";
 
 const ACTOR_NAME = "balance-monitor";
 const COMPONENT_NAME = "monitor";
@@ -164,7 +164,7 @@ export class BalanceMonitor {
         setTimeout(checkBalanceAndReport, 60_000);
       };
 
-      checkBalanceAndReport();
+      void checkBalanceAndReport();
     });
 
     return {
