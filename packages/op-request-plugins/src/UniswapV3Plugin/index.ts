@@ -195,7 +195,8 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               inAmount,
               tokenOut,
               maxSlippageBps,
-              ...quote,
+              exactQuoteWei: quote.exactQuoteWei,
+              minimumAmountOutWei: quote.minimumAmountOutWei,
             };
 
             const erc20InContract = new ethers.Contract(
