@@ -1,1 +1,1 @@
-export { HasuraSdkSyncAdapter } from "./sdk";
+export { HasuraSdkSyncAdapter, HasuraSupportedNetwork } from "./sdk";

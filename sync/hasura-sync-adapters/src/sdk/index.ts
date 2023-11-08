@@ -15,32 +15,36 @@ import {
 import { EncryptedStateDiff, SDKIterSyncOpts } from "@nocturne-xyz/core";
 import { Client as UrqlClient, fetchExchange } from "@urql/core";
 import {
-  SupportedNetwork,
+  HasuraSupportedNetwork,
   FetchLatestIndexedMerkleIndexFn,
   makeFetchLatestIndexedMerkleIndex,
   makeFetchSdkEventsAndLatestCommittedMerkleIndex,
   FetchSdkEventsAndLatestCommitedMerkleIndexFn,
+  HasuraSupportedNetworks,
 } from "./fetch";
 
-export { SupportedNetwork } from "./fetch";
+export { HasuraSupportedNetwork } from "./fetch";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
 export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
   client: UrqlClient;
   subgraphUrl: string;
-  network: SupportedNetwork;
+  network: HasuraSupportedNetwork;
 
   fetchLatestIndexedMerkleIndex: FetchLatestIndexedMerkleIndexFn;
   fetchSdkEventsAndLatestCommittedMerkleIndex: FetchSdkEventsAndLatestCommitedMerkleIndexFn;
 
-  constructor(
-    graphqlEndpoint: string,
-    subgraphUrl: string,
-    network: SupportedNetwork
-  ) {
+  constructor(graphqlEndpoint: string, subgraphUrl: string, network: string) {
     this.subgraphUrl = subgraphUrl;
-    this.network = network;
+
+    if (!HasuraSupportedNetworks.includes(network)) {
+      throw new Error(
+        `hasura-sync-adapters doesn't support network: ${network}`
+      );
+    }
+
+    this.network = network as HasuraSupportedNetwork;
 
     this.client = new UrqlClient({
       url: graphqlEndpoint,
@@ -49,7 +53,7 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
 
     this.fetchLatestIndexedMerkleIndex = makeFetchLatestIndexedMerkleIndex(
       this.client,
-      network
+      network as HasuraSupportedNetwork
     );
     this.fetchSdkEventsAndLatestCommittedMerkleIndex =
       makeFetchSdkEventsAndLatestCommittedMerkleIndex(

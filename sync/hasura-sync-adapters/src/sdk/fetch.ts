@@ -23,7 +23,8 @@ import {
   MainnetSdkEventsPaginatedById,
 } from "../gql/queries";
 
-export type SupportedNetwork = "goerli" | "mainnet";
+export type HasuraSupportedNetwork = "goerli" | "mainnet";
+export const HasuraSupportedNetworks = ["goerli", "mainnet"];
 
 const GoerliQueries = {
   SdkEventsPaginatedById: GoerliSdkEventsPaginatedById,
@@ -53,7 +54,7 @@ export type FetchSdkEventsAndLatestCommitedMerkleIndexFn = (
 
 export function makeFetchLatestIndexedMerkleIndex<N>(
   client: UrqlClient,
-  network: SupportedNetwork
+  network: HasuraSupportedNetwork
 ): FetchLatestIndexedMerkleIndexFn {
   const { LatestIndexedMerkleIndex, LatestIndexedMerkleIndexUpToBlock } =
     QueriesByNetwork[network];
@@ -100,7 +101,7 @@ type SubtreeCommitResponse = ArrayElem<
 
 export function makeFetchSdkEventsAndLatestCommittedMerkleIndex(
   client: UrqlClient,
-  network: SupportedNetwork
+  network: HasuraSupportedNetwork
 ): FetchSdkEventsAndLatestCommitedMerkleIndexFn {
   const { SdkEventsPaginatedById } = GoerliQueries;
   return async (from: TotalEntityIndex, toBlock: number, limit = 1000) => {
