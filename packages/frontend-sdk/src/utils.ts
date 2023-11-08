@@ -23,6 +23,17 @@ import {
 } from "./types";
 
 const ENDPOINTS = {
+  mainnet: {
+    screenerEndpoint:
+      process.env.NEXT_PUBLIC_SCREENER_URL ??
+      "https://screener.mainnet.nocturnelabs.xyz",
+    bundlerEndpoint:
+      process.env.NEXT_PUBLIC_BUNDLER_URL ??
+      "https://bundler.mainnet.nocturnelabs.xyz",
+    subgraphEndpoint:
+      process.env.NEXT_PUBLIC_SUBGRAPH_URL ??
+      "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.25-testnet/gn", // TODO: fix
+  },
   goerli: {
     screenerEndpoint:
       process.env.NEXT_PUBLIC_SCREENER_URL ??
@@ -44,7 +55,7 @@ const ENDPOINTS = {
 export function getTokenContract(
   assetType: AssetType,
   assetAddress: Address,
-  signerOrProvider: ethers.Signer | ethers.providers.Provider
+  signerOrProvider: ethers.Signer | ethers.providers.Provider,
 ): ethers.Contract {
   let abi;
   if (assetType == AssetType.ERC20) {
@@ -63,13 +74,13 @@ export function getTokenContract(
 export async function getTokenDetails(
   assetType: AssetType,
   assetAddress: Address,
-  signerOrProvider: ethers.Signer | ethers.providers.Provider
+  signerOrProvider: ethers.Signer | ethers.providers.Provider,
 ): Promise<TokenDetails> {
   console.log("getting token contract...");
   const tokenContract = getTokenContract(
     assetType,
     assetAddress,
-    signerOrProvider
+    signerOrProvider,
   );
 
   if (assetType == AssetType.ERC20) {
@@ -88,14 +99,14 @@ export async function getTokenDetails(
 
 export function formatTokenAmountUserRepr(
   balance: bigint,
-  decimals: number
+  decimals: number,
 ): number {
   return Number(balance) / Math.pow(10, decimals);
 }
 
 export function formatTokenAmountEvmRepr(
   amount: number,
-  decimals: number
+  decimals: number,
 ): bigint {
   return BigInt(amount * Math.pow(10, decimals));
 }
@@ -120,7 +131,7 @@ export interface CircuitArtifactUrls {
 }
 
 export function getCircuitArtifactUrls(
-  networkName: SupportedNetwork
+  networkName: SupportedNetwork,
 ): CircuitArtifactUrls {
   switch (networkName) {
     case "mainnet":
@@ -168,12 +179,15 @@ export function getCircuitArtifactUrls(
 }
 
 export function getNocturneSdkConfig(
-  networkName: SupportedNetwork
+  networkName: SupportedNetwork,
 ): NocturneSdkConfig {
   const config = loadNocturneConfigBuiltin(networkName);
 
   let endpoints: Endpoints;
   switch (networkName) {
+    case "mainnet":
+      endpoints = ENDPOINTS.mainnet;
+      break;
     case "goerli":
       endpoints = ENDPOINTS.goerli;
       break;
@@ -191,7 +205,7 @@ export function getNocturneSdkConfig(
 }
 
 export function toDepositRequest(
-  displayDepositRequest: DisplayDepositRequest
+  displayDepositRequest: DisplayDepositRequest,
 ): DepositRequest {
   const asset = {
     ...displayDepositRequest.asset,
@@ -212,7 +226,7 @@ export function toDepositRequest(
 
 export function flattenDepositRequestStatus(
   subgraphStatus: OnChainDepositRequestStatus,
-  screenerStatus: ScreenerDepositRequestStatus
+  screenerStatus: ScreenerDepositRequestStatus,
 ): DepositRequestStatus {
   switch (subgraphStatus) {
     case OnChainDepositRequestStatus.Retrieved:
@@ -240,9 +254,10 @@ export function flattenDepositRequestStatus(
 }
 
 // TODO: flatten these two option types and change all tests to expect new behavior
-export function getBalanceOptsToGetNotesOpts(
-  { includeUncommitted, includePending }: GetBalanceOpts
-): GetNotesOpts {
+export function getBalanceOptsToGetNotesOpts({
+  includeUncommitted,
+  includePending,
+}: GetBalanceOpts): GetNotesOpts {
   return {
     includeUncommitted,
     ignoreOptimisticNFs: !includePending,
