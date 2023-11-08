@@ -23,6 +23,7 @@ import * as ot from "@opentelemetry/api";
 import { TreeInsertionLog, Insertion } from "@nocturne-xyz/persistent-log";
 import { Mutex } from "async-mutex";
 import { ACTOR_NAME, COMPONENT_NAME } from "./constants";
+import retry from "async-retry";
 
 const { fetchLatestCommittedMerkleIndex } = SubgraphUtils;
 const { BATCH_SIZE } = TreeConstants;
@@ -294,31 +295,35 @@ export class SubtreeUpdater {
       logger.debug(
         `acquiring mutex on handler contract to submit update tx for subtree index ${subtreeIndex}`
       );
-      const receipt = await this.handlerMutex.runExclusive(async () => {
-        logger.info(
-          `pre-dispatch attempting tx submission. subtreeIndex: ${subtreeIndex}`
-        );
-        const estimatedGas = (
-          await this.handlerContract.estimateGas.applySubtreeUpdate(
-            newRoot,
-            solidityProof
-          )
-        ).toBigInt();
+      const receipt = await retry(
+        async () =>
+          await this.handlerMutex.runExclusive(async () => {
+            logger.info(
+              `pre-dispatch attempting tx submission. subtreeIndex: ${subtreeIndex}`
+            );
+            const estimatedGas = (
+              await this.handlerContract.estimateGas.applySubtreeUpdate(
+                newRoot,
+                solidityProof
+              )
+            ).toBigInt();
 
-        const tx = await this.handlerContract.applySubtreeUpdate(
-          newRoot,
-          solidityProof,
-          {
-            gasLimit: (estimatedGas * 3n) / 2n,
-          }
-        );
+            const tx = await this.handlerContract.applySubtreeUpdate(
+              newRoot,
+              solidityProof,
+              {
+                gasLimit: (estimatedGas * 3n) / 2n,
+              }
+            );
 
-        logger.info(
-          `post-dispatch awaiting tx receipt. subtreeIndex: ${subtreeIndex}. txhash: ${tx.hash}`
-        );
-        const receipt = await tx.wait(1);
-        return receipt;
-      });
+            logger.info(
+              `post-dispatch awaiting tx receipt. subtreeIndex: ${subtreeIndex}. txhash: ${tx.hash}`
+            );
+            const receipt = await tx.wait(1);
+            return receipt;
+          }),
+        { retries: 3 }
+      );
 
       logger.info("subtree update tx receipt:", { receipt, subtreeIndex });
       logger.info("successfully updated root", { newRoot, subtreeIndex });
