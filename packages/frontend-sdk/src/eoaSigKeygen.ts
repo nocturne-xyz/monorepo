@@ -1,13 +1,12 @@
 import { ethers } from "ethers";
 
 const SPEND_KEY_FIXED_MESSAGE = Buffer.from(
-  `Generate your Spending Key
+  `Sign to generate your Nocturne spending key. This key will secure your funds in Nocturne.
 
-  1. Verify you're on: https://app.nocturne.xyz before proceeding
-  2. Verify that you have access to the connected wallet's private key. This spending key is unique to your connected wallet address. 
-  3. Nocturne cannot recover your spending key or your wallet's private key for you.
-
-  By signing, you will generate your spending key to manage Nocturne funds.`,
+By signing this message, I assert that
+1. I trust the application
+2. I have safely stored the private key (or seed phrase from which the private key was derived) for the connected Ethereum account
+3. The only way I can recover access to my Nocturne account is by signing this message again with the current Ethereum account`,
 );
 
 export async function generateNocturneSpendKeyFromEoaSig(
