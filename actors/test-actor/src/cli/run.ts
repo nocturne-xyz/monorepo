@@ -10,7 +10,6 @@ import {
   MockEthToTokenConverter,
   BundlerOpTracker,
 } from "@nocturne-xyz/client";
-import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import { Command } from "commander";
 import { ethers } from "ethers";
@@ -21,11 +20,12 @@ import {
   getEthersProviderAndSignerFromEnvConfiguration,
 } from "@nocturne-xyz/offchain-utils";
 import { LMDBKVStore } from "../lmdb";
+import { HasuraSdkSyncAdapter } from "@nocturne-xyz/hasura-sync-adapters";
 
 export const run = new Command("run")
   .summary("run test actor")
   .description(
-    "must supply .env file with RPC_URL, BUNDLER_URL, SUBGRAPH_URL, TX_SIGNER_KEY, and NOCTURNE_SPENDING_KEY."
+    "must supply .env file with RPC_URL, BUNDLER_URL, SUBGRAPH_URL, HASURA_URL, TX_SIGNER_KEY, and NOCTURNE_SPENDING_KEY."
   )
   .requiredOption(
     "--config-name-or-path <string>",
@@ -105,6 +105,11 @@ export const run = new Command("run")
       throw new Error("missing SUBGRAPH_URL");
     }
 
+    const hasuraEndpoint = process.env.HASURA_URL;
+    if (!hasuraEndpoint) {
+      throw new Error("missing HASURA_URL");
+    }
+
     // hex string
     const nocturneSKStr = process.env.NOCTURNE_SPENDING_KEY;
     if (!nocturneSKStr) {
@@ -128,7 +133,10 @@ export const run = new Command("run")
     const kv = new LMDBKVStore({ path: dbPath });
     const merkleProver = await SparseMerkleProver.loadFromKV(kv);
     const db = new NocturneDB(kv);
-    const syncAdapter = new SubgraphSDKSyncAdapter(subgraphEndpoint, logger);
+    const syncAdapter = new HasuraSdkSyncAdapter(
+      hasuraEndpoint,
+      subgraphEndpoint
+    );
     const sdk = new NocturneClient(
       nocturneSigner.viewer(),
       provider,
