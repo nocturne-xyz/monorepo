@@ -1,3 +1,5 @@
+import { ethers } from "ethers";
+
 const JOINSPLIT = {
   proof: ["0n", "0n", "0n", "0n", "0n", "0n", "0n", "0n"],
   senderCommitment: "0n",
@@ -61,3 +63,14 @@ export const VALID_RELAY_REQUEST = {
     atomicActions: true,
   },
 };
+
+const RPC_URL = "https://eth.llamarpc.com";
+export const TEST_PROVIDER = new ethers.providers.JsonRpcProvider(RPC_URL);
+export const DUMMY_CONTRACT_ADDRESS = ethers.utils.getAddress(
+  "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"
+);
+export const DUMMY_ADDRESSES = [
+  ethers.utils.getAddress("0xddbd1e80090943632ed47b1632cb36e7ca28abc2"),
+  ethers.utils.getAddress("0x6798639591530fbbafd12c2826422b58bd2c5219"),
+  ethers.utils.getAddress("0x67f8f9a5d4290325506b119980660624dc7d3ba9"),
+];

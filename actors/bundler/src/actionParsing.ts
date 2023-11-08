@@ -26,10 +26,13 @@ export function parseTransferAction(action: Action): TransferActionCalldata {
   }
 
   const calldata = ethers.utils.hexDataSlice(action.encodedFunction, 4);
-  const { to, amount } = ethers.utils.defaultAbiCoder.decode(
+  const [to, amount] = ethers.utils.defaultAbiCoder.decode(
     ["address", "uint256"],
     calldata
-  ) as unknown as TransferActionCalldata;
+  ) as [string, ethers.BigNumber];
 
-  return { to, amount };
+  return {
+    to,
+    amount: amount.toString(),
+  };
 }
