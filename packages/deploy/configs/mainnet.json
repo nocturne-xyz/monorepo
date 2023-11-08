@@ -1,0 +1,69 @@
+{
+  "proxyAdminOwner": "0x47794AB20f45Bdc18ef6EcBcB19E1FdF82C6E8Db",
+  "contractOwner": "0x29989e8695D3902f1d7fEDa2698FE526D2227941",
+  "finalityBlocks": 1,
+  "screeners": ["0xaa23ba28e085F8c8aBb59DE9FEd17518A425F906"],
+  "subtreeBatchFillers": ["0xE3F1679cdfa11716D51105Ef3feB7bD6B2D9103D"],
+  "wethAddress": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+  "erc20s": [
+    [
+      "WETH",
+      {
+        "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        "globalCapWholeTokens": "313n",
+        "maxDepositSizeWholeTokens": "100n",
+        "resetWindowHours": "3n",
+        "precision": "18n",
+        "isGasAsset": true
+      }
+    ],
+    [
+      "DAI",
+      {
+        "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+        "globalCapWholeTokens": "625000n",
+        "maxDepositSizeWholeTokens": "200000n",
+        "resetWindowHours": "3n",
+        "precision": "18n",
+        "isGasAsset": false
+      }
+    ],
+    [
+      "wstETH",
+      {
+        "address": "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+        "globalCapWholeTokens": "313n",
+        "maxDepositSizeWholeTokens": "100n",
+        "resetWindowHours": "3n",
+        "precision": "18n",
+        "isGasAsset": false
+      }
+    ],
+    [
+      "rETH",
+      {
+        "address": "0xae78736Cd615f374D3085123A210448E74Fc6393",
+        "globalCapWholeTokens": "313n",
+        "maxDepositSizeWholeTokens": "100n",
+        "resetWindowHours": "3n",
+        "precision": "18n",
+        "isGasAsset": false
+      }
+    ]
+  ],
+  "protocolAllowlist": [],
+  "leftoverTokensHolder": "0x0000000000000000000000000000000000000000",
+  "opts": {
+    "useMockSubtreeUpdateVerifier": false,
+    "uniswapV3AdapterDeployConfig": {
+      "swapRouterAddress": "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+    },
+    "wstethAdapterDeployConfig": {
+      "wstethAddress": "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
+    },
+    "rethAdapterDeployConfig": {
+      "rocketPoolStorageAddress": "0x1d8f8f00cfa6758d7bE78336684788Fb0ee0Fa46"
+    },
+    "confirmations": 1
+  }
+}
