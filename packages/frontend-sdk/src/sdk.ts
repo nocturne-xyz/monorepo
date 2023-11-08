@@ -1,5 +1,4 @@
 import {
-  ActionMetadata,
   BundlerOpTracker,
   MockEthToTokenConverter,
   NocturneClient,
@@ -12,9 +11,9 @@ import {
   SignCanonAddrRegistryEntryMethod,
   SignOperationMethod,
   SyncOpts,
+  isTerminalOpStatus,
   newOpRequestBuilder,
   proveOperation,
-  isTerminalOpStatus,
 } from "@nocturne-xyz/client";
 import { Erc20Config } from "@nocturne-xyz/config";
 import {
@@ -93,11 +92,9 @@ import {
   GetBalanceOpts,
   NocturneSdkConfig,
   OnChainDepositRequestStatus,
-  OpRequestParams,
   OperationHandle,
   SupportedNetwork,
   SupportedProvider,
-  SwapTypes,
 } from "./types";
 import {
   BUNDLER_RECEIVED_OP_BUFFER,
@@ -219,8 +216,9 @@ export class NocturneSdk implements NocturneSdkApi {
         this.endpoints.screenerEndpoint,
       );
 
-    this.syncAdapter = options.syncAdapter ?? new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint),
-
+    this.syncAdapter =
+      options.syncAdapter ??
+      new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint);
     this.clientThunk = thunk(async () => {
       const { vk, vkNonce } = await this.snap.invoke<RequestViewingKeyMethod>({
         method: "nocturne_requestViewingKey",
@@ -273,8 +271,12 @@ export class NocturneSdk implements NocturneSdkApi {
     return this._snap;
   }
 
+  get chainId(): bigint {
+    return this.sdkConfig.config.chainId;
+  }
+
   get opRequestBuilder(): OpRequestBuilder {
-    return newOpRequestBuilder(this.provider, this.sdkConfig.config.chainId);
+    return newOpRequestBuilder(this.provider, this.chainId);
   }
 
   /**
@@ -341,7 +343,7 @@ export class NocturneSdk implements NocturneSdkApi {
             compressedCanonAddr,
             perCanonAddrNonce: nonce,
           },
-          chainId: BigInt(this.sdkConfig.config.chainId),
+          chainId: this.chainId,
           registryAddress: registry.address,
         },
       });
@@ -419,12 +421,11 @@ export class NocturneSdk implements NocturneSdkApi {
     amount: bigint,
     recipientAddress: Address,
   ): Promise<OperationHandle> {
-    return this.createOpRequest({
-      type: "ANON_TRANSFER",
-      erc20Address,
-      recipientAddress,
-      amount,
-    });
+    const operationRequest = await this.opRequestBuilder
+      .use(Erc20Plugin)
+      .erc20Transfer(erc20Address, recipientAddress, amount)
+      .build();
+    return this.performOperation(operationRequest);
   }
 
   async initiateAnonEthTransfer(
@@ -436,60 +437,45 @@ export class NocturneSdk implements NocturneSdkApi {
       .transferEth(recipientAddress, amount)
       .build();
 
-    const actionMeta: ActionMetadata = {
-      type: "Action",
-      actionType: "Transfer ETH",
-      recipientAddress,
-      amount,
-    };
-
-    return this.performOperation(operationRequest, [actionMeta]);
+    return this.performOperation(operationRequest);
   }
 
   async initiateAnonErc20Swap({
+    tokenIn,
+    tokenOut,
+    amountIn,
+    maxSlippageBps,
     protocol = "UNISWAP_V3",
-    ...params
   }: AnonSwapRequestParams): Promise<OperationHandle> {
-    let type: SwapTypes;
-    switch (protocol) {
-      case "UNISWAP_V3":
-        type = "UNISWAP_V3_SWAP";
-        break;
-      default:
-        throw new Error(`Unsupported protocol: ${protocol}`);
+    if (protocol !== "UNISWAP_V3") {
+      throw new Error(`Protocol "${protocol}" not currently supported`);
     }
-    return this.createOpRequest({
-      type,
-      ...params,
-    });
+
+    const operationRequest = await this.opRequestBuilder
+      .use(UniswapV3Plugin)
+      .swap(tokenIn, amountIn, tokenOut, { maxSlippageBps })
+      .build();
+
+    return this.performOperation(operationRequest);
   }
 
   /**
-   * Take an operation request OR submittable operation. If the former, sign and prove the operation
-   * and submit it to the bundler. If the latter, directly submit it to the bundler.
-   * @param opOrOpRequest Submittable operation or operation request
+   * Take an operation request, sign and prove the operation
+   * and submit it to the bundler.
+   * @param opRequest Operation request
    * @param actionsMetadata Metadata for each action in the operation
    * @returns Operation handle
    */
   async performOperation(
-    opOrOpRequest:
-      | SubmittableOperationWithNetworkInfo
-      | OperationRequestWithMetadata,
-    actionsMetadata: ActionMetadata[],
+    opRequest: OperationRequestWithMetadata,
   ): Promise<OperationHandle> {
-    const metadata = { items: actionsMetadata };
-    const submittableOperation =
-      "request" in opOrOpRequest
-        ? await this.signAndProveOperation({
-            ...opOrOpRequest,
-            meta: { items: actionsMetadata },
-          })
-        : opOrOpRequest;
-      
-    const opHandleWithoutMetadata = await this.submitOperation(submittableOperation);
+    const submittableOperation = await this.signAndProveOperation(opRequest);
+
+    const opHandleWithoutMetadata =
+      await this.submitOperation(submittableOperation);
     return {
       ...opHandleWithoutMetadata,
-      metadata,
+      metadata: opRequest.meta,
     };
   }
 
@@ -581,7 +567,7 @@ export class NocturneSdk implements NocturneSdkApi {
     switch (protocol) {
       case "UNISWAP_V3":
         const quote = await getSwapQuote({
-          chainId: this.sdkConfig.config.chainId,
+          chainId: this.chainId,
           provider: this.provider,
           fromAddress: this.sdkConfig.config.handlerAddress,
           tokenInAddress: tokenIn,
@@ -747,9 +733,10 @@ export class NocturneSdk implements NocturneSdkApi {
     };
   }
 
-  protected makeGetStatus(digest: bigint): () => Promise<OperationStatusResponse> {
+  protected makeGetStatus(
+    digest: bigint,
+  ): () => Promise<OperationStatusResponse> {
     return async () => {
-
       // check history first. If it's in a terminal status, return that status
       const client = await this.clientThunk();
       const historyRecord = await client.getOpHistoryRecord(digest);
@@ -761,7 +748,7 @@ export class NocturneSdk implements NocturneSdkApi {
       }
 
       if (historyRecord.status && isTerminalOpStatus(historyRecord.status)) {
-        return { status: historyRecord.status }; 
+        return { status: historyRecord.status };
       }
 
       // fetch status
@@ -850,16 +837,14 @@ export class NocturneSdk implements NocturneSdkApi {
     const history = await this.getOpHistory(true);
     const operationHandles = history
       .filter(({ status }) => !status || !isTerminalOpStatus(status))
-      .map(
-        ({ digest, metadata }) => {
-          const getStatus = this.makeGetStatus(digest);
-          return {
-            digest,
-            metadata,
-            getStatus,
-          };
-        }
-      );
+      .map(({ digest, metadata }) => {
+        const getStatus = this.makeGetStatus(digest);
+        return {
+          digest,
+          metadata,
+          getStatus,
+        };
+      });
     return operationHandles;
   }
 
@@ -901,13 +886,15 @@ export class NocturneSdk implements NocturneSdkApi {
     return undefined;
   }
 
-
   /**
    * sync in increments, passing progress updates back to the caller through a callback
    * if another call to this function is in progress, this function will wait for the existing call to complete
    * TODO this behavior is extremely scuffed, this should be replaced by an event emitter in `client`
    */
-  async sync(syncOpts?: Omit<SyncOpts, "timeoutSeconds">, handleProgress?: (progress: number) => void): Promise<void> {
+  async sync(
+    syncOpts?: Omit<SyncOpts, "timeoutSeconds">,
+    handleProgress?: (progress: number) => void,
+  ): Promise<void> {
     // TODO: re-architect the SDK with a proper event-based subscription model
     let handlerIndex: number | undefined;
     if (handleProgress) {
@@ -920,11 +907,11 @@ export class NocturneSdk implements NocturneSdkApi {
         const finalityBlocks = this.sdkConfig.config.finalityBlocks;
 
         const opts = {
-        ...syncOpts,
-        timing: syncOpts?.timing ?? true,
-        finalityBlocks: syncOpts?.finalityBlocks ?? finalityBlocks,
-        timeoutSeconds: 5, // always override timeoutSeconds
-      };
+          ...syncOpts,
+          timing: syncOpts?.timing ?? true,
+          finalityBlocks: syncOpts?.finalityBlocks ?? finalityBlocks,
+          timeoutSeconds: 5, // always override timeoutSeconds
+        };
 
         const fetchEndIndex = async () => {
           if (!finalityBlocks) {
@@ -936,7 +923,11 @@ export class NocturneSdk implements NocturneSdkApi {
             return 0;
           }
 
-          return (await this.syncAdapter.getLatestIndexedMerkleIndex(currentBlock - finalityBlocks)) ?? 0;
+          return (
+            (await this.syncAdapter.getLatestIndexedMerkleIndex(
+              currentBlock - finalityBlocks,
+            )) ?? 0
+          );
         };
 
         let endIndex = await fetchEndIndex();
@@ -952,8 +943,7 @@ export class NocturneSdk implements NocturneSdkApi {
         let count = 0;
         while (currentIndex < endIndex) {
           console.log("[sync] syncing", { currentIndex, endIndex, opts });
-          currentIndex =
-            (await this.syncInner(opts)) ?? 0;
+          currentIndex = (await this.syncInner(opts)) ?? 0;
 
           if (count % refetchEvery === 0) {
             endIndex = await fetchEndIndex();
@@ -1040,7 +1030,11 @@ export class NocturneSdk implements NocturneSdkApi {
         );
 
         const body = await res.json();
-        if (res.status === 404 && typeof body.error === "string" && body.error.includes("operation not found")) {
+        if (
+          res.status === 404 &&
+          typeof body.error === "string" &&
+          body.error.includes("operation not found")
+        ) {
           return undefined;
         } else if (!res.ok) {
           console.error("failed to fetch operation status", body);
@@ -1103,49 +1097,5 @@ export class NocturneSdk implements NocturneSdkApi {
         };
       }),
     );
-  }
-
-  private async createOpRequest(
-    params: OpRequestParams,
-  ): Promise<OperationHandle> {
-    const chainId = BigInt((await this.provider.getNetwork()).chainId);
-    const builder = newOpRequestBuilder(this.provider, chainId);
-    let operationRequest: OperationRequestWithMetadata;
-    let action: ActionMetadata;
-    switch (params.type) {
-      case "ANON_TRANSFER": {
-        const { erc20Address, amount, recipientAddress } = params;
-
-        operationRequest = await builder
-          .use(Erc20Plugin)
-          .erc20Transfer(erc20Address, recipientAddress, amount)
-          .build();
-
-        action = {
-          type: "Action",
-          actionType: "Transfer",
-          recipientAddress,
-          erc20Address,
-          amount,
-        };
-        break;
-      }
-      case "UNISWAP_V3_SWAP": {
-        const { tokenIn, amountIn, tokenOut, maxSlippageBps } = params;
-        operationRequest = await builder
-          .use(UniswapV3Plugin)
-          .swap(tokenIn, amountIn, tokenOut, { maxSlippageBps })
-          .build();
-        action = {
-          type: "Action",
-          actionType: "UniswapV3 Swap",
-          tokenIn,
-          inAmount: amountIn,
-          tokenOut,
-        };
-        break;
-      }
-    }
-    return this.performOperation(operationRequest, [action]);
   }
 }

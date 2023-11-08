@@ -56,6 +56,9 @@ export type ActionMetadata =
       tokenIn: Address;
       inAmount: bigint;
       tokenOut: Address;
+      maxSlippageBps: number;
+      exactQuoteWei: bigint;
+      minimumAmountOutWei: bigint;
     };
 
 export interface ConfidentialPaymentMetadata {
