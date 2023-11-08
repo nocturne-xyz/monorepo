@@ -1,6 +1,6 @@
 {
   "contracts": {
-    "network": { "name": "mainnet", "chainId": 1 },
+    "network": { "name": "homestead", "chainId": 1 },
     "startBlock": 18524516,
     "owners": {
       "proxyAdminOwner": "0x47794AB20f45Bdc18ef6EcBcB19E1FdF82C6E8Db",
