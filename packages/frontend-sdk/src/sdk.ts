@@ -861,10 +861,16 @@ export class NocturneSdk implements NocturneSdkApi {
 
     // check it has corresponding canon addr in registry
     const registry = await this.canonAddrRegistryThunk();
-    const maybeCompressedCanonAddr =
-      (await registry._ethAddressToCompressedCanonAddr(eoaAddr)) as
-        | BigNumber
-        | undefined;
+    let maybeCompressedCanonAddr: BigNumber | undefined;
+    try {
+      maybeCompressedCanonAddr =
+        (await registry._ethAddressToCompressedCanonAddr(eoaAddr)) as
+          | BigNumber
+          | undefined;
+    } catch (err) {
+      console.warn("error when looking up canon addr in registry: ", err);
+      return undefined
+    }
 
     if (!maybeCompressedCanonAddr) {
       return undefined;
