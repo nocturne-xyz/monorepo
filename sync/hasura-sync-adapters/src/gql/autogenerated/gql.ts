@@ -13,12 +13,18 @@ import { TypedDocumentNode as DocumentNode } from "@graphql-typed-document-node/
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
-  "\n  query fetchSdkEvents($from: String!, $toBlock: Int!, $limit: Int!) {\n    sdk_event(\n      where: { id: { _gte: $from }, block: { _lt: $toBlock } }\n      order_by: { id: asc }\n      limit: $limit\n    ) {\n      id\n      merkle_index\n      encoded_note_encoded_asset_addr\n      encoded_note_encoded_asset_id\n      encoded_note_nonce\n      encoded_note_owner_h1\n      encoded_note_owner_h2\n      encoded_note_value\n      encrypted_note_ciphertext_bytes\n      encrypted_note_commitment\n      encrypted_note_encapsulated_secret_bytes\n      nullifier\n    }\n    subtree_commit(\n      where: { block: { _lt: $toBlock } }\n      limit: 1\n      order_by: { id: desc }\n    ) {\n      subtree_batch_offset\n    }\n  }\n":
-    types.FetchSdkEventsDocument,
-  "\n  query fetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    sdk_event_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n":
-    types.FetchLatestIndexedMerkleIndexUpToBlockDocument,
-  "\n  query fetchLatestIndexedMerkleIndex {\n    sdk_event_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n":
-    types.FetchLatestIndexedMerkleIndexDocument,
+  "\n  query goerliFetchSdkEvents($from: String!, $toBlock: Int!, $limit: Int!) {\n    goerli_sdk_events(\n      where: { id: { _gte: $from }, block: { _lt: $toBlock } }\n      order_by: { id: asc }\n      limit: $limit\n    ) {\n      id\n      merkle_index\n      encoded_note_encoded_asset_addr\n      encoded_note_encoded_asset_id\n      encoded_note_nonce\n      encoded_note_owner_h1\n      encoded_note_owner_h2\n      encoded_note_value\n      encrypted_note_ciphertext_bytes\n      encrypted_note_commitment\n      encrypted_note_encapsulated_secret_bytes\n      nullifier\n    }\n    goerli_subtree_commits(\n      where: { block: { _lt: $toBlock } }\n      limit: 1\n      order_by: { id: desc }\n    ) {\n      subtree_batch_offset\n    }\n  }\n":
+    types.GoerliFetchSdkEventsDocument,
+  "\n  query goerliFetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    goerli_sdk_events_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n":
+    types.GoerliFetchLatestIndexedMerkleIndexUpToBlockDocument,
+  "\n  query goerliFetchLatestIndexedMerkleIndex {\n    goerli_sdk_events_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n":
+    types.GoerliFetchLatestIndexedMerkleIndexDocument,
+  "\n  query mainnetFetchSdkEvents($from: String!, $toBlock: Int!, $limit: Int!) {\n    mainnet_sdk_events(\n      where: { id: { _gte: $from }, block: { _lt: $toBlock } }\n      order_by: { id: asc }\n      limit: $limit\n    ) {\n      id\n      merkle_index\n      encoded_note_encoded_asset_addr\n      encoded_note_encoded_asset_id\n      encoded_note_nonce\n      encoded_note_owner_h1\n      encoded_note_owner_h2\n      encoded_note_value\n      encrypted_note_ciphertext_bytes\n      encrypted_note_commitment\n      encrypted_note_encapsulated_secret_bytes\n      nullifier\n    }\n    mainnet_subtree_commits(\n      where: { block: { _lt: $toBlock } }\n      limit: 1\n      order_by: { id: desc }\n    ) {\n      subtree_batch_offset\n    }\n  }\n":
+    types.MainnetFetchSdkEventsDocument,
+  "\n  query mainnetFetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    mainnet_sdk_events_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n":
+    types.MainnetFetchLatestIndexedMerkleIndexUpToBlockDocument,
+  "\n  query mainnetFetchLatestIndexedMerkleIndex {\n    mainnet_sdk_events_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n":
+    types.MainnetFetchLatestIndexedMerkleIndexDocument,
 };
 
 /**
@@ -39,20 +45,38 @@ export function graphql(source: string): unknown;
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: "\n  query fetchSdkEvents($from: String!, $toBlock: Int!, $limit: Int!) {\n    sdk_event(\n      where: { id: { _gte: $from }, block: { _lt: $toBlock } }\n      order_by: { id: asc }\n      limit: $limit\n    ) {\n      id\n      merkle_index\n      encoded_note_encoded_asset_addr\n      encoded_note_encoded_asset_id\n      encoded_note_nonce\n      encoded_note_owner_h1\n      encoded_note_owner_h2\n      encoded_note_value\n      encrypted_note_ciphertext_bytes\n      encrypted_note_commitment\n      encrypted_note_encapsulated_secret_bytes\n      nullifier\n    }\n    subtree_commit(\n      where: { block: { _lt: $toBlock } }\n      limit: 1\n      order_by: { id: desc }\n    ) {\n      subtree_batch_offset\n    }\n  }\n"
-): (typeof documents)["\n  query fetchSdkEvents($from: String!, $toBlock: Int!, $limit: Int!) {\n    sdk_event(\n      where: { id: { _gte: $from }, block: { _lt: $toBlock } }\n      order_by: { id: asc }\n      limit: $limit\n    ) {\n      id\n      merkle_index\n      encoded_note_encoded_asset_addr\n      encoded_note_encoded_asset_id\n      encoded_note_nonce\n      encoded_note_owner_h1\n      encoded_note_owner_h2\n      encoded_note_value\n      encrypted_note_ciphertext_bytes\n      encrypted_note_commitment\n      encrypted_note_encapsulated_secret_bytes\n      nullifier\n    }\n    subtree_commit(\n      where: { block: { _lt: $toBlock } }\n      limit: 1\n      order_by: { id: desc }\n    ) {\n      subtree_batch_offset\n    }\n  }\n"];
+  source: "\n  query goerliFetchSdkEvents($from: String!, $toBlock: Int!, $limit: Int!) {\n    goerli_sdk_events(\n      where: { id: { _gte: $from }, block: { _lt: $toBlock } }\n      order_by: { id: asc }\n      limit: $limit\n    ) {\n      id\n      merkle_index\n      encoded_note_encoded_asset_addr\n      encoded_note_encoded_asset_id\n      encoded_note_nonce\n      encoded_note_owner_h1\n      encoded_note_owner_h2\n      encoded_note_value\n      encrypted_note_ciphertext_bytes\n      encrypted_note_commitment\n      encrypted_note_encapsulated_secret_bytes\n      nullifier\n    }\n    goerli_subtree_commits(\n      where: { block: { _lt: $toBlock } }\n      limit: 1\n      order_by: { id: desc }\n    ) {\n      subtree_batch_offset\n    }\n  }\n"
+): (typeof documents)["\n  query goerliFetchSdkEvents($from: String!, $toBlock: Int!, $limit: Int!) {\n    goerli_sdk_events(\n      where: { id: { _gte: $from }, block: { _lt: $toBlock } }\n      order_by: { id: asc }\n      limit: $limit\n    ) {\n      id\n      merkle_index\n      encoded_note_encoded_asset_addr\n      encoded_note_encoded_asset_id\n      encoded_note_nonce\n      encoded_note_owner_h1\n      encoded_note_owner_h2\n      encoded_note_value\n      encrypted_note_ciphertext_bytes\n      encrypted_note_commitment\n      encrypted_note_encapsulated_secret_bytes\n      nullifier\n    }\n    goerli_subtree_commits(\n      where: { block: { _lt: $toBlock } }\n      limit: 1\n      order_by: { id: desc }\n    ) {\n      subtree_batch_offset\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: "\n  query fetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    sdk_event_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"
-): (typeof documents)["\n  query fetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    sdk_event_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"];
+  source: "\n  query goerliFetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    goerli_sdk_events_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"
+): (typeof documents)["\n  query goerliFetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    goerli_sdk_events_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: "\n  query fetchLatestIndexedMerkleIndex {\n    sdk_event_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"
-): (typeof documents)["\n  query fetchLatestIndexedMerkleIndex {\n    sdk_event_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"];
+  source: "\n  query goerliFetchLatestIndexedMerkleIndex {\n    goerli_sdk_events_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"
+): (typeof documents)["\n  query goerliFetchLatestIndexedMerkleIndex {\n    goerli_sdk_events_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: "\n  query mainnetFetchSdkEvents($from: String!, $toBlock: Int!, $limit: Int!) {\n    mainnet_sdk_events(\n      where: { id: { _gte: $from }, block: { _lt: $toBlock } }\n      order_by: { id: asc }\n      limit: $limit\n    ) {\n      id\n      merkle_index\n      encoded_note_encoded_asset_addr\n      encoded_note_encoded_asset_id\n      encoded_note_nonce\n      encoded_note_owner_h1\n      encoded_note_owner_h2\n      encoded_note_value\n      encrypted_note_ciphertext_bytes\n      encrypted_note_commitment\n      encrypted_note_encapsulated_secret_bytes\n      nullifier\n    }\n    mainnet_subtree_commits(\n      where: { block: { _lt: $toBlock } }\n      limit: 1\n      order_by: { id: desc }\n    ) {\n      subtree_batch_offset\n    }\n  }\n"
+): (typeof documents)["\n  query mainnetFetchSdkEvents($from: String!, $toBlock: Int!, $limit: Int!) {\n    mainnet_sdk_events(\n      where: { id: { _gte: $from }, block: { _lt: $toBlock } }\n      order_by: { id: asc }\n      limit: $limit\n    ) {\n      id\n      merkle_index\n      encoded_note_encoded_asset_addr\n      encoded_note_encoded_asset_id\n      encoded_note_nonce\n      encoded_note_owner_h1\n      encoded_note_owner_h2\n      encoded_note_value\n      encrypted_note_ciphertext_bytes\n      encrypted_note_commitment\n      encrypted_note_encapsulated_secret_bytes\n      nullifier\n    }\n    mainnet_subtree_commits(\n      where: { block: { _lt: $toBlock } }\n      limit: 1\n      order_by: { id: desc }\n    ) {\n      subtree_batch_offset\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: "\n  query mainnetFetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    mainnet_sdk_events_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"
+): (typeof documents)["\n  query mainnetFetchLatestIndexedMerkleIndexUpToBlock($toBlock: Int!) {\n    mainnet_sdk_events_aggregate(where: { block: { _lte: $toBlock } }) {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: "\n  query mainnetFetchLatestIndexedMerkleIndex {\n    mainnet_sdk_events_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"
+): (typeof documents)["\n  query mainnetFetchLatestIndexedMerkleIndex {\n    mainnet_sdk_events_aggregate {\n      aggregate {\n        max {\n          merkle_index\n        }\n      }\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

@@ -15,23 +15,47 @@ import {
 import { EncryptedStateDiff, SDKIterSyncOpts } from "@nocturne-xyz/core";
 import { Client as UrqlClient, fetchExchange } from "@urql/core";
 import {
-  fetchSdkEventsAndLatestCommittedMerkleIndex,
-  fetchLatestIndexedMerkleIndex,
+  SupportedNetwork,
+  FetchLatestIndexedMerkleIndexFn,
+  makeFetchLatestIndexedMerkleIndex,
+  makeFetchSdkEventsAndLatestCommittedMerkleIndex,
+  FetchSdkEventsAndLatestCommitedMerkleIndexFn,
 } from "./fetch";
+
+export { SupportedNetwork } from "./fetch";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
 export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
   client: UrqlClient;
   subgraphUrl: string;
+  network: SupportedNetwork;
 
-  constructor(graphqlEndpoint: string, subgraphUrl: string) {
+  fetchLatestIndexedMerkleIndex: FetchLatestIndexedMerkleIndexFn;
+  fetchSdkEventsAndLatestCommittedMerkleIndex: FetchSdkEventsAndLatestCommitedMerkleIndexFn;
+
+  constructor(
+    graphqlEndpoint: string,
+    subgraphUrl: string,
+    network: SupportedNetwork
+  ) {
+    this.subgraphUrl = subgraphUrl;
+    this.network = network;
+
     this.client = new UrqlClient({
       url: graphqlEndpoint,
       exchanges: [fetchExchange],
     });
 
-    this.subgraphUrl = subgraphUrl;
+    this.fetchLatestIndexedMerkleIndex = makeFetchLatestIndexedMerkleIndex(
+      this.client,
+      network
+    );
+    this.fetchSdkEventsAndLatestCommittedMerkleIndex =
+      makeFetchSdkEventsAndLatestCommittedMerkleIndex(
+        this.client,
+        this.network
+      );
   }
 
   iterStateDiffs(
@@ -40,7 +64,8 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
   ): ClosableAsyncIterator<EncryptedStateDiff> {
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
 
-    const client = this.client;
+    const fetchSdkEventsAndLatestCommittedMerkleIndex =
+      this.fetchSdkEventsAndLatestCommittedMerkleIndex;
     const fetchLatestIndexedBlock = async () =>
       await this.getLatestIndexedBlock();
 
@@ -61,7 +86,6 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
           events,
           latestCommittedMerkleIndex: newLatestCommittedMerkleIndex,
         } = await fetchSdkEventsAndLatestCommittedMerkleIndex(
-          client,
           from,
           toBlock + 1
         );
@@ -168,6 +192,6 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
   async getLatestIndexedMerkleIndex(
     toBlock?: number
   ): Promise<number | undefined> {
-    return await fetchLatestIndexedMerkleIndex(this.client, toBlock);
+    return await this.fetchLatestIndexedMerkleIndex(toBlock);
   }
 }
