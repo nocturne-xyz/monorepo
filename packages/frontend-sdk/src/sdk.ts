@@ -216,39 +216,37 @@ export class NocturneSdk implements NocturneSdkApi {
         this.endpoints.screenerEndpoint,
       );
 
-    (this.syncAdapter =
+    this.syncAdapter =
       options.syncAdapter ??
-      new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint)),
-      (this.clientThunk = thunk(async () => {
-        const { vk, vkNonce } = await this.snap.invoke<RequestViewingKeyMethod>(
-          {
-            method: "nocturne_requestViewingKey",
-            params: undefined,
-          },
-        );
+      new SubgraphSDKSyncAdapter(this.endpoints.subgraphEndpoint);
+    this.clientThunk = thunk(async () => {
+      const { vk, vkNonce } = await this.snap.invoke<RequestViewingKeyMethod>({
+        method: "nocturne_requestViewingKey",
+        params: undefined,
+      });
 
-        const viewer = new NocturneViewer(vk, vkNonce);
-        const { x, y } = viewer.canonicalAddress();
-        const canonAddr = JSON.stringify({ x, y });
-        const canonAddrHash = ethers.utils.sha256(
-          ethers.utils.toUtf8Bytes(canonAddr),
-        );
-        const kv = new IdbKvStore(
-          `nocturne-fe-sdk-${networkName}-${canonAddrHash}`,
-        );
-        const db = new NocturneDB(kv);
+      const viewer = new NocturneViewer(vk, vkNonce);
+      const { x, y } = viewer.canonicalAddress();
+      const canonAddr = JSON.stringify({ x, y });
+      const canonAddrHash = ethers.utils.sha256(
+        ethers.utils.toUtf8Bytes(canonAddr),
+      );
+      const kv = new IdbKvStore(
+        `nocturne-fe-sdk-${networkName}-${canonAddrHash}`,
+      );
+      const db = new NocturneDB(kv);
 
-        return new NocturneClient(
-          viewer,
-          this.provider,
-          this.sdkConfig.config,
-          await SparseMerkleProver.loadFromKV(kv),
-          db,
-          this.syncAdapter,
-          new MockEthToTokenConverter(),
-          new BundlerOpTracker(this.endpoints.bundlerEndpoint),
-        );
-      }));
+      return new NocturneClient(
+        viewer,
+        this.provider,
+        this.sdkConfig.config,
+        await SparseMerkleProver.loadFromKV(kv),
+        db,
+        this.syncAdapter,
+        new MockEthToTokenConverter(),
+        new BundlerOpTracker(this.endpoints.bundlerEndpoint),
+      );
+    });
   }
 
   protected get wethAddress(): string {
