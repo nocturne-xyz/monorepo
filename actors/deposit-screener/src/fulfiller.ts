@@ -39,6 +39,7 @@ import {
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import { millisToSeconds } from "./utils";
+import retry from "async-retry";
 
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 const COMPONENT_NAME = "fulfiller";
@@ -273,36 +274,42 @@ export class DepositScreenerFulfiller {
     );
 
     const asset = AssetTrait.decode(depositRequest.encodedAsset);
-    const receipt = await this.signerMutex.runExclusive(async () => {
-      switch (asset.assetType) {
-        case AssetType.ERC20:
-          const estimatedGas = (
-            await this.depositManagerContract.estimateGas.completeErc20Deposit(
-              depositRequest,
-              signature
-            )
-          ).toBigInt();
+    const receipt = await retry(
+      async () =>
+        await this.signerMutex.runExclusive(async () => {
+          switch (asset.assetType) {
+            case AssetType.ERC20:
+              const estimatedGas = (
+                await this.depositManagerContract.estimateGas.completeErc20Deposit(
+                  depositRequest,
+                  signature
+                )
+              ).toBigInt();
 
-          logger.info(
-            `pre-dispatch attempting tx submission. nonce ${depositRequest.nonce}`
-          );
-          const tx = await this.depositManagerContract.completeErc20Deposit(
-            depositRequest,
-            signature,
-            {
-              gasLimit: (estimatedGas * 3n) / 2n,
-            }
-          );
+              logger.info(
+                `pre-dispatch attempting tx submission. nonce ${depositRequest.nonce}`
+              );
+              const tx = await this.depositManagerContract.completeErc20Deposit(
+                depositRequest,
+                signature,
+                {
+                  gasLimit: (estimatedGas * 3n) / 2n,
+                }
+              );
 
-          logger.info(
-            `post-dispatch awaiting tx receipt. nonce: ${depositRequest.nonce}. txhash: ${tx.hash}`
-          );
-          const receipt = await tx.wait(this.finalityBlocks);
-          return receipt;
-        default:
-          throw new Error("currently only supporting erc20 deposits");
+              logger.info(
+                `post-dispatch awaiting tx receipt. nonce: ${depositRequest.nonce}. txhash: ${tx.hash}`
+              );
+              const receipt = await tx.wait(this.finalityBlocks);
+              return receipt;
+            default:
+              throw new Error("currently only supporting erc20 deposits");
+          }
+        }),
+      {
+        retries: 3,
       }
-    });
+    );
 
     logger.info("completeDeposit receipt:", { receipt });
 
