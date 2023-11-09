@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- f2d04f65: (BREAKING) HasuraSdkSyncAdapter takes network parameter and changes queries accordingly
+
+## 0.2.5
+
+### Patch Changes
+
+- Updated dependencies [1b2530d1]
+  - @nocturne-xyz/core@3.1.2
+
 ## 0.2.4
 
 ### Patch Changes

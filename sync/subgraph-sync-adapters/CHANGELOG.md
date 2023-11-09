@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.4
+
+### Patch Changes
+
+- 1b2530d1: pass logger into make subgraph utils and log errors
+- Updated dependencies [1b2530d1]
+  - @nocturne-xyz/core@3.1.2
+
 ## 0.3.3
 
 ### Patch Changes

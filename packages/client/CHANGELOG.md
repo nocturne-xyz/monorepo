@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.1.1
+
+### Patch Changes
+
+- 3b9cf081: Adds extra metadata for Uniswap V3 Swap ops
+- Updated dependencies [1b2530d1]
+  - @nocturne-xyz/core@3.1.2
+
 ## 3.1.0
 
 ### Minor Changes

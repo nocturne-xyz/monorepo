@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.1.2
+
+### Patch Changes
+
+- 1b2530d1: pass logger into make subgraph utils and log errors
+
 ## 3.1.1
 
 ### Patch Changes
