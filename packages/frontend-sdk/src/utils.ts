@@ -30,9 +30,7 @@ const ENDPOINTS = {
     bundlerEndpoint:
       process.env.NEXT_PUBLIC_BUNDLER_URL ??
       "https://bundler.mainnet.nocturnelabs.xyz",
-    subgraphEndpoint:
-      process.env.NEXT_PUBLIC_SUBGRAPH_URL ??
-      "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.25-testnet/gn", // TODO: fix
+    subgraphEndpoint: process.env.NEXT_PUBLIC_SUBGRAPH_URL,
   },
   goerli: {
     screenerEndpoint:
@@ -41,9 +39,7 @@ const ENDPOINTS = {
     bundlerEndpoint:
       process.env.NEXT_PUBLIC_BUNDLER_URL ??
       "https://bundler.testnet.nocturnelabs.xyz",
-    subgraphEndpoint:
-      process.env.NEXT_PUBLIC_SUBGRAPH_URL ??
-      "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.25-testnet/gn",
+    subgraphEndpoint: process.env.NEXT_PUBLIC_SUBGRAPH_URL,
   },
   localhost: {
     screenerEndpoint: "http://localhost:3001",
@@ -186,10 +182,22 @@ export function getNocturneSdkConfig(
   let endpoints: Endpoints;
   switch (networkName) {
     case "mainnet":
-      endpoints = ENDPOINTS.mainnet;
+      if (!ENDPOINTS.mainnet.subgraphEndpoint) {
+        throw new Error(
+          `Missing subgraph endpoint for network: ${networkName}`,
+        );
+      }
+
+      endpoints = ENDPOINTS.mainnet as Endpoints;
       break;
     case "goerli":
-      endpoints = ENDPOINTS.goerli;
+      if (!ENDPOINTS.goerli.subgraphEndpoint) {
+        throw new Error(
+          `Missing subgraph endpoint for network: ${networkName}`,
+        );
+      }
+
+      endpoints = ENDPOINTS.goerli as Endpoints;
       break;
     case "localhost":
       endpoints = ENDPOINTS.localhost;
