@@ -2,14 +2,15 @@
   "name": "@nocturne-xyz/frontend-sdk",
   "version": "5.0.0",
   "license": "MIT",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist/**/*",
     "src/**/*"
   ],
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsup src/index.ts --format cjs,esm --dts",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "codegen": "yarn codegen:subgraph",
@@ -56,6 +57,7 @@
     "graphql": "^16.7.1",
     "mocha": "^10.1.0",
     "ts-node": "^10.9.1",
+    "tsup": "^7.2.0",
     "typescript": "^4.8.4"
   },
   "engines": {

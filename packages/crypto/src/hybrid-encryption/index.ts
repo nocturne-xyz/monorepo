@@ -11,6 +11,7 @@ import {
 } from "@stablelib/chacha20poly1305";
 import { HPKEKDF, deriveBaseNonce } from "./nonceDerivation";
 import { bytesToNumberLE } from "@noble/curves/abstract/utils";
+import randomBytes from "randombytes";
 
 export interface HybridCiphertext {
   ciphertextBytes: Uint8Array;
@@ -71,9 +72,7 @@ export class BabyJubJubHybridCipher {
     if (__ephemeralSecretEntropy) {
       ephemeralSecretEntropy = __ephemeralSecretEntropy;
     } else {
-      ephemeralSecretEntropy = crypto.getRandomValues(
-        new Uint8Array(this.ephemeralSecretEntropyNumBytes)
-      );
+      ephemeralSecretEntropy = randomBytes(this.ephemeralSecretEntropyNumBytes);
     }
     const ephemeralSecret = BabyJubJub.ScalarField.create(
       bytesToNumberLE(ephemeralSecretEntropy)

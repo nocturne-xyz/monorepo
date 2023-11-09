@@ -1,7 +1,7 @@
 import { AffinePoint, BabyJubJub } from "./BabyJubJub";
 import { poseidon3 } from "./hashes";
 import * as ethers from "ethers";
-import { randomBytes } from "crypto";
+import randomBytes from "randombytes";
 import { bytesToNumberLE } from "@noble/curves/abstract/utils";
 
 const Fr = BabyJubJub.ScalarField;

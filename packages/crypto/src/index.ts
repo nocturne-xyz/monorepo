@@ -37,6 +37,7 @@ export {
 } from "./hashes";
 export { BabyJubJub, AffinePoint } from "./BabyJubJub";
 export {
+  CompressedPoint,
   compressPoint,
   decompressPoint,
   decomposeCompressedPoint,

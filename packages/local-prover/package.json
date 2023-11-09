@@ -2,14 +2,15 @@
   "name": "@nocturne-xyz/local-prover",
   "version": "0.5.0",
   "license": "MIT",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist/**/*",
     "src/**/*"
   ],
   "scripts": {
-    "build": "yarn clean; tsc --build",
+    "build": "yarn clean && tsup src/index.ts --format cjs,esm --dts",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "gen-test-cases": "yarn gen-test-cases:joinsplit && yarn gen-test-cases:subtreeupdate && yarn gen-test-cases:canonAddrSigCheck",
@@ -44,6 +45,7 @@
     "mocha": "^10.1.0",
     "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
+    "tsup": "^7.2.0",
     "typescript": "^4.8.4"
   },
   "engines": {
