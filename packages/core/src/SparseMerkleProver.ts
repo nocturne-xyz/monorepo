@@ -1,6 +1,5 @@
-import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { assertOrErr, zip } from "./utils";
-import { poseidonBN } from "@nocturne-xyz/crypto";
+import { poseidon4 } from "@nocturne-xyz/crypto";
 import { KVStore } from "./store";
 import * as JSON from "bigint-json-serialization";
 import {
@@ -10,7 +9,19 @@ import {
   range,
   TreeConstants,
 } from "./utils";
+
 const { ZERO_VALUE, DEPTH, ARITY } = TreeConstants;
+
+export type MerkleProof = {
+  root: bigint;
+  leaf: bigint;
+  siblings: bigint[][];
+  pathIndices: number[];
+};
+
+if (ARITY !== 4) {
+  throw new Error("SparseMerkleProver only supports arity 4");
+}
 
 // high level idea:
 // want to sync a local replica of the tree such that
@@ -42,7 +53,12 @@ const { ZERO_VALUE, DEPTH, ARITY } = TreeConstants;
 // have to iterate over all leaves.
 
 export interface TreeNode {
-  children: (TreeNode | undefined)[];
+  children: [
+    TreeNode | undefined,
+    TreeNode | undefined,
+    TreeNode | undefined,
+    TreeNode | undefined
+  ];
   hash: bigint;
 }
 
@@ -68,10 +84,17 @@ const SMT_DUMP_KEY = "SMT_DUMP";
 // ZERO_HASH[i] = root hash of empty merkle tree of depth i
 export const ZERO_HASHES = [ZERO_VALUE];
 for (let i = 1; i <= DEPTH; i++) {
-  ZERO_HASHES.push(poseidonBN(new Array(ARITY).fill(ZERO_HASHES[i - 1])));
+  ZERO_HASHES.push(
+    poseidon4([
+      ZERO_HASHES[i - 1],
+      ZERO_HASHES[i - 1],
+      ZERO_HASHES[i - 1],
+      ZERO_HASHES[i - 1],
+    ])
+  );
 }
 
-const NO_CHILDREN = new Array(ARITY).fill(undefined);
+const NO_CHILDREN = [undefined, undefined, undefined, undefined] as const;
 
 function zeroHashAtDepth(depth: number): bigint {
   return ZERO_HASHES[DEPTH - depth - 1];
@@ -261,8 +284,8 @@ export class SparseMerkleProver {
         ...currSiblings.slice(0, pathIndex),
         currentRoot,
         ...currSiblings.slice(pathIndex),
-      ];
-      currentRoot = poseidonBN(preimage);
+      ] as [bigint, bigint, bigint, bigint];
+      currentRoot = poseidon4(preimage);
     }
 
     return currentRoot === root;
@@ -426,10 +449,10 @@ export class SparseMerkleProver {
       );
     }
 
-    root.hash = poseidonBN(
+    root.hash = poseidon4(
       root.children.map((child) =>
         child ? child.hash : zeroHashAtDepth(depth)
-      )
+      ) as [bigint, bigint, bigint, bigint]
     );
     return root;
   }
@@ -451,10 +474,10 @@ export class SparseMerkleProver {
       );
     } while (leaves.length > 0 && ++pathIndex < ARITY);
 
-    root.hash = poseidonBN(
+    root.hash = poseidon4(
       root.children.map((child) =>
         child ? child.hash : zeroHashAtDepth(depth)
-      )
+      ) as [bigint, bigint, bigint, bigint]
     );
     return root;
   }
