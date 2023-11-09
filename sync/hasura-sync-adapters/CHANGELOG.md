@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- f2d04f65: (BREAKING) HasuraSdkSyncAdapter takes network parameter and changes queries accordingly
+
 ## 0.2.5
 
 ### Patch Changes

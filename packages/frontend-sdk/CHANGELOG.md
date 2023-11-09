@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.0.0
+
+### Major Changes
+
+- f2d04f65: (BREAKING) `HasuraSyncAdapter` takes network parameter and changes queries accordingly
+
 ## 4.1.0
 
 ### Minor Changes
