@@ -869,7 +869,7 @@ export class NocturneSdk implements NocturneSdkApi {
           | undefined;
     } catch (err) {
       console.warn("error when looking up canon addr in registry: ", err);
-      return undefined
+      return undefined;
     }
 
     if (!maybeCompressedCanonAddr) {

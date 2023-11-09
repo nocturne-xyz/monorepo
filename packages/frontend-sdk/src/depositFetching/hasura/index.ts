@@ -62,7 +62,7 @@ export class HasuraDepositAdapter implements DepositAdapter {
     }
 
     //@ts-ignore
-    const depositRequestResponses = data[`${network}_deposit_requests`] as DepositRequestResponse[];
+    const depositRequestResponses = data[`${this.network}_deposit_requests`] as DepositRequestResponse[];
 
     return Promise.all(
       depositRequestResponses.map((res) => depositRequestResponseToDepositRequestWithMetadata(spender, res))
@@ -92,7 +92,7 @@ export class HasuraDepositAdapter implements DepositAdapter {
 }
 
 async function getDepositRequestStatus(
-  network: SupportedNetwork,
+  network: HasuraSupportedNetwork,
   screenerEndpoint: string,
   client: UrqlClient,
   depositRequestHash: string,
