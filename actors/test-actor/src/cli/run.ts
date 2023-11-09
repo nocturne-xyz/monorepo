@@ -20,7 +20,10 @@ import {
   getEthersProviderAndSignerFromEnvConfiguration,
 } from "@nocturne-xyz/offchain-utils";
 import { LMDBKVStore } from "../lmdb";
-import { HasuraSdkSyncAdapter } from "@nocturne-xyz/hasura-sync-adapters";
+import {
+  HasuraSdkSyncAdapter,
+  HasuraSupportedNetwork,
+} from "@nocturne-xyz/hasura-sync-adapters";
 
 export const run = new Command("run")
   .summary("run test actor")
@@ -135,7 +138,8 @@ export const run = new Command("run")
     const db = new NocturneDB(kv);
     const syncAdapter = new HasuraSdkSyncAdapter(
       hasuraEndpoint,
-      subgraphEndpoint
+      subgraphEndpoint,
+      config.networkName as HasuraSupportedNetwork
     );
     const sdk = new NocturneClient(
       nocturneSigner.viewer(),
