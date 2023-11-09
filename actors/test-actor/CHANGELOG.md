@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.3
+
+### Patch Changes
+
+- 0471a552: test-actor uses hasura sync adapter
+- Updated dependencies [3b9cf081]
+- Updated dependencies [18f6e56c]
+- Updated dependencies [1b2530d1]
+  - @nocturne-xyz/op-request-plugins@2.1.3
+  - @nocturne-xyz/client@3.1.1
+  - @nocturne-xyz/local-prover@0.5.0
+  - @nocturne-xyz/core@3.1.2
+  - @nocturne-xyz/hasura-sync-adapters@0.2.5
+  - @nocturne-xyz/offchain-utils@0.3.2
+
 ## 0.6.2
 
 ### Patch Changes

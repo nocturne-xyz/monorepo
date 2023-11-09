@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.3
+
+### Patch Changes
+
+- 1a2446d4: retry transaction up to 3 times if it fails
+- Updated dependencies [1b2530d1]
+  - @nocturne-xyz/subgraph-sync-adapters@0.3.4
+  - @nocturne-xyz/core@3.1.2
+  - @nocturne-xyz/offchain-utils@0.3.2
+
 ## 0.9.2
 
 ### Patch Changes

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0
+
+### Minor Changes
+
+- 18f6e56c: update circuit artifacts
+
+### Patch Changes
+
+- 1a2446d4: retry transaction up to 3 times if it fails
+- Updated dependencies [1b2530d1]
+  - @nocturne-xyz/core@3.1.2
+  - @nocturne-xyz/persistent-log@0.1.10
+  - @nocturne-xyz/offchain-utils@0.3.2
+
 ## 0.6.2
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- f44c41c5: Add balance monitor CLI so we can invoke from docker mono-image
+
+### Patch Changes
+
+- Updated dependencies [1b2530d1]
+  - @nocturne-xyz/core@3.1.2
+  - @nocturne-xyz/offchain-utils@0.3.2
+
 ## 0.2.2
 
 ### Patch Changes
