@@ -1,1 +1,18 @@
-export { poseidonBN } from "./poseidonBN";
+export {
+  poseidon1,
+  poseidon2,
+  poseidon3,
+  poseidon4,
+  poseidon5,
+  poseidon6,
+  poseidon7,
+  poseidon8,
+  poseidon9,
+  poseidon10,
+  poseidon11,
+  poseidon12,
+  poseidon13,
+  poseidon14,
+  poseidon15,
+  poseidon16,
+} from "./poseidonBN";

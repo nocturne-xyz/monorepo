@@ -1,5 +1,5 @@
 import { AffinePoint, BabyJubJub } from "./BabyJubJub";
-import { poseidonBN } from "./hashes";
+import { poseidon3 } from "./hashes";
 import * as ethers from "ethers";
 import { randomBytes } from "crypto";
 import { bytesToNumberLE } from "@noble/curves/abstract/utils";
@@ -23,10 +23,10 @@ export function deriveSpendPK(sk: SpendingKey): SpendPk {
 // returns [vk, vkNonce]
 export function vkFromSpendPk(spendPk: SpendPk): [ViewingKey, bigint] {
   let nonce = 1n;
-  let vk = poseidonBN([spendPk.x, spendPk.y, nonce]);
+  let vk = poseidon3([spendPk.x, spendPk.y, nonce]);
   while (vk >= Fr.ORDER) {
     nonce += 1n;
-    vk = poseidonBN([spendPk.x, spendPk.y, nonce]);
+    vk = poseidon3([spendPk.x, spendPk.y, nonce]);
   }
 
   return [vk, nonce];
