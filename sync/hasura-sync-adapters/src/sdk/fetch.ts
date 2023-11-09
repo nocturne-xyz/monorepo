@@ -103,7 +103,7 @@ export function makeFetchSdkEventsAndLatestCommittedMerkleIndex(
   client: UrqlClient,
   network: HasuraSupportedNetwork
 ): FetchSdkEventsAndLatestCommitedMerkleIndexFn {
-  const { SdkEventsPaginatedById } = GoerliQueries;
+  const { SdkEventsPaginatedById } = QueriesByNetwork[network];
   return async (from: TotalEntityIndex, toBlock: number, limit = 1000) => {
     const { data, error } = await client.query(SdkEventsPaginatedById, {
       from: TotalEntityIndexTrait.toStringPadded(from),
