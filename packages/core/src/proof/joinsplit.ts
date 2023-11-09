@@ -1,6 +1,8 @@
 import {
   BN254ScalarField,
-  poseidonBN,
+  poseidon2,
+  poseidon3,
+  poseidon6,
   compressPoint,
   decomposeCompressedPoint,
   CanonAddress,
@@ -192,7 +194,7 @@ export function computeSenderCommitment(
   senderCanonAddr: CanonAddress,
   newNoteBNonce: bigint
 ): bigint {
-  return poseidonBN(
+  return poseidon3(
     [senderCanonAddr.x, senderCanonAddr.y, newNoteBNonce],
     SENDER_COMMITMENT_DOMAIN_SEPARATOR
   );
@@ -202,7 +204,7 @@ export function computeJoinSplitInfoNonce(
   nullifierA: bigint,
   vk: bigint
 ): bigint {
-  return poseidonBN([vk, nullifierA], JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR);
+  return poseidon2([vk, nullifierA], JOINSPLIT_INFO_NONCE_DOMAIN_SEPARATOR);
 }
 
 export function computeJoinSplitInfo(
@@ -263,7 +265,7 @@ export function computeJoinSplitInfoCommitment(
     newNoteB
   );
 
-  return poseidonBN(
+  return poseidon6(
     [
       compressedSenderCanonAddr,
       compressedReceiverCanonAddr,

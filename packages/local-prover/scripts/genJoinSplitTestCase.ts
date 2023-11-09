@@ -2,9 +2,12 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
-import { poseidonBN } from "@nocturne-xyz/crypto";
+import { poseidon5, poseidon4 } from "@nocturne-xyz/crypto";
 import { WasmJoinSplitProver } from "../src/joinsplit";
-import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
+import {
+  HashFunction,
+  IncrementalMerkleTree,
+} from "@zk-kit/incremental-merkle-tree";
 import {
   JoinSplitInputs,
   MerkleProofInput,
@@ -71,7 +74,7 @@ function makeTestJoinSplitInputs(
   console.log("old note A: ", oldNoteA);
 
   const oldNoteAOwnerHash = StealthAddressTrait.hash(stealthAddrA);
-  const oldNoteACommitment = poseidonBN([
+  const oldNoteACommitment = poseidon5([
     oldNoteAOwnerHash,
     oldNoteA.nonce,
     oldNoteA.encodedAssetAddr,
@@ -90,7 +93,7 @@ function makeTestJoinSplitInputs(
   console.log("old note B: ", oldNoteB);
 
   const oldNoteBOwnerHash = StealthAddressTrait.hash(stealthAddrB);
-  const oldNoteBCommitment = poseidonBN([
+  const oldNoteBCommitment = poseidon5([
     oldNoteBOwnerHash,
     oldNoteB.nonce,
     oldNoteB.encodedAssetAddr,
@@ -100,7 +103,12 @@ function makeTestJoinSplitInputs(
   console.log("old note commitment B: ", oldNoteBCommitment);
 
   // Generate valid merkle proofs
-  const tree = new IncrementalMerkleTree(poseidonBN, DEPTH, ZERO_VALUE, ARITY);
+  const tree = new IncrementalMerkleTree(
+    poseidon4 as HashFunction,
+    DEPTH,
+    ZERO_VALUE,
+    ARITY
+  );
   tree.insert(oldNoteACommitment);
   tree.insert(oldNoteBCommitment);
 
@@ -137,7 +145,7 @@ function makeTestJoinSplitInputs(
   };
   console.log("new note B: ", newNoteB);
 
-  const newNoteACommitment = poseidonBN([
+  const newNoteACommitment = poseidon5([
     oldNoteAOwnerHash,
     newNoteA.nonce,
     newNoteA.encodedAssetAddr,
@@ -146,7 +154,7 @@ function makeTestJoinSplitInputs(
   ]);
   console.log("new note commitment A: ", newNoteACommitment);
 
-  const newNoteBCommitment = poseidonBN([
+  const newNoteBCommitment = poseidon5([
     oldNoteBOwnerHash,
     newNoteB.nonce,
     newNoteB.encodedAssetAddr,

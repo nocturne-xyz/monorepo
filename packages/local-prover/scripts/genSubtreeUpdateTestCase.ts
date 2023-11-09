@@ -3,7 +3,10 @@ import * as JSON from "bigint-json-serialization";
 import * as path from "path";
 import * as fs from "fs";
 
-import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
+import {
+  HashFunction,
+  IncrementalMerkleTree,
+} from "@zk-kit/incremental-merkle-tree";
 import {
   AssetType,
   Note,
@@ -13,7 +16,7 @@ import {
   TreeConstants,
 } from "@nocturne-xyz/core";
 import { WasmSubtreeUpdateProver } from "../src/subtreeUpdate";
-import { poseidonBN } from "@nocturne-xyz/crypto";
+import { poseidon4 } from "@nocturne-xyz/crypto";
 import { NocturneSigner } from "@nocturne-xyz/crypto";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -36,7 +39,7 @@ const stealthAddr = nocturneSigner.generateRandomStealthAddress();
 
 // start with empty tree
 const tree = new IncrementalMerkleTree(
-  poseidonBN,
+  poseidon4 as HashFunction,
   TreeConstants.DEPTH,
   TreeConstants.ZERO_VALUE,
   TreeConstants.ARITY

@@ -3,7 +3,8 @@ import {
   StealthAddress,
   CanonAddress,
   NocturneViewer,
-  poseidonBN,
+  poseidon5,
+  poseidon2,
 } from "@nocturne-xyz/crypto";
 import { Asset, AssetTrait, EncodedAsset } from "./asset";
 import { sha256 } from "js-sha256";
@@ -70,7 +71,7 @@ export class NoteTrait {
     const { owner, nonce, encodedAssetAddr, encodedAssetId, value } =
       NoteTrait.encode(note);
     return BigInt(
-      poseidonBN([
+      poseidon5([
         StealthAddressTrait.hash(owner),
         nonce,
         encodedAssetAddr,
@@ -82,7 +83,7 @@ export class NoteTrait {
 
   static emptyNoteCommitment(): bigint {
     return BigInt(
-      poseidonBN([
+      poseidon5([
         StealthAddressTrait.hash({
           h1X: 0n,
           h1Y: 0n,
@@ -169,7 +170,7 @@ export class NoteTrait {
       );
     }
 
-    return poseidonBN(
+    return poseidon2(
       [NoteTrait.toCommitment(note), viewer.vk],
       NULLIFIER_DOMAIN_SEPARATOR
     );
@@ -179,7 +180,7 @@ export class NoteTrait {
     viewer: NocturneViewer,
     oldNullifier: bigint
   ): bigint {
-    return poseidonBN(
+    return poseidon2(
       [viewer.vk, oldNullifier],
       NEW_NOTE_NONCE_DOMAIN_SEPARATOR
     );
