@@ -17,7 +17,7 @@ export {
 } from "./keys";
 export { BN254ScalarField } from "./bnScalarField";
 export { randomFr, randomFp } from "./rand";
-export { poseidonBN } from "./hashes";
+export { poseidon1, poseidon2, poseidon3, poseidon4 } from "./hashes";
 export { BabyJubJub, AffinePoint } from "./BabyJubJub";
 export {
   compressPoint,
