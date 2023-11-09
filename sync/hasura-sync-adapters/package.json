@@ -2,15 +2,16 @@
   "name": "@nocturne-xyz/hasura-sync-adapters",
   "version": "0.3.1",
   "license": "MIT",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist/**/*",
     "src/**/*"
   ],
   "scripts": {
     "codegen": "graphql-codegen --config ./graphql-codegen.ts",
-    "build": "yarn clean; tsc --build",
+    "build": "yarn clean && tsup src/index.ts --format cjs,esm --dts",
     "check": "yarn clean && tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",
@@ -34,6 +35,7 @@
     "graphql": "^16.7.1",
     "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
+    "tsup": "^7.2.0",
     "typescript": "^4.8.4"
   },
   "engines": {

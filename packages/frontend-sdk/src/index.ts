@@ -13,29 +13,33 @@ export {
   SyncProgress,
 } from "./types";
 
-export {
+export type {
   ActionMetadata,
   ConfidentialPaymentMetadata,
   OperationRequest,
   OperationRequestWithMetadata,
   SyncOpts,
+} from "@nocturne-xyz/client";
+export {
   isTerminalOpStatus,
   isFailedOpStatus,
 } from "@nocturne-xyz/client";
 
-export {
+export type {
   Asset,
-  AssetTrait,
   AssetWithBalance,
   DepositQuoteResponse,
-  OperationStatus,
   ProvenOperation,
   SignedOperation,
   StealthAddress,
+} from "@nocturne-xyz/core";
+export {
+  OperationStatus,
+  AssetTrait,
   StealthAddressTrait,
 } from "@nocturne-xyz/core";
 
-export { Erc20Config } from "@nocturne-xyz/config";
+export type { Erc20Config } from "@nocturne-xyz/config";
 export {
   GetSnapOptions,
   GetSnapsResponse,

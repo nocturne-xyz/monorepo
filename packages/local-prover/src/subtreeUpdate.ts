@@ -4,8 +4,7 @@ import {
   SubtreeUpdateProofWithPublicSignals,
 } from "@nocturne-xyz/core";
 
-//@ts-ignore
-import * as snarkjs from "snarkjs";
+import { groth16 } from "snarkjs";
 
 export class WasmSubtreeUpdateProver implements SubtreeUpdateProver {
   wasmPath: string;
@@ -21,20 +20,31 @@ export class WasmSubtreeUpdateProver implements SubtreeUpdateProver {
   async proveSubtreeUpdate(
     inputs: SubtreeUpdateInputs
   ): Promise<SubtreeUpdateProofWithPublicSignals> {
-    const proof = await snarkjs.groth16.fullProve(
-      inputs,
+    const { proof, publicSignals } = await groth16.fullProve(
+      { ...inputs },
       this.wasmPath,
       this.zkeyPath
     );
 
-    proof.publicSignals = proof.publicSignals.map((val: any) => BigInt(val));
-    return proof;
+    return {
+      proof,
+      publicSignals: publicSignals.map((val: any) => BigInt(val)) as [
+        bigint,
+        bigint,
+        bigint,
+        bigint
+      ],
+    };
   }
 
   async verifySubtreeUpdate({
     proof,
     publicSignals,
   }: SubtreeUpdateProofWithPublicSignals): Promise<boolean> {
-    return await snarkjs.groth16.verify(this.vkey, publicSignals, proof);
+    return await groth16.verify(
+      this.vkey,
+      publicSignals.map((signal) => signal.toString()),
+      { ...proof, curve: "bn128" }
+    );
   }
 }

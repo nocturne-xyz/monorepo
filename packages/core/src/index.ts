@@ -5,21 +5,23 @@ export * from "./store";
 export * from "./sync";
 export * from "./request";
 
-export {
-  NocturneSigner,
-  NocturneSignature,
-  NocturneViewer,
-  generateRandomSpendingKey,
+export type {
+  CanonAddress,
   StealthAddress,
   CompressedStealthAddress,
-  CanonAddress,
-  StealthAddressTrait,
-  compressPoint,
-  decompressPoint,
-  decomposeCompressedPoint,
+  NocturneSignature,
   SpendingKey,
   ViewingKey,
   SpendPk,
+} from "@nocturne-xyz/crypto";
+export {
+  NocturneSigner,
+  NocturneViewer,
+  StealthAddressTrait,
+  generateRandomSpendingKey,
+  compressPoint,
+  decompressPoint,
+  decomposeCompressedPoint,
 } from "@nocturne-xyz/crypto";
 
 export { SparseMerkleProver } from "./SparseMerkleProver";

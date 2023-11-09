@@ -28,13 +28,14 @@
     "@nocturne-xyz/crypto": "workspace:^",
     "bigint-conversion": "^2.3.0",
     "bigint-json-serialization": "^1.0.1",
-    "snarkjs": "^0.7.0"
+    "snarkjs": "^0.7.2"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
     "@types/chai": "^4.3.3",
     "@types/mocha": "^10.0.0",
     "@types/node": "^18.8.0",
+    "@types/snarkjs": "^0.7.7",
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@typescript-eslint/parser": "^5.20.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",

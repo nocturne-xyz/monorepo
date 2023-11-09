@@ -1,5 +1,4 @@
-//@ts-ignore
-import * as snarkjs from "snarkjs";
+import { groth16 } from "snarkjs";
 
 import {
   JoinSplitInputs,
@@ -98,23 +97,40 @@ export class WasmJoinSplitProver implements JoinSplitProver {
       newNoteBValue: newNoteB.value,
     };
 
-    const proof = await snarkjs.groth16.fullProve(
+    const { proof, publicSignals } = await groth16.fullProve(
       signals,
       this.wasmPath,
       this.zkeyPath
     );
 
-    // ensure publicSignals are BigInts
-    proof.publicSignals = proof.publicSignals.map((val: any) =>
-      BigInt(val as string)
-    );
-    return proof;
+    return {
+      proof,
+      publicSignals: publicSignals.map((val: any) => BigInt(val as string)) as [
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint
+      ],
+    };
   }
 
   async verifyJoinSplitProof({
     proof,
     publicSignals,
   }: JoinSplitProofWithPublicSignals): Promise<boolean> {
-    return await snarkjs.groth16.verify(this.vkey, publicSignals, proof);
+    return await groth16.verify(
+      this.vkey,
+      publicSignals.map((signal) => signal.toString()),
+      { ...proof, curve: "bn128" }
+    );
   }
 }

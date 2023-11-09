@@ -1,21 +1,26 @@
-export {
+export { BN254ScalarField } from "./bnScalarField";
+
+export type { AffinePoint } from "./BabyJubJub";
+export { BabyJubJub } from "./BabyJubJub";
+
+export type {
   StealthAddress,
-  StealthAddressTrait,
   CanonAddress,
   CompressedStealthAddress,
   EncryptedCanonAddress,
 } from "./address";
+export { StealthAddressTrait } from "./address";
+
 export { NocturneSigner, NocturneSignature } from "./signer";
 export { NocturneViewer } from "./viewer";
+
+export type { SpendPk, SpendingKey, ViewingKey } from "./keys";
 export {
   generateRandomSpendingKey,
   deriveSpendPK,
   vkFromSpendPk,
-  SpendPk,
-  SpendingKey,
-  ViewingKey,
 } from "./keys";
-export { BN254ScalarField } from "./bnScalarField";
+
 export { randomFr, randomFp } from "./rand";
 export {
   poseidon1,
@@ -35,11 +40,12 @@ export {
   poseidon15,
   poseidon16,
 } from "./hashes";
-export { BabyJubJub, AffinePoint } from "./BabyJubJub";
+
+export type { CompressedPoint } from "./pointCompression";
 export {
-  CompressedPoint,
   compressPoint,
   decompressPoint,
   decomposeCompressedPoint,
 } from "./pointCompression";
+
 export * from "./hybrid-encryption";
