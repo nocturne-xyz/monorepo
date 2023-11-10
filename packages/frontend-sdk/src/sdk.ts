@@ -15,7 +15,7 @@ import {
   newOpRequestBuilder,
   proveOperation,
 } from "@nocturne-xyz/client";
-import { Erc20Config, NocturneConfig } from "@nocturne-xyz/config";
+import { Erc20Config } from "@nocturne-xyz/config";
 import {
   CanonicalAddressRegistry,
   CanonicalAddressRegistry__factory,
@@ -123,9 +123,6 @@ export interface NocturneSdkOptions {
   // version / id of the nocturne snap to use, defaults to the latest version
   // we highly recommend letting the SDK default to the latest version unless you have a good reason not to
   snap?: GetSnapOptions;
-
-  // nocturne config to use. defaults to the config for the given networkName
-  config?: NocturneConfig;
 }
 
 export class NocturneSdk implements NocturneSdkApi {
@@ -152,7 +149,7 @@ export class NocturneSdk implements NocturneSdkApi {
   constructor(options: NocturneSdkOptions = {}) {
     const networkName = options.networkName || "mainnet";
     const snapOptions = options.snap;
-    const sdkConfig = getNocturneSdkConfig(networkName, options.config);
+    const sdkConfig = getNocturneSdkConfig(networkName);
 
     // HACK `@nocturne-xyz/local-prover` doesn't work with server components (imports a lot of unnecessary garbage)
     this.joinSplitProverThunk = thunk(async () => {
@@ -329,7 +326,10 @@ export class NocturneSdk implements NocturneSdkApi {
   > {
     const ethSigner = await getSigner(this.provider);
     const address = await ethSigner.getAddress();
-    if (await this.getCanonAddrFromRegistry(address)) return;
+    console.log("[fe-sdk] eth address:", address);
+    const maybeExistingCanonAddr = await this.getCanonAddrFromRegistry(address);
+    console.log("[fe-sdk] existing canon addr:", maybeExistingCanonAddr);
+    if (maybeExistingCanonAddr) return;
 
     const client = await this.clientThunk();
     const registry = await this.canonAddrRegistryThunk();
@@ -867,7 +867,8 @@ export class NocturneSdk implements NocturneSdkApi {
     }
 
     // check it has corresponding canon addr in registry
-    const maybeCompressedCanonAddr = this.getCanonAddrFromRegistry(eoaAddr);
+    const maybeCompressedCanonAddr =
+      await this.getCanonAddrFromRegistry(eoaAddr);
 
     if (!maybeCompressedCanonAddr) {
       return undefined;
@@ -1107,9 +1108,9 @@ export class NocturneSdk implements NocturneSdkApi {
     // check it has corresponding canon addr in registry
     const registry = await this.canonAddrRegistryThunk();
     try {
-      return (await registry._ethAddressToCompressedCanonAddr(eoaAddr)) as
-        | BigNumber
-        | undefined;
+      const uncleansedCanonAddr =
+        await registry._ethAddressToCompressedCanonAddr(eoaAddr);
+      return uncleansedCanonAddr.isZero() ? undefined : uncleansedCanonAddr;
     } catch (err) {
       console.warn("error when looking up canon addr in registry: ", err);
       return undefined;
