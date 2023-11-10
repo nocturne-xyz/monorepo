@@ -937,17 +937,26 @@ export class NocturneSdk implements NocturneSdkApi {
         const startIndex = (await this.getLatestSyncedMerkleIndex()) ?? 0;
         let currentIndex = startIndex;
 
+        // if latestCommittedMerkleIndex from the client is different from that on-chain, then the client
+        // is behind  and we need to sync at least once. However, we don't currently have a way to fetch
+        // the latest committed merkle index with a timelag, so for now we're going to assume the client needs
+        // to sync at least once if its `latestCommittedMerkleIndex` is different from the `endIndex` we fetched
+        // this should work fine, but it technically makes more queries than it needs to.
+        // TODO: add method to SDKSyncAdapter to fetch latest committed merkle index with a timelag
+        const latestCommittedMerkleIndex = await (await this.clientThunk()).getLatestCommittedMerkleIndex();
+        const minIterations = latestCommittedMerkleIndex !== endIndex ? 1 : 0;
+
         const NUM_REFETCHES = 5;
         const refetchEvery = Math.floor(
           (endIndex - startIndex) / NUM_REFETCHES,
         );
 
         let count = 0;
-        while (currentIndex < endIndex) {
+        while (count < minIterations || currentIndex < endIndex) {
           console.log("[sync] syncing", { currentIndex, endIndex, opts });
           currentIndex = (await this.syncInner(opts)) ?? 0;
 
-          if (count % refetchEvery === 0) {
+          if (refetchEvery > 1 && count % refetchEvery === 0) {
             endIndex = await fetchEndIndex();
           }
           count++;
@@ -956,7 +965,7 @@ export class NocturneSdk implements NocturneSdkApi {
             ((currentIndex - startIndex) / (endIndex - startIndex)) * 100;
 
           this.syncProgressHandlers.forEach((handler) => handler(progress));
-        }
+        };
       });
     } catch (err) {
       if (err == E_ALREADY_LOCKED) {
