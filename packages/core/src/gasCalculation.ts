@@ -4,14 +4,14 @@ import {
   SubmittableOperationWithNetworkInfo,
 } from ".";
 
-// Numbers and logic copied from contracts Types.sol
+// Assumes single joinsplit op = ~400k gas
 export const BLOCK_GAS_LIMIT = 30_000_000n;
-const GAS_PER_JOINSPLIT_VERIFY_SINGLE = 300_000n;
+const GAS_PER_JOINSPLIT_VERIFY_SINGLE = 100_000n; // assumes batch size = 8
 const GAS_PER_JOINSPLIT_HANDLE = 110_000n;
 const GAS_PER_INSERTION_SUBTREE_UPDATE = 25_000n;
 const GAS_PER_INSERTION_ENQUEUE = 25_000n;
-const GAS_PER_OPERATION_MISC = 100_000n;
-const GAS_BUFFER = 300_000n;
+const GAS_PER_OPERATION_MISC = 0n; // TODO: tune
+const GAS_BUFFER = 0n; // TODO: tune
 
 // etherscan shows typical depoit ~182600 gas
 export const GAS_PER_DEPOSIT_COMPLETE = 185_000n;
