@@ -321,9 +321,14 @@ export class NocturneSdk implements NocturneSdkApi {
     return await this.depositAdapter.fetchDepositRequestsBySpender(spender);
   }
 
-  // TODO: use this method in interface
-  async registerCanonicalAddress(): Promise<ethers.ContractTransaction> {
+  async registerCanonicalAddress(): Promise<
+    ethers.ContractTransaction | undefined
+  > {
     const ethSigner = await getSigner(this.provider);
+    const address = await ethSigner.getAddress();
+    const maybeExistingCanonAddr = await this.getCanonAddrFromRegistry(address);
+    if (maybeExistingCanonAddr) return;
+
     const client = await this.clientThunk();
     const registry = await this.canonAddrRegistryThunk();
     const prover = await this.canonAddrSigCheckProverThunk();
@@ -860,17 +865,8 @@ export class NocturneSdk implements NocturneSdkApi {
     }
 
     // check it has corresponding canon addr in registry
-    const registry = await this.canonAddrRegistryThunk();
-    let maybeCompressedCanonAddr: BigNumber | undefined;
-    try {
-      maybeCompressedCanonAddr =
-        (await registry._ethAddressToCompressedCanonAddr(eoaAddr)) as
-          | BigNumber
-          | undefined;
-    } catch (err) {
-      console.warn("error when looking up canon addr in registry: ", err);
-      return undefined;
-    }
+    const maybeCompressedCanonAddr =
+      await this.getCanonAddrFromRegistry(eoaAddr);
 
     if (!maybeCompressedCanonAddr) {
       return undefined;
@@ -1103,5 +1099,19 @@ export class NocturneSdk implements NocturneSdkApi {
         };
       }),
     );
+  }
+  private async getCanonAddrFromRegistry(
+    eoaAddr: string,
+  ): Promise<BigNumber | undefined> {
+    // check it has corresponding canon addr in registry
+    const registry = await this.canonAddrRegistryThunk();
+    try {
+      const maybeCanonAddr =
+        await registry._ethAddressToCompressedCanonAddr(eoaAddr);
+      return maybeCanonAddr.isZero() ? undefined : maybeCanonAddr;
+    } catch (err) {
+      console.warn("error when looking up canon addr in registry: ", err);
+      return undefined;
+    }
   }
 }
