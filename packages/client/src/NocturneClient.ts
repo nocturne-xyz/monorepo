@@ -149,6 +149,10 @@ export class NocturneClient {
     return await this.db.latestSyncedMerkleIndex();
   }
 
+  async getLatestCommitteddMerkleIndex(): Promise<number | undefined> {
+    return await this.db.latestCommittedMerkleIndex();
+  }
+
   async hasEnoughBalanceForOperationRequest(
     opRequest: OperationRequest
   ): Promise<boolean> {
