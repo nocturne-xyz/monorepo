@@ -287,6 +287,7 @@ export function dummyOp(
     deadline: 0n,
     atomicActions: false,
     joinSplits,
+    gasFeeEstimate: 0n,
   };
 }
 
