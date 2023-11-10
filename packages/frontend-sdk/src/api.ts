@@ -43,7 +43,7 @@ export interface NocturneSdkApi {
   /**
    * Register the user's canonical address from the snap instance against the current signer EOA.
    */
-  registerCanonicalAddress(): Promise<ContractTransaction>;
+  registerCanonicalAddress(): Promise<ContractTransaction | undefined>;
 
   /**
    * @param values Asset amounts
