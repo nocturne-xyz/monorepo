@@ -151,12 +151,6 @@ export function makeFetchSdkEventsAndLatestCommittedMerkleIndex(
         batchOffsetToLatestMerkleIndexInBatch(batchOffset);
     }
 
-    console.log("[HasuraSdkSyncAdapter]", {
-      data,
-      subtreeCommits,
-      latestCommittedMerkleIndex,
-    });
-
     return {
       events,
       latestCommittedMerkleIndex,
