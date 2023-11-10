@@ -94,6 +94,12 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
           toBlock + 1
         );
 
+        console.log("[HasuraSdkSyncAdapter]", {
+          events,
+          latestCommittedMerkleIndex,
+          newLatestCommittedMerkleIndex,
+        });
+
         // if there are sdk events, produce the requisite diff.
         // otherwise, see if latestCommittedMerkleIndex changed - if so, yield an empty state diff with the new merkle index
         if (events.length > 0) {
@@ -151,12 +157,12 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
           );
 
           // check the latest committed merkle index
-          // if it's bigger than the one from the last iteration,
+          // if it's bigger than the one from the last iteration OR it's the first iteration,
           // then emit an empty diff with only the latest committed merkle index
           if (
-            latestCommittedMerkleIndex &&
-            newLatestCommittedMerkleIndex &&
-            newLatestCommittedMerkleIndex > latestCommittedMerkleIndex
+            !latestCommittedMerkleIndex ||
+            (newLatestCommittedMerkleIndex &&
+              newLatestCommittedMerkleIndex > latestCommittedMerkleIndex)
           ) {
             latestCommittedMerkleIndex = newLatestCommittedMerkleIndex;
 

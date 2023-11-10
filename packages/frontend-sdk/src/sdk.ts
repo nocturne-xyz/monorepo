@@ -943,8 +943,13 @@ export class NocturneSdk implements NocturneSdkApi {
         // to sync at least once if its `latestCommittedMerkleIndex` is different from the `endIndex` we fetched
         // this should work fine, but it technically makes more queries than it needs to.
         // TODO: add method to SDKSyncAdapter to fetch latest committed merkle index with a timelag
-        const latestCommittedMerkleIndex = await (await this.clientThunk()).geLatestCommittedMerkleIndex();
+        const latestCommittedMerkleIndex = await (await this.clientThunk()).getLatestCommittedMerkleIndex();
         const minIterations = latestCommittedMerkleIndex !== endIndex ? 1 : 0;
+
+        console.log("[sync] startIndex", startIndex);
+        console.log("[sync] endIndex", endIndex);
+        console.log("[sync] latestCommittedMerkleIndex", latestCommittedMerkleIndex);
+        console.log("[sync] minIterations", minIterations);
 
         const NUM_REFETCHES = 5;
         const refetchEvery = Math.floor(

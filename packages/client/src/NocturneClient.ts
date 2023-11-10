@@ -149,7 +149,7 @@ export class NocturneClient {
     return await this.db.latestSyncedMerkleIndex();
   }
 
-  async getLatestCommitteddMerkleIndex(): Promise<number | undefined> {
+  async getLatestCommittedMerkleIndex(): Promise<number | undefined> {
     return await this.db.latestCommittedMerkleIndex();
   }
 
