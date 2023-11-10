@@ -946,11 +946,6 @@ export class NocturneSdk implements NocturneSdkApi {
         const latestCommittedMerkleIndex = await (await this.clientThunk()).getLatestCommittedMerkleIndex();
         const minIterations = latestCommittedMerkleIndex !== endIndex ? 1 : 0;
 
-        console.log("[sync] startIndex", startIndex);
-        console.log("[sync] endIndex", endIndex);
-        console.log("[sync] latestCommittedMerkleIndex", latestCommittedMerkleIndex);
-        console.log("[sync] minIterations", minIterations);
-
         const NUM_REFETCHES = 5;
         const refetchEvery = Math.floor(
           (endIndex - startIndex) / NUM_REFETCHES,
