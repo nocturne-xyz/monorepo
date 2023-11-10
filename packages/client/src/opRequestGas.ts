@@ -341,7 +341,8 @@ async function getOperationRequestTrace(
   // if gasPrice is not specified, get it from RPC node
   // NOTE: gasPrice returned in wei
   gasPrice =
-    gasPrice ?? (await handlerContract.provider.getGasPrice()).toBigInt();
+    gasPrice ??
+    ((await handlerContract.provider.getGasPrice()).toBigInt() * 6n) / 10n; // TODO: tune
 
   return {
     totalGasLimit,
