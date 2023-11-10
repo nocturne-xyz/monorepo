@@ -214,7 +214,7 @@ export class BundlerSubmitter {
       const tx = await this.tellerContract.processBundle(
         { operations },
         {
-          gasLimit: totalGasLimit * (15n / 10n),
+          gasLimit: (totalGasLimit * 15n) / 10n,
         } // 50% gas buffer
       );
 
