@@ -16,7 +16,7 @@ export type ForkNetwork = typeof FORK_NETWORKS;
 
 const FORK_NETWORK_MAPPING: { [K in ForkNetwork]: string } = {
   mainnet:
-    "https://eth-mainnet.g.alchemy.com/v2/X21iuJe_hcEAH4cooxG7xGuTQ-ebJJmB",
+    "https://eth-mainnet.g.alchemy.com/v2/oaZgSEuM_n2GWITRCIJ3-pO-aKGtYC0l",
 };
 
 // returns snapshotId of empty chain state

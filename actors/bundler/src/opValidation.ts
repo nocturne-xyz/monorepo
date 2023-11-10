@@ -8,6 +8,8 @@ import { Handler, Teller } from "@nocturne-xyz/contracts";
 import { NullifierDB } from "./db";
 import { Logger } from "winston";
 import { ErrString } from "@nocturne-xyz/offchain-utils";
+import { isTransferAction, parseTransferAction } from "./actionParsing";
+import { isSanctionedAddress } from "./sanctions";
 
 export async function checkNullifierConflictError(
   db: NullifierDB,
@@ -100,5 +102,40 @@ export async function checkNotEnoughGasError(
   if (operation.gasPrice < gasPrice) {
     const id = OperationTrait.computeDigest(operation).toString();
     return `operation ${id} gas price too low: ${operation.gasPrice} < current chain's gas price ${gasPrice}`;
+  }
+}
+
+export async function checkIsNotTransferToSanctionedAddress(
+  provider: ethers.providers.Provider,
+  logger: Logger,
+  operation: SubmittableOperationWithNetworkInfo
+): Promise<ErrString | undefined> {
+  logger.debug(
+    "checking that operation doesn't contain any transfers to a sanctioned address"
+  );
+
+  const transferActions = operation.actions.filter(isTransferAction);
+  const opDigest = OperationTrait.computeDigest(operation).toString();
+  const results = await Promise.all(
+    transferActions.map(async (action, i) => {
+      const { to, amount } = parseTransferAction(action);
+      if (await isSanctionedAddress(provider, to)) {
+        logger.alert("detected transfer to sanctioned address", {
+          opDigest,
+          actionIndex: i,
+          recipient: to,
+          amount,
+          contract: action.contractAddress,
+        });
+        return true;
+      }
+
+      return false;
+    })
+  );
+
+  const sanctionedTransfers = results.filter((result) => result === true);
+  if (sanctionedTransfers.length > 0) {
+    return `operation ${opDigest} contains ${sanctionedTransfers.length} transfer(s) to sanctioned addresses`;
   }
 }

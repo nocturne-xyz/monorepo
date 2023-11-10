@@ -40,6 +40,7 @@ const runServer = new Command("server")
       logLevel,
       logDir
     );
+
     const server = new BundlerServer(
       bundlerAddress,
       config.tellerAddress,
