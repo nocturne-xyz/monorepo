@@ -64,7 +64,8 @@ export const VALID_RELAY_REQUEST = {
   },
 };
 
-const RPC_URL = "https://eth.llamarpc.com";
+const RPC_URL =
+  "https://eth-mainnet.g.alchemy.com/v2/oaZgSEuM_n2GWITRCIJ3-pO-aKGtYC0l";
 export const TEST_PROVIDER = new ethers.providers.JsonRpcProvider(RPC_URL);
 export const DUMMY_CONTRACT_ADDRESS = ethers.utils.getAddress(
   "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"
