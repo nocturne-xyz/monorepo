@@ -42,6 +42,7 @@ export interface NocturneSdkApi {
 
   /**
    * Register the user's canonical address from the snap instance against the current signer EOA.
+   * If already registered, returns undefined, otherwise returns contract transaction of registration.
    */
   registerCanonicalAddress(): Promise<ContractTransaction | undefined>;
 
