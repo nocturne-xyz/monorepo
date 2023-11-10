@@ -139,10 +139,10 @@ export interface BaseOperation {
 export interface PreSignOperation extends BaseOperation {
   joinSplits: PreSignJoinSplit[];
 
-  // gas estimate for the operation denominated in `encodedGasAsset`
+  // gas fee estimate for the operation denominated in `encodedGasAsset`
   // this is passed along to the snap so the user can see how much gas
   // they will front for the operation
-  gasEstimate: bigint;
+  gasFeeEstimate: bigint;
 }
 
 export interface SignedOperation extends BaseOperation {
