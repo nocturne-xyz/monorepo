@@ -326,9 +326,7 @@ export class NocturneSdk implements NocturneSdkApi {
   > {
     const ethSigner = await getSigner(this.provider);
     const address = await ethSigner.getAddress();
-    console.log("[fe-sdk] eth address:", address);
     const maybeExistingCanonAddr = await this.getCanonAddrFromRegistry(address);
-    console.log("[fe-sdk] existing canon addr:", maybeExistingCanonAddr);
     if (maybeExistingCanonAddr) return;
 
     const client = await this.clientThunk();
