@@ -7,8 +7,8 @@
     "sync/*"
   ],
   "scripts": {
-    "copy-circuit-artifacts": "cp -r ../protocol/circuit-artifacts .",
     "build": "yarn turbo run --no-daemon build",
+    "checkout-circuit-artifacts:protocol": "cp -r ../protocol/circuit-artifacts .",
     "checkout-circuit-artifacts:goerli": "scripts/checkout_circuit_artifacts.sh goerli",
     "checkout-circuit-artifacts:mainnet": "scripts/checkout_circuit_artifacts.sh mainnet",
     "build:docker-actors:goerli": "scripts/build_docker_actors.sh goerli",
