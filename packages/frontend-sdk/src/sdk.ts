@@ -1106,9 +1106,9 @@ export class NocturneSdk implements NocturneSdkApi {
     // check it has corresponding canon addr in registry
     const registry = await this.canonAddrRegistryThunk();
     try {
-      const uncleansedCanonAddr =
+      const maybeCanonAddr =
         await registry._ethAddressToCompressedCanonAddr(eoaAddr);
-      return uncleansedCanonAddr.isZero() ? undefined : uncleansedCanonAddr;
+      return maybeCanonAddr.isZero() ? undefined : maybeCanonAddr;
     } catch (err) {
       console.warn("error when looking up canon addr in registry: ", err);
       return undefined;
