@@ -23,6 +23,7 @@ const BASE_DELAY_SECONDS = 60 * 60 * 2; // 2 hours
 
 // - TRM rejects if any of the following are true
 //     - > $0 of ownership exposure to severe risk categories
+//     - > $10k of ownership exposure to high risk categories
 //     - > $30k of counterparty exposure to severe risk categories
 //     - > $50k of counterparty exposure to high risk categories (NOTE that mixer is medium risk)
 //     - > $300k of indirect exposure to high risk categories
@@ -42,6 +43,27 @@ const TRM_SEVERE_OWNERSHIP_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
   action: {
     type: "Rejection",
     reason: "Ownership exposure to severe risk categories > $0",
+  },
+};
+
+const TRM_HIGH_OWNERSHIP_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
+  name: "TRM_HIGH_OWNERSHIP_REJECT",
+  call: "TRM_SCREENING_ADDRESSES",
+  threshold: (data: TrmData) => {
+    const totalHighOwnership = data.addressRiskIndicators.reduce(
+      (acc, item) =>
+        item.riskType === "OWNERSHIP" &&
+        item.categoryRiskScoreLevelLabel === "High"
+          ? acc + Number(item.incomingVolumeUsd)
+          : acc,
+      0
+    );
+
+    return totalHighOwnership > 10_000;
+  },
+  action: {
+    type: "Rejection",
+    reason: "Ownership exposure to high risk categories > $0",
   },
 };
 
@@ -328,6 +350,7 @@ export const RULESET_V1 = (redis: IORedis, logger: Logger): RuleSet => {
     logger
   )
     .add(TRM_SEVERE_OWNERSHIP_REJECT)
+    .add(TRM_HIGH_OWNERSHIP_REJECT)
     .combineAndAdd(TRM_SEVERE_COUNTERPARTY_REJECT)
     .combineAndAdd(TRM_HIGH_MIXER_REJECT)
     .combineAndAdd(TRM_HIGH_COUNTERPARTY_REJECT)
