@@ -2,6 +2,7 @@
 !*risk_engine**.csv
 *-reject.json*
 *-accept.json
+*-output
 
 dex-traders-by-vol-24h-10-14-2023-top-500.json
 gmx-1m-gain-notional-10-2023-top-500.json

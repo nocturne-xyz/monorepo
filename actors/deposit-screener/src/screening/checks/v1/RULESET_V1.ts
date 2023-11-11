@@ -33,12 +33,16 @@ const TRM_SEVERE_OWNERSHIP_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
   name: "TRM_SEVERE_OWNERSHIP_REJECT",
   call: "TRM_SCREENING_ADDRESSES",
   threshold: (data: TrmData) => {
-    return data.addressRiskIndicators.some(
-      (item) =>
+    const totalSevereOwnership = data.addressRiskIndicators.reduce(
+      (acc, item) =>
         item.riskType === "OWNERSHIP" &&
-        item.categoryRiskScoreLevelLabel === "Severe" &&
-        Number(item.totalVolumeUsd) > 0
+        item.categoryRiskScoreLevelLabel === "Severe"
+          ? acc + Number(item.totalVolumeUsd)
+          : acc,
+      0
     );
+
+    return totalSevereOwnership > 0;
   },
   action: {
     type: "Rejection",
@@ -54,7 +58,7 @@ const TRM_HIGH_OWNERSHIP_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
       (acc, item) =>
         item.riskType === "OWNERSHIP" &&
         item.categoryRiskScoreLevelLabel === "High"
-          ? acc + Number(item.incomingVolumeUsd)
+          ? acc + Number(item.totalVolumeUsd)
           : acc,
       0
     );
@@ -63,7 +67,7 @@ const TRM_HIGH_OWNERSHIP_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
   },
   action: {
     type: "Rejection",
-    reason: "Ownership exposure to high risk categories > $0",
+    reason: "Ownership exposure to high risk categories > $15k",
   },
 };
 
@@ -91,12 +95,16 @@ const TRM_SEVERE_COUNTERPARTY_REJECT: CombinedRulesParams<
       name: "TRM_SEVERE_COUNTERPARTY_REJECT",
       call: "TRM_SCREENING_ADDRESSES",
       threshold: (data: TrmData) => {
-        return data.addressRiskIndicators.some(
-          (item) =>
+        const counterpartySevereTotal = data.addressRiskIndicators.reduce(
+          (acc, item) =>
             item.riskType === "COUNTERPARTY" &&
-            item.categoryRiskScoreLevelLabel === "Severe" &&
-            Number(item.totalVolumeUsd) > 30_000
+            item.categoryRiskScoreLevelLabel === "Severe"
+              ? acc + Number(item.totalVolumeUsd)
+              : acc,
+          0
         );
+
+        return counterpartySevereTotal > 30_000;
       },
     },
     noPositiveLabelsPartial,
@@ -116,12 +124,16 @@ const TRM_HIGH_COUNTERPARTY_REJECT: CombinedRulesParams<
       name: "TRM_HIGH_COUNTERPARTY_REJECT",
       call: "TRM_SCREENING_ADDRESSES",
       threshold: (data: TrmData) => {
-        return data.addressRiskIndicators.some(
-          (item) =>
+        const counterpartyHighTotal = data.addressRiskIndicators.reduce(
+          (acc, item) =>
             item.riskType === "COUNTERPARTY" &&
-            item.categoryRiskScoreLevelLabel === "High" &&
-            Number(item.totalVolumeUsd) > 50_000
+            item.categoryRiskScoreLevelLabel === "High"
+              ? acc + Number(item.totalVolumeUsd)
+              : acc,
+          0
         );
+
+        return counterpartyHighTotal > 50_000;
       },
     },
     noPositiveLabelsPartial,
@@ -133,6 +145,35 @@ const TRM_HIGH_COUNTERPARTY_REJECT: CombinedRulesParams<
   applyIf: "All",
 };
 
+const TRM_SEVERE_INDIRECT_REJECT: CombinedRulesParams<
+  ["TRM_SCREENING_ADDRESSES", "MISTTRACK_ADDRESS_LABELS"]
+> = {
+  partialRules: [
+    {
+      name: "TRM_SEVERE_INDIRECT_REJECT",
+      call: "TRM_SCREENING_ADDRESSES",
+      threshold: (data: TrmData) => {
+        const indirectHighTotal = data.addressRiskIndicators.reduce(
+          (acc, item) =>
+            item.riskType === "INDIRECT" &&
+            item.categoryRiskScoreLevelLabel === "Severe"
+              ? acc + Number(item.totalVolumeUsd)
+              : acc,
+          0
+        );
+
+        return indirectHighTotal > 200_000;
+      },
+    },
+    noPositiveLabelsPartial,
+  ],
+  applyIf: "All",
+  action: {
+    type: "Rejection",
+    reason: "Indirect exposure to severe risk categories > $200k",
+  },
+};
+
 const TRM_HIGH_INDIRECT_REJECT: CombinedRulesParams<
   ["TRM_SCREENING_ADDRESSES", "MISTTRACK_ADDRESS_LABELS"]
 > = {
@@ -141,12 +182,16 @@ const TRM_HIGH_INDIRECT_REJECT: CombinedRulesParams<
       name: "TRM_HIGH_INDIRECT_REJECT",
       call: "TRM_SCREENING_ADDRESSES",
       threshold: (data: TrmData) => {
-        return data.addressRiskIndicators.some(
-          (item) =>
+        const indirectHighTotal = data.addressRiskIndicators.reduce(
+          (acc, item) =>
             item.riskType === "INDIRECT" &&
-            item.categoryRiskScoreLevelLabel === "High" &&
-            Number(item.totalVolumeUsd) > 300_000
+            item.categoryRiskScoreLevelLabel === "High"
+              ? acc + Number(item.totalVolumeUsd)
+              : acc,
+          0
         );
+
+        return indirectHighTotal > 300_000;
       },
     },
     noPositiveLabelsPartial,
@@ -352,9 +397,10 @@ export const RULESET_V1 = (redis: IORedis, logger: Logger): RuleSet => {
     .add(TRM_SEVERE_OWNERSHIP_REJECT)
     .add(TRM_HIGH_OWNERSHIP_REJECT)
     .combineAndAdd(TRM_SEVERE_COUNTERPARTY_REJECT)
-    .combineAndAdd(TRM_HIGH_MIXER_REJECT)
     .combineAndAdd(TRM_HIGH_COUNTERPARTY_REJECT)
+    .combineAndAdd(TRM_SEVERE_INDIRECT_REJECT)
     .combineAndAdd(TRM_HIGH_INDIRECT_REJECT)
+    .combineAndAdd(TRM_HIGH_MIXER_REJECT)
     .add(MISTTRACK_RISK_REJECT)
     .add(SHORT_WALLET_HISTORY_DELAY)
     .combineAndAdd(SHORT_WALLET_HISTORY_AND_HIGH_VALUE_WALLET_DELAY)
