@@ -325,9 +325,18 @@ export class NocturneSdk implements NocturneSdkApi {
     ethers.ContractTransaction | undefined
   > {
     const ethSigner = await getSigner(this.provider);
-    const address = await ethSigner.getAddress();
-    const maybeExistingCanonAddr = await this.getCanonAddrFromRegistry(address);
-    if (maybeExistingCanonAddr) return;
+
+    const address = await this.snap.invoke<RequestSpendKeyEoaMethod>({
+      method: "nocturne_requestSpendKeyEoa",
+      params: undefined,
+    });
+    if (!address) {
+      throw new Error("Nocturne spend key EOA not found");
+    }
+    const alreadyRegistered = Boolean(
+      await this.getCanonAddrFromRegistry(address),
+    );
+    if (alreadyRegistered) return undefined;
 
     const client = await this.clientThunk();
     const registry = await this.canonAddrRegistryThunk();
@@ -861,6 +870,8 @@ export class NocturneSdk implements NocturneSdkApi {
     });
 
     if (!eoaAddr) {
+      // this should never happen, this.genAndSetNewSpendKey() should always be called first
+      console.warn("Nocturne spend key EOA not found");
       return undefined;
     }
 
