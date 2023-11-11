@@ -1,7 +1,26 @@
 import path from "path";
-import { createLogger, format, transports, Logger } from "winston";
+import winston, { createLogger, format, transports, Logger } from "winston";
 import * as Transport from "winston-transport";
 import { presets } from "winston-humanize-formatter";
+
+const customLevels = {
+  levels: {
+    compliance: 0, // Custom 'compliance' alert level
+    error: 1,
+    warn: 2,
+    info: 3,
+    debug: 4,
+  },
+  colors: {
+    compliance: "pink",
+    error: "red",
+    warn: "yellow",
+    info: "green",
+    debug: "gray",
+  },
+};
+
+winston.addColors(customLevels.colors);
 
 // if `consoleLevel` is undefined, no logs will be emitted to console
 // if `consoleLevel` is defined, logs at least as important `consoleLevel` will be emitted to console
@@ -22,6 +41,10 @@ export function makeLogger(
 
   const debugFilter = format((info) => {
     return info.level === "debug" ? info : false;
+  });
+
+  const complianceFilter = format((info) => {
+    return info.level === "compliance" ? info : false;
   });
 
   const logTransports: Transport[] = [
@@ -72,6 +95,13 @@ export function makeLogger(
         format: (debugFilter(), format.timestamp(), format.json()),
         filename: path.join(logDir, "debug.log"),
         level: "debug",
+      }),
+
+      // write `compliance` logs `compliance.log`
+      new transports.File({
+        format: (complianceFilter(), format.timestamp(), format.json()),
+        filename: path.join(logDir, "compliance.log"),
+        level: "compliance",
       })
     );
 
@@ -89,6 +119,7 @@ export function makeLogger(
   }
 
   return createLogger({
+    levels: customLevels.levels,
     // default format
     format: format.combine(format.timestamp(), format.json()),
     // add metadata saying which deployment, actor, and process this log is coming from
@@ -108,6 +139,7 @@ export function makeTestLogger(actor: string, processName: string): Logger {
   }
 
   return createLogger({
+    levels: customLevels.levels,
     format: presets.cli.dev,
     // add metadata saying which process this log is coming from
     defaultMeta: { actor, process: processName },

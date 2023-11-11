@@ -120,7 +120,7 @@ export async function checkIsNotTransferToSanctionedAddress(
     transferActions.map(async (action, i) => {
       const { to, amount } = parseTransferAction(action);
       if (await isSanctionedAddress(provider, to)) {
-        logger.alert("detected transfer to sanctioned address", {
+        logger.log("compliance", "detected transfer to sanctioned address", {
           opDigest,
           actionIndex: i,
           recipient: to,

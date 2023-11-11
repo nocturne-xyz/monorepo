@@ -280,7 +280,8 @@ export class DepositScreenerScreener {
         });
 
         if (checkResult.type === "Rejection") {
-          childLogger.alert(
+          childLogger.log(
+            "compliance",
             `deposit failed first screening stage with reason: ${checkResult.reason}`,
             {
               reason: checkResult.reason,
@@ -409,7 +410,8 @@ export class DepositScreenerScreener {
         );
 
         if (checkResult.type === "Rejection") {
-          childLogger.alert(
+          childLogger.log(
+            "compliance",
             `deposit failed second screening screening with reason: ${checkResult.reason}`,
             { reason: checkResult.reason }
           );
