@@ -1,26 +1,18 @@
 import path from "path";
-import winston, { createLogger, format, transports, Logger } from "winston";
+import { createLogger, format, transports, Logger } from "winston";
 import * as Transport from "winston-transport";
 import { presets } from "winston-humanize-formatter";
 
-const customLevels = {
-  levels: {
-    compliance: 0, // Custom 'compliance' alert level
-    error: 1,
-    warn: 2,
-    info: 3,
-    debug: 4,
-  },
-  colors: {
-    compliance: "pink",
-    error: "red",
-    warn: "yellow",
-    info: "green",
-    debug: "gray",
-  },
+const logLevels = {
+  compliance: 0,
+  error: 1,
+  warn: 2,
+  info: 3,
+  http: 4,
+  verbose: 5,
+  debug: 6,
+  silly: 7,
 };
-
-winston.addColors(customLevels.colors);
 
 // if `consoleLevel` is undefined, no logs will be emitted to console
 // if `consoleLevel` is defined, logs at least as important `consoleLevel` will be emitted to console
@@ -119,7 +111,7 @@ export function makeLogger(
   }
 
   return createLogger({
-    levels: customLevels.levels,
+    levels: logLevels,
     // default format
     format: format.combine(format.timestamp(), format.json()),
     // add metadata saying which deployment, actor, and process this log is coming from
@@ -139,7 +131,7 @@ export function makeTestLogger(actor: string, processName: string): Logger {
   }
 
   return createLogger({
-    levels: customLevels.levels,
+    levels: logLevels,
     format: presets.cli.dev,
     // add metadata saying which process this log is coming from
     defaultMeta: { actor, process: processName },
