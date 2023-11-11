@@ -265,9 +265,10 @@ describe("handleGasForOperationRequest", async () => {
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
 
-    // Need 1M tokens to unwrap + op gas estimate with 1 JS (415k for one JS + 200k for op and gas buffer)
-    // 615k * 10 = 6.15M tokens needed for 1 JS op gas
-    // Each note of gas token is 1.5M so we need 5 notes, 3 additional JSs to cover
+    // Need 1M tokens to unwrap + op gas estimate with 1 JS (485k for one JS + 200k for op and gas buffer)
+    // 685k * 10 = 6.85M tokens needed for 1 JS op gas
+    // Each note of gas token is 1.5M so we need 6 notes, 3 additional JSs to cover (doesn't
+    // including extras to cover those joinsplits)
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .__unwrap(shitcoin, 1_000_000n)

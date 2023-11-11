@@ -4,9 +4,10 @@ import {
   SubmittableOperationWithNetworkInfo,
 } from ".";
 
-// Assumes single joinsplit op = ~400k gas
+// Numbers and logic copied from contracts Types.sol
+// Only exception is an extra 100k gas buffer for safety
 export const BLOCK_GAS_LIMIT = 30_000_000n;
-const GAS_PER_JOINSPLIT_VERIFY_SINGLE = 230_000n; // assumes batch size = 1
+const GAS_PER_JOINSPLIT_VERIFY_SINGLE = 300_000n; // assumes batch size = 1
 const GAS_PER_JOINSPLIT_HANDLE = 110_000n;
 const GAS_PER_INSERTION_SUBTREE_UPDATE = 25_000n;
 const GAS_PER_INSERTION_ENQUEUE = 25_000n;
