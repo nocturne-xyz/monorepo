@@ -218,14 +218,14 @@ describe("handleGasForOperationRequest", async () => {
   it("accounts for gas of 3 extra joinsplits when gas compensation is high", async () => {
     const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [
-        500_000n,
-        500_000n,
-        2_000_000n,
-        2_000_000n,
-        2_000_000n,
-        2_000_000n,
-        2_000_000n,
-        2_000_000n,
+        500_000n, // for execution
+        500_000n, // for execution
+        1_500_000n, // for base gas (op w/ 1 JS)
+        1_500_000n, // for base gas (op w/ 1 JS)
+        1_500_000n, // for base gas (op w/ 1 JS)
+        1_500_000n, // for base gas (op w/ 1 JS)
+        1_500_000n, // for base gas (op w/ 1 JS)
+        2_000_000n, // rest is for covering extra joinsplits cost
         2_000_000n,
         2_000_000n,
         2_000_000n,
@@ -265,8 +265,9 @@ describe("handleGasForOperationRequest", async () => {
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
 
-    // Need 1M tokens to unwrap + op gas estimate (860k * 10)
-    // 860k * 10 = 8.6M needed for gas incurs 3 more joinsplits (485k * 3 * 10)
+    // Need 1M tokens to unwrap + op gas estimate with 1 JS (415k for one JS + 200k for op and gas buffer)
+    // 615k * 10 = 6.15M tokens needed for 1 JS op gas
+    // Each note of gas token is 1.5M so we need 5 notes, 3 additional JSs to cover
     const opRequest = await builder
       .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .__unwrap(shitcoin, 1_000_000n)
