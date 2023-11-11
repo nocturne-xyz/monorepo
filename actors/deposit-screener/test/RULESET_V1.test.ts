@@ -17,6 +17,7 @@ import {
   populateRedisCache,
 } from "../src/cli/commands/inspect/helpers";
 import { getLatestSnapshotFolder } from "./utils";
+import { makeLogger } from "@nocturne-xyz/offchain-utils";
 
 describe("RULESET_V1", () => {
   let server: RedisMemoryServer;
@@ -42,7 +43,15 @@ describe("RULESET_V1", () => {
     ) as AddressDataSnapshot;
     await populateRedisCache(snapshotData, redis);
 
-    ruleset = RULESET_V1(redis);
+    const logger = makeLogger(
+      "snapshot",
+      "deposit-screener",
+      "server",
+      "debug",
+      "./logs"
+    );
+
+    ruleset = RULESET_V1(redis, logger);
   });
 
   describe("Bulk Tests", async () => {

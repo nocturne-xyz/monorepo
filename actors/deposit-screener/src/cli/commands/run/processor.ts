@@ -105,7 +105,7 @@ const runProcess = new Command("processor")
       screeningApi = new DummyScreeningApi(dummyScreeningDelay);
     } else {
       logger.info("Configuring real screening api");
-      screeningApi = new ConcreteScreeningChecker(redis);
+      screeningApi = new ConcreteScreeningChecker(redis, logger);
     }
 
     const screener = new DepositScreenerScreener(

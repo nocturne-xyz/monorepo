@@ -65,7 +65,7 @@ const runServer = new Command("server")
       screeningApi = new DummyScreeningApi(dummyScreeningDelay);
     } else {
       logger.info("Configuring real screening api");
-      screeningApi = new ConcreteScreeningChecker(redis);
+      screeningApi = new ConcreteScreeningChecker(redis, logger);
     }
 
     const server = new DepositScreenerServer(
