@@ -27,7 +27,7 @@ const convertParams = (index: number): string => {
 };
 
 // Loop through the range and generate the modules
-for (let i = 0; i < 16; i++) {
+for (let i = 0; i < 6; i++) {
   const content = convertParams(i);
   fs.writeFileSync(path.join(__dirname, `../src/hashes/constants/constants${i + 1}.ts`), content);
 }
