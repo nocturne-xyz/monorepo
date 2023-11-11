@@ -131,7 +131,7 @@ async function main(options: any): Promise<void> {
   const percentAccepted = (acceptCount / totalAddresses) * 100;
   const percentRejected = (rejectCount / totalAddresses) * 100;
   logger.info(
-    `Inspection complete. Accepted ${acceptCount} / ${totalAddresses} addresses (${percentAccepted}%) and rejected ${rejectCount}/${totalAddresses} addresses (${percentRejected}%)`
+    `Inspection complete. Accepted ${acceptCount} / ${totalAddresses} addresses (${percentAccepted}%) and rejected ${rejectCount} / ${totalAddresses} addresses (${percentRejected}%)`
   );
 
   showReasonCounts(logger, reasonCounts);

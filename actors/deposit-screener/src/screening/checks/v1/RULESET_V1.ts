@@ -23,7 +23,7 @@ const BASE_DELAY_SECONDS = 60 * 60 * 2; // 2 hours
 
 // - TRM rejects if any of the following are true
 //     - > $0 of ownership exposure to severe risk categories
-//     - > $10k of ownership exposure to high risk categories
+//     - > $15k of ownership exposure to high risk categories
 //     - > $30k of counterparty exposure to severe risk categories
 //     - > $50k of counterparty exposure to high risk categories (NOTE that mixer is medium risk)
 //     - > $300k of indirect exposure to high risk categories
@@ -59,7 +59,7 @@ const TRM_HIGH_OWNERSHIP_REJECT: RuleParams<"TRM_SCREENING_ADDRESSES"> = {
       0
     );
 
-    return totalHighOwnership > 10_000;
+    return totalHighOwnership > 15_000;
   },
   action: {
     type: "Rejection",

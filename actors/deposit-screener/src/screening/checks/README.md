@@ -130,19 +130,19 @@ Commit Hash: `650b3d2f`
 Tornado Top 1000 Depositors Post-Anonymity-Mining:
 
 - Accepted 864 / 1015 addresses (85.1231527093596%)
-- Rejected 151/1015 addresses (14.876847290640393%)
+- Rejected 151 / 1015 addresses (14.876847290640393%)
 
 Top 500 DEX Traders by 24h Volume on 10-14-2023
 
-- Accepted 480 / 500 addresses (96%)
-- Rejected 20/500 addresses (4%)
+- Accepted 474 / 500 addresses (94.8%)
+- Rejected 26 / 500 addresses (5.2%)
 
 Top 700 NFT Traders by 24h Volume 10-14-2023
 
-- Accepted 674 / 690 addresses (97.68115942028986%)
-- Rejected 16/690 addresses (2.318840579710145%)
+- Accepted 654 / 690 addresses (94.78260869565217%)
+- Rejected 3 6/ 690 addresses (5.217391304347826%)
 
 Top 500 GMX Traders with > $1M Notional 10-2023
 
-- Accepted 531 / 536 addresses (99.06716417910447%)
-- Rejected 5/536 addresses (0.9328358208955223%)
+- Accepted 528 / 536 addresses (98.50746268656717%)
+- Rejected 8 / 536 addresses (1.4925373134328357%)
