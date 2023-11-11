@@ -6,7 +6,7 @@ import "./crypto";
 import { poseidon } from "circomlibjs";
 import { randomFp, poseidon1, poseidon2, poseidon3 } from "../src";
 import { range } from "./utils";
-import { poseidon15, poseidon6 } from "../src/hashes";
+import { poseidon15, poseidon6 } from "../src/hashes/poseidonBN";
 
 describe("Poseidon", () => {
   it("matches circomlibjs with 1 input", () => {
