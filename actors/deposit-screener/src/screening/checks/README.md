@@ -140,7 +140,7 @@ Top 500 DEX Traders by 24h Volume on 10-14-2023
 Top 700 NFT Traders by 24h Volume 10-14-2023
 
 - Accepted 654 / 690 addresses (94.78260869565217%)
-- Rejected 36 / 690 addresses
+- Rejected 36 / 690 addresses (5.217391304347826%)
 
 Top 500 GMX Traders with > $1M Notional 10-2023
 
