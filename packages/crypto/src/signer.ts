@@ -1,6 +1,6 @@
 import { bytesToNumberLE } from "@noble/curves/abstract/utils";
 import { AffinePoint, BabyJubJub } from "./BabyJubJub";
-import { poseidonBN } from "./hashes";
+import { poseidon4 } from "./hashes";
 import { SpendingKey, deriveSpendPK, vkFromSpendPk } from "./keys";
 import { NocturneViewer } from "./viewer";
 import * as ethers from "ethers";
@@ -48,7 +48,7 @@ export class NocturneSigner extends NocturneViewer {
 
     // sign
     const R = BabyJubJub.BasePointExtended.multiply(r).toAffine();
-    const c = poseidonBN([this.spendPk.x, R.x, R.y, m]);
+    const c = poseidon4([this.spendPk.x, R.x, R.y, m]);
     const z = Fr.sub(r, Fr.mul(Fr.create(bytesToNumberLE(s)), c));
 
     return {
@@ -63,7 +63,7 @@ export class NocturneSigner extends NocturneViewer {
     const Z = BabyJubJub.BasePointExtended.multiplyUnsafe(z);
     const P = BabyJubJub.ExtendedPoint.fromAffine(pk).multiplyUnsafe(c);
     const R = Z.add(P);
-    const cp = poseidonBN([pk.x, R.x, R.y, m]);
+    const cp = poseidon4([pk.x, R.x, R.y, m]);
     return Fr.eql(c, cp);
   }
 }

@@ -1,5 +1,5 @@
 import { AffinePoint, BabyJubJub } from "./BabyJubJub";
-import { poseidonBN } from "./hashes";
+import { poseidon4 } from "./hashes";
 import { assert } from "./utils";
 import * as JSON from "bigint-json-serialization";
 import { randomFr } from "./rand";
@@ -99,7 +99,7 @@ export class StealthAddressTrait {
 
   static hash(address: StealthAddress): bigint {
     const { h1X, h1Y, h2X, h2Y } = address;
-    return BigInt(poseidonBN([h1X, h1Y, h2X, h2Y]));
+    return BigInt(poseidon4([h1X, h1Y, h2X, h2Y]));
   }
 
   static randomize(address: StealthAddress): StealthAddress {

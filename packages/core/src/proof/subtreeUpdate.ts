@@ -6,7 +6,7 @@ import {
   TreeConstants,
   merklePathToIndex,
 } from "../utils";
-import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
+import { MerkleProof } from "../SparseMerkleProver";
 import { sha256 } from "js-sha256";
 
 export interface SubtreeUpdateProofWithPublicSignals {

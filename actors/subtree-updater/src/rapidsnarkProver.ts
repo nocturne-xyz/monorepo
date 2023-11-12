@@ -5,8 +5,7 @@ import {
   BaseProof,
 } from "@nocturne-xyz/core";
 
-//@ts-ignore
-import * as snarkjs from "snarkjs";
+import { groth16 } from "snarkjs";
 import * as fs from "fs";
 import { spawn } from "child_process";
 
@@ -85,7 +84,11 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
     proof,
     publicSignals,
   }: SubtreeUpdateProofWithPublicSignals): Promise<boolean> {
-    return await snarkjs.groth16.verify(this.vkey, publicSignals, proof);
+    return await groth16.verify(
+      this.vkey,
+      publicSignals.map((signal) => signal.toString()),
+      { ...proof, curve: "bn128" }
+    );
   }
 }
 

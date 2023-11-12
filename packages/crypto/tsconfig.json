@@ -7,6 +7,6 @@
 	},
 	"type": "module",
 	"exclude": ["node_modules", "dist", "config"],
-	"include": ["index.ts", "src", "src/**/*.ts", "scripts/*.ts", "package.json", "node.ts", "browser.ts"],
+	"include": ["index.ts", "src", "src/**/*.ts", "package.json", "node.ts", "browser.ts"],
   }
   

@@ -11,9 +11,12 @@ import {
   NocturneSigner,
   StealthAddressTrait,
 } from "../src";
-import { BabyJubJub, poseidonBN } from "@nocturne-xyz/crypto";
+import { BabyJubJub, poseidon4 } from "@nocturne-xyz/crypto";
 import { SparseMerkleProver, TreeNode } from "../src/SparseMerkleProver";
-import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
+import {
+  HashFunction,
+  IncrementalMerkleTree,
+} from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
 import { encodePathAndHash } from "../src/proof/subtreeUpdate";
 import { DUMMY_ROOT_KEY, randomBigInt } from "./utils";
@@ -284,7 +287,7 @@ describe("SparseMerkleProver", () => {
     {
       const prover = new SparseMerkleProver(kv);
       const tree = new IncrementalMerkleTree(
-        poseidonBN,
+        poseidon4 as HashFunction,
         DEPTH,
         ZERO_VALUE,
         ARITY
@@ -298,7 +301,7 @@ describe("SparseMerkleProver", () => {
     range(5).forEach((_) => {
       const prover = new SparseMerkleProver(kv);
       const tree = new IncrementalMerkleTree(
-        poseidonBN,
+        poseidon4 as HashFunction,
         DEPTH,
         ZERO_VALUE,
         ARITY
@@ -318,7 +321,7 @@ describe("SparseMerkleProver", () => {
     range(5).forEach((_) => {
       const prover = new SparseMerkleProver(kv);
       const tree = new IncrementalMerkleTree(
-        poseidonBN,
+        poseidon4 as HashFunction,
         DEPTH,
         ZERO_VALUE,
         ARITY
