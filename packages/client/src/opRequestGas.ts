@@ -340,15 +340,15 @@ async function getOperationRequestTrace(
   preparedOp.executionGasLimit = executionGasLimit;
   const totalGasLimit = maxGasForOperation(preparedOp);
 
-  const scale = 100n;
-  const gasMultiplierScaled = BigInt(gasMultiplier) * scale;
+  const scale = 100;
+  const gasMultiplierScaled = BigInt(Math.floor(gasMultiplier * scale));
   // if gasPrice is not specified, get it from RPC node
   // NOTE: gasPrice returned in wei
   gasPrice =
     gasPrice ??
     ((await handlerContract.provider.getGasPrice()).toBigInt() *
       gasMultiplierScaled) /
-      scale;
+      BigInt(Math.floor(scale));
 
   return {
     totalGasLimit,
