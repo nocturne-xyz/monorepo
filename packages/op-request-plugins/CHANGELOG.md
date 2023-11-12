@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.5
+
+### Patch Changes
+
+- Updated dependencies [41671325]
+- Updated dependencies [79aa7a82]
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/client@3.1.3
+  - @nocturne-xyz/core@3.1.3
+
 ## 2.1.4
 
 ### Patch Changes

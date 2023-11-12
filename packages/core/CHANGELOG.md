@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.1.3
+
+### Patch Changes
+
+- 4070b154: add `gasEstimate` to `PreSignOperation`
+- Updated dependencies [8973d4cb]
+  - @nocturne-xyz/crypto@0.4.0
+
 ## 3.1.2
 
 ### Patch Changes

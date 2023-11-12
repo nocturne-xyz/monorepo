@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.1.3
+
+### Patch Changes
+
+- 41671325: ensure frontend-sdk syncs when latestCommittedIndex != latestSyncedIndex
+- 79aa7a82: Lower gas estimation numbers to match contracts (100k gas buffer not 300k)
+- Updated dependencies [8973d4cb]
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/crypto@0.4.0
+  - @nocturne-xyz/core@3.1.3
+
 ## 3.1.2
 
 ### Patch Changes

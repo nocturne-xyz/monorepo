@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- fdefa43b: Add custom log levels with compliance level
+
+### Patch Changes
+
+- @nocturne-xyz/persistent-log@0.1.11
+
 ## 0.3.2
 
 ### Patch Changes

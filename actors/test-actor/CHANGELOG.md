@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.6.6
+
+### Patch Changes
+
+- Updated dependencies [41671325]
+- Updated dependencies [41671325]
+- Updated dependencies [8973d4cb]
+- Updated dependencies [79aa7a82]
+- Updated dependencies [fdefa43b]
+- Updated dependencies [4070b154]
+- Updated dependencies [79aa7a82]
+  - @nocturne-xyz/hasura-sync-adapters@0.3.2
+  - @nocturne-xyz/client@3.1.3
+  - @nocturne-xyz/local-prover@0.6.0
+  - @nocturne-xyz/offchain-utils@0.4.0
+  - @nocturne-xyz/core@3.1.3
+  - @nocturne-xyz/op-request-plugins@2.1.5
+
 ## 0.6.5
 
 ### Patch Changes

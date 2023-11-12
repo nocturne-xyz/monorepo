@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.8.0
+
+### Minor Changes
+
+- 8973d4cb: use typed snarkjs
+
+### Patch Changes
+
+- Updated dependencies [fdefa43b]
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/offchain-utils@0.4.0
+  - @nocturne-xyz/core@3.1.3
+  - @nocturne-xyz/persistent-log@0.1.11
+
 ## 0.7.1
 
 ### Patch Changes

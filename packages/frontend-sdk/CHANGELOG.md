@@ -1,5 +1,24 @@
 # Changelog
 
+## 5.1.1
+
+### Patch Changes
+
+- 41671325: ensure frontend-sdk syncs when latestCommittedIndex != latestSyncedIndex
+- 79aa7a82: Stop hardcoding subgraph url for dev and mainnet, require that to be passed via env
+- 1d8de67d: Change eoa fetch source
+- 94bb921c: Only register canon addr if not already
+- Updated dependencies [41671325]
+- Updated dependencies [8973d4cb]
+- Updated dependencies [79aa7a82]
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/client@3.1.3
+  - @nocturne-xyz/local-prover@0.6.0
+  - @nocturne-xyz/core@3.1.3
+  - @nocturne-xyz/op-request-plugins@2.1.5
+  - @nocturne-xyz/idb-kv-store@0.4.10
+  - @nocturne-xyz/subgraph-sync-adapters@0.4.1
+
 ## 5.1.0
 
 ### Minor Changes
