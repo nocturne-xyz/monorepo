@@ -100,10 +100,12 @@ const runProcess = new Command("processor")
 
     let screeningApi: ScreeningCheckerApi;
     if (env === "local" || env == "development") {
+      logger.info("Configuring dummy screening api");
       const { dummyScreeningDelay } = options;
       screeningApi = new DummyScreeningApi(dummyScreeningDelay);
     } else {
-      screeningApi = new ConcreteScreeningChecker(redis);
+      logger.info("Configuring real screening api");
+      screeningApi = new ConcreteScreeningChecker(redis, logger);
     }
 
     const screener = new DepositScreenerScreener(

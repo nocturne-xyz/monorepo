@@ -342,7 +342,7 @@ async function getOperationRequestTrace(
   // NOTE: gasPrice returned in wei
   gasPrice =
     gasPrice ??
-    ((await handlerContract.provider.getGasPrice()).toBigInt() * 14n) / 10n;
+    ((await handlerContract.provider.getGasPrice()).toBigInt() * 6n) / 10n; // TODO: tune
 
   return {
     totalGasLimit,

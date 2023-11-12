@@ -5,15 +5,16 @@ import {
 } from ".";
 
 // Numbers and logic copied from contracts Types.sol
+// Only exception is an extra 100k gas buffer for safety
 export const BLOCK_GAS_LIMIT = 30_000_000n;
-const GAS_PER_JOINSPLIT_VERIFY_SINGLE = 300_000n;
+const GAS_PER_JOINSPLIT_VERIFY_SINGLE = 300_000n; // assumes batch size = 1
 const GAS_PER_JOINSPLIT_HANDLE = 110_000n;
 const GAS_PER_INSERTION_SUBTREE_UPDATE = 25_000n;
 const GAS_PER_INSERTION_ENQUEUE = 25_000n;
 const GAS_PER_OPERATION_MISC = 100_000n;
-const GAS_BUFFER = 300_000n;
+const GAS_BUFFER = 100_000n; // TODO: tune
 
-// etherscan shows typical depoit ~182600 gas
+// etherscan shows typical deposit ~182600 gas
 export const GAS_PER_DEPOSIT_COMPLETE = 185_000n;
 
 interface GasCompensationParams {

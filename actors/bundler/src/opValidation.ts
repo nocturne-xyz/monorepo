@@ -98,7 +98,7 @@ export async function checkNotEnoughGasError(
   logger.debug(
     "checking that operation's gas price >= current chain's gas price"
   );
-  const gasPrice = (await provider.getGasPrice()).toBigInt();
+  const gasPrice = ((await provider.getGasPrice()).toBigInt() * 5n) / 10n; // -50% buffer
   if (operation.gasPrice < gasPrice) {
     const id = OperationTrait.computeDigest(operation).toString();
     return `operation ${id} gas price too low: ${operation.gasPrice} < current chain's gas price ${gasPrice}`;
