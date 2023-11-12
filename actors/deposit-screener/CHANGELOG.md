@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.10.1
+
+### Patch Changes
+
+- empty bump
+- Updated dependencies
+  - @nocturne-xyz/subgraph-sync-adapters@0.4.2
+  - @nocturne-xyz/offchain-utils@0.4.1
+  - @nocturne-xyz/config@1.7.1
+  - @nocturne-xyz/core@3.1.4
+
+## 0.10.0
+
+### Minor Changes
+
+- de5ad155: Add high ownership and severe indirect rules
+
+### Patch Changes
+
+- 79aa7a82: Pass logger to concrete screener for more observability
+- de5ad155: Make threshold checks sum exposure over all matching risk indicators with array .reduce instead of .some
+- Updated dependencies [1d5cefc2]
+- Updated dependencies [fdefa43b]
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/config@1.7.0
+  - @nocturne-xyz/offchain-utils@0.4.0
+  - @nocturne-xyz/core@3.1.3
+  - @nocturne-xyz/subgraph-sync-adapters@0.4.1
+
 ## 0.10.0-beta.0
 
 ### Minor Changes

@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.1.6
+
+### Patch Changes
+
+- empty bump
+- Updated dependencies
+  - @nocturne-xyz/client@3.1.4
+  - @nocturne-xyz/config@1.7.1
+  - @nocturne-xyz/core@3.1.4
+
+## 2.1.5
+
+### Patch Changes
+
+- Updated dependencies [41671325]
+- Updated dependencies [1d5cefc2]
+- Updated dependencies [79aa7a82]
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/client@3.1.3
+  - @nocturne-xyz/config@1.7.0
+  - @nocturne-xyz/core@3.1.3
+
 ## 2.1.5-beta.0
 
 ### Patch Changes

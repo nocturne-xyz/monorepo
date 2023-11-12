@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.6.1
+
+### Patch Changes
+
+- empty bump
+- Updated dependencies
+  - @nocturne-xyz/crypto@0.4.1
+  - @nocturne-xyz/core@3.1.4
+
+## 0.6.0
+
+### Minor Changes
+
+- 8973d4cb: use typed snarkjs
+
+### Patch Changes
+
+- Updated dependencies [8973d4cb]
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/crypto@0.4.0
+  - @nocturne-xyz/core@3.1.3
+
 ## 0.6.0-beta.0
 
 ### Minor Changes

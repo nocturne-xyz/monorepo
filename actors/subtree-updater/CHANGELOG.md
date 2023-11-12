@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.8.1
+
+### Patch Changes
+
+- empty bump
+- Updated dependencies
+  - @nocturne-xyz/offchain-utils@0.4.1
+  - @nocturne-xyz/persistent-log@0.1.12
+  - @nocturne-xyz/config@1.7.1
+  - @nocturne-xyz/core@3.1.4
+
+## 0.8.0
+
+### Minor Changes
+
+- 8973d4cb: use typed snarkjs
+
+### Patch Changes
+
+- Updated dependencies [1d5cefc2]
+- Updated dependencies [fdefa43b]
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/config@1.7.0
+  - @nocturne-xyz/offchain-utils@0.4.0
+  - @nocturne-xyz/core@3.1.3
+  - @nocturne-xyz/persistent-log@0.1.11
+
 ## 0.8.0-beta.0
 
 ### Minor Changes

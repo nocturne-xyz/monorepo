@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.1
+
+### Patch Changes
+
+- empty bump
+
+## 1.7.0
+
+### Minor Changes
+
+- 1d5cefc2: change network name to `mainnet`
+
 ## 1.7.0-beta.0
 
 ### Minor Changes
