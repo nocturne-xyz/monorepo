@@ -244,10 +244,14 @@ export class TestActor {
         erc20Config.address,
         this.txSigner
       );
-      await erc20Token.reserveTokens(this._address!, randomValue);
+      const reserveTx = await erc20Token.reserveTokens(
+        this._address!,
+        randomValue
+      );
+      await reserveTx.wait(1);
 
       this.logger.info(
-        `approving deopsit manager for ${randomValue} of token "${erc20Config.address}"`,
+        `approving deposit manager for ${randomValue} of token "${erc20Config.address}"`,
         {
           tokenName: erc20Name,
           tokenAddress: erc20Config.address,
@@ -255,7 +259,11 @@ export class TestActor {
         }
       );
 
-      await erc20Token.approve(this.depositManager.address, randomValue);
+      const approveTx = await erc20Token.approve(
+        this.depositManager.address,
+        randomValue
+      );
+      await approveTx.wait(1);
 
       // submit
       this.logger.info(
