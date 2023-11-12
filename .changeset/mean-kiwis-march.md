@@ -2,4 +2,4 @@
 "@nocturne-xyz/deposit-screener": patch
 ---
 
-Make threshold checks additive with .reduce rather than .some
+Make threshold checks sum exposure over all matching risk indicators with array .reduce instead of .some
