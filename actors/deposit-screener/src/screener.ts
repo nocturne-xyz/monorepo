@@ -280,8 +280,12 @@ export class DepositScreenerScreener {
         });
 
         if (checkResult.type === "Rejection") {
-          childLogger.warn(
-            `deposit failed first screening stage with reason: ${checkResult.reason}`
+          childLogger.log(
+            "compliance",
+            `deposit failed first screening stage with reason: ${checkResult.reason}`,
+            {
+              reason: checkResult.reason,
+            }
           );
           await this.db.setDepositRequestStatus(
             depositRequest,
@@ -406,8 +410,10 @@ export class DepositScreenerScreener {
         );
 
         if (checkResult.type === "Rejection") {
-          childLogger.warn(
-            `deposit failed second screening screening with reason ${checkResult.reason}`
+          childLogger.log(
+            "compliance",
+            `deposit failed second screening screening with reason: ${checkResult.reason}`,
+            { reason: checkResult.reason }
           );
           await this.db.setDepositRequestStatus(
             depositRequest,
