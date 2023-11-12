@@ -1,35 +1,35 @@
-import { expect } from "chai";
-import { ethers } from "ethers";
+import {
+  NocturneClient,
+  newOpRequestBuilder,
+  proveOperation,
+  signOperation,
+} from "@nocturne-xyz/client";
+import { NocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager,
   SimpleERC20Token__factory,
 } from "@nocturne-xyz/contracts";
+import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
   AssetType,
   JoinSplitProver,
+  NocturneSigner,
   NoteTrait,
   unzip,
-  NocturneSigner,
 } from "@nocturne-xyz/core";
-import {
-  NocturneClient,
-  proveOperation,
-  newOpRequestBuilder,
-  signOperation,
-} from "@nocturne-xyz/client";
+import { expect } from "chai";
+import { ethers } from "ethers";
 import {
   SyncAdapterOption,
-  setupTestDeployment,
   setupTestClient,
+  setupTestDeployment,
 } from "../src/deploy";
 import {
   depositFundsMultiToken,
   depositFundsSingleToken,
 } from "../src/deposit";
-import { sleep, submitAndProcessOperation } from "../src/utils";
-import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { KEYS_TO_WALLETS } from "../src/keys";
-import { NocturneConfig } from "@nocturne-xyz/config";
+import { sleep, submitAndProcessOperation } from "../src/utils";
 
 // 10^9 (e.g. 10 gwei if this was eth)
 const GAS_PRICE = 10n * 10n ** 9n;
@@ -185,7 +185,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
       console.log("preparing op...");
       const preSign = await nocturneClientAlice.prepareOperation(
-        opRequest.request
+        opRequest.request,
+        1
       );
       const signed = signOperation(nocturneSignerAlice, preSign);
       console.log("proving op...");

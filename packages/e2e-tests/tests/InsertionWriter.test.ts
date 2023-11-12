@@ -1,11 +1,12 @@
-import chai, { expect } from "chai";
-import chaiAsPromised from "chai-as-promised";
 import {
-  SUBGRAPH_URL,
-  setupTestClient,
-  setupTestDeployment,
-} from "../src/deploy";
+  NocturneClient,
+  newOpRequestBuilder,
+  proveOperation,
+  signOperation,
+} from "@nocturne-xyz/client";
+import { NocturneConfig } from "@nocturne-xyz/config";
 import { DepositManager } from "@nocturne-xyz/contracts";
+import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
   Asset,
   JoinSplitProver,
@@ -13,26 +14,25 @@ import {
   range,
   sleep,
 } from "@nocturne-xyz/core";
+import { InsertionWriter } from "@nocturne-xyz/insertion-writer";
+import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
+import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
+import { SubgraphTreeInsertionSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
+import chai, { expect } from "chai";
+import chaiAsPromised from "chai-as-promised";
+import * as ethers from "ethers";
+import IORedis from "ioredis";
 import {
-  NocturneClient,
-  newOpRequestBuilder,
-  proveOperation,
-  signOperation,
-} from "@nocturne-xyz/client";
+  SUBGRAPH_URL,
+  setupTestClient,
+  setupTestDeployment,
+} from "../src/deploy";
 import { depositFundsSingleToken } from "../src/deposit";
 import {
   getAllTreeInsertionsFromSubgraph,
   makeRedisInstance,
   submitAndProcessOperation,
 } from "../src/utils";
-import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
-import { InsertionWriter } from "@nocturne-xyz/insertion-writer";
-import { SubgraphTreeInsertionSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
-import IORedis from "ioredis";
-import * as ethers from "ethers";
-import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
-import { NocturneConfig } from "@nocturne-xyz/config";
 
 chai.use(chaiAsPromised);
 
@@ -166,7 +166,7 @@ describe("InsertionWriter", () => {
       .erc20Transfer(asset.assetAddr, eoaAddr, 1n)
       .build();
 
-    const op = await client.prepareOperation(opRequest.request);
+    const op = await client.prepareOperation(opRequest.request, 1);
     const signedOp = signOperation(signer, op);
     const provenOp = await proveOperation(prover, signedOp);
     await submitAndProcessOperation(provenOp);

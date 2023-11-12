@@ -1,3 +1,11 @@
+import {
+  NocturneClient,
+  OperationRequest,
+  OperationRequestWithMetadata,
+  newOpRequestBuilder,
+  proveOperation,
+  signOperation,
+} from "@nocturne-xyz/client";
 import { Erc20Config } from "@nocturne-xyz/config";
 import {
   DepositManager,
@@ -9,31 +17,23 @@ import {
   Address,
   Asset,
   JoinSplitProver,
-  StealthAddressTrait,
+  NocturneSigner,
   OperationTrait,
+  StealthAddressTrait,
   min,
   parseEventsFromContractReceipt,
   sleep,
-  NocturneSigner,
 } from "@nocturne-xyz/core";
-import {
-  NocturneClient,
-  OperationRequest,
-  newOpRequestBuilder,
-  OperationRequestWithMetadata,
-  proveOperation,
-  signOperation,
-} from "@nocturne-xyz/client";
 import {
   makeCreateCounterFn,
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
-import randomBytes from "randombytes";
+import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
 import * as ot from "@opentelemetry/api";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
+import randomBytes from "randombytes";
 import { Logger } from "winston";
-import { Erc20Plugin } from "@nocturne-xyz/op-request-plugins";
 
 export const ACTOR_NAME = "test-actor";
 const COMPONENT_NAME = "main";
@@ -349,7 +349,7 @@ export class TestActor {
 
     // prepare, sign, and prove
     try {
-      const preSign = await this.client.prepareOperation(opRequest);
+      const preSign = await this.client.prepareOperation(opRequest, 1);
       const signed = signOperation(this.nocturneSigner, preSign);
       await this.client.addOpToHistory(signed, { items: [] });
 

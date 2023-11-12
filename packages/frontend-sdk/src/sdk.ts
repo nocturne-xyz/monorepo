@@ -123,6 +123,8 @@ export interface NocturneSdkOptions {
   // version / id of the nocturne snap to use, defaults to the latest version
   // we highly recommend letting the SDK default to the latest version unless you have a good reason not to
   snap?: GetSnapOptions;
+
+  gasMultiplier?: number;
 }
 
 export class NocturneSdk implements NocturneSdkApi {
@@ -135,6 +137,7 @@ export class NocturneSdk implements NocturneSdkApi {
   protected depositAdapter: DepositAdapter;
   protected syncAdapter: SDKSyncAdapter;
   protected syncMutex: Mutex;
+  protected gasMultiplier: number;
 
   protected syncProgressHandlerCounter = 0;
   protected syncProgressHandlers: Map<number, (progress: number) => void>;
@@ -178,6 +181,7 @@ export class NocturneSdk implements NocturneSdkApi {
       return new WasmCanonAddrSigCheckProver(wasm, zkey, vkey);
     });
 
+    this.gasMultiplier = options.gasMultiplier ?? 1;
     this.endpoints = sdkConfig.endpoints;
     this.sdkConfig = sdkConfig;
     this._provider = options.provider;
@@ -627,7 +631,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
     let preSignOp: PreSignOperation | undefined;
     try {
-      preSignOp = await client.prepareOperation(opRequest);
+      preSignOp = await client.prepareOperation(opRequest, this.gasMultiplier);
     } catch (e) {
       console.log("[fe-sdk] prepareOperation failed: ", e);
       throw e;
@@ -954,7 +958,9 @@ export class NocturneSdk implements NocturneSdkApi {
         // to sync at least once if its `latestCommittedMerkleIndex` is different from the `endIndex` we fetched
         // this should work fine, but it technically makes more queries than it needs to.
         // TODO: add method to SDKSyncAdapter to fetch latest committed merkle index with a timelag
-        const latestCommittedMerkleIndex = await (await this.clientThunk()).getLatestCommittedMerkleIndex();
+        const latestCommittedMerkleIndex = await (
+          await this.clientThunk()
+        ).getLatestCommittedMerkleIndex();
         const minIterations = latestCommittedMerkleIndex !== endIndex ? 1 : 0;
 
         const NUM_REFETCHES = 5;
@@ -976,7 +982,7 @@ export class NocturneSdk implements NocturneSdkApi {
             ((currentIndex - startIndex) / (endIndex - startIndex)) * 100;
 
           this.syncProgressHandlers.forEach((handler) => handler(progress));
-        };
+        }
       });
     } catch (err) {
       if (err == E_ALREADY_LOCKED) {

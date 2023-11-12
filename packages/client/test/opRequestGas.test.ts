@@ -1,27 +1,26 @@
-import "mocha";
-import chai from "chai";
-import chaiAsPromised from "chai-as-promised";
-import { expect } from "chai";
-import { newOpRequestBuilder } from "../src";
 import {
   Asset,
   AssetType,
-  gasCompensationForParams,
   ERC20_ID,
+  gasCompensationForParams,
 } from "@nocturne-xyz/core";
-import {
-  setup,
-  shitcoin,
-  getDummyHex,
-  testGasAssets,
-  stablescam,
-  DUMMY_CONTRACT_ADDR,
-  DUMMY_CONFIG,
-} from "./utils";
+import chai, { expect } from "chai";
+import chaiAsPromised from "chai-as-promised";
+import { ethers } from "ethers";
+import "mocha";
+import { newOpRequestBuilder } from "../src";
+import { MockEthToTokenConverter } from "../src/conversion";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { JoinSplitRequest } from "../src/operationRequest/operationRequest";
-import { MockEthToTokenConverter } from "../src/conversion";
-import { ethers } from "ethers";
+import {
+  DUMMY_CONFIG,
+  DUMMY_CONTRACT_ADDR,
+  getDummyHex,
+  setup,
+  shitcoin,
+  stablescam,
+  testGasAssets,
+} from "./utils";
 
 chai.use(chaiAsPromised);
 
@@ -30,6 +29,8 @@ const DUMMY_GAS_ASSET: Asset = {
   assetAddr: "0x0000000000000000000000000000000000000000",
   id: ERC20_ID,
 };
+
+const gasMultiplier = 1;
 
 describe("handleGasForOperationRequest", async () => {
   let provider: ethers.providers.JsonRpcProvider;
@@ -65,7 +66,8 @@ describe("handleGasForOperationRequest", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
 
     expect(gasCompAccountedOpRequest.gasPrice).to.eql(0n);
@@ -100,7 +102,8 @@ describe("handleGasForOperationRequest", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
 
     expect(gasCompAccountedOpRequest.joinSplitRequests.length).to.eql(1);
@@ -142,7 +145,8 @@ describe("handleGasForOperationRequest", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
 
     const expectedJoinSplitRequestUnwrap: JoinSplitRequest = {
@@ -194,7 +198,8 @@ describe("handleGasForOperationRequest", async () => {
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
 
     expect(gasCompAccountedOperationRequest.gasPrice).to.eql(1n);
@@ -282,7 +287,8 @@ describe("handleGasForOperationRequest", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
 
     expect(gasCompAccountedOpRequest.gasPrice).to.eql(10n);
@@ -330,7 +336,8 @@ describe("handleGasForOperationRequest", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
 
     expect(gasCompAccountedOpRequest.gasPrice).to.eql(10n);

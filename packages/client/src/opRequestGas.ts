@@ -1,34 +1,34 @@
-import * as JSON from "bigint-json-serialization";
 import { Handler } from "@nocturne-xyz/contracts";
+import {
+  Asset,
+  AssetType,
+  BLOCK_GAS_LIMIT,
+  ERC20_ID,
+  IncludedNote,
+  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
+  MapWithObjectKeys,
+  Operation,
+  OperationResult,
+  OperationTrait,
+  PreSignOperation,
+  ProvenJoinSplit,
+  SparseMerkleProver,
+  SubmittableOperationWithNetworkInfo,
+  groupByMap,
+  maxGasForOperation,
+  partition,
+} from "@nocturne-xyz/core";
 import { NocturneViewer, StealthAddress } from "@nocturne-xyz/crypto";
-import { gatherNotes, prepareOperation } from "./prepareOperation";
-import { EthToTokenConverter } from "./conversion";
+import * as JSON from "bigint-json-serialization";
 import { NocturneDB } from "./NocturneDB";
+import { EthToTokenConverter } from "./conversion";
 import {
   GasAccountedOperationRequest,
   JoinSplitRequest,
   OperationRequest,
 } from "./operationRequest/operationRequest";
-import { getJoinSplitRequestTotalValue, getIncludedNotesFromOp } from "./utils";
-import {
-  ERC20_ID,
-  Operation,
-  OperationResult,
-  Asset,
-  PreSignOperation,
-  AssetType,
-  ProvenJoinSplit,
-  SubmittableOperationWithNetworkInfo,
-  OperationTrait,
-  IncludedNote,
-  SparseMerkleProver,
-  groupByMap,
-  partition,
-  MapWithObjectKeys,
-  BLOCK_GAS_LIMIT,
-  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
-  maxGasForOperation,
-} from "@nocturne-xyz/core";
+import { gatherNotes, prepareOperation } from "./prepareOperation";
+import { getIncludedNotesFromOp, getJoinSplitRequestTotalValue } from "./utils";
 
 // If gas asset refund is less than this amount * gasPrice denominated in the gas asset, refund will
 // not be processed and funds will be sent to bundler. This is because cost of processing would
@@ -78,12 +78,13 @@ const DUMMY_REFUND_ADDR: StealthAddress =
 
 export async function handleGasForOperationRequest(
   deps: HandleOpRequestGasDeps,
-  opRequest: OperationRequest
+  opRequest: OperationRequest,
+  gasMultiplier: number
 ): Promise<GasAccountedOperationRequest> {
   // estimate gas params for opRequest
   console.log("estimating gas for op request");
   const { totalGasLimit, executionGasLimit, gasPrice, usedNotes } =
-    await getOperationRequestTrace(deps, opRequest);
+    await getOperationRequestTrace(deps, opRequest, gasMultiplier);
 
   const gasEstimatedOpRequest: GasEstimatedOperationRequest = {
     ...opRequest,
@@ -298,7 +299,8 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
 // estimate gas params for opRequest
 async function getOperationRequestTrace(
   { handlerContract, ...deps }: HandleOpRequestGasDeps,
-  opRequest: OperationRequest
+  opRequest: OperationRequest,
+  gasMultiplier: number
 ): Promise<OpRequestTraceParams> {
   let { executionGasLimit, gasPrice } = opRequest;
 
@@ -338,11 +340,15 @@ async function getOperationRequestTrace(
   preparedOp.executionGasLimit = executionGasLimit;
   const totalGasLimit = maxGasForOperation(preparedOp);
 
+  const scale = 100;
+  const gasMultiplierScaled = BigInt(Math.floor(gasMultiplier * scale));
   // if gasPrice is not specified, get it from RPC node
   // NOTE: gasPrice returned in wei
   gasPrice =
     gasPrice ??
-    ((await handlerContract.provider.getGasPrice()).toBigInt() * 6n) / 10n; // TODO: tune
+    ((await handlerContract.provider.getGasPrice()).toBigInt() *
+      gasMultiplierScaled) /
+      BigInt(Math.floor(scale));
 
   return {
     totalGasLimit,
