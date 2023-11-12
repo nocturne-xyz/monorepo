@@ -1,5 +1,10 @@
-import "mocha";
+import { expect } from "chai";
 import { ethers } from "ethers";
+import "mocha";
+import { MockEthToTokenConverter, newOpRequestBuilder } from "../src";
+import { getTotalEntityIndexOfNewestNoteInOp } from "../src/NocturneClient";
+import { handleGasForOperationRequest } from "../src/opRequestGas";
+import { prepareOperation } from "../src/prepareOperation";
 import {
   DUMMY_CONFIG,
   DUMMY_CONTRACT_ADDR,
@@ -8,11 +13,6 @@ import {
   shitcoin,
   testGasAssets,
 } from "./utils";
-import { MockEthToTokenConverter, newOpRequestBuilder } from "../src";
-import { handleGasForOperationRequest } from "../src/opRequestGas";
-import { prepareOperation } from "../src/prepareOperation";
-import { expect } from "chai";
-import { getTotalEntityIndexOfNewestNoteInOp } from "../src/NocturneClient";
 
 describe("getCreationTimestampOfNewestNoteInOp", () => {
   it("returns the timetsamp of the newest note in op", async () => {
@@ -52,7 +52,8 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
     // we expect the op to use the first 3 notes only
     const gasAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      1
     );
     const op = await prepareOperation(deps, gasAccountedOpRequest);
 

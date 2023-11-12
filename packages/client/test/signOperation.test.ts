@@ -20,6 +20,7 @@ import { signOperation } from "../src/signOperation";
 import { MockEthToTokenConverter } from "../src/conversion";
 import { ethers } from "ethers";
 
+const gasMultiplier = 1;
 describe("signOperation", () => {
   it("signs an operation with 1 action, 1 unwrap, 1 payment", async () => {
     const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
@@ -57,7 +58,8 @@ describe("signOperation", () => {
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
     const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
 

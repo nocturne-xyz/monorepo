@@ -1,7 +1,3 @@
-import "mocha";
-import chai from "chai";
-import chaiAsPromised from "chai-as-promised";
-import { expect } from "chai";
 import {
   AssetTrait,
   NocturneSigner,
@@ -9,33 +5,37 @@ import {
   generateRandomSpendingKey,
   range,
 } from "@nocturne-xyz/core";
+import chai, { expect } from "chai";
+import chaiAsPromised from "chai-as-promised";
+import { ethers } from "ethers";
+import "mocha";
 import { NocturneDB, newOpRequestBuilder } from "../src";
-import { prepareOperation, __private } from "../src/prepareOperation";
+import { MockEthToTokenConverter } from "../src/conversion";
+import { handleGasForOperationRequest } from "../src/opRequestGas";
+import { __private, prepareOperation } from "../src/prepareOperation";
 import { sortNotesByValue } from "../src/utils";
 import {
-  stablescam,
+  DUMMY_CONFIG,
+  DUMMY_CONTRACT_ADDR,
+  encodedPlutocracy,
+  encodedPonzi,
+  encodedShitcoin,
+  encodedStablescam,
+  getDummyHex,
+  monkey,
+  plutocracy,
+  ponzi,
   setup,
   shitcoin,
-  encodedShitcoin,
-  monkey,
-  ponzi,
-  plutocracy,
-  encodedPonzi,
-  encodedStablescam,
-  encodedPlutocracy,
-  getDummyHex,
+  stablescam,
   testGasAssets,
-  DUMMY_CONTRACT_ADDR,
-  DUMMY_CONFIG,
 } from "./utils";
-import { handleGasForOperationRequest } from "../src/opRequestGas";
-import { MockEthToTokenConverter } from "../src/conversion";
-import { ethers } from "ethers";
 
 const { gatherNotes } = __private;
 
 chai.use(chaiAsPromised);
 
+const gasMultiplier = 1;
 let provider: ethers.providers.JsonRpcProvider;
 beforeEach(() => {
   provider = ethers.getDefaultProvider() as ethers.providers.JsonRpcProvider;
@@ -203,7 +203,8 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
     const op = await prepareOperation(deps, gasCompAccountedOpRequest);
     expect(op).to.not.be.null;
@@ -258,7 +259,8 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
     const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
     expect(op).to.not.be.null;
@@ -311,7 +313,8 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
     const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
     expect(op).to.not.be.null;
@@ -370,7 +373,8 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
     const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
     expect(op).to.not.be.null;
@@ -429,7 +433,8 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
     const op = await prepareOperation(deps, gasCompAccountedOpRequest);
     expect(op).to.not.be.null;
@@ -497,7 +502,8 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
     const op = await prepareOperation(deps, gasCompAccountedOpRequest);
 
@@ -541,7 +547,8 @@ describe("prepareOperation", async () => {
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest.request
+      opRequest.request,
+      gasMultiplier
     );
     const op = await prepareOperation(deps, gasCompAccountedOpRequest);
 
