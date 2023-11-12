@@ -1,11 +1,5 @@
 # Changelog
 
-## 1.6.0
-
-### Minor Changes
-
-- 8742f9a0: Add mainnet config after deploying contracts
-
 ## 1.5.0
 
 ### Minor Changes

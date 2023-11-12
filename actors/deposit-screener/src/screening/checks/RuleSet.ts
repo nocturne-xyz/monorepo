@@ -7,7 +7,6 @@ import {
   ApiCallReturnData,
 } from "./apiCalls";
 import IORedis from "ioredis";
-import { Logger } from "winston";
 
 export interface Rejection {
   type: "Rejection";
@@ -158,16 +157,13 @@ export class RuleSet {
   private tail: RuleLike | null = null;
   private readonly baseDelaySeconds;
   private cache: IORedis;
-  private logger: Logger;
 
   constructor(
     { baseDelaySeconds }: { baseDelaySeconds: number },
-    cache: IORedis,
-    logger: Logger
+    cache: IORedis
   ) {
     this.baseDelaySeconds = baseDelaySeconds;
     this.cache = cache;
-    this.logger = logger;
   }
 
   private _add(ruleLike: RuleLike) {
@@ -211,11 +207,7 @@ export class RuleSet {
         result,
       });
       if (result.type === "Rejection") {
-        this.logger.info(
-          `Screener execution for deposit:`,
-          deposit,
-          rulesLogList
-        );
+        console.log(`Screener execution for deposit:`, deposit, rulesLogList);
         return result;
       } else if (result.type === "Delay") {
         delaySeconds = APPLY_DELAY_OPERATION[result.operation](
@@ -225,7 +217,7 @@ export class RuleSet {
       }
       currRule = currRule.next;
     }
-    this.logger.info(`Screener execution for deposit:`, deposit, rulesLogList);
+    console.log(`Screener execution for deposit:`, deposit, rulesLogList);
     return { type: "Delay", timeSeconds: delaySeconds };
   }
 }

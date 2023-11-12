@@ -1,12 +1,5 @@
 # @nocturne-xyz/insertion-writer
 
-## 0.5.4
-
-### Patch Changes
-
-- Updated dependencies [8742f9a0]
-  - @nocturne-xyz/config@1.6.0
-
 ## 0.5.3
 
 ### Patch Changes

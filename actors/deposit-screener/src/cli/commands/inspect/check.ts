@@ -72,7 +72,7 @@ async function main(options: any): Promise<void> {
   );
 
   const redis = await getLocalRedis();
-  const ruleset = RULESET_V1(redis, logger);
+  const ruleset = RULESET_V1(redis);
 
   // Populate redis cache with snapshot file contents
   logger.info(`Populating redis cache with data from ${snapshotJsonPath}`);

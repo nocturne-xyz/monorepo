@@ -39,15 +39,6 @@ const runServer = new Command("server")
 
     const { configNameOrPath, port, logDir, logLevel } = options;
 
-    const configName = extractConfigName(configNameOrPath);
-    const logger = makeLogger(
-      configName,
-      "deposit-screener",
-      "server",
-      logLevel,
-      logDir
-    );
-
     const config = loadNocturneConfig(configNameOrPath);
 
     const supportedAssetRateLimits = new Map(
@@ -60,17 +51,24 @@ const runServer = new Command("server")
     const redis = getRedis();
     let screeningApi: ScreeningCheckerApi;
     if (env === "local" || env == "development") {
-      logger.info("Configuring dummy screening api");
       const { dummyScreeningDelay } = options;
       screeningApi = new DummyScreeningApi(dummyScreeningDelay);
     } else {
-      logger.info("Configuring real screening api");
-      screeningApi = new ConcreteScreeningChecker(redis, logger);
+      screeningApi = new ConcreteScreeningChecker(redis);
     }
 
+    const configName = extractConfigName(configNameOrPath);
+    const logger = makeLogger(
+      configName,
+      "deposit-screener",
+      "server",
+      logLevel,
+      logDir
+    );
     const server = new DepositScreenerServer(
       logger,
       redis,
+      // TODO: use real screening api and delay calculator
       screeningApi,
       supportedAssetRateLimits
     );

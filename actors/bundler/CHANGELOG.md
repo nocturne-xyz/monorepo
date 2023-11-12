@@ -1,13 +1,5 @@
 # Changelog
 
-## 0.9.4
-
-### Patch Changes
-
-- Updated dependencies [8742f9a0]
-  - @nocturne-xyz/config@1.6.0
-  - @nocturne-xyz/client@3.1.2
-
 ## 0.9.3
 
 ### Patch Changes

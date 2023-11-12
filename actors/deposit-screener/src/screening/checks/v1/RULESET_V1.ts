@@ -1,4 +1,3 @@
-import { Logger } from "winston";
 import { CombinedRulesParams, RuleParams, RuleSet } from "../RuleSet";
 import {
   MisttrackAddressOverviewData,
@@ -386,13 +385,12 @@ const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
 //   },
 // };
 
-export const RULESET_V1 = (redis: IORedis, logger: Logger): RuleSet => {
+export const RULESET_V1 = (redis: IORedis): RuleSet => {
   return new RuleSet(
     {
       baseDelaySeconds: BASE_DELAY_SECONDS,
     },
-    redis,
-    logger
+    redis
   )
     .add(TRM_SEVERE_OWNERSHIP_REJECT)
     .add(TRM_HIGH_OWNERSHIP_REJECT)

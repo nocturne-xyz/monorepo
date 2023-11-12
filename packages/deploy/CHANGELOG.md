@@ -1,16 +1,5 @@
 # Changelog
 
-## 0.12.0
-
-### Minor Changes
-
-- 8742f9a0: Add mainnet deploy config
-
-### Patch Changes
-
-- Updated dependencies [8742f9a0]
-  - @nocturne-xyz/config@1.6.0
-
 ## 0.11.1
 
 ### Patch Changes

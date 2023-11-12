@@ -378,7 +378,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
   protected async estimateGasPerDeposit(): Promise<bigint> {
     const gasPrice = await this.provider.getGasPrice();
-    return gasPrice.toBigInt() * GAS_PER_DEPOSIT_COMPLETE;
+    return 2n * gasPrice.toBigInt() * GAS_PER_DEPOSIT_COMPLETE;
   }
 
   async initiateErc20Deposits(

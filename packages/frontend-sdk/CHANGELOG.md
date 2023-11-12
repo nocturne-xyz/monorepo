@@ -1,18 +1,5 @@
 # Changelog
 
-## 5.1.0
-
-### Minor Changes
-
-- 8742f9a0: Stop leaking subgraph URLs, require them to be passed via env
-
-### Patch Changes
-
-- Updated dependencies [8742f9a0]
-  - @nocturne-xyz/config@1.6.0
-  - @nocturne-xyz/client@3.1.2
-  - @nocturne-xyz/op-request-plugins@2.1.4
-
 ## 5.0.0
 
 ### Major Changes
