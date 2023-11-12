@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.9.6
+
+### Patch Changes
+
+- empty bump
+- Updated dependencies
+  - @nocturne-xyz/offchain-utils@0.4.1
+  - @nocturne-xyz/client@3.1.4
+  - @nocturne-xyz/config@1.7.1
+  - @nocturne-xyz/core@3.1.4
+
+## 0.9.5
+
+### Patch Changes
+
+- 79aa7a82: Fix gas limit 50% buffer bigint math bug
+- 57023ec4: check outgoing transfers against sanctions list
+- Updated dependencies [41671325]
+- Updated dependencies [1d5cefc2]
+- Updated dependencies [79aa7a82]
+- Updated dependencies [fdefa43b]
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/client@3.1.3
+  - @nocturne-xyz/config@1.7.0
+  - @nocturne-xyz/offchain-utils@0.4.0
+  - @nocturne-xyz/core@3.1.3
+
 ## 0.9.5-beta.0
 
 ### Patch Changes

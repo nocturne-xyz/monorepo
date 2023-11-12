@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.12
+
+### Patch Changes
+
+- empty bump
+- Updated dependencies
+  - @nocturne-xyz/core@3.1.4
+
+## 0.1.11
+
+### Patch Changes
+
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/core@3.1.3
+
 ## 0.1.11-beta.0
 
 ### Patch Changes
