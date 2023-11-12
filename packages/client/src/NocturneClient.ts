@@ -1,36 +1,36 @@
-import ethers from "ethers";
+import { NocturneConfig, loadNocturneConfig } from "@nocturne-xyz/config";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
-import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { NocturneViewer } from "@nocturne-xyz/crypto";
-import { OperationMetadata, OpHistoryRecord } from "./types";
+import ethers from "ethers";
+import { GetNotesOpts, NocturneDB } from "./NocturneDB";
+import { OpTracker } from "./OpTracker";
+import { EthToTokenConverter } from "./conversion";
+import { handleGasForOperationRequest } from "./opRequestGas";
 import {
   OperationRequest,
   ensureOpRequestChainInfo,
 } from "./operationRequest/operationRequest";
-import { GetNotesOpts, NocturneDB } from "./NocturneDB";
-import { handleGasForOperationRequest } from "./opRequestGas";
 import { prepareOperation } from "./prepareOperation";
 import { SyncOpts, syncSDK } from "./syncSDK";
-import { EthToTokenConverter } from "./conversion";
+import { OpHistoryRecord, OperationMetadata } from "./types";
 import {
-  getMerkleIndicesAndNfsFromOp,
   getJoinSplitRequestTotalValue,
+  getMerkleIndicesAndNfsFromOp,
 } from "./utils";
-import { OpTracker } from "./OpTracker";
 
 import {
-  SignedOperation,
-  PreSignOperation,
-  AssetWithBalance,
-  AssetTrait,
   Asset,
-  SparseMerkleProver,
+  AssetTrait,
+  AssetWithBalance,
   MapWithObjectKeys,
-  maxArray,
+  OperationStatus,
+  PreSignOperation,
   SDKSyncAdapter,
+  SignedOperation,
+  SparseMerkleProver,
   TotalEntityIndex,
   TotalEntityIndexTrait,
-  OperationStatus,
+  maxArray,
 } from "@nocturne-xyz/core";
 
 export class NocturneClient {
@@ -108,7 +108,8 @@ export class NocturneClient {
   }
 
   async prepareOperation(
-    opRequest: OperationRequest
+    opRequest: OperationRequest,
+    gasMultiplier: number
   ): Promise<PreSignOperation> {
     opRequest = await ensureOpRequestChainInfo(opRequest, this.provider);
 
@@ -122,7 +123,8 @@ export class NocturneClient {
     };
     const gasAccountedOpRequest = await handleGasForOperationRequest(
       deps,
-      opRequest
+      opRequest,
+      gasMultiplier
     );
 
     return await prepareOperation(deps, gasAccountedOpRequest);
