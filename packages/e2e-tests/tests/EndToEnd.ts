@@ -1,7 +1,12 @@
-import chai, { expect } from "chai";
-import chaiAsPromised from "chai-as-promised";
-import { setupTestDeployment, setupTestClient } from "../src/deploy";
-import { ethers } from "ethers";
+import {
+  NocturneClient,
+  NocturneDB,
+  OperationRequestWithMetadata,
+  newOpRequestBuilder,
+  proveOperation,
+  signOperation,
+} from "@nocturne-xyz/client";
+import { NocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager,
   Handler,
@@ -10,32 +15,27 @@ import {
   WETH9,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
+import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
 import {
-  queryEvents,
   Asset,
-  JoinSplitProver,
-  OperationStatus,
-  NocturneSigner,
   AssetTrait,
+  JoinSplitProver,
+  NocturneSigner,
+  OperationStatus,
+  queryEvents,
 } from "@nocturne-xyz/core";
-import {
-  NocturneClient,
-  NocturneDB,
-  newOpRequestBuilder,
-  proveOperation,
-  OperationRequestWithMetadata,
-  signOperation,
-} from "@nocturne-xyz/client";
+import { EthTransferAdapterPlugin } from "@nocturne-xyz/op-request-plugins";
+import chai, { expect } from "chai";
+import chaiAsPromised from "chai-as-promised";
+import { ethers } from "ethers";
+import { setupTestClient, setupTestDeployment } from "../src/deploy";
+import { depositFundsMultiToken } from "../src/deposit";
 import {
   GAS_FAUCET_DEFAULT_AMOUNT,
   GAS_PRICE,
   ONE_DAY_SECONDS,
   submitAndProcessOperation,
 } from "../src/utils";
-import { depositFundsMultiToken } from "../src/deposit";
-import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
-import { NocturneConfig } from "@nocturne-xyz/config";
-import { EthTransferAdapterPlugin } from "@nocturne-xyz/op-request-plugins";
 
 chai.use(chaiAsPromised);
 
@@ -152,7 +152,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     console.log("prepare, sign, and prove operation with NocturneClient");
     const preSign = await nocturneClientAlice.prepareOperation(
-      opRequestWithMetadata.request
+      opRequestWithMetadata.request,
+      1
     );
     const signed = signOperation(nocturneSignerAlice, preSign);
     const operation = await proveOperation(joinSplitProver, signed);
