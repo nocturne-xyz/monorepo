@@ -2528,6 +2528,7 @@ __metadata:
     express: ^4.18.2
     find-yarn-workspace-root: ^2.0.0
     ioredis: ^5.3.1
+    knex: 3.0.1
     mocha: ^10.1.0
     morgan: ^1.10.0
     nodemon: ^3.0.1
@@ -2811,6 +2812,7 @@ __metadata:
     ethers: ^5.7.2
     find-yarn-workspace-root: ^2.0.0
     hardhat: ^2.17.1
+    knex: ^3.0.1
     mocha: ^10.1.0
     prettier: ^2.8.8
     redis-memory-server: ^0.6.0
@@ -2997,6 +2999,7 @@ __metadata:
     json-stable-stringify: ^1.0.2
     knex: ^3.0.1
     mocha: ^10.1.0
+    node-mocks-http: ^1.13.0
     pg: ^8.11.3
     prettier: ^2.8.8
     ts-node: ^10.9.1
@@ -4968,7 +4971,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"accepts@npm:~1.3.8":
+"accepts@npm:^1.3.7, accepts@npm:~1.3.8":
   version: 1.3.8
   resolution: "accepts@npm:1.3.8"
   dependencies:
@@ -6518,7 +6521,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"content-disposition@npm:0.5.4":
+"content-disposition@npm:0.5.4, content-disposition@npm:^0.5.3":
   version: 0.5.4
   resolution: "content-disposition@npm:0.5.4"
   dependencies:
@@ -6893,6 +6896,13 @@ circomlibjs@nocturne-xyz/circomlibjs:
   version: 2.0.0
   resolution: "depd@npm:2.0.0"
   checksum: abbe19c768c97ee2eed6282d8ce3031126662252c58d711f646921c9623f9052e3e1906443066beec1095832f534e57c523b7333f8e7e0d93051ab6baef5ab3a
+  languageName: node
+  linkType: hard
+
+"depd@npm:^1.1.0":
+  version: 1.1.2
+  resolution: "depd@npm:1.1.2"
+  checksum: 6b406620d269619852885ce15965272b829df6f409724415e0002c8632ab6a8c0a08ec1f0bd2add05dc7bd7507606f7e2cc034fa24224ab829580040b835ecd9
   languageName: node
   linkType: hard
 
@@ -8225,7 +8235,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"fresh@npm:0.5.2":
+"fresh@npm:0.5.2, fresh@npm:^0.5.2":
   version: 0.5.2
   resolution: "fresh@npm:0.5.2"
   checksum: 13ea8b08f91e669a64e3ba3a20eb79d7ca5379a81f1ff7f4310d54e2320645503cc0c78daedc93dfb6191287295f6479544a649c64d8e41a1c0fb0c221552346
@@ -9860,7 +9870,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"knex@npm:^3.0.1":
+"knex@npm:3.0.1, knex@npm:^3.0.1":
   version: 3.0.1
   resolution: "knex@npm:3.0.1"
   dependencies:
@@ -10478,7 +10488,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"merge-descriptors@npm:1.0.1":
+"merge-descriptors@npm:1.0.1, merge-descriptors@npm:^1.0.1":
   version: 1.0.1
   resolution: "merge-descriptors@npm:1.0.1"
   checksum: 5abc259d2ae25bb06d19ce2b94a21632583c74e2a9109ee1ba7fd147aa7362b380d971e0251069f8b3eb7d48c21ac839e21fa177b335e82c76ec172e30c31a26
@@ -10504,7 +10514,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"methods@npm:~1.1.2":
+"methods@npm:^1.1.2, methods@npm:~1.1.2":
   version: 1.1.2
   resolution: "methods@npm:1.1.2"
   checksum: 0917ff4041fa8e2f2fda5425a955fe16ca411591fbd123c0d722fcf02b73971ed6f764d85f0a6f547ce49ee0221ce2c19a5fa692157931cecb422984f1dcd13a
@@ -10537,7 +10547,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"mime@npm:1.6.0":
+"mime@npm:1.6.0, mime@npm:^1.3.4":
   version: 1.6.0
   resolution: "mime@npm:1.6.0"
   bin:
@@ -11166,6 +11176,24 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
+"node-mocks-http@npm:^1.13.0":
+  version: 1.13.0
+  resolution: "node-mocks-http@npm:1.13.0"
+  dependencies:
+    accepts: ^1.3.7
+    content-disposition: ^0.5.3
+    depd: ^1.1.0
+    fresh: ^0.5.2
+    merge-descriptors: ^1.0.1
+    methods: ^1.1.2
+    mime: ^1.3.4
+    parseurl: ^1.3.3
+    range-parser: ^1.2.0
+    type-is: ^1.6.18
+  checksum: ee03dbb81dfa47760731f994a89754976a3379ab29484e3537e8ddb8084f9c013f81337e12e9781176fdec5b10be2f273a1f274f9478527793971453f0ce5a49
+  languageName: node
+  linkType: hard
+
 "node-releases@npm:^2.0.13":
   version: 2.0.13
   resolution: "node-releases@npm:2.0.13"
@@ -11571,7 +11599,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"parseurl@npm:~1.3.3":
+"parseurl@npm:^1.3.3, parseurl@npm:~1.3.3":
   version: 1.3.3
   resolution: "parseurl@npm:1.3.3"
   checksum: 407cee8e0a3a4c5cd472559bca8b6a45b82c124e9a4703302326e9ab60fc1081442ada4e02628efef1eb16197ddc7f8822f5a91fd7d7c86b51f530aedb17dfa2
@@ -12081,7 +12109,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"range-parser@npm:~1.2.1":
+"range-parser@npm:^1.2.0, range-parser@npm:~1.2.1":
   version: 1.2.1
   resolution: "range-parser@npm:1.2.1"
   checksum: 0a268d4fea508661cf5743dfe3d5f47ce214fd6b7dec1de0da4d669dd4ef3d2144468ebe4179049eff253d9d27e719c88dae55be64f954e80135a0cada804ec9
@@ -13887,7 +13915,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   languageName: node
   linkType: hard
 
-"type-is@npm:~1.6.18":
+"type-is@npm:^1.6.18, type-is@npm:~1.6.18":
   version: 1.6.18
   resolution: "type-is@npm:1.6.18"
   dependencies:
