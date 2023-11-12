@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.8.0-beta.0
+
+### Minor Changes
+
+- 8973d4cb: use typed snarkjs
+
+### Patch Changes
+
+- Updated dependencies
+- Updated dependencies [fdefa43b]
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/config@1.7.0-beta.0
+  - @nocturne-xyz/offchain-utils@0.4.0-beta.0
+  - @nocturne-xyz/core@3.1.3-beta.0
+  - @nocturne-xyz/persistent-log@0.1.11-beta.0
+
 ## 0.7.1
 
 ### Patch Changes

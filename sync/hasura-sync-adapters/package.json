@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/hasura-sync-adapters",
-  "version": "0.3.1",
+  "version": "0.3.2-beta.0",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

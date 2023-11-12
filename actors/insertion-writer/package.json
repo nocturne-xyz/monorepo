@@ -1,7 +1,7 @@
 {
   "name": "@nocturne-xyz/insertion-writer",
   "license": "MIT",
-  "version": "0.5.4",
+  "version": "0.5.5-beta.0",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

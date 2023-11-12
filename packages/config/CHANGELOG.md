@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.0-beta.0
+
+### Minor Changes
+
+- change network name to `mainnet`
+
 ## 1.6.0
 
 ### Minor Changes

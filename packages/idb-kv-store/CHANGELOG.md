@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.10-beta.0
+
+### Patch Changes
+
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/core@3.1.3-beta.0
+
 ## 0.4.9
 
 ### Patch Changes

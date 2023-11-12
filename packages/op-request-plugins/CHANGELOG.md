@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.5-beta.0
+
+### Patch Changes
+
+- Updated dependencies [41671325]
+- Updated dependencies
+- Updated dependencies [79aa7a82]
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/client@3.1.3-beta.0
+  - @nocturne-xyz/config@1.7.0-beta.0
+  - @nocturne-xyz/core@3.1.3-beta.0
+
 ## 2.1.4
 
 ### Patch Changes
