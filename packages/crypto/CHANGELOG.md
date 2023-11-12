@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0-beta.0
+
+### Minor Changes
+
+- 8973d4cb: (BREAKING) split up poseidon constants and get rid of most of them
+
 ## 0.3.0
 
 ### Minor Changes

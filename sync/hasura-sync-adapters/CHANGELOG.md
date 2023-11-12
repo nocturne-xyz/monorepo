@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.2-beta.0
+
+### Patch Changes
+
+- 41671325: always emit empty state diff if `latestCommittedMerkleIndex` is undefined and no sdk events
+- 79aa7a82: Fix bug where hasura adapter was hardcoded to support only goerli queries
+- Updated dependencies [4070b154]
+  - @nocturne-xyz/core@3.1.3-beta.0
+
 ## 0.3.0
 
 ### Minor Changes
