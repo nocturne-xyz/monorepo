@@ -45,6 +45,7 @@ export interface GasAccountedOperationRequest
   executionGasLimit: bigint;
   gasPrice: bigint;
   gasAsset: Asset;
+  totalGasLimit: bigint;
 }
 
 export interface OperationGasParams {
