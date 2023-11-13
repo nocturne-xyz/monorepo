@@ -581,7 +581,7 @@ export class NocturneSdk implements NocturneSdkApi {
     maxSlippageBps = 50,
     protocol = "UNISWAP_V3",
   }: AnonSwapRequestParams): Promise<AnonErc20SwapQuoteResponse> {
-    maxSlippageBps = Math.floor(Math.max(maxSlippageBps, 1)); // protect against BigInt decimal conversion attempt
+    maxSlippageBps = Math.floor(Math.max(maxSlippageBps, 1)); // protect against bad BigInt decimal conversion attempt
     switch (protocol) {
       case "UNISWAP_V3":
         const quote = await getSwapQuote({
