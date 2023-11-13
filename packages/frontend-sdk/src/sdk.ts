@@ -635,6 +635,8 @@ export class NocturneSdk implements NocturneSdkApi {
       throw e;
     }
 
+    console.log("[fe-sdk] gas refund threshold:", preSignOp.gasAssetRefundThreshold.toString());
+
     const op = await this.snap.invoke<SignOperationMethod>({
       method: "nocturne_signOperation",
       params: { op: preSignOp, metadata: opMeta },

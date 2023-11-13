@@ -100,6 +100,7 @@ export async function handleGasForOperationRequest(
       gasPrice: 0n,
       gasAsset: DUMMY_GAS_ASSET,
       gasAssetRefundThreshold: 0n,
+      totalGasLimit,
     };
   } else {
     console.log(`total gas limit pre gas update: ${totalGasLimit}`);
@@ -131,7 +132,7 @@ export async function handleGasForOperationRequest(
       gasAssetRefundThreshold,
       joinSplitRequests,
       gasAsset: gasAssetAndTicker.asset,
-      totalGasLimit: totalGasLimit,
+      totalGasLimit,
     };
   }
 }
@@ -314,6 +315,7 @@ async function getOperationRequestTrace(
     // Use 0 gas price and dummy asset for simulation
     gasPrice: 0n,
     gasAsset: DUMMY_GAS_ASSET,
+    totalGasLimit: BLOCK_GAS_LIMIT,
   };
 
   // prepare the request into an operation using a dummy viewer
