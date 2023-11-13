@@ -52,7 +52,7 @@ async function checkProxyInfo(
   deployment: NocturneContractDeployment,
   provider: ethers.providers.Provider
 ): Promise<void> {
-  console.log("checking config proxy admin owner matches deployment");
+  console.log("checking config proxy admin owner matches config");
   const proxyAdminContract = ProxyAdmin__factory.connect(
     deployment.proxyAdmin,
     provider
@@ -63,7 +63,7 @@ async function checkProxyInfo(
     "proxy admin owner inconsistent"
   );
 
-  console.log("checking teller proxy admin matches deployment");
+  console.log("checking teller proxy admin matches config");
   const tellerProxyAdmin = await proxyAdmin(
     provider,
     deployment.tellerProxy.proxy
@@ -73,7 +73,7 @@ async function checkProxyInfo(
     "teller proxy admin incorrectly set"
   );
 
-  console.log("checking handler proxy admin matches deployment");
+  console.log("checking handler proxy admin matches config");
   const handlerProxyAdmin = await proxyAdmin(
     provider,
     deployment.handlerProxy.proxy
@@ -83,7 +83,7 @@ async function checkProxyInfo(
     "handler proxy admin incorrectly set"
   );
 
-  console.log("checking deposit manager proxy admin matches deployment");
+  console.log("checking deposit manager proxy admin matches config");
   const depositManagerProxyAdmin = await proxyAdmin(
     provider,
     deployment.depositManagerProxy.proxy
@@ -93,9 +93,7 @@ async function checkProxyInfo(
     "deposit manager proxy admin incorrectly set"
   );
 
-  console.log(
-    "checking canonical address registry proxy admin matches deployment"
-  );
+  console.log("checking canonical address registry proxy admin matches config");
   const canonicalAddressRegistryProxyAdmin = await proxyAdmin(
     provider,
     deployment.canonicalAddressRegistryProxy.proxy
@@ -105,7 +103,7 @@ async function checkProxyInfo(
     "canonical address registry proxy admin incorrectly set"
   );
 
-  console.log("checking teller proxy implementation matches deployment");
+  console.log("checking teller proxy implementation matches config");
   const tellerProxyImplementation = await proxyImplementation(
     provider,
     deployment.tellerProxy.proxy
@@ -115,7 +113,7 @@ async function checkProxyInfo(
     "teller proxy implementation does not match deployment"
   );
 
-  console.log("checking handler proxy implementation matches deployment");
+  console.log("checking handler proxy implementation matches config");
   const handlerProxyImplementation = await proxyImplementation(
     provider,
     deployment.handlerProxy.proxy
@@ -125,9 +123,7 @@ async function checkProxyInfo(
     "handler proxy implementation does not match deployment"
   );
 
-  console.log(
-    "checking deposit manager proxy implementation matches deployment"
-  );
+  console.log("checking deposit manager proxy implementation matches config");
   const depositManagerProxyImplementation = await proxyImplementation(
     provider,
     deployment.depositManagerProxy.proxy
@@ -139,7 +135,7 @@ async function checkProxyInfo(
   );
 
   console.log(
-    "checking canonical address registry proxy implementation matches deployment"
+    "checking canonical address registry proxy implementation matches config"
   );
   const canonicalAddressRegistryProxyImplementation = await proxyImplementation(
     provider,
