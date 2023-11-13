@@ -94,8 +94,7 @@ export async function prepareOperation(
     deadline,
     atomicActions: true, // always default to atomic until we find reason not to
 
-    // TODO: add actual estimate here
-    gasFeeEstimate: opRequest.gasAssetRefundThreshold,
+    gasFeeEstimate: opRequest.totalGasLimit * opRequest.gasPrice,
   };
 
   return op;

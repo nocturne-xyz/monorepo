@@ -131,6 +131,7 @@ export async function handleGasForOperationRequest(
       gasAssetRefundThreshold,
       joinSplitRequests,
       gasAsset: gasAssetAndTicker.asset,
+      totalGasLimit: totalGasLimit,
     };
   }
 }
