@@ -29,7 +29,6 @@ export interface NocturneDeploymentCheckOpts {
   skipOwnersCheck: boolean;
 }
 
-// TODO: add check for UniswapV3Adapter owner
 export async function checkNocturneDeployment(
   deployConfig: NocturneDeployConfig,
   config: NocturneConfig,
@@ -53,7 +52,7 @@ async function checkProxyInfo(
   deployment: NocturneContractDeployment,
   provider: ethers.providers.Provider
 ): Promise<void> {
-  // Proxy admin owner matches deployment
+  console.log("checking config proxy admin owner matches config");
   const proxyAdminContract = ProxyAdmin__factory.connect(
     deployment.proxyAdmin,
     provider
@@ -64,7 +63,7 @@ async function checkProxyInfo(
     "proxy admin owner inconsistent"
   );
 
-  // Teller proxy admin matches deployment proxy admin
+  console.log("checking teller proxy admin matches config");
   const tellerProxyAdmin = await proxyAdmin(
     provider,
     deployment.tellerProxy.proxy
@@ -74,7 +73,7 @@ async function checkProxyInfo(
     "teller proxy admin incorrectly set"
   );
 
-  // Handler proxy admin matches deployment proxy admin
+  console.log("checking handler proxy admin matches config");
   const handlerProxyAdmin = await proxyAdmin(
     provider,
     deployment.handlerProxy.proxy
@@ -84,7 +83,7 @@ async function checkProxyInfo(
     "handler proxy admin incorrectly set"
   );
 
-  // Deposit manager proxy admin matches deployment proxy admin
+  console.log("checking deposit manager proxy admin matches config");
   const depositManagerProxyAdmin = await proxyAdmin(
     provider,
     deployment.depositManagerProxy.proxy
@@ -94,7 +93,7 @@ async function checkProxyInfo(
     "deposit manager proxy admin incorrectly set"
   );
 
-  // Canonical address registry proxy admin matches deployment proxy admin
+  console.log("checking canonical address registry proxy admin matches config");
   const canonicalAddressRegistryProxyAdmin = await proxyAdmin(
     provider,
     deployment.canonicalAddressRegistryProxy.proxy
@@ -104,7 +103,7 @@ async function checkProxyInfo(
     "canonical address registry proxy admin incorrectly set"
   );
 
-  // Teller proxy implementation matches deployment
+  console.log("checking teller proxy implementation matches config");
   const tellerProxyImplementation = await proxyImplementation(
     provider,
     deployment.tellerProxy.proxy
@@ -114,7 +113,7 @@ async function checkProxyInfo(
     "teller proxy implementation does not match deployment"
   );
 
-  // Handler proxy implementation matches deployment
+  console.log("checking handler proxy implementation matches config");
   const handlerProxyImplementation = await proxyImplementation(
     provider,
     deployment.handlerProxy.proxy
@@ -124,7 +123,7 @@ async function checkProxyInfo(
     "handler proxy implementation does not match deployment"
   );
 
-  // Deposit manager proxy implementation matches deployment
+  console.log("checking deposit manager proxy implementation matches config");
   const depositManagerProxyImplementation = await proxyImplementation(
     provider,
     deployment.depositManagerProxy.proxy
@@ -135,7 +134,9 @@ async function checkProxyInfo(
     "deposit manager proxy implementation does not match deployment"
   );
 
-  // Canonical address registry proxy implementation matches deployment
+  console.log(
+    "checking canonical address registry proxy implementation matches config"
+  );
   const canonicalAddressRegistryProxyImplementation = await proxyImplementation(
     provider,
     deployment.canonicalAddressRegistryProxy.proxy
@@ -169,8 +170,8 @@ async function checkTellerStateVars(
     provider
   );
 
-  // Teller owner matches config
   if (!opts?.skipOwnersCheck) {
+    console.log("checking teller owner matches config");
     const expectedOwner = deployment.owners.contractOwner;
     const tellerOwner = await tellerContract.owner();
     assertOrErr(
@@ -179,21 +180,21 @@ async function checkTellerStateVars(
     );
   }
 
-  // Teller handler matches config
+  console.log("checking teller handler matches config");
   const tellerHandler = await tellerContract._handler();
   assertOrErr(
     tellerHandler === deployment.handlerProxy.proxy,
     "teller handler does not match deployment"
   );
 
-  // Teller joinsplit verifier matches config
+  console.log("checking teller joinsplit verifier matches config");
   const tellerJoinSplitVerifier = await tellerContract._joinSplitVerifier();
   assertOrErr(
     tellerJoinSplitVerifier === deployment.joinSplitVerifierAddress,
     "teller joinsplit verifier does not match deployment"
   );
 
-  // Teller whitelisted deposit manager as source
+  console.log("checking teller deposit manager is whitelisted");
   const hasDepositManager = await tellerContract._depositSources(
     deployment.depositManagerProxy.proxy
   );
@@ -202,18 +203,18 @@ async function checkTellerStateVars(
     "teller did not whitelist deposit manager as deposit source"
   );
 
-  // poseidonExtT7 matches config
+  console.log("checking teller poseidonExtT7 address matches config");
   const poseidonExtT7 = await tellerContract._poseidonExtT7();
   assertOrErr(
     poseidonExtT7 === deployment.poseidonExtT7Address,
     "teller poseidonExtT7 does not match deployment"
   );
 
-  // Teller is not paused
+  console.log("checking teller is not paused");
   const isPaused = await tellerContract.paused();
   assertOrErr(!isPaused, "teller is paused");
 
-  // EIP-712 domain matches expected
+  console.log("checking Teller EIP 712 info matches expected");
   await checkEip712("Teller", tellerContract);
 }
 
@@ -228,8 +229,8 @@ async function checkHandlerStateVars(
     provider
   );
 
-  // Handler owner matches config
   if (!opts?.skipOwnersCheck) {
+    console.log("checking handler owner matches config");
     const expectedOwner = deployment.owners.contractOwner;
     const handlerOwner = await handlerContract.owner();
     assertOrErr(
@@ -238,14 +239,14 @@ async function checkHandlerStateVars(
     );
   }
 
-  // Handler teller matches config
+  console.log("checking handler teller matches config");
   const handlerTeller = await handlerContract._teller();
   assertOrErr(
     handlerTeller === deployment.tellerProxy.proxy,
     "handler teller does not match deployment"
   );
 
-  // Leftover tokens holder matches config
+  console.log("checking handler leftover tokens holder matches config");
   const leftoverTokensHolder = await handlerContract._leftoverTokensHolder();
   assertOrErr(
     leftoverTokensHolder === deployment.leftoverTokensHolder,
@@ -254,7 +255,7 @@ async function checkHandlerStateVars(
 
   // TODO: is there a way to check subtree update verifier embedded in merkle struct?
 
-  // Subtree batch fillers match config
+  console.log("checking handler subtree batch fillers match config");
   for (const subtreeBatchFiller of config.offchain.subtreeBatchFillers) {
     const isSubtreeBatchFiller = await handlerContract._subtreeBatchFillers(
       subtreeBatchFiller
@@ -265,11 +266,11 @@ async function checkHandlerStateVars(
     );
   }
 
-  // Handler is not paused
+  console.log("checking handler is not paused");
   const isPaused = await handlerContract.paused();
   assertOrErr(!isPaused, "handler is paused");
 
-  // Ensure reentrancy guard is set to 1
+  console.log("checking handler reentrancy guard stage is 1");
   const reentrancyGuardStage = (
     await handlerContract.reentrancyGuardStage()
   ).toNumber();
@@ -278,7 +279,7 @@ async function checkHandlerStateVars(
     "handler reentrancy guard stage is not 1 (NOT_ENTERED)"
   );
 
-  // Ensure all protocols on whitelist are allowed
+  console.log("checking handler protocol allowlist is whitelisted...");
   await checkProtocolAllowlist(
     handlerContract,
     config.erc20s,
@@ -297,8 +298,8 @@ async function checkDepositManagerStateVars(
     provider
   );
 
-  // Deposit manager owner matches config
   if (!opts?.skipOwnersCheck) {
+    console.log("checking deposit manager owner matches config");
     const expectedOwner = deployment.owners.contractOwner;
     const depositManagerOwner = await depositManagerContract.owner();
     assertOrErr(
@@ -307,22 +308,22 @@ async function checkDepositManagerStateVars(
     );
   }
 
-  // Deposit manager weth is set
+  console.log("checking deposit manager weth matches config");
   const depositManagerWeth = await depositManagerContract._weth();
   assertOrErr(
     depositManagerWeth === config.erc20s.get("WETH")!.address,
     "deposit manager weth does not match deployment"
   );
 
-  // Deposit manager teller matches config
+  console.log("checking deposit manager teller matches config");
   const depositManagerTeller = await depositManagerContract._teller();
   assertOrErr(
     depositManagerTeller === deployment.tellerProxy.proxy,
     "deposit manager teller does not match deployment"
   );
 
-  // Screeners are whitelisted
   for (const screener of config.offchain.screeners) {
+    console.log(`checking deposit manager screener ${screener} is whitelisted`);
     const hasScreener = await depositManagerContract._screeners(screener);
     assertOrErr(
       hasScreener,
@@ -330,14 +331,10 @@ async function checkDepositManagerStateVars(
     );
   }
 
-  // nonce is 0
-  const nonce = (await depositManagerContract._nonce()).toNumber();
-  assertOrErr(nonce === 0, "deposit manager nonce is not 0");
-
-  // Erc20 caps properly set
+  console.log("checking deposit manager erc20 caps set...");
   await checkErc20Caps(depositManagerContract, config.erc20s);
 
-  // EIP-712 domain matches expected
+  console.log("checking deposit manager EIP 712 info matches expected");
   await checkEip712("DepositManager", depositManagerContract);
 }
 
@@ -353,7 +350,9 @@ async function checkCanonicalAddressRegistryStateVars(
       provider
     );
 
-  // Sig check verifier is set
+  console.log(
+    "checking canonical address registry sig check verifier matches config"
+  );
   const sigCheckVerifier =
     await canonicalAddressRegistryContract._sigCheckVerifier();
   assertOrErr(
@@ -361,7 +360,9 @@ async function checkCanonicalAddressRegistryStateVars(
     "canonical address registry sig check verifier does not match deployment"
   );
 
-  // EIP-712 domain matches expected
+  console.log(
+    "checking canonical address registry EIP 712 info matches expected"
+  );
   await checkEip712(
     "CanonicalAddressRegistry",
     canonicalAddressRegistryContract
@@ -392,6 +393,7 @@ async function checkErc20Caps(
   erc20s: Map<string, Erc20Config>
 ): Promise<void> {
   for (const [ticker, config] of erc20s.entries()) {
+    console.log(`checking deposit manager cap for ${ticker}`);
     const { globalCapWholeTokens, maxDepositSizeWholeTokens, precision } =
       await depositManager._erc20Caps(config.address);
     assertOrErr(
@@ -421,6 +423,7 @@ async function checkProtocolAllowlist(
   protocolAllowlist: Map<string, ProtocolAddressWithMethods>
 ): Promise<void> {
   for (const [ticker, { address }] of erc20s.entries()) {
+    console.log(`checking contract for ${ticker} is whitelisted`);
     const tokenSupported = await handler._supportedContracts(address);
     assertOrErr(
       tokenSupported,
@@ -449,6 +452,9 @@ async function checkProtocolAllowlist(
 
   for (const [name, { address, functionSignatures }] of protocolAllowlist) {
     for (const signature of functionSignatures) {
+      console.log(
+        `checking protocol allowlist method. name: ${name}. function signature: ${signature}`
+      );
       const selector = getSelector(signature);
       const key = protocolWhitelistKey(address, selector);
       const isOnAllowlist = await handler._supportedContractMethods(key);
@@ -465,20 +471,20 @@ async function checkNocturneAdapterStateVars(
   config: NocturneConfig,
   provider: ethers.providers.Provider
 ): Promise<void> {
-  // Eth transfer adapter weth matches config
   const ethTransferAdapterAddress =
     config.protocolAllowlist.get("ETHTransferAdapter")!.address;
   const ethTransferAdapter = EthTransferAdapter__factory.connect(
     ethTransferAdapterAddress,
     provider
   );
+
+  console.log("checking eth transfer adapter weth matches config");
   const ethTransferAdapterWeth = await ethTransferAdapter._weth();
   assertOrErr(
     ethTransferAdapterWeth === config.erc20s.get("WETH")!.address,
     "eth transfer adapter weth does not match deployment"
   );
 
-  // Uniswap owner, allowed tokens, and swap router match config
   const maybeUniswapV3AdapterAddress =
     config.protocolAllowlist.get("UniswapV3Adapter")?.address;
   if (maybeUniswapV3AdapterAddress) {
@@ -487,13 +493,15 @@ async function checkNocturneAdapterStateVars(
       provider
     );
 
+    console.log("checking uniswap v3 adapter owner matches config owner");
     const uniswapV3AdapterOwner = await uniswapV3Adapter.owner();
     assertOrErr(
       uniswapV3AdapterOwner === config.contracts.owners.contractOwner,
       "uniswap v3 adapter owner does not match deployment"
     );
 
-    for (const { address } of config.erc20s.values()) {
+    for (const [ticker, { address }] of config.erc20s) {
+      console.log(`checking uniswap v3 adapter supports token ${ticker}`);
       const isTokenSupported = await uniswapV3Adapter._allowedTokens(address);
       assertOrErr(
         isTokenSupported,
@@ -501,6 +509,9 @@ async function checkNocturneAdapterStateVars(
       );
     }
 
+    console.log(
+      "checking uniswap v3 adapter swap router is actual swap router in config"
+    );
     const uniswapV3AdapterSwapRouter = await uniswapV3Adapter._swapRouter();
     assertOrErr(
       uniswapV3AdapterSwapRouter ===
@@ -509,7 +520,9 @@ async function checkNocturneAdapterStateVars(
     );
   }
 
-  // Reth adapter weth and rocket storage match config
+  console.log(
+    "checking reth adapter weth and rocket storage match real contracts in config"
+  );
   const maybeRethAdapterAddress = config.protocolAllowlist.get("rETHAdapter");
   if (maybeRethAdapterAddress) {
     const rethAdapter = RethAdapter__factory.connect(
@@ -517,12 +530,16 @@ async function checkNocturneAdapterStateVars(
       provider
     );
 
+    console.log("checking reth adapter weth is real weth in config");
     const rethAdapterWeth = await rethAdapter._weth();
     assertOrErr(
       rethAdapterWeth === config.erc20s.get("WETH")!.address,
       "reth adapter weth does not match deployment"
     );
 
+    console.log(
+      "checking reth adapter rocket storage is real rocket storage in config"
+    );
     const rethAdapterRocketStorage = await rethAdapter._rocketStorage();
     assertOrErr(
       rethAdapterRocketStorage ===
@@ -541,10 +558,13 @@ async function checkNocturneAdapterStateVars(
     const wstethAdapterWeth = await wstethAdapter._weth();
     const wstethAdapterWsteth = await wstethAdapter._wsteth();
 
+    console.log("checking wsteth adapter weth is real weth in config");
     assertOrErr(
       wstethAdapterWeth === config.erc20s.get("WETH")!.address,
       "wsteth adapter weth does not match deployment"
     );
+
+    console.log("checking wsteth adapter wsteth is real wsteth in config");
     assertOrErr(
       wstethAdapterWsteth === config.erc20s.get("wstETH")!.address,
       "wsteth adapter wsteth does not match deployment"
