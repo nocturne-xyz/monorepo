@@ -1,8 +1,11 @@
 import { AlphaRouter } from "@uniswap/smart-order-router";
-import { ethers } from "ethers";
-import { currencyAmountToBigInt, getSwapRoute } from "../src/UniswapV3Plugin";
-import { Percent } from "@uniswap/sdk-core";
 import dotenv from "dotenv";
+import { ethers } from "ethers";
+import {
+  bpsToPercent,
+  currencyAmountToBigInt,
+  getSwapRoute,
+} from "../src/UniswapV3Plugin";
 
 const MAINNET_WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 const MAINNET_SUSD_ADDRESS = "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51";
@@ -33,7 +36,7 @@ async function run() {
   console.log("OUTPUT AMOUNT", route.trade.outputAmount.toExact());
   console.log(
     "MIN OUT",
-    route.trade.minimumAmountOut(new Percent(50, 10_000)).toExact()
+    route.trade.minimumAmountOut(bpsToPercent(50)).toExact()
   );
   console.log("QUOTE 1 weth for SUSD:" + route.quote.toExact());
   console.log("to:", route.methodParameters?.to);

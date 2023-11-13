@@ -76,7 +76,7 @@ export async function getSwapRoute({
   const swapOpts: SwapOptionsSwapRouter02 = {
     type: SwapType.SWAP_ROUTER_02,
     recipient: fromAddress,
-    slippageTolerance: new Percent(maxSlippageBps, 10_000),
+    slippageTolerance: new Percent(maxSlippageBps, 100),
     deadline: Date.now() + 3_600,
   };
   const route = await swapRouter.route(
@@ -127,9 +127,9 @@ export function formatSwapQuote(
   return {
     exactQuoteWei: currencyAmountToBigInt(route.quote),
     minimumAmountOutWei: currencyAmountToBigInt(
-      route.trade.minimumAmountOut(new Percent(maxSlippageBps, 10_000))
+      route.trade.minimumAmountOut(bpsToPercent(maxSlippageBps))
     ),
-    priceImpactBps: Number(route.trade.priceImpact.toSignificant(4)) * 10_000,
+    priceImpactBps: percentToBps(route.trade.priceImpact),
   };
 }
 
@@ -137,4 +137,12 @@ export function currencyAmountToBigInt<T extends Currency>(
   currencyAmount: CurrencyAmount<T>
 ): bigint {
   return BigInt(currencyAmount.numerator.toString());
+}
+
+export function percentToBps(percent: Percent, toSignificant = 4): number {
+  return Number(percent.toSignificant(4)) * 100;
+}
+
+export function bpsToPercent(bps: number): Percent {
+  return new Percent(bps, 100);
 }

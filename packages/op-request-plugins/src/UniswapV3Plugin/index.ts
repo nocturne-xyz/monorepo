@@ -9,11 +9,11 @@ import {
 } from "@nocturne-xyz/client";
 import { UniswapV3Adapter__factory } from "@nocturne-xyz/contracts";
 import { Action, Address, AssetTrait } from "@nocturne-xyz/core";
-import { Percent } from "@uniswap/sdk-core";
 import * as JSON from "bigint-json-serialization";
 import { ethers } from "ethers";
 import ERC20_ABI from "../abis/ERC20.json";
 import {
+  bpsToPercent,
   currencyAmountToBigInt,
   formatSwapQuote,
   getSwapRoute,
@@ -98,9 +98,7 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
             const route = swapRoute.route[0];
             const pools = route.route.pools;
             const minimumAmountWithSlippage = currencyAmountToBigInt(
-              swapRoute.trade.minimumAmountOut(
-                new Percent(maxSlippageBps, 10_000)
-              )
+              swapRoute.trade.minimumAmountOut(bpsToPercent(maxSlippageBps))
             );
 
             const recipient = opts?.recipient ?? this.config.handlerAddress;

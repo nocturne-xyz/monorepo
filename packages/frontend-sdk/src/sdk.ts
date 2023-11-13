@@ -581,7 +581,7 @@ export class NocturneSdk implements NocturneSdkApi {
     maxSlippageBps = 50,
     protocol = "UNISWAP_V3",
   }: AnonSwapRequestParams): Promise<AnonErc20SwapQuoteResponse> {
-    let response: AnonErc20SwapQuoteResponse;
+    maxSlippageBps = Math.floor(Math.max(maxSlippageBps, 1)); // protect against bad BigInt decimal conversion attempt
     switch (protocol) {
       case "UNISWAP_V3":
         const quote = await getSwapQuote({
@@ -593,7 +593,7 @@ export class NocturneSdk implements NocturneSdkApi {
           tokenOutAddress: tokenOut,
           maxSlippageBps,
         });
-        response = quote
+        return quote
           ? {
               success: true,
               quote,
@@ -602,11 +602,9 @@ export class NocturneSdk implements NocturneSdkApi {
               success: false,
               message: `No route found for swap. Token in: ${tokenIn}, Token out: ${tokenOut}. Amount in: ${amountIn}`,
             };
-        break;
       default:
         throw new Error(`Unsupported protocol: ${protocol}`);
     }
-    return response;
   }
 
   /**
