@@ -36,7 +36,7 @@
   },
   "offchain": {
     "finalityBlocks": 1,
-    "screeners": ["0xaa23ba28e085F8c8aBb59DE9FEd17518A425F906"],
+    "screeners": ["0x36CBEb4242950aca49317fD835439B8f31263753"],
     "subtreeBatchFillers": ["0xE3F1679cdfa11716D51105Ef3feB7bD6B2D9103D"]
   },
   "erc20s": [
