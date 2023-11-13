@@ -89,7 +89,7 @@ export const geoMiddleware = (options: GeoOptions) => {
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    options.logger.info(`WAF headers: ${JSON.stringify(req.headers)}}`);
+    options.logger.info(`Headers: ${JSON.stringify(req.headers)}}`);
     const wafHeaders = Object.entries(req.headers).filter((h) => {
       return h[0].toLowerCase().startsWith("x-waf-");
     });
