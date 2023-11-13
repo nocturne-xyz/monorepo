@@ -4,6 +4,7 @@ import { BundlerServer } from "../../../server";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { getRedis } from "./utils";
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
+import { createPool } from "@nocturne-xyz/offchain-utils";
 
 const runServer = new Command("server")
   .summary("run bundler server")
@@ -47,7 +48,8 @@ const runServer = new Command("server")
       config.handlerAddress,
       provider,
       getRedis(),
-      logger
+      logger,
+      createPool()
     );
 
     const { promise } = server.start(port);

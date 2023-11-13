@@ -1,5 +1,5 @@
 import { TeardownFn, makeRedisInstance } from "./utils";
-import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
+import { createPool, makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import {
   BundlerBatcher,
   BundlerServer,
@@ -7,6 +7,7 @@ import {
 } from "@nocturne-xyz/bundler";
 import { ethers } from "ethers";
 import IORedis from "ioredis";
+import { Knex } from "knex";
 
 export interface BundlerConfig {
   bundlerAddress: string;
@@ -22,8 +23,8 @@ const { getRedis, clearRedis } = makeRedisInstance();
 
 export async function startBundler(config: BundlerConfig): Promise<TeardownFn> {
   const redis = await getRedis();
-
-  const stopServer = startBundlerServer(config, redis);
+  const pool = createPool();
+  const stopServer = startBundlerServer(config, redis, pool);
   const stopBatcher = startBundlerBatcher(config, redis);
   const stopSubmitter = startBundlerSubmitter(config, redis);
 
@@ -71,7 +72,11 @@ function startBundlerBatcher(
   return teardown;
 }
 
-function startBundlerServer(config: BundlerConfig, redis: IORedis): TeardownFn {
+function startBundlerServer(
+  config: BundlerConfig,
+  redis: IORedis,
+  pool: Knex
+): TeardownFn {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
   const logger = makeTestLogger("bundler", "server");
   const server = new BundlerServer(
@@ -81,6 +86,7 @@ function startBundlerServer(config: BundlerConfig, redis: IORedis): TeardownFn {
     provider,
     redis,
     logger,
+    pool,
     config.ignoreGas
   );
 

@@ -32,6 +32,7 @@ import {
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import { Address } from "@nocturne-xyz/core";
+import { Knex } from "knex";
 
 const COMPONENT_NAME = "server";
 
@@ -43,6 +44,7 @@ export interface BundlerServerMetrics {
 
 export class BundlerServer {
   redis: IORedis;
+  pool: Knex;
   queue: Queue<OperationJobData>;
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
@@ -61,9 +63,11 @@ export class BundlerServer {
     provider: ethers.providers.Provider,
     redis: IORedis,
     logger: Logger,
+    pool: Knex,
     ignoreGas?: boolean
   ) {
     this.redis = redis;
+    this.pool = pool;
     this.queue = new Queue(SUBMITTABLE_OPERATION_QUEUE, { connection: redis });
     this.statusDB = new StatusDB(redis);
     this.nullifierDB = new NullifierDB(redis);
@@ -173,7 +177,7 @@ export class BundlerServer {
     app.use(cors());
     app.use(express.json());
     app.use(router);
-    app.use(geoMiddleware({ logger: this.logger }));
+    app.use(geoMiddleware({ logger: this.logger, pool: this.pool }));
 
     const server = app.listen(port, () => {
       this.logger.info(`listening at ${os.hostname()}:${port}`);

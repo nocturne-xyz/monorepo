@@ -3,7 +3,8 @@ import { intFromEnv } from "./configuration";
 
 const DEFAULT_MIN_POOL_CONNECTIONS = 0;
 const DEFAULT_MAX_POOL_CONNECTIONS = 1;
-
+const DEFAULT_CONNECTION_STRING =
+  "postgresql://nocturne_db_user:password@localhost:5432/nocturne?searchPath=nocturne";
 /**
  * Creates a Knex pool for the offchain database.
  *
@@ -19,10 +20,8 @@ const DEFAULT_MAX_POOL_CONNECTIONS = 1;
  * @throws if PG_CONNECTION_STRING is not set
  */
 export function createPool(): Knex<any, unknown[]> {
-  const connectionString = process.env.PG_CONNECTION_STRING;
-  if (!connectionString) {
-    throw new Error("PG_CONNECTION_STRING not set");
-  }
+  const connectionString =
+    process.env.PG_CONNECTION_STRING ?? DEFAULT_CONNECTION_STRING;
 
   let minPoolConnecttions = intFromEnv("CONNECTION_POOL_MIN");
   if (!minPoolConnecttions) {
