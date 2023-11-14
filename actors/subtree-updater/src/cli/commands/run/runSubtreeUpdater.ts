@@ -118,7 +118,8 @@ export const runSubtreeUpdater = new Command("subtree-updater")
         rapidsnarkExecutablePath,
         witnessGeneratorPath,
         zkeyPath,
-        vkeyPath
+        vkeyPath,
+        logger
       );
     }
 

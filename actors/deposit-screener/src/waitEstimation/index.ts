@@ -18,8 +18,10 @@ import {
   totalValueAheadInScreenerQueueInclusive,
   totalValueInFulfillerQueue,
 } from "./valueAhead";
+import { Logger } from "winston";
 
 export interface EstimateExistingWaitDeps {
+  logger: Logger;
   db: DepositScreenerDB;
   rateLimits: Map<Address, bigint>;
   screenerQueue: Queue<DepositEventJobData>;
@@ -28,12 +30,20 @@ export interface EstimateExistingWaitDeps {
 
 // NOTE: This function can throw errors
 export async function estimateSecondsUntilDepositCompletion(
-  { db, screenerQueue, fulfillerQueues, rateLimits }: EstimateExistingWaitDeps,
+  {
+    logger,
+    db,
+    screenerQueue,
+    fulfillerQueues,
+    rateLimits,
+  }: EstimateExistingWaitDeps,
   depositHash: string,
   status: DepositRequestStatus
 ): Promise<number> {
   // get deposit request status
-  console.log("Entered estimateSecondsUntilDepositCompletion", depositHash);
+  logger.debug("Entered estimateSecondsUntilDepositCompletion", {
+    depositHash,
+  });
   if (status === DepositRequestStatus.DoesNotExist) {
     throw new Error(`No status found for deposit hash ${depositHash}`);
   }
@@ -53,7 +63,7 @@ export async function estimateSecondsUntilDepositCompletion(
   /// Get asset value ahead of deposit
   let valueAhead: bigint;
   let job: Job<DepositEventJobData>;
-  console.log("estimateSecondsUntilDepositCompletion status", status);
+  logger.debug("estimateSecondsUntilDepositCompletion status", { status });
   if (status == DepositRequestStatus.Completed) {
     return 0;
   } else if (status == DepositRequestStatus.PassedFirstScreen) {
@@ -98,12 +108,14 @@ export async function estimateSecondsUntilDepositCompletion(
     valueAhead,
     rateLimits
   );
-  console.log("secondsLeftInJobDelay", secondsLeftInJobDelay);
-  console.log("delaySeconds", delaySeconds);
+
+  logger.info("secondsLeftInJobDelay", { depositHash, secondsLeftInJobDelay });
+  logger.info("delaySeconds", { depositHash, delaySeconds });
   return secondsLeftInJobDelay + delaySeconds;
 }
 
 export interface EstimateProspectiveWaitDeps {
+  logger: Logger;
   screeningApi: ScreeningCheckerApi;
   rateLimits: Map<Address, bigint>;
   screenerQueue: Queue<DepositEventJobData>;
@@ -113,6 +125,7 @@ export interface EstimateProspectiveWaitDeps {
 // NOTE: This function can throw error
 export async function estimateSecondsUntilCompletionForProspectiveDeposit(
   {
+    logger,
     screeningApi,
     screenerQueue,
     fulfillerQueues,
@@ -123,7 +136,7 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
   value: bigint
 ): Promise<number> {
   // ensure passes screen
-  console.log("in estimateSecondsUntilCompletionForProspectiveDeposit");
+  logger.debug("in estimateSecondsUntilCompletionForProspectiveDeposit");
 
   const checkResult = await screeningApi.checkDeposit({
     spender,
@@ -148,7 +161,7 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
     assetAddr,
     checkResult.timeSeconds
   );
-  console.log("closestJob", closestJob);
+  logger.debug("closestJob", { closestJob });
 
   // calculate value ahead of closest job
   let valueAhead: bigint;
@@ -161,14 +174,11 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
       fulfillerQueue
     );
     valueAhead = valueAheadInScreenerQueue + valueInFulfillerQueue;
-    console.log(
-      "valueAheadInScreenerQueue",
-      "valueInFulfillerQueue",
-      "valueAhead",
+    logger.debug("valueAhead calculation results", {
       valueAheadInScreenerQueue,
       valueInFulfillerQueue,
-      valueAhead
-    );
+      valueAhead,
+    });
   }
   const delaySeconds = convertAssetTotalToDelaySeconds(
     assetAddr,
@@ -176,8 +186,8 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
     rateLimits
   );
 
-  console.log("screenerDelay", checkResult.timeSeconds);
-  console.log("delaySeconds", delaySeconds);
+  logger.info("screenerDelay", { timeSeconds: checkResult.timeSeconds });
+  logger.info("total delaySeconds estimate", { delaySeconds });
   return checkResult.timeSeconds + delaySeconds;
 }
 

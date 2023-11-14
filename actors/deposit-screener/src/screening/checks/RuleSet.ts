@@ -211,11 +211,10 @@ export class RuleSet {
         result,
       });
       if (result.type === "Rejection") {
-        this.logger.info(
-          `Screener execution for deposit:`,
+        this.logger.info(`Screener execution for deposit:`, {
           deposit,
-          rulesLogList
-        );
+          rulesLogList,
+        });
         return result;
       } else if (result.type === "Delay") {
         delaySeconds = APPLY_DELAY_OPERATION[result.operation](

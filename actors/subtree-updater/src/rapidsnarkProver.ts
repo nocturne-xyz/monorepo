@@ -8,6 +8,7 @@ import {
 import { groth16 } from "snarkjs";
 import * as fs from "fs";
 import { spawn } from "child_process";
+import { Logger } from "winston";
 
 export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
   rapidsnarkExecutablePath: string;
@@ -15,6 +16,7 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
   zkeyPath: string;
   tmpDir: string;
   vkey: any;
+  logger: Logger;
 
   // rapidsnark writes to files, so if we have multiple provers running at the same time,
   // the proofs will overwrite each other. To prevent this, we use a global counter to
@@ -26,6 +28,7 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
     witnessGeneratorExecutablePath: string,
     zkeyPath: string,
     vkeyPath: string,
+    logger: Logger,
     tmpDir: string = __dirname
   ) {
     this.rapidsnarkExecutablePath = rapidsnarkExecutablePath;
@@ -33,6 +36,7 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
     this.zkeyPath = zkeyPath;
     this.tmpDir = tmpDir;
     this.vkey = JSON.parse(fs.readFileSync(vkeyPath).toString());
+    this.logger = logger;
   }
 
   async proveSubtreeUpdate(
@@ -53,10 +57,12 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
     );
 
     await runCommand(
-      `${this.witnessGeneratorExecutablePath} ${inputJsonPath} ${witnessPath}`
+      `${this.witnessGeneratorExecutablePath} ${inputJsonPath} ${witnessPath}`,
+      this.logger
     );
     await runCommand(
-      `${this.rapidsnarkExecutablePath} ${this.zkeyPath} ${witnessPath} ${proofJsonPath} ${publicSignalsPath}`
+      `${this.rapidsnarkExecutablePath} ${this.zkeyPath} ${witnessPath} ${proofJsonPath} ${publicSignalsPath}`,
+      this.logger
     );
 
     const [proofStr, publicSignalsStr] = await Promise.all([
@@ -92,7 +98,10 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
   }
 }
 
-async function runCommand(cmd: string): Promise<[string, string]> {
+async function runCommand(
+  cmd: string,
+  logger: Logger
+): Promise<[string, string]> {
   return new Promise((resolve, reject) => {
     let stdout = "";
     let stderr = "";
@@ -106,13 +115,11 @@ async function runCommand(cmd: string): Promise<[string, string]> {
       stderr += output;
     });
     child.on("error", () => {
-      console.log(stdout);
-      console.error(stderr);
+      logger.error("error when running command", { cmd, stdout, stderr });
       reject(stderr);
     });
     child.on("exit", () => {
-      console.log(stdout);
-      console.error(stderr);
+      logger.info("command finished", { cmd, stdout, stderr });
       resolve([stdout, stderr]);
     });
   });

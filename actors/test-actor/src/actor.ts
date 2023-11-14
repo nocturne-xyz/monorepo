@@ -152,7 +152,7 @@ export class TestActor {
     while (true) {
       await this.client.sync({ finalityBlocks });
       const balances = await this.client.getAllAssetBalances();
-      this.logger.info("balances: ", balances);
+      this.logger.info("balances: ", { balances });
 
       if (batchEvery && i !== 0 && i % batchEvery === 0) {
         this.logger.info("performing 8 operations to fill a bundle");

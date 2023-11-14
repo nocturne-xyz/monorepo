@@ -87,10 +87,10 @@ export class BalanceMonitor {
         const balanceEther = parseFloat(
           ethers.utils.formatUnits(balance, "ether")
         );
-        this.logger.info("bundler ETH balance ether", balanceEther);
+        this.logger.info("bundler ETH balance ether", { balanceEther });
         observableResult.observe(balanceEther);
       } catch (e) {
-        this.logger.error("error fetching bundler ETH balance", e);
+        this.logger.error("error fetching bundler ETH balance", { e });
       }
     });
 
@@ -102,10 +102,10 @@ export class BalanceMonitor {
         const balanceEther = parseFloat(
           ethers.utils.formatUnits(balance, "ether")
         );
-        this.logger.info("bundler gas token balance ether", balanceEther);
+        this.logger.info("bundler gas token balance ether", { balanceEther });
         observableResult.observe(balanceEther);
       } catch (e) {
-        this.logger.error("error fetching bundler gas token balance", e);
+        this.logger.error("error fetching bundler gas token balance", { e });
       }
     });
 
@@ -117,10 +117,10 @@ export class BalanceMonitor {
         const balanceEther = parseFloat(
           ethers.utils.formatUnits(balance, "ether")
         );
-        this.logger.info("updater ETH balance", balanceEther);
+        this.logger.info("updater ETH balance", { balanceEther });
         observableResult.observe(balanceEther);
       } catch (e) {
-        this.logger.error("error fetching updater ETH balance", e);
+        this.logger.error("error fetching updater ETH balance", { e });
       }
     });
 
@@ -132,10 +132,10 @@ export class BalanceMonitor {
         const balanceEther = parseFloat(
           ethers.utils.formatUnits(balance, "ether")
         );
-        this.logger.info("screener ETH balance", balanceEther);
+        this.logger.info("screener ETH balance", { balanceEther });
         observableResult.observe(balanceEther);
       } catch (e) {
-        this.logger.error("error fetching screener ETH balance", e);
+        this.logger.error("error fetching screener ETH balance", { e });
       }
     });
 

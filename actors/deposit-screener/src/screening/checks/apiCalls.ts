@@ -150,7 +150,9 @@ export function formatRequestData(
 
 async function ensureCallSucceeded(response: Response): Promise<void> {
   if (!response.headers.get("content-type")?.includes("application/json")) {
-    console.log(await response.text());
+    console.error("call to mistrack failed", {
+      response: await response.text(),
+    });
     throw new Error(
       `Call to misttrack failed with message: ${response.statusText}`
     );

@@ -58,11 +58,13 @@ export class InsertionWriter {
           };
         }
 
-        this.logger.info(`got batch of ${insertions.length} insertions`, meta);
+        this.logger.info(`got batch of ${insertions.length} insertions`, {
+          meta,
+        });
         await this.insertionLog.push(insertions);
         this.logger.info(
           `pushed batch of ${insertions.length} into insertion log`,
-          meta
+          { meta }
         );
       }
     })();

@@ -151,7 +151,7 @@ export function makeRelayHandler({
       metrics.relayRequestsEnqueuedCounter.add(1);
     } catch (err) {
       const msg = "failed to enqueue operation";
-      childLogger.error(msg, err);
+      childLogger.error(msg, { err });
       res.status(500).json({ error: msg });
       return;
     }

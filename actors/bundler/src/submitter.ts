@@ -222,7 +222,7 @@ export class BundlerSubmitter {
       const receipt = await tx.wait(this.finalityBlocks);
       return receipt;
     } catch (err) {
-      logger.error("failed to process bundle:", err);
+      logger.error("failed to process bundle:", { err });
       const redisTxs = operations.flatMap((op) => {
         const digest = OperationTrait.computeDigest(op);
         logger.error(
