@@ -80,10 +80,10 @@ export function makeQuoteHandler({
   rateLimits,
 }: QuoteHandlerDeps): RequestHandler {
   return async (req: Request, res: Response) => {
-    console.log("Entered makeQuoteHandler", req.body);
+    logger.info("Entered makeQuoteHandler", { body: req.body });
     const errorOrQuoteRequest = tryParseQuoteRequest(req.body);
     if (typeof errorOrQuoteRequest == "string") {
-      logger.warn("request validation failed", errorOrQuoteRequest);
+      logger.warn("request validation failed", { error: errorOrQuoteRequest });
       res.statusMessage = errorOrQuoteRequest;
       res.status(400).json(errorOrQuoteRequest);
       return;
@@ -112,9 +112,12 @@ export function makeQuoteHandler({
         quoteRequest.assetAddr,
         quoteRequest.value
       );
-    } catch (err) {
-      if (err instanceof Error) logger.warn(err.message);
-      else logger.warn(err);
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.warn("error in server", { error });
+      } else {
+        logger.warn("error in server", { error });
+      }
 
       res.status(500).json({ message: "Internal Server Error" });
       return;
