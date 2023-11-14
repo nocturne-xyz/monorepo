@@ -15,6 +15,8 @@ const { makeSubgraphQuery } = SubgraphUtils;
 export interface DepositEventResponse {
   id: string;
   type: string;
+  txHash: string;
+  timestamp: string;
   chainId: string;
   spender: string;
   encodedAssetAddr: string;
@@ -131,6 +133,8 @@ function depositEventFromDepositEventResponse(
   depositEventResponse: DepositEventResponse
 ): WithTotalEntityIndex<DepositEvent> {
   const type = depositEventResponse.type;
+  const txHash = depositEventResponse.txHash;
+  const timestamp = BigInt(depositEventResponse.timestamp);
   const spender = depositEventResponse.spender;
 
   const h1 = BigInt(depositEventResponse.depositAddrH1);
@@ -152,6 +156,8 @@ function depositEventFromDepositEventResponse(
     totalEntityIndex: BigInt(depositEventResponse.id),
     inner: {
       type: type as DepositEventType,
+      txHash,
+      timestamp,
       spender,
       encodedAsset,
       value,
