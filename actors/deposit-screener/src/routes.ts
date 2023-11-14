@@ -53,7 +53,9 @@ export function makeDepositStatusHandler({
         status
       );
     } catch (err) {
-      logger.warn({ err: JSON.stringify(err) });
+      logger.warn("error in estimatedWaitSeconds", {
+        err: JSON.stringify(err),
+      });
     }
 
     const response: DepositStatusResponse = {
