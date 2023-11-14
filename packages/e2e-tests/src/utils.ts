@@ -53,39 +53,6 @@ export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function getSubtreeUpdateProver(): SubtreeUpdateProver {
-  if (
-    process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true" &&
-    process.env.USE_RAPIDSNARK === "true"
-  ) {
-    return new RapidsnarkSubtreeUpdateProver(
-      EXECUTABLE_CMD,
-      WITNESS_GEN_EXECUTABLE_PATH,
-      ZKEY_PATH,
-      VKEY_PATH,
-      TMP_PATH
-    );
-  } else if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
-    const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
-    return new WasmSubtreeUpdateProver(WASM_PATH, ZKEY_PATH, VKEY);
-  }
-
-  return new MockSubtreeUpdateProver();
-}
-
-export function getSubtreeUpdaterDelay(): number {
-  if (
-    process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true" &&
-    process.env.USE_RAPIDSNARK === "true"
-  ) {
-    return MOCK_SUBTREE_UPDATER_DELAY + 8000;
-  } else if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
-    return MOCK_SUBTREE_UPDATER_DELAY + 60000;
-  }
-
-  return MOCK_SUBTREE_UPDATER_DELAY;
-}
-
 export async function queryDepositStatus(
   depositHash: string
 ): Promise<DepositStatusResponse | undefined> {

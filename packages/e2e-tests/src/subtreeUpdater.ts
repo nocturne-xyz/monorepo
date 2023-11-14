@@ -50,6 +50,7 @@ export async function startSubtreeUpdater(
         WITNESS_GENERATOR_PATH,
         ZKEY_PATH,
         VKEY_PATH,
+        logger,
         TMP_DIR
       )
     : new MockSubtreeUpdateProver();
