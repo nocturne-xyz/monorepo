@@ -185,38 +185,7 @@ export class TestActor {
     } else if (opts?.onlyOperations) {
       await this.runOps(opIntervalSeconds * 1000, 1);
     } else if (opts?.onlySync) {
-      while (true) {
-        await this.client.sync();
-        const [latestSyncedMerkleIndex, latestCommittedMerkleIndex] =
-          await Promise.all([
-            this.client.getLatestSyncedMerkleIndex(),
-            this.client.getLatestCommittedMerkleIndex(),
-          ]);
-        const currentTreeRoot = this.client.getCurrentTreeRoot();
-        this.logger.info(
-          `finished syncing to root ${currentTreeRoot}, committed index ${latestCommittedMerkleIndex}, latest index ${latestSyncedMerkleIndex}`,
-          {
-            latestSyncedMerkleIndex,
-            latestCommittedMerkleIndex,
-            currentTreeRoot: currentTreeRoot.toString(),
-          }
-        );
-
-        try {
-          const isPastRoot = await this.handler._pastRoots(currentTreeRoot);
-          if (!isPastRoot) {
-            this.logger.error(
-              `current root ${currentTreeRoot} is not past root`
-            );
-            throw new Error("tree root not past root");
-          }
-        } catch (err) {
-          this.logger.error(`failed to check if root is past root`, { err });
-          throw err;
-        }
-
-        await sleep(syncIntervalSeconds * 1000);
-      }
+      await this.runSyncOnly(syncIntervalSeconds * 1000);
     } else {
       await Promise.all([
         this.runDeposits(depositIntervalSeconds * 1000),
@@ -226,6 +195,39 @@ export class TestActor {
           opts?.finalityBlocks
         ),
       ]);
+    }
+  }
+
+  private async runSyncOnly(syncInterval: number): Promise<void> {
+    while (true) {
+      await this.client.sync();
+      const [latestSyncedMerkleIndex, latestCommittedMerkleIndex] =
+        await Promise.all([
+          this.client.getLatestSyncedMerkleIndex(),
+          this.client.getLatestCommittedMerkleIndex(),
+        ]);
+      const currentTreeRoot = this.client.getCurrentTreeRoot();
+      this.logger.info(
+        `finished syncing to root ${currentTreeRoot}, committed index ${latestCommittedMerkleIndex}, latest index ${latestSyncedMerkleIndex}`,
+        {
+          latestSyncedMerkleIndex,
+          latestCommittedMerkleIndex,
+          currentTreeRoot: currentTreeRoot.toString(),
+        }
+      );
+
+      try {
+        const isPastRoot = await this.handler._pastRoots(currentTreeRoot);
+        if (!isPastRoot) {
+          this.logger.error(`current root ${currentTreeRoot} is not past root`);
+          throw new Error("tree root not past root");
+        }
+      } catch (err) {
+        this.logger.error(`failed to check if root is past root`, { err });
+        throw err;
+      }
+
+      await sleep(syncInterval);
     }
   }
 
