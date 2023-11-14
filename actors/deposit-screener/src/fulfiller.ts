@@ -18,7 +18,7 @@ import { Job, Worker } from "bullmq";
 import { Logger } from "winston";
 import {
   ACTOR_NAME,
-  DepositRequestJobData,
+  DepositEventJobData,
   getFulfillmentQueueName,
 } from "./types";
 import {
@@ -139,7 +139,7 @@ export class DepositScreenerFulfiller {
           // make a worker listening to the current asset's fulfillment queue
           const worker = new Worker(
             getFulfillmentQueueName(address),
-            async (job: Job<DepositRequestJobData>) => {
+            async (job: Job<DepositEventJobData>) => {
               const depositEvent: DepositEvent = JSON.parse(
                 job.data.depositRequestJson
               );

@@ -34,7 +34,7 @@ import { Delay } from "./screening/checks/RuleSet";
 import {
   ACTOR_NAME,
   DELAYED_DEPOSIT_JOB_TAG,
-  DepositRequestJobData,
+  DepositEventJobData,
   SCREENER_DELAY_QUEUE,
   getFulfillmentJobTag,
   getFulfillmentQueueName,
@@ -62,7 +62,7 @@ export class DepositScreenerScreener {
   adapter: DepositEventSyncAdapter;
   depositManagerContract: DepositManager;
   screeningApi: ScreeningCheckerApi;
-  screenerDelayQueue: Queue<DepositRequestJobData>;
+  screenerDelayQueue: Queue<DepositEventJobData>;
   db: DepositScreenerDB;
   redis: IORedis;
   logger: Logger;
@@ -326,7 +326,7 @@ export class DepositScreenerScreener {
   ): Promise<void> {
     logger.debug(`calculating delay until second phase of screening`);
     const depositRequestJson = JSON.stringify(depositRequest);
-    const jobData: DepositRequestJobData = {
+    const jobData: DepositEventJobData = {
       depositRequestJson,
     };
 
@@ -358,12 +358,12 @@ export class DepositScreenerScreener {
     });
   }
 
-  startArbiter(logger: Logger): Worker<DepositRequestJobData, any, string> {
+  startArbiter(logger: Logger): Worker<DepositEventJobData, any, string> {
     logger.info("starting arbiter...");
 
     return new Worker(
       SCREENER_DELAY_QUEUE,
-      async (job: Job<DepositRequestJobData>) => {
+      async (job: Job<DepositEventJobData>) => {
         logger.debug("processing deposit request");
         const depositEvent: DepositEvent = JSON.parse(
           job.data.depositRequestJson
@@ -431,7 +431,7 @@ export class DepositScreenerScreener {
           `deposit request passed screening. pushing to fulfillment queue`
         );
         const depositRequestJson = JSON.stringify(depositEvent);
-        const jobData: DepositRequestJobData = {
+        const jobData: DepositEventJobData = {
           depositRequestJson,
         };
 

@@ -1,11 +1,11 @@
 import { Job, Queue } from "bullmq";
-import { DepositRequestJobData } from "../types";
+import { DepositEventJobData } from "../types";
 import { AssetTrait, DepositEvent, DepositRequest } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 
 export async function totalValueAheadInScreenerQueueInclusive(
-  screenerQueue: Queue<DepositRequestJobData>,
-  job: Job<DepositRequestJobData>
+  screenerQueue: Queue<DepositEventJobData>,
+  job: Job<DepositEventJobData>
 ): Promise<bigint> {
   const depositRequest: DepositRequest = JSON.parse(
     job.data.depositRequestJson
@@ -34,8 +34,8 @@ export async function totalValueAheadInScreenerQueueInclusive(
 }
 
 export async function totalValueAheadInFulfillerQueueInclusive(
-  fulfillerQueue: Queue<DepositRequestJobData>,
-  job: Job<DepositRequestJobData>
+  fulfillerQueue: Queue<DepositEventJobData>,
+  job: Job<DepositEventJobData>
 ): Promise<bigint> {
   const depositsAhead: DepositRequest[] = [];
   const screenerDelayed = await fulfillerQueue.getDelayed();
@@ -55,7 +55,7 @@ export async function totalValueAheadInFulfillerQueueInclusive(
 }
 
 export async function totalValueInFulfillerQueue(
-  fulfillerQueue: Queue<DepositRequestJobData>
+  fulfillerQueue: Queue<DepositEventJobData>
 ): Promise<bigint> {
   const deposits: DepositRequest[] = [];
   const screenerDelayed = await fulfillerQueue.getDelayed();

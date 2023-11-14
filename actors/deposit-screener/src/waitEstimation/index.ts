@@ -8,7 +8,7 @@ import * as JSON from "bigint-json-serialization";
 import { Job, Queue } from "bullmq";
 import { DepositScreenerDB } from "../db";
 import { ScreeningCheckerApi } from "../screening";
-import { DepositRequestJobData } from "../types";
+import { DepositEventJobData } from "../types";
 import {
   calculateSecondsLeftInJobDelay,
   convertAssetTotalToDelaySeconds,
@@ -22,8 +22,8 @@ import {
 export interface EstimateExistingWaitDeps {
   db: DepositScreenerDB;
   rateLimits: Map<Address, bigint>;
-  screenerQueue: Queue<DepositRequestJobData>;
-  fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
+  screenerQueue: Queue<DepositEventJobData>;
+  fulfillerQueues: Map<Address, Queue<DepositEventJobData>>;
 }
 
 // NOTE: This function can throw errors
@@ -52,7 +52,7 @@ export async function estimateSecondsUntilDepositCompletion(
 
   /// Get asset value ahead of deposit
   let valueAhead: bigint;
-  let job: Job<DepositRequestJobData>;
+  let job: Job<DepositEventJobData>;
   console.log("estimateSecondsUntilDepositCompletion status", status);
   if (status == DepositRequestStatus.Completed) {
     return 0;
@@ -106,8 +106,8 @@ export async function estimateSecondsUntilDepositCompletion(
 export interface EstimateProspectiveWaitDeps {
   screeningApi: ScreeningCheckerApi;
   rateLimits: Map<Address, bigint>;
-  screenerQueue: Queue<DepositRequestJobData>;
-  fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
+  screenerQueue: Queue<DepositEventJobData>;
+  fulfillerQueues: Map<Address, Queue<DepositEventJobData>>;
 }
 
 // NOTE: This function can throw error
@@ -182,10 +182,10 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
 }
 
 async function findScreenerQueueJobClosestInDelay(
-  screenerQueue: Queue<DepositRequestJobData>,
+  screenerQueue: Queue<DepositEventJobData>,
   assetAddr: Address,
   delayMs: number
-): Promise<Job<DepositRequestJobData> | undefined> {
+): Promise<Job<DepositEventJobData> | undefined> {
   const screenerDelayed = await screenerQueue.getDelayed();
   const screenerWaiting = await screenerQueue.getWaiting();
 
