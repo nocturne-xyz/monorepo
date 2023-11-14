@@ -325,9 +325,9 @@ export class DepositScreenerScreener {
     delay: Delay
   ): Promise<void> {
     logger.debug(`calculating delay until second phase of screening`);
-    const depositRequestJson = JSON.stringify(depositRequest);
+    const depositEventJson = JSON.stringify(depositRequest);
     const jobData: DepositEventJobData = {
-      depositRequestJson,
+      depositEventJson,
     };
 
     logger.info(
@@ -366,7 +366,7 @@ export class DepositScreenerScreener {
       async (job: Job<DepositEventJobData>) => {
         logger.debug("processing deposit request");
         const depositEvent: DepositEvent = JSON.parse(
-          job.data.depositRequestJson
+          job.data.depositEventJson
         );
         const depositHash = hashDepositRequest(depositEvent);
         const assetAddr = AssetTrait.decode(
@@ -430,9 +430,9 @@ export class DepositScreenerScreener {
         childLogger.info(
           `deposit request passed screening. pushing to fulfillment queue`
         );
-        const depositRequestJson = JSON.stringify(depositEvent);
+        const depositEventJson = JSON.stringify(depositEvent);
         const jobData: DepositEventJobData = {
-          depositRequestJson,
+          depositEventJson,
         };
 
         // figure out which fulfillment queue to add to

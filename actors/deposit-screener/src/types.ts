@@ -21,5 +21,5 @@ const FULFILLMENT_QUEUE = "DepositFulfillmentQueue";
 const FULFILLMENT_JOB_TAG = "DEPOSIT_FULFILLMENT";
 
 export type DepositEventJobData = {
-  depositRequestJson: string;
+  depositEventJson: string;
 };

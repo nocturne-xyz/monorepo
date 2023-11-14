@@ -193,7 +193,7 @@ async function findScreenerQueueJobClosestInDelay(
   const screenerJobsAhead = screenerJobs
     .filter((job) => {
       const depositRequest: DepositEvent = JSON.parse(
-        job.data.depositRequestJson
+        job.data.depositEventJson
       );
       return (
         AssetTrait.decode(depositRequest.encodedAsset).assetAddr == assetAddr

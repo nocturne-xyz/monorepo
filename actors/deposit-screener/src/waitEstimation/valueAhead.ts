@@ -7,9 +7,7 @@ export async function totalValueAheadInScreenerQueueInclusive(
   screenerQueue: Queue<DepositEventJobData>,
   job: Job<DepositEventJobData>
 ): Promise<bigint> {
-  const depositRequest: DepositRequest = JSON.parse(
-    job.data.depositRequestJson
-  );
+  const depositRequest: DepositRequest = JSON.parse(job.data.depositEventJson);
   const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
 
   const depositsAhead: DepositRequest[] = [];
@@ -23,7 +21,7 @@ export async function totalValueAheadInScreenerQueueInclusive(
     ...screenerWaiting,
   ]
     .filter((j) => j.delay <= job.delay)
-    .map((j) => JSON.parse(j.data.depositRequestJson) as DepositRequest)
+    .map((j) => JSON.parse(j.data.depositEventJson) as DepositRequest)
     .filter(
       (deposit) =>
         AssetTrait.decode(deposit.encodedAsset).assetAddr == assetAddr
@@ -48,7 +46,7 @@ export async function totalValueAheadInFulfillerQueueInclusive(
     ...screenerWaiting,
   ]
     .filter((j) => j.timestamp <= job.timestamp)
-    .map((j) => JSON.parse(j.data.depositRequestJson) as DepositRequest);
+    .map((j) => JSON.parse(j.data.depositEventJson) as DepositRequest);
   depositsAhead.push(...depositsAheadInScreenerQueue);
 
   return depositsAhead.reduce((acc, deposit) => acc + deposit.value, 0n);
@@ -63,7 +61,7 @@ export async function totalValueInFulfillerQueue(
 
   // get all fulfiller queue jobs that are ahead of the job in question by timestamp
   const depositsInScreenerQueue = [...screenerDelayed, ...screenerWaiting].map(
-    (j) => JSON.parse(j.data.depositRequestJson) as DepositEvent
+    (j) => JSON.parse(j.data.depositEventJson) as DepositEvent
   );
   deposits.push(...depositsInScreenerQueue);
 

@@ -141,7 +141,7 @@ export class DepositScreenerFulfiller {
             getFulfillmentQueueName(address),
             async (job: Job<DepositEventJobData>) => {
               const depositEvent: DepositEvent = JSON.parse(
-                job.data.depositRequestJson
+                job.data.depositEventJson
               );
               logger.info(
                 `attempting to fulfill deposit request: ${depositEvent}`,
