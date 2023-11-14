@@ -225,7 +225,10 @@ export class RuleSet {
       }
       currRule = currRule.next;
     }
-    this.logger.info(`Screener execution for deposit:`, deposit, rulesLogList);
+    this.logger.info(`Screener execution for deposit:`, {
+      deposit,
+      rulesLogList,
+    });
     return { type: "Delay", timeSeconds: delaySeconds };
   }
 }
