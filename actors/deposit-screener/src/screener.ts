@@ -285,7 +285,7 @@ export class DepositScreenerScreener {
         if (checkResult.type === "Rejection") {
           childLogger.log(
             "compliance",
-            `deposit failed first screening stage with reason: ${checkResult.reason}`,
+            `deposit failed first screening stage. reason: ${checkResult.reason}. txhash: ${event.txHash}`,
             {
               reason: checkResult.reason,
             }
@@ -417,7 +417,7 @@ export class DepositScreenerScreener {
         if (checkResult.type === "Rejection") {
           childLogger.log(
             "compliance",
-            `deposit failed second screening screening with reason: ${checkResult.reason}`,
+            `deposit failed second screening screening. reason: ${checkResult.reason}. txhash: ${depositEvent.txHash}`,
             { reason: checkResult.reason }
           );
           await this.db.setDepositRequestStatus(
