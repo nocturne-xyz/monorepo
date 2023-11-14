@@ -62,7 +62,7 @@ export class DepositScreenerServer {
     router.get(
       "/status/:depositHash",
       makeDepositStatusHandler({
-        logger: this.logger,
+        logger: this.logger.child({ route: "/status/:depositHash" }),
         db: this.db,
         screenerQueue: this.screenerQueue,
         fulfillerQueues: this.fulfillerQueues,
@@ -73,7 +73,7 @@ export class DepositScreenerServer {
     router.post(
       "/quote",
       makeQuoteHandler({
-        logger: this.logger,
+        logger: this.logger.child({ route: "/quote" }),
         screeningApi: this.screeningApi,
         screenerQueue: this.screenerQueue,
         fulfillerQueues: this.fulfillerQueues,
