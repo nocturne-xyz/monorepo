@@ -32,7 +32,7 @@ export function makeDepositStatusHandler({
   rateLimits,
 }: DepositStatusHandlerDeps): RequestHandler {
   return async (req: Request, res: Response) => {
-    console.log("Entered makeDepositStatusHandler", req.params);
+    logger.info("Entered makeDepositStatusHandler", { params: req.params });
     const depositHash = req.params.depositHash;
     const status = await db.getDepositRequestStatus(depositHash);
 
