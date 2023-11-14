@@ -1,6 +1,7 @@
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager__factory,
+  Handler__factory,
   Teller__factory,
 } from "@nocturne-xyz/contracts";
 import { SparseMerkleProver, NocturneSigner } from "@nocturne-xyz/core";
@@ -52,11 +53,6 @@ export const run = new Command("run")
     "60"
   )
   .option(
-    "--sync-interval <number>",
-    "interval in seconds between syncs in seconds when running in sync-only mode. does nothing when not in sync-only mode. defaults to 60 (1 minute)",
-    "60"
-  )
-  .option(
     "--full-bundle-every <number>",
     "perform 8 ops in rapid succession to fill a bundle every N iterations of the op loop"
   )
@@ -67,7 +63,10 @@ export const run = new Command("run")
   )
   .option("--only-deposits", "only perform deposits")
   .option("--only-operations", "only perform operations")
-  .option("--only-sync", "only sync tree")
+  .option(
+    "--only-sync-interval <number>",
+    "if given, the test actor will only sync (no ops or deposts), and it will attempt to sync on the given interval in seconds. defaults to 60 (1 minute)"
+  )
   .option(
     "--log-dir <string>",
     "directory to write logs to. if not given, logs will only be emitted to stdout."
@@ -82,11 +81,10 @@ export const run = new Command("run")
       dbPath,
       depositInterval,
       opInterval,
-      syncInterval,
       fullBundleEvery,
       onlyDeposits,
       onlyOperations,
-      onlySync,
+      onlySyncInterval,
       logDir,
       logLevel,
       finalityBlocks,
@@ -135,6 +133,7 @@ export const run = new Command("run")
       getEthersProviderAndSignerFromEnvConfiguration();
 
     const teller = Teller__factory.connect(config.tellerAddress, signer);
+    const handler = Handler__factory.connect(config.handlerAddress, signer);
     const depositManager = DepositManager__factory.connect(
       config.depositManagerAddress,
       signer
@@ -175,6 +174,7 @@ export const run = new Command("run")
       signer,
       teller,
       depositManager,
+      handler,
       nocturneSigner,
       sdk,
       prover,
@@ -183,6 +183,7 @@ export const run = new Command("run")
       logger
     );
 
+    const onlySync = onlySyncInterval !== undefined;
     if (
       [onlyDeposits, onlyOperations, onlySync]
         .map(Number)
@@ -196,7 +197,9 @@ export const run = new Command("run")
     await actor.run({
       depositIntervalSeconds: parseInt(depositInterval),
       opIntervalSeconds: parseInt(opInterval),
-      syncIntervalSeconds: parseInt(syncInterval),
+      syncIntervalSeconds: onlySyncInterval
+        ? parseInt(onlySyncInterval)
+        : undefined,
       fullBundleEvery: fullBundleEvery ? parseInt(fullBundleEvery) : undefined,
       onlyDeposits,
       onlyOperations,

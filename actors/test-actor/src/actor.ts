@@ -9,6 +9,7 @@ import {
 import { Erc20Config } from "@nocturne-xyz/config";
 import {
   DepositManager,
+  Handler,
   SimpleERC20Token__factory,
   Teller,
 } from "@nocturne-xyz/contracts";
@@ -65,6 +66,7 @@ export class TestActor {
   txSigner: ethers.Signer;
   teller: Teller;
   depositManager: DepositManager;
+  handler: Handler;
   nocturneSigner: NocturneSigner;
   client: NocturneClient;
   prover: JoinSplitProver;
@@ -81,6 +83,7 @@ export class TestActor {
     txSigner: ethers.Signer,
     teller: Teller,
     depositManager: DepositManager,
+    handler: Handler,
     nocturneSigner: NocturneSigner,
     client: NocturneClient,
     prover: JoinSplitProver,
@@ -92,6 +95,7 @@ export class TestActor {
     this.txSigner = txSigner;
     this.teller = teller;
     this.depositManager = depositManager;
+    this.handler = handler;
     this.nocturneSigner = nocturneSigner;
     this.client = client;
     this.prover = prover;
@@ -197,6 +201,19 @@ export class TestActor {
             currentTreeRoot: currentTreeRoot.toString(),
           }
         );
+
+        try {
+          const isPastRoot = await this.handler._pastRoots(currentTreeRoot);
+          if (!isPastRoot) {
+            this.logger.error(
+              `current root ${currentTreeRoot} is not past root`
+            );
+            throw new Error("tree root not past root");
+          }
+        } catch (err) {
+          this.logger.error(`failed to check if root is past root`, { err });
+          throw err;
+        }
 
         await sleep(syncIntervalSeconds * 1000);
       }
