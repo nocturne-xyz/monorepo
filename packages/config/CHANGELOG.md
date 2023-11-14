@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.2
+
+### Patch Changes
+
+- c34c6b7a: fix screener signer address to be correct
+
 ## 1.7.1
 
 ### Patch Changes

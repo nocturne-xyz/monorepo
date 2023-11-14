@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- fd8709ed: Add geo middleware
+
 ## 0.4.1
 
 ### Patch Changes

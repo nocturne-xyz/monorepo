@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.2.0
+
+### Minor Changes
+
+- 9b17bc41: add method to get current tree root
+
+### Patch Changes
+
+- feb897cf: pass in actual gas estimate into snap
+- Updated dependencies [c34c6b7a]
+  - @nocturne-xyz/config@1.7.2
+
 ## 3.1.4
 
 ### Patch Changes
