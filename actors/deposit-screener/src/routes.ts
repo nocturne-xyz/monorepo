@@ -48,12 +48,12 @@ export function makeDepositStatusHandler({
     let estimatedWaitSeconds: number | undefined;
     try {
       estimatedWaitSeconds = await estimateSecondsUntilDepositCompletion(
-        { db, screenerQueue, fulfillerQueues, rateLimits },
+        { logger, db, screenerQueue, fulfillerQueues, rateLimits },
         depositHash,
         status
       );
     } catch (err) {
-      logger.warn({ err });
+      logger.warn({ err: JSON.stringify(err) });
     }
 
     const response: DepositStatusResponse = {
@@ -103,6 +103,7 @@ export function makeQuoteHandler({
     try {
       quote = await estimateSecondsUntilCompletionForProspectiveDeposit(
         {
+          logger,
           screeningApi,
           screenerQueue,
           fulfillerQueues,
