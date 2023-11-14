@@ -120,7 +120,7 @@ export class DepositScreenerServer {
       });
 
       server.on("error", (err) => {
-        this.logger.error("server error", err);
+        this.logger.error("server error", { err });
         reject();
       });
 
