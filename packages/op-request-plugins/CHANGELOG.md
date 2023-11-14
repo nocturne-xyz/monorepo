@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.1.7
+
+### Patch Changes
+
+- 0a2b7455: Fix bps bug, protect against bad maxSlippageBps inputs
+- Updated dependencies [c34c6b7a]
+- Updated dependencies [9b17bc41]
+- Updated dependencies [feb897cf]
+  - @nocturne-xyz/config@1.7.2
+  - @nocturne-xyz/client@3.2.0
+
 ## 2.1.6
 
 ### Patch Changes

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.10.0
+
+### Minor Changes
+
+- fd8709ed: Add geo middleware to express server
+
+### Patch Changes
+
+- Updated dependencies [fd8709ed]
+- Updated dependencies [c34c6b7a]
+- Updated dependencies [9b17bc41]
+- Updated dependencies [feb897cf]
+  - @nocturne-xyz/offchain-utils@0.5.0
+  - @nocturne-xyz/config@1.7.2
+  - @nocturne-xyz/client@3.2.0
+
 ## 0.9.6
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.3
+
+### Patch Changes
+
+- c34c6b7a: add logging to deploy script checker
+- Updated dependencies [c34c6b7a]
+  - @nocturne-xyz/config@1.7.2
+
 ## 0.12.2
 
 ### Patch Changes
