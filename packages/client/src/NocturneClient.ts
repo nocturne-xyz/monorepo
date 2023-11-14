@@ -155,6 +155,10 @@ export class NocturneClient {
     return await this.db.latestCommittedMerkleIndex();
   }
 
+  getCurrentTreeRoot(): bigint {
+    return this.merkleProver.getRoot();
+  }
+
   async hasEnoughBalanceForOperationRequest(
     opRequest: OperationRequest
   ): Promise<boolean> {

@@ -9,6 +9,7 @@ import {
 import { Erc20Config } from "@nocturne-xyz/config";
 import {
   DepositManager,
+  Handler,
   SimpleERC20Token__factory,
   Teller,
 } from "@nocturne-xyz/contracts";
@@ -45,9 +46,11 @@ const ONE_ETH_IN_WEI = 10n ** 18n;
 export class TestActorOpts {
   depositIntervalSeconds?: number;
   opIntervalSeconds?: number;
+  syncIntervalSeconds?: number;
   fullBundleEvery?: number;
   onlyDeposits?: boolean;
   onlyOperations?: boolean;
+  onlySync?: boolean;
   finalityBlocks?: number;
 }
 
@@ -63,6 +66,7 @@ export class TestActor {
   txSigner: ethers.Signer;
   teller: Teller;
   depositManager: DepositManager;
+  handler: Handler;
   nocturneSigner: NocturneSigner;
   client: NocturneClient;
   prover: JoinSplitProver;
@@ -79,6 +83,7 @@ export class TestActor {
     txSigner: ethers.Signer,
     teller: Teller,
     depositManager: DepositManager,
+    handler: Handler,
     nocturneSigner: NocturneSigner,
     client: NocturneClient,
     prover: JoinSplitProver,
@@ -90,6 +95,7 @@ export class TestActor {
     this.txSigner = txSigner;
     this.teller = teller;
     this.depositManager = depositManager;
+    this.handler = handler;
     this.nocturneSigner = nocturneSigner;
     this.client = client;
     this.prover = prover;
@@ -172,11 +178,14 @@ export class TestActor {
     const depositIntervalSeconds =
       opts?.depositIntervalSeconds ?? ONE_MINUTE_AS_SECS;
     const opIntervalSeconds = opts?.opIntervalSeconds ?? ONE_MINUTE_AS_SECS;
+    const syncIntervalSeconds = opts?.syncIntervalSeconds ?? ONE_MINUTE_AS_SECS;
 
     if (opts?.onlyDeposits) {
       await this.runDeposits(depositIntervalSeconds * 1000);
     } else if (opts?.onlyOperations) {
       await this.runOps(opIntervalSeconds * 1000, 1);
+    } else if (opts?.onlySync) {
+      await this.runSyncOnly(syncIntervalSeconds * 1000);
     } else {
       await Promise.all([
         this.runDeposits(depositIntervalSeconds * 1000),
@@ -186,6 +195,39 @@ export class TestActor {
           opts?.finalityBlocks
         ),
       ]);
+    }
+  }
+
+  private async runSyncOnly(syncInterval: number): Promise<void> {
+    while (true) {
+      await this.client.sync();
+      const [latestSyncedMerkleIndex, latestCommittedMerkleIndex] =
+        await Promise.all([
+          this.client.getLatestSyncedMerkleIndex(),
+          this.client.getLatestCommittedMerkleIndex(),
+        ]);
+      const currentTreeRoot = this.client.getCurrentTreeRoot();
+      this.logger.info(
+        `finished syncing to root ${currentTreeRoot}, committed index ${latestCommittedMerkleIndex}, latest index ${latestSyncedMerkleIndex}`,
+        {
+          latestSyncedMerkleIndex,
+          latestCommittedMerkleIndex,
+          currentTreeRoot: currentTreeRoot.toString(),
+        }
+      );
+
+      try {
+        const isPastRoot = await this.handler._pastRoots(currentTreeRoot);
+        if (!isPastRoot) {
+          this.logger.error(`current root ${currentTreeRoot} is not past root`);
+          throw new Error("tree root not past root");
+        }
+      } catch (err) {
+        this.logger.error(`failed to check if root is past root`, { err });
+        throw err;
+      }
+
+      await sleep(syncInterval);
     }
   }
 
