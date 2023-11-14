@@ -40,6 +40,7 @@ import {
   getFulfillmentQueueName,
 } from "./types";
 import { secsToMillis } from "./utils";
+import { QueueValueCounter, totalValueInScreenerQueue } from "./waitEstimation/valueAhead";
 
 const COMPONENT_NAME = "screener";
 
@@ -70,6 +71,7 @@ export class DepositScreenerScreener {
   supportedAssets: Set<Address>;
   metrics: DepositScreenerScreenerMetrics;
   skipUndergassedDeposits: boolean;
+  queueCounter: QueueValueCounter;
 
   constructor(
     syncAdapter: DepositEventSyncAdapter,
@@ -79,6 +81,7 @@ export class DepositScreenerScreener {
     logger: Logger,
     screeningApi: ScreeningCheckerApi,
     supportedAssets: Set<Address>,
+    queueCounter: QueueValueCounter,
     opts?: DepositScreenerScreenerOpts
   ) {
     this.redis = redis;
@@ -113,6 +116,8 @@ export class DepositScreenerScreener {
       ACTOR_NAME,
       COMPONENT_NAME
     );
+
+    this.queueCounter = queueCounter;
 
     this.metrics = {
       depositInstantiatedValueCounter: createCounter(
@@ -176,7 +181,8 @@ export class DepositScreenerScreener {
 
     const screenerProm = this.startScreener(
       this.logger.child({ function: "screener" }),
-      depositEvents
+      depositEvents,
+      this.queueCounter
     ).catch((err) => {
       this.logger.error("error in deposit processor screener", { err });
       throw new Error("error in deposit processor screener: " + err);
@@ -218,9 +224,11 @@ export class DepositScreenerScreener {
 
   async startScreener(
     logger: Logger,
-    depositEvents: ClosableAsyncIterator<DepositEventsBatch>
+    depositEvents: ClosableAsyncIterator<DepositEventsBatch>,
+    queueCounter: QueueValueCounter
   ): Promise<void> {
     logger.info("starting screener");
+
     for await (const batch of depositEvents.iter) {
       const gasPrice = (
         await this.depositManagerContract.provider.getGasPrice()
@@ -292,7 +300,7 @@ export class DepositScreenerScreener {
           );
           await this.db.setDepositRequestStatus(
             depositRequest,
-            DepositRequestStatus.FailedScreen
+            { status: DepositRequestStatus.FailedScreen }
           );
         } else {
           childLogger.info(
@@ -305,7 +313,10 @@ export class DepositScreenerScreener {
           );
           await this.db.setDepositRequestStatus(
             depositRequest,
-            DepositRequestStatus.PassedFirstScreen
+            {
+              status: DepositRequestStatus.PassedFirstScreen,
+              eta: checkResult.timeSeconds + 
+            }
           );
 
           this.metrics.depositsPassedFirstScreenCounter.add(1, attributes);
@@ -422,7 +433,9 @@ export class DepositScreenerScreener {
           );
           await this.db.setDepositRequestStatus(
             depositEvent,
-            DepositRequestStatus.FailedScreen
+            {
+            status: DepositRequestStatus.FailedScreen
+            }
           );
           return;
         }

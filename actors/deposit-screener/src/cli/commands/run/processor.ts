@@ -14,6 +14,7 @@ import {
 } from "../../../screening";
 import { SubgraphDepositEventSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { getRedis } from "./utils";
+import { QueueValueCounter } from "../../../waitEstimation/valueAhead";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
@@ -95,8 +96,10 @@ const runProcess = new Command("processor")
     const supportedAssets = new Set(
       Array.from(config.erc20s.values()).map(({ address }) => address)
     );
-
     const redis = getRedis();
+
+    const queueCounter = new QueueValueCounter(Array.from(supportedAssets));
+    await queueCounter.init(redis);
 
     let screeningApi: ScreeningCheckerApi;
     if (env === "local" || env == "development") {

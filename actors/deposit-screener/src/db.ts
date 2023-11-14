@@ -15,6 +15,11 @@ const PER_ADDR_DEPOSIT_AMOUNT_PREFIX = "PER_ADDR_DEPOSIT_AMOUNT_";
 
 const GLOBAL_DEPOSIT_AMOUNT_KEY = "GLOBAL_DEPOSIT_AMOUNT";
 
+export type DepositRequestStatusDoc = {
+  status: DepositRequestStatus;
+  eta?: number
+}
+
 export class DepositScreenerDB {
   redis: IORedis;
 
@@ -76,22 +81,22 @@ export class DepositScreenerDB {
 
   async setDepositRequestStatus(
     depositRequestOrHash: DepositRequest | string,
-    status: DepositRequestStatus
+    doc: DepositRequestStatusDoc
   ): Promise<void> {
     const key =
       DepositScreenerDB.formatDepositRequestStatusKey(depositRequestOrHash);
-    await this.redis.set(key, status.toString());
+    await this.redis.set(key, doc.toString());
   }
 
   async getDepositRequestStatus(
     depositRequestOrHash: DepositRequest | string
-  ): Promise<DepositRequestStatus> {
+  ): Promise<DepositRequestStatusDoc> {
     const key =
       DepositScreenerDB.formatDepositRequestStatusKey(depositRequestOrHash);
     const val = await this.redis.get(key);
     return val
-      ? (val as DepositRequestStatus)
-      : DepositRequestStatus.DoesNotExist;
+      ? (JSON.parse(val) as DepositRequestStatusDoc)
+      : { status: DepositRequestStatus.DoesNotExist };
   }
 
   async setDepositAmountForAddress(

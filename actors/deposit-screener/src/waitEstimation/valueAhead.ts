@@ -1,69 +1,80 @@
-import { Job, Queue } from "bullmq";
-import { DepositEventJobData } from "../types";
-import { AssetTrait, DepositEvent, DepositRequest } from "@nocturne-xyz/core";
+import { Queue } from "bullmq";
+import { DepositEventJobData, SCREENER_DELAY_QUEUE, getFulfillmentQueueName } from "../types";
+import { Address, DepositEvent, min } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
+import IORedis from "ioredis";
 
-export async function totalValueAheadInScreenerQueueInclusive(
-  screenerQueue: Queue<DepositEventJobData>,
-  job: Job<DepositEventJobData>
-): Promise<bigint> {
-  const depositRequest: DepositRequest = JSON.parse(job.data.depositEventJson);
-  const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
+export class QueueValueCounter {
+  fulfillerValues: Map<Address, bigint>;
+  screenerValue: bigint;
 
-  const depositsAhead: DepositRequest[] = [];
-  const screenerDelayed = await screenerQueue.getDelayed();
-  const screenerWaiting = await screenerQueue.getWaiting();
-
-  // get all screener queue jobs that are ahead of the job in question
-  const depositsAheadInScreenerQueue = [
-    job,
-    ...screenerDelayed,
-    ...screenerWaiting,
-  ]
-    .filter((j) => j.delay <= job.delay)
-    .map((j) => JSON.parse(j.data.depositEventJson) as DepositRequest)
-    .filter(
-      (deposit) =>
-        AssetTrait.decode(deposit.encodedAsset).assetAddr == assetAddr
+  constructor(supportedAssets: Address[]) {
+    this.fulfillerValues = new Map(
+      supportedAssets.map((address) => [address, 0n])
     );
-  depositsAhead.push(...depositsAheadInScreenerQueue);
+    this.screenerValue = 0n;
+  }
 
-  return depositsAhead.reduce((acc, deposit) => acc + deposit.value, 0n);
+  async init(redis: IORedis): Promise<void> {
+    const screenerQueue = new Queue<DepositEventJobData>(SCREENER_DELAY_QUEUE, {
+      connection: redis,
+    });
+    this.screenerValue = await totalValueInScreenerQueue(screenerQueue);
+
+    let values = new Map();
+    await Promise.all([...this.fulfillerValues.keys()].map(async (address) => {
+      const fulfillerQueue = new Queue<DepositEventJobData>(
+        getFulfillmentQueueName(address),
+        { connection: redis }
+      );
+
+      values.set(address, await totalValueInFulfillerQueue(fulfillerQueue));
+    }));
+    this.fulfillerValues = values;
+  }
+
+  addToScreenerValue(amount: bigint) {
+    this.screenerValue += amount;
+  }
+
+  addToFulfillerValue(assetAddr: Address, amount: bigint) {
+    this.fulfillerValues.set(assetAddr, (this.fulfillerValues.get(assetAddr) ?? 0n) + amount);
+  }
+
+  subtractFromScreenerValue(amount: bigint) {
+    this.screenerValue -= amount;
+  }
+
+  subtractFromFulfillerValue(assetAddr: Address, amount: bigint) {
+    this.fulfillerValues.set(assetAddr, min(0n, (this.fulfillerValues.get(assetAddr) ?? 0n) - amount));
+  }
 }
 
-export async function totalValueAheadInFulfillerQueueInclusive(
-  fulfillerQueue: Queue<DepositEventJobData>,
-  job: Job<DepositEventJobData>
+async function totalValueInScreenerQueue(
+  screenerQueue: Queue<DepositEventJobData>,
 ): Promise<bigint> {
-  const depositsAhead: DepositRequest[] = [];
-  const screenerDelayed = await fulfillerQueue.getDelayed();
-  const screenerWaiting = await fulfillerQueue.getWaiting();
+  const [screenerDelayed, screenerWaiting] = await Promise.all([
+    screenerQueue.getDelayed(),
+    screenerQueue.getWaiting(),
+  ]);
 
   // get all fulfiller queue jobs that are ahead of the job in question by timestamp
-  const depositsAheadInScreenerQueue = [
-    job,
-    ...screenerDelayed,
-    ...screenerWaiting,
-  ]
-    .filter((j) => j.timestamp <= job.timestamp)
-    .map((j) => JSON.parse(j.data.depositEventJson) as DepositRequest);
-  depositsAhead.push(...depositsAheadInScreenerQueue);
-
-  return depositsAhead.reduce((acc, deposit) => acc + deposit.value, 0n);
+  return [...screenerDelayed, ...screenerWaiting].map(
+    (j) => JSON.parse(j.data.depositEventJson) as DepositEvent
+  ).reduce((acc, deposit) => acc + deposit.value, 0n);
 }
 
-export async function totalValueInFulfillerQueue(
+
+async function totalValueInFulfillerQueue(
   fulfillerQueue: Queue<DepositEventJobData>
 ): Promise<bigint> {
-  const deposits: DepositRequest[] = [];
-  const screenerDelayed = await fulfillerQueue.getDelayed();
-  const screenerWaiting = await fulfillerQueue.getWaiting();
+  const [screenerDelayed, screenerWaiting] = await Promise.all([
+    fulfillerQueue.getDelayed(),
+    fulfillerQueue.getWaiting(),
+  ]);
 
   // get all fulfiller queue jobs that are ahead of the job in question by timestamp
-  const depositsInScreenerQueue = [...screenerDelayed, ...screenerWaiting].map(
+  return [...screenerDelayed, ...screenerWaiting].map(
     (j) => JSON.parse(j.data.depositEventJson) as DepositEvent
-  );
-  deposits.push(...depositsInScreenerQueue);
-
-  return deposits.reduce((acc, deposit) => acc + deposit.value, 0n);
+  ).reduce((acc, deposit) => acc + deposit.value, 0n);
 }
