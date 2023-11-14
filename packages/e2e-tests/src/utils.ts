@@ -2,40 +2,22 @@ import {
   DepositStatusResponse,
   IncludedEncryptedNote,
   IncludedNote,
-  MockSubtreeUpdateProver,
   NoteTrait,
   OperationStatus,
   SubmittableOperationWithNetworkInfo,
-  SubtreeUpdateProver,
   TreeConstants,
   OperationTrait,
   range,
 } from "@nocturne-xyz/core";
 import { Mutex } from "async-mutex";
 import { spawn } from "child_process";
-import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
-import findWorkspaceRoot from "find-yarn-workspace-root";
-import * as path from "path";
-import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
-import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { thunk } from "@nocturne-xyz/core";
 import { Insertion } from "@nocturne-xyz/persistent-log";
 import { fetchTreeInsertions } from "@nocturne-xyz/subgraph-sync-adapters/src/treeInsertions/fetch";
 import { SUBGRAPH_URL } from "./deploy";
-
-const ROOT_DIR = findWorkspaceRoot()!;
-const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;
-const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
-const WASM_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_js/subtreeupdate.wasm`;
-const WITNESS_GEN_EXECUTABLE_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate`;
-const ZKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey`;
-const TMP_PATH = `${ARTIFACTS_DIR}/subtreeupdate/`;
-const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
-
-const MOCK_SUBTREE_UPDATER_DELAY = 2100;
 
 export const ONE_DAY_SECONDS = 60n * 60n * 24n;
 
