@@ -10,6 +10,8 @@ export enum DepositEventType {
 }
 export interface DepositEvent extends DepositRequest {
   type: DepositEventType;
+  txHash: string;
+  timestamp: bigint;
 }
 
 export interface DepositEventsBatch {

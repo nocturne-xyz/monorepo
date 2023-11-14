@@ -1,12 +1,12 @@
 import { Job } from "bullmq";
-import { DepositRequestJobData } from "../types";
+import { DepositEventJobData } from "../types";
 import { Address } from "@nocturne-xyz/core";
 import { divideDecimalPreserving } from "../utils";
 
 const SECS_IN_HOUR = 60 * 60;
 
 export function calculateSecondsLeftInJobDelay(
-  job: Job<DepositRequestJobData>
+  job: Job<DepositEventJobData>
 ): number {
   const jobDelayMs = job.delay;
   const enqueuedDateMs = job.timestamp;

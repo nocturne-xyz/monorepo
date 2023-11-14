@@ -20,6 +20,6 @@ export function getFulfillmentJobTag(assetAddr: Address): string {
 const FULFILLMENT_QUEUE = "DepositFulfillmentQueue";
 const FULFILLMENT_JOB_TAG = "DEPOSIT_FULFILLMENT";
 
-export type DepositRequestJobData = {
-  depositRequestJson: string;
+export type DepositEventJobData = {
+  depositEventJson: string;
 };

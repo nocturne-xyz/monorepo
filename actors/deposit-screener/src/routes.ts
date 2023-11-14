@@ -10,7 +10,7 @@ import { Logger } from "winston";
 import { DepositScreenerDB } from "./db";
 import { tryParseQuoteRequest } from "./request";
 import { ScreeningCheckerApi } from "./screening";
-import { DepositRequestJobData } from "./types";
+import { DepositEventJobData } from "./types";
 import {
   estimateSecondsUntilCompletionForProspectiveDeposit,
   estimateSecondsUntilDepositCompletion,
@@ -19,8 +19,8 @@ import {
 export interface DepositStatusHandlerDeps {
   db: DepositScreenerDB;
   logger: Logger;
-  screenerQueue: Queue<DepositRequestJobData>;
-  fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
+  screenerQueue: Queue<DepositEventJobData>;
+  fulfillerQueues: Map<Address, Queue<DepositEventJobData>>;
   rateLimits: Map<Address, bigint>;
 }
 
@@ -67,8 +67,8 @@ export function makeDepositStatusHandler({
 export interface QuoteHandlerDeps {
   logger: Logger;
   screeningApi: ScreeningCheckerApi;
-  screenerQueue: Queue<DepositRequestJobData>;
-  fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
+  screenerQueue: Queue<DepositEventJobData>;
+  fulfillerQueues: Map<Address, Queue<DepositEventJobData>>;
   rateLimits: Map<Address, bigint>;
 }
 

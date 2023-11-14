@@ -2,6 +2,7 @@ import {
   Address,
   AssetTrait,
   AssetType,
+  DepositEvent,
   DepositRequest,
   DepositRequestStatus,
   hashDepositRequest,
@@ -17,7 +18,7 @@ import { Job, Worker } from "bullmq";
 import { Logger } from "winston";
 import {
   ACTOR_NAME,
-  DepositRequestJobData,
+  DepositEventJobData,
   getFulfillmentQueueName,
 } from "./types";
 import {
@@ -138,18 +139,20 @@ export class DepositScreenerFulfiller {
           // make a worker listening to the current asset's fulfillment queue
           const worker = new Worker(
             getFulfillmentQueueName(address),
-            async (job: Job<DepositRequestJobData>) => {
-              const depositRequest: DepositRequest = JSON.parse(
-                job.data.depositRequestJson
+            async (job: Job<DepositEventJobData>) => {
+              const depositEvent: DepositEvent = JSON.parse(
+                job.data.depositEventJson
               );
               logger.info(
-                `attempting to fulfill deposit request: ${depositRequest}`,
-                { depositRequest }
+                `attempting to fulfill deposit request: ${depositEvent}`,
+                { depositEvent }
               );
-              const hash = hashDepositRequest(depositRequest);
+              const hash = hashDepositRequest(depositEvent);
               const childLogger = logger.child({
-                depositRequestSpender: depositRequest.spender,
-                depositReququestNonce: depositRequest.nonce,
+                depositTxHash: depositEvent.txHash,
+                depositTimestamp: depositEvent.timestamp,
+                depositRequestSpender: depositEvent.spender,
+                depositReququestNonce: depositEvent.nonce,
                 depositRequestHash: hash,
               });
 
@@ -169,16 +172,16 @@ export class DepositScreenerFulfiller {
               window.removeOldEntries();
 
               // if the deposit would exceed the rate limit, pause the queue
-              if (window.wouldExceedRateLimit(depositRequest.value)) {
+              if (window.wouldExceedRateLimit(depositEvent.value)) {
                 childLogger.warn(
                   `fulfilling deposit ${hash} would exceed rate limit`,
-                  { depositRequest }
+                  { depositEvent }
                 );
 
                 // not sure if it's possible for the RHS to be < 0, but my gut tells me it is so adding the check just to be safe
                 const queueDelay = max(
                   0,
-                  window.timeWhenAmountAvailable(depositRequest.value) -
+                  window.timeWhenAmountAvailable(depositEvent.value) -
                     Date.now()
                 );
 
@@ -195,16 +198,16 @@ export class DepositScreenerFulfiller {
               // otherwise, sign and submit it
               const receipt = await this.signAndSubmitDeposit(
                 childLogger,
-                depositRequest
+                depositEvent
               );
 
               const attributes = {
-                spender: depositRequest.spender,
+                spender: depositEvent.spender,
                 assetAddr: address,
               };
               this.metrics.fulfilledDepositsCounter.add(1, attributes);
               this.metrics.fulfilledDepositsValueCounter.add(
-                Number(depositRequest.value),
+                Number(depositEvent.value),
                 attributes
               );
 
@@ -213,7 +216,7 @@ export class DepositScreenerFulfiller {
               );
               const timestamp = block.timestamp;
 
-              window.add({ amount: depositRequest.value, timestamp });
+              window.add({ amount: depositEvent.value, timestamp });
             },
             { connection: this.redis, autorun: true }
           );

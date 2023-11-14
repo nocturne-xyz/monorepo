@@ -15,7 +15,7 @@ import { DepositScreenerDB } from "./db";
 import { makeDepositStatusHandler, makeQuoteHandler } from "./routes";
 import { ScreeningCheckerApi } from "./screening";
 import {
-  DepositRequestJobData,
+  DepositEventJobData,
   SCREENER_DELAY_QUEUE,
   getFulfillmentQueueName,
 } from "./types";
@@ -27,8 +27,8 @@ export class DepositScreenerServer {
   pool: Knex;
   db: DepositScreenerDB;
   screeningApi: ScreeningCheckerApi;
-  screenerQueue: Queue<DepositRequestJobData>;
-  fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
+  screenerQueue: Queue<DepositEventJobData>;
+  fulfillerQueues: Map<Address, Queue<DepositEventJobData>>;
   supportedAssetRateLimits: Map<Address, bigint>;
 
   constructor(

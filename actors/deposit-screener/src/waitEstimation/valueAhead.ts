@@ -1,15 +1,13 @@
 import { Job, Queue } from "bullmq";
-import { DepositRequestJobData } from "../types";
-import { AssetTrait, DepositRequest } from "@nocturne-xyz/core";
+import { DepositEventJobData } from "../types";
+import { AssetTrait, DepositEvent, DepositRequest } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 
 export async function totalValueAheadInScreenerQueueInclusive(
-  screenerQueue: Queue<DepositRequestJobData>,
-  job: Job<DepositRequestJobData>
+  screenerQueue: Queue<DepositEventJobData>,
+  job: Job<DepositEventJobData>
 ): Promise<bigint> {
-  const depositRequest: DepositRequest = JSON.parse(
-    job.data.depositRequestJson
-  );
+  const depositRequest: DepositRequest = JSON.parse(job.data.depositEventJson);
   const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
 
   const depositsAhead: DepositRequest[] = [];
@@ -23,7 +21,7 @@ export async function totalValueAheadInScreenerQueueInclusive(
     ...screenerWaiting,
   ]
     .filter((j) => j.delay <= job.delay)
-    .map((j) => JSON.parse(j.data.depositRequestJson) as DepositRequest)
+    .map((j) => JSON.parse(j.data.depositEventJson) as DepositRequest)
     .filter(
       (deposit) =>
         AssetTrait.decode(deposit.encodedAsset).assetAddr == assetAddr
@@ -34,8 +32,8 @@ export async function totalValueAheadInScreenerQueueInclusive(
 }
 
 export async function totalValueAheadInFulfillerQueueInclusive(
-  fulfillerQueue: Queue<DepositRequestJobData>,
-  job: Job<DepositRequestJobData>
+  fulfillerQueue: Queue<DepositEventJobData>,
+  job: Job<DepositEventJobData>
 ): Promise<bigint> {
   const depositsAhead: DepositRequest[] = [];
   const screenerDelayed = await fulfillerQueue.getDelayed();
@@ -48,14 +46,14 @@ export async function totalValueAheadInFulfillerQueueInclusive(
     ...screenerWaiting,
   ]
     .filter((j) => j.timestamp <= job.timestamp)
-    .map((j) => JSON.parse(j.data.depositRequestJson) as DepositRequest);
+    .map((j) => JSON.parse(j.data.depositEventJson) as DepositRequest);
   depositsAhead.push(...depositsAheadInScreenerQueue);
 
   return depositsAhead.reduce((acc, deposit) => acc + deposit.value, 0n);
 }
 
 export async function totalValueInFulfillerQueue(
-  fulfillerQueue: Queue<DepositRequestJobData>
+  fulfillerQueue: Queue<DepositEventJobData>
 ): Promise<bigint> {
   const deposits: DepositRequest[] = [];
   const screenerDelayed = await fulfillerQueue.getDelayed();
@@ -63,7 +61,7 @@ export async function totalValueInFulfillerQueue(
 
   // get all fulfiller queue jobs that are ahead of the job in question by timestamp
   const depositsInScreenerQueue = [...screenerDelayed, ...screenerWaiting].map(
-    (j) => JSON.parse(j.data.depositRequestJson) as DepositRequest
+    (j) => JSON.parse(j.data.depositEventJson) as DepositEvent
   );
   deposits.push(...depositsInScreenerQueue);
 
