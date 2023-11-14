@@ -15,6 +15,7 @@ import {
   DepositEventsBatch,
   DepositEventSyncAdapter,
   GAS_PER_DEPOSIT_COMPLETE,
+  DepositEvent,
 } from "@nocturne-xyz/core";
 import {
   ActorHandle,
@@ -248,6 +249,8 @@ export class DepositScreenerScreener {
 
         const hash = hashDepositRequest(depositRequest);
         const childLogger = logger.child({
+          depositTxHash: event.txHash,
+          depositTimestamp: event.timestamp,
           depositRequestSpender: depositRequest.spender,
           depositReququestNonce: depositRequest.nonce,
           depositRequestHash: hash,
@@ -362,16 +365,18 @@ export class DepositScreenerScreener {
       SCREENER_DELAY_QUEUE,
       async (job: Job<DepositRequestJobData>) => {
         logger.debug("processing deposit request");
-        const depositRequest: DepositRequest = JSON.parse(
+        const depositEvent: DepositEvent = JSON.parse(
           job.data.depositRequestJson
         );
-        const depositHash = hashDepositRequest(depositRequest);
+        const depositHash = hashDepositRequest(depositEvent);
         const assetAddr = AssetTrait.decode(
-          depositRequest.encodedAsset
+          depositEvent.encodedAsset
         ).assetAddr;
         const childLogger = logger.child({
-          depositRequestSpender: depositRequest.spender,
-          depositReququestNonce: depositRequest.nonce,
+          depositTxHash: depositEvent.txHash,
+          depositTimestamp: depositEvent.timestamp,
+          depositRequestSpender: depositEvent.spender,
+          depositReququestNonce: depositEvent.nonce,
           depositRequestHash: depositHash,
           depositRequestAsset: assetAddr,
         });
@@ -400,9 +405,9 @@ export class DepositScreenerScreener {
         );
         const checkResult = await this.screeningApi.checkDeposit(
           {
-            spender: depositRequest.spender,
+            spender: depositEvent.spender,
             assetAddr,
-            value: depositRequest.value,
+            value: depositEvent.value,
           },
           {
             skipCacheRead: true, // NOTE: we never resort to cache on final screening check
@@ -416,7 +421,7 @@ export class DepositScreenerScreener {
             { reason: checkResult.reason }
           );
           await this.db.setDepositRequestStatus(
-            depositRequest,
+            depositEvent,
             DepositRequestStatus.FailedScreen
           );
           return;
@@ -425,7 +430,7 @@ export class DepositScreenerScreener {
         childLogger.info(
           `deposit request passed screening. pushing to fulfillment queue`
         );
-        const depositRequestJson = JSON.stringify(depositRequest);
+        const depositRequestJson = JSON.stringify(depositEvent);
         const jobData: DepositRequestJobData = {
           depositRequestJson,
         };
@@ -440,17 +445,17 @@ export class DepositScreenerScreener {
         // submit to it
         await fulfillmentQueue.add(jobTag, jobData, { jobId: depositHash });
         await this.db.setDepositRequestStatus(
-          depositRequest,
+          depositEvent,
           DepositRequestStatus.AwaitingFulfillment
         );
 
         const attributes = {
-          spender: depositRequest.spender,
+          spender: depositEvent.spender,
           assetAddr: assetAddr,
         };
         this.metrics.depositsPassedSecondScreenCounter.add(1, attributes);
         this.metrics.depositsPassedSecondScreenValueCounter.add(
-          Number(depositRequest.value),
+          Number(depositEvent.value),
           attributes
         );
       },

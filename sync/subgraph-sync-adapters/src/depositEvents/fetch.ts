@@ -75,6 +75,8 @@ function formDepositEventsRawQuery(
       depositEvents(${whereClause}first: 50, orderDirection: asc, orderBy: id) {
         id
         type
+        txHash
+        timestamp
         spender
         encodedAssetAddr
         encodedAssetId

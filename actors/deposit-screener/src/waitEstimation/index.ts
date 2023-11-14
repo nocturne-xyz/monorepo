@@ -1,7 +1,7 @@
 import {
   Address,
   AssetTrait,
-  DepositRequest,
+  DepositEvent,
   DepositRequestStatus,
 } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
@@ -192,7 +192,7 @@ async function findScreenerQueueJobClosestInDelay(
   const screenerJobs = [...screenerDelayed, ...screenerWaiting];
   const screenerJobsAhead = screenerJobs
     .filter((job) => {
-      const depositRequest: DepositRequest = JSON.parse(
+      const depositRequest: DepositEvent = JSON.parse(
         job.data.depositRequestJson
       );
       return (

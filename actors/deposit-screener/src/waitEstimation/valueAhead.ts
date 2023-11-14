@@ -1,6 +1,6 @@
 import { Job, Queue } from "bullmq";
 import { DepositRequestJobData } from "../types";
-import { AssetTrait, DepositRequest } from "@nocturne-xyz/core";
+import { AssetTrait, DepositEvent, DepositRequest } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 
 export async function totalValueAheadInScreenerQueueInclusive(
@@ -63,7 +63,7 @@ export async function totalValueInFulfillerQueue(
 
   // get all fulfiller queue jobs that are ahead of the job in question by timestamp
   const depositsInScreenerQueue = [...screenerDelayed, ...screenerWaiting].map(
-    (j) => JSON.parse(j.data.depositRequestJson) as DepositRequest
+    (j) => JSON.parse(j.data.depositRequestJson) as DepositEvent
   );
   deposits.push(...depositsInScreenerQueue);
 
