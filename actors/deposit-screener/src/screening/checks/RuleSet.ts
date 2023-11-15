@@ -225,9 +225,14 @@ export class RuleSet {
       }
       currRule = currRule.next;
     }
+
+    const ruleResults = rulesLogList.reduce((acc, { ruleName, result }) => {
+      acc[ruleName] = result;
+      return acc;
+    }, {} as Record<string, Awaited<ReturnType<RuleLike["check"]>>>);
     this.logger.info(`Screener execution for deposit:`, {
-      deposit,
-      rulesLogList,
+      ...deposit,
+      ...ruleResults,
     });
     return { type: "Delay", timeSeconds: delaySeconds };
   }
