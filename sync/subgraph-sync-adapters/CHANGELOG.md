@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- 3ca99eaf: add txhash and timestamp to deposit event
+
+### Patch Changes
+
+- Updated dependencies [3ca99eaf]
+  - @nocturne-xyz/core@3.2.0
+
 ## 0.4.2
 
 ### Patch Changes

@@ -1,5 +1,18 @@
 # Changelog
 
+## 5.1.4
+
+### Patch Changes
+
+- f87b6457: use gas multiplier for deposit comp
+- Updated dependencies [3ca99eaf]
+  - @nocturne-xyz/subgraph-sync-adapters@0.5.0
+  - @nocturne-xyz/core@3.2.0
+  - @nocturne-xyz/client@3.2.1
+  - @nocturne-xyz/idb-kv-store@0.4.12
+  - @nocturne-xyz/local-prover@0.6.2
+  - @nocturne-xyz/op-request-plugins@2.1.8
+
 ## 5.1.3
 
 ### Patch Changes

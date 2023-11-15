@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.12.0
+
+### Minor Changes
+
+- 3ca99eaf: log txhash and timestamp in metadata
+
+### Patch Changes
+
+- 9ae71e02: small logger fixes to wrap objects in brackets, particularly screener delay decision trace
+- Updated dependencies [3ca99eaf]
+  - @nocturne-xyz/subgraph-sync-adapters@0.5.0
+  - @nocturne-xyz/core@3.2.0
+  - @nocturne-xyz/offchain-utils@0.5.1
+
 ## 0.11.0
 
 ### Minor Changes

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.1
+
+### Patch Changes
+
+- Updated dependencies [3ca99eaf]
+  - @nocturne-xyz/core@3.2.0
+  - @nocturne-xyz/client@3.2.1
+  - @nocturne-xyz/offchain-utils@0.5.1
+
 ## 0.10.0
 
 ### Minor Changes
