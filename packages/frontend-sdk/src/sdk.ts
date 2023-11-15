@@ -124,7 +124,8 @@ export interface NocturneSdkOptions {
   // we highly recommend letting the SDK default to the latest version unless you have a good reason not to
   snap?: GetSnapOptions;
 
-  gasMultiplier?: number;
+  opGasMultiplier?: number;
+  depositGasMultiplier?: number;
 }
 
 export class NocturneSdk implements NocturneSdkApi {
@@ -137,7 +138,8 @@ export class NocturneSdk implements NocturneSdkApi {
   protected depositAdapter: DepositAdapter;
   protected syncAdapter: SDKSyncAdapter;
   protected syncMutex: Mutex;
-  protected gasMultiplier: number;
+  protected opGasMultiplier: number;
+  protected depositGasMultiplier: number;
 
   protected syncProgressHandlerCounter = 0;
   protected syncProgressHandlers: Map<number, (progress: number) => void>;
@@ -181,7 +183,9 @@ export class NocturneSdk implements NocturneSdkApi {
       return new WasmCanonAddrSigCheckProver(wasm, zkey, vkey);
     });
 
-    this.gasMultiplier = options.gasMultiplier ?? 1;
+    this.opGasMultiplier = options.opGasMultiplier ?? 1;
+    this.depositGasMultiplier = options.depositGasMultiplier ?? 1;
+
     this.endpoints = sdkConfig.endpoints;
     this.sdkConfig = sdkConfig;
     this._provider = options.provider;
@@ -382,7 +386,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
   protected async estimateGasPerDeposit(): Promise<bigint> {
     const gasPrice = await this.provider.getGasPrice();
-    return gasPrice.toBigInt() * GAS_PER_DEPOSIT_COMPLETE;
+    return (gasPrice.toBigInt() * GAS_PER_DEPOSIT_COMPLETE * BigInt(Math.floor(this.depositGasMultiplier * 100))) / 100n;
   }
 
   async initiateErc20Deposits(
@@ -629,7 +633,7 @@ export class NocturneSdk implements NocturneSdkApi {
 
     let preSignOp: PreSignOperation | undefined;
     try {
-      preSignOp = await client.prepareOperation(opRequest, this.gasMultiplier);
+      preSignOp = await client.prepareOperation(opRequest, this.opGasMultiplier);
     } catch (e) {
       console.log("[fe-sdk] prepareOperation failed: ", e);
       throw e;
