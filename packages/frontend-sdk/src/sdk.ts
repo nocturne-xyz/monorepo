@@ -293,14 +293,13 @@ export class NocturneSdk implements NocturneSdkApi {
   async initiateEthDeposits(
     values: bigint[],
     gasCompensationPerDeposit?: bigint,
-    gasMultiplier?: number,
   ): Promise<DepositHandleWithReceipt[]> {
     const signer = await getSigner(this.provider);
 
     const ethToWrap = values.reduce((acc, val) => acc + val, 0n);
     const gasCompRequired = gasCompensationPerDeposit
       ? gasCompensationPerDeposit * BigInt(values.length)
-      : BigInt(values.length) * (await this.estimateGasPerDeposit(gasMultiplier));
+      : BigInt(values.length) * (await this.estimateGasPerDeposit());
 
     const totalValue = ethToWrap + gasCompRequired;
 
@@ -381,22 +380,21 @@ export class NocturneSdk implements NocturneSdkApi {
     );
   }
 
-  protected async estimateGasPerDeposit(gasMultiplier: number = 1): Promise<bigint> {
+  protected async estimateGasPerDeposit(): Promise<bigint> {
     const gasPrice = await this.provider.getGasPrice();
-    return (gasPrice.toBigInt() * GAS_PER_DEPOSIT_COMPLETE * BigInt(Math.floor(gasMultiplier * 100))) / 100n;
+    return (gasPrice.toBigInt() * GAS_PER_DEPOSIT_COMPLETE * BigInt(Math.floor(this.gasMultiplier * 100))) / 100n;
   }
 
   async initiateErc20Deposits(
     erc20Address: Address,
     values: bigint[],
     gasCompensationPerDeposit?: bigint,
-    gasMultiplier?: number,
   ): Promise<DepositHandleWithReceipt[]> {
     const signer = await getSigner(this.provider);
 
     const gasCompRequired = gasCompensationPerDeposit
       ? gasCompensationPerDeposit * BigInt(values.length)
-      : BigInt(values.length) * (await this.estimateGasPerDeposit(gasMultiplier));
+      : BigInt(values.length) * (await this.estimateGasPerDeposit());
 
     const signerBalance = (await signer.getBalance()).toBigInt();
     if (signerBalance < gasCompRequired) {
