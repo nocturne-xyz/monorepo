@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.0
+
+### Minor Changes
+
+- 3ca99eaf: add txhash and timestamp to deposit event
+
 ## 3.1.4
 
 ### Patch Changes
