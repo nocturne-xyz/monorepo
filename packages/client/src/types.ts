@@ -6,6 +6,11 @@ import {
   OperationStatus,
 } from "@nocturne-xyz/core";
 
+export type OpWithMetadata<O> = {
+  op: O;
+  metadata: OperationMetadata;
+};
+
 export interface OptimisticNFRecord {
   nullifier: bigint;
   expirationDate: number;

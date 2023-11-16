@@ -5,7 +5,6 @@ import {
   stringifyObjectValues,
 } from "@nocturne-xyz/client";
 import * as JSON from "bigint-json-serialization";
-import { SnapStateApi } from "../api";
 import { generateNocturneSpendKeyFromEoaSig } from "../eoaSigKeygen";
 import { SupportedProvider } from "../types";
 import { GetSnapsResponse, Snap } from "./types";
@@ -15,7 +14,7 @@ export * from "./utils";
 
 const NOCTURNE_SNAP_ORIGIN = "npm:@nocturne-xyz/snap";
 
-export class SnapStateSdk implements SnapStateApi {
+export class SnapStateSdk {
   constructor(
     // this is lazy so it plays nice with server components
     readonly getProvider: () => SupportedProvider,
