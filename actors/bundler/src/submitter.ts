@@ -1,10 +1,8 @@
 import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
-import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
 import {
   Address,
   OperationTrait,
   OperationStatus,
-  parseEventsFromContractReceipt,
   SubmittableOperationWithNetworkInfo,
   maxGasForOperation,
 } from "@nocturne-xyz/core";
@@ -28,6 +26,8 @@ import {
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import retry from "async-retry";
+import { parseEventsFromTransactionReceipt } from "@nocturne-xyz/core/dist/src/utils/ethers";
+import { LogDescription } from "ethers/lib/utils";
 
 const COMPONENT_NAME = "submitter";
 
@@ -112,9 +112,11 @@ export class BundlerSubmitter {
           bundle: opDigests,
         });
 
-        await this.submitBatch(logger, operations).catch((e) => {
-          throw new Error(e);
-        });
+        try {
+          await this.submitBatch(logger, operations);
+        } catch (e) {
+          logger.error("failed to submit bundle:", e);
+        }
 
         this.metrics.operationsSubmittedCounter.add(operations.length);
         this.metrics.bundlesSubmittedCounter.add(1);
@@ -275,11 +277,18 @@ export class BundlerSubmitter {
     logger.info("getting transaction receipt for processBundle tx", {
       txHash,
     });
+
     const receipt = await this.provider.getTransactionReceipt(txHash);
-    const matchingEvents = parseEventsFromContractReceipt(
+    logger.info("got transaction receipt for processBundle tx", {
+      txHash,
       receipt,
+    });
+
+    const matchingEvents = parseEventsFromTransactionReceipt(
+      receipt,
+      this.tellerContract.interface,
       this.tellerContract.interface.getEvent("OperationProcessed")
-    ) as OperationProcessedEvent[];
+    ) as LogDescription[];
 
     logger.info("matching events:", { matchingEvents });
 
