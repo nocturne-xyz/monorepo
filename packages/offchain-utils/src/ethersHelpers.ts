@@ -1,14 +1,29 @@
-// import ethers
 import { ethers } from "ethers";
+import { intFromEnv } from "./configuration";
+
+const DEFAULT_RPC_TIMEOUT_MS = 3000;
+/**
+ * Get ethers provider and signer from environment variables.
+ */
+export function getEthersProviderFromEnv(): ethers.providers.JsonRpcProvider {
+  const rpcUrl = process.env.RPC_URL;
+  if (!rpcUrl) {
+    throw new Error("RPC_URL env var not set");
+  }
+  const timeout = intFromEnv("RPC_TIMEOUT_MS") ?? DEFAULT_RPC_TIMEOUT_MS;
+  return new ethers.providers.JsonRpcProvider({
+    url: rpcUrl,
+    timeout,
+  });
+}
+
+// TODO: REMOVE ALL THIS
 import {
   DefenderRelayProvider,
   DefenderRelaySigner,
 } from "@openzeppelin/defender-relay-client/lib/ethers";
 import { Speed } from "@openzeppelin/defender-relay-client";
-import { intFromEnv } from "./configuration";
 import * as https from "https";
-
-const DEFAULT_RPC_TIMEOUT_MS = 3000;
 
 const DEFAULT_SPEED: Speed = "safeLow";
 

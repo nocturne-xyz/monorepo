@@ -7,7 +7,11 @@ import {
   DummyScreeningApi,
 } from "@nocturne-xyz/deposit-screener";
 import { SubgraphDepositEventSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
-import { createPool, makeTestLogger } from "@nocturne-xyz/offchain-utils";
+import {
+  EthersTxSubmitter,
+  createPool,
+  makeTestLogger,
+} from "@nocturne-xyz/offchain-utils";
 import { ethers } from "ethers";
 import IORedis from "ioredis";
 import { TeardownFn, makeRedisInstance } from "./utils";
@@ -102,7 +106,9 @@ async function startDepositScreenerFulfiller(
     config;
 
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-  const txSigner = new ethers.Wallet(txSignerKey, provider);
+  const txSubmitter = new EthersTxSubmitter(
+    new ethers.Wallet(txSignerKey, provider)
+  );
   const attestationSigner = new ethers.Wallet(attestationSignerKey);
 
   const logger = makeTestLogger("deposit-screener", "fulfiller");
@@ -110,7 +116,8 @@ async function startDepositScreenerFulfiller(
   const fulfiller = new DepositScreenerFulfiller(
     logger,
     depositManagerAddress,
-    txSigner,
+    provider,
+    txSubmitter,
     attestationSigner,
     redis,
     supportedAssets

@@ -1,7 +1,8 @@
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import {
   makeLogger,
-  getEthersProviderAndSignerFromEnvConfiguration,
+  getEthersProviderFromEnv,
+  getTxSubmitterFromEnv,
 } from "@nocturne-xyz/offchain-utils";
 import { Command } from "commander";
 import { ethers } from "ethers";
@@ -83,8 +84,8 @@ const runProcess = new Command("processor")
       logger.child({ function: "SubgraphDepositEventSyncAdapter" })
     );
 
-    const { signer, provider } =
-      getEthersProviderAndSignerFromEnvConfiguration();
+    const provider = getEthersProviderFromEnv();
+    const txSubmitter = getTxSubmitterFromEnv();
 
     const attestationSignerKey = process.env.ATTESTATION_SIGNER_KEY;
     if (!attestationSignerKey) {
@@ -128,7 +129,8 @@ const runProcess = new Command("processor")
     const fulfiller = new DepositScreenerFulfiller(
       logger,
       config.depositManagerAddress,
-      signer,
+      provider,
+      txSubmitter,
       attestationSigner,
       getRedis(),
       supportedAssets,
