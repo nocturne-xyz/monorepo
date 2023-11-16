@@ -4,7 +4,10 @@ import {
 } from "@nocturne-xyz/subtree-updater";
 import { MockSubtreeUpdateProver, thunk } from "@nocturne-xyz/core";
 import { ethers } from "ethers";
-import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
+import {
+  EthersTxSubmitter,
+  makeTestLogger,
+} from "@nocturne-xyz/offchain-utils";
 import { Handler__factory } from "@nocturne-xyz/contracts";
 import { makeRedisInstance } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -38,11 +41,13 @@ export async function startSubtreeUpdater(
   config: SubtreeUpdaterConfig
 ): Promise<() => Promise<void>> {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
-  const signer = new ethers.Wallet(config.txSignerKey, provider);
+  const txSubmitter = new EthersTxSubmitter(
+    new ethers.Wallet(config.txSignerKey, provider)
+  );
   const logger = makeTestLogger("subtree-updater", "subtree-updater");
   const handlerContract = Handler__factory.connect(
     config.handlerAddress,
-    signer
+    provider
   );
   const prover = config.useRapidsnark
     ? new RapidsnarkSubtreeUpdateProver(
@@ -55,6 +60,7 @@ export async function startSubtreeUpdater(
     : new MockSubtreeUpdateProver();
   const updater = new SubtreeUpdater(
     handlerContract,
+    txSubmitter,
     logger,
     await getRedis(),
     prover,

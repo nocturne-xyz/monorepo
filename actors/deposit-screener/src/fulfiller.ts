@@ -302,7 +302,7 @@ export class DepositScreenerFulfiller {
               );
 
               logger.info(
-                `confirmed tx receipt. nonce: ${depositRequest.nonce}. txhash: ${txHash}`
+                `confirmed completeDeposit tx. nonce: ${depositRequest.nonce}. txhash: ${txHash}`
               );
               return txHash;
             default:

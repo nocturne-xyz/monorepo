@@ -226,7 +226,7 @@ export class BundlerSubmitter {
         }
       );
 
-      logger.info(`confirmed tx. txhash: ${txHash}`);
+      logger.info(`confirmed processBundle tx. txhash: ${txHash}`);
       return txHash;
     } catch (err) {
       logger.error("failed to process bundle:", err);
