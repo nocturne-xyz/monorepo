@@ -176,6 +176,14 @@ export interface NocturneSdkApi {
   // *** HISTORY METHODS *** //
 
   getOpHistory(): Promise<OpHistoryRecord[]>;
+
+  // *** MISCELLANEOUS *** //
+
+  /**
+   * Get the total value locked in the protocol, by ERC20 Ticker.
+   * TODO best to give back as address, but interface maps by Ticker, based on @nocturne-xyz/config, so would need to change first
+   */
+  getProtocolTvl(): Promise<Map<string, bigint>>;
 }
 
 // *** SNAP STATE METHODS *** //

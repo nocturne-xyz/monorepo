@@ -23,6 +23,7 @@ import {
   DepositManager__factory,
   Handler,
   Handler__factory,
+  SimpleERC20Token__factory,
 } from "@nocturne-xyz/contracts";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
@@ -285,6 +286,20 @@ export class NocturneSdk implements NocturneSdkApi {
 
   get opRequestBuilder(): OpRequestBuilder {
     return newOpRequestBuilder(this.provider, this.chainId);
+  }
+
+  async getProtocolTvl(): Promise<Map<string, bigint>> {
+    const tellerAddress = this.sdkConfig.config.tellerAddress;
+    const tvlByAsset = new Map<string, bigint>();
+    for (const [assetName, { address }] of this.sdkConfig.config.erc20s) {
+      const erc20Contract = SimpleERC20Token__factory.connect(
+        address,
+        this.provider,
+      );
+      const balance = await erc20Contract.balanceOf(tellerAddress);
+      tvlByAsset.set(assetName, balance.toBigInt());
+    }
+    return tvlByAsset;
   }
 
   /**
