@@ -298,21 +298,12 @@ export class NocturneSdk implements NocturneSdkApi {
     values: bigint[],
     gasCompensationPerDeposit?: bigint,
   ): Promise<DepositHandleWithReceipt[]> {
-    const signer = await getSigner(this.provider);
-
     const ethToWrap = values.reduce((acc, val) => acc + val, 0n);
     const gasCompRequired = gasCompensationPerDeposit
       ? gasCompensationPerDeposit * BigInt(values.length)
       : BigInt(values.length) * (await this.estimateGasPerDeposit());
 
     const totalValue = ethToWrap + gasCompRequired;
-
-    const signerBalance = (await signer.getBalance()).toBigInt();
-    if (signerBalance < totalValue) {
-      throw new Error(
-        `signer does not have enough balance for gas comp + eth to wrap. balance: ${signerBalance}. gasComp required: ${gasCompRequired}. eth to wrap: ${ethToWrap}`,
-      );
-    }
 
     const depositAddr = StealthAddressTrait.compress(
       await this.getRandomStealthAddress(),
@@ -386,7 +377,12 @@ export class NocturneSdk implements NocturneSdkApi {
 
   protected async estimateGasPerDeposit(): Promise<bigint> {
     const gasPrice = await this.provider.getGasPrice();
-    return (gasPrice.toBigInt() * GAS_PER_DEPOSIT_COMPLETE * BigInt(Math.floor(this.depositGasMultiplier * 100))) / 100n;
+    return (
+      (gasPrice.toBigInt() *
+        GAS_PER_DEPOSIT_COMPLETE *
+        BigInt(Math.floor(this.depositGasMultiplier * 100))) /
+      100n
+    );
   }
 
   async initiateErc20Deposits(
@@ -399,13 +395,6 @@ export class NocturneSdk implements NocturneSdkApi {
     const gasCompRequired = gasCompensationPerDeposit
       ? gasCompensationPerDeposit * BigInt(values.length)
       : BigInt(values.length) * (await this.estimateGasPerDeposit());
-
-    const signerBalance = (await signer.getBalance()).toBigInt();
-    if (signerBalance < gasCompRequired) {
-      throw new Error(
-        `signer does not have enough balance for gas comp. balance: ${signerBalance}. gasComp required: ${gasCompRequired}`,
-      );
-    }
 
     const depositAmount = values.reduce((acc, val) => acc + val, 0n);
     const totalValue = depositAmount;
@@ -633,7 +622,10 @@ export class NocturneSdk implements NocturneSdkApi {
 
     let preSignOp: PreSignOperation | undefined;
     try {
-      preSignOp = await client.prepareOperation(opRequest, this.opGasMultiplier);
+      preSignOp = await client.prepareOperation(
+        opRequest,
+        this.opGasMultiplier,
+      );
     } catch (e) {
       console.log("[fe-sdk] prepareOperation failed: ", e);
       throw e;

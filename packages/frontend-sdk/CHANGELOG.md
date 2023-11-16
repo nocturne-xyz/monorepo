@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.1.5
+
+### Patch Changes
+
+- Don't throw if balances < total amount, on deposits
+
 ## 5.1.4
 
 ### Patch Changes
