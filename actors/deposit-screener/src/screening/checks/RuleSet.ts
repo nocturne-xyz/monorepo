@@ -211,10 +211,13 @@ export class RuleSet {
         result,
       });
       if (result.type === "Rejection") {
-        this.logger.info(`Screener execution for deposit:`, {
-          deposit: { ...deposit },
-          results: { ...toLoggable(rulesLogList) },
-        });
+        this.logger.info(
+          `Screener execution on deposit for addr ${deposit.spender}`,
+          {
+            deposit: { ...deposit },
+            results: { ...toLoggable(rulesLogList) },
+          }
+        );
         return result;
       } else if (result.type === "Delay") {
         delaySeconds = APPLY_DELAY_OPERATION[result.operation](
@@ -224,10 +227,13 @@ export class RuleSet {
       }
       currRule = currRule.next;
     }
-    this.logger.info(`Screener execution for deposit:`, {
-      deposit: { ...deposit },
-      results: { ...toLoggable(rulesLogList) },
-    });
+    this.logger.info(
+      `Screener execution for deposit for addr ${deposit.spender}`,
+      {
+        deposit: { ...deposit },
+        results: { ...toLoggable(rulesLogList) },
+      }
+    );
     return { type: "Delay", timeSeconds: delaySeconds };
   }
 }
