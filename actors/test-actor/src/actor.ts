@@ -303,11 +303,14 @@ export class TestActor {
         }
       );
 
-      const approveTx = await erc20Token.approve(
+      const approveData = erc20Token.interface.encodeFunctionData("approve", [
         this.depositManager.address,
-        randomValue
-      );
-      await approveTx.wait(1);
+        randomValue,
+      ]);
+      await this.txSubmitter.submitTransaction({
+        to: erc20Config.address,
+        data: approveData,
+      });
 
       // submit
       this.logger.info(

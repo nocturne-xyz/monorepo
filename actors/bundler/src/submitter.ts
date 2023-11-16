@@ -169,7 +169,6 @@ export class BundlerSubmitter {
     }
 
     logger = logger.child({ txHash });
-
     logger.debug("performing post-submission bookkeeping");
     await this.performPostSubmissionBookkeeping(logger, operations, txHash);
   }
@@ -227,7 +226,7 @@ export class BundlerSubmitter {
         }
       );
 
-      logger.info(`confirmed tx receipt. txhash: ${txHash}`);
+      logger.info(`confirmed tx. txhash: ${txHash}`);
       return txHash;
     } catch (err) {
       logger.error("failed to process bundle:", err);
@@ -270,7 +269,12 @@ export class BundlerSubmitter {
       operations.map((op) => [OperationTrait.computeDigest(op), op])
     );
 
-    logger.debug("looking for OperationProcessed events...");
+    logger.info("waiting for processBundle tx to be mined", { txHash });
+    await this.provider.waitForTransaction(txHash);
+
+    logger.info("getting transaction receipt for processBundle tx", {
+      txHash,
+    });
     const receipt = await this.provider.getTransactionReceipt(txHash);
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,

@@ -84,7 +84,7 @@ export class EthersTxSubmitter implements TxSubmitter {
     });
 
     console.log(`tx dispatched, waiting for confirmation. txhash: ${tx.hash}`);
-    await tx.wait(opts?.numConfirmations);
+    await tx.wait(opts?.numConfirmations ?? 1);
 
     return tx.hash;
   }
