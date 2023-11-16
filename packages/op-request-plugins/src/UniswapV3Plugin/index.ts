@@ -73,7 +73,10 @@ export function UniswapV3Plugin<EInner extends BaseOpRequestBuilder>(
               );
             }
 
-            const maxSlippageBps = opts?.maxSlippageBps ?? 100;
+            const maxSlippageBps = Math.floor(
+              Math.max(opts?.maxSlippageBps ?? 100, 1)
+            ); // protect against bad BigInt decimal conversion attempt
+
             const swapRoute = await getSwapRoute({
               chainId: this._op.chainId,
               provider: this.provider,
