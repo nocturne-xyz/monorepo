@@ -1,5 +1,9 @@
 import { TeardownFn, makeRedisInstance } from "./utils";
-import { createPool, makeTestLogger } from "@nocturne-xyz/offchain-utils";
+import {
+  EthersTxSubmitter,
+  createPool,
+  makeTestLogger,
+} from "@nocturne-xyz/offchain-utils";
 import {
   BundlerBatcher,
   BundlerServer,
@@ -39,11 +43,14 @@ function startBundlerSubmitter(
   redis: IORedis
 ): TeardownFn {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
-  const signer = new ethers.Wallet(config.txSignerKey, provider);
+  const txSubmitter = new EthersTxSubmitter(
+    new ethers.Wallet(config.txSignerKey, provider)
+  );
   const logger = makeTestLogger("bundler", "submitter");
   const submitter = new BundlerSubmitter(
     config.tellerAddress,
-    signer,
+    provider,
+    txSubmitter,
     redis,
     logger
   );
