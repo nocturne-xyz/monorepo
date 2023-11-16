@@ -113,7 +113,14 @@ export class OzRelayerTxSubmitter implements TxSubmitter {
       value: opts?.value ?? 0,
       speed: opts?.speed ?? "fast",
       gasLimit:
-        opts?.gasLimit ?? Number(await this.provider.estimateGas({ to, data })),
+        opts?.gasLimit ??
+        Number(
+          await this.provider.estimateGas({
+            to,
+            data,
+            from: await this.address(),
+          })
+        ),
     });
 
     console.log(
