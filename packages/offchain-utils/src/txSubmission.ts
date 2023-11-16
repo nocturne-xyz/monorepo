@@ -24,9 +24,11 @@ export interface TxSubmissionOpts {
 }
 
 export interface TxSubmitter {
+  address(): Promise<Address>;
+
   submitTransaction(
     args: TxSubmissionArgs,
-    opts: TxSubmissionOpts
+    opts?: TxSubmissionOpts
   ): Promise<TxHash>;
 }
 
@@ -65,20 +67,24 @@ export class EthersTxSubmitter implements TxSubmitter {
     this.signer = signer;
   }
 
+  async address(): Promise<Address> {
+    return this.signer.getAddress();
+  }
+
   async submitTransaction(
     { to, data }: TxSubmissionArgs,
-    opts: TxSubmissionOpts
+    opts?: TxSubmissionOpts
   ): Promise<TxHash> {
     const tx = await this.signer.sendTransaction({
       to,
       data,
-      value: opts.value,
-      gasLimit: opts.gasLimit,
+      value: opts?.value,
+      gasLimit: opts?.gasLimit,
       gasPrice: await this.signer.provider.getGasPrice(),
     });
 
     console.log(`tx dispatched, waiting for confirmation. txhash: ${tx.hash}`);
-    await tx.wait(opts.numConfirmations);
+    await tx.wait(opts?.numConfirmations);
 
     return tx.hash;
   }
@@ -93,17 +99,21 @@ export class OzRelayerTxSubmitter implements TxSubmitter {
     this.provider = provider;
   }
 
+  async address(): Promise<Address> {
+    return (await this.relayer.getRelayer()).address;
+  }
+
   async submitTransaction(
     { to, data }: TxSubmissionArgs,
-    opts: TxSubmissionOpts
+    opts?: TxSubmissionOpts
   ): Promise<TxHash> {
     let relayerTx = await this.relayer.sendTransaction({
       to,
       data,
-      value: opts.value,
-      speed: opts.speed ?? "fast",
+      value: opts?.value ?? 0,
+      speed: opts?.speed ?? "fast",
       gasLimit:
-        opts.gasLimit ?? Number(await this.provider.estimateGas({ to, data })),
+        opts?.gasLimit ?? Number(await this.provider.estimateGas({ to, data })),
     });
 
     console.log(

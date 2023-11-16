@@ -18,7 +18,8 @@ import { TestActor } from "../actor";
 import * as fs from "fs";
 import {
   makeLogger,
-  getEthersProviderAndSignerFromEnvConfiguration,
+  getEthersProviderFromEnv,
+  getTxSubmitterFromEnv,
 } from "@nocturne-xyz/offchain-utils";
 import { LMDBKVStore } from "../lmdb";
 import {
@@ -129,14 +130,14 @@ export const run = new Command("run")
       throw new Error("NOCTURNE_SPENDING_KEY must be 32 bytes");
     }
 
-    const { signer, provider } =
-      getEthersProviderAndSignerFromEnvConfiguration();
+    const provider = getEthersProviderFromEnv();
+    const txSubmitter = getTxSubmitterFromEnv();
 
-    const teller = Teller__factory.connect(config.tellerAddress, signer);
-    const handler = Handler__factory.connect(config.handlerAddress, signer);
+    const teller = Teller__factory.connect(config.tellerAddress, provider);
+    const handler = Handler__factory.connect(config.handlerAddress, provider);
     const depositManager = DepositManager__factory.connect(
       config.depositManagerAddress,
-      signer
+      provider
     );
 
     const nocturneSigner = new NocturneSigner(skBytes);
@@ -171,7 +172,7 @@ export const run = new Command("run")
 
     const actor = new TestActor(
       provider,
-      signer,
+      txSubmitter,
       teller,
       depositManager,
       handler,
