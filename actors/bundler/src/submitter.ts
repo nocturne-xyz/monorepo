@@ -1,10 +1,8 @@
 import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
-import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
 import {
   Address,
   OperationTrait,
   OperationStatus,
-  parseEventsFromContractReceipt,
   SubmittableOperationWithNetworkInfo,
   maxGasForOperation,
 } from "@nocturne-xyz/core";
@@ -21,11 +19,15 @@ import * as JSON from "bigint-json-serialization";
 import { Logger } from "winston";
 import {
   ActorHandle,
+  TxHash,
+  TxSubmitter,
   makeCreateCounterFn,
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import retry from "async-retry";
+import { parseEventsFromTransactionReceipt } from "@nocturne-xyz/core/dist/src/utils/ethers";
+import { LogDescription } from "ethers/lib/utils";
 
 const COMPONENT_NAME = "submitter";
 
@@ -37,7 +39,8 @@ interface BundlerSubmitterMetrics {
 
 export class BundlerSubmitter {
   redis: IORedis;
-  signingProvider: ethers.Signer;
+  provider: ethers.providers.JsonRpcProvider;
+  txSubmitter: TxSubmitter;
   tellerContract: Teller;
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
@@ -50,7 +53,8 @@ export class BundlerSubmitter {
 
   constructor(
     tellerAddress: Address,
-    signingProvider: ethers.Signer,
+    provider: ethers.providers.JsonRpcProvider,
+    txSubmitter: TxSubmitter,
     redis: IORedis,
     logger: Logger,
     finalityBlocks = 1
@@ -59,11 +63,9 @@ export class BundlerSubmitter {
     this.logger = logger;
     this.statusDB = new StatusDB(this.redis);
     this.nullifierDB = new NullifierDB(this.redis);
-    this.signingProvider = signingProvider;
-    this.tellerContract = Teller__factory.connect(
-      tellerAddress,
-      this.signingProvider
-    );
+    this.provider = provider;
+    this.txSubmitter = txSubmitter;
+    this.tellerContract = Teller__factory.connect(tellerAddress, this.provider);
     this.finalityBlocks = finalityBlocks;
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
@@ -110,9 +112,11 @@ export class BundlerSubmitter {
           bundle: opDigests,
         });
 
-        await this.submitBatch(logger, operations).catch((e) => {
-          throw new Error(e);
-        });
+        try {
+          await this.submitBatch(logger, operations);
+        } catch (e) {
+          logger.error("failed to submit bundle:", e);
+        }
 
         this.metrics.operationsSubmittedCounter.add(operations.length);
         this.metrics.bundlesSubmittedCounter.add(1);
@@ -155,21 +159,20 @@ export class BundlerSubmitter {
     await this.setOpsToInflight(logger, operations);
 
     logger.debug("dispatching bundle...");
-    const receipt = await retry(
+    const txHash = await retry(
       async () => await this.dispatchBundle(logger, operations),
       { retries: 3 }
     );
-    logger.info("dispatch bundle tx receipt: ", { receipt });
+    logger.info("process bundle tx hash:", { txHash });
 
-    if (!receipt) {
+    if (!txHash) {
       logger.error("bundle reverted");
       return;
     }
 
-    logger = logger.child({ txHash: receipt.transactionHash });
-
+    logger = logger.child({ txHash });
     logger.debug("performing post-submission bookkeeping");
-    await this.performPostSubmissionBookkeeping(logger, operations, receipt);
+    await this.performPostSubmissionBookkeeping(logger, operations, txHash);
   }
 
   async setOpsToInflight(
@@ -201,7 +204,7 @@ export class BundlerSubmitter {
   async dispatchBundle(
     logger: Logger,
     operations: SubmittableOperationWithNetworkInfo[]
-  ): Promise<ethers.ContractReceipt | undefined> {
+  ): Promise<TxHash | undefined> {
     try {
       logger.info("pre-dispatch attempting tx submission");
 
@@ -211,16 +214,23 @@ export class BundlerSubmitter {
         .map((op) => maxGasForOperation(op))
         .reduce((acc, gasForOp) => acc + gasForOp, 0n);
 
-      const tx = await this.tellerContract.processBundle(
-        { operations },
+      const data = this.tellerContract.interface.encodeFunctionData(
+        "processBundle",
+        [{ operations }]
+      );
+      const txHash = await this.txSubmitter.submitTransaction(
         {
-          gasLimit: (totalGasLimit * 15n) / 10n,
-        } // 50% gas buffer
+          to: this.tellerContract.address,
+          data,
+        },
+        {
+          gasLimit: Number(totalGasLimit),
+          logger,
+        }
       );
 
-      logger.info(`post-dispatch awaiting tx receipt. txhash: ${tx.hash}`);
-      const receipt = await tx.wait(this.finalityBlocks);
-      return receipt;
+      logger.info(`confirmed processBundle tx. txhash: ${txHash}`);
+      return txHash;
     } catch (err) {
       logger.error("failed to process bundle:", err);
       const redisTxs = operations.flatMap((op) => {
@@ -256,17 +266,30 @@ export class BundlerSubmitter {
   async performPostSubmissionBookkeeping(
     logger: Logger,
     operations: SubmittableOperationWithNetworkInfo[],
-    receipt: ethers.ContractReceipt
+    txHash: TxHash
   ): Promise<void> {
     const digestsToOps = new Map(
       operations.map((op) => [OperationTrait.computeDigest(op), op])
     );
 
-    logger.debug("looking for OperationProcessed events...");
-    const matchingEvents = parseEventsFromContractReceipt(
+    logger.info("waiting for processBundle tx to be mined", { txHash });
+    await this.provider.waitForTransaction(txHash);
+
+    logger.info("getting transaction receipt for processBundle tx", {
+      txHash,
+    });
+
+    const receipt = await this.provider.getTransactionReceipt(txHash);
+    logger.info("got transaction receipt for processBundle tx", {
+      txHash,
       receipt,
+    });
+
+    const matchingEvents = parseEventsFromTransactionReceipt(
+      receipt,
+      this.tellerContract.interface,
       this.tellerContract.interface.getEvent("OperationProcessed")
-    ) as OperationProcessedEvent[];
+    ) as LogDescription[];
 
     logger.info("matching events:", { matchingEvents });
 

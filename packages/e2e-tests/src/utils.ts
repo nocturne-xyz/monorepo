@@ -208,11 +208,6 @@ export interface RunCommandDetachedOpts {
   ) => void;
 }
 
-// runs a command in the child process without waiting for completion
-// instead, returns a teardown function that can be used to kill the process
-// NOTE: there is a potential race condition when killing the process:
-//   if the process has already exited and the OS re-allocated the PID,
-//   then the teardown function may attempt to kill that other process.
 export function runCommandBackground(
   cmd: string,
   args: string[],
@@ -220,12 +215,20 @@ export function runCommandBackground(
 ) {
   const { cwd, onStdOut, onStdErr, onError, onExit, processName } = opts ?? {};
   const child = spawn(cmd, args, { cwd });
+
+  // Define the log file path
+  const logFilePath = path.join(cwd || ".", "hardhat.log");
+
+  // Create a write stream for the log file
+  const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
+
   let stdout = "";
   let stderr = "";
 
   child.stdout.on("data", (data) => {
     const output = data.toString();
     stdout += output;
+    logStream.write(output); // Write to log file
 
     if (onStdOut) {
       onStdOut(output);
@@ -235,6 +238,7 @@ export function runCommandBackground(
   child.stderr.on("data", (data) => {
     const output = data.toString();
     stderr += output;
+    logStream.write(output); // Write to log file
 
     if (onStdErr) {
       onStdErr(output);
@@ -250,25 +254,27 @@ export function runCommandBackground(
   });
 
   child.on("close", (code: number | null, signal: NodeJS.Signals | null) => {
+    let msg = "";
+    if (processName) {
+      msg += `${processName} (${child.pid}) exited`;
+    } else {
+      msg += `child process ${child.pid} exited`;
+    }
+
+    if (code) {
+      msg += ` with code ${code}`;
+    }
+    if (signal) {
+      msg += ` on signal ${signal}`;
+    }
+
+    logStream.write(`${msg}\n`); // Write exit message to log file
+    logStream.end(); // Close the stream
+
     if (onExit) {
       onExit(stdout, stderr, code, signal);
     } else {
-      let msg = "";
-      if (processName) {
-        msg += `${processName} (${child.pid}) exited`;
-      } else {
-        msg += `child process ${child.pid} exited`;
-      }
-
-      if (code) {
-        msg += ` with code ${code}`;
-      }
-      if (signal) {
-        msg += ` on signal ${signal}`;
-      }
-
       console.log(msg);
-
       if (stderr) {
         console.log("STDERR:");
         console.log(stderr);
@@ -280,6 +286,8 @@ export function runCommandBackground(
   process.on("exit", () => {
     child.kill();
   });
+
+  return child;
 }
 
 interface RedisHandle {

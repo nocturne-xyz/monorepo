@@ -12,3 +12,5 @@ cache
 artifacts
 
 deployments
+
+*.log

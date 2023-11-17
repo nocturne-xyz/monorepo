@@ -3,7 +3,8 @@ import { SubtreeUpdater } from "../../../subtreeUpdater";
 import { getRedis } from "../utils";
 import {
   makeLogger,
-  getEthersProviderAndSignerFromEnvConfiguration,
+  getEthersProviderFromEnv,
+  getTxSubmitterFromEnv,
 } from "@nocturne-xyz/offchain-utils";
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
 import { Handler__factory } from "@nocturne-xyz/contracts";
@@ -80,11 +81,12 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       throw new Error("missing SUBGRAPH_URL");
     }
 
-    const { signer } = getEthersProviderAndSignerFromEnvConfiguration();
+    const provider = getEthersProviderFromEnv();
+    const txSubmitter = getTxSubmitterFromEnv();
 
     const handlerContract = Handler__factory.connect(
       config.handlerAddress,
-      signer
+      provider
     );
 
     const fillBatchLatency = fillBatchLatencyMs
@@ -124,6 +126,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
 
     const updater = new SubtreeUpdater(
       handlerContract,
+      txSubmitter,
       logger,
       getRedis(),
       prover,

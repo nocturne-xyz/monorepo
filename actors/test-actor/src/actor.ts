@@ -6,14 +6,13 @@ import {
   proveOperation,
   signOperation,
 } from "@nocturne-xyz/client";
-import { Erc20Config } from "@nocturne-xyz/config";
+import { Erc20Config, NocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager,
   Handler,
   SimpleERC20Token__factory,
   Teller,
 } from "@nocturne-xyz/contracts";
-import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
   Address,
   Asset,
@@ -22,10 +21,10 @@ import {
   OperationTrait,
   StealthAddressTrait,
   min,
-  parseEventsFromContractReceipt,
   sleep,
 } from "@nocturne-xyz/core";
 import {
+  TxSubmitter,
   makeCreateCounterFn,
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
@@ -63,7 +62,7 @@ export interface TestActorMetrics {
 
 export class TestActor {
   provider: ethers.providers.JsonRpcProvider;
-  txSigner: ethers.Signer;
+  txSubmitter: TxSubmitter;
   teller: Teller;
   depositManager: DepositManager;
   handler: Handler;
@@ -72,6 +71,7 @@ export class TestActor {
   prover: JoinSplitProver;
   bundlerEndpoint: string;
   erc20s: Map<string, Erc20Config>;
+  config: NocturneConfig;
   logger: Logger;
   metrics: TestActorMetrics;
 
@@ -80,7 +80,7 @@ export class TestActor {
 
   constructor(
     provider: ethers.providers.JsonRpcProvider,
-    txSigner: ethers.Signer,
+    txSubmitter: TxSubmitter,
     teller: Teller,
     depositManager: DepositManager,
     handler: Handler,
@@ -88,11 +88,11 @@ export class TestActor {
     client: NocturneClient,
     prover: JoinSplitProver,
     bundlerEndpoint: string,
-    erc20s: Map<string, Erc20Config>,
+    config: NocturneConfig,
     logger: Logger
   ) {
     this.provider = provider;
-    this.txSigner = txSigner;
+    this.txSubmitter = txSubmitter;
     this.teller = teller;
     this.depositManager = depositManager;
     this.handler = handler;
@@ -101,7 +101,12 @@ export class TestActor {
     this.prover = prover;
     this.bundlerEndpoint = bundlerEndpoint;
 
-    this.erc20s = erc20s;
+    this.config = config;
+    this.erc20s = new Map(
+      Array.from(config.erc20s.entries()).filter(([key]) =>
+        key.toLowerCase().includes("test")
+      )
+    );
     this.logger = logger;
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
@@ -172,8 +177,8 @@ export class TestActor {
 
   async run(opts?: TestActorOpts): Promise<void> {
     // set chainid
-    this._chainId = BigInt(await this.txSigner.getChainId());
-    this._address = await this.txSigner.getAddress();
+    this._chainId = BigInt((await this.provider.getNetwork()).chainId);
+    this._address = await this.txSubmitter.address();
 
     const depositIntervalSeconds =
       opts?.depositIntervalSeconds ?? ONE_MINUTE_AS_SECS;
@@ -284,13 +289,22 @@ export class TestActor {
 
       const erc20Token = SimpleERC20Token__factory.connect(
         erc20Config.address,
-        this.txSigner
+        this.provider
       );
-      const reserveTx = await erc20Token.reserveTokens(
-        this._address!,
-        randomValue
+      const reserveData = erc20Token.interface.encodeFunctionData(
+        "reserveTokens",
+        [this._address!, randomValue]
       );
-      await reserveTx.wait(1);
+      await this.txSubmitter.submitTransaction(
+        {
+          to: erc20Config.address,
+          data: reserveData,
+        },
+        {
+          numConfirmations: this.config.finalityBlocks,
+          logger: this.logger,
+        }
+      );
 
       this.logger.info(
         `approving deposit manager for ${randomValue} of token "${erc20Config.address}"`,
@@ -301,11 +315,20 @@ export class TestActor {
         }
       );
 
-      const approveTx = await erc20Token.approve(
+      const approveData = erc20Token.interface.encodeFunctionData("approve", [
         this.depositManager.address,
-        randomValue
+        50n * ONE_ETH_IN_WEI,
+      ]);
+      await this.txSubmitter.submitTransaction(
+        {
+          to: erc20Config.address,
+          data: approveData,
+        },
+        {
+          numConfirmations: this.config.finalityBlocks,
+          logger: this.logger,
+        }
       );
-      await approveTx.wait(1);
 
       // submit
       this.logger.info(
@@ -324,30 +347,28 @@ export class TestActor {
         await this.depositManager.estimateGas.instantiateErc20MultiDeposit(
           erc20Token.address,
           [randomValue],
-          stealthAddress
+          stealthAddress,
+          {
+            from: this._address!,
+          }
         )
       ).toBigInt();
 
-      const instantiateDepositTx =
-        await this.depositManager.instantiateErc20MultiDeposit(
-          erc20Token.address,
-          [randomValue],
-          StealthAddressTrait.compress(
-            this.client.viewer.generateRandomStealthAddress()
-          ),
-          {
-            gasLimit: (estimatedGas * 3n) / 2n,
-          }
-        );
-      const receipt = await instantiateDepositTx.wait(1);
-
-      const matchingEvents = parseEventsFromContractReceipt(
-        receipt,
-        this.depositManager.interface.getEvent("DepositInstantiated")
-      ) as DepositInstantiatedEvent[];
-      this.logger.debug("matching events from transaction receipt", {
-        matchingEvents,
-      });
+      const depositData = this.depositManager.interface.encodeFunctionData(
+        "instantiateErc20MultiDeposit",
+        [erc20Token.address, [randomValue], stealthAddress]
+      );
+      await this.txSubmitter.submitTransaction(
+        {
+          to: this.depositManager.address,
+          data: depositData,
+        },
+        {
+          numConfirmations: this.config.finalityBlocks,
+          gasLimit: Number((estimatedGas * 3n) / 2n),
+          logger: this.logger,
+        }
+      );
 
       const labels = {
         spender: this._address!,
@@ -459,7 +480,8 @@ export class TestActor {
     asset: Asset,
     value: bigint
   ): Promise<OperationRequestWithMetadata> {
-    const chainId = this._chainId ?? BigInt(await this.txSigner.getChainId());
+    const chainId =
+      this._chainId ?? BigInt((await this.provider.getNetwork()).chainId);
 
     return newOpRequestBuilder(this.provider, chainId)
       .use(Erc20Plugin)
