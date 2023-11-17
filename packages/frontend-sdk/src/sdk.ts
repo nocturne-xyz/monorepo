@@ -23,7 +23,6 @@ import {
   DepositManager__factory,
   Handler,
   Handler__factory,
-  SimpleERC20Token__factory,
 } from "@nocturne-xyz/contracts";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
@@ -78,6 +77,7 @@ import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
+import ERC20_ABI from "./abis/ERC20.json";
 import { NocturneSdkApi, SnapStateApi } from "./api";
 import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
 import { SnapStateSdk, getSigner } from "./metamask";
@@ -292,8 +292,9 @@ export class NocturneSdk implements NocturneSdkApi {
     const tellerAddress = this.sdkConfig.config.tellerAddress;
     const tvlByAsset = new Map<string, bigint>();
     for (const [assetName, { address }] of this.sdkConfig.config.erc20s) {
-      const erc20Contract = SimpleERC20Token__factory.connect(
+      const erc20Contract = new ethers.Contract(
         address,
+        ERC20_ABI,
         this.provider,
       );
       const balance = await erc20Contract.balanceOf(tellerAddress);
