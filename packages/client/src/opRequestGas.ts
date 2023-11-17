@@ -285,7 +285,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
       if (totalOwnedGasAsset < estimateInGasAssetIncludingNewJoinSplits) {
         // Don't have enough for new joinsplits gas overhead, try new asset
         failedGasAssets.push(gasAsset);
-        failedGasEstimates.push(estimateInGasAsset);
+        failedGasEstimates.push(estimateInGasAssetIncludingNewJoinSplits);
         failedGasAssetBalances.push(totalOwnedGasAsset);
         continue;
       }
