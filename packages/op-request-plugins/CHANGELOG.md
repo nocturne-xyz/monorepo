@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.9
+
+### Patch Changes
+
+- Updated dependencies [21d65e2b]
+- Updated dependencies [f92a1cfe]
+  - @nocturne-xyz/client@3.3.0
+
 ## 2.1.8
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.3.0
+
+### Minor Changes
+
+- 21d65e2b: throw typed `NotEnoughGasTokens` error when `opRequestGas` fails due to not enough gas tokens
+
+### Patch Changes
+
+- f92a1cfe: fix edge case where estimate in error msg is wrong
+
 ## 3.2.1
 
 ### Patch Changes

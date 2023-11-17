@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.2
+
+### Patch Changes
+
+- 4aff3cd3: integrate tx submitter
+- Updated dependencies [4aff3cd3]
+- Updated dependencies [21d65e2b]
+- Updated dependencies [f92a1cfe]
+  - @nocturne-xyz/offchain-utils@0.6.0
+  - @nocturne-xyz/client@3.3.0
+  - @nocturne-xyz/op-request-plugins@2.1.9
+
 ## 0.7.1
 
 ### Patch Changes
