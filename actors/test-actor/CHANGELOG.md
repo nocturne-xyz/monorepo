@@ -10,6 +10,7 @@
 - Updated dependencies [f92a1cfe]
   - @nocturne-xyz/offchain-utils@0.6.0
   - @nocturne-xyz/client@3.3.0
+- Updated dependencies [7b0205b9]
   - @nocturne-xyz/op-request-plugins@2.1.9
 
 ## 0.7.1

@@ -4,9 +4,7 @@
 
 ### Patch Changes
 
-- Updated dependencies [21d65e2b]
-- Updated dependencies [f92a1cfe]
-  - @nocturne-xyz/client@3.3.0
+- 7b0205b9: fix slippage bps conversion
 
 ## 2.1.8
 

@@ -11,6 +11,12 @@
 - Updated dependencies [21d65e2b]
 - Updated dependencies [f92a1cfe]
   - @nocturne-xyz/client@3.3.0
+
+## 5.1.6
+
+### Patch Changes
+
+- Updated dependencies [7b0205b9]
   - @nocturne-xyz/op-request-plugins@2.1.9
 
 ## 5.1.5
