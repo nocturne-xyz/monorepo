@@ -6,7 +6,7 @@ import {
   proveOperation,
   signOperation,
 } from "@nocturne-xyz/client";
-import { Erc20Config } from "@nocturne-xyz/config";
+import { Erc20Config, NocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager,
   Handler,
@@ -71,6 +71,7 @@ export class TestActor {
   prover: JoinSplitProver;
   bundlerEndpoint: string;
   erc20s: Map<string, Erc20Config>;
+  config: NocturneConfig;
   logger: Logger;
   metrics: TestActorMetrics;
 
@@ -87,7 +88,7 @@ export class TestActor {
     client: NocturneClient,
     prover: JoinSplitProver,
     bundlerEndpoint: string,
-    erc20s: Map<string, Erc20Config>,
+    config: NocturneConfig,
     logger: Logger
   ) {
     this.provider = provider;
@@ -100,7 +101,12 @@ export class TestActor {
     this.prover = prover;
     this.bundlerEndpoint = bundlerEndpoint;
 
-    this.erc20s = erc20s;
+    this.config = config;
+    this.erc20s = new Map(
+      Array.from(config.erc20s.entries()).filter(([key]) =>
+        key.toLowerCase().includes("test")
+      )
+    );
     this.logger = logger;
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
@@ -289,10 +295,15 @@ export class TestActor {
         "reserveTokens",
         [this._address!, randomValue]
       );
-      await this.txSubmitter.submitTransaction({
-        to: erc20Config.address,
-        data: reserveData,
-      });
+      await this.txSubmitter.submitTransaction(
+        {
+          to: erc20Config.address,
+          data: reserveData,
+        },
+        {
+          numConfirmations: this.config.finalityBlocks,
+        }
+      );
 
       this.logger.info(
         `approving deposit manager for ${randomValue} of token "${erc20Config.address}"`,
@@ -305,12 +316,20 @@ export class TestActor {
 
       const approveData = erc20Token.interface.encodeFunctionData("approve", [
         this.depositManager.address,
-        randomValue,
+        50n * ONE_ETH_IN_WEI,
       ]);
-      await this.txSubmitter.submitTransaction({
-        to: erc20Config.address,
-        data: approveData,
-      });
+      await this.txSubmitter.submitTransaction(
+        {
+          to: erc20Config.address,
+          data: approveData,
+        },
+        {
+          numConfirmations: this.config.finalityBlocks,
+        }
+      );
+
+      this.logger.info("sleeping for 60s");
+      await sleep(60_000); // hack
 
       // submit
       this.logger.info(
@@ -343,6 +362,7 @@ export class TestActor {
           data: depositData,
         },
         {
+          numConfirmations: this.config.finalityBlocks,
           gasLimit: Number((estimatedGas * 3n) / 2n),
         }
       );

@@ -164,12 +164,6 @@ export const run = new Command("run")
     const vkey = JSON.parse(vkeyStr);
     const prover = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
 
-    const testTokens = new Map(
-      Array.from(config.erc20s.entries()).filter(([key]) =>
-        key.toLowerCase().includes("test")
-      )
-    );
-
     const actor = new TestActor(
       provider,
       txSubmitter,
@@ -180,7 +174,7 @@ export const run = new Command("run")
       sdk,
       prover,
       bundlerEndpoint,
-      testTokens,
+      config,
       logger
     );
 

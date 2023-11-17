@@ -1,10 +1,10 @@
 import { Relayer } from "@openzeppelin/defender-relay-client";
 import { Address } from "@nocturne-xyz/core";
-import { sleep } from "./utils";
 import { ethers } from "ethers";
 import { intFromEnv } from "./configuration";
 import * as https from "https";
 import { getEthersProviderFromEnv } from "./ethersHelpers";
+import { sleep } from "./utils";
 
 const DEFAULT_RPC_TIMEOUT_MS = 3000;
 
@@ -126,11 +126,72 @@ export class OzRelayerTxSubmitter implements TxSubmitter {
     console.log(
       `tx dispatched, waiting for confirmation. relay id: ${relayerTx.transactionId}`
     );
-    while (relayerTx.status != "confirmed") {
-      await sleep(5_000);
-      relayerTx = await this.relayer.query(relayerTx.transactionId);
+
+    let txHash = relayerTx.hash;
+    let maybeFinalTxHash: TxHash | undefined;
+    while (true) {
+      txHash = (await this.relayer.query(relayerTx.transactionId)).hash;
+      console.log("fetching transaction object by txhash");
+      const tx: ethers.providers.TransactionResponse | null =
+        await this.provider.getTransaction(txHash);
+
+      if (!tx) {
+        console.log("tx not found, polling again in 5s");
+        await sleep(5_000);
+        continue;
+      }
+
+      const numConfirmations = opts?.numConfirmations ?? 1;
+      console.log(`waiting for ${numConfirmations} confirmations`);
+      maybeFinalTxHash = await waitForConfirmationsWithTimeout(
+        tx,
+        20,
+        numConfirmations
+      );
+
+      // if tx hash got confirmation, break and return
+      if (maybeFinalTxHash) {
+        break;
+      }
+
+      // if tx hash not defined then it was not confirmed, refetch from OZ relay
+      if (!maybeFinalTxHash) {
+        console.log("tx hash not defined, refetching from OZ relay");
+        relayerTx = await this.relayer.query(relayerTx.transactionId);
+        continue;
+      }
     }
 
-    return relayerTx.hash;
+    console.log(`tx confirmed. txhash: ${relayerTx.hash}`);
+    return maybeFinalTxHash;
   }
+}
+
+export function waitForConfirmationsWithTimeout(
+  tx: ethers.providers.TransactionResponse,
+  timeoutSeconds: number = 30,
+  confirmations: number = 1
+): Promise<TxHash | undefined> {
+  const waitForConfirmation = async () => {
+    try {
+      await tx.wait(confirmations);
+
+      console.log(`tx confirmed. hash ${tx.hash}`);
+      return tx.hash;
+    } catch (error) {
+      console.error("Error in transaction confirmation:", error);
+      return undefined;
+    }
+  };
+
+  // Create a timeout promise
+  const timeout = new Promise<undefined>((resolve) =>
+    setTimeout(() => {
+      console.log("tx confirmations timeout ended");
+      resolve(undefined);
+    }, timeoutSeconds * 1000)
+  );
+
+  // Race the two promises
+  return Promise.race([waitForConfirmation(), timeout]);
 }
