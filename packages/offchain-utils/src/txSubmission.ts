@@ -5,6 +5,7 @@ import { intFromEnv } from "./configuration";
 import * as https from "https";
 import { getEthersProviderFromEnv } from "./ethersHelpers";
 import { sleep } from "./utils";
+import { Logger } from "winston";
 
 const DEFAULT_RPC_TIMEOUT_MS = 3000;
 
@@ -21,6 +22,7 @@ export interface TxSubmissionOpts {
   speed?: "safeLow" | "average" | "fast" | "fastest";
   isPrivate?: boolean;
   numConfirmations?: number;
+  logger?: Logger;
 }
 
 export interface TxSubmitter {
@@ -83,7 +85,10 @@ export class EthersTxSubmitter implements TxSubmitter {
       gasPrice: await this.signer.provider.getGasPrice(),
     });
 
-    console.log(`tx dispatched, waiting for confirmation. txhash: ${tx.hash}`);
+    opts?.logger &&
+      opts.logger.debug(
+        `tx dispatched, waiting for confirmation. txhash: ${tx.hash}`
+      );
     await tx.wait(opts?.numConfirmations ?? 1);
 
     return tx.hash;
@@ -123,31 +128,34 @@ export class OzRelayerTxSubmitter implements TxSubmitter {
         ),
     });
 
-    console.log(
-      `tx dispatched, waiting for confirmation. relay id: ${relayerTx.transactionId}`
-    );
+    opts?.logger &&
+      opts.logger.debug(
+        `tx dispatched, waiting for confirmation. relay id: ${relayerTx.transactionId}`
+      );
 
     let txHash = relayerTx.hash;
     let maybeFinalTxHash: TxHash | undefined;
     while (true) {
       txHash = (await this.relayer.query(relayerTx.transactionId)).hash;
-      console.log("fetching transaction object by txhash");
+      opts?.logger &&
+        opts.logger.debug("fetching transaction object by txhash");
       const tx: ethers.providers.TransactionResponse | null =
         await this.provider.getTransaction(txHash);
 
       if (!tx) {
-        console.log("tx not found, polling again in 5s");
+        opts?.logger && opts.logger.debug("tx not found, polling again in 5s");
         await sleep(5_000);
         continue;
       }
 
       const numConfirmations = opts?.numConfirmations ?? 1;
-      console.log(`waiting for ${numConfirmations} confirmations`);
-      maybeFinalTxHash = await waitForConfirmationsWithTimeout(
-        tx,
-        30,
-        numConfirmations
-      );
+      opts?.logger &&
+        opts.logger.debug(`waiting for ${numConfirmations} confirmations`);
+      maybeFinalTxHash = await waitForConfirmationsWithTimeout(tx, {
+        timeoutSeconds: 30,
+        confirmations: numConfirmations,
+        logger: opts?.logger,
+      });
 
       // if tx hash got confirmation, break and return
       if (maybeFinalTxHash) {
@@ -156,27 +164,34 @@ export class OzRelayerTxSubmitter implements TxSubmitter {
 
       // if tx hash not defined then it was not confirmed, refetch from OZ relay
       if (!maybeFinalTxHash) {
-        console.log("tx hash not defined, refetching from OZ relay");
+        opts?.logger &&
+          opts.logger.debug("tx hash not defined, refetching from OZ relay");
         relayerTx = await this.relayer.query(relayerTx.transactionId);
         continue;
       }
     }
 
-    console.log(`tx confirmed. txhash: ${relayerTx.hash}`);
+    opts?.logger &&
+      opts.logger.debug(`tx confirmed. txhash: ${relayerTx.hash}`);
     return maybeFinalTxHash;
   }
 }
 
+interface WaitForConfirmationOpts {
+  confirmations?: number;
+  timeoutSeconds?: number;
+  logger?: Logger;
+}
+
 export function waitForConfirmationsWithTimeout(
   tx: ethers.providers.TransactionResponse,
-  timeoutSeconds: number = 30,
-  confirmations: number = 1
+  opts?: WaitForConfirmationOpts
 ): Promise<TxHash | undefined> {
   const waitForConfirmation = async () => {
     try {
-      await tx.wait(confirmations);
+      await tx.wait(opts?.confirmations ?? 1);
 
-      console.log(`tx confirmed. hash ${tx.hash}`);
+      opts?.logger && opts.logger.debug(`tx confirmed. hash ${tx.hash}`);
       return tx.hash;
     } catch (error) {
       console.error("Error in transaction confirmation:", error);
@@ -187,9 +202,9 @@ export function waitForConfirmationsWithTimeout(
   // Create a timeout promise
   const timeout = new Promise<undefined>((resolve) =>
     setTimeout(() => {
-      console.log("tx confirmations timeout ended");
+      opts?.logger && opts.logger.debug("tx confirmations timeout ended");
       resolve(undefined);
-    }, timeoutSeconds * 1000)
+    }, (opts?.timeoutSeconds ?? 30) * 1000)
   );
 
   // Race the two promises
