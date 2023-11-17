@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0
+
+### Minor Changes
+
+- 4aff3cd3: add tx submitter classes for ethers wallet and oz relayer
+
 ## 0.5.1
 
 ### Patch Changes
