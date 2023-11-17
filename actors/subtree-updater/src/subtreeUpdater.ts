@@ -311,7 +311,10 @@ export class SubtreeUpdater {
             const estimatedGas = (
               await this.handlerContract.estimateGas.applySubtreeUpdate(
                 newRoot,
-                solidityProof
+                solidityProof,
+                {
+                  from: await this.txSubmitter.address(),
+                }
               )
             ).toBigInt();
 

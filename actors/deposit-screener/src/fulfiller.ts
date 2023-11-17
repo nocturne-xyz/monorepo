@@ -281,7 +281,10 @@ export class DepositScreenerFulfiller {
               const estimatedGas = (
                 await this.depositManagerContract.estimateGas.completeErc20Deposit(
                   depositRequest,
-                  signature
+                  signature,
+                  {
+                    from: await this.txSubmitter.address(),
+                  }
                 )
               ).toBigInt();
 

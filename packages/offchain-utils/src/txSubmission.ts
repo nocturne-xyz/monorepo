@@ -145,7 +145,7 @@ export class OzRelayerTxSubmitter implements TxSubmitter {
       console.log(`waiting for ${numConfirmations} confirmations`);
       maybeFinalTxHash = await waitForConfirmationsWithTimeout(
         tx,
-        20,
+        30,
         numConfirmations
       );
 

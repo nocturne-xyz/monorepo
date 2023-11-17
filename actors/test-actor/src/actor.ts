@@ -348,7 +348,10 @@ export class TestActor {
         await this.depositManager.estimateGas.instantiateErc20MultiDeposit(
           erc20Token.address,
           [randomValue],
-          stealthAddress
+          stealthAddress,
+          {
+            from: this._address!,
+          }
         )
       ).toBigInt();
 
