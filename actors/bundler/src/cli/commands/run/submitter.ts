@@ -2,7 +2,8 @@ import { Command } from "commander";
 import { BundlerSubmitter } from "../../../submitter";
 import {
   makeLogger,
-  getEthersProviderAndSignerFromEnvConfiguration,
+  getEthersProviderFromEnv,
+  getTxSubmitterFromEnv,
 } from "@nocturne-xyz/offchain-utils";
 import { getRedis } from "./utils";
 import { extractConfigName, loadNocturneConfig } from "@nocturne-xyz/config";
@@ -30,7 +31,8 @@ const runSubmitter = new Command("submitter")
     const { configNameOrPath, logDir, logLevel, finalityBlocks } = options;
     const config = loadNocturneConfig(configNameOrPath);
 
-    const { signer } = getEthersProviderAndSignerFromEnvConfiguration();
+    const provider = getEthersProviderFromEnv();
+    const txSubmitter = getTxSubmitterFromEnv();
 
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
@@ -42,7 +44,8 @@ const runSubmitter = new Command("submitter")
     );
     const submitter = new BundlerSubmitter(
       config.tellerAddress,
-      signer,
+      provider,
+      txSubmitter,
       getRedis(),
       logger,
       finalityBlocks ?? config.offchain.finalityBlocks

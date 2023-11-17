@@ -76,6 +76,17 @@ const DUMMY_VIEWER = new NocturneViewer(
 const DUMMY_REFUND_ADDR: StealthAddress =
   DUMMY_VIEWER.generateRandomStealthAddress();
 
+export class NotEnoughGasTokensError extends Error {
+  constructor(
+    public readonly gasAssets: Asset[],
+    public readonly gasEstimates: bigint[],
+    public readonly gasAssetBalances: bigint[]
+  ) {
+    super("Not enough gas to execute operation");
+    this.name = "NotEnoughGasTokensError";
+  }
+}
+
 export async function handleGasForOperationRequest(
   deps: HandleOpRequestGasDeps,
   opRequest: OperationRequest,
@@ -118,10 +129,6 @@ export async function handleGasForOperationRequest(
         usedNotes
       );
 
-    if (!gasAssetAndTicker) {
-      throw new Error("not enough owned gas tokens pay for op");
-    }
-
     const gasAssetRefundThreshold = await deps.tokenConverter.weiToTargetErc20(
       DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS * gasPrice,
       gasAssetAndTicker.ticker
@@ -148,7 +155,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
   gasPrice: bigint,
   tokenConverter: EthToTokenConverter,
   usedNotes: MapWithObjectKeys<Asset, IncludedNote[]>
-): Promise<[JoinSplitRequest[], AssetAndTicker | undefined]> {
+): Promise<[JoinSplitRequest[], AssetAndTicker]> {
   // group joinSplitRequests by asset address
   const joinSplitRequestsByAsset = groupByMap(
     joinSplitRequests,
@@ -253,6 +260,10 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
     }
   }
 
+  const failedGasEstimates = [];
+  const failedGasAssets = [];
+  const failedGasAssetBalances = [];
+
   // if we couldn't find an existing joinsplit request with a supported gas asset,
   // attempt to make a new joinsplit request to include the gas comp
   // iterate through each gas asset
@@ -273,6 +284,9 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
 
       if (totalOwnedGasAsset < estimateInGasAssetIncludingNewJoinSplits) {
         // Don't have enough for new joinsplits gas overhead, try new asset
+        failedGasAssets.push(gasAsset);
+        failedGasEstimates.push(estimateInGasAssetIncludingNewJoinSplits);
+        failedGasAssetBalances.push(totalOwnedGasAsset);
         continue;
       }
 
@@ -291,11 +305,19 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
       );
 
       return [modifiedJoinSplitRequests, { asset: gasAsset, ticker }];
+    } else {
+      failedGasAssets.push(gasAsset);
+      failedGasEstimates.push(estimateInGasAsset);
+      failedGasAssetBalances.push(totalOwnedGasAsset);
     }
   }
 
   // if we get here, the user can't afford the gas
-  return [[], undefined];
+  throw new NotEnoughGasTokensError(
+    failedGasAssets,
+    failedGasEstimates,
+    failedGasAssetBalances
+  );
 }
 
 // estimate gas params for opRequest

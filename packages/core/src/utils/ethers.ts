@@ -1,6 +1,17 @@
 import { TypedEvent } from "@nocturne-xyz/contracts/dist/src/common";
-import { BaseContract, EventFilter, ContractReceipt, Event } from "ethers";
-import { Result, EventFragment } from "ethers/lib/utils";
+import {
+  BaseContract,
+  EventFilter,
+  ContractReceipt,
+  Event,
+  ethers,
+} from "ethers";
+import {
+  Result,
+  EventFragment,
+  Interface,
+  LogDescription,
+} from "ethers/lib/utils";
 const CHUNK_SIZE = 2000;
 
 export async function queryEvents<T extends Result, C extends BaseContract>(
@@ -19,6 +30,30 @@ export function parseEventsFromContractReceipt(
   return receipt.events!.filter((e) => {
     return e.eventSignature == eventFragment.format();
   });
+}
+
+export function parseEventsFromTransactionReceipt(
+  receipt: ethers.providers.TransactionReceipt,
+  contractInterface: Interface,
+  eventFragment: EventFragment
+): LogDescription[] {
+  return receipt.logs
+    .map((log) => tryParseLog(log, contractInterface))
+    .filter(
+      (event) =>
+        event && event !== null && event.signature === eventFragment.format()
+    )
+    .map((event) => event!);
+}
+
+// Helper function to safely parse a log entry
+function tryParseLog(log: ethers.providers.Log, contractInterface: Interface) {
+  try {
+    return contractInterface.parseLog(log);
+  } catch {
+    console.log("Could not parse log", log);
+    return null;
+  }
 }
 
 async function largeQueryInChunks<T extends Result>(

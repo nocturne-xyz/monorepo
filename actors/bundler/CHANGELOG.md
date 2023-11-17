@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.2
+
+### Patch Changes
+
+- 4aff3cd3: integrate tx submitter
+- Updated dependencies [4aff3cd3]
+- Updated dependencies [21d65e2b]
+- Updated dependencies [f92a1cfe]
+  - @nocturne-xyz/offchain-utils@0.6.0
+  - @nocturne-xyz/client@3.3.0
+
 ## 0.10.1
 
 ### Patch Changes

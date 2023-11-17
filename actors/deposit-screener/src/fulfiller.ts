@@ -7,7 +7,6 @@ import {
   DepositRequestStatus,
   hashDepositRequest,
   max,
-  parseEventsFromContractReceipt,
   unzip,
 } from "@nocturne-xyz/core";
 import { RateLimitWindow } from "./rateLimitWindow";
@@ -32,9 +31,10 @@ import {
   DEPOSIT_MANAGER_CONTRACT_VERSION,
 } from "./typedData/constants";
 import * as JSON from "bigint-json-serialization";
-import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
   ActorHandle,
+  TxHash,
+  TxSubmitter,
   makeCreateCounterFn,
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
@@ -56,7 +56,8 @@ export class DepositScreenerFulfiller {
   supportedAssets: Set<Address>;
   signerMutex: Mutex;
   depositManagerContract: DepositManager;
-  txSigner: ethers.Signer;
+  provider: ethers.providers.JsonRpcProvider;
+  txSubmitter: TxSubmitter;
   attestationSigner: ethers.Wallet;
   redis: IORedis;
   db: DepositScreenerDB;
@@ -66,7 +67,8 @@ export class DepositScreenerFulfiller {
   constructor(
     logger: Logger,
     depositManagerAddress: Address,
-    txSigner: ethers.Signer,
+    provider: ethers.providers.JsonRpcProvider,
+    txSubmitter: TxSubmitter,
     attestationSigner: ethers.Wallet,
     redis: IORedis,
     supportedAssets: Set<Address>,
@@ -76,10 +78,8 @@ export class DepositScreenerFulfiller {
     this.redis = redis;
     this.db = new DepositScreenerDB(redis);
 
-    if (!txSigner.provider) {
-      throw new Error("txSigner must have a provider");
-    }
-    this.txSigner = txSigner;
+    this.provider = provider;
+    this.txSubmitter = txSubmitter;
     this.attestationSigner = attestationSigner;
     this.signerMutex = new Mutex();
 
@@ -87,7 +87,7 @@ export class DepositScreenerFulfiller {
 
     this.depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
-      txSigner
+      this.provider
     );
 
     this.supportedAssets = supportedAssets;
@@ -196,10 +196,7 @@ export class DepositScreenerFulfiller {
               }
 
               // otherwise, sign and submit it
-              const receipt = await this.signAndSubmitDeposit(
-                childLogger,
-                depositEvent
-              );
+              await this.signAndSubmitDeposit(childLogger, depositEvent);
 
               const attributes = {
                 spender: depositEvent.spender,
@@ -211,9 +208,8 @@ export class DepositScreenerFulfiller {
                 attributes
               );
 
-              const block = await this.txSigner.provider!.getBlock(
-                receipt.blockNumber
-              );
+              const blockNum = this.provider.getBlockNumber();
+              const block = await this.provider.getBlock(blockNum);
               const timestamp = block.timestamp;
 
               window.add({ amount: depositEvent.value, timestamp });
@@ -260,12 +256,12 @@ export class DepositScreenerFulfiller {
   async signAndSubmitDeposit(
     logger: Logger,
     depositRequest: DepositRequest
-  ): Promise<ethers.ContractReceipt> {
+  ): Promise<TxHash> {
     const domain: EIP712Domain = {
       name: DEPOSIT_MANAGER_CONTRACT_NAME,
       version: DEPOSIT_MANAGER_CONTRACT_VERSION,
       // TODO: fetch from config instead
-      chainId: BigInt(await this.txSigner.getChainId()),
+      chainId: BigInt((await this.provider.getNetwork()).chainId),
       verifyingContract: this.depositManagerContract.address,
     };
 
@@ -277,7 +273,7 @@ export class DepositScreenerFulfiller {
     );
 
     const asset = AssetTrait.decode(depositRequest.encodedAsset);
-    const receipt = await retry(
+    const txHash = await retry(
       async () =>
         await this.signerMutex.runExclusive(async () => {
           switch (asset.assetType) {
@@ -285,26 +281,34 @@ export class DepositScreenerFulfiller {
               const estimatedGas = (
                 await this.depositManagerContract.estimateGas.completeErc20Deposit(
                   depositRequest,
-                  signature
+                  signature,
+                  {
+                    from: await this.txSubmitter.address(),
+                  }
                 )
               ).toBigInt();
 
               logger.info(
                 `pre-dispatch attempting tx submission. nonce ${depositRequest.nonce}`
               );
-              const tx = await this.depositManagerContract.completeErc20Deposit(
-                depositRequest,
-                signature,
+              const data =
+                this.depositManagerContract.interface.encodeFunctionData(
+                  "completeErc20Deposit",
+                  [depositRequest, signature]
+                );
+
+              const txHash = await this.txSubmitter.submitTransaction(
+                { to: this.depositManagerContract.address, data },
                 {
-                  gasLimit: (estimatedGas * 3n) / 2n,
+                  gasLimit: Number(estimatedGas),
+                  logger,
                 }
               );
 
               logger.info(
-                `post-dispatch awaiting tx receipt. nonce: ${depositRequest.nonce}. txhash: ${tx.hash}`
+                `confirmed completeDeposit tx. nonce: ${depositRequest.nonce}. txhash: ${txHash}`
               );
-              const receipt = await tx.wait(this.finalityBlocks);
-              return receipt;
+              return txHash;
             default:
               throw new Error("currently only supporting erc20 deposits");
           }
@@ -314,29 +318,13 @@ export class DepositScreenerFulfiller {
       }
     );
 
-    logger.info("completeDeposit receipt:", { receipt });
+    logger.info(`completeDeposit txHash: ${txHash}`);
+    await this.db.setDepositRequestStatus(
+      depositRequest,
+      DepositRequestStatus.Completed
+    );
 
-    const matchingEvents = parseEventsFromContractReceipt(
-      receipt,
-      this.depositManagerContract.interface.getEvent("DepositCompleted")
-    ) as DepositCompletedEvent[];
-    logger.info("matching events:", { matchingEvents });
-
-    if (matchingEvents.length > 0) {
-      logger.info(
-        `deposit signed and submitted. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
-      );
-      await this.db.setDepositRequestStatus(
-        depositRequest,
-        DepositRequestStatus.Completed
-      );
-
-      return receipt;
-    } else {
-      throw new Error(
-        `deposit request failed. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
-      );
-    }
+    return txHash;
   }
 
   async getErc20RateLimitWindow(

@@ -18,7 +18,11 @@ import {
 } from "@nocturne-xyz/core";
 import IORedis from "ioredis";
 import { Handler } from "@nocturne-xyz/contracts";
-import { ActorHandle, makeCreateCounterFn } from "@nocturne-xyz/offchain-utils";
+import {
+  ActorHandle,
+  TxSubmitter,
+  makeCreateCounterFn,
+} from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import { TreeInsertionLog, Insertion } from "@nocturne-xyz/persistent-log";
 import { Mutex } from "async-mutex";
@@ -56,6 +60,7 @@ export interface ProofInputData {
 export class SubtreeUpdater {
   handlerMutex: Mutex;
   handlerContract: Handler;
+  txSubmitter: TxSubmitter;
   logger: Logger;
 
   redis: IORedis;
@@ -71,6 +76,7 @@ export class SubtreeUpdater {
 
   constructor(
     handlerContract: Handler,
+    txSubmitter: TxSubmitter,
     logger: Logger,
     redis: IORedis,
     prover: SubtreeUpdateProver,
@@ -78,6 +84,7 @@ export class SubtreeUpdater {
     opts?: SubtreeUpdaterOpts
   ) {
     this.handlerContract = handlerContract;
+    this.txSubmitter = txSubmitter;
     this.logger = logger;
     this.prover = prover;
     this.subgraphEndpoint = subgraphEndpoint;
@@ -295,7 +302,7 @@ export class SubtreeUpdater {
       logger.debug(
         `acquiring mutex on handler contract to submit update tx for subtree index ${subtreeIndex}`
       );
-      const receipt = await retry(
+      const txHash = await retry(
         async () =>
           await this.handlerMutex.runExclusive(async () => {
             logger.info(
@@ -304,28 +311,37 @@ export class SubtreeUpdater {
             const estimatedGas = (
               await this.handlerContract.estimateGas.applySubtreeUpdate(
                 newRoot,
-                solidityProof
+                solidityProof,
+                {
+                  from: await this.txSubmitter.address(),
+                }
               )
             ).toBigInt();
 
-            const tx = await this.handlerContract.applySubtreeUpdate(
-              newRoot,
-              solidityProof,
+            const data = this.handlerContract.interface.encodeFunctionData(
+              "applySubtreeUpdate",
+              [newRoot, solidityProof]
+            );
+            const txHash = await this.txSubmitter.submitTransaction(
               {
-                gasLimit: (estimatedGas * 3n) / 2n,
+                to: this.handlerContract.address,
+                data,
+              },
+              {
+                gasLimit: Number((estimatedGas * 3n) / 2n),
+                logger,
               }
             );
 
             logger.info(
-              `post-dispatch awaiting tx receipt. subtreeIndex: ${subtreeIndex}. txhash: ${tx.hash}`
+              `confirmed applySubtreeUpdate tx. subtreeIndex: ${subtreeIndex}. txhash: ${txHash}`
             );
-            const receipt = await tx.wait(1);
-            return receipt;
+            return txHash;
           }),
         { retries: 3 }
       );
 
-      logger.info("subtree update tx receipt:", { receipt, subtreeIndex });
+      logger.info("subtree update tx receipt:", { txHash, subtreeIndex });
       logger.info("successfully updated root", { newRoot, subtreeIndex });
       this.metrics.subtreeUpdatesSubmittedCounter.add(1);
     } catch (err: any) {
@@ -371,8 +387,18 @@ export class SubtreeUpdater {
     await this.handlerMutex.runExclusive(async () => {
       logger.info("filling batch...");
       try {
-        const tx = await this.handlerContract.fillBatchWithZeros();
-        await tx.wait(1);
+        const data =
+          this.handlerContract.interface.encodeFunctionData(
+            "fillBatchWithZeros"
+          );
+        const txHash = await this.txSubmitter.submitTransaction(
+          {
+            to: this.handlerContract.address,
+            data,
+          },
+          { logger }
+        );
+        logger.info("confirmed fillbatch tx", { txHash });
       } catch (err: any) {
         // if we get revert due to batch already being organically filled, ignore the error
         if (!err.toString().includes("!zero fill empty batch")) {
