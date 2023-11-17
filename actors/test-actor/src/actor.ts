@@ -328,9 +328,6 @@ export class TestActor {
         }
       );
 
-      this.logger.info("sleeping for 60s");
-      await sleep(60_000); // hack
-
       // submit
       this.logger.info(
         `instantiating erc20 deposit request for ${randomValue} of token "${erc20Config.address}"`,

@@ -34,7 +34,7 @@ export function parseEventsFromContractReceipt(
 
 export function parseEventsFromTransactionReceipt(
   receipt: ethers.providers.TransactionReceipt,
-  contractInterface: Interface, // This is the Interface object of your contract
+  contractInterface: Interface,
   eventFragment: EventFragment
 ): LogDescription[] {
   return receipt.logs
@@ -51,7 +51,6 @@ function tryParseLog(log: ethers.providers.Log, contractInterface: Interface) {
   try {
     return contractInterface.parseLog(log);
   } catch {
-    // Log could not be parsed (maybe it's not an event of the provided interface)
     console.log("Could not parse log", log);
     return null;
   }
