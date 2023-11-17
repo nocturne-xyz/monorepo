@@ -4,7 +4,10 @@ import {
   AssetTrait,
   AssetType,
   DepositRequest,
+  PreSignOperation,
   DepositRequestStatus as ScreenerDepositRequestStatus,
+  SignedOperation,
+  SubmittableOperationWithNetworkInfo,
 } from "@nocturne-xyz/core";
 import { GetNotesOpts } from "@nocturne-xyz/client";
 import { ethers } from "ethers";
@@ -273,3 +276,18 @@ export function getBalanceOptsToGetNotesOpts({
 }
 
 export const BUNDLER_RECEIVED_OP_BUFFER: number = 90 * 1000; // 90 seconds (used to detect dropped ops)
+
+
+// TODO replace this with better operation types
+export type OperationKind = "PreSign" | "Signed" | "Submittable"
+export function getOperationKind(op: PreSignOperation | SignedOperation | SubmittableOperationWithNetworkInfo): OperationKind {
+  if ("gasFeeEstimate" in op) {
+    return "PreSign";
+  }
+
+  if ("trackedAssets" in op) {
+    return "Submittable";
+  }
+
+  return "Signed";
+}

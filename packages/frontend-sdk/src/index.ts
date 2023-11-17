@@ -14,6 +14,7 @@ export {
 } from "./types";
 
 export {
+  NotEnoughGasTokensError,
   ActionMetadata,
   ConfidentialPaymentMetadata,
   OperationRequest,

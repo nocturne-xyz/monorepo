@@ -5,6 +5,7 @@ import {
   NocturneDB,
   OpHistoryRecord,
   OpRequestBuilder,
+  OpWithMetadata,
   OperationRequestWithMetadata,
   RequestSpendKeyEoaMethod,
   RequestViewingKeyMethod,
@@ -77,7 +78,6 @@ import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
-import { NocturneSdkApi, SnapStateApi } from "./api";
 import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
 import { SnapStateSdk, getSigner } from "./metamask";
 import { GetSnapOptions } from "./metamask/types";
@@ -101,6 +101,7 @@ import {
   getBalanceOptsToGetNotesOpts,
   getCircuitArtifactUrls,
   getNocturneSdkConfig,
+  getOperationKind,
   getTokenContract,
   toDepositRequest,
 } from "./utils";
@@ -128,13 +129,13 @@ export interface NocturneSdkOptions {
   depositGasMultiplier?: number;
 }
 
-export class NocturneSdk implements NocturneSdkApi {
+export class NocturneSdk {
   protected joinSplitProverThunk: Thunk<WasmJoinSplitProver>;
   protected canonAddrSigCheckProverThunk: Thunk<WasmCanonAddrSigCheckProver>;
   protected endpoints: Endpoints;
   protected sdkConfig: NocturneSdkConfig;
   protected _provider?: SupportedProvider;
-  protected _snap: SnapStateApi;
+  protected _snap: SnapStateSdk;
   protected depositAdapter: DepositAdapter;
   protected syncAdapter: SDKSyncAdapter;
   protected syncMutex: Mutex;
@@ -275,7 +276,7 @@ export class NocturneSdk implements NocturneSdkApi {
     );
   }
 
-  get snap(): SnapStateApi {
+  get snap(): SnapStateSdk {
     return this._snap;
   }
 
@@ -421,43 +422,107 @@ export class NocturneSdk implements NocturneSdkApi {
     return this.formDepositHandlesWithTxReceipt(tx);
   }
 
-  /**
-   * Format and submit a proven operation to transfer funds out of Nocturne to a specified recipient address.
-   * @param erc20Address Asset address
-   * @param amount Asset amount
-   * @param recipientAddress Recipient address
-   */
-  async initiateAnonErc20Transfer(
+  async prepareOperation(
+    { request, meta }: OperationRequestWithMetadata
+  ): Promise<OpWithMetadata<PreSignOperation>> {
+    const client = await this.clientThunk();
+    const op = await client.prepareOperation(request, this.opGasMultiplier); 
+    return {
+      op,
+      metadata: meta,
+    };
+  }
+
+  async signOperation(
+    { op, metadata }: OpWithMetadata<PreSignOperation>,
+  ): Promise<OpWithMetadata<SignedOperation>> {
+    const _op = await this.snap.invoke<SignOperationMethod>({
+      method: "nocturne_signOperation",
+      params: { op, metadata },
+    });
+
+    return { op: _op, metadata };
+  }
+
+  async proveOperation(
+    { op, metadata }: OpWithMetadata<SignedOperation>,
+  ): Promise<OpWithMetadata<SubmittableOperationWithNetworkInfo>> {
+    const prover = await this.joinSplitProverThunk();
+    const _op = await proveOperation(prover, op);
+    return { op: _op, metadata };
+  }
+
+  async performOperation(
+    { op, metadata }: OpWithMetadata<PreSignOperation> | OpWithMetadata<SignedOperation> | OpWithMetadata<SubmittableOperationWithNetworkInfo>
+  ): Promise<OperationHandle> {
+    const client = await this.clientThunk();
+
+    const kind = getOperationKind(op);
+    switch (kind) {
+      case "PreSign": {
+        const _op = op as PreSignOperation;
+
+        const signed = await this.signOperation({ op: _op, metadata });
+        const submittable = await this.proveOperation(signed);
+        
+        await client.addOpToHistory(_op, metadata);
+        const handle = await this.submitOperation(submittable.op);
+        return {
+          ...handle,
+          metadata,
+        };
+      }
+      case "Signed": {
+        const _op = op as SignedOperation;
+
+        const submittable = await this.proveOperation({ op: _op, metadata });
+        await client.addOpToHistory(_op, metadata);
+        const handle = await this.submitOperation(submittable.op);
+        return {
+          ...handle,
+          metadata,
+        };
+      }
+      case "Submittable": {
+        const _op = op as SubmittableOperationWithNetworkInfo;
+
+        // can't add to history here because we don't have merkle indices
+        return await this.submitOperation(_op);
+      }
+    }
+  }
+
+  async prepareAnonErc20Transfer(
     erc20Address: Address,
     amount: bigint,
     recipientAddress: Address,
-  ): Promise<OperationHandle> {
+  ): Promise<OpWithMetadata<PreSignOperation>> {
     const operationRequest = await this.opRequestBuilder
       .use(Erc20Plugin)
       .erc20Transfer(erc20Address, recipientAddress, amount)
       .build();
-    return this.performOperation(operationRequest);
+    return await this.prepareOperation(operationRequest);
   }
 
-  async initiateAnonEthTransfer(
+  async prepareAnonEthTransfer(
     recipientAddress: Address,
     amount: bigint,
-  ): Promise<OperationHandle> {
+  ): Promise<OpWithMetadata<PreSignOperation>> {
     const operationRequest = await this.opRequestBuilder
       .use(EthTransferAdapterPlugin)
       .transferEth(recipientAddress, amount)
       .build();
 
-    return this.performOperation(operationRequest);
+    return await this.prepareOperation(operationRequest);
   }
 
-  async initiateAnonErc20Swap({
+  async prepareAnonErc20Swap({
     tokenIn,
     tokenOut,
     amountIn,
     maxSlippageBps,
     protocol = "UNISWAP_V3",
-  }: AnonSwapRequestParams): Promise<OperationHandle> {
+  }: AnonSwapRequestParams): Promise<OpWithMetadata<PreSignOperation>> {
     if (protocol !== "UNISWAP_V3") {
       throw new Error(`Protocol "${protocol}" not currently supported`);
     }
@@ -467,27 +532,7 @@ export class NocturneSdk implements NocturneSdkApi {
       .swap(tokenIn, amountIn, tokenOut, { maxSlippageBps })
       .build();
 
-    return this.performOperation(operationRequest);
-  }
-
-  /**
-   * Take an operation request, sign and prove the operation
-   * and submit it to the bundler.
-   * @param opRequest Operation request
-   * @param actionsMetadata Metadata for each action in the operation
-   * @returns Operation handle
-   */
-  async performOperation(
-    opRequest: OperationRequestWithMetadata,
-  ): Promise<OperationHandle> {
-    const submittableOperation = await this.signAndProveOperation(opRequest);
-
-    const opHandleWithoutMetadata =
-      await this.submitOperation(submittableOperation);
-    return {
-      ...opHandleWithoutMetadata,
-      metadata: opRequest.meta,
-    };
+    return await this.prepareOperation(operationRequest);
   }
 
   async retrievePendingDeposit(
@@ -598,58 +643,7 @@ export class NocturneSdk implements NocturneSdkApi {
       default:
         throw new Error(`Unsupported protocol: ${protocol}`);
     }
-  }
-
-  /**
-   * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
-   * This includes all joinsplit tx inputs.
-   *
-   * @param operationRequest Operation request
-   */
-  async signOperationRequest(
-    operationRequest: OperationRequestWithMetadata,
-  ): Promise<SignedOperation> {
-    console.log("[fe-sdk] metadata:", operationRequest.meta);
-
-    const client = await this.clientThunk();
-
-    const { meta: opMeta, request: opRequest } = operationRequest;
-
-    // Ensure user has minimum balance for request
-    if (!(await client.hasEnoughBalanceForOperationRequest(opRequest))) {
-      throw new Error("Insufficient balance for operation request");
-    }
-
-    let preSignOp: PreSignOperation | undefined;
-    try {
-      preSignOp = await client.prepareOperation(
-        opRequest,
-        this.opGasMultiplier,
-      );
-    } catch (e) {
-      console.log("[fe-sdk] prepareOperation failed: ", e);
-      throw e;
-    }
-
-    const op = await this.snap.invoke<SignOperationMethod>({
-      method: "nocturne_signOperation",
-      params: { op: preSignOp, metadata: opMeta },
-    });
-
-    // TODO: do this when we submit, not when we sign
-    // requires refactoring such that we have
-    // merkle indices for spent notes when we submit
-    await client.addOpToHistory(op, opMeta);
-
-    return op;
-  }
-
-  async proveOperation(
-    op: SignedOperation,
-  ): Promise<SubmittableOperationWithNetworkInfo> {
-    const prover = await this.joinSplitProverThunk();
-    return await proveOperation(prover, op);
-  }
+  } 
 
   async verifyProvenOperation(operation: ProvenOperation): Promise<boolean> {
     const opDigest = OperationTrait.computeDigest(operation);
@@ -799,14 +793,6 @@ export class NocturneSdk implements NocturneSdkApi {
       // return
       return res;
     };
-  }
-
-  async signAndProveOperation(
-    operationRequest: OperationRequestWithMetadata,
-  ): Promise<SubmittableOperationWithNetworkInfo> {
-    const op = await this.signOperationRequest(operationRequest);
-
-    return await this.proveOperation(op);
   }
 
   /**
