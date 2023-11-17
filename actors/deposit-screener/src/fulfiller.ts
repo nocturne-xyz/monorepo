@@ -301,6 +301,7 @@ export class DepositScreenerFulfiller {
                 { to: this.depositManagerContract.address, data },
                 {
                   gasLimit: Number(estimatedGas),
+                  logger,
                 }
               );
 

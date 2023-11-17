@@ -302,6 +302,7 @@ export class TestActor {
         },
         {
           numConfirmations: this.config.finalityBlocks,
+          logger: this.logger,
         }
       );
 
@@ -325,6 +326,7 @@ export class TestActor {
         },
         {
           numConfirmations: this.config.finalityBlocks,
+          logger: this.logger,
         }
       );
 
@@ -364,6 +366,7 @@ export class TestActor {
         {
           numConfirmations: this.config.finalityBlocks,
           gasLimit: Number((estimatedGas * 3n) / 2n),
+          logger: this.logger,
         }
       );
 

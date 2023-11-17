@@ -329,6 +329,7 @@ export class SubtreeUpdater {
               },
               {
                 gasLimit: Number((estimatedGas * 3n) / 2n),
+                logger,
               }
             );
 
@@ -390,10 +391,13 @@ export class SubtreeUpdater {
           this.handlerContract.interface.encodeFunctionData(
             "fillBatchWithZeros"
           );
-        const txHash = await this.txSubmitter.submitTransaction({
-          to: this.handlerContract.address,
-          data,
-        });
+        const txHash = await this.txSubmitter.submitTransaction(
+          {
+            to: this.handlerContract.address,
+            data,
+          },
+          { logger }
+        );
         logger.info("confirmed fillbatch tx", { txHash });
       } catch (err: any) {
         // if we get revert due to batch already being organically filled, ignore the error
