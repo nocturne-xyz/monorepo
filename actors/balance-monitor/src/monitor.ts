@@ -45,6 +45,8 @@ export class BalanceMonitor {
     this.actorAddresses = actorAddresses;
 
     const gasTokenAddress = config.erc20s.get(gasTokenTicker)!.address;
+
+    this.logger.info(`gas token address ${gasTokenAddress}`);
     this.gasToken = new ethers.Contract(gasTokenAddress, ERC20_ABI, provider);
   }
 
@@ -87,10 +89,10 @@ export class BalanceMonitor {
         const balanceEther = parseFloat(
           ethers.utils.formatUnits(balance, "ether")
         );
-        this.logger.info("bundler ETH balance ether", balanceEther);
+        this.logger.info(`bundler ETH balance ether ${balanceEther}`);
         observableResult.observe(balanceEther);
-      } catch (e) {
-        this.logger.error("error fetching bundler ETH balance", e);
+      } catch (error) {
+        this.logger.error("error fetching bundler ETH balance", { error });
       }
     });
 
@@ -102,10 +104,12 @@ export class BalanceMonitor {
         const balanceEther = parseFloat(
           ethers.utils.formatUnits(balance, "ether")
         );
-        this.logger.info("bundler gas token balance ether", balanceEther);
+        this.logger.info(`bundler gas token balance ether ${balanceEther}`);
         observableResult.observe(balanceEther);
-      } catch (e) {
-        this.logger.error("error fetching bundler gas token balance", e);
+      } catch (error) {
+        this.logger.error("error fetching bundler gas token balance", {
+          error,
+        });
       }
     });
 
@@ -117,10 +121,10 @@ export class BalanceMonitor {
         const balanceEther = parseFloat(
           ethers.utils.formatUnits(balance, "ether")
         );
-        this.logger.info("updater ETH balance", balanceEther);
+        this.logger.info(`updater ETH balance ${balanceEther}`);
         observableResult.observe(balanceEther);
-      } catch (e) {
-        this.logger.error("error fetching updater ETH balance", e);
+      } catch (error) {
+        this.logger.error("error fetching updater ETH balance", { error });
       }
     });
 
@@ -132,10 +136,10 @@ export class BalanceMonitor {
         const balanceEther = parseFloat(
           ethers.utils.formatUnits(balance, "ether")
         );
-        this.logger.info("screener ETH balance", balanceEther);
+        this.logger.info(`screener ETH balance ${balanceEther}`);
         observableResult.observe(balanceEther);
-      } catch (e) {
-        this.logger.error("error fetching screener ETH balance", e);
+      } catch (error) {
+        this.logger.error("error fetching screener ETH balance", { error });
       }
     });
 
