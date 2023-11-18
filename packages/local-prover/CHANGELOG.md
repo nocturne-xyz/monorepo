@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.3
+
+### Patch Changes
+
+- 87d5bb40: dummy bump
+- Updated dependencies [87d5bb40]
+  - @nocturne-xyz/core@3.2.1
+  - @nocturne-xyz/crypto@0.4.2
+
 ## 0.6.2
 
 ### Patch Changes

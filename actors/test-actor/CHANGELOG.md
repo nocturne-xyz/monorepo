@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.4
+
+### Patch Changes
+
+- 87d5bb40: dummy bump
+- Updated dependencies [87d5bb40]
+  - @nocturne-xyz/client@3.4.1
+  - @nocturne-xyz/config@1.7.3
+  - @nocturne-xyz/core@3.2.1
+  - @nocturne-xyz/local-prover@0.6.3
+  - @nocturne-xyz/offchain-utils@0.6.1
+  - @nocturne-xyz/op-request-plugins@2.1.11
+  - @nocturne-xyz/hasura-sync-adapters@0.3.5
+
 ## 0.7.3
 
 ### Patch Changes

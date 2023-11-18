@@ -1,5 +1,19 @@
 # Changelog
 
+## 7.0.1
+
+### Patch Changes
+
+- 87d5bb40: dummy bump
+- Updated dependencies [87d5bb40]
+  - @nocturne-xyz/client@3.4.1
+  - @nocturne-xyz/config@1.7.3
+  - @nocturne-xyz/core@3.2.1
+  - @nocturne-xyz/idb-kv-store@0.4.13
+  - @nocturne-xyz/local-prover@0.6.3
+  - @nocturne-xyz/op-request-plugins@2.1.11
+  - @nocturne-xyz/subgraph-sync-adapters@0.5.1
+
 ## 7.0.0
 
 ### Major Changes

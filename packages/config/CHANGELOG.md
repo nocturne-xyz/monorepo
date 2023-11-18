@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.3
+
+### Patch Changes
+
+- 87d5bb40: dummy bump
+
 ## 1.7.2
 
 ### Patch Changes
