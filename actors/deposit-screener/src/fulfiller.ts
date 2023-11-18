@@ -300,7 +300,7 @@ export class DepositScreenerFulfiller {
               const txHash = await this.txSubmitter.submitTransaction(
                 { to: this.depositManagerContract.address, data },
                 {
-                  gasLimit: Number(estimatedGas),
+                  gasLimit: Number(estimatedGas) * 2,
                   logger,
                 }
               );
