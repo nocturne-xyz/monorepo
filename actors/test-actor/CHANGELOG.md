@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.3
+
+### Patch Changes
+
+- 3d9deaaf: dummy bump
+- Updated dependencies [35875d78]
+- Updated dependencies [3d9deaaf]
+  - @nocturne-xyz/client@3.4.0
+  - @nocturne-xyz/op-request-plugins@2.1.10
+
 ## 0.7.2
 
 ### Patch Changes
@@ -10,6 +20,7 @@
 - Updated dependencies [f92a1cfe]
   - @nocturne-xyz/offchain-utils@0.6.0
   - @nocturne-xyz/client@3.3.0
+- Updated dependencies [7b0205b9]
   - @nocturne-xyz/op-request-plugins@2.1.9
 
 ## 0.7.1

@@ -1,5 +1,19 @@
 # Changelog
 
+## 7.0.0
+
+### Major Changes
+
+- 35875d78: (BREAKING) split op flow into two steps - prepare and preform. this allows frontend to prepare ops and inspect the resulting op (gas, etc) before submission
+
+### Patch Changes
+
+- 3d9deaaf: dummy bump
+- Updated dependencies [35875d78]
+- Updated dependencies [3d9deaaf]
+  - @nocturne-xyz/client@3.4.0
+  - @nocturne-xyz/op-request-plugins@2.1.10
+
 ## 6.0.0
 
 ### Major Changes
@@ -11,6 +25,12 @@
 - Updated dependencies [21d65e2b]
 - Updated dependencies [f92a1cfe]
   - @nocturne-xyz/client@3.3.0
+
+## 5.1.6
+
+### Patch Changes
+
+- Updated dependencies [7b0205b9]
   - @nocturne-xyz/op-request-plugins@2.1.9
 
 ## 5.1.5

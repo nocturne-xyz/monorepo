@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.0
+
+### Minor Changes
+
+- 35875d78: throw typed `NotEnoughGasTokens` error when `opRequestGas` fails due to not enough gas tokens
+
 ## 3.3.0
 
 ### Minor Changes

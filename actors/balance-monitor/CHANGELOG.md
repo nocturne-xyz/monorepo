@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.7
+
+### Patch Changes
+
+- 9302006e: fix logging to use brackets
+
 ## 0.3.6
 
 ### Patch Changes

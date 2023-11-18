@@ -1,12 +1,18 @@
 # Changelog
 
+## 2.1.10
+
+### Patch Changes
+
+- 3d9deaaf: dummy bump
+- Updated dependencies [35875d78]
+  - @nocturne-xyz/client@3.4.0
+
 ## 2.1.9
 
 ### Patch Changes
 
-- Updated dependencies [21d65e2b]
-- Updated dependencies [f92a1cfe]
-  - @nocturne-xyz/client@3.3.0
+- 7b0205b9: fix slippage bps conversion
 
 ## 2.1.8
 
