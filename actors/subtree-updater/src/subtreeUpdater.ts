@@ -387,6 +387,12 @@ export class SubtreeUpdater {
     await this.handlerMutex.runExclusive(async () => {
       logger.info("filling batch...");
       try {
+        const estimatedGas = (
+          await this.handlerContract.estimateGas.fillBatchWithZeros({
+            from: await this.txSubmitter.address(),
+          })
+        ).toBigInt();
+
         const data =
           this.handlerContract.interface.encodeFunctionData(
             "fillBatchWithZeros"
@@ -396,7 +402,7 @@ export class SubtreeUpdater {
             to: this.handlerContract.address,
             data,
           },
-          { logger }
+          { gasLimit: Number((estimatedGas * 15n) / 10n), logger }
         );
         logger.info("confirmed fillbatch tx", { txHash });
       } catch (err: any) {

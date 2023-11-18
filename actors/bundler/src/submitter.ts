@@ -224,7 +224,7 @@ export class BundlerSubmitter {
           data,
         },
         {
-          gasLimit: Number(totalGasLimit) * 2,
+          gasLimit: Number((totalGasLimit * 12n) / 10n),
           logger,
         }
       );
