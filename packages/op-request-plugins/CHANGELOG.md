@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.10
+
+### Patch Changes
+
+- 3d9deaaf: dummy bump
+- Updated dependencies [35875d78]
+  - @nocturne-xyz/client@3.4.0
+
 ## 2.1.9
 
 ### Patch Changes
