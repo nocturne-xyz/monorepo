@@ -133,6 +133,19 @@ async function prepareJoinSplits(
   );
 }
 
+export class NotEnoughFundsError extends Error {
+  constructor(
+    public readonly requestedAmount: bigint,
+    public readonly ownedAmount: bigint,
+    public readonly asset: Asset
+  ) {
+    super(
+      `attempted to spend more funds than owned. Address: ${asset.assetAddr}. Attempted: ${requestedAmount}. Owned: ${ownedAmount}.`
+    );
+    this.name = "NotEnoughFundsError";
+  }
+}
+
 export async function gatherNotes(
   db: NocturneDB,
   requestedAmount: bigint,
