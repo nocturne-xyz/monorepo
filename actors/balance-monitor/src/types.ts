@@ -11,19 +11,19 @@ export interface ActorAddresses {
 
 export const BALANCE_THRESHOLDS = {
   BalanceMonitor: {
-    minBalance: ethers.utils.parseEther("1.0"),
-    targetBalance: ethers.utils.parseEther("2.0"),
+    minBalance: ethers.utils.parseEther("1.0").toBigInt(),
+    targetBalance: ethers.utils.parseEther("2.0").toBigInt(),
   },
   Bundler: {
-    minBalance: ethers.utils.parseEther("0.4"),
-    targetBalance: ethers.utils.parseEther("0.8"),
+    minBalance: ethers.utils.parseEther("0.4").toBigInt(),
+    targetBalance: ethers.utils.parseEther("0.8").toBigInt(),
   },
   SubtreeUpdater: {
-    minBalance: ethers.utils.parseEther("0.2"),
-    targetBalance: ethers.utils.parseEther("0.8"),
+    minBalance: ethers.utils.parseEther("0.2").toBigInt(),
+    targetBalance: ethers.utils.parseEther("0.8").toBigInt(),
   },
   DepositScreener: {
-    minBalance: ethers.utils.parseEther("0.2"),
-    targetBalance: ethers.utils.parseEther("0.5"),
+    minBalance: ethers.utils.parseEther("0.2").toBigInt(),
+    targetBalance: ethers.utils.parseEther("0.5").toBigInt(),
   },
 };

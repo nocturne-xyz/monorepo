@@ -146,52 +146,66 @@ export class BalanceMonitor {
 
   private async tryFillBalances(): Promise<void> {
     try {
-      this.logger.info("checking balance for self");
-      const selfEthBalance = await this.wallet.getBalance();
+      const selfEthBalance = (await this.wallet.getBalance()).toBigInt();
+
+      this.logger.info(`current self ETH balance: ${selfEthBalance}`);
       if (selfEthBalance < BALANCE_THRESHOLDS.BalanceMonitor.minBalance) {
         this.logger.error(
           `balance monitor ETH balance ${selfEthBalance} is below minimum ${BALANCE_THRESHOLDS.BalanceMonitor.minBalance}`
         );
       }
 
-      this.logger.info("checking balance for bundler");
-      const bundlerEthBalance = await this.wallet.provider.getBalance(
-        this.actorAddresses.bundler
+      const bundlerEthBalance = (
+        await this.wallet.provider.getBalance(this.actorAddresses.bundler)
+      ).toBigInt();
+
+      this.logger.info(`current bundler ETH balance: ${bundlerEthBalance}`);
+      this.logger.info(
+        `bundler min balance: ${BALANCE_THRESHOLDS.Bundler.minBalance}`
       );
       if (bundlerEthBalance < BALANCE_THRESHOLDS.Bundler.minBalance) {
+        const diff =
+          BALANCE_THRESHOLDS.Bundler.targetBalance - bundlerEthBalance;
+
+        this.logger.info(`topping up bundler balance. amount: ${diff}`);
         const tx = await this.wallet.sendTransaction({
           to: this.actorAddresses.bundler,
-          value:
-            BALANCE_THRESHOLDS.Bundler.targetBalance.toBigInt() -
-            bundlerEthBalance.toBigInt(),
+          value: diff,
         });
         await tx.wait(1);
       }
 
-      this.logger.info("checking balance for updater");
-      const updaterEthBalance = await this.wallet.provider.getBalance(
-        this.actorAddresses.updater
-      );
+      const updaterEthBalance = (
+        await this.wallet.provider.getBalance(this.actorAddresses.updater)
+      ).toBigInt();
+
+      this.logger.info(`current updater ETH balance: ${updaterEthBalance}`);
       if (updaterEthBalance < BALANCE_THRESHOLDS.SubtreeUpdater.minBalance) {
+        const diff =
+          BALANCE_THRESHOLDS.SubtreeUpdater.targetBalance - updaterEthBalance;
+
+        this.logger.info(`topping up updater balance. amount: ${diff}`);
         const tx = await this.wallet.sendTransaction({
           to: this.actorAddresses.updater,
-          value:
-            BALANCE_THRESHOLDS.SubtreeUpdater.targetBalance.toBigInt() -
-            updaterEthBalance.toBigInt(),
+          value: diff,
         });
         await tx.wait(1);
       }
 
       // Deposit screener
-      const screenerEthBalance = await this.wallet.provider.getBalance(
-        this.actorAddresses.screener
-      );
+      const screenerEthBalance = (
+        await this.wallet.provider.getBalance(this.actorAddresses.screener)
+      ).toBigInt();
+
+      this.logger.info(`current screener ETH balance: ${screenerEthBalance}`);
       if (screenerEthBalance < BALANCE_THRESHOLDS.DepositScreener.minBalance) {
+        const diff =
+          BALANCE_THRESHOLDS.DepositScreener.targetBalance - screenerEthBalance;
+
+        this.logger.info(`topping up screener balance. amount: ${diff}`);
         const tx = await this.wallet.sendTransaction({
           to: this.actorAddresses.screener,
-          value:
-            BALANCE_THRESHOLDS.DepositScreener.targetBalance.toBigInt() -
-            screenerEthBalance.toBigInt(),
+          value: diff,
         });
         await tx.wait(1);
       }
@@ -208,6 +222,8 @@ export class BalanceMonitor {
 
     const promise = new Promise<void>((resolve) => {
       const poll = async () => {
+        this.logger.info("polling...");
+
         if (this.closed) {
           this.logger.info("Balance Monitor stopping...");
           resolve();
