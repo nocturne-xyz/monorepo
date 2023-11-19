@@ -193,7 +193,10 @@ export class NocturneDB {
     await this.mutex.runExclusive(async () => {
       const record = await this._getHistoryRecord(opDigest);
       if (record === undefined) {
-        throw new Error("record not found");
+        console.warn(
+          "attempting to set status of op whose record has been pruned"
+        );
+        return;
       }
 
       record.status = status;
