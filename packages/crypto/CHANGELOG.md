@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.2
+
+### Patch Changes
+
+- 87d5bb40: dummy bump
+
 ## 0.4.1
 
 ### Patch Changes

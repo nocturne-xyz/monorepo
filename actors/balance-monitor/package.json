@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/balance-monitor",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "private": true,
   "license": "MIT",
   "main": "dist/index.js",

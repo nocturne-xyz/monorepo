@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.10.4
+
+### Patch Changes
+
+- afcea436: fix gas limit multiplier
+- 87d5bb40: dummy bump
+- Updated dependencies [87d5bb40]
+  - @nocturne-xyz/client@3.4.1
+  - @nocturne-xyz/config@1.7.3
+  - @nocturne-xyz/core@3.2.1
+  - @nocturne-xyz/offchain-utils@0.6.1
+
 ## 0.10.3
 
 ### Patch Changes

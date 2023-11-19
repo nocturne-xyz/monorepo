@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/deploy",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "private": true,
   "license": "MIT",
   "main": "dist/index.js",

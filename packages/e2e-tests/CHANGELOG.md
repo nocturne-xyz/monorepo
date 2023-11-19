@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.8
+
+### Patch Changes
+
+- 87d5bb40: dummy bump
+- Updated dependencies [87d5bb40]
+  - @nocturne-xyz/offchain-utils@0.6.1
+
 ## 0.9.7
 
 ### Patch Changes

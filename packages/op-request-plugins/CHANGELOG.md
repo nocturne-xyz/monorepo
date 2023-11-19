@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.11
+
+### Patch Changes
+
+- 87d5bb40: dummy bump
+- Updated dependencies [87d5bb40]
+  - @nocturne-xyz/client@3.4.1
+  - @nocturne-xyz/config@1.7.3
+  - @nocturne-xyz/core@3.2.1
+
 ## 2.1.10
 
 ### Patch Changes

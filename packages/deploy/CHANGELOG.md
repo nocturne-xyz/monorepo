@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.5
+
+### Patch Changes
+
+- 87d5bb40: dummy bump
+- Updated dependencies [87d5bb40]
+  - @nocturne-xyz/config@1.7.3
+  - @nocturne-xyz/core@3.2.1
+
 ## 0.12.4
 
 ### Patch Changes

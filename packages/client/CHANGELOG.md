@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.4.1
+
+### Patch Changes
+
+- 87d5bb40: dummy bump
+- Updated dependencies [87d5bb40]
+  - @nocturne-xyz/config@1.7.3
+  - @nocturne-xyz/core@3.2.1
+  - @nocturne-xyz/crypto@0.4.2
+
 ## 3.4.0
 
 ### Minor Changes
