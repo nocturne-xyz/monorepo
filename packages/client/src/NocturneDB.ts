@@ -167,7 +167,7 @@ export class NocturneDB {
 
       // if any record is missing, something bad happened
       if (records.some((r) => r === undefined)) {
-        throw new Error("record not found");
+        console.error("missing record in history");
       }
 
       if (!includePending) {
