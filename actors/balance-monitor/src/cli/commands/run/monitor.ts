@@ -58,11 +58,17 @@ export const runMonitor = new Command("monitor")
     }
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
+    const txSignerKey = process.env.TX_SIGNER_KEY;
+    if (!txSignerKey) {
+      throw new Error("missing TX_SIGNER_KEY");
+    }
+    const wallet = new ethers.Wallet(txSignerKey, provider);
+
     const config = loadNocturneConfig(configName);
 
     const balanceMonitor = new BalanceMonitor(
       config,
-      provider,
+      wallet,
       {
         bundler: bundlerAddress,
         screener: screenerAddress,
