@@ -2,18 +2,14 @@
 
 actors/subtree-updater @Sladuca
 
-# more than one codeowner => no codeowner
-# actors/bundler @luketchang @Sladuca
-# actors/deposit-screener @Sladuca @luketchang
-# actors/test-actor @Sladuca @luketchang
+ actors/bundler @luketchang @Sladuca
+ actors/deposit-screener @Sladuca @luketchang
+ actors/test-actor @Sladuca @luketchang
 
 # SDKs
 
 packages/core @Sladuca
 packages/client @Sladuca
-
-# more than one codeowner => no codeowner
-# packages/frontend-sdk @Sladuca @panieldark
 
 # other packages
 
@@ -23,4 +19,4 @@ packages/local-prover @Sladuca
 packages/crypto-utils @Sladuca
 
 # more than one codeowner => no codeowner
-# packages/e2e-tests @luketchang @Sladuca
+packages/e2e-tests @luketchang @Sladuca
