@@ -8,7 +8,13 @@ import * as ot from "@opentelemetry/api";
 import * as ethers from "ethers";
 import { Logger } from "winston";
 import ERC20_ABI from "./abis/ERC20.json";
-import { ACTOR_NAME, BALANCE_THRESHOLDS, ActorAddresses } from "./types";
+import {
+  ACTOR_NAME,
+  BALANCE_THRESHOLDS,
+  ActorAddresses,
+  BalanceThresholdInfo,
+  ActorToCheck,
+} from "./types";
 
 const COMPONENT_NAME = "monitor";
 
@@ -22,6 +28,7 @@ interface BalanceMonitorMetrics {
 export class BalanceMonitor {
   private wallet: ethers.Wallet;
   private actorAddresses: ActorAddresses;
+  private balanceThresholdInfo: Map<ActorToCheck, BalanceThresholdInfo>;
   private gasToken: ethers.Contract;
   private logger: Logger;
   private closed = false;
@@ -36,6 +43,11 @@ export class BalanceMonitor {
     this.wallet = wallet;
     this.logger = logger;
     this.actorAddresses = actorAddresses;
+
+    this.balanceThresholdInfo = BALANCE_THRESHOLDS(
+      this.wallet.address,
+      actorAddresses
+    );
 
     const gasTokenAddress = config.erc20s.get(gasTokenTicker)!.address;
 
@@ -146,68 +158,31 @@ export class BalanceMonitor {
 
   private async tryFillBalances(): Promise<void> {
     try {
-      const selfEthBalance = (await this.wallet.getBalance()).toBigInt();
+      for (const [actor, info] of this.balanceThresholdInfo.entries()) {
+        const ethBalance = (
+          await this.wallet.provider.getBalance(info.address)
+        ).toBigInt();
 
-      this.logger.info(`current self ETH balance: ${selfEthBalance}`);
-      if (selfEthBalance < BALANCE_THRESHOLDS.BalanceMonitor.minBalance) {
-        this.logger.error(
-          `balance monitor ETH balance ${selfEthBalance} is below minimum ${BALANCE_THRESHOLDS.BalanceMonitor.minBalance}`
-        );
-      }
+        this.logger.info(`current ${actor} ETH balance: ${ethBalance}`);
+        if (ethBalance < info.minBalance) {
+          if (actor === "BalanceMonitor") {
+            // Log errors so alerts are triggered and team can top up balance monitor wallet
+            this.logger.error(
+              `balance monitor balance below min balance. skipping top up.`
+            );
+            continue;
+          } else {
+            // Top up actor if not balance monitor
+            const diff = info.targetBalance - ethBalance;
 
-      const bundlerEthBalance = (
-        await this.wallet.provider.getBalance(this.actorAddresses.bundler)
-      ).toBigInt();
-
-      this.logger.info(`current bundler ETH balance: ${bundlerEthBalance}`);
-      this.logger.info(
-        `bundler min balance: ${BALANCE_THRESHOLDS.Bundler.minBalance}`
-      );
-      if (bundlerEthBalance < BALANCE_THRESHOLDS.Bundler.minBalance) {
-        const diff =
-          BALANCE_THRESHOLDS.Bundler.targetBalance - bundlerEthBalance;
-
-        this.logger.info(`topping up bundler balance. amount: ${diff}`);
-        const tx = await this.wallet.sendTransaction({
-          to: this.actorAddresses.bundler,
-          value: diff,
-        });
-        await tx.wait(1);
-      }
-
-      const updaterEthBalance = (
-        await this.wallet.provider.getBalance(this.actorAddresses.updater)
-      ).toBigInt();
-
-      this.logger.info(`current updater ETH balance: ${updaterEthBalance}`);
-      if (updaterEthBalance < BALANCE_THRESHOLDS.SubtreeUpdater.minBalance) {
-        const diff =
-          BALANCE_THRESHOLDS.SubtreeUpdater.targetBalance - updaterEthBalance;
-
-        this.logger.info(`topping up updater balance. amount: ${diff}`);
-        const tx = await this.wallet.sendTransaction({
-          to: this.actorAddresses.updater,
-          value: diff,
-        });
-        await tx.wait(1);
-      }
-
-      // Deposit screener
-      const screenerEthBalance = (
-        await this.wallet.provider.getBalance(this.actorAddresses.screener)
-      ).toBigInt();
-
-      this.logger.info(`current screener ETH balance: ${screenerEthBalance}`);
-      if (screenerEthBalance < BALANCE_THRESHOLDS.DepositScreener.minBalance) {
-        const diff =
-          BALANCE_THRESHOLDS.DepositScreener.targetBalance - screenerEthBalance;
-
-        this.logger.info(`topping up screener balance. amount: ${diff}`);
-        const tx = await this.wallet.sendTransaction({
-          to: this.actorAddresses.screener,
-          value: diff,
-        });
-        await tx.wait(1);
+            this.logger.info(`topping up ${actor} balance. amount: ${diff}`);
+            const tx = await this.wallet.sendTransaction({
+              to: info.address,
+              value: diff,
+            });
+            await tx.wait(1);
+          }
+        }
       }
     } catch (error) {
       this.logger.error("error filling balances", { error });
