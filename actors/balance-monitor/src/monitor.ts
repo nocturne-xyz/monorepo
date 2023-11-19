@@ -167,10 +167,11 @@ export class BalanceMonitor {
         if (ethBalance < info.minBalance) {
           if (actor === "BalanceMonitor") {
             // Log errors so alerts are triggered and team can top up balance monitor wallet
-            this.logger.error(
-              `balance monitor balance below min balance. skipping top up.`
-            );
-            continue;
+            if (ethBalance < info.minBalance) {
+              this.logger.error(
+                `need to top up balance monitor! current balance: ${ethBalance}. min balance: ${info.minBalance}`
+              );
+            }
           } else {
             // Top up actor if not balance monitor
             const diff = info.targetBalance - ethBalance;
