@@ -16,6 +16,7 @@ import {
 import {
   Address,
   Asset,
+  GAS_PER_DEPOSIT_COMPLETE,
   JoinSplitProver,
   NocturneSigner,
   OperationTrait,
@@ -343,6 +344,9 @@ export class TestActor {
       const stealthAddress = StealthAddressTrait.compress(
         this.client.viewer.generateRandomStealthAddress()
       );
+      const gasPrice = (await this.provider.getGasPrice()).toBigInt();
+      const gasCompensation = GAS_PER_DEPOSIT_COMPLETE * gasPrice;
+
       const estimatedGas = (
         await this.depositManager.estimateGas.instantiateErc20MultiDeposit(
           erc20Token.address,
@@ -350,6 +354,7 @@ export class TestActor {
           stealthAddress,
           {
             from: this._address!,
+            value: gasCompensation,
           }
         )
       ).toBigInt();
