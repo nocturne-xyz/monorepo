@@ -2,9 +2,9 @@
 
 actors/subtree-updater @Sladuca
 
- actors/bundler @luketchang @Sladuca
- actors/deposit-screener @Sladuca @luketchang
- actors/test-actor @Sladuca @luketchang
+actors/bundler @luketchang @Sladuca
+actors/deposit-screener @Sladuca @luketchang
+actors/test-actor @Sladuca @luketchang
 
 # SDKs
 
