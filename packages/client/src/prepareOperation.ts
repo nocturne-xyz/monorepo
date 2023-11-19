@@ -160,9 +160,11 @@ export async function gatherNotes(
   );
   const balance = notes.reduce((acc, note) => acc + note.value, 0n);
   if (balance < requestedAmount) {
-    throw new Error(
-      `attempted to spend more funds than owned. Address: ${asset.assetAddr}. Attempted: ${requestedAmount}. Owned: ${balance}.`
-    );
+    // TODO: have a better way to handle following edge case:
+    // 1. there are multiple JS requests for the same asset
+    // 2. the user has enough notes to cover the total amount
+    // 3. the user does *not* have enough to cover each request individually.
+    throw new NotEnoughFundsError(requestedAmount, balance, asset);
   }
 
   // Goal: want to utilize small notes so they don't pile up.
