@@ -15,6 +15,7 @@ export {
 
 export {
   NotEnoughGasTokensError,
+  NotEnoughFundsError,
   ActionMetadata,
   ConfidentialPaymentMetadata,
   OperationRequest,

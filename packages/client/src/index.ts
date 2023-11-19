@@ -8,6 +8,7 @@ export { NocturneDB, GetNotesOpts } from "./NocturneDB";
 export { SyncOpts } from "./syncSDK";
 export { BundlerOpTracker } from "./OpTracker";
 export { NotEnoughGasTokensError } from "./opRequestGas";
+export { NotEnoughFundsError } from "./prepareOperation";
 export { signOperation } from "./signOperation";
 export { proveOperation } from "./proveOperation";
 export { isTerminalOpStatus, isFailedOpStatus } from "./utils";
