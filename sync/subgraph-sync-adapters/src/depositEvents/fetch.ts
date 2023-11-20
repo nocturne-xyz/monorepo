@@ -8,6 +8,7 @@ import {
   DepositEvent,
   DepositEventType,
 } from "@nocturne-xyz/core";
+import { OnchainDepositType } from "@nocturne-xyz/core";
 import { Logger } from "winston";
 
 const { makeSubgraphQuery } = SubgraphUtils;
@@ -30,7 +31,7 @@ export interface DepositEventResponse {
 
 interface FetchDepositEventsVars {
   fromIdx?: string;
-  type?: DepositEventType;
+  type?: OnchainDepositType;
   spender?: string;
   toIdx?: string;
 }
@@ -44,8 +45,9 @@ interface FetchDepositEventsResponse {
 function formDepositEventsRawQuery(
   type?: string,
   fromTotalEntityIndex?: TotalEntityIndex,
+  toTotalEntityIndex?: TotalEntityIndex,
   spender?: string,
-  toTotalEntityIndex?: TotalEntityIndex
+  limit?: number
 ) {
   const params = [];
   const conditions = [];
@@ -72,7 +74,9 @@ function formDepositEventsRawQuery(
   const whereClause = exists ? `where: { ${conditions.join(", ")} }, ` : "";
   return `\
     query fetchDepositEvents${paramsString} {
-      depositEvents(${whereClause}first: 50, orderDirection: asc, orderBy: id) {
+      depositEvents(${whereClause}first: ${
+    limit ?? 50
+  }, orderDirection: asc, orderBy: id) {
         id
         type
         txHash
@@ -92,14 +96,16 @@ function formDepositEventsRawQuery(
 export async function fetchDepositEvents(
   endpoint: string,
   filter: {
-    type?: DepositEventType;
+    type?: OnchainDepositType;
     fromTotalEntityIndex?: TotalEntityIndex;
     toTotalEntityIndex?: TotalEntityIndex;
     spender?: string;
+    limit?: number;
   } = {},
   logger?: Logger
 ): Promise<WithTotalEntityIndex<DepositEvent>[]> {
-  const { type, fromTotalEntityIndex, toTotalEntityIndex, spender } = filter;
+  const { type, fromTotalEntityIndex, toTotalEntityIndex, spender, limit } =
+    filter;
   const query = makeSubgraphQuery<
     FetchDepositEventsVars,
     FetchDepositEventsResponse
@@ -108,8 +114,9 @@ export async function fetchDepositEvents(
     formDepositEventsRawQuery(
       type,
       fromTotalEntityIndex,
+      toTotalEntityIndex,
       spender,
-      toTotalEntityIndex
+      limit
     ),
     "depositEvents",
     logger

@@ -9,7 +9,7 @@ import {
   max,
   DepositEventsBatch,
   DepositEventSyncAdapter,
-  DepositEventType,
+  OnchainDepositType,
 } from "@nocturne-xyz/core";
 import { Logger } from "winston";
 import { fetchDepositEvents } from "./fetch";
@@ -28,7 +28,7 @@ export class SubgraphDepositEventSyncAdapter
   }
 
   iterDepositEvents(
-    type: DepositEventType,
+    type: OnchainDepositType,
     startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<DepositEventsBatch> {
