@@ -16,10 +16,12 @@ export interface TxSubmissionArgs {
   data: string;
 }
 
+export type TxSpeed = "safeLow" | "average" | "fast" | "fastest";
+
 export interface TxSubmissionOpts {
   value?: number;
   gasLimit?: number;
-  speed?: "safeLow" | "average" | "fast" | "fastest";
+  speed?: TxSpeed;
   isPrivate?: boolean;
   numConfirmations?: number;
   logger?: Logger;
@@ -37,6 +39,7 @@ export interface TxSubmitter {
 export function getTxSubmitterFromEnv(): TxSubmitter {
   const relayerApiKey = process.env.OZ_RELAYER_API_KEY;
   const relayerApiSecret = process.env.OZ_RELAYER_API_SECRET;
+  const relayerSpeed = process.env.OZ_RELAYER_SPEED as TxSpeed | undefined;
 
   const privateKey = process.env.TX_SIGNER_KEY;
   const provider = getEthersProviderFromEnv();
@@ -51,7 +54,8 @@ export function getTxSubmitterFromEnv(): TxSubmitter {
         keepAlive: true,
       }),
     });
-    return new OzRelayerTxSubmitter(relayer, provider);
+
+    return new OzRelayerTxSubmitter(relayer, provider, relayerSpeed);
   } else if (privateKey) {
     const signer = new ethers.Wallet(privateKey, provider);
     return new EthersTxSubmitter(signer);
@@ -98,10 +102,16 @@ export class EthersTxSubmitter implements TxSubmitter {
 export class OzRelayerTxSubmitter implements TxSubmitter {
   provider: ethers.providers.JsonRpcProvider;
   relayer: Relayer;
+  speed: TxSpeed;
 
-  constructor(relayer: Relayer, provider: ethers.providers.JsonRpcProvider) {
+  constructor(
+    relayer: Relayer,
+    provider: ethers.providers.JsonRpcProvider,
+    speed: TxSpeed = "fast"
+  ) {
     this.relayer = relayer;
     this.provider = provider;
+    this.speed = speed;
   }
 
   async address(): Promise<Address> {
@@ -116,7 +126,7 @@ export class OzRelayerTxSubmitter implements TxSubmitter {
       to,
       data,
       value: opts?.value ?? 0,
-      speed: opts?.speed ?? "fast",
+      speed: opts?.speed ?? this.speed,
       gasLimit:
         opts?.gasLimit ??
         Number(
