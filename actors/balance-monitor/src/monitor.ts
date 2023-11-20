@@ -1,5 +1,4 @@
 import { NocturneConfig } from "@nocturne-xyz/config";
-import { Address } from "@nocturne-xyz/core";
 import {
   ActorHandle,
   makeCreateObservableGaugeFn,
@@ -9,15 +8,15 @@ import * as ot from "@opentelemetry/api";
 import * as ethers from "ethers";
 import { Logger } from "winston";
 import ERC20_ABI from "./abis/ERC20.json";
+import {
+  ACTOR_NAME,
+  BALANCE_THRESHOLDS,
+  ActorAddresses,
+  BalanceThresholdInfo,
+  ActorToCheck,
+} from "./types";
 
-const ACTOR_NAME = "balance-monitor";
 const COMPONENT_NAME = "monitor";
-
-interface ActorAddresses {
-  bundler: Address;
-  updater: Address;
-  screener: Address;
-}
 
 interface BalanceMonitorMetrics {
   bundlerEthBalanceGauge: ot.ObservableGauge;
@@ -27,27 +26,33 @@ interface BalanceMonitorMetrics {
 }
 
 export class BalanceMonitor {
-  private provider: ethers.providers.JsonRpcProvider;
+  private wallet: ethers.Wallet;
   private actorAddresses: ActorAddresses;
+  private balanceThresholdInfo: Map<ActorToCheck, BalanceThresholdInfo>;
   private gasToken: ethers.Contract;
   private logger: Logger;
   private closed = false;
 
   constructor(
     config: NocturneConfig,
-    provider: ethers.providers.JsonRpcProvider,
+    wallet: ethers.Wallet,
     actorAddresses: ActorAddresses,
     gasTokenTicker: string,
     logger: Logger
   ) {
+    this.wallet = wallet;
     this.logger = logger;
-    this.provider = provider;
     this.actorAddresses = actorAddresses;
+
+    this.balanceThresholdInfo = BALANCE_THRESHOLDS(
+      this.wallet.address,
+      actorAddresses
+    );
 
     const gasTokenAddress = config.erc20s.get(gasTokenTicker)!.address;
 
     this.logger.info(`gas token address ${gasTokenAddress}`);
-    this.gasToken = new ethers.Contract(gasTokenAddress, ERC20_ABI, provider);
+    this.gasToken = new ethers.Contract(gasTokenAddress, ERC20_ABI, wallet);
   }
 
   private registerMetrics(): BalanceMonitorMetrics {
@@ -83,7 +88,7 @@ export class BalanceMonitor {
 
     bundlerEthBalanceGauge.addCallback(async (observableResult) => {
       try {
-        const balance = await this.provider.getBalance(
+        const balance = await this.wallet.provider.getBalance(
           this.actorAddresses.bundler
         );
         const balanceEther = parseFloat(
@@ -115,7 +120,7 @@ export class BalanceMonitor {
 
     updaterEthBalanceGauge.addCallback(async (observableResult) => {
       try {
-        const balance = await this.provider.getBalance(
+        const balance = await this.wallet.provider.getBalance(
           this.actorAddresses.updater
         );
         const balanceEther = parseFloat(
@@ -130,7 +135,7 @@ export class BalanceMonitor {
 
     screenerEthBalanceGauge.addCallback(async (observableResult) => {
       try {
-        const balance = await this.provider.getBalance(
+        const balance = await this.wallet.provider.getBalance(
           this.actorAddresses.screener
         );
         const balanceEther = parseFloat(
@@ -151,6 +156,40 @@ export class BalanceMonitor {
     };
   }
 
+  private async tryFillBalances(): Promise<void> {
+    try {
+      for (const [actor, info] of this.balanceThresholdInfo.entries()) {
+        const ethBalance = (
+          await this.wallet.provider.getBalance(info.address)
+        ).toBigInt();
+
+        this.logger.info(`current ${actor} ETH balance: ${ethBalance}`);
+        if (ethBalance < info.minBalance) {
+          if (actor === "BalanceMonitor") {
+            // Log errors so alerts are triggered and team can top up balance monitor wallet
+            if (ethBalance < info.minBalance) {
+              this.logger.error(
+                `need to top up balance monitor! current balance: ${ethBalance}. min balance: ${info.minBalance}`
+              );
+            }
+          } else {
+            // Top up actor if not balance monitor
+            const diff = info.targetBalance - ethBalance;
+
+            this.logger.info(`topping up ${actor} balance. amount: ${diff}`);
+            const tx = await this.wallet.sendTransaction({
+              to: info.address,
+              value: diff,
+            });
+            await tx.wait(1);
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error("error filling balances", { error });
+    }
+  }
+
   public start(): ActorHandle {
     this.logger.info(
       "Balance Monitor started. Piping balance metrics every 60 seconds."
@@ -158,17 +197,24 @@ export class BalanceMonitor {
     this.registerMetrics();
 
     const promise = new Promise<void>((resolve) => {
-      const checkBalanceAndReport = async () => {
+      const poll = async () => {
+        this.logger.info("polling...");
+
         if (this.closed) {
           this.logger.info("Balance Monitor stopping...");
           resolve();
           return;
         }
 
-        setTimeout(checkBalanceAndReport, 60_000);
+        // try to top up balances
+        await this.tryFillBalances();
+
+        // balance monitor metrics piping is implicit, automatically executed via register metrics
+        // callbacks
+        setTimeout(poll, 60_000);
       };
 
-      void checkBalanceAndReport();
+      void poll();
     });
 
     return {
