@@ -1,6 +1,8 @@
 // this function stringifies a number `num` and padds it with leading zeros to `targetLen` digits
 // this is used to ensure that stringified numbers are oredered the same way as numbers
-export function numberToStringPadded(num: number, targetLen: number): string {
+export function numberToStringPadded(num: bigint, targenLen: number): string;
+export function numberToStringPadded(num: number, targetLen: number): string;
+export function numberToStringPadded(num: bigint | number, targetLen: number): string {
   let res = num.toString();
   if (res.length > targetLen) {
     throw new Error(`number ${num} is too large to fit in ${targetLen} digits`);
