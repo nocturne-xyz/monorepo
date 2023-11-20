@@ -82,7 +82,7 @@ export class EthersTxSubmitter implements TxSubmitter {
       data,
       value: opts?.value,
       gasLimit: opts?.gasLimit,
-      gasPrice: await this.signer.provider.getGasPrice(),
+      gasPrice: (await this.signer.provider.getGasPrice()).toBigInt() * 2n,
     });
 
     opts?.logger &&
