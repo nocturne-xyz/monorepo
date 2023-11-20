@@ -13,6 +13,8 @@ import {
   isLessThanOneMonthAgo,
 } from "./utils";
 import IORedis from "ioredis";
+import { ethers } from "ethers";
+import { ScreeningDepositRequest } from "../..";
 
 /**
  * Ruleset V1 Specification
@@ -358,6 +360,26 @@ const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
   },
 };
 
+let ENV_BLACKLIST: string[] | undefined;
+if (process.env.DEFAULT_BLOCKLIST) {
+  ENV_BLACKLIST = process.env.DEFAULT_BLOCKLIST.split(",").map(
+    ethers.utils.getAddress
+  );
+}
+
+const ENV_BLACKLIST_RULE: RuleParams<"IDENTITY"> = {
+  name: "ENV_BLACKLIST_RULE",
+  call: "IDENTITY",
+  threshold: (deposit: ScreeningDepositRequest) =>
+    ENV_BLACKLIST
+      ? ENV_BLACKLIST.includes(ethers.utils.getAddress(deposit.spender))
+      : false,
+  action: {
+    type: "Rejection",
+    reason: "ENV_BLACKLIST",
+  },
+};
+
 // // - Large volume of deposits coming from same address (large multideposit) → 3x delay (6h)
 
 // const LARGE_MULTIDEPOSIT_DELAY: RuleParams<"IDENTITY"> = {
@@ -394,6 +416,7 @@ export const RULESET_V1 = (redis: IORedis, logger: Logger): RuleSet => {
     redis,
     logger
   )
+    .add(ENV_BLACKLIST_RULE)
     .add(TRM_SEVERE_OWNERSHIP_REJECT)
     .add(TRM_HIGH_OWNERSHIP_REJECT)
     .combineAndAdd(TRM_SEVERE_COUNTERPARTY_REJECT)
