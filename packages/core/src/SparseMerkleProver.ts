@@ -1,6 +1,5 @@
 import { assertOrErr, zip } from "./utils";
 import { poseidon4 } from "@nocturne-xyz/crypto";
-import { KVStore } from "./store";
 import * as JSON from "bigint-json-serialization";
 import {
   consecutiveChunks,
@@ -78,8 +77,6 @@ interface UncommittedLeaf {
 // (0 means left, 1 means right)
 type PathIndex = number;
 
-const SMT_DUMP_KEY = "SMT_DUMP";
-
 // TODO: turn these into constants
 // ZERO_HASH[i] = root hash of empty merkle tree of depth i
 export const ZERO_HASHES = [ZERO_VALUE];
@@ -109,9 +106,8 @@ export class SparseMerkleProver {
   private root: TreeNode;
   private leaves: Map<number, bigint>;
   private uncommittedLeaves: UncommittedLeaf[];
-  private kv: KVStore;
 
-  constructor(kv: KVStore) {
+  constructor() {
     this.root = {
       children: [...NO_CHILDREN],
       hash: ZERO_HASHES[DEPTH],
@@ -119,7 +115,6 @@ export class SparseMerkleProver {
     this.leaves = new Map();
     this.uncommittedLeaves = [];
     this._count = 0;
-    this.kv = kv;
   }
 
   getRoot(): bigint {
@@ -128,6 +123,10 @@ export class SparseMerkleProver {
 
   count(): number {
     return this._count;
+  }
+
+  totalCount(): number {
+    return this._count + this.uncommittedLeaves.length;
   }
 
   insert(index: number, leaf: bigint, include = true): void {
@@ -295,7 +294,11 @@ export class SparseMerkleProver {
     this.pruneHelper(this.root, 0);
   }
 
-  async persist(): Promise<void> {
+  removeUncommitted(): void {
+    this.uncommittedLeaves = [];
+  }
+
+  serialize(): string {
     this.prune();
 
     const dump: SMTDump = {
@@ -304,17 +307,14 @@ export class SparseMerkleProver {
       uncommittedLeaves: this.uncommittedLeaves,
       _count: this._count,
     };
-    await this.kv.putString(SMT_DUMP_KEY, JSON.stringify(dump));
+
+    return JSON.stringify(dump);
   }
 
-  static async loadFromKV(kv: KVStore): Promise<SparseMerkleProver> {
-    const smt = new SparseMerkleProver(kv);
-    const dumpStr = await kv.getString(SMT_DUMP_KEY);
-    if (!dumpStr) {
-      return smt;
-    }
+  static deserialize(ser: string): SparseMerkleProver {
+    const smt = new SparseMerkleProver();
 
-    const dump: SMTDump = JSON.parse(dumpStr);
+    const dump: SMTDump = JSON.parse(ser);
     smt.root = dump.root;
     smt.leaves = new Map(dump.leaves);
     smt._count = dump._count;
