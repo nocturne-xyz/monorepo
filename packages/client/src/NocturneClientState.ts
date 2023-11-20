@@ -8,9 +8,16 @@ import {
   Address,
   SparseMerkleProver,
   StateDiff,
+  OperationStatus,
+  PreSignOperation,
+  SignedOperation,
+  OperationTrait,
+  unzip,
+  Nullifier,
 } from "@nocturne-xyz/core";
 import { Mutex } from "async-mutex";
-import { OpHistoryRecord } from "./types";
+import { OpHistoryRecord, OperationMetadata } from "./types";
+import { OPTIMISTIC_RECORD_TTL, getMerkleIndicesAndNfsFromOp } from "./utils";
 
 const SNAPSHOTS_KEY = "nocturne-client-snapshots";
 const SNAPSHOT_KEY_PREFIX = "snapshot-";
@@ -19,10 +26,13 @@ const SNAPSHOT_KEY_PREFIX = "snapshot-";
 // if includeUncommitted is defined and true, then the method include notes that are not yet committed to the commitment tree
 // if ignoreOptimisticNFs is defined and true, then the method will include notes that have been used by the SDK, but may not have been nullified on-chain yet
 // if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
-export interface GetNotesOpts {
+export type GetNotesOpts = {
   includeUncommitted?: boolean;
   ignoreOptimisticNFs?: boolean;
-}
+};
+
+type ExpirationDate = number;
+type MerkleIndex = number;
 
 type Snapshot = {
   tei: bigint;
@@ -33,8 +43,8 @@ type Snapshot = {
   assetToMerkleIndices: [Address, number[]][];
   nfToMerkleIndex: [bigint, number][];
 
-  optimisticNfIndices: number[];
-  opHistory: Array<OpHistoryRecord>;
+  optimisticNfs: [MerkleIndex, ExpirationDate][];
+  opHistory: OpHistoryRecord[];
 
   serializedMerkle: string;
 };
@@ -45,13 +55,13 @@ export class NocturneClientState {
   private tei?: TotalEntityIndex;
   private commitTei?: bigint;
 
-  private merkleIndexToNote: Map<number, IncludedNoteWithNullifier>;
-  private merkleIndexToTei: Map<number, TotalEntityIndex>;
-  private assetToMerkleIndices: Map<Address, number[]>;
-  private nfToMerkleIndex: Map<bigint, number>;
+  private merkleIndexToNote: Map<MerkleIndex, IncludedNoteWithNullifier>;
+  private merkleIndexToTei: Map<MerkleIndex, TotalEntityIndex>;
+  private assetToMerkleIndices: Map<Address, MerkleIndex[]>;
+  private nfToMerkleIndex: Map<Nullifier, MerkleIndex>;
 
-  private optimisticNfIndices: Set<number>;
-  private opHistory: OpHistoryRecord[];
+  private optimisticNfs: Map<MerkleIndex, ExpirationDate>;
+  private _opHistory: OpHistoryRecord[];
 
   public merkle: SparseMerkleProver;
 
@@ -61,13 +71,13 @@ export class NocturneClientState {
   constructor(kv: KVStore) {
     this.kv = kv;
 
-    this.merkleIndexToNote = new Map<number, IncludedNoteWithNullifier>();
-    this.merkleIndexToTei = new Map<number, TotalEntityIndex>();
-    this.assetToMerkleIndices = new Map<Address, number[]>();
-    this.nfToMerkleIndex = new Map<bigint, number>();
+    this.merkleIndexToNote = new Map<MerkleIndex, IncludedNoteWithNullifier>();
+    this.merkleIndexToTei = new Map<MerkleIndex, TotalEntityIndex>();
+    this.assetToMerkleIndices = new Map<Address, MerkleIndex[]>();
+    this.nfToMerkleIndex = new Map<Nullifier, MerkleIndex>();
 
-    this.optimisticNfIndices = new Set<number>();
-    this.opHistory = [];
+    this.optimisticNfs = new Map<MerkleIndex, ExpirationDate>();
+    this._opHistory = [];
 
     this.merkle = new SparseMerkleProver();
   }
@@ -147,6 +157,72 @@ export class NocturneClientState {
     );
   }
 
+  get opHistory(): OpHistoryRecord[] {
+    return this.opHistory;
+  }
+
+  getOpHistoryRecord(digest: bigint): OpHistoryRecord | undefined {
+    return this.opHistory.find((record) => record.digest === digest);
+  }
+
+  // idempotent
+  setStatusForOp(digest: bigint, status: OperationStatus): void {
+    const idx = this.opHistory.findIndex((record) => record.digest === digest);
+    if (idx < 0) {
+      console.warn("op history record not found");
+      return;
+    }
+
+    this._opHistory[idx].status = status;
+  }
+
+  // idempotent
+  addOpToHistory(
+    op: PreSignOperation | SignedOperation,
+    metadata: OperationMetadata,
+    status?: OperationStatus
+  ): void {
+    const digest = OperationTrait.computeDigest(op);
+
+    // see if op already exists. if so, skip
+    if (this.getOpHistoryRecord(digest) !== undefined) {
+      return;
+    }
+
+    const pairs: [number, bigint][] = getMerkleIndicesAndNfsFromOp(op).map(
+      ({ merkleIndex, nullifier }) => [Number(merkleIndex), nullifier]
+    );
+    const [spentNoteMerkleIndices] = unzip(pairs);
+    const now = Date.now();
+
+    const record = {
+      digest,
+      metadata,
+      status,
+      spentNoteMerkleIndices,
+      createdAt: now,
+      lastModified: now,
+    };
+    this.opHistory.push(record);
+
+    const expirationDate = now + OPTIMISTIC_RECORD_TTL;
+    for (const idx of spentNoteMerkleIndices) {
+      this.optimisticNfs.set(idx, expirationDate);
+    }
+  }
+
+  // idempotent
+  removeOpfromHistory(digest: bigint, removeOptimisticNfs?: boolean): void {
+    const index = this.opHistory.findIndex(
+      (record) => record.digest === digest
+    );
+    if (index === -1) {
+      return;
+    }
+
+    this.opHistory.splice(index, 1);
+  }
+
   private filterNotesByOpts(
     notes: IncludedNote[],
     opts?: GetNotesOpts
@@ -161,9 +237,7 @@ export class NocturneClientState {
     }
 
     if (!opts?.ignoreOptimisticNFs) {
-      notes = notes.filter((note) =>
-        this.optimisticNfIndices.has(note.merkleIndex)
-      );
+      notes = notes.filter((note) => this.optimisticNfs.has(note.merkleIndex));
     }
 
     return notes;
@@ -185,7 +259,7 @@ export class NocturneClientState {
         assetToMerkleIndices,
         nfToMerkleIndex,
 
-        optimisticNfIndices,
+        optimisticNfs,
         opHistory,
 
         serializedMerkle,
@@ -198,8 +272,8 @@ export class NocturneClientState {
 
       state.merkle = SparseMerkleProver.deserialize(serializedMerkle);
 
-      state.opHistory = opHistory;
-      state.optimisticNfIndices = new Set(optimisticNfIndices);
+      state._opHistory = opHistory;
+      state.optimisticNfs = new Map(optimisticNfs);
 
       state.merkleIndexToNote = new Map(merkleIndexToNote);
       state.merkleIndexToTei = new Map(merkleIndexToTei);
@@ -281,16 +355,16 @@ export class NocturneClientState {
       state.merkle.removeUncommitted();
 
       // 4. make snapshot
-      const snapshot = {
+      const snapshot: Snapshot = {
         tei: state.tei,
 
         merkleIndexToNote: Array.from(state.merkleIndexToNote.entries()),
-        merkleIndexToTei: Array.from(state.merkleIndexToNote.entries()),
+        merkleIndexToTei: Array.from(state.merkleIndexToTei.entries()),
         assetToMerkleIndices: Array.from(state.assetToMerkleIndices.entries()),
-        nullifierToMerkleIndex: Array.from(state.nfToMerkleIndex.entries()),
+        nfToMerkleIndex: Array.from(state.nfToMerkleIndex.entries()),
 
-        optimisticNfToMerkleIndex: Array.from(state.optimisticNfIndices),
-        opHistory: state.opHistory,
+        optimisticNfs: Array.from(state.optimisticNfs),
+        opHistory: state._opHistory,
 
         serializedMerkle: state.merkle.serialize(),
       };
