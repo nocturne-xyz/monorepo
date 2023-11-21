@@ -73,19 +73,19 @@ export class SnapStateSdk {
     request: Omit<RpcMethod, "return">,
   ): Promise<RpcMethod["return"]> {
     console.log("[fe-sdk] invoking snap method:", request.method);
-    const stringifiedParams = request.params
-      ? stringifyObjectValues(request.params)
-      : undefined;
     const jsonRpcRequest = {
       method: "wallet_invokeSnap",
       params: {
         snapId: this.snapId,
         request: {
           method: request.method,
-          params: stringifiedParams,
+          ...(request.params && {
+            params: stringifyObjectValues(request.params),
+          }),
         },
       },
     };
+
     const response = await window.ethereum.request<{ res: string | null }>(
       jsonRpcRequest,
     );
@@ -121,7 +121,7 @@ export class SnapStateSdk {
     // Return early if spend key already set
     const spendKeyEoa = await this.invoke<RequestSpendKeyEoaMethod>({
       method: "nocturne_requestSpendKeyEoa",
-      params: undefined,
+      params: null,
     });
     if (spendKeyEoa) {
       return;
