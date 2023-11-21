@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.4.2
+
+### Patch Changes
+
+- 9e63e754: log instead of throw on missing op history record
+- 326fd2b2: add typed error for when user doesn't have enough funds for op request
+
 ## 3.4.1
 
 ### Patch Changes

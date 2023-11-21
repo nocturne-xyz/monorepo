@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.6
+
+### Patch Changes
+
+- 812d2463: add 1.5x gas limit
+- Updated dependencies [b7febfca]
+  - @nocturne-xyz/offchain-utils@0.6.2
+
 ## 0.8.5
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.5
+
+### Patch Changes
+
+- 812d2463: 1.2x gas limit, 2x was too high
+- Updated dependencies [9e63e754]
+- Updated dependencies [b7febfca]
+- Updated dependencies [326fd2b2]
+  - @nocturne-xyz/client@3.4.2
+  - @nocturne-xyz/offchain-utils@0.6.2
+
 ## 0.10.4
 
 ### Patch Changes
