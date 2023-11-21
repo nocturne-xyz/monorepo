@@ -7,10 +7,10 @@ import { expect } from "chai";
 describe("RuleSet Utils", async () => {
   it("checks US timezone rule", () => {
     // Mock date/time to be 10pm ET (should trigger since window starts @ 9:30pm ET)
-    const mockDate = moment
+    const mockDate1 = moment
       .tz("2023-11-20 22:00:00", "America/New_York")
       .toDate();
-    const clock1 = sinon.useFakeTimers(mockDate.getTime());
+    const clock1 = sinon.useFakeTimers(mockDate1.getTime());
 
     let triggered = US_TIMEZONE_DELAY_RULE.threshold(DUMMY_DEPOSIT_REQUEST);
     expect(triggered).to.be.true;

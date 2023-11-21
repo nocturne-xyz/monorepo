@@ -18,6 +18,13 @@ import {
 } from "../src/cli/commands/inspect/helpers";
 import { getLatestSnapshotFolder } from "./utils";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import moment from "moment-timezone";
+import * as sinon from "sinon";
+
+const mockDate = moment
+  .tz("2023-11-20 10:00:00", "America/New_York") // this is NOT during the US sleeping timezone
+  .toDate();
+const clock = sinon.useFakeTimers(mockDate.getTime());
 
 describe("RULESET_V1", () => {
   let server: RedisMemoryServer;
@@ -52,6 +59,10 @@ describe("RULESET_V1", () => {
     );
 
     ruleset = RULESET_V1(redis, logger);
+  });
+
+  after(() => {
+    clock.restore();
   });
 
   describe("Bulk Tests", async () => {

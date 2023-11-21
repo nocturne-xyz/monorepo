@@ -382,6 +382,7 @@ const ENV_BLACKLIST_RULE: RuleParams<"IDENTITY"> = {
   },
 };
 
+// TODO: condition on deposit being > 5 ETh
 export const US_TIMEZONE_DELAY_RULE: RuleParams<"IDENTITY"> = {
   name: "US_TIMEZONE_DELAY_RULE",
   call: "IDENTITY",
@@ -401,7 +402,7 @@ export const US_TIMEZONE_DELAY_RULE: RuleParams<"IDENTITY"> = {
   action: {
     type: "Delay",
     operation: "Add",
-    valueSeconds: timeUntil7AMNextDayInSeconds(), // calculate time until 6 AM ET next day
+    valueSeconds: timeUntil7AMNextDayInSeconds(), // calculate time until 7 AM ET next day (this is additional delay so it will be 9am ET next day at least given 2h base delay)
   },
 };
 
