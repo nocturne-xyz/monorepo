@@ -14,15 +14,16 @@ export {
 } from "./types";
 
 export {
-  NotEnoughGasTokensError,
-  NotEnoughFundsError,
   ActionMetadata,
   ConfidentialPaymentMetadata,
+  NotEnoughFundsError,
+  NotEnoughGasTokensError,
+  OpWithMetadata,
   OperationRequest,
   OperationRequestWithMetadata,
   SyncOpts,
-  isTerminalOpStatus,
   isFailedOpStatus,
+  isTerminalOpStatus,
 } from "@nocturne-xyz/client";
 
 export {
@@ -31,6 +32,7 @@ export {
   AssetWithBalance,
   DepositQuoteResponse,
   OperationStatus,
+  PreSignOperation,
   ProvenOperation,
   SignedOperation,
   StealthAddress,
@@ -45,4 +47,8 @@ export {
   Snap,
 } from "./metamask/types";
 
-export { DepositAdapter, HasuraDepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
+export {
+  DepositAdapter,
+  HasuraDepositAdapter,
+  SubgraphDepositAdapter,
+} from "./depositFetching";
