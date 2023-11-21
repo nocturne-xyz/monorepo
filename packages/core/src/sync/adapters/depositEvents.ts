@@ -3,8 +3,6 @@ import { ClosableAsyncIterator } from "../closableAsyncIterator";
 import { TotalEntityIndex } from "../totalEntityIndex";
 import { IterSyncOpts } from "./shared";
 
-export type OnchainDepositType = "Instantiated" | "Retrieved" | "Completed";
-
 export enum DepositEventType {
   Instantiated = "Instantiated",
   Retrieved = "Retrieved",
@@ -24,7 +22,7 @@ export interface DepositEventsBatch {
 
 export interface DepositEventSyncAdapter {
   iterDepositEvents(
-    type: OnchainDepositType,
+    type: DepositEventType,
     startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<DepositEventsBatch>;

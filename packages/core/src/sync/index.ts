@@ -12,7 +12,6 @@ export {
   DepositEventsBatch,
   DepositEvent,
   DepositEventType,
-  OnchainDepositType,
 } from "./adapters";
 
 export * from "./totalEntityIndex";

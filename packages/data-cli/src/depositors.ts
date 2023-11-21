@@ -39,7 +39,7 @@ async function fetchDepositors(
   opts: FetchDepositorsOpts
 ): Promise<Address[]> {
   const depositEvents = await fetchDepositEvents(subgraphUrl, {
-    type: "Instantiated",
+    type: opts.type,
     fromTotalEntityIndex: TotalEntityIndexTrait.fromBlockNumber(opts.fromBlock),
     toTotalEntityIndex: TotalEntityIndexTrait.fromBlockNumber(opts.toBlock),
     limit: opts.limit,

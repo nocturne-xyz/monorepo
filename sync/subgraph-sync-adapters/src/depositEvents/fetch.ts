@@ -8,7 +8,6 @@ import {
   DepositEvent,
   DepositEventType,
 } from "@nocturne-xyz/core";
-import { OnchainDepositType } from "@nocturne-xyz/core";
 import { Logger } from "winston";
 
 const { makeSubgraphQuery } = SubgraphUtils;
@@ -31,7 +30,7 @@ export interface DepositEventResponse {
 
 interface FetchDepositEventsVars {
   fromIdx?: string;
-  type?: OnchainDepositType;
+  type?: DepositEventType;
   spender?: string;
   toIdx?: string;
 }
@@ -96,7 +95,7 @@ function formDepositEventsRawQuery(
 export async function fetchDepositEvents(
   endpoint: string,
   filter: {
-    type?: OnchainDepositType;
+    type?: DepositEventType;
     fromTotalEntityIndex?: TotalEntityIndex;
     toTotalEntityIndex?: TotalEntityIndex;
     spender?: string;
