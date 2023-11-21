@@ -11,6 +11,7 @@ interface FetchDepositorsOpts {
   type: DepositEventType;
   fromBlock: number;
   toBlock: number;
+  limit?: number;
 }
 
 async function writeDepositorsToCsv(
@@ -41,7 +42,7 @@ async function fetchDepositors(
     type: "Instantiated",
     fromTotalEntityIndex: TotalEntityIndexTrait.fromBlockNumber(opts.fromBlock),
     toTotalEntityIndex: TotalEntityIndexTrait.fromBlockNumber(opts.toBlock),
-    limit: 1000,
+    limit: opts.limit,
   });
 
   return depositEvents.map((event) => event.inner.spender);
@@ -54,10 +55,11 @@ const depositors = new Command("depositors")
   )
   .requiredOption("--from-block <number>", "Block number to start from")
   .requiredOption("--to-block <number>", "Block number to end at")
+  .option("--limit <number>", "Max number of depositors to fetch", "1000")
   .action(main);
 
 async function main(options: any): Promise<void> {
-  const { fromBlock, toBlock } = options;
+  const { fromBlock, toBlock, limit } = options;
 
   const subgraphUrl = process.env.SUBGRAPH_URL;
   if (!subgraphUrl) {
@@ -68,6 +70,7 @@ async function main(options: any): Promise<void> {
     type: DepositEventType.Instantiated,
     fromBlock,
     toBlock,
+    limit,
   });
 
   console.log(`Found ${depositors.length} depositors`);
