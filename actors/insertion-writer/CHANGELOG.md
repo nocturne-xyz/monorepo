@@ -1,5 +1,12 @@
 # @nocturne-xyz/insertion-writer
 
+## 0.5.13
+
+### Patch Changes
+
+- Updated dependencies [c8cfc54c]
+  - @nocturne-xyz/subgraph-sync-adapters@0.5.2
+
 ## 0.5.12
 
 ### Patch Changes

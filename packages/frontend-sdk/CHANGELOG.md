@@ -1,5 +1,16 @@
 # Changelog
 
+## 7.1.0
+
+### Minor Changes
+
+- Fix rpc handler to expect params:null according to JSON-RPC spec
+
+### Patch Changes
+
+- Updated dependencies [c8cfc54c]
+  - @nocturne-xyz/subgraph-sync-adapters@0.5.2
+
 ## 7.0.3
 
 ### Patch Changes
