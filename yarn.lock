@@ -2688,9 +2688,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/data@workspace:packages/data":
+"@nocturne-xyz/data-cli@workspace:packages/data-cli":
   version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/data@workspace:packages/data"
+  resolution: "@nocturne-xyz/data-cli@workspace:packages/data-cli"
   dependencies:
     "@nocturne-xyz/contracts": ^3.0.0
     "@nocturne-xyz/core": "workspace:^"
@@ -2699,6 +2699,7 @@ __metadata:
     "@types/async-retry": ^1.4.5
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
+    "@types/commander": ^2.12.2
     "@types/mocha": ^10.0.0
     "@types/node": ^18.8.0
     "@types/randombytes": ^2.0.0
@@ -2713,6 +2714,7 @@ __metadata:
     bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
     chai-as-promised: ^7.1.1
+    commander: ^10.0.0
     csv-writer: ^1.6.0
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
@@ -2727,6 +2729,8 @@ __metadata:
     ts-node: ^10.9.1
     typescript: ^4.8.4
     winston: ^3.9.0
+  bin:
+    data-cli: dist/src/index.js
   languageName: unknown
   linkType: soft
 

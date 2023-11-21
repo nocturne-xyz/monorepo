@@ -53,7 +53,7 @@
       "path": "./packages/core"
     },
     {
-      "path": "./packages/data"
+      "path": "./packages/data-cli"
     },
     {
       "path": "./packages/op-request-plugins"
