@@ -53,6 +53,9 @@
       "path": "./packages/core"
     },
     {
+      "path": "./packages/data-cli"
+    },
+    {
       "path": "./packages/op-request-plugins"
     },
     {
@@ -80,7 +83,7 @@
       "path": "./packages/persistent-log"
     },
     {
-      "path": "./packages/client",
+      "path": "./packages/client"
     },
     {
       "path": "./sync/rpc-sync-adapters"

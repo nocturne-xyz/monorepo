@@ -8,6 +8,7 @@ export enum DepositEventType {
   Retrieved = "Retrieved",
   Processed = "Processed",
 }
+
 export interface DepositEvent extends DepositRequest {
   type: DepositEventType;
   txHash: string;
