@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.5
+
+### Patch Changes
+
+- 3e7546e2: add compensation for screener to silence screener loss alerts
+- Updated dependencies [9e63e754]
+- Updated dependencies [b7febfca]
+- Updated dependencies [326fd2b2]
+  - @nocturne-xyz/client@3.4.2
+  - @nocturne-xyz/offchain-utils@0.6.2
+  - @nocturne-xyz/op-request-plugins@2.1.12
+
 ## 0.7.4
 
 ### Patch Changes

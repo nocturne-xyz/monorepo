@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.2
+
+### Patch Changes
+
+- b7febfca: getting oz tx submitter from env propagates OZ_RELAYER_SPEED
+
 ## 0.6.1
 
 ### Patch Changes

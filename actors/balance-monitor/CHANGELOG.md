@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- 2a0c971f: add ETH top up functionality to monitor
+
+### Patch Changes
+
+- Updated dependencies [b7febfca]
+  - @nocturne-xyz/offchain-utils@0.6.2
+
 ## 0.3.8
 
 ### Patch Changes

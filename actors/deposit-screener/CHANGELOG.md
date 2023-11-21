@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.3
+
+### Patch Changes
+
+- ca86cc6b: add rule that checks blacklist passed in by env
+- 812d2463: add 1.5x gas limit
+- Updated dependencies [b7febfca]
+  - @nocturne-xyz/offchain-utils@0.6.2
+
 ## 0.12.2
 
 ### Patch Changes
