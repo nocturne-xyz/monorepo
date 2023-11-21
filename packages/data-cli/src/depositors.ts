@@ -3,7 +3,7 @@ import {
   DepositEventType,
   TotalEntityIndexTrait,
 } from "@nocturne-xyz/core";
-import { fetchDepositEvents } from "@nocturne-xyz/subgraph-sync-adapters";
+import { SubgraphDepositEventSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
 import { Command } from "commander";
 import { createObjectCsvWriter } from "csv-writer";
 
@@ -38,14 +38,23 @@ async function fetchDepositors(
   subgraphUrl: string,
   opts: FetchDepositorsOpts
 ): Promise<Address[]> {
-  const depositEvents = await fetchDepositEvents(subgraphUrl, {
-    type: opts.type,
-    fromTotalEntityIndex: TotalEntityIndexTrait.fromBlockNumber(opts.fromBlock),
-    toTotalEntityIndex: TotalEntityIndexTrait.fromBlockNumber(opts.toBlock),
-    limit: opts.limit,
-  });
+  const adapter = new SubgraphDepositEventSyncAdapter(subgraphUrl);
+  const depositEvents = adapter.iterDepositEvents(
+    opts.type,
+    TotalEntityIndexTrait.fromBlockNumber(opts.fromBlock),
+    {
+      endTotalEntityIndex: TotalEntityIndexTrait.fromBlockNumber(opts.toBlock),
+    }
+  );
 
-  return depositEvents.map((event) => event.inner.spender);
+  let depositors: Address[] = [];
+  for await (const batch of depositEvents.iter) {
+    console.log(`Got batch of ${batch.depositEvents.length} events`);
+    const batchOfDepositors = batch.depositEvents.map((event) => event.spender);
+    depositors.push(...batchOfDepositors);
+  }
+
+  return depositors;
 }
 
 const depositors = new Command("depositors")
