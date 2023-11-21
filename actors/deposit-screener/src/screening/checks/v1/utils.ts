@@ -26,12 +26,12 @@ export function isCreatedAfterTornadoCashSanction(
   return tornadoCashSanctionUnixTime < unixTimestamp;
 }
 
-export const timeUntil6AMNextDayInSeconds = (): number => {
+export const timeUntil7AMNextDayInSeconds = (): number => {
   const currentTime = moment().tz("America/New_York");
   const sixAMNextDay = currentTime
     .clone()
     .add(1, "days")
-    .hour(6)
+    .hour(7)
     .minute(0)
     .second(0);
 

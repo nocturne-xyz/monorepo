@@ -2,6 +2,7 @@ import path from "path";
 import { AddressDataSnapshot } from "../src/cli/commands/inspect/helpers";
 import fs from "fs";
 import { promisify } from "util";
+import { ScreeningDepositRequest } from "../src";
 
 export function getNewSnapshotFolderPath(): string {
   const date = new Date();
@@ -45,3 +46,9 @@ export async function getLatestSnapshotFolder(
     return null;
   }
 }
+
+export const DUMMY_DEPOSIT_REQUEST: ScreeningDepositRequest = {
+  spender: "",
+  assetAddr: "",
+  value: 0n,
+} as const;

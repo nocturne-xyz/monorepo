@@ -11,7 +11,7 @@ import {
   includesMixerUsage,
   isCreatedAfterTornadoCashSanction,
   isLessThanOneMonthAgo,
-  timeUntil6AMNextDayInSeconds,
+  timeUntil7AMNextDayInSeconds,
 } from "./utils";
 import IORedis from "ioredis";
 import { ethers } from "ethers";
@@ -382,14 +382,17 @@ const ENV_BLACKLIST_RULE: RuleParams<"IDENTITY"> = {
   },
 };
 
-const US_TIMEZONE_DELAY_RULE: RuleParams<"IDENTITY"> = {
+export const US_TIMEZONE_DELAY_RULE: RuleParams<"IDENTITY"> = {
   name: "US_TIMEZONE_DELAY_RULE",
   call: "IDENTITY",
   threshold: (_deposit: ScreeningDepositRequest) => {
     const timeEt = moment().tz("America/New_York");
-
-    // If the event is after 9:30 PM ET, trigger rule
-    if (timeEt.hour() > 21 || (timeEt.hour() === 21 && timeEt.minute() >= 30)) {
+    // If the event is between 9:30pm M ET and 7:00am the next day, trigger rule
+    if (
+      timeEt.hour() > 21 ||
+      (timeEt.hour() === 21 && timeEt.minute() >= 30) ||
+      timeEt.hour() < 6
+    ) {
       return true;
     }
 
@@ -398,7 +401,7 @@ const US_TIMEZONE_DELAY_RULE: RuleParams<"IDENTITY"> = {
   action: {
     type: "Delay",
     operation: "Add",
-    valueSeconds: timeUntil6AMNextDayInSeconds(), // calculate time until 6 AM ET next day
+    valueSeconds: timeUntil7AMNextDayInSeconds(), // calculate time until 6 AM ET next day
   },
 };
 
