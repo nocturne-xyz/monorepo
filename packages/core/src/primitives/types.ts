@@ -13,8 +13,9 @@ export const BN254_SCALAR_FIELD_MODULUS =
 export const SENDER_COMMITMENT_DOMAIN_SEPARATOR =
   5680996188676417870015190585682285899130949254168256752199352013418366665222n;
 
+// TODO use this in more places
+export type MerkleIndex = number;
 export type Address = string;
-
 export type Nullifier = bigint;
 
 export interface Action {

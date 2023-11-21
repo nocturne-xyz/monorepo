@@ -119,7 +119,7 @@ export async function setup(
 
   const kv = new InMemoryKVStore();
   const nocturneDB = new NocturneDB(kv);
-  const merkleProver = new SparseMerkleProver(kv);
+  const merkleProver = new SparseMerkleProver();
 
   const notes: IncludedNote[] = zip(noteAmounts, assets).map(
     ([amount, asset], i) => ({
@@ -169,15 +169,20 @@ export async function setup(
   return [nocturneDB, merkleProver, signer, handler];
 }
 
+export type DummyNotesAndNfsOptions = {
+  startMerkleIndex?: number;
+};
+
 export function dummyNotesAndNfs(
   viewer: NocturneViewer,
   notesPerAsset: number,
-  ...assets: Asset[]
+  assets: Asset[],
+  options?: DummyNotesAndNfsOptions
 ): [IncludedNoteWithNullifier[], bigint[]] {
   const owner = viewer.generateRandomStealthAddress();
   const notes: IncludedNoteWithNullifier[] = [];
   const nullifiers: bigint[] = [];
-  let offset = 0;
+  let offset = options?.startMerkleIndex ?? 0;
   for (const asset of assets) {
     const allNotes: IncludedNote[] = range(notesPerAsset).map((i) => ({
       owner,
@@ -192,7 +197,7 @@ export function dummyNotesAndNfs(
     );
 
     notes.push(...notesWithNFs);
-    nullifiers.push(...notes.map((n) => NoteTrait.createNullifier(viewer, n)));
+    nullifiers.push(...notesWithNFs.map(({ nullifier }) => nullifier));
 
     offset += notesPerAsset;
   }
@@ -221,9 +226,9 @@ export function dummyOp(
   const [dummyOldNotes, dummyNfs] = dummyNotesAndNfs(
     viewer,
     numJoinSplits * 2,
-    asset
+    [asset]
   );
-  const [dummyNewNotes] = dummyNotesAndNfs(viewer, numJoinSplits * 2, asset);
+  const [dummyNewNotes] = dummyNotesAndNfs(viewer, numJoinSplits * 2, [asset]);
 
   const encodedAsset = AssetTrait.encode(asset);
   const joinSplits: TestJoinSplit[] = zip(

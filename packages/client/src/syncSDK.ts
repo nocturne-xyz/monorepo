@@ -157,7 +157,7 @@ async function updateMerkle(
   }
 
   // persist merkle to underlying KV store
-  await merkle.persist();
+  // await merkle.persist();
 }
 
 function decryptStateDiff(

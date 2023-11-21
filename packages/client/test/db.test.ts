@@ -28,7 +28,7 @@ describe("NocturneDB", async () => {
   const viewer = new NocturneSigner(DUMMY_ROOT_KEY).viewer();
 
   const dummyNotesAndNfs = (notesPerAsset: number, ...assets: Asset[]) =>
-    _dummyNotesAndNfs(viewer, notesPerAsset, ...assets);
+    _dummyNotesAndNfs(viewer, notesPerAsset, assets);
   const dummyOp = (numJoinSplits: number, asset: Asset) =>
     _dummyOp(viewer, numJoinSplits, asset);
 

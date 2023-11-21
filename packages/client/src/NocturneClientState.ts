@@ -18,6 +18,7 @@ import {
   WithTotalEntityIndex,
   IncludedNoteCommitment,
   consecutiveChunks,
+  MerkleIndex,
 } from "@nocturne-xyz/core";
 import { Mutex } from "async-mutex";
 import { OpHistoryRecord, OperationMetadata } from "./types";
@@ -36,7 +37,6 @@ export type GetNotesOpts = {
 };
 
 type ExpirationDate = number;
-type MerkleIndex = number;
 
 type Snapshot = {
   tei: bigint;
@@ -93,7 +93,7 @@ export class NocturneClientState {
   }
 
   get teiOfLatestCommit(): TotalEntityIndex | undefined {
-    return this.teiOfLatestCommit;
+    return this.commitTei;
   }
 
   get latestSyncedMerkleIndex(): number | undefined {
@@ -134,6 +134,7 @@ export class NocturneClientState {
         !NoteTrait.isCommitment(inner) &&
         (inner as IncludedNoteWithNullifier).value > 0n
     ) as WithTotalEntityIndex<IncludedNoteWithNullifier>[];
+
     for (const { inner: note } of notesToStore) {
       // a. set the entry in `merkleIndexToNote` to the new note no matter what, even if there's something already there
       const alreadyHasNote = this.merkleIndexToNote.has(note.merkleIndex);
@@ -144,6 +145,7 @@ export class NocturneClientState {
         this.assetToMerkleIndices.get(note.asset.assetAddr) ?? [];
       if (!merkleIndices.includes(note.merkleIndex)) {
         merkleIndices.push(note.merkleIndex);
+        this.assetToMerkleIndices.set(note.asset.assetAddr, merkleIndices);
 
         if (alreadyHasNote) {
           console.warn(
@@ -158,16 +160,57 @@ export class NocturneClientState {
 
     // 2. apply new nullifiers to notes
     // NOTE: this comes after storing notes because new notes can be nullified in the same state diff
+    // TODO make this more efficient / less contrived
+
     const nfIndices: number[] = [];
     for (const nf of nullifiers) {
+      // 1. remove merkle index from asset => merkle indices map
+      // 2. remove nf => merkle map entry
       const merkleIndex = this.nfToMerkleIndex.get(nf);
-      if (!merkleIndex) {
+      if (merkleIndex === undefined) {
         console.error(
-          `nullifier ${nf} not found in nfToMerkleIndex - db is in an incosistent state!`
+          `nullifier ${nf} not found in nfToMerkleIndex - client is in an incosistent state!`
         );
         // TODO: do we throw an error here?
         // TODO: trigger recovery once we have events
         continue;
+      }
+
+      const note = this.merkleIndexToNote.get(merkleIndex);
+      if (note === undefined) {
+        console.error(
+          `merkle index ${merkleIndex} not found in merkleIndexToNote - client is in an incosistent state!`
+        );
+        // TODO: do we throw an error here?
+        // TODO: trigger recovery once we have events
+        continue;
+      }
+
+      const assetIndices = this.assetToMerkleIndices.get(note.asset.assetAddr);
+      if (assetIndices === undefined) {
+        console.error(
+          `asset ${note.asset.assetAddr} not found in assetToMerkleIndices - client is in an incosistent state!`
+        );
+        // TODO: do we throw an error here?
+        // TODO: trigger recovery once we have events
+        continue;
+      }
+
+      const index = assetIndices.findIndex((i) => i === merkleIndex);
+      if (index < 0) {
+        console.error(
+          `merkle index ${merkleIndex} not found in assetToMerkleIndices - client is in an incosistent state!`
+        );
+        // TODO: do we throw an error here?
+        // TODO: trigger recovery once we have events
+        continue;
+      }
+
+      assetIndices.splice(index, 1);
+      if (assetIndices.length < 1) {
+        this.assetToMerkleIndices.delete(note.asset.assetAddr);
+      } else {
+        this.assetToMerkleIndices.set(note.asset.assetAddr, assetIndices);
       }
 
       nfIndices.push(merkleIndex);
@@ -187,11 +230,11 @@ export class NocturneClientState {
     return nfIndices;
   }
 
-  private updateMerkle(
+  updateMerkle(
     notesAndCommitments: (IncludedNote | IncludedNoteCommitment)[],
     nfIndices: number[],
     commitUpTo?: number
-  ) {
+  ): void {
     // add all new leaves as uncommitted leaves
     const batches = consecutiveChunks(
       notesAndCommitments,
@@ -283,7 +326,7 @@ export class NocturneClientState {
     }
 
     if (!opts?.ignoreOptimisticNFs) {
-      notes = notes.filter((note) => this.optimisticNfs.has(note.merkleIndex));
+      notes = notes.filter((note) => !this.optimisticNfs.has(note.merkleIndex));
     }
 
     return notes;
@@ -497,8 +540,38 @@ export class NocturneClientState {
       );
     });
   }
+
+  /// *** getters for test purposes ***
+  get __merkleIndexToNote(): Map<MerkleIndex, IncludedNoteWithNullifier> {
+    return this.merkleIndexToNote;
+  }
+
+  get __merkleIndexToTei(): Map<MerkleIndex, TotalEntityIndex> {
+    return this.merkleIndexToTei;
+  }
+
+  get __assetToMerkleIndices(): Map<Address, MerkleIndex[]> {
+    return this.assetToMerkleIndices;
+  }
+
+  get __nfToMerkleIndex(): Map<Nullifier, MerkleIndex> {
+    return this.nfToMerkleIndex;
+  }
+
+  get __optimisticNfs(): Map<MerkleIndex, ExpirationDate> {
+    return this.optimisticNfs;
+  }
+
+  get __merkle(): SparseMerkleProver {
+    return this.merkle;
+  }
 }
 
 function snapshotKey(tei: TotalEntityIndex): string {
-  return SNAPSHOT_KEY_PREFIX + bigintToBEPadded(tei, 40, 16);
+  return (
+    SNAPSHOT_KEY_PREFIX +
+    bigintToBEPadded(tei, 40)
+      .map((n) => n.toString(16))
+      .join("")
+  );
 }
