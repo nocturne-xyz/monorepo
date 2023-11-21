@@ -481,6 +481,17 @@ export class SparseMerkleProver {
     );
     return root;
   }
+
+  clone(): SparseMerkleProver {
+    const smt = new SparseMerkleProver();
+
+    smt._count = this._count;
+    smt.root = structuredClone(this.root);
+    smt.leaves = structuredClone(this.leaves);
+    smt.uncommittedLeaves = structuredClone(this.uncommittedLeaves);
+
+    return smt;
+  }
 }
 
 // reverse order of the 2-bit chunks in binary representation of `x`

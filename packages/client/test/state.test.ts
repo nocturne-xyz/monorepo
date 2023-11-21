@@ -3,14 +3,14 @@ import { expect } from "chai";
 import {
   InMemoryKVStore,
   Asset,
-  // IncludedNoteWithNullifier,
-  // WithTotalEntityIndex,
   NocturneSigner,
   StateDiff,
   Nullifier,
   MerkleIndex,
   zip,
   NoteTrait,
+  OperationStatus,
+  OperationTrait,
 } from "@nocturne-xyz/core";
 import { NocturneClientState } from "../src/NocturneClientState";
 import {
@@ -20,7 +20,11 @@ import {
   dummyOp as _dummyOp,
   DummyNotesAndNfsOptions,
   stablescam,
+  ponzi,
+  getNotesAndNfsFromOp,
 } from "./utils";
+import { OperationMetadata } from "../src";
+import { __private } from "../src/NocturneClientState";
 
 describe("NocturneClientState", async () => {
   const viewer = new NocturneSigner(DUMMY_ROOT_KEY).viewer();
@@ -35,11 +39,8 @@ describe("NocturneClientState", async () => {
     assets: Asset[],
     options?: DummyNotesAndNfsOptions
   ) => _dummyNotesAndNfs(viewer, notesPerAsset, assets, options);
-  // const dummyOp = (numJoinSplits: number, asset: Asset) =>
-  //   _dummyOp(viewer, numJoinSplits, asset);
-
-  // const toIncludedNote = ({ nullifier, ...rest }: IncludedNoteWithNullifier) =>
-  //   rest;
+  const dummyOp = (numJoinSplits: number, asset: Asset) =>
+    _dummyOp(viewer, numJoinSplits, asset);
 
   it("correctly applies state diff with only notes", () => {
     const [, state] = newState();
@@ -417,11 +418,156 @@ describe("NocturneClientState", async () => {
     ).to.eql(10);
   });
 
-  it("gets and sets op history", () => {});
+  it("gets and sets op history", () => {
+    const [, state] = newState();
 
-  it("applies optimistic nullifiers when adding op to history", async () => {});
+    // add a few ops with different assets
+    const ops = [
+      dummyOp(1, shitcoin),
+      dummyOp(2, ponzi),
+      dummyOp(3, stablescam),
+    ];
+
+    const metas: OperationMetadata[] = [
+      {
+        items: [
+          {
+            type: "Action",
+            actionType: "Transfer",
+            recipientAddress: "alpha",
+            erc20Address: "bravo",
+            amount: 1n,
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            type: "Action",
+            actionType: "Transfer",
+            recipientAddress: "bravo",
+            erc20Address: "charlie",
+            amount: 2n,
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            type: "Action",
+            actionType: "Transfer",
+            recipientAddress: "charlie",
+            erc20Address: "delta",
+            amount: 2n,
+          },
+        ],
+      },
+    ];
+
+    state.addOpToHistory(ops[0], metas[0], OperationStatus.BUNDLE_REVERTED);
+    state.addOpToHistory(ops[1], metas[1], OperationStatus.EXECUTED_SUCCESS);
+    state.addOpToHistory(ops[2], metas[2]);
+
+    // get op history, expect it to only have first 2
+    expect(state.opHistory.length).to.eql(2);
+    expect(state.opHistory[0].digest).to.eql(
+      OperationTrait.computeDigest(ops[0])
+    );
+    expect(state.opHistory[1].digest).to.eql(
+      OperationTrait.computeDigest(ops[1])
+    );
+    expect(state.opHistory[0].metadata).to.eql(metas[0]);
+    expect(state.opHistory[1].metadata).to.eql(metas[1]);
+
+    // get pending ops, expect it to only have third
+    expect(state.pendingOps.length).to.eql(1);
+    expect(state.pendingOps[0].digest).to.eql(
+      OperationTrait.computeDigest(ops[2])
+    );
+    expect(state.pendingOps[0].metadata).to.eql(metas[2]);
+
+    // get all ops
+    expect(state.allOps.length).to.eql(3);
+
+    // check that the op digests match
+    expect(state.allOps[0].digest).to.eql(OperationTrait.computeDigest(ops[0]));
+    expect(state.allOps[1].digest).to.eql(OperationTrait.computeDigest(ops[1]));
+    expect(state.allOps[2].digest).to.eql(OperationTrait.computeDigest(ops[2]));
+
+    // check that metadatas match
+    expect(state.allOps[0].metadata).to.eql(metas[0]);
+    expect(state.allOps[1].metadata).to.eql(metas[1]);
+    expect(state.allOps[2].metadata).to.eql(metas[2]);
+
+    // check statuses match
+    expect(state.allOps[0].status).to.eql(OperationStatus.BUNDLE_REVERTED);
+    expect(state.allOps[1].status).to.eql(OperationStatus.EXECUTED_SUCCESS);
+    expect(state.allOps[2].status).to.be.undefined;
+  });
+
+  it("applies optimistic nullifiers when adding op to history", async () => {
+    const [, state] = newState();
+
+    // add an op with 5 joinsplits to history
+    const op = dummyOp(5, shitcoin);
+    const { oldNotes } = getNotesAndNfsFromOp(op);
+
+    const diff: StateDiff = {
+      notesAndCommitments: oldNotes.map((inner, i) => ({
+        inner,
+        totalEntityIndex: BigInt(i),
+      })),
+      nullifiers: [],
+      totalEntityIndex: 10n,
+      latestNewlySyncedMerkleIndex: 9,
+      latestCommittedMerkleIndex: 9,
+    };
+    state.applyStateDiff(diff);
+    state.addOpToHistory(op, { items: [] });
+
+    // expect `getAllNotes` to return an empty map, as all notes have been optimistically nf'd
+    expect([...state.getAllNotes().values()].flat()).to.be.empty;
+  });
+
+  it("makes snapshots", async () => {
+    const [kv, state] = newState();
+
+    // apply a diff with 10 new notes
+    const [notes] = dummyNotesAndNfs(10, [shitcoin]);
+    const diff: StateDiff = {
+      notesAndCommitments: notes.map((inner, i) => ({
+        inner,
+        totalEntityIndex: BigInt(i),
+      })),
+      nullifiers: [],
+      totalEntityIndex: 10n,
+      latestNewlySyncedMerkleIndex: 9,
+      latestCommittedMerkleIndex: 9,
+    };
+    state.applyStateDiff(diff);
+
+    await state.save();
+
+    expect(await kv.getString(__private.snapshotKey(10n))).to.not.be.undefined;
+
+    // TODO: change these test cases when we have commit TEI in state diff
+    const loadedState = await NocturneClientState.load(kv);
+    expect(loadedState.currentTei).to.equal(state.currentTei);
+    expect(loadedState.teiOfLatestCommit).to.equal(state.teiOfLatestCommit);
+    expect(loadedState.latestSyncedMerkleIndex).to.equal(
+      state.latestSyncedMerkleIndex
+    );
+    expect(loadedState.latestCommittedMerkleIndex).to.equal(
+      state.latestCommittedMerkleIndex
+    );
+    expect(loadedState.merkleRoot).to.equal(state.merkleRoot);
+    expect(loadedState.__merkleIndexToNote).to.eql(state.__merkleIndexToNote);
+    expect(loadedState.__merkleIndexToTei).to.eql(state.__merkleIndexToTei);
+    expect(loadedState.__assetToMerkleIndices).to.eql(
+      state.__assetToMerkleIndices
+    );
+  });
+
+  // TODO add more test cases when we have commit TEI in state diff
+  // TODO add more test cases with dummy adapter when we have event-driven client
 });
-
-// function withDummyTotalEntityIndices<T>(arr: T[]): WithTotalEntityIndex<T>[] {
-//   return arr.map((t) => ({ inner: t, totalEntityIndex: 0n }));
-// }

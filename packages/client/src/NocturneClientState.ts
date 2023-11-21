@@ -22,10 +22,18 @@ import {
 } from "@nocturne-xyz/core";
 import { Mutex } from "async-mutex";
 import { OpHistoryRecord, OperationMetadata } from "./types";
-import { OPTIMISTIC_RECORD_TTL, getMerkleIndicesAndNfsFromOp } from "./utils";
+import {
+  OPTIMISTIC_RECORD_TTL,
+  getMerkleIndicesAndNfsFromOp,
+  isTerminalOpStatus,
+} from "./utils";
 
 const SNAPSHOTS_KEY = "nocturne-client-snapshots";
 const SNAPSHOT_KEY_PREFIX = "snapshot-";
+
+export const __private = {
+  snapshotKey,
+};
 
 // options for methods that get notes from the DB
 // if includeUncommitted is defined and true, then the method include notes that are not yet committed to the commitment tree
@@ -39,8 +47,8 @@ export type GetNotesOpts = {
 type ExpirationDate = number;
 
 type Snapshot = {
-  tei: bigint;
-  teiOfLatestCommit: bigint;
+  tei?: bigint;
+  teiOfLatestCommit?: bigint;
 
   merkleIndexToNote: [number, IncludedNoteWithNullifier][];
   merkleIndexToTei: [number, TotalEntityIndex][];
@@ -164,10 +172,27 @@ export class NocturneClientState {
 
     // 2. apply new nullifiers to notes
     // NOTE: this comes after storing notes because new notes can be nullified in the same state diff
-    // TODO make this more efficient / less contrived
+    const nfIndices = this.nullifyNotes(nullifiers);
 
+    // 3. update tree
+    this.updateMerkle(
+      notesAndCommitments.map(({ inner }) => inner),
+      nfIndices,
+      latestCommittedMerkleIndex
+    );
+
+    // 4. update TEI
+    // TODO add commitTei to state diff
+    this.commitTei = totalEntityIndex;
+    this.tei = totalEntityIndex;
+
+    return nfIndices;
+  }
+
+  // TODO make this more efficient / less contrived
+  private nullifyNotes(nfs: Nullifier[]): number[] {
     const nfIndices: number[] = [];
-    for (const nf of nullifiers) {
+    for (const nf of nfs) {
       // strategy:
       // 1. remove merkle index from asset => merkle indices map
       // 2. remove nf => merkle map entry
@@ -232,19 +257,10 @@ export class NocturneClientState {
       this.nfToMerkleIndex.delete(nf);
     }
 
-    // 3. update tree
-    this.updateMerkle(
-      notesAndCommitments.map(({ inner }) => inner),
-      nfIndices,
-      latestCommittedMerkleIndex
-    );
-
-    // 4. update TEI
-    this.tei = totalEntityIndex;
-
     return nfIndices;
   }
 
+  // TODO make this private
   updateMerkle(
     notesAndCommitments: (IncludedNote | IncludedNoteCommitment)[],
     nfIndices: number[],
@@ -353,8 +369,20 @@ export class NocturneClientState {
 
   // *** HISTORY METHODS ***
 
+  get allOps(): OpHistoryRecord[] {
+    return this._opHistory;
+  }
+
+  get pendingOps(): OpHistoryRecord[] {
+    return this._opHistory.filter(
+      (record) => !record.status || !isTerminalOpStatus(record.status)
+    );
+  }
+
   get opHistory(): OpHistoryRecord[] {
-    return this.opHistory;
+    return this._opHistory.filter(
+      (record) => record.status && isTerminalOpStatus(record.status)
+    );
   }
 
   getOpHistoryRecord(digest: bigint): OpHistoryRecord | undefined {
@@ -399,7 +427,7 @@ export class NocturneClientState {
       createdAt: now,
       lastModified: now,
     };
-    this.opHistory.push(record);
+    this._opHistory.push(record);
 
     const expirationDate = now + OPTIMISTIC_RECORD_TTL;
     for (const idx of spentNoteMerkleIndices) {
@@ -420,47 +448,6 @@ export class NocturneClientState {
   }
 
   // *** SNAPSHOT METHODS ***
-
-  private static async loadInner(
-    kv: KVStore,
-    snapshotKey: string
-  ): Promise<NocturneClientState | undefined> {
-    return await snapshotMutex.runExclusive(async () => {
-      const serialized = await kv.getString(snapshotKey);
-      if (!serialized) {
-        return undefined;
-      }
-
-      const {
-        merkleIndexToNote,
-        merkleIndexToTei,
-        assetToMerkleIndices,
-        nfToMerkleIndex,
-
-        optimisticNfs,
-        opHistory,
-
-        serializedMerkle,
-        tei,
-      }: Snapshot = JSON.parse(serialized);
-
-      const state = new NocturneClientState(kv);
-      state.tei = tei;
-      state.commitTei = tei;
-
-      state.merkle = SparseMerkleProver.deserialize(serializedMerkle);
-
-      state._opHistory = opHistory;
-      state.optimisticNfs = new Map(optimisticNfs);
-
-      state.merkleIndexToNote = new Map(merkleIndexToNote);
-      state.merkleIndexToTei = new Map(merkleIndexToTei);
-      state.assetToMerkleIndices = new Map(assetToMerkleIndices);
-      state.nfToMerkleIndex = new Map(nfToMerkleIndex);
-
-      return state;
-    });
-  }
 
   static async load(
     kv: KVStore,
@@ -515,31 +502,22 @@ export class NocturneClientState {
     });
   }
 
-  async snapshot(): Promise<void> {
+  async save(): Promise<void> {
     await snapshotMutex.runExclusive(async () => {
-      // clone state
-      const state = structuredClone(this);
+      const state = this.clone();
 
-      // HACK: set `tei` to `lastCommittedTei`
-      // we do this because we want to snapshot the state of the tree at the point of the latest committed merkle index
-      // this is because we only have the capability of checking the correctness of the tree by comparing to the onchain root
-      // we can't check whether or not the uncommitted insertions afterwards match the contract's state because that state isn't public
-      // therefore, we only snapshot the state of the tree at the point of the latest commit, at which point we can be sure that it matches the contract's on-chain state
-      // since `applyStateDiff` is idempotent, when we load from snapshot and re-sync, we'll get an equivalent state
-      // (at worst, we end up with dangling NFs that don't point to anything, which is fine)
-      // if this TEI is undefined, skip the snapshot because that implies it's empty
-      state.tei = state.commitTei;
-      if (!state.tei) {
+      // skip empty snapshots
+      const snapshotTei = state.tei;
+      if (snapshotTei === undefined) {
         return;
       }
 
-      // prune uncommitted leaves from tree
-      state.merkle.removeUncommitted();
+      // TODO prune uncommitted leaves from tree and use `commitTei` instead of `tei` in snapshot
 
       // make snapshot
       const snapshot: Snapshot = {
-        tei: state.tei,
-        teiOfLatestCommit: state.tei,
+        tei: snapshotTei,
+        teiOfLatestCommit: state.commitTei,
 
         merkleIndexToNote: Array.from(state.merkleIndexToNote.entries()),
         merkleIndexToTei: Array.from(state.merkleIndexToTei.entries()),
@@ -554,13 +532,85 @@ export class NocturneClientState {
 
       // 5. save it
       await this.kv.putString(
-        snapshotKey(snapshot.tei),
+        snapshotKey(snapshotTei),
         JSON.stringify(snapshot)
       );
+
+      // add it to list of snapshots
+      const snapshotTeisSer = await this.kv.getString(SNAPSHOTS_KEY);
+      const snapshotTeis = snapshotTeisSer
+        ? JSON.parse(snapshotTeisSer)
+        : ([] as bigint[]);
+
+      if (snapshotTeis.includes(snapshotTei)) {
+        return;
+      }
+
+      snapshotTeis.push(snapshotTei);
+      await this.kv.putString(SNAPSHOTS_KEY, JSON.stringify(snapshotTeis));
     });
   }
 
+  clone(): NocturneClientState {
+    const state = new NocturneClientState(this.kv);
+
+    state.tei = this.tei;
+    state.commitTei = this.commitTei;
+
+    state.merkle = this.merkle.clone();
+
+    state._opHistory = structuredClone(this._opHistory);
+    state.optimisticNfs = structuredClone(this.optimisticNfs);
+
+    state.merkleIndexToNote = structuredClone(this.merkleIndexToNote);
+    state.merkleIndexToTei = structuredClone(this.merkleIndexToTei);
+    state.assetToMerkleIndices = structuredClone(this.assetToMerkleIndices);
+    state.nfToMerkleIndex = structuredClone(this.nfToMerkleIndex);
+
+    return state;
+  }
+
+  private static async loadInner(
+    kv: KVStore,
+    snapshotKey: string
+  ): Promise<NocturneClientState | undefined> {
+    const serialized = await kv.getString(snapshotKey);
+    if (!serialized) {
+      return undefined;
+    }
+
+    const {
+      merkleIndexToNote,
+      merkleIndexToTei,
+      assetToMerkleIndices,
+      nfToMerkleIndex,
+
+      optimisticNfs,
+      opHistory,
+
+      serializedMerkle,
+      tei,
+    }: Snapshot = JSON.parse(serialized);
+
+    const state = new NocturneClientState(kv);
+    state.tei = tei;
+    state.commitTei = tei;
+
+    state.merkle = SparseMerkleProver.deserialize(serializedMerkle);
+
+    state._opHistory = opHistory;
+    state.optimisticNfs = new Map(optimisticNfs);
+
+    state.merkleIndexToNote = new Map(merkleIndexToNote);
+    state.merkleIndexToTei = new Map(merkleIndexToTei);
+    state.assetToMerkleIndices = new Map(assetToMerkleIndices);
+    state.nfToMerkleIndex = new Map(nfToMerkleIndex);
+
+    return state;
+  }
+
   /// *** getters for test purposes ***
+
   get __merkleIndexToNote(): Map<MerkleIndex, IncludedNoteWithNullifier> {
     return this.merkleIndexToNote;
   }
