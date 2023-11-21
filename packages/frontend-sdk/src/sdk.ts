@@ -231,7 +231,6 @@ export class NocturneSdk {
     this.clientThunk = thunk(async () => {
       const { vk, vkNonce } = await this.snap.invoke<RequestViewingKeyMethod>({
         method: "nocturne_requestViewingKey",
-        params: null,
       });
 
       const viewer = new NocturneViewer(vk, vkNonce);
@@ -328,7 +327,6 @@ export class NocturneSdk {
 
     const address = await this.snap.invoke<RequestSpendKeyEoaMethod>({
       method: "nocturne_requestSpendKeyEoa",
-      params: null,
     });
     if (!address) {
       throw new Error("Nocturne spend key EOA not found");
@@ -861,7 +859,6 @@ export class NocturneSdk {
     // get EOA address from snap
     const eoaAddr = await this.snap.invoke<RequestSpendKeyEoaMethod>({
       method: "nocturne_requestSpendKeyEoa",
-      params: null,
     });
 
     if (!eoaAddr) {

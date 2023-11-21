@@ -46,7 +46,6 @@ export interface SignOperationMethod {
 
 export interface RequestSpendKeyEoaMethod {
   method: "nocturne_requestSpendKeyEoa";
-  params: null;
   return: Address | null;
 }
 
@@ -57,7 +56,6 @@ export interface RequestViewingKeyMethodResponse {
 
 export interface RequestViewingKeyMethod {
   method: "nocturne_requestViewingKey";
-  params: null;
   return: RequestViewingKeyMethodResponse;
 }
 

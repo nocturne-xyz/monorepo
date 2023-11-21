@@ -79,9 +79,11 @@ export class SnapStateSdk {
         snapId: this.snapId,
         request: {
           method: request.method,
-          ...(request.params && {
-            params: stringifyObjectValues(request.params),
-          }),
+          ...("params" in request && request.params
+            ? {
+                params: stringifyObjectValues(request.params),
+              }
+            : {}),
         },
       },
     };
@@ -121,7 +123,6 @@ export class SnapStateSdk {
     // Return early if spend key already set
     const spendKeyEoa = await this.invoke<RequestSpendKeyEoaMethod>({
       method: "nocturne_requestSpendKeyEoa",
-      params: null,
     });
     if (spendKeyEoa) {
       return;
