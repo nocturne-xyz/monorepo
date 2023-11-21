@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.3
+
+### Patch Changes
+
+- c390746f: Publish via yarn publish-packages not yarn changeset publish
+
 ## 3.4.2
 
 ### Patch Changes

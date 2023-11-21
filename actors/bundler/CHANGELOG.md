@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.6
+
+### Patch Changes
+
+- c390746f: Publish via yarn publish-packages not yarn changeset publish
+- Updated dependencies [c390746f]
+  - @nocturne-xyz/client@3.4.3
+  - @nocturne-xyz/offchain-utils@0.6.3
+
 ## 0.10.5
 
 ### Patch Changes

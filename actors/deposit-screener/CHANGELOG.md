@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.13.0
+
+### Minor Changes
+
+- 3d731550: add US sleeping timezone rule for deposits > 5 ETH
+
+### Patch Changes
+
+- c390746f: Publish via yarn publish-packages not yarn changeset publish
+- Updated dependencies [c390746f]
+  - @nocturne-xyz/offchain-utils@0.6.3
+
 ## 0.12.3
 
 ### Patch Changes

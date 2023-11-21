@@ -1,5 +1,13 @@
 # @nocturne-xyz/insertion-writer
 
+## 0.5.12
+
+### Patch Changes
+
+- c390746f: Publish via yarn publish-packages not yarn changeset publish
+- Updated dependencies [c390746f]
+  - @nocturne-xyz/offchain-utils@0.6.3
+
 ## 0.5.11
 
 ### Patch Changes
