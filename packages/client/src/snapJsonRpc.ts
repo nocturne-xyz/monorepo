@@ -19,7 +19,7 @@ export interface SetSpendKeyMethod {
     spendKey: string;
     eoaAddress: Address;
   };
-  return: string | undefined; // error string or undefined
+  return: string | null; // error string or null
 }
 
 export interface SignCanonAddrRegistryEntryMethod {
@@ -46,8 +46,8 @@ export interface SignOperationMethod {
 
 export interface RequestSpendKeyEoaMethod {
   method: "nocturne_requestSpendKeyEoa";
-  params: undefined;
-  return: Address | undefined;
+  params: null;
+  return: Address | null;
 }
 
 export interface RequestViewingKeyMethodResponse {
@@ -57,7 +57,7 @@ export interface RequestViewingKeyMethodResponse {
 
 export interface RequestViewingKeyMethod {
   method: "nocturne_requestViewingKey";
-  params: undefined;
+  params: null;
   return: RequestViewingKeyMethodResponse;
 }
 
