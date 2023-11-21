@@ -28,7 +28,7 @@ export function isCreatedAfterTornadoCashSanction(
 
 export const timeUntil7AMNextDayInSeconds = (): number => {
   const currentTime = moment().tz("America/New_York");
-  const sixAMNextDay = currentTime
+  const sevenAMNextDay = currentTime
     .clone()
     .add(1, "days")
     .hour(7)
@@ -36,5 +36,5 @@ export const timeUntil7AMNextDayInSeconds = (): number => {
     .second(0);
 
   // Calculate the duration in seconds
-  return sixAMNextDay.diff(currentTime, "seconds");
+  return sevenAMNextDay.diff(currentTime, "seconds");
 };

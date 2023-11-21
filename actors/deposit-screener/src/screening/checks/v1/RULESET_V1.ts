@@ -401,8 +401,8 @@ export const US_TIMEZONE_DELAY_RULE: RuleParams<"IDENTITY"> = {
   },
   action: {
     type: "Delay",
-    operation: "Add",
-    valueSeconds: timeUntil7AMNextDayInSeconds(), // calculate time until 7 AM ET next day (this is additional delay so it will be 9am ET next day at least given 2h base delay)
+    operation: "AddDynamic",
+    delayFn: timeUntil7AMNextDayInSeconds, // calculate time until 7 AM ET next day (this is additional delay so it will be 9am ET next day at least given 2h base delay)
   },
 };
 
