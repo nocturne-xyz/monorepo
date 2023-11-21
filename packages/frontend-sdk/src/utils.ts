@@ -271,7 +271,7 @@ export function getBalanceOptsToGetNotesOpts({
 }: GetBalanceOpts): GetNotesOpts {
   return {
     includeUncommitted,
-    ignoreOptimisticNFs: !includePending,
+    ignoreOptimisticNfs: !includePending,
   };
 }
 

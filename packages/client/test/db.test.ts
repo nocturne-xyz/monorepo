@@ -49,7 +49,7 @@ describe("NocturneDB", async () => {
 
     const map = await db.getAllNotes({
       includeUncommitted: true,
-      ignoreOptimisticNFs: true,
+      ignoreOptimisticNfs: true,
     });
     const assetKey = NocturneDB.formatAssetKey(shitcoin);
     const shitcoinNotes = map.get(assetKey)!;
@@ -64,7 +64,7 @@ describe("NocturneDB", async () => {
 
     const map = await db.getAllNotes({
       includeUncommitted: true,
-      ignoreOptimisticNFs: true,
+      ignoreOptimisticNfs: true,
     });
 
     for (const asset of [shitcoin, ponzi, stablescam]) {
@@ -89,7 +89,7 @@ describe("NocturneDB", async () => {
     await db.nullifyNotes([nfToApply]);
     const map = await db.getAllNotes({
       includeUncommitted: true,
-      ignoreOptimisticNFs: true,
+      ignoreOptimisticNfs: true,
     });
 
     const shitcoinKey = NocturneDB.formatAssetKey(shitcoin);
@@ -110,7 +110,7 @@ describe("NocturneDB", async () => {
     await db.nullifyNotes(nfsToApply);
     const map = await db.getAllNotes({
       includeUncommitted: true,
-      ignoreOptimisticNFs: true,
+      ignoreOptimisticNfs: true,
     });
 
     const shitcoinKey = NocturneDB.formatAssetKey(shitcoin);
@@ -137,7 +137,7 @@ describe("NocturneDB", async () => {
     await db.nullifyNotes(ponziNfs);
     const map = await db.getAllNotes({
       includeUncommitted: true,
-      ignoreOptimisticNFs: true,
+      ignoreOptimisticNfs: true,
     });
 
     const ponziKey = NocturneDB.formatAssetKey(ponzi);
@@ -184,7 +184,7 @@ describe("NocturneDB", async () => {
     await db.nullifyNotes(nfsToApply);
     const map = await db.getAllNotes({
       includeUncommitted: true,
-      ignoreOptimisticNFs: true,
+      ignoreOptimisticNfs: true,
     });
 
     const shitcoinKey = NocturneDB.formatAssetKey(shitcoin);
@@ -229,7 +229,7 @@ describe("NocturneDB", async () => {
         .map(toIncludedNote);
       const notesGot = await db.getNotesForAsset(asset, {
         includeUncommitted: true,
-        ignoreOptimisticNFs: true,
+        ignoreOptimisticNfs: true,
       });
 
       expect(notesGot).to.not.be.undefined;

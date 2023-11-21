@@ -29,11 +29,11 @@ const SNAPSHOT_KEY_PREFIX = "snapshot-";
 
 // options for methods that get notes from the DB
 // if includeUncommitted is defined and true, then the method include notes that are not yet committed to the commitment tree
-// if ignoreOptimisticNFs is defined and true, then the method will include notes that have been used by the SDK, but may not have been nullified on-chain yet
+// if ignoreOptimisticNfs is defined and true, then the method will include notes that have been used by the SDK, but may not have been nullified on-chain yet
 // if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
 export type GetNotesOpts = {
   includeUncommitted?: boolean;
-  ignoreOptimisticNFs?: boolean;
+  ignoreOptimisticNfs?: boolean;
 };
 
 type ExpirationDate = number;
@@ -114,6 +114,10 @@ export class NocturneClientState {
     return countMinusOne;
   }
 
+  get merkleRoot(): bigint {
+    return this.merkle.getRoot();
+  }
+
   getTeiForMerkleIndex(merkleIndex: number): TotalEntityIndex | undefined {
     return this.merkleIndexToTei.get(merkleIndex);
   }
@@ -164,15 +168,16 @@ export class NocturneClientState {
 
     const nfIndices: number[] = [];
     for (const nf of nullifiers) {
+      // strategy:
       // 1. remove merkle index from asset => merkle indices map
       // 2. remove nf => merkle map entry
+
+      // if the nf isn't in the map, skip it. This is expected for idempotency, but we should log a warning anyways
       const merkleIndex = this.nfToMerkleIndex.get(nf);
       if (merkleIndex === undefined) {
-        console.error(
-          `nullifier ${nf} not found in nfToMerkleIndex - client is in an incosistent state!`
+        console.warn(
+          `nullifier ${nf} not found in nfToMerkleIndex - skipping...`
         );
-        // TODO: do we throw an error here?
-        // TODO: trigger recovery once we have events
         continue;
       }
 
@@ -183,6 +188,16 @@ export class NocturneClientState {
         );
         // TODO: do we throw an error here?
         // TODO: trigger recovery once we have events
+        continue;
+      }
+
+      if (note.nullifier !== nf) {
+        console.error(
+          `note at merkle index has a different nullifier - client is in an inconsistent state!`
+        );
+        // TODO: do we throw an error here?
+        // TODO: trigger recovery once we have events
+
         continue;
       }
 
@@ -236,10 +251,14 @@ export class NocturneClientState {
     commitUpTo?: number
   ): void {
     // add all new leaves as uncommitted leaves
+    const treeTip = this.merkle.totalCount();
     const batches = consecutiveChunks(
-      notesAndCommitments,
-      (noteOrCommitment) => noteOrCommitment.merkleIndex
+      // filter out insertions with merkle index < tree count
+      // TODO: make tree idempotent instead
+      notesAndCommitments.filter(({ merkleIndex }) => merkleIndex >= treeTip),
+      ({ merkleIndex }) => merkleIndex
     );
+
     for (const batch of batches) {
       const startIndex = batch[0].merkleIndex;
       const leaves = [];
@@ -325,7 +344,7 @@ export class NocturneClientState {
       notes = notes.filter((note) => note.merkleIndex <= idx);
     }
 
-    if (!opts?.ignoreOptimisticNFs) {
+    if (!opts?.ignoreOptimisticNfs) {
       notes = notes.filter((note) => !this.optimisticNfs.has(note.merkleIndex));
     }
 

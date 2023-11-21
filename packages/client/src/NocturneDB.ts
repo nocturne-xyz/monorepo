@@ -50,11 +50,11 @@ type AllNotes = Map<AssetKey, IncludedNote[]>;
 
 // options for methods that get notes from the DB
 // if includeUncommitted is defined and true, then the method include notes that are not yet committed to the commitment tree
-// if ignoreOptimisticNFs is defined and true, then the method will include notes that have been used by the SDK, but may not have been nullified on-chain yet
+// if ignoreOptimisticNfs is defined and true, then the method will include notes that have been used by the SDK, but may not have been nullified on-chain yet
 // if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
 export interface GetNotesOpts {
   includeUncommitted?: boolean;
-  ignoreOptimisticNFs?: boolean;
+  ignoreOptimisticNfs?: boolean;
 }
 
 export class NocturneDB {
@@ -416,7 +416,7 @@ export class NocturneDB {
       );
     }
 
-    if (!opts?.ignoreOptimisticNFs) {
+    if (!opts?.ignoreOptimisticNfs) {
       const hasOptimisticNF = await Promise.all(
         notes.map(
           async (note) => !(await this.getOptimisticNFRecord(note.merkleIndex))
