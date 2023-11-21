@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.13
+
+### Patch Changes
+
+- c390746f: Publish via yarn publish-packages not yarn changeset publish
+- Updated dependencies [c390746f]
+  - @nocturne-xyz/client@3.4.3
+
 ## 2.1.12
 
 ### Patch Changes
