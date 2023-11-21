@@ -14,6 +14,10 @@ import {
   OperationTrait,
   unzip,
   Nullifier,
+  NoteTrait,
+  WithTotalEntityIndex,
+  IncludedNoteCommitment,
+  consecutiveChunks,
 } from "@nocturne-xyz/core";
 import { Mutex } from "async-mutex";
 import { OpHistoryRecord, OperationMetadata } from "./types";
@@ -82,6 +86,8 @@ export class NocturneClientState {
     this.merkle = new SparseMerkleProver();
   }
 
+  // *** TEIs and Merkle Indices ***
+
   get currentTei(): TotalEntityIndex | undefined {
     return this.tei;
   }
@@ -112,9 +118,115 @@ export class NocturneClientState {
     return this.merkleIndexToTei.get(merkleIndex);
   }
 
-  applyStateDiff(diff: StateDiff): Promise<number[]> {
-    throw new Error("todo");
+  // *** APPLY STATE DIFF
+
+  applyStateDiff(diff: StateDiff): number[] {
+    const {
+      notesAndCommitments,
+      nullifiers,
+      latestCommittedMerkleIndex,
+      totalEntityIndex,
+    } = diff;
+
+    // 1. store new notes + nfs
+    const notesToStore = notesAndCommitments.filter(
+      ({ inner }) =>
+        !NoteTrait.isCommitment(inner) &&
+        (inner as IncludedNoteWithNullifier).value > 0n
+    ) as WithTotalEntityIndex<IncludedNoteWithNullifier>[];
+    for (const { inner: note } of notesToStore) {
+      // a. set the entry in `merkleIndexToNote` to the new note no matter what, even if there's something already there
+      const alreadyHasNote = this.merkleIndexToNote.has(note.merkleIndex);
+      this.merkleIndexToNote.set(note.merkleIndex, note);
+
+      // b. add to `assetToMerkleIndices` map if it's not already there
+      const merkleIndices =
+        this.assetToMerkleIndices.get(note.asset.assetAddr) ?? [];
+      if (!merkleIndices.includes(note.merkleIndex)) {
+        merkleIndices.push(note.merkleIndex);
+
+        if (alreadyHasNote) {
+          console.warn(
+            `note ${note.merkleIndex} already exists in note map but is not in asset map`
+          );
+        }
+      }
+
+      // c. add the nullifiers to the `nfToMerkleIndex` map
+      this.nfToMerkleIndex.set(note.nullifier, note.merkleIndex);
+    }
+
+    // 2. apply new nullifiers to notes
+    // NOTE: this comes after storing notes because new notes can be nullified in the same state diff
+    const nfIndices: number[] = [];
+    for (const nf of nullifiers) {
+      const merkleIndex = this.nfToMerkleIndex.get(nf);
+      if (!merkleIndex) {
+        console.error(
+          `nullifier ${nf} not found in nfToMerkleIndex - db is in an incosistent state!`
+        );
+        // TODO: do we throw an error here?
+        // TODO: trigger recovery once we have events
+        continue;
+      }
+
+      nfIndices.push(merkleIndex);
+      this.nfToMerkleIndex.delete(nf);
+    }
+
+    // 3. update tree
+    this.updateMerkle(
+      notesAndCommitments.map(({ inner }) => inner),
+      nfIndices,
+      latestCommittedMerkleIndex
+    );
+
+    // 4. update TEI
+    this.tei = totalEntityIndex;
+
+    return nfIndices;
   }
+
+  private updateMerkle(
+    notesAndCommitments: (IncludedNote | IncludedNoteCommitment)[],
+    nfIndices: number[],
+    commitUpTo?: number
+  ) {
+    // add all new leaves as uncommitted leaves
+    const batches = consecutiveChunks(
+      notesAndCommitments,
+      (noteOrCommitment) => noteOrCommitment.merkleIndex
+    );
+    for (const batch of batches) {
+      const startIndex = batch[0].merkleIndex;
+      const leaves = [];
+      const includes = [];
+      for (const noteOrCommitment of batch) {
+        if (NoteTrait.isCommitment(noteOrCommitment)) {
+          leaves.push(
+            (noteOrCommitment as IncludedNoteCommitment).noteCommitment
+          );
+          includes.push(false);
+        } else {
+          leaves.push(NoteTrait.toCommitment(noteOrCommitment as IncludedNote));
+          includes.push(true);
+        }
+      }
+      this.merkle.insertBatchUncommitted(startIndex, leaves, includes);
+    }
+
+    // commit up to latest subtree commit if
+    if (commitUpTo !== undefined) {
+      this.merkle.commitUpToIndex(commitUpTo);
+    }
+
+    // mark nullified ones for pruning
+    for (const index of nfIndices) {
+      this.merkle.markForPruning(index);
+    }
+  }
+
+  // *** NOTE FETCHING METHODS ***
 
   getBalanceForAsset(asset: Address, opts?: GetNotesOpts): bigint {
     const indices = this.assetToMerkleIndices.get(asset) ?? [];
@@ -156,6 +268,28 @@ export class NocturneClientState {
       ])
     );
   }
+
+  private filterNotesByOpts(
+    notes: IncludedNote[],
+    opts?: GetNotesOpts
+  ): IncludedNote[] {
+    if (!opts?.includeUncommitted) {
+      const idx = this.latestCommittedMerkleIndex;
+      if (idx === undefined) {
+        return [];
+      }
+
+      notes = notes.filter((note) => note.merkleIndex <= idx);
+    }
+
+    if (!opts?.ignoreOptimisticNFs) {
+      notes = notes.filter((note) => this.optimisticNfs.has(note.merkleIndex));
+    }
+
+    return notes;
+  }
+
+  // *** HISTORY METHODS ***
 
   get opHistory(): OpHistoryRecord[] {
     return this.opHistory;
@@ -223,25 +357,7 @@ export class NocturneClientState {
     this.opHistory.splice(index, 1);
   }
 
-  private filterNotesByOpts(
-    notes: IncludedNote[],
-    opts?: GetNotesOpts
-  ): IncludedNote[] {
-    if (!opts?.includeUncommitted) {
-      const idx = this.latestCommittedMerkleIndex;
-      if (idx === undefined) {
-        return [];
-      }
-
-      notes = notes.filter((note) => note.merkleIndex <= idx);
-    }
-
-    if (!opts?.ignoreOptimisticNFs) {
-      notes = notes.filter((note) => this.optimisticNfs.has(note.merkleIndex));
-    }
-
-    return notes;
-  }
+  // *** SNAPSHOT METHODS ***
 
   private static async loadInner(
     kv: KVStore,
@@ -339,10 +455,14 @@ export class NocturneClientState {
 
   async snapshot(): Promise<void> {
     await snapshotMutex.runExclusive(async () => {
-      // 1. clone state
+      // clone state
       const state = structuredClone(this);
 
-      // 2. set `tei` to `lastCommittedTei`
+      // HACK: set `tei` to `lastCommittedTei`
+      // we do this because we want to snapshot the state of the tree at the point of the latest committed merkle index
+      // this is because we only have the capability of checking the correctness of the tree by comparing to the onchain root
+      // we can't check whether or not the uncommitted insertions afterwards match the contract's state because that state isn't public
+      // therefore, we only snapshot the state of the tree at the point of the latest commit, at which point we can be sure that it matches the contract's on-chain state
       // since `applyStateDiff` is idempotent, when we load from snapshot and re-sync, we'll get an equivalent state
       // (at worst, we end up with dangling NFs that don't point to anything, which is fine)
       // if this TEI is undefined, skip the snapshot because that implies it's empty
@@ -351,12 +471,13 @@ export class NocturneClientState {
         return;
       }
 
-      // 3. prune uncommitted leaves from tree
+      // prune uncommitted leaves from tree
       state.merkle.removeUncommitted();
 
-      // 4. make snapshot
+      // make snapshot
       const snapshot: Snapshot = {
         tei: state.tei,
+        teiOfLatestCommit: state.tei,
 
         merkleIndexToNote: Array.from(state.merkleIndexToNote.entries()),
         merkleIndexToTei: Array.from(state.merkleIndexToTei.entries()),
