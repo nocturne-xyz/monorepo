@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2
+
+### Patch Changes
+
+- c8cfc54c: add `limit` parameter to fetchDepositEvents
+
 ## 0.5.1
 
 ### Patch Changes
