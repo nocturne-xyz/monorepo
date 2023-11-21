@@ -4,6 +4,12 @@ import fs from "fs";
 import { promisify } from "util";
 import { ScreeningDepositRequest } from "../src";
 
+export const DUMMY_DEPOSIT_REQUEST: ScreeningDepositRequest = {
+  spender: "",
+  assetAddr: "",
+  value: 0n,
+} as const;
+
 export function getNewSnapshotFolderPath(): string {
   const date = new Date();
   const folderPath = path.resolve(
@@ -46,9 +52,3 @@ export async function getLatestSnapshotFolder(
     return null;
   }
 }
-
-export const DUMMY_DEPOSIT_REQUEST: ScreeningDepositRequest = {
-  spender: "",
-  assetAddr: "",
-  value: 0n,
-} as const;

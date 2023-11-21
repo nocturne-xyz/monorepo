@@ -1,6 +1,8 @@
 import { MisttrackRiskScoreData } from "../apiCalls";
 import moment from "moment-timezone";
 
+export const FIVE_ETHER = 5n * 10n ** 18n;
+
 export function isLessThanOneMonthAgo(unixTimestamp: number): boolean {
   // checks if first_seen is less than one month ago
   const now = Math.floor(Date.now() / 1000);

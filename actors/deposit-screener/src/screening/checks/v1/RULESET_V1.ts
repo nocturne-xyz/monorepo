@@ -8,6 +8,7 @@ import {
   TrmData,
 } from "../apiCalls";
 import {
+  FIVE_ETHER,
   includesMixerUsage,
   isCreatedAfterTornadoCashSanction,
   isLessThanOneMonthAgo,
@@ -382,19 +383,21 @@ const ENV_BLACKLIST_RULE: RuleParams<"IDENTITY"> = {
   },
 };
 
-// TODO: condition on deposit being > 5 ETh
 export const US_TIMEZONE_DELAY_RULE: RuleParams<"IDENTITY"> = {
   name: "US_TIMEZONE_DELAY_RULE",
   call: "IDENTITY",
-  threshold: (_deposit: ScreeningDepositRequest) => {
-    const timeEt = moment().tz("America/New_York");
-    // If the event is between 9:30pm M ET and 7:00am the next day, trigger rule
-    if (
-      timeEt.hour() > 21 ||
-      (timeEt.hour() === 21 && timeEt.minute() >= 30) ||
-      timeEt.hour() < 6
-    ) {
-      return true;
+  threshold: (deposit: ScreeningDepositRequest) => {
+    // If the deposit > 5 ETH and happens between 9:30pm ET and 7:00am ET next day, delay until at
+    // least 7am ET
+    if (deposit.value >= FIVE_ETHER) {
+      const timeEt = moment().tz("America/New_York");
+      if (
+        (timeEt.hour() === 21 && timeEt.minute() >= 30) ||
+        timeEt.hour() > 21 ||
+        timeEt.hour() < 7
+      ) {
+        return true;
+      }
     }
 
     return false;
