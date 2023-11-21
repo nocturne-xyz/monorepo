@@ -1,4 +1,7 @@
 import { MisttrackRiskScoreData } from "../apiCalls";
+import moment from "moment-timezone";
+
+export const FIVE_ETHER = 5n * 10n ** 18n;
 
 export function isLessThanOneMonthAgo(unixTimestamp: number): boolean {
   // checks if first_seen is less than one month ago
@@ -24,3 +27,16 @@ export function isCreatedAfterTornadoCashSanction(
   // checks if wallet is created after tornado cash sanction
   return tornadoCashSanctionUnixTime < unixTimestamp;
 }
+
+export const timeUntil7AMNextDayInSeconds = (): number => {
+  const currentTime = moment().tz("America/New_York");
+  const sevenAMNextDay = currentTime
+    .clone()
+    .add(1, "days")
+    .hour(7)
+    .minute(0)
+    .second(0);
+
+  // Calculate the duration in seconds
+  return sevenAMNextDay.diff(currentTime, "seconds");
+};

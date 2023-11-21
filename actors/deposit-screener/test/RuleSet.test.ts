@@ -1,4 +1,3 @@
-import { ScreeningDepositRequest } from "../src";
 import {
   CombinedRulesParams,
   RuleParams,
@@ -9,6 +8,7 @@ import { expect } from "chai";
 import RedisMemoryServer from "redis-memory-server";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { Logger } from "winston";
+import { DUMMY_DEPOSIT_REQUEST } from "./utils";
 
 const DELAY_50_ALWAYS: RuleParams<"IDENTITY"> = {
   name: "DELAY_50_ALWAYS",
@@ -65,12 +65,6 @@ const COMBINED_RULE_ANY: CombinedRulesParams<
 const COMBINED_RULE_ALL = {
   ...COMBINED_RULE_ANY,
   applyIf: "All",
-} as const;
-
-const DUMMY_DEPOSIT_REQUEST: ScreeningDepositRequest = {
-  spender: "",
-  assetAddr: "",
-  value: 0n,
 } as const;
 
 describe("RuleSet", async () => {

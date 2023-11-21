@@ -28,19 +28,31 @@ export interface AddDelay {
   valueSeconds: number;
 }
 
+export interface AddDelayDynamic {
+  operation: "AddDynamic";
+  delayFn: () => number; // TODO: may need to be more expressive than 0 params
+}
+
 export interface MultiplyDelay {
   operation: "Multiply";
   factor: number;
 }
 
-export type DelayAction = (AddDelay | MultiplyDelay) & { type: "Delay" };
+export type DelayAction = (AddDelay | AddDelayDynamic | MultiplyDelay) & {
+  type: "Delay";
+};
 
-const APPLY_DELAY_OPERATION: Record<
-  DelayAction["operation"],
-  (a: number, b: number) => number
-> = {
-  Add: (a, b) => a + b,
-  Multiply: (a, b) => a * b,
+type DelayActionFunctionMap = {
+  [K in DelayAction["operation"]]: (
+    a: number,
+    b: Extract<DelayAction, { operation: K }>
+  ) => number;
+};
+
+const APPLY_DELAY_OPERATION: DelayActionFunctionMap = {
+  Add: (a, b) => a + b.valueSeconds,
+  AddDynamic: (a, b) => a + b.delayFn(),
+  Multiply: (a, b) => a * b.factor,
 };
 
 const ACTION_NOT_TRIGGERED = {
@@ -220,7 +232,7 @@ export class RuleSet {
       } else if (result.type === "Delay") {
         delaySeconds = APPLY_DELAY_OPERATION[result.operation](
           delaySeconds,
-          result.operation === "Add" ? result.valueSeconds : result.factor
+          result as Extract<DelayAction, { operation: typeof result }>
         );
       }
       currRule = currRule.next;

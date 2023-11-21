@@ -8,13 +8,16 @@ import {
   TrmData,
 } from "../apiCalls";
 import {
+  FIVE_ETHER,
   includesMixerUsage,
   isCreatedAfterTornadoCashSanction,
   isLessThanOneMonthAgo,
+  timeUntil7AMNextDayInSeconds,
 } from "./utils";
 import IORedis from "ioredis";
 import { ethers } from "ethers";
 import { ScreeningDepositRequest } from "../..";
+import moment from "moment-timezone";
 
 /**
  * Ruleset V1 Specification
@@ -380,6 +383,32 @@ const ENV_BLACKLIST_RULE: RuleParams<"IDENTITY"> = {
   },
 };
 
+export const US_TIMEZONE_DELAY_RULE: RuleParams<"IDENTITY"> = {
+  name: "US_TIMEZONE_DELAY_RULE",
+  call: "IDENTITY",
+  threshold: (deposit: ScreeningDepositRequest) => {
+    // If the deposit > 5 ETH and happens between 9:30pm ET and 7:00am ET next day, delay until at
+    // least 7am ET
+    if (deposit.value >= FIVE_ETHER) {
+      const timeEt = moment().tz("America/New_York");
+      if (
+        (timeEt.hour() === 21 && timeEt.minute() >= 30) ||
+        timeEt.hour() > 21 ||
+        timeEt.hour() < 7
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+  action: {
+    type: "Delay",
+    operation: "AddDynamic",
+    delayFn: timeUntil7AMNextDayInSeconds, // calculate time until 7 AM ET next day (this is additional delay so it will be 9am ET next day at least given 2h base delay)
+  },
+};
+
 // // - Large volume of deposits coming from same address (large multideposit) → 3x delay (6h)
 
 // const LARGE_MULTIDEPOSIT_DELAY: RuleParams<"IDENTITY"> = {
@@ -417,6 +446,7 @@ export const RULESET_V1 = (redis: IORedis, logger: Logger): RuleSet => {
     logger
   )
     .add(ENV_BLACKLIST_RULE)
+    .add(US_TIMEZONE_DELAY_RULE)
     .add(TRM_SEVERE_OWNERSHIP_REJECT)
     .add(TRM_HIGH_OWNERSHIP_REJECT)
     .combineAndAdd(TRM_SEVERE_COUNTERPARTY_REJECT)
