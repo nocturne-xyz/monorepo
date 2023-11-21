@@ -16,8 +16,8 @@ describe("RuleSet Utils", async () => {
       .toDate();
     const clock = sinon.useFakeTimers(mockDate1.getTime());
 
-    let triggered = US_TIMEZONE_DELAY_RULE.threshold(largeDeposit);
-    expect(triggered).to.be.true;
+    const lateEveningTriggered = US_TIMEZONE_DELAY_RULE.threshold(largeDeposit);
+    expect(lateEveningTriggered).to.be.true;
 
     // Mock date/time to be 8am ET (no trigger since window ends @ 7:00am ET)
     const mockDate2 = moment
@@ -25,8 +25,8 @@ describe("RuleSet Utils", async () => {
       .toDate();
     clock.tick(mockDate2.valueOf() - mockDate1.valueOf());
 
-    triggered = US_TIMEZONE_DELAY_RULE.threshold(largeDeposit);
-    expect(triggered).to.be.false;
+    const daytimeTriggered = US_TIMEZONE_DELAY_RULE.threshold(largeDeposit);
+    expect(daytimeTriggered).to.be.false;
 
     clock.restore();
   });
