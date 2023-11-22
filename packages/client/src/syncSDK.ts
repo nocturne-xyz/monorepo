@@ -1,5 +1,4 @@
 import { NocturneViewer } from "@nocturne-xyz/crypto";
-import { NocturneDB } from "./NocturneDB";
 import {
   IncludedEncryptedNote,
   IncludedNote,
@@ -13,9 +12,9 @@ import {
   SparseMerkleProver,
   consecutiveChunks,
   timed,
-  timedAsync,
   Histogram,
 } from "@nocturne-xyz/core";
+import { NocturneClientState } from "./NocturneClientState";
 
 export interface SyncOpts {
   endBlock?: number;
@@ -32,13 +31,12 @@ export interface SyncDeps {
 export async function syncSDK(
   { viewer }: SyncDeps,
   adapter: SDKSyncAdapter,
-  db: NocturneDB,
+  state: NocturneClientState,
   merkle: SparseMerkleProver,
   opts?: SyncOpts
 ): Promise<number | undefined> {
-  const currTotalEntityIndex = await db.currentTotalEntityIndex();
-  const startTotalEntityIndex = currTotalEntityIndex
-    ? currTotalEntityIndex + 1n
+  const startTotalEntityIndex = state.currentTei 
+    ? state.currentTei + 1n
     : 0n;
 
   const currentBlock = await adapter.getLatestIndexedBlock();
@@ -73,8 +71,7 @@ export async function syncSDK(
     return decrypted;
   });
 
-  let latestSyncedMerkleIndex: number | undefined =
-    await db.latestSyncedMerkleIndex();
+  let latestSyncedMerkleIndex = state.latestSyncedMerkleIndex;
 
   if (opts?.timeoutSeconds) {
     setTimeout(() => diffs.close(), opts.timeoutSeconds * 1000);
@@ -93,14 +90,12 @@ export async function syncSDK(
       diff.latestNewlySyncedMerkleIndex
     );
     // update notes in DB
-    const [nfIndices, nfTime] = await timedAsync(() => db.applyStateDiff(diff));
+    const [nfIndices, nfTime] = timed(() => state.applyStateDiff(diff));
     applyStateDiffHistogram?.sample(nfTime / diff.notesAndCommitments.length);
-    latestSyncedMerkleIndex = await db.latestSyncedMerkleIndex();
-
-    // TODO: deal with case where we have failure between applying state diff to DB and merkle being persisted
+    latestSyncedMerkleIndex = state.latestSyncedMerkleIndex;
 
     if (diff.latestCommittedMerkleIndex) {
-      const [_, time] = await timedAsync(() =>
+      const [_, time] = timed(() =>
         updateMerkle(
           merkle,
           diff.latestCommittedMerkleIndex!,
@@ -112,6 +107,9 @@ export async function syncSDK(
     }
   }
 
+  // TODO instead of snapshotting at the end, check tree root every K diffs and snapshot if it's correct
+  await state.save();
+
   diffHistogram?.print();
   applyStateDiffHistogram?.print();
   updateMerkleHistogram?.print();
@@ -119,12 +117,12 @@ export async function syncSDK(
   return latestSyncedMerkleIndex;
 }
 
-async function updateMerkle(
+function updateMerkle(
   merkle: SparseMerkleProver,
   latestCommittedMerkleIndex: number,
   notesAndCommitments: (IncludedNote | IncludedNoteCommitment)[],
   nfIndices: number[]
-): Promise<void> {
+): void {
   // add all new leaves as uncommitted leaves
   const batches = consecutiveChunks(
     notesAndCommitments,
@@ -155,9 +153,6 @@ async function updateMerkle(
   for (const index of nfIndices) {
     merkle.markForPruning(index);
   }
-
-  // persist merkle to underlying KV store
-  // await merkle.persist();
 }
 
 function decryptStateDiff(
