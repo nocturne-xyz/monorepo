@@ -369,7 +369,7 @@ export class NocturneClientState {
 
   // *** HISTORY METHODS ***
 
-  get allOps(): OpHistoryRecord[] {
+  get opHistory(): OpHistoryRecord[] {
     return this._opHistory;
   }
 
@@ -379,7 +379,7 @@ export class NocturneClientState {
     );
   }
 
-  get opHistory(): OpHistoryRecord[] {
+  get previousOps(): OpHistoryRecord[] {
     return this._opHistory.filter(
       (record) => record.status && isTerminalOpStatus(record.status)
     );
@@ -389,7 +389,6 @@ export class NocturneClientState {
     return this.opHistory.find((record) => record.digest === digest);
   }
 
-  // idempotent
   setStatusForOp(digest: bigint, status: OperationStatus): void {
     const idx = this.opHistory.findIndex((record) => record.digest === digest);
     if (idx < 0) {
@@ -400,7 +399,6 @@ export class NocturneClientState {
     this._opHistory[idx].status = status;
   }
 
-  // idempotent
   addOpToHistory(
     op: PreSignOperation | SignedOperation,
     metadata: OperationMetadata,
@@ -435,8 +433,7 @@ export class NocturneClientState {
     }
   }
 
-  // idempotent
-  removeOpfromHistory(digest: bigint, removeOptimisticNfs?: boolean): void {
+  removeOpFromHistory(digest: bigint, removeOptimisticNfs?: boolean): void {
     const index = this.opHistory.findIndex(
       (record) => record.digest === digest
     );
@@ -446,6 +443,18 @@ export class NocturneClientState {
 
     this.opHistory.splice(index, 1);
   }
+
+  /// *** OPTIMISTIC NULLIFIER METHODS ***
+
+  pruneOptimisticNFs(): void {
+    const now = Date.now();
+    for (const [merkleIndex, expirationDate] of this.optimisticNfs.entries()) {
+      if (now > expirationDate) {
+        this.optimisticNfs.delete(merkleIndex);
+      }
+    }
+  }
+
 
   // *** SNAPSHOT METHODS ***
 

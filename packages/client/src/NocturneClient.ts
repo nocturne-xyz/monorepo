@@ -32,6 +32,7 @@ import {
   TotalEntityIndexTrait,
   maxArray,
 } from "@nocturne-xyz/core";
+import { NocturneClientState } from "./NocturneClientState";
 
 const PRUNE_OPTIMISTIC_NFS_TIMER = 60 * 1000; // 1 minute
 
@@ -40,7 +41,7 @@ export class NocturneClient {
   protected config: NocturneConfig;
   protected handlerContract: Handler;
   protected merkleProver: SparseMerkleProver;
-  protected db: NocturneDB;
+  protected state: NocturneClientState;
   protected syncAdapter: SDKSyncAdapter;
   protected tokenConverter: EthToTokenConverter;
   protected opTracker: OpTracker;
@@ -53,7 +54,7 @@ export class NocturneClient {
     provider: ethers.providers.Provider,
     configOrNetworkName: NocturneConfig | string,
     merkleProver: SparseMerkleProver,
-    db: NocturneDB,
+    state: NocturneClientState,
     syncAdapter: SDKSyncAdapter,
     tokenConverter: EthToTokenConverter,
     nulliferChecker: OpTracker
@@ -81,7 +82,7 @@ export class NocturneClient {
       provider
     );
     this.merkleProver = merkleProver;
-    this.db = db;
+    this.state = state;
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
     this.opTracker = nulliferChecker;
@@ -94,16 +95,12 @@ export class NocturneClient {
     void prune();
   }
 
-  async clearDb(): Promise<void> {
-    await this.db.kv.clear();
-  }
-
   // Sync SDK, returning last synced merkle index of last state diff
   async sync(opts?: SyncOpts): Promise<number | undefined> {
     const latestSyncedMerkleIndex = await syncSDK(
       { viewer: this.viewer },
       this.syncAdapter,
-      this.db,
+      this.state,
       this.merkleProver,
       opts
         ? {
@@ -123,7 +120,7 @@ export class NocturneClient {
     opRequest = await ensureOpRequestChainInfo(opRequest, this.provider);
 
     const deps = {
-      db: this.db,
+      db: this.state,
       gasAssets: this.gasAssets,
       tokenConverter: this.tokenConverter,
       handlerContract: this.handlerContract,
@@ -139,8 +136,8 @@ export class NocturneClient {
     return await prepareOperation(deps, gasAccountedOpRequest);
   }
 
-  async getAllAssetBalances(opts?: GetNotesOpts): Promise<AssetWithBalance[]> {
-    const notes = await this.db.getAllNotes(opts);
+  getAllAssetBalances(opts?: GetNotesOpts): AssetWithBalance[] {
+    const notes = this.state.getAllNotes(opts);
     return Array.from(notes.entries()).map(([assetString, notes]) => {
       const asset = NocturneDB.parseAssetKey(assetString);
       const balance = notes.reduce((a, b) => a + b.value, 0n);
@@ -152,25 +149,25 @@ export class NocturneClient {
     });
   }
 
-  async getBalanceForAsset(asset: Asset, opts?: GetNotesOpts): Promise<bigint> {
-    return await this.db.getBalanceForAsset(asset, opts);
+  getBalanceForAsset(asset: Asset, opts?: GetNotesOpts): bigint {
+    return this.state.getBalanceForAsset(asset, opts);
   }
 
-  async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
-    return await this.db.latestSyncedMerkleIndex();
+  get latestSyncedMerkleIndex(): number | undefined {
+    return this.state.latestSyncedMerkleIndex
   }
 
-  async getLatestCommittedMerkleIndex(): Promise<number | undefined> {
-    return await this.db.latestCommittedMerkleIndex();
+  get latestCommittedMerkleIndex(): number | undefined {
+    return this.state.latestCommittedMerkleIndex;
   }
 
-  getCurrentTreeRoot(): bigint {
-    return this.merkleProver.getRoot();
+  get merkleRoot(): bigint {
+    return this.state.merkleRoot
   }
 
-  async hasEnoughBalanceForOperationRequest(
+  hasEnoughBalanceForOperationRequest(
     opRequest: OperationRequest
-  ): Promise<boolean> {
+  ): boolean {
     const assetRequestedAmounts = new MapWithObjectKeys<Asset, bigint>();
     for (const joinSplitRequest of opRequest.joinSplitRequests) {
       const asset = joinSplitRequest.asset;
@@ -180,7 +177,7 @@ export class NocturneClient {
     }
 
     for (const [asset, requestedAmount] of assetRequestedAmounts.entries()) {
-      const balance = await this.db.getBalanceForAsset(asset);
+      const balance = this.state.getBalanceForAsset(asset.assetAddr);
       if (balance < requestedAmount) {
         return false;
       }
@@ -189,11 +186,11 @@ export class NocturneClient {
     return true;
   }
 
-  async getCreationBlockOfNewestNoteInOp(
+  getCreationBlockOfNewestNoteInOp(
     op: PreSignOperation | SignedOperation
-  ): Promise<number> {
-    const totalEntityIndex = await getTotalEntityIndexOfNewestNoteInOp(
-      this.db,
+  ): number {
+    const totalEntityIndex = getTotalEntityIndexOfNewestNoteInOp(
+      this.state,
       op
     );
     return Number(
@@ -201,50 +198,58 @@ export class NocturneClient {
     );
   }
 
-  async addOpToHistory(
+  addOpToHistory(
     op: PreSignOperation | SignedOperation,
     metadata: OperationMetadata
-  ): Promise<void> {
-    await this.db.addOpToHistory(op, metadata);
+  ): void {
+    this.state.addOpToHistory(op, metadata);
   }
 
-  async removeOpFromHistory(digest: bigint): Promise<void> {
-    await this.db.removeOpFromHistory(digest);
+  removeOpFromHistory(digest: bigint): void {
+    this.state.removeOpFromHistory(digest);
   }
 
-  async getOpHistory(includePending?: boolean): Promise<OpHistoryRecord[]> {
-    return await this.db.getHistory(includePending);
+  get opHistory(): OpHistoryRecord[] {
+    return this.state.opHistory;
   }
 
-  async getOpHistoryRecord(
+  get pendingOps(): OpHistoryRecord[] {
+    return this.state.pendingOps;
+  }
+
+  get previousOps(): OpHistoryRecord[] {
+    return this.state.previousOps;
+  }
+
+  getOpHistoryRecord(
     digest: bigint
-  ): Promise<OpHistoryRecord | undefined> {
-    return await this.db.getHistoryRecord(digest);
+  ): OpHistoryRecord | undefined {
+    return this.state.getOpHistoryRecord(digest);
   }
 
-  async setOpStatusInHistory(
+  setOpStatusInHistory(
     digest: bigint,
     status: OperationStatus
-  ): Promise<void> {
-    await this.db.setStatusForOp(digest, status);
+  ): void {
+    this.state.setStatusForOp(digest, status);
   }
 
-  async pruneOptimisticNullifiers(): Promise<void> {
-    await this.db.pruneOptimisticNFs();
+  pruneOptimisticNullifiers(): void {
+    this.state.pruneOptimisticNFs();
   }
 }
 
-export async function getTotalEntityIndexOfNewestNoteInOp(
-  db: NocturneDB,
+function getTotalEntityIndexOfNewestNoteInOp(
+  state: NocturneClientState,
   op: PreSignOperation | SignedOperation
-): Promise<TotalEntityIndex> {
+): TotalEntityIndex {
   // get the max merkle index of any note in any joinsplit in the op
   const maxMerkleIndex = maxArray(
     getMerkleIndicesAndNfsFromOp(op).map(({ merkleIndex }) => merkleIndex)
   );
 
   // get the corresponding TotalEntityIndex
-  const totalEntityIndex = await db.getTotalEntityIndexForMerkleIndex(
+  const totalEntityIndex = state.getTeiForMerkleIndex(
     Number(maxMerkleIndex)
   );
 
