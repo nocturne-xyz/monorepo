@@ -28,6 +28,7 @@ import {
   computeSenderCommitment,
 } from "@nocturne-xyz/core";
 import { sortNotesByValue, getJoinSplitRequestTotalValue } from "./utils";
+import { NocturneClientState } from "./NocturneClientState";
 
 export const __private = {
   gatherNotes,
@@ -146,16 +147,16 @@ export class NotEnoughFundsError extends Error {
   }
 }
 
-export async function gatherNotes(
-  db: NocturneDB,
+export function gatherNotes(
+  state: NocturneClientState,
   requestedAmount: bigint,
   asset: Asset,
   noteMerkleIndicesToIgnore: Set<number> = new Set()
-): Promise<IncludedNote[]> {
+): IncludedNote[] {
   console.log("indices to ignore", noteMerkleIndicesToIgnore);
 
   // check that the user has enough notes to cover the request
-  const notes = (await db.getNotesForAsset(asset)).filter(
+  const notes = state.getNotesForAsset(asset.assetAddr).filter(
     (n) => !noteMerkleIndicesToIgnore.has(n.merkleIndex)
   );
   const balance = notes.reduce((acc, note) => acc + note.value, 0n);
