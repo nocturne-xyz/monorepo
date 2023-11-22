@@ -28,5 +28,5 @@ export {
 } from "./tree";
 export { MapWithObjectKeys, SetWithObjectKeys } from "./collections";
 export { Histogram, timed, timedAsync, sleep } from "./timing";
-export { queryEvents, parseEventsFromContractReceipt } from "./ethers";
+export { queryEvents, parseEventsFromContractReceipt, parseEventsFromTransactionReceipt } from "./ethers";
 export * as SubgraphUtils from "./subgraph";

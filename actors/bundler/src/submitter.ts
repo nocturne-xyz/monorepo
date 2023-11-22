@@ -1,4 +1,9 @@
-import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
+import {
+  Handler,
+  Handler__factory,
+  Teller,
+  Teller__factory,
+} from "@nocturne-xyz/contracts";
 import {
   Address,
   OperationTrait,
@@ -26,8 +31,9 @@ import {
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import retry from "async-retry";
-import { parseEventsFromTransactionReceipt } from "@nocturne-xyz/core/dist/src/utils/ethers";
+import { parseEventsFromTransactionReceipt } from "@nocturne-xyz/core";
 import { LogDescription } from "ethers/lib/utils";
+import { checkRevertError } from "./opValidation";
 
 const COMPONENT_NAME = "submitter";
 
@@ -42,6 +48,7 @@ export class BundlerSubmitter {
   provider: ethers.providers.JsonRpcProvider;
   txSubmitter: TxSubmitter;
   tellerContract: Teller;
+  handlerContract: Handler;
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   logger: Logger;
@@ -53,6 +60,7 @@ export class BundlerSubmitter {
 
   constructor(
     tellerAddress: Address,
+    handlerAddress: Address,
     provider: ethers.providers.JsonRpcProvider,
     txSubmitter: TxSubmitter,
     redis: IORedis,
@@ -66,6 +74,10 @@ export class BundlerSubmitter {
     this.provider = provider;
     this.txSubmitter = txSubmitter;
     this.tellerContract = Teller__factory.connect(tellerAddress, this.provider);
+    this.handlerContract = Handler__factory.connect(
+      handlerAddress,
+      this.provider
+    );
     this.finalityBlocks = finalityBlocks;
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
@@ -112,13 +124,40 @@ export class BundlerSubmitter {
           bundle: opDigests,
         });
 
+        // re-validate ops just before submission and remove any that now revert (marking them as
+        // failing validation)
+        let validOps: SubmittableOperationWithNetworkInfo[] = [];
+        for (let i = 0; i < operations.length; i++) {
+          const maybeErr = await checkRevertError(
+            this.tellerContract.address,
+            this.tellerContract,
+            this.handlerContract,
+            this.provider,
+            logger,
+            operations[i]
+          );
+
+          if (maybeErr) {
+            logger.error(
+              `op failed. removing from batch. digest: ${opDigests[i]}`,
+              { err: maybeErr }
+            );
+            this.statusDB.setJobStatus(
+              opDigests[i],
+              OperationStatus.OPERATION_VALIDATION_FAILED
+            );
+          } else {
+            validOps.push(operations[i]);
+          }
+        }
+
         try {
-          await this.submitBatch(logger, operations);
+          await this.submitBatch(logger, validOps);
         } catch (e) {
           logger.error("failed to submit bundle:", e);
         }
 
-        this.metrics.operationsSubmittedCounter.add(operations.length);
+        this.metrics.operationsSubmittedCounter.add(validOps.length);
         this.metrics.bundlesSubmittedCounter.add(1);
       },
       { connection: this.redis, autorun: true }

@@ -44,6 +44,7 @@ const runSubmitter = new Command("submitter")
     );
     const submitter = new BundlerSubmitter(
       config.tellerAddress,
+      config.handlerAddress,
       provider,
       txSubmitter,
       getRedis(),
