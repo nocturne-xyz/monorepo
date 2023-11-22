@@ -33,6 +33,8 @@ import {
   maxArray,
 } from "@nocturne-xyz/core";
 
+const PRUNE_OPTIMISTIC_NFS_TIMER = 1000 * 10; // 10 seconds
+
 export class NocturneClient {
   protected provider: ethers.providers.Provider;
   protected config: NocturneConfig;
@@ -83,6 +85,13 @@ export class NocturneClient {
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
     this.opTracker = nulliferChecker;
+
+    // set an interval to prune optimistic nfs to ensure they don't get stuck
+    const prune = async () => {
+      await this.pruneOptimisticNullifiers();
+      setTimeout(prune, PRUNE_OPTIMISTIC_NFS_TIMER);
+    };
+    void prune();
   }
 
   async clearDb(): Promise<void> {
