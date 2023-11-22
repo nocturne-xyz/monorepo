@@ -167,7 +167,6 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       const signed = signOperation(nocturneSignerAlice, preSign);
       operation = await proveOperation(joinSplitProver, signed);
     } else {
-      console.log("ALREADY HAD OPERATION PREPARED");
       operation = opOrOpRequest;
     }
 
@@ -298,9 +297,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     console.log("alice: Sync SDK");
     await nocturneClientAlice.sync();
 
-    // make an operation with gas price < chain's gas price (1 wei <<< 1 gwei)
-    // HH's default gas price seems to be somewhere around 1 gwei experimentally
-    // unfortunately it doesn't have a way to set it in the chain itself, only in hre
+    // Make transfer op and sign/prove up front
     const chainId = BigInt((await provider.getNetwork()).chainId);
     const opRequestWithMetadata = await newOpRequestBuilder(
       provider,
@@ -324,7 +321,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const signed = signOperation(nocturneSignerAlice, preSign);
     const operation = await proveOperation(joinSplitProver, signed);
 
-    // Submit to bundler without awaiting
+    // Submit op to bundler without awaiting
     const bundlerSubmitProm = testE2E({
       opOrOpRequest: operation,
       expectedResult: {
@@ -340,6 +337,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       .connect(aliceEoa)
       .processBundle({ operations: [operation] }, { gasLimit: 2_000_000 });
 
+    // awaiting prom should pass if op status ends up being OPERATION_VALIDATION_FAILED
     await bundlerSubmitProm;
   });
 

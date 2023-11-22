@@ -151,6 +151,11 @@ export class BundlerSubmitter {
           }
         }
 
+        if (validOps.length === 0) {
+          logger.warn("no valid ops in batch. skipping submission.");
+          return;
+        }
+
         try {
           await this.submitBatch(logger, validOps);
         } catch (e) {
