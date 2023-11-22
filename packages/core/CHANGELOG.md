@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.0
+
+### Minor Changes
+
+- 8b9d9030: add OPERATION_VALIDATION_FAILED type to OperationStatus for when re-validation fails in submitter
+
 ## 3.2.1
 
 ### Patch Changes

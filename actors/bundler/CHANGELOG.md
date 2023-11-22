@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.10.9
+
+### Patch Changes
+
+- 8b9d9030: submitter re-validates that op doesn't revert or internally revert to prevent against slippage-related reverts
+- Updated dependencies [8b9d9030]
+  - @nocturne-xyz/core@3.3.0
+  - @nocturne-xyz/client@4.0.2
+  - @nocturne-xyz/offchain-utils@0.6.5
+
 ## 0.10.8
 
 ### Patch Changes

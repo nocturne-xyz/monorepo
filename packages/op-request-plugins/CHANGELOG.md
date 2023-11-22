@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.16
+
+### Patch Changes
+
+- Updated dependencies [8b9d9030]
+  - @nocturne-xyz/core@3.3.0
+  - @nocturne-xyz/client@4.0.2
+
 ## 2.1.15
 
 ### Patch Changes
