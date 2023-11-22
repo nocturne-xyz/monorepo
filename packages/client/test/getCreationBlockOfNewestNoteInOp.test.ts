@@ -17,7 +17,7 @@ import {
 describe("getCreationTimestampOfNewestNoteInOp", () => {
   it("returns the timetsamp of the newest note in op", async () => {
     // setup with some tokens and totalEntityindices
-    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+    const [state, merkleProver, signer, handlerContract] = setup(
       [100n, 10n, 20n, 1000n],
       [shitcoin, shitcoin, shitcoin, shitcoin],
       {
@@ -32,7 +32,7 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      db: nocturneDB,
+      state,
     };
     const provider =
       ethers.getDefaultProvider() as ethers.providers.JsonRpcProvider;
@@ -55,11 +55,11 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
       opRequest.request,
       1
     );
-    const op = await prepareOperation(deps, gasAccountedOpRequest);
+    const op = prepareOperation(deps, gasAccountedOpRequest);
 
     // get totalEntityIndex of the newest note in the op
-    const totalEntityindex = await getTotalEntityIndexOfNewestNoteInOp(
-      nocturneDB,
+    const totalEntityindex = getTotalEntityIndexOfNewestNoteInOp(
+      state,
       op
     );
 

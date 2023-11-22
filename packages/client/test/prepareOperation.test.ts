@@ -41,37 +41,37 @@ beforeEach(() => {
   provider = ethers.getDefaultProvider() as ethers.providers.JsonRpcProvider;
 });
 describe("gatherNotes", () => {
-  it("throws an error when attempting to overspend", async () => {
-    const [nocturneDB] = await setup([100n], [stablescam]);
+  it("throws an error when attempting to overspend", () => {
+    const [state] = setup([100n], [stablescam]);
 
     // attempt request 1000 tokens, more than the user owns
     // expect to throw error
-    await expect(gatherNotes(nocturneDB, 1000n, stablescam)).to.be.rejectedWith(
+    expect(gatherNotes(state, 1000n, stablescam)).to.throw(
       "attempted to spend more funds than owned"
     );
   });
 
-  it("gathers the minimum notes for amount < smallest note", async () => {
-    const [nocturneDB] = await setup(
+  it("gathers the minimum notes for amount < smallest note", () => {
+    const [state] = setup(
       [10000n, 1000n, 100n, 10n],
       range(4).map((_) => stablescam)
     );
     // expect to get one note - the 10 token note
-    const notes = await gatherNotes(nocturneDB, 5n, stablescam);
+    const notes = gatherNotes(state, 5n, stablescam);
     expect(notes).to.have.lengthOf(2);
     expect(notes[0].value).to.equal(10n);
     expect(notes[1].value).to.equal(100n);
   });
 
   it("gathers the minimum amount of notes for amount requiring all notes", async () => {
-    const [nocturneDB] = await setup(
+    const [state] = setup(
       [30n, 20n, 10n],
       range(3).map((_) => stablescam)
     );
 
     // attempt to request 55 tokens
     // expect to get all three notes
-    const notes = await gatherNotes(nocturneDB, 55n, stablescam);
+    const notes = gatherNotes(state, 55n, stablescam);
     expect(notes).to.have.lengthOf(3);
 
     const sortedNotes = sortNotesByValue(notes);
@@ -81,7 +81,7 @@ describe("gatherNotes", () => {
   });
 
   it("gathers minimum amount of notes for a realistic-ish example", async () => {
-    const [nocturneDB] = await setup(
+    const [state] = setup(
       [1000n, 51n, 19n, 3n, 3n, 2n, 1n, 1n, 1n],
       range(9).map((_) => stablescam)
     );
@@ -90,8 +90,7 @@ describe("gatherNotes", () => {
     // expect to get 4 notes - 19, 2, 1, 1
     // in principle, we could get away with 3 notes - 19, 3, 1. But we also want to
     // utilize small notes. this is what we'd expect to get from the algorithm
-    //@ts-ignore
-    const notes = await gatherNotes(nocturneDB, 23n, stablescam);
+    const notes = gatherNotes(state, 23n, stablescam);
     expect(notes).to.have.lengthOf(4);
 
     const sortedNotes = sortNotesByValue(notes);
@@ -106,7 +105,7 @@ describe("gatherNotes", () => {
 
   it("ignores uncommitted notes", async () => {
     // insert 4 notes, but the last one is uncommitted
-    const [nocturneDB] = await setup(
+    const [state] = setup(
       [5n, 15n, 10n, 30n],
       range(4).map((_) => stablescam),
       {
@@ -117,7 +116,7 @@ describe("gatherNotes", () => {
     // get notes for 30 tokens
     // we should not get the 30 token note, since it is uncommitted
     // instead, we should get the other three notes
-    const notes = await gatherNotes(nocturneDB, 30n, stablescam);
+    const notes = gatherNotes(state, 30n, stablescam);
     expect(notes).to.have.lengthOf(3);
 
     const sortedNotes = sortNotesByValue(notes);
@@ -128,7 +127,7 @@ describe("gatherNotes", () => {
 
   it("ignores uncommitted notes when packing to an even number", async () => {
     // insert 5 notes, but the last one is uncommitted
-    const [nocturneDB] = await setup(
+    const [state] = setup(
       [5n, 15n, 10n, 20n, 30n],
       range(5).map((_) => stablescam),
       {
@@ -141,7 +140,7 @@ describe("gatherNotes", () => {
     // instead, we should get the other three notes
     // in this case, we have not used all the notes but we are going to sweep the smallest unused note
     // in with the rest of the transaction to pad it out and collect dust
-    const notes = await gatherNotes(nocturneDB, 30n, stablescam);
+    const notes = gatherNotes(state, 30n, stablescam);
     expect(notes).to.have.lengthOf(4);
 
     const sortedNotes = sortNotesByValue(notes);
@@ -152,31 +151,25 @@ describe("gatherNotes", () => {
   });
 
   it("ignores notes with optimistic NF records", async () => {
-    const [nocturneDB] = await setup(
+    const [state] = setup(
       [30n, 15n, 10n, 10n],
       range(4).map((_) => stablescam)
     );
 
     // add optimistic NF records for the 30 token note at merkleIndex 0
-    await nocturneDB.kv.putMany([
-      //@ts-ignore
-      NocturneDB.makeOptimisticNFRecordKV(0, {
-        nullifier: 420n,
-        expirationDate: Date.now() + 1_000_000,
-      }),
-    ]);
+    state.__optimisticNfs.set(0, Date.now() + 1_000_000);
 
     // gather notes to spend 30 tokens total
     // we should not get the 30 token note, since it has an optimistic NF record
     // instead, we should get the other three notes
-    const notes = await gatherNotes(nocturneDB, 30n, stablescam);
+    const notes = gatherNotes(state, 30n, stablescam);
     expect(notes).to.have.lengthOf(3);
   });
 });
 
 describe("prepareOperation", async () => {
   it("works for an operation request with 1 action, 1 unrwap, 0 payments, no params set", async () => {
-    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+    const [state, merkleProver, signer, handlerContract] = setup(
       [100n, 10n],
       [shitcoin, shitcoin]
     );
@@ -186,7 +179,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      db: nocturneDB,
+      state
     };
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
@@ -206,7 +199,7 @@ describe("prepareOperation", async () => {
       opRequest.request,
       gasMultiplier
     );
-    const op = await prepareOperation(deps, gasCompAccountedOpRequest);
+    const op = prepareOperation(deps, gasCompAccountedOpRequest);
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -227,7 +220,7 @@ describe("prepareOperation", async () => {
   });
 
   it("works for an operation request with 1 action, 1 unwrap, 1 payment, no params set", async () => {
-    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+    const [state, merkleProver, signer, handlerContract] = setup(
       [100n, 10n],
       [shitcoin, shitcoin]
     );
@@ -237,7 +230,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      db: nocturneDB,
+      state
     };
 
     const receiverRk = generateRandomSpendingKey();
@@ -262,7 +255,7 @@ describe("prepareOperation", async () => {
       opRequest.request,
       gasMultiplier
     );
-    const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
+    const op = prepareOperation(deps, gasCompAccountedOperationRequest);
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -283,7 +276,7 @@ describe("prepareOperation", async () => {
   });
 
   it("works for an operation request with 1 action, 1 unwrap, 0 payments, all params set", async () => {
-    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+    const [state, merkleProver, signer, handlerContract] = setup(
       [100n, 10n],
       [shitcoin, shitcoin]
     );
@@ -293,7 +286,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      db: nocturneDB,
+      state
     };
     const refundAddr = signer.generateRandomStealthAddress();
 
@@ -316,7 +309,7 @@ describe("prepareOperation", async () => {
       opRequest.request,
       gasMultiplier
     );
-    const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
+    const op = prepareOperation(deps, gasCompAccountedOperationRequest);
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -341,7 +334,7 @@ describe("prepareOperation", async () => {
   });
 
   it("works for an operation request with 0 actions, 0 unwraps, 2 payments, no params set", async () => {
-    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+    const [state, merkleProver, signer, handlerContract] = setup(
       [100n, 10n],
       [shitcoin, stablescam]
     );
@@ -351,7 +344,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      db: nocturneDB,
+      state
     };
 
     const receivers = range(2)
@@ -376,7 +369,7 @@ describe("prepareOperation", async () => {
       opRequest.request,
       gasMultiplier
     );
-    const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
+    const op = prepareOperation(deps, gasCompAccountedOperationRequest);
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -388,7 +381,7 @@ describe("prepareOperation", async () => {
   });
 
   it("works for an operation request with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", async () => {
-    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+    const [state, merkleProver, signer, handlerContract] = setup(
       [1000n, 1000n, 1000n, 1n, 1000n],
       [shitcoin, ponzi, stablescam, monkey, plutocracy]
     );
@@ -398,7 +391,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      db: nocturneDB,
+      state
     };
 
     const receivers = range(3)
@@ -436,7 +429,7 @@ describe("prepareOperation", async () => {
       opRequest.request,
       gasMultiplier
     );
-    const op = await prepareOperation(deps, gasCompAccountedOpRequest);
+    const op = prepareOperation(deps, gasCompAccountedOpRequest);
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -475,7 +468,7 @@ describe("prepareOperation", async () => {
   });
 
   it("sorts joinsplits contiguously by asset", async () => {
-    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+    const [state, merkleProver, signer, handlerContract] = setup(
       [1000n, 1000n, 1000n, 1000n, 1000n, 1000n, 1000n, 1000n],
       [shitcoin, ponzi, shitcoin, shitcoin, shitcoin, ponzi, ponzi, ponzi]
     );
@@ -485,7 +478,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      db: nocturneDB,
+      state
     };
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
@@ -505,7 +498,7 @@ describe("prepareOperation", async () => {
       opRequest.request,
       gasMultiplier
     );
-    const op = await prepareOperation(deps, gasCompAccountedOpRequest);
+    const op = prepareOperation(deps, gasCompAccountedOpRequest);
 
     expect(op.joinSplits.length).to.equal(4);
     expect(AssetTrait.decode(op.joinSplits[0].encodedAsset)).to.eql(shitcoin);
@@ -515,7 +508,7 @@ describe("prepareOperation", async () => {
   });
 
   it("handles multiple joinSplit requests for the same asset", async () => {
-    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+    const [state, merkleProver, signer, handlerContract] = setup(
       [1000n, 2000n, 1000n, 2000n],
       [shitcoin, shitcoin, shitcoin, shitcoin]
     );
@@ -525,7 +518,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      db: nocturneDB,
+      state
     };
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
@@ -550,7 +543,7 @@ describe("prepareOperation", async () => {
       opRequest.request,
       gasMultiplier
     );
-    const op = await prepareOperation(deps, gasCompAccountedOpRequest);
+    const op = prepareOperation(deps, gasCompAccountedOpRequest);
 
     expect(op.joinSplits.length).to.equal(2);
     expect(op.joinSplits[0].publicSpend).to.eql(1000n);

@@ -21,9 +21,11 @@ import { ethers } from "ethers";
 
 describe("OpRequestBuilder", () => {
   let provider: ethers.providers.JsonRpcProvider;
+
   beforeEach(() => {
     provider = ethers.getDefaultProvider() as ethers.providers.JsonRpcProvider;
   });
+
   it("builds OperationRequest with 1 action, 1 unwrap, 0 payments, no params set", async () => {
     const expected: OperationRequest = {
       joinSplitRequests: [

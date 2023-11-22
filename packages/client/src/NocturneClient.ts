@@ -239,7 +239,7 @@ export class NocturneClient {
   }
 }
 
-function getTotalEntityIndexOfNewestNoteInOp(
+export function getTotalEntityIndexOfNewestNoteInOp(
   state: NocturneClientState,
   op: PreSignOperation | SignedOperation
 ): TotalEntityIndex {

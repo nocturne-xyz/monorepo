@@ -19,9 +19,9 @@ import {
   iterChunks,
   MerkleProofInput,
 } from "@nocturne-xyz/core";
-import { NocturneDB } from "../src";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
+import { NocturneClientState } from "../src/NocturneClientState";
 export const DUMMY_CONFIG = loadNocturneConfigBuiltin("example-network");
 
 export const DUMMY_ROOT_KEY = Uint8Array.from(range(32));
@@ -110,15 +110,15 @@ export interface TestSetupOpts {
   totalEntityIndices?: bigint[];
 }
 
-export async function setup(
+export function setup(
   noteAmounts: bigint[],
   assets: Asset[],
   opts?: TestSetupOpts
-): Promise<[NocturneDB, SparseMerkleProver, NocturneSigner, Handler]> {
+): [NocturneClientState, SparseMerkleProver, NocturneSigner, Handler] {
   const signer = new NocturneSigner(Uint8Array.from(DUMMY_ROOT_KEY));
 
   const kv = new InMemoryKVStore();
-  const nocturneDB = new NocturneDB(kv);
+  const state = new NocturneClientState(kv);
   const merkleProver = new SparseMerkleProver();
 
   const notes: IncludedNote[] = zip(noteAmounts, assets).map(
@@ -150,10 +150,13 @@ export async function setup(
     }));
   }
 
-  await nocturneDB.storeNotes(withTotalEntityIndices);
-  await nocturneDB.setlatestCommittedMerkleIndex(
-    opts?.latestCommittedMerkleIndex ?? notes.length - 1
-  );
+  state.applyStateDiff({
+    notesAndCommitments: withTotalEntityIndices,
+    nullifiers: [],
+    totalEntityIndex: notes.length > 0 ? withTotalEntityIndices[withTotalEntityIndices.length - 1].totalEntityIndex : 0n,
+    latestCommittedMerkleIndex: notes.length - 1,
+    latestNewlySyncedMerkleIndex: notes.length - 1,
+  });
 
   const leaves = notes.map((note) => NoteTrait.toCommitment(note));
   merkleProver.insertBatch(
@@ -166,7 +169,7 @@ export async function setup(
   const provider = getDefaultProvider();
   const handler = Handler__factory.connect(dummyHandlerAddr, provider);
 
-  return [nocturneDB, merkleProver, signer, handler];
+  return [state, merkleProver, signer, handler];
 }
 
 export type DummyNotesAndNfsOptions = {
