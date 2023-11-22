@@ -179,7 +179,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
@@ -230,7 +230,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
 
     const receiverRk = generateRandomSpendingKey();
@@ -286,7 +286,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
     const refundAddr = signer.generateRandomStealthAddress();
 
@@ -344,7 +344,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
 
     const receivers = range(2)
@@ -391,7 +391,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
 
     const receivers = range(3)
@@ -478,7 +478,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
@@ -518,7 +518,7 @@ describe("prepareOperation", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);

@@ -58,10 +58,7 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
     const op = prepareOperation(deps, gasAccountedOpRequest);
 
     // get totalEntityIndex of the newest note in the op
-    const totalEntityindex = getTotalEntityIndexOfNewestNoteInOp(
-      state,
-      op
-    );
+    const totalEntityindex = getTotalEntityIndexOfNewestNoteInOp(state, op);
 
     // we expect it to be 4000, the totalEntityIndex of the to 1000 token note which we expect should be the
     // newest note in the op due to even number padding.

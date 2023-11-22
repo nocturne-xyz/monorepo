@@ -35,9 +35,7 @@ export async function syncSDK(
   merkle: SparseMerkleProver,
   opts?: SyncOpts
 ): Promise<number | undefined> {
-  const startTotalEntityIndex = state.currentTei 
-    ? state.currentTei + 1n
-    : 0n;
+  const startTotalEntityIndex = state.currentTei ? state.currentTei + 1n : 0n;
 
   const currentBlock = await adapter.getLatestIndexedBlock();
   const endTotalEntityIndex = TotalEntityIndexTrait.fromBlockNumber(

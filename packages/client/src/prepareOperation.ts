@@ -155,9 +155,9 @@ export function gatherNotes(
   console.log("indices to ignore", noteMerkleIndicesToIgnore);
 
   // check that the user has enough notes to cover the request
-  const notes = state.getNotesForAsset(asset.assetAddr).filter(
-    (n) => !noteMerkleIndicesToIgnore.has(n.merkleIndex)
-  );
+  const notes = state
+    .getNotesForAsset(asset.assetAddr)
+    .filter((n) => !noteMerkleIndicesToIgnore.has(n.merkleIndex));
   const balance = notes.reduce((acc, note) => acc + note.value, 0n);
   if (balance < requestedAmount) {
     // TODO: have a better way to handle following edge case:

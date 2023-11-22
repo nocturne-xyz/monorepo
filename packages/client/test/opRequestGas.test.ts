@@ -50,7 +50,7 @@ describe("handleGasForOperationRequest", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
@@ -86,7 +86,7 @@ describe("handleGasForOperationRequest", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
@@ -129,7 +129,7 @@ describe("handleGasForOperationRequest", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
@@ -181,7 +181,7 @@ describe("handleGasForOperationRequest", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
@@ -266,7 +266,7 @@ describe("handleGasForOperationRequest", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
@@ -318,7 +318,7 @@ describe("handleGasForOperationRequest", async () => {
       viewer: signer,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
-      state
+      state,
     };
 
     const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);

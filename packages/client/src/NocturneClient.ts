@@ -154,7 +154,7 @@ export class NocturneClient {
   }
 
   get latestSyncedMerkleIndex(): number | undefined {
-    return this.state.latestSyncedMerkleIndex
+    return this.state.latestSyncedMerkleIndex;
   }
 
   get latestCommittedMerkleIndex(): number | undefined {
@@ -162,12 +162,10 @@ export class NocturneClient {
   }
 
   get merkleRoot(): bigint {
-    return this.state.merkleRoot
+    return this.state.merkleRoot;
   }
 
-  hasEnoughBalanceForOperationRequest(
-    opRequest: OperationRequest
-  ): boolean {
+  hasEnoughBalanceForOperationRequest(opRequest: OperationRequest): boolean {
     const assetRequestedAmounts = new MapWithObjectKeys<Asset, bigint>();
     for (const joinSplitRequest of opRequest.joinSplitRequests) {
       const asset = joinSplitRequest.asset;
@@ -221,16 +219,11 @@ export class NocturneClient {
     return this.state.previousOps;
   }
 
-  getOpHistoryRecord(
-    digest: bigint
-  ): OpHistoryRecord | undefined {
+  getOpHistoryRecord(digest: bigint): OpHistoryRecord | undefined {
     return this.state.getOpHistoryRecord(digest);
   }
 
-  setOpStatusInHistory(
-    digest: bigint,
-    status: OperationStatus
-  ): void {
+  setOpStatusInHistory(digest: bigint, status: OperationStatus): void {
     this.state.setStatusForOp(digest, status);
   }
 
@@ -249,9 +242,7 @@ export function getTotalEntityIndexOfNewestNoteInOp(
   );
 
   // get the corresponding TotalEntityIndex
-  const totalEntityIndex = state.getTeiForMerkleIndex(
-    Number(maxMerkleIndex)
-  );
+  const totalEntityIndex = state.getTeiForMerkleIndex(Number(maxMerkleIndex));
 
   if (totalEntityIndex === undefined) {
     throw new Error(

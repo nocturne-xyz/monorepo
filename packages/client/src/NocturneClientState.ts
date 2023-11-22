@@ -455,7 +455,6 @@ export class NocturneClientState {
     }
   }
 
-
   // *** SNAPSHOT METHODS ***
 
   static async load(

@@ -153,7 +153,11 @@ export function setup(
   state.applyStateDiff({
     notesAndCommitments: withTotalEntityIndices,
     nullifiers: [],
-    totalEntityIndex: notes.length > 0 ? withTotalEntityIndices[withTotalEntityIndices.length - 1].totalEntityIndex : 0n,
+    totalEntityIndex:
+      notes.length > 0
+        ? withTotalEntityIndices[withTotalEntityIndices.length - 1]
+            .totalEntityIndex
+        : 0n,
     latestCommittedMerkleIndex: notes.length - 1,
     latestNewlySyncedMerkleIndex: notes.length - 1,
   });
