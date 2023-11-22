@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.9
+
+### Patch Changes
+
+- Updated dependencies [8b9d9030]
+  - @nocturne-xyz/core@3.3.0
+  - @nocturne-xyz/client@4.0.2
+  - @nocturne-xyz/local-prover@0.6.4
+  - @nocturne-xyz/op-request-plugins@2.1.16
+  - @nocturne-xyz/hasura-sync-adapters@0.3.6
+  - @nocturne-xyz/offchain-utils@0.6.5
+
 ## 0.7.8
 
 ### Patch Changes

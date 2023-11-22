@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.13.3
+
+### Patch Changes
+
+- Updated dependencies [8b9d9030]
+  - @nocturne-xyz/core@3.3.0
+  - @nocturne-xyz/subgraph-sync-adapters@0.5.3
+  - @nocturne-xyz/offchain-utils@0.6.5
+
 ## 0.13.2
 
 ### Patch Changes

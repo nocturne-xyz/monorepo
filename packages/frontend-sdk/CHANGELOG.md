@@ -1,5 +1,17 @@
 # Changelog
 
+## 7.1.3
+
+### Patch Changes
+
+- Updated dependencies [8b9d9030]
+  - @nocturne-xyz/core@3.3.0
+  - @nocturne-xyz/client@4.0.2
+  - @nocturne-xyz/idb-kv-store@0.4.14
+  - @nocturne-xyz/local-prover@0.6.4
+  - @nocturne-xyz/op-request-plugins@2.1.16
+  - @nocturne-xyz/subgraph-sync-adapters@0.5.3
+
 ## 7.1.2
 
 ### Patch Changes

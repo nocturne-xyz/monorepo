@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies [8b9d9030]
+  - @nocturne-xyz/core@3.3.0
+  - @nocturne-xyz/offchain-utils@0.6.5
+
 ## 0.4.2
 
 ### Patch Changes
