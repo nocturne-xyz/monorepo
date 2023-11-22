@@ -348,7 +348,7 @@ async function getOperationRequestTrace(
   };
 
   // prepare the request into an operation using a dummy viewer
-  const preparedOp = await prepareOperation(
+  const preparedOp = prepareOperation(
     { viewer: DUMMY_VIEWER, ...deps },
     dummyOpRequest
   );

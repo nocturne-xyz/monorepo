@@ -1,4 +1,3 @@
-import { NocturneDB } from "./NocturneDB";
 import {
   JoinSplitRequest,
   GasAccountedOperationRequest,
@@ -35,15 +34,15 @@ export const __private = {
 };
 
 export interface PrepareOperationDeps {
-  db: NocturneDB;
+  state: NocturneClientState;
   viewer: NocturneViewer;
   merkle: SparseMerkleProver;
 }
 
-export async function prepareOperation(
+export function prepareOperation(
   deps: PrepareOperationDeps,
   opRequest: GasAccountedOperationRequest
-): Promise<PreSignOperation> {
+): PreSignOperation {
   const { refunds, joinSplitRequests, chainId, tellerContract, deadline } =
     opRequest;
   const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
@@ -58,7 +57,7 @@ export async function prepareOperation(
   const usedMerkleIndices = new Set<number>();
   for (const joinSplitRequest of joinSplitRequests) {
     console.log("preparing joinSplits for request: ", joinSplitRequest);
-    const newJoinSplits = await prepareJoinSplits(
+    const newJoinSplits = prepareJoinSplits(
       deps,
       joinSplitRequest,
       refundAddr,
@@ -101,14 +100,14 @@ export async function prepareOperation(
   return op;
 }
 
-async function prepareJoinSplits(
-  { db, viewer, merkle }: PrepareOperationDeps,
+function prepareJoinSplits(
+  { state, viewer, merkle }: PrepareOperationDeps,
   joinSplitRequest: JoinSplitRequest,
   refundAddr: CompressedStealthAddress,
   alreadyUsedNoteMerkleIndices: Set<number> = new Set()
-): Promise<PreSignJoinSplit[]> {
-  const notes = await gatherNotes(
-    db,
+): PreSignJoinSplit[] {
+  const notes = gatherNotes(
+    state,
     getJoinSplitRequestTotalValue(joinSplitRequest),
     joinSplitRequest.asset,
     alreadyUsedNoteMerkleIndices
@@ -231,7 +230,7 @@ export function gatherNotes(
   return notesToUse;
 }
 
-async function getJoinSplitsFromNotes(
+function getJoinSplitsFromNotes(
   viewer: NocturneViewer,
   merkle: SparseMerkleProver,
   notes: IncludedNote[],
@@ -239,7 +238,7 @@ async function getJoinSplitsFromNotes(
   amountLeftOver: bigint,
   refundAddr: CompressedStealthAddress,
   receiver?: CanonAddress
-): Promise<PreSignJoinSplit[]> {
+): PreSignJoinSplit[] {
   // add a dummy note if there are an odd number of notes.
   if (notes.length % 2 == 1) {
     const newAddr = viewer.generateRandomStealthAddress();
@@ -266,7 +265,7 @@ async function getJoinSplitsFromNotes(
     const paymentAmount = min(remainingPairValue, remainingPayment);
     remainingPayment -= paymentAmount;
 
-    const joinSplit = await makeJoinSplit(
+    const joinSplit = makeJoinSplit(
       viewer,
       merkle,
       noteA,
@@ -283,7 +282,7 @@ async function getJoinSplitsFromNotes(
   return res;
 }
 
-async function makeJoinSplit(
+function makeJoinSplit(
   viewer: NocturneViewer,
   merkle: SparseMerkleProver,
   oldNoteA: IncludedNote,
@@ -292,7 +291,7 @@ async function makeJoinSplit(
   amountToReturn: bigint,
   refundAddr: CompressedStealthAddress,
   receiver?: CanonAddress
-): Promise<PreSignJoinSplit> {
+): PreSignJoinSplit {
   const sender = viewer.canonicalAddress();
   // if receiver not given, assumme the sender is the receiver
   receiver = receiver ?? sender;
