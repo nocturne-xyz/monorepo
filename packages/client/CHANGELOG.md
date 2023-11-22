@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.0.1
+
+### Patch Changes
+
+- b321b41b: - reduce optimistic NF TTL to 90 seconds
+  - prune stale optimistic NFs every 90 seconds
+
 ## 4.0.0
 
 ### Major Changes

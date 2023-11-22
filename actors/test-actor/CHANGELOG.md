@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.8
+
+### Patch Changes
+
+- Updated dependencies [b321b41b]
+- Updated dependencies [5a3afc72]
+  - @nocturne-xyz/client@4.0.1
+  - @nocturne-xyz/offchain-utils@0.6.4
+  - @nocturne-xyz/op-request-plugins@2.1.15
+
 ## 0.7.7
 
 ### Patch Changes

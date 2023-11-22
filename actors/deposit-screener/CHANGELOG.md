@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.13.2
+
+### Patch Changes
+
+- 5a3afc72: fix trm tx monitor command to only handle transfers where tx.from matches --from-address
+- 5a3afc72: trm tx monitor uses rand uuid to avoid clashes of transfers within the same transaction
+- Updated dependencies [5a3afc72]
+  - @nocturne-xyz/offchain-utils@0.6.4
+
 ## 0.13.1
 
 ### Patch Changes
