@@ -13,4 +13,4 @@ export function chainIdToNetworkName(chainId: bigint): string {
   }
 }
 
-export const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000; // 10 minutes
+export const OPTIMISTIC_RECORD_TTL: number = 90 * 1000; // 90 seconds

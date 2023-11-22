@@ -477,22 +477,39 @@ export class NocturneSdk {
         const submittable = await this.proveOperation(signed);
 
         await client.addOpToHistory(_op, metadata);
-        const handle = await this.submitOperation(submittable.op);
-        return {
-          ...handle,
-          metadata,
-        };
+        try {
+          const handle = await this.submitOperation(submittable.op);
+          return {
+            ...handle,
+            metadata,
+          };
+        } catch (err) {
+          // ? separate status for submission failure?
+          const digest = OperationTrait.computeDigest(_op);
+          await client.removeOpFromHistory(digest);
+
+          throw err;
+        }
       }
       case "Signed": {
         const _op = op as SignedOperation;
 
         const submittable = await this.proveOperation({ op: _op, metadata });
         await client.addOpToHistory(_op, metadata);
-        const handle = await this.submitOperation(submittable.op);
-        return {
-          ...handle,
-          metadata,
-        };
+
+        try {
+          const handle = await this.submitOperation(submittable.op);
+          return {
+            ...handle,
+            metadata,
+          };
+        } catch (err) {
+          // ? separate status for submission failure?
+          const digest = OperationTrait.computeDigest(_op);
+          await client.removeOpFromHistory(digest);
+
+          throw err;
+        }
       }
       case "Submittable": {
         const _op = op as SubmittableOperationWithNetworkInfo;

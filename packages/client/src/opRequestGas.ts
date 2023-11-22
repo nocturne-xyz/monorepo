@@ -173,6 +173,10 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
     ([_, gasAsset]) => joinSplitRequestsByAsset.has(gasAsset.assetAddr)
   );
 
+  const failedGasEstimates = [];
+  const failedGasAssets = [];
+  const failedGasAssetBalances = [];
+
   // attempt to find matching gas asset with enough balance
   for (const [ticker, gasAsset] of matchingGasAssets) {
     const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
@@ -230,6 +234,9 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
 
         if (totalOwnedGasAsset < estimateInGasAssetIncludingNewJoinSplits) {
           // Don't have enough for new joinsplits gas overhead, try new asset
+          failedGasAssets.push(gasAsset);
+          failedGasEstimates.push(estimateInGasAssetIncludingNewJoinSplits);
+          failedGasAssetBalances.push(totalOwnedGasAsset);
           continue;
         }
       } else {
@@ -259,10 +266,6 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
       ];
     }
   }
-
-  const failedGasEstimates = [];
-  const failedGasAssets = [];
-  const failedGasAssetBalances = [];
 
   // if we couldn't find an existing joinsplit request with a supported gas asset,
   // attempt to make a new joinsplit request to include the gas comp
