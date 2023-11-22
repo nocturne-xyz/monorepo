@@ -120,7 +120,7 @@ export class NocturneClient {
     opRequest = await ensureOpRequestChainInfo(opRequest, this.provider);
 
     const deps = {
-      db: this.state,
+      state: this.state,
       gasAssets: this.gasAssets,
       tokenConverter: this.tokenConverter,
       handlerContract: this.handlerContract,
@@ -133,7 +133,7 @@ export class NocturneClient {
       gasMultiplier
     );
 
-    return await prepareOperation(deps, gasAccountedOpRequest);
+    return prepareOperation(deps, gasAccountedOpRequest);
   }
 
   getAllAssetBalances(opts?: GetNotesOpts): AssetWithBalance[] {
@@ -150,7 +150,7 @@ export class NocturneClient {
   }
 
   getBalanceForAsset(asset: Asset, opts?: GetNotesOpts): bigint {
-    return this.state.getBalanceForAsset(asset, opts);
+    return this.state.getBalanceForAsset(asset.assetAddr, opts);
   }
 
   get latestSyncedMerkleIndex(): number | undefined {
