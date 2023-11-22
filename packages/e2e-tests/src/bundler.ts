@@ -49,6 +49,7 @@ function startBundlerSubmitter(
   const logger = makeTestLogger("bundler", "submitter");
   const submitter = new BundlerSubmitter(
     config.tellerAddress,
+    config.handlerAddress,
     provider,
     txSubmitter,
     redis,

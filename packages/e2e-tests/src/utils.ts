@@ -144,6 +144,7 @@ export async function submitAndProcessOperation(
         status === OperationStatus.EXECUTED_SUCCESS ||
         status === OperationStatus.OPERATION_PROCESSING_FAILED ||
         status === OperationStatus.OPERATION_EXECUTION_FAILED ||
+        status === OperationStatus.OPERATION_VALIDATION_FAILED ||
         status === OperationStatus.BUNDLE_REVERTED
       ) {
         return status;

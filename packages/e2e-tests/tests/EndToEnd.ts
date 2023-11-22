@@ -22,9 +22,14 @@ import {
   JoinSplitProver,
   NocturneSigner,
   OperationStatus,
+  SubmittableOperationWithNetworkInfo,
   queryEvents,
+  sleep,
 } from "@nocturne-xyz/core";
-import { EthTransferAdapterPlugin } from "@nocturne-xyz/op-request-plugins";
+import {
+  Erc20Plugin,
+  EthTransferAdapterPlugin,
+} from "@nocturne-xyz/op-request-plugins";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ethers } from "ethers";
@@ -54,7 +59,9 @@ type BundlerSubmissionResult =
   | BundlerSubmissionError;
 
 interface TestE2EParams {
-  opRequestWithMetadata: OperationRequestWithMetadata;
+  opOrOpRequest:
+    | OperationRequestWithMetadata
+    | SubmittableOperationWithNetworkInfo;
   expectedResult: BundlerSubmissionResult;
   contractChecks?: () => Promise<void>;
   offchainChecks?: () => Promise<void>;
@@ -132,34 +139,38 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
   });
 
   async function testE2E({
-    opRequestWithMetadata,
+    opOrOpRequest,
     contractChecks,
     offchainChecks,
     expectedResult,
   }: TestE2EParams): Promise<void> {
-    console.log("alice: Sync SDK");
-    await nocturneClientAlice.sync();
+    let operation: SubmittableOperationWithNetworkInfo;
+    if ("request" in opOrOpRequest) {
+      console.log("alice: Sync SDK");
+      await nocturneClientAlice.sync();
 
-    console.log("bob: Sync SDK");
-    await nocturneClientBob.sync();
+      console.log("bob: Sync SDK");
+      await nocturneClientBob.sync();
 
-    const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
-    console.log("alice pre-op notes:", preOpNotesAlice);
-    console.log(
-      "alice pre-op latestCommittedMerkleIndex",
-      await nocturneDBAlice.latestCommittedMerkleIndex()
-    );
+      const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
+      console.log("alice pre-op notes:", preOpNotesAlice);
+      console.log(
+        "alice pre-op latestCommittedMerkleIndex",
+        await nocturneDBAlice.latestCommittedMerkleIndex()
+      );
 
-    console.log("prepare, sign, and prove operation with NocturneClient");
-    const preSign = await nocturneClientAlice.prepareOperation(
-      opRequestWithMetadata.request,
-      1
-    );
-    const signed = signOperation(nocturneSignerAlice, preSign);
-    const operation = await proveOperation(joinSplitProver, signed);
+      console.log("prepare, sign, and prove operation with NocturneClient");
+      const preSign = await nocturneClientAlice.prepareOperation(
+        opOrOpRequest.request,
+        1
+      );
+      const signed = signOperation(nocturneSignerAlice, preSign);
+      operation = await proveOperation(joinSplitProver, signed);
+    } else {
+      operation = opOrOpRequest;
+    }
 
     console.log("proven operation:", operation);
-
     if (expectedResult.type === "error") {
       try {
         await submitAndProcessOperation(operation);
@@ -213,7 +224,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     await expect(
       testE2E({
-        opRequestWithMetadata,
+        opOrOpRequest: opRequestWithMetadata,
         expectedResult: {
           type: "success",
           expectedBundlerStatus: OperationStatus.BUNDLE_REVERTED,
@@ -260,13 +271,74 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       .build();
 
     await testE2E({
-      opRequestWithMetadata,
+      opOrOpRequest: opRequestWithMetadata,
       expectedResult: {
         type: "error",
         errorMessageLike:
           "operation processing fails with: exceeded `executionGasLimit`",
       },
     });
+  });
+
+  it("bundler revalidates op and marks failed if fails", async () => {
+    console.log("deposit funds");
+    await depositFundsMultiToken(
+      depositManager,
+      [
+        [erc20, [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]],
+        [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
+      ],
+      aliceEoa,
+      nocturneClientAlice.viewer.generateRandomStealthAddress()
+    );
+    console.log("fill batch and wait for subtree update");
+    await fillSubtreeBatch();
+
+    console.log("alice: Sync SDK");
+    await nocturneClientAlice.sync();
+
+    // Make transfer op and sign/prove up front
+    const chainId = BigInt((await provider.getNetwork()).chainId);
+    const opRequestWithMetadata = await newOpRequestBuilder(
+      provider,
+      chainId,
+      config
+    )
+      .use(Erc20Plugin)
+      .__unwrap(erc20Asset, PER_NOTE_AMOUNT)
+      .gasPrice(GAS_PRICE)
+      .deadline(
+        BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
+      )
+      .erc20Transfer(erc20Asset.assetAddr, bobEoa.address, 100n)
+      .build();
+
+    console.log("prepare, sign, and prove operation with NocturneClient");
+    const preSign = await nocturneClientAlice.prepareOperation(
+      opRequestWithMetadata.request,
+      1
+    );
+    const signed = signOperation(nocturneSignerAlice, preSign);
+    const operation = await proveOperation(joinSplitProver, signed);
+
+    // Submit op to bundler without awaiting
+    const bundlerSubmitProm = testE2E({
+      opOrOpRequest: operation,
+      expectedResult: {
+        type: "success",
+        expectedBundlerStatus: OperationStatus.OPERATION_VALIDATION_FAILED,
+      },
+    });
+
+    // Immediately frontrun bundler submitter so op passes validation but fails revalidation
+    console.log("frontrunning bundler by directly submitting op");
+    await sleep(1_000);
+    await teller
+      .connect(aliceEoa)
+      .processBundle({ operations: [operation] }, { gasLimit: 2_000_000 });
+
+    // awaiting prom should pass if op status ends up being OPERATION_VALIDATION_FAILED
+    await bundlerSubmitProm;
   });
 
   it(`alice deposits four notes, public ERC20 transfers some to Bob, privately pays some to Bob`, async () => {
@@ -395,7 +467,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     };
 
     await testE2E({
-      opRequestWithMetadata,
+      opOrOpRequest: opRequestWithMetadata,
       contractChecks,
       offchainChecks,
       expectedResult: {
@@ -510,7 +582,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     };
 
     await testE2E({
-      opRequestWithMetadata,
+      opOrOpRequest: opRequestWithMetadata,
       contractChecks,
       offchainChecks,
       expectedResult: {
@@ -618,7 +690,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     };
 
     await testE2E({
-      opRequestWithMetadata,
+      opOrOpRequest: opRequestWithMetadata,
       contractChecks,
       offchainChecks,
       expectedResult: {
@@ -713,7 +785,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     };
 
     await testE2E({
-      opRequestWithMetadata,
+      opOrOpRequest: opRequestWithMetadata,
       contractChecks,
       offchainChecks,
       expectedResult: {
