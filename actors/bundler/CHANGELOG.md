@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @nocturne-xyz/client@4.0.0
+
 ## 0.10.6
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.0
+
+### Major Changes
+
+- Update snap method types: undefined -> null
+
 ## 3.4.3
 
 ### Patch Changes
