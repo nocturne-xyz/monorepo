@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.4
+
+### Patch Changes
+
+- 5a3afc72: fix bug where response.clone() was prematurely consuming response, ser then deser to deep copy
+
 ## 0.6.3
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # Changelog
 
+## 7.1.2
+
+### Patch Changes
+
+- b321b41b: remove op from history if submission fails
+- Updated dependencies [b321b41b]
+  - @nocturne-xyz/client@4.0.1
+  - @nocturne-xyz/op-request-plugins@2.1.15
+
 ## 7.1.1
 
 ### Patch Changes

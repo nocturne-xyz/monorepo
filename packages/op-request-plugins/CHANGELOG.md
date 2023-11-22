@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.15
+
+### Patch Changes
+
+- Updated dependencies [b321b41b]
+  - @nocturne-xyz/client@4.0.1
+
 ## 2.1.14
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @nocturne-xyz/insertion-writer
 
+## 0.5.14
+
+### Patch Changes
+
+- Updated dependencies [5a3afc72]
+  - @nocturne-xyz/offchain-utils@0.6.4
+
 ## 0.5.13
 
 ### Patch Changes
