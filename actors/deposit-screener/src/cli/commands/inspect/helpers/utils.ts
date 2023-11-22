@@ -16,6 +16,7 @@ import fs from "fs";
 import path from "path";
 import { EtherscanErc20Transfer, EtherscanInternalTx } from "./etherscan";
 import { TRMTransferRequest } from "./trm";
+import { randomUUID } from "crypto";
 
 export type OutputItem = {
   path: string;
@@ -59,7 +60,7 @@ export function etherscanErc20ToTrmTransferRequest(
       assetAmount: wholeTokensAmount.toString(),
       chain: "ethereum", // TODO: allow more chains
       destinationAddress: transfer.to,
-      externalId: transfer.hash,
+      externalId: randomUUID(),
       fiatCurrency: "USD",
       fiatValue: fiatValue.toString(), // Assuming fiatValue is not directly provided in Etherscan's response
       onchainReference: transfer.hash,

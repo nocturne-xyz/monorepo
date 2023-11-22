@@ -90,13 +90,11 @@ export async function cachedFetch(
   }
 
   // Cache response
-  await redis.setex(
-    cacheKey,
-    ttlSeconds,
-    await serializeResponse(response.clone())
-  );
+  const serializedResponse = await serializeResponse(response);
+  await redis.setex(cacheKey, ttlSeconds, serializedResponse);
 
-  return response.clone();
+  // Hack: create copy of response since we already consumed it via res.json() in serializeResponse
+  return deserializeToResponseString(serializedResponse);
 }
 
 export function formatCachedFetchCacheKey(

@@ -11,8 +11,8 @@ import {
   getLocalRedis,
 } from "./helpers/utils";
 import * as JSON from "bigint-json-serialization";
-import { submitTrmTransfer } from "./helpers/trm";
-import { getCoinMarketCapPriceConversion } from "./helpers";
+import { getCoinMarketCapPriceConversion, submitTrmTransfer } from "./helpers";
+import { ethers } from "ethers";
 
 /**
  * Example
@@ -71,13 +71,19 @@ async function main(options: any): Promise<void> {
   let erc20Outflows: EtherscanErc20Transfer[] = [];
   if (tokenAddress) {
     logger.info(`Checking outflows for token address: ${tokenAddress}`);
-    erc20Outflows = await getEtherscanErc20Transfers(
-      tokenAddress,
-      fromAddress,
-      startBlock,
-      endBlock,
-      redis
+    erc20Outflows = (
+      await getEtherscanErc20Transfers(
+        tokenAddress,
+        fromAddress,
+        startBlock,
+        endBlock,
+        redis
+      )
+    ).filter(
+      (tx) =>
+        ethers.utils.getAddress(tx.from) == ethers.utils.getAddress(fromAddress)
     );
+
     erc20Outflows.forEach((tx) => {
       logger.info(`ERC-20 outflow: ${JSON.stringify(tx)}`);
     });
@@ -126,6 +132,8 @@ async function main(options: any): Promise<void> {
       const res = await submitTrmTransfer(trmRequest, redis);
       logger.info(`TRM response: ${JSON.stringify(res)}`);
     }
+
+    logger.info(`Sent ${trmErc20Requests.length} ETH transfers to TRM`);
   }
 
   if (ethOutflows.length > 0) {
@@ -148,7 +156,11 @@ async function main(options: any): Promise<void> {
       const res = await submitTrmTransfer(trmRequest, redis);
       logger.info(`TRM response: ${JSON.stringify(res)}`);
     }
+
+    logger.info(`Sent ${trmEthRequests.length} ETH transfers to TRM`);
   }
+
+  logger.info("Done!");
 }
 
 export default runTrmTxMonitor;
