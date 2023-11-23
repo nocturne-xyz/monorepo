@@ -47,7 +47,7 @@ async function fetchDepositors(
     }
   );
 
-  let depositors: Address[] = [];
+  const depositors: Address[] = [];
   for await (const batch of depositEvents.iter) {
     console.log(`Got batch of ${batch.depositEvents.length} events`);
     const batchOfDepositors = batch.depositEvents.map((event) => event.spender);

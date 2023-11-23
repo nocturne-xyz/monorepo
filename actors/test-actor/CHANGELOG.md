@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.10
+
+### Patch Changes
+
+- Updated dependencies [08e6d2e0]
+  - @nocturne-xyz/client@4.0.3
+  - @nocturne-xyz/op-request-plugins@2.1.17
+
 ## 0.7.9
 
 ### Patch Changes

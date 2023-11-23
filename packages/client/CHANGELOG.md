@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.3
+
+### Patch Changes
+
+- 08e6d2e0: fix another gas edgeccase in tryUpdateJoinSplitRequestsForGasEstimate
+
 ## 4.0.2
 
 ### Patch Changes

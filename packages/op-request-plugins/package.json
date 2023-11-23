@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/op-request-plugins",
-  "version": "2.1.16",
+  "version": "2.1.17",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

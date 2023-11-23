@@ -6,22 +6,12 @@ import {
 } from "@nocturne-xyz/contracts";
 import {
   Address,
-  OperationTrait,
   OperationStatus,
+  OperationTrait,
   SubmittableOperationWithNetworkInfo,
   maxGasForOperation,
+  parseEventsFromTransactionReceipt,
 } from "@nocturne-xyz/core";
-import { Job, Worker } from "bullmq";
-import IORedis from "ioredis";
-import { ethers } from "ethers";
-import {
-  ACTOR_NAME,
-  OPERATION_BATCH_QUEUE,
-  OperationBatchJobData,
-} from "./types";
-import { NullifierDB, RedisTransaction, StatusDB } from "./db";
-import * as JSON from "bigint-json-serialization";
-import { Logger } from "winston";
 import {
   ActorHandle,
   TxHash,
@@ -31,9 +21,19 @@ import {
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import retry from "async-retry";
-import { parseEventsFromTransactionReceipt } from "@nocturne-xyz/core";
+import * as JSON from "bigint-json-serialization";
+import { Job, Worker } from "bullmq";
+import { ethers } from "ethers";
 import { LogDescription } from "ethers/lib/utils";
+import IORedis from "ioredis";
+import { Logger } from "winston";
+import { NullifierDB, RedisTransaction, StatusDB } from "./db";
 import { checkRevertError } from "./opValidation";
+import {
+  ACTOR_NAME,
+  OPERATION_BATCH_QUEUE,
+  OperationBatchJobData,
+} from "./types";
 
 const COMPONENT_NAME = "submitter";
 
@@ -126,7 +126,7 @@ export class BundlerSubmitter {
 
         // re-validate ops just before submission and remove any that now revert (marking them as
         // failing validation)
-        let validOps: SubmittableOperationWithNetworkInfo[] = [];
+        const validOps: SubmittableOperationWithNetworkInfo[] = [];
         for (let i = 0; i < operations.length; i++) {
           const maybeErr = await checkRevertError(
             this.tellerContract.address,
@@ -142,7 +142,7 @@ export class BundlerSubmitter {
               `op failed. removing from batch. digest: ${opDigests[i]}`,
               { err: maybeErr }
             );
-            this.statusDB.setJobStatus(
+            void this.statusDB.setJobStatus(
               opDigests[i],
               OperationStatus.OPERATION_VALIDATION_FAILED
             );
