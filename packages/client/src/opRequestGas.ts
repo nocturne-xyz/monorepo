@@ -264,6 +264,10 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
         Array.from(joinSplitRequestsByAsset.values()).flat(),
         { asset: gasAsset, ticker },
       ];
+    } else {
+      failedGasAssets.push(gasAsset);
+      failedGasEstimates.push(estimateInGasAsset);
+      failedGasAssetBalances.push(totalOwnedGasAsset);
     }
   }
 
