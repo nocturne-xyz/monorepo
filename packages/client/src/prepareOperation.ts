@@ -36,7 +36,6 @@ export const __private = {
 export interface PrepareOperationDeps {
   state: NocturneClientState;
   viewer: NocturneViewer;
-  merkle: SparseMerkleProver;
 }
 
 export function prepareOperation(
@@ -101,7 +100,7 @@ export function prepareOperation(
 }
 
 function prepareJoinSplits(
-  { state, viewer, merkle }: PrepareOperationDeps,
+  { state, viewer }: PrepareOperationDeps,
   joinSplitRequest: JoinSplitRequest,
   refundAddr: CompressedStealthAddress,
   alreadyUsedNoteMerkleIndices: Set<number> = new Set()
@@ -124,7 +123,7 @@ function prepareJoinSplits(
   console.log(`getting joinsplits from notes. Num notes: ${notes.length}`);
   return getJoinSplitsFromNotes(
     viewer,
-    merkle,
+    state.merkle,
     notes,
     paymentAmount,
     amountToReturn,

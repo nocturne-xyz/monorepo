@@ -52,7 +52,6 @@ export class NocturneClient {
     viewer: NocturneViewer,
     provider: ethers.providers.Provider,
     configOrNetworkName: NocturneConfig | string,
-    merkleProver: SparseMerkleProver,
     state: NocturneClientState,
     syncAdapter: SDKSyncAdapter,
     tokenConverter: EthToTokenConverter,
@@ -80,7 +79,6 @@ export class NocturneClient {
       this.config.handlerAddress,
       provider
     );
-    this.merkleProver = merkleProver;
     this.state = state;
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
@@ -100,7 +98,6 @@ export class NocturneClient {
       { viewer: this.viewer },
       this.syncAdapter,
       this.state,
-      this.merkleProver,
       opts
         ? {
             ...opts,
@@ -123,7 +120,6 @@ export class NocturneClient {
       gasAssets: this.gasAssets,
       tokenConverter: this.tokenConverter,
       handlerContract: this.handlerContract,
-      merkle: this.merkleProver,
       viewer: this.viewer,
     };
     const gasAccountedOpRequest = await handleGasForOperationRequest(

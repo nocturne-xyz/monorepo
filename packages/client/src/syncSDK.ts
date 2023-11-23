@@ -32,7 +32,6 @@ export async function syncSDK(
   { viewer }: SyncDeps,
   adapter: SDKSyncAdapter,
   state: NocturneClientState,
-  merkle: SparseMerkleProver,
   opts?: SyncOpts
 ): Promise<number | undefined> {
   const startTotalEntityIndex = state.currentTei ? state.currentTei + 1n : 0n;
@@ -95,7 +94,7 @@ export async function syncSDK(
     if (diff.latestCommittedMerkleIndex) {
       const [_, time] = timed(() =>
         updateMerkle(
-          merkle,
+          state.merkle,
           diff.latestCommittedMerkleIndex!,
           diff.notesAndCommitments.map((n) => n.inner),
           nfIndices
@@ -115,6 +114,7 @@ export async function syncSDK(
   return latestSyncedMerkleIndex;
 }
 
+// TODO move inside applyStateDiff
 function updateMerkle(
   merkle: SparseMerkleProver,
   latestCommittedMerkleIndex: number,

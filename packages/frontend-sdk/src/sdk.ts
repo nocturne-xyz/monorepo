@@ -2,7 +2,7 @@ import {
   BundlerOpTracker,
   MockEthToTokenConverter,
   NocturneClient,
-  NocturneDB,
+  NocturneClientState,
   OpHistoryRecord,
   OpRequestBuilder,
   OpWithMetadata,
@@ -244,14 +244,12 @@ export class NocturneSdk {
       const kv = new IdbKvStore(
         `nocturne-fe-sdk-${networkName}-${canonAddrHash}`,
       );
-      const db = new NocturneDB(kv);
-
+      const state = NocturneClientState.load(kv);
       return new NocturneClient(
         viewer,
         this.provider,
         this.sdkConfig.config,
-        await SparseMerkleProver.loadFromKV(kv),
-        db,
+        state, 
         this.syncAdapter,
         new MockEthToTokenConverter(),
         new BundlerOpTracker(this.endpoints.bundlerEndpoint),

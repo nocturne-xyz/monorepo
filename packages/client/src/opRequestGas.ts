@@ -12,7 +12,6 @@ import {
   OperationTrait,
   PreSignOperation,
   ProvenJoinSplit,
-  SparseMerkleProver,
   SubmittableOperationWithNetworkInfo,
   groupByMap,
   maxGasForOperation,
@@ -51,7 +50,6 @@ export interface HandleOpRequestGasDeps {
   handlerContract: Handler;
   gasAssets: Map<string, Asset>;
   tokenConverter: EthToTokenConverter;
-  merkle: SparseMerkleProver;
 }
 
 interface GasEstimatedOperationRequest
