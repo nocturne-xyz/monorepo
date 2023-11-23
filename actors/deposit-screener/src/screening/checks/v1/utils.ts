@@ -30,13 +30,20 @@ export function isCreatedAfterTornadoCashSanction(
 
 export const timeUntil7AMNextDayInSeconds = (): number => {
   const currentTime = moment().tz("America/New_York");
-  const sevenAMNextDay = currentTime
-    .clone()
-    .add(1, "days")
-    .hour(7)
-    .minute(0)
-    .second(0);
 
+  let sevenAMTarget: moment.Moment;
+  if (currentTime.hour() < 7) {
+    // If time is between midnight and 7 AM, set target to 7 AM of the same day
+    sevenAMTarget = currentTime.clone().hour(7).minute(0).second(0);
+  } else {
+    // If time is between 9:30 PM and midnight, set target to 7 AM of the next day
+    sevenAMTarget = currentTime
+      .clone()
+      .add(1, "days")
+      .hour(7)
+      .minute(0)
+      .second(0);
+  }
   // Calculate the duration in seconds
-  return sevenAMNextDay.diff(currentTime, "seconds");
+  return sevenAMTarget.diff(currentTime, "seconds");
 };

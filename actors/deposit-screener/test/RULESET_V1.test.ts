@@ -20,10 +20,7 @@ import { getLatestSnapshotFolder } from "./utils";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import moment from "moment-timezone";
 import * as sinon from "sinon";
-import {
-  FIVE_ETHER,
-  timeUntil7AMNextDayInSeconds,
-} from "../src/screening/checks/v1/utils";
+import { FIVE_ETHER } from "../src/screening/checks/v1/utils";
 
 describe("RULESET_V1", () => {
   let server: RedisMemoryServer;
@@ -261,7 +258,7 @@ describe("RULESET_V1", () => {
     });
   });
 
-  it("adds delay if sleeping US timezone", async () => {
+  it("adds delay if sleeping US timezone evening", async () => {
     const largeDeposit = formDepositInfo(APPROVE_ADDRESSES.AZTEC_3);
     largeDeposit.value = FIVE_ETHER;
 
@@ -275,15 +272,33 @@ describe("RULESET_V1", () => {
     const clock = sinon.useFakeTimers(newTime);
     clock.setSystemTime(newTime);
 
-    const expectedExtraDelay = timeUntil7AMNextDayInSeconds();
     const result = await ruleset.check(largeDeposit);
 
     expect(result).to.deep.equal({
-      timeSeconds: 7200 + expectedExtraDelay,
+      timeSeconds: 7200 + 3600 * 9,
       type: "Delay",
     });
+  });
 
-    // // Restore the test-specific clock at the end of the test, afterAll will restore sinon global
-    // clock.restore();
+  it("adds delay if sleeping US timezone next morning", async () => {
+    const largeDeposit = formDepositInfo(APPROVE_ADDRESSES.AZTEC_3);
+    largeDeposit.value = FIVE_ETHER;
+
+    // We need separately init'ed sinon for this special case
+    sinon.restore();
+
+    // Set the new time and capture a brand new clock instance
+    const newTime = moment
+      .tz("2023-11-21 01:00:00", "America/New_York")
+      .valueOf();
+    const clock = sinon.useFakeTimers(newTime);
+    clock.setSystemTime(newTime);
+
+    const result = await ruleset.check(largeDeposit);
+
+    expect(result).to.deep.equal({
+      timeSeconds: 7200 + 3600 * 6,
+      type: "Delay",
+    });
   });
 });
