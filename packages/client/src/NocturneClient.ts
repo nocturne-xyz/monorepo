@@ -2,7 +2,6 @@ import { NocturneConfig, loadNocturneConfig } from "@nocturne-xyz/config";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { NocturneViewer } from "@nocturne-xyz/crypto";
 import ethers from "ethers";
-import { GetNotesOpts, NocturneDB } from "./NocturneDB";
 import { OpTracker } from "./OpTracker";
 import { EthToTokenConverter } from "./conversion";
 import { handleGasForOperationRequest } from "./opRequestGas";
@@ -32,7 +31,7 @@ import {
   TotalEntityIndexTrait,
   maxArray,
 } from "@nocturne-xyz/core";
-import { NocturneClientState } from "./NocturneClientState";
+import { GetNotesOpts, NocturneClientState } from "./NocturneClientState";
 
 const PRUNE_OPTIMISTIC_NFS_TIMER = 60 * 1000; // 1 minute
 
@@ -138,13 +137,12 @@ export class NocturneClient {
 
   getAllAssetBalances(opts?: GetNotesOpts): AssetWithBalance[] {
     const notes = this.state.getAllNotes(opts);
-    return Array.from(notes.entries()).map(([assetString, notes]) => {
-      const asset = NocturneDB.parseAssetKey(assetString);
+    return Array.from(notes.entries()).map(([addr, notes]) => {
+      const asset = this.state.assetAddrToAsset.get(addr)!;
       const balance = notes.reduce((a, b) => a + b.value, 0n);
       return {
         asset,
         balance,
-        numNotes: notes.length,
       };
     });
   }

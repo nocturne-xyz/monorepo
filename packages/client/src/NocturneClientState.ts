@@ -19,6 +19,7 @@ import {
   IncludedNoteCommitment,
   consecutiveChunks,
   MerkleIndex,
+  Asset,
 } from "@nocturne-xyz/core";
 import { Mutex } from "async-mutex";
 import { OpHistoryRecord, OperationMetadata } from "./types";
@@ -67,6 +68,9 @@ export class NocturneClientState {
   private tei?: TotalEntityIndex;
   private commitTei?: bigint;
 
+  // TODO find another home for this
+  assetAddrToAsset: Map<Address, Asset>;
+
   private merkleIndexToNote: Map<MerkleIndex, IncludedNoteWithNullifier>;
   private merkleIndexToTei: Map<MerkleIndex, TotalEntityIndex>;
   private assetToMerkleIndices: Map<Address, MerkleIndex[]>;
@@ -83,6 +87,7 @@ export class NocturneClientState {
   constructor(kv: KVStore) {
     this.kv = kv;
 
+    this.assetAddrToAsset = new Map<Address, Asset>();
     this.merkleIndexToNote = new Map<MerkleIndex, IncludedNoteWithNullifier>();
     this.merkleIndexToTei = new Map<MerkleIndex, TotalEntityIndex>();
     this.assetToMerkleIndices = new Map<Address, MerkleIndex[]>();
@@ -152,7 +157,11 @@ export class NocturneClientState {
       const alreadyHasNote = this.merkleIndexToNote.has(note.merkleIndex);
       this.merkleIndexToNote.set(note.merkleIndex, note);
 
-      // b. add to `assetToMerkleIndices` map if it's not already there
+      // b. add to the `assetAddr => Asset` map if it's not already there
+      // ? why do we need the full asset here?
+      this.assetAddrToAsset.set(note.asset.assetAddr, note.asset);
+
+      // c. add to `assetToMerkleIndices` map if it's not already there
       const merkleIndices =
         this.assetToMerkleIndices.get(note.asset.assetAddr) ?? [];
       if (!merkleIndices.includes(note.merkleIndex)) {
@@ -166,7 +175,7 @@ export class NocturneClientState {
         }
       }
 
-      // c. add the nullifiers to the `nfToMerkleIndex` map
+      // d. add the nullifiers to the `nfToMerkleIndex` map
       this.nfToMerkleIndex.set(note.nullifier, note.merkleIndex);
     }
 

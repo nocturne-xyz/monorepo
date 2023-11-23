@@ -23,17 +23,17 @@ import { ethers } from "ethers";
 const gasMultiplier = 1;
 describe("signOperation", () => {
   it("signs an operation with 1 action, 1 unwrap, 1 payment", async () => {
-    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+    const [state, merkleProver, signer, handlerContract] = setup(
       [100n, 10n],
       [shitcoin, shitcoin]
     );
     const deps = {
-      db: nocturneDB,
       gasAssets: testGasAssets,
       tokenConverter: new MockEthToTokenConverter(),
       merkle: merkleProver,
       viewer: signer,
       handlerContract,
+      state,
     };
 
     const receiverRk = generateRandomSpendingKey();

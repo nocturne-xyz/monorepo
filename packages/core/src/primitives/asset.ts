@@ -25,7 +25,6 @@ export interface EncodedAsset {
 export interface AssetWithBalance {
   asset: Asset;
   balance: bigint;
-  numNotes: number;
 }
 
 // compact asset byte-serialization format (53 bytes)

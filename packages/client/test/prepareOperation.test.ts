@@ -9,7 +9,7 @@ import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ethers } from "ethers";
 import "mocha";
-import { NocturneDB, newOpRequestBuilder } from "../src";
+import { newOpRequestBuilder } from "../src";
 import { MockEthToTokenConverter } from "../src/conversion";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { __private, prepareOperation } from "../src/prepareOperation";
