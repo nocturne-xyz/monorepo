@@ -1,13 +1,13 @@
 import { CachedFetchOptions } from "@nocturne-xyz/offchain-utils";
+import IORedis from "ioredis";
+import { Logger } from "winston";
 import { ScreeningDepositRequest } from "..";
 import {
   API_CALL_MAP,
   ApiCallNames,
-  ApiCallToReturnType,
   ApiCallReturnData,
+  ApiCallToReturnType,
 } from "./apiCalls";
-import IORedis from "ioredis";
-import { Logger } from "winston";
 
 export interface Rejection {
   type: "Rejection";
@@ -224,9 +224,11 @@ export class RuleSet {
       });
       if (result.type === "Rejection") {
         this.logger.info(
-          `Screener execution for deposit:`,
-          deposit,
-          rulesLogList
+          `Screener execution on deposit for addr ${deposit.spender}`,
+          {
+            deposit: { ...deposit },
+            results: { ...toLoggable(rulesLogList) },
+          }
         );
         return result;
       } else if (result.type === "Delay") {
@@ -237,15 +239,25 @@ export class RuleSet {
       }
       currRule = currRule.next;
     }
-
-    const ruleResults = rulesLogList.reduce((acc, { ruleName, result }) => {
-      acc[ruleName] = result;
-      return acc;
-    }, {} as Record<string, Awaited<ReturnType<RuleLike["check"]>>>);
-    this.logger.info(`Screener execution for deposit:`, {
-      ...deposit,
-      ...ruleResults,
-    });
+    this.logger.info(
+      `Screener execution for deposit for addr ${deposit.spender}`,
+      {
+        deposit: { ...deposit },
+        results: { ...toLoggable(rulesLogList) },
+      }
+    );
     return { type: "Delay", timeSeconds: delaySeconds };
   }
 }
+
+const toLoggable = (
+  rulesLogList: {
+    ruleName: string;
+    result: Awaited<ReturnType<RuleLike["check"]>>;
+  }[]
+): Record<string, Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> => {
+  return rulesLogList.reduce((acc, { ruleName, result }) => {
+    acc[ruleName] = result;
+    return acc;
+  }, {} as Record<string, Awaited<ReturnType<RuleLike["check"]>>>);
+};

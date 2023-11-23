@@ -78,6 +78,7 @@ import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
+import ERC20_ABI from "./abis/ERC20.json";
 import { DepositAdapter, SubgraphDepositAdapter } from "./depositFetching";
 import { SnapStateSdk, getSigner } from "./metamask";
 import { GetSnapOptions } from "./metamask/types";
@@ -286,6 +287,21 @@ export class NocturneSdk {
 
   get opRequestBuilder(): OpRequestBuilder {
     return newOpRequestBuilder(this.provider, this.chainId);
+  }
+
+  async getProtocolTvl(): Promise<Map<string, bigint>> {
+    const tellerAddress = this.sdkConfig.config.tellerAddress;
+    const tvlByAsset = new Map<string, bigint>();
+    for (const [assetName, { address }] of this.sdkConfig.config.erc20s) {
+      const erc20Contract = new ethers.Contract(
+        address,
+        ERC20_ABI,
+        this.provider,
+      );
+      const balance = await erc20Contract.balanceOf(tellerAddress);
+      tvlByAsset.set(assetName, balance.toBigInt());
+    }
+    return tvlByAsset;
   }
 
   /**
