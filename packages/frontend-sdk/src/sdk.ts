@@ -854,9 +854,9 @@ export class NocturneSdk {
     const client = await this.clientThunk();
 
     if (includePending) {
-      return client.opHistory
+      return client.opHistory;
     } else {
-      return client.previousOps
+      return client.previousOps;
     }
   }
 

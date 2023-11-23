@@ -2,7 +2,6 @@ import "mocha";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {
-  InMemoryKVStore,
   NoteTrait,
   bigInt256ToFieldElems,
   bigintToBEPadded,
@@ -32,8 +31,7 @@ const randomBaseFieldElement = () => F.create(randomBigInt());
 
 describe("SparseMerkleProver", () => {
   it("inserts values one-by-one with consecutive indices", () => {
-    const kv = new InMemoryKVStore();
-    const prover = new SparseMerkleProver(kv);
+    const prover = new SparseMerkleProver();
 
     for (const idx of range(10)) {
       prover.insert(idx, randomBaseFieldElement());
@@ -43,8 +41,7 @@ describe("SparseMerkleProver", () => {
   });
 
   it("throws error when inserting non-monotonically increasing indices", () => {
-    const kv = new InMemoryKVStore();
-    const prover = new SparseMerkleProver(kv);
+    const prover = new SparseMerkleProver();
 
     prover.insert(0, randomBaseFieldElement());
     prover.insert(2, randomBaseFieldElement());
@@ -52,16 +49,14 @@ describe("SparseMerkleProver", () => {
   });
 
   it("fills gaps with zeros when inserting non-consecutive indices", () => {
-    const kv = new InMemoryKVStore();
-    const prover = new SparseMerkleProver(kv);
+    const prover = new SparseMerkleProver();
 
     prover.insert(16, randomBaseFieldElement());
     expect(prover.count()).to.equal(17);
   });
 
   it("generates valid merkle proofs", () => {
-    const kv = new InMemoryKVStore();
-    const prover = new SparseMerkleProver(kv);
+    const prover = new SparseMerkleProver();
 
     // insert a few leaves
     for (const idx of range(10)) {
@@ -77,8 +72,7 @@ describe("SparseMerkleProver", () => {
   });
 
   it("rejects invalid proofs", () => {
-    const kv = new InMemoryKVStore();
-    const prover = new SparseMerkleProver(kv);
+    const prover = new SparseMerkleProver();
 
     // insert a few leaves
     for (const idx of range(10)) {
@@ -123,8 +117,7 @@ describe("SparseMerkleProver", () => {
   });
 
   it("prunes nodes irrelevant for proving membership of leaves inserted with `include = false`", () => {
-    const kv = new InMemoryKVStore();
-    const prover = new SparseMerkleProver(kv);
+    const prover = new SparseMerkleProver();
 
     // insert a leaf with `include = true`
     prover.insert(0, randomBaseFieldElement(), true);
@@ -169,8 +162,7 @@ describe("SparseMerkleProver", () => {
   for (const k of range(1, ARITY)) {
     it(`doesn't prune the latest leaves if the tree has a number of nodes = ${k} mod ARITY (${ARITY}) and they're not in the map`, () => {
       // run the test for each k mod ARITY
-      const kv = new InMemoryKVStore();
-      const prover = new SparseMerkleProver(kv);
+      const prover = new SparseMerkleProver();
 
       // insert a multiple of ARITY number of leaves with `include = false`
       for (const idx of range(prover.count(), prover.count() + ARITY * 3)) {
@@ -193,8 +185,7 @@ describe("SparseMerkleProver", () => {
   }
 
   it(`doesn't prune latest ARITY leaves if the tree has a number of nodes = 0 mod ARITY (${ARITY}) and none of them are in the map`, () => {
-    const kv = new InMemoryKVStore();
-    const prover = new SparseMerkleProver(kv);
+    const prover = new SparseMerkleProver();
 
     // insert an multiple of ARITY number of leaves with `include = false`
     for (const idx of range(prover.count(), prover.count() + ARITY * 3)) {
@@ -215,9 +206,8 @@ describe("SparseMerkleProver", () => {
   });
 
   it("inserts a batch of leaves all at once", () => {
-    const kv = new InMemoryKVStore();
-    const p1 = new SparseMerkleProver(kv);
-    const p2 = new SparseMerkleProver(kv);
+    const p1 = new SparseMerkleProver();
+    const p2 = new SparseMerkleProver();
 
     // insert 400 random leaves
     const leaves = range(100).map(() => randomBaseFieldElement());
@@ -242,8 +232,7 @@ describe("SparseMerkleProver", () => {
   });
 
   it("marks leaves for pruning", () => {
-    const kv = new InMemoryKVStore();
-    const prover = new SparseMerkleProver(kv);
+    const prover = new SparseMerkleProver();
 
     // insert a bunch of leaves with `include = false`
     prover.insertBatch(
@@ -281,11 +270,9 @@ describe("SparseMerkleProver", () => {
   });
 
   it("calculates same root as @zk-kit/incremental-merkle-tree", () => {
-    const kv = new InMemoryKVStore();
-
     // check empty batch case
     {
-      const prover = new SparseMerkleProver(kv);
+      const prover = new SparseMerkleProver();
       const tree = new IncrementalMerkleTree(
         poseidon4 as HashFunction,
         DEPTH,
@@ -299,7 +286,7 @@ describe("SparseMerkleProver", () => {
 
     // run 5 fuzzes using incremental insert
     range(5).forEach((_) => {
-      const prover = new SparseMerkleProver(kv);
+      const prover = new SparseMerkleProver();
       const tree = new IncrementalMerkleTree(
         poseidon4 as HashFunction,
         DEPTH,
@@ -319,7 +306,7 @@ describe("SparseMerkleProver", () => {
 
     // run 5 fuzzes using batch insert
     range(5).forEach((_) => {
-      const prover = new SparseMerkleProver(kv);
+      const prover = new SparseMerkleProver();
       const tree = new IncrementalMerkleTree(
         poseidon4 as HashFunction,
         DEPTH,
@@ -349,8 +336,7 @@ describe("SparseMerkleProver", () => {
 
   it.skip("generates test constants for testTreeTest in contracts", () => {
     // from idx 0, insert 420, 69, and print root
-    const kv = new InMemoryKVStore();
-    const prover = new SparseMerkleProver(kv);
+    const prover = new SparseMerkleProver();
 
     prover.insert(0, 420n, false);
     prover.insert(1, 69n, false);
@@ -366,8 +352,7 @@ describe("SparseMerkleProver", () => {
   });
 
   it.skip("generates test constants for testCalculatePublicInputs in contracts", () => {
-    const kv = new InMemoryKVStore();
-    const prover = new SparseMerkleProver(kv);
+    const prover = new SparseMerkleProver();
 
     const ownerViewer = new NocturneSigner(Uint8Array.from(DUMMY_ROOT_KEY));
     const owner = ownerViewer.canonicalStealthAddress();

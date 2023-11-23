@@ -11,7 +11,6 @@ import {
   range,
   TreeConstants,
   SparseMerkleProver,
-  InMemoryKVStore,
 } from "@nocturne-xyz/core";
 import { RapidsnarkSubtreeUpdateProver } from "../src/rapidsnarkProver";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -71,8 +70,7 @@ describe("rapidsnark subtree update prover", async () => {
         TMP_PATH
       );
 
-      const kv = new InMemoryKVStore();
-      const tree = new SparseMerkleProver(kv);
+      const tree = new SparseMerkleProver();
       const batch = dummyBatch();
 
       for (let i = 0; i < batch.length; i++) {

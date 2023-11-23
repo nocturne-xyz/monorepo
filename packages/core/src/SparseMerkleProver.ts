@@ -27,8 +27,6 @@ if (ARITY !== 4) {
 // 1. we avoid loading the whole tree into memory at once
 // 2. we avoid iterating over all of the leaves
 // 3. we avoid storing the whole tree persistently
-// 4. all of the above hold in snap, where storage is a single value
-//    (ie we have to serialize all persistent state into single object and get/set that)
 //
 // `SparseMerkleProver` works as follows:
 // 1. Start with a basic, naive merkle tree implementation with monotonic,

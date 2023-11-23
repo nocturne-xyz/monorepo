@@ -1,6 +1,6 @@
 import {
   NocturneClient,
-  NocturneDB,
+  NocturneClientState,
   OperationRequestWithMetadata,
   newOpRequestBuilder,
   proveOperation,
@@ -18,7 +18,6 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
 import {
   Asset,
-  AssetTrait,
   JoinSplitProver,
   NocturneSigner,
   OperationStatus,
@@ -84,9 +83,9 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
   let handler: Handler;
   let weth: WETH9;
   let nocturneSignerAlice: NocturneSigner;
-  let nocturneDBAlice: NocturneDB;
+  let clientStateAlice: NocturneClientState;
   let nocturneClientAlice: NocturneClient;
-  let nocturneDBBob: NocturneDB;
+  let clientStateBob: NocturneClientState;
   let nocturneClientBob: NocturneClient;
   let joinSplitProver: JoinSplitProver;
 
@@ -123,10 +122,10 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     ({ erc20, erc20Asset, gasToken, gasTokenAsset } = testDeployment.tokens);
 
     ({
-      nocturneDBAlice,
+      clientStateAlice,
       nocturneSignerAlice,
       nocturneClientAlice,
-      nocturneDBBob,
+      clientStateBob,
       nocturneClientBob,
       joinSplitProver,
     } = await setupTestClient(testDeployment.config, provider, {
@@ -152,12 +151,12 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       console.log("bob: Sync SDK");
       await nocturneClientBob.sync();
 
-      const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
-      console.log("alice pre-op notes:", preOpNotesAlice);
-      console.log(
-        "alice pre-op latestCommittedMerkleIndex",
-        await nocturneDBAlice.latestCommittedMerkleIndex()
-      );
+    const preOpNotesAlice = clientStateAlice.getAllNotes();
+    console.log("alice pre-op notes:", preOpNotesAlice);
+    console.log(
+      "alice pre-op latestCommittedMerkleIndex",
+      clientStateAlice.latestCommittedMerkleIndex
+    );
 
       console.log("prepare, sign, and prove operation with NocturneClient");
       const preSign = await nocturneClientAlice.prepareOperation(
@@ -420,8 +419,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
       await nocturneClientAlice.sync();
-      const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc20Asset,
+      const updatedNotesAlice = clientStateAlice.getNotesForAsset(
+        erc20Asset.assetAddr,
         { includeUncommitted: true }
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
@@ -446,9 +445,12 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
       console.log("bob: Sync SDK post-operation");
       await nocturneClientBob.sync();
-      const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset, {
-        includeUncommitted: true,
-      })!;
+      const updatedNotesBob = clientStateBob.getNotesForAsset(
+        erc20Asset.assetAddr,
+        {
+          includeUncommitted: true,
+        }
+      )!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
       // bob should have one nonzero note total
       expect(nonZeroNotesBob.length).to.equal(1);
@@ -561,8 +563,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
       await nocturneClientAlice.sync();
-      const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc20Asset,
+      const updatedNotesAlice = clientStateAlice.getNotesForAsset(
+        erc20Asset.assetAddr,
         { includeUncommitted: true }
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
@@ -652,8 +654,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
       await nocturneClientAlice.sync();
-      const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc20Asset,
+      const updatedNotesAlice = clientStateAlice.getNotesForAsset(
+        erc20Asset.assetAddr,
         { includeUncommitted: true }
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
@@ -669,9 +671,12 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
       console.log("bob: Sync SDK post-operation");
       await nocturneClientBob.sync();
-      const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset, {
-        includeUncommitted: true,
-      })!;
+      const updatedNotesBob = clientStateBob.getNotesForAsset(
+        erc20Asset.assetAddr,
+        {
+          includeUncommitted: true,
+        }
+      )!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
       // bob should have one nonzero note from conf payment
       expect(nonZeroNotesBob.length).to.equal(1);
@@ -765,8 +770,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
       await nocturneClientAlice.sync();
-      const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
-        AssetTrait.erc20AddressToAsset(weth.address),
+      const updatedNotesAlice = clientStateAlice.getNotesForAsset(
+        weth.address,
         { includeUncommitted: true }
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);

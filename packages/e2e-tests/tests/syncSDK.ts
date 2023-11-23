@@ -206,25 +206,17 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
       // check that the DB nullified the spent note
       // after the op, the 80 token note should be nullified, so they should have
-      // no non-zero notes for `token`
-      //@ts-ignore
-      const notesForToken = await nocturneClientAlice.db.getNotesForAsset({
+      // no non-zero notes for `token`, so they should have 0 balance
+      const balance = nocturneClientAlice.getBalanceForAsset({
         assetType: AssetType.ERC20,
         assetAddr: token.address,
         id: 0n,
       });
-      console.log("notesForToken: ", notesForToken);
+      expect(balance).to.eql(0n);
 
-      const nonZeroNotes = Array.from(notesForToken.values())
-        .flat()
-        .filter((note) => note.value > 0n);
-
-      expect(nonZeroNotes).to.be.empty;
-
-      // check that the merkle prover marked spent note's commitment for pruning
       // the spent note was inserted first, at merkle index 0
       //@ts-ignore
-      expect(nocturneClientAlice.merkleProver.leaves.has(0)).to.be.false;
+      expect(nocturneClientAlice.state.merkle.leaves.has(0)).to.be.false;
     });
   };
 }

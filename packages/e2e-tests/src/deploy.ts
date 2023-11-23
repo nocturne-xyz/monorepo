@@ -17,7 +17,6 @@ import {
 import {
   NocturneSigner,
   InMemoryKVStore,
-  SparseMerkleProver,
   JoinSplitProver,
   SDKSyncAdapter,
   Address,
@@ -31,9 +30,9 @@ import {
 
 import {
   NocturneClient,
-  NocturneDB,
   MockEthToTokenConverter,
   BundlerOpTracker,
+  NocturneClientState,
 } from "@nocturne-xyz/client";
 
 import { RPCSDKSyncAdapter } from "@nocturne-xyz/rpc-sync-adapters";
@@ -545,10 +544,10 @@ export enum SyncAdapterOption {
 
 export interface ClientSetup {
   nocturneSignerAlice: NocturneSigner;
-  nocturneDBAlice: NocturneDB;
+  clientStateAlice: NocturneClientState;
   nocturneClientAlice: NocturneClient;
   nocturneSignerBob: NocturneSigner;
-  nocturneDBBob: NocturneDB;
+  clientStateBob: NocturneClientState;
   nocturneClientBob: NocturneClient;
   joinSplitProver: JoinSplitProver;
   canonAddrSigCheckProver: CanonAddrSigCheckProver;
@@ -570,22 +569,19 @@ export async function setupTestClient(
 
   console.log("Create nocturneClientAlice");
   const aliceKV = new InMemoryKVStore();
-  const nocturneDBAlice = new NocturneDB(aliceKV);
-  const merkleProverAlice = new SparseMerkleProver(aliceKV);
+  const clientStateAlice = new NocturneClientState(aliceKV);
   const nocturneSignerAlice = new NocturneSigner(Uint8Array.from(range(32)));
   const nocturneClientAlice = setupNocturneClient(
     nocturneSignerAlice,
     config,
     provider,
-    nocturneDBAlice,
-    merkleProverAlice,
+    clientStateAlice,
     syncAdapter
   );
 
   console.log("Create nocturneClientBob");
   const bobKV = new InMemoryKVStore();
-  const nocturneDBBob = new NocturneDB(bobKV);
-  const merkleProverBob = new SparseMerkleProver(aliceKV);
+  const clientStateBob = new NocturneClientState(bobKV);
   const nocturneSignerBob = new NocturneSigner(
     Uint8Array.from(range(32).map((n) => 2 * n))
   );
@@ -593,8 +589,7 @@ export async function setupTestClient(
     nocturneSignerBob,
     config,
     provider,
-    nocturneDBBob,
-    merkleProverBob,
+    clientStateBob,
     syncAdapter
   );
 
@@ -611,10 +606,10 @@ export async function setupTestClient(
   );
 
   return {
-    nocturneDBAlice,
+    clientStateAlice,
     nocturneSignerAlice,
     nocturneClientAlice,
-    nocturneDBBob,
+    clientStateBob,
     nocturneSignerBob,
     nocturneClientBob,
     joinSplitProver,
@@ -626,16 +621,14 @@ function setupNocturneClient(
   signer: NocturneSigner,
   config: NocturneConfig,
   provider: ethers.providers.Provider,
-  nocturneDB: NocturneDB,
-  merkleProver: SparseMerkleProver,
+  state: NocturneClientState,
   syncAdapter: SDKSyncAdapter
 ): NocturneClient {
   return new NocturneClient(
     signer,
     provider,
     config,
-    merkleProver,
-    nocturneDB,
+    state,
     syncAdapter,
     new MockEthToTokenConverter(),
     new BundlerOpTracker(BUNDLER_ENDPOINT)
