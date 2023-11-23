@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.1.5
+
+### Patch Changes
+
+- fe573a44: Adds Protocol TVL
+
 ## 7.1.4
 
 ### Patch Changes
