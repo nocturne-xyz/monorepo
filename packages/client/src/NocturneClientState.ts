@@ -146,6 +146,37 @@ export class NocturneClientState {
     } = diff;
 
     // 1. store new notes + nfs
+    this.storeNewNotes(notesAndCommitments);
+
+    // 2. apply new nullifiers to notes
+    // NOTE: this comes after storing notes because new notes can be nullified in the same state diff
+    const nfIndices = this.nullifyNotes(nullifiers);
+
+    // 3. update tree
+    this.updateMerkle(
+      notesAndCommitments.map(({ inner }) => inner),
+      nfIndices,
+      latestCommittedMerkleIndex
+    );
+
+    // 4. update TEI map
+    for (const { inner, totalEntityIndex } of notesAndCommitments) {
+      this.merkleIndexToTei.set(inner.merkleIndex, totalEntityIndex);
+    }
+
+    // 5. update TEI
+    // TODO add commitTei to state diff
+    this.commitTei = totalEntityIndex;
+    this.tei = totalEntityIndex;
+
+    return nfIndices;
+  }
+
+  private storeNewNotes(
+    notesAndCommitments: WithTotalEntityIndex<
+      IncludedNoteWithNullifier | IncludedNoteCommitment
+    >[]
+  ): void {
     const notesToStore = notesAndCommitments.filter(
       ({ inner }) =>
         !NoteTrait.isCommitment(inner) &&
@@ -178,24 +209,6 @@ export class NocturneClientState {
       // d. add the nullifiers to the `nfToMerkleIndex` map
       this.nfToMerkleIndex.set(note.nullifier, note.merkleIndex);
     }
-
-    // 2. apply new nullifiers to notes
-    // NOTE: this comes after storing notes because new notes can be nullified in the same state diff
-    const nfIndices = this.nullifyNotes(nullifiers);
-
-    // 3. update tree
-    this.updateMerkle(
-      notesAndCommitments.map(({ inner }) => inner),
-      nfIndices,
-      latestCommittedMerkleIndex
-    );
-
-    // 4. update TEI
-    // TODO add commitTei to state diff
-    this.commitTei = totalEntityIndex;
-    this.tei = totalEntityIndex;
-
-    return nfIndices;
   }
 
   // TODO make this more efficient / less contrived

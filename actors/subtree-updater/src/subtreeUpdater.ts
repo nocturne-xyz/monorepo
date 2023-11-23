@@ -96,8 +96,7 @@ export class SubtreeUpdater {
     this.redis = redis;
 
     // TODO make this a redis KV store
-    const kv = new InMemoryKVStore();
-    this.tree = new SparseMerkleProver(kv);
+    this.tree = new SparseMerkleProver();
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
     const createCounter = makeCreateCounterFn(

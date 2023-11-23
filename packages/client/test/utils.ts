@@ -158,7 +158,8 @@ export function setup(
         ? withTotalEntityIndices[withTotalEntityIndices.length - 1]
             .totalEntityIndex
         : 0n,
-    latestCommittedMerkleIndex: notes.length - 1,
+    latestCommittedMerkleIndex:
+      opts?.latestCommittedMerkleIndex ?? notes.length - 1,
     latestNewlySyncedMerkleIndex: notes.length - 1,
   });
 

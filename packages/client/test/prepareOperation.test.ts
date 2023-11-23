@@ -12,7 +12,11 @@ import "mocha";
 import { newOpRequestBuilder } from "../src";
 import { MockEthToTokenConverter } from "../src/conversion";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
-import { __private, prepareOperation } from "../src/prepareOperation";
+import {
+  NotEnoughFundsError,
+  __private,
+  prepareOperation,
+} from "../src/prepareOperation";
 import { sortNotesByValue } from "../src/utils";
 import {
   DUMMY_CONFIG,
@@ -41,13 +45,13 @@ beforeEach(() => {
   provider = ethers.getDefaultProvider() as ethers.providers.JsonRpcProvider;
 });
 describe("gatherNotes", () => {
-  it("throws an error when attempting to overspend", () => {
+  it("throws a NotEnoughFundsError when attempting to overspend", () => {
     const [state] = setup([100n], [stablescam]);
 
     // attempt request 1000 tokens, more than the user owns
-    // expect to throw error
-    expect(gatherNotes(state, 1000n, stablescam)).to.throw(
-      "attempted to spend more funds than owned"
+    // expect to throw a `NotEnoughFundsError`
+    expect(() => gatherNotes(state, 1000n, stablescam)).to.throw(
+      NotEnoughFundsError
     );
   });
 

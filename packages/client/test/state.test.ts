@@ -469,15 +469,15 @@ describe("NocturneClientState", async () => {
     state.addOpToHistory(ops[2], metas[2]);
 
     // get op history, expect it to only have first 2
-    expect(state.opHistory.length).to.eql(2);
-    expect(state.opHistory[0].digest).to.eql(
+    expect(state.previousOps.length).to.eql(2);
+    expect(state.previousOps[0].digest).to.eql(
       OperationTrait.computeDigest(ops[0])
     );
-    expect(state.opHistory[1].digest).to.eql(
+    expect(state.previousOps[1].digest).to.eql(
       OperationTrait.computeDigest(ops[1])
     );
-    expect(state.opHistory[0].metadata).to.eql(metas[0]);
-    expect(state.opHistory[1].metadata).to.eql(metas[1]);
+    expect(state.previousOps[0].metadata).to.eql(metas[0]);
+    expect(state.previousOps[1].metadata).to.eql(metas[1]);
 
     // get pending ops, expect it to only have third
     expect(state.pendingOps.length).to.eql(1);
@@ -487,22 +487,28 @@ describe("NocturneClientState", async () => {
     expect(state.pendingOps[0].metadata).to.eql(metas[2]);
 
     // get all ops
-    expect(state.allOps.length).to.eql(3);
+    expect(state.opHistory.length).to.eql(3);
 
     // check that the op digests match
-    expect(state.allOps[0].digest).to.eql(OperationTrait.computeDigest(ops[0]));
-    expect(state.allOps[1].digest).to.eql(OperationTrait.computeDigest(ops[1]));
-    expect(state.allOps[2].digest).to.eql(OperationTrait.computeDigest(ops[2]));
+    expect(state.opHistory[0].digest).to.eql(
+      OperationTrait.computeDigest(ops[0])
+    );
+    expect(state.opHistory[1].digest).to.eql(
+      OperationTrait.computeDigest(ops[1])
+    );
+    expect(state.opHistory[2].digest).to.eql(
+      OperationTrait.computeDigest(ops[2])
+    );
 
     // check that metadatas match
-    expect(state.allOps[0].metadata).to.eql(metas[0]);
-    expect(state.allOps[1].metadata).to.eql(metas[1]);
-    expect(state.allOps[2].metadata).to.eql(metas[2]);
+    expect(state.opHistory[0].metadata).to.eql(metas[0]);
+    expect(state.opHistory[1].metadata).to.eql(metas[1]);
+    expect(state.opHistory[2].metadata).to.eql(metas[2]);
 
     // check statuses match
-    expect(state.allOps[0].status).to.eql(OperationStatus.BUNDLE_REVERTED);
-    expect(state.allOps[1].status).to.eql(OperationStatus.EXECUTED_SUCCESS);
-    expect(state.allOps[2].status).to.be.undefined;
+    expect(state.opHistory[0].status).to.eql(OperationStatus.BUNDLE_REVERTED);
+    expect(state.opHistory[1].status).to.eql(OperationStatus.EXECUTED_SUCCESS);
+    expect(state.opHistory[2].status).to.be.undefined;
   });
 
   it("applies optimistic nullifiers when adding op to history", async () => {
