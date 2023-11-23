@@ -1,7 +1,6 @@
 import { Logger } from "winston";
 import {
   ClosableAsyncIterator,
-  InMemoryKVStore,
   Note,
   NoteTrait,
   SparseMerkleProver,

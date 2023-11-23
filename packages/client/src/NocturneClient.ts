@@ -26,7 +26,6 @@ import {
   PreSignOperation,
   SDKSyncAdapter,
   SignedOperation,
-  SparseMerkleProver,
   TotalEntityIndex,
   TotalEntityIndexTrait,
   maxArray,
@@ -39,7 +38,6 @@ export class NocturneClient {
   protected provider: ethers.providers.Provider;
   protected config: NocturneConfig;
   protected handlerContract: Handler;
-  protected merkleProver: SparseMerkleProver;
   protected state: NocturneClientState;
   protected syncAdapter: SDKSyncAdapter;
   protected tokenConverter: EthToTokenConverter;

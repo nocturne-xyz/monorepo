@@ -45,7 +45,6 @@ import {
   RelayRequest,
   SDKSyncAdapter,
   SignedOperation,
-  SparseMerkleProver,
   StealthAddress,
   StealthAddressTrait,
   SubmittableOperationWithNetworkInfo,
@@ -490,7 +489,7 @@ export class NocturneSdk {
         const signed = await this.signOperation({ op: _op, metadata });
         const submittable = await this.proveOperation(signed);
         const handle = await this.submitOperation(submittable.op);
-        await client.addOpToHistory(_op, metadata);
+        client.addOpToHistory(_op, metadata);
         return {
           ...handle,
           metadata,
@@ -501,7 +500,7 @@ export class NocturneSdk {
 
         const submittable = await this.proveOperation({ op: _op, metadata });
         const handle = await this.submitOperation(submittable.op);
-        await client.addOpToHistory(_op, metadata);
+        client.addOpToHistory(_op, metadata);
         return {
           ...handle,
           metadata,
@@ -769,7 +768,7 @@ export class NocturneSdk {
     return async () => {
       // check history first. If it's in a terminal status, return that status
       const client = await this.clientThunk();
-      const historyRecord = await client.getOpHistoryRecord(digest);
+      const historyRecord = client.getOpHistoryRecord(digest);
 
       // if there's no history record anymore, return `QUEUED` and, wait for the frontend
       // to re-fetch the history, and stop calling this function
@@ -790,7 +789,7 @@ export class NocturneSdk {
       // otherwise, assume bundler is being slow and say it's queued
       if (!res) {
         if (historyRecord.createdAt + BUNDLER_RECEIVED_OP_BUFFER < Date.now()) {
-          await client.removeOpFromHistory(digest);
+          client.removeOpFromHistory(digest);
         }
         return { status: OperationStatus.QUEUED };
       }
@@ -799,7 +798,7 @@ export class NocturneSdk {
       const { status } = res;
       if (status !== historyRecord.status) {
         try {
-          await client.setOpStatusInHistory(digest, status);
+          client.setOpStatusInHistory(digest, status);
         } catch (err) {
           if (
             err instanceof Error &&
@@ -829,7 +828,7 @@ export class NocturneSdk {
     await this.sync();
 
     const client = await this.clientThunk();
-    return await client.getAllAssetBalances(
+    return client.getAllAssetBalances(
       opts ? getBalanceOptsToGetNotesOpts(opts) : undefined,
     );
   }
@@ -850,9 +849,15 @@ export class NocturneSdk {
     );
   }
 
+  // TODO replace this method with re-exported `opHistory`, `previousOps`, `pendingOps` getters
   async getOpHistory(includePending?: boolean): Promise<OpHistoryRecord[]> {
     const client = await this.clientThunk();
-    return await client.getOpHistory(includePending);
+
+    if (includePending) {
+      return client.opHistory
+    } else {
+      return client.previousOps
+    }
   }
 
   async getInFlightOperations(): Promise<OperationHandle[]> {
@@ -1009,7 +1014,7 @@ export class NocturneSdk {
     try {
       const client = await this.clientThunk();
       latestSyncedMerkleIndex = await client.sync(syncOpts ?? { timing: true });
-      await client.pruneOptimisticNullifiers();
+      client.pruneOptimisticNullifiers();
     } catch (e) {
       console.log("Error syncing notes: ", e);
       throw e;
@@ -1023,7 +1028,7 @@ export class NocturneSdk {
 
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
     const client = await this.clientThunk();
-    const latestSyncedMerkleIndex = await client.getLatestSyncedMerkleIndex();
+    const latestSyncedMerkleIndex = client.latestSyncedMerkleIndex;
     console.log(
       "[getLatestSyncedMerkleIndex] FE-SDK latestSyncedMerkleIndex",
       latestSyncedMerkleIndex,
@@ -1033,7 +1038,7 @@ export class NocturneSdk {
 
   async clearSyncState(): Promise<void> {
     const client = await this.clientThunk();
-    await client.clearDb();
+    await client.kv.clear();
   }
 
   /**

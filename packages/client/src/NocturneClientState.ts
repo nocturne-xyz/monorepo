@@ -82,7 +82,7 @@ export class NocturneClientState {
   public merkle: SparseMerkleProver;
 
   // used to persist the state
-  private kv: KVStore;
+  public kv: KVStore;
 
   constructor(kv: KVStore) {
     this.kv = kv;
