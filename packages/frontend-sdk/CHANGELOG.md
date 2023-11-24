@@ -1,5 +1,17 @@
 # Changelog
 
+## 7.2.0
+
+### Minor Changes
+
+- 5f493cdf: consensys is taking too long, revert firefox changes
+
+### Patch Changes
+
+- Updated dependencies [5f493cdf]
+  - @nocturne-xyz/client@4.1.0
+  - @nocturne-xyz/op-request-plugins@2.1.18
+
 ## 7.1.5
 
 ### Patch Changes
