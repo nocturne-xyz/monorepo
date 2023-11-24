@@ -232,7 +232,7 @@ export class NocturneSdk {
     this.clientThunk = thunk(async () => {
       const { vk, vkNonce } = await this.snap.invoke<RequestViewingKeyMethod>({
         method: "nocturne_requestViewingKey",
-        params: null,
+        params: undefined,
       });
 
       const viewer = new NocturneViewer(vk, vkNonce);
@@ -344,7 +344,7 @@ export class NocturneSdk {
 
     const address = await this.snap.invoke<RequestSpendKeyEoaMethod>({
       method: "nocturne_requestSpendKeyEoa",
-      params: null,
+      params: undefined,
     });
     if (!address) {
       throw new Error("Nocturne spend key EOA not found");
@@ -438,24 +438,20 @@ export class NocturneSdk {
     return this.formDepositHandlesWithTxReceipt(tx);
   }
 
-  async prepareOperation({
-    request,
-    meta,
-  }: OperationRequestWithMetadata): Promise<OpWithMetadata<PreSignOperation>> {
+  async prepareOperation(
+    { request, meta }: OperationRequestWithMetadata
+  ): Promise<OpWithMetadata<PreSignOperation>> {
     const client = await this.clientThunk();
-    const op = await client.prepareOperation(request, this.opGasMultiplier);
+    const op = await client.prepareOperation(request, this.opGasMultiplier); 
     return {
       op,
       metadata: meta,
     };
   }
 
-  async signOperation({
-    op,
-    metadata,
-  }: OpWithMetadata<PreSignOperation>): Promise<
-    OpWithMetadata<SignedOperation>
-  > {
+  async signOperation(
+    { op, metadata }: OpWithMetadata<PreSignOperation>,
+  ): Promise<OpWithMetadata<SignedOperation>> {
     const _op = await this.snap.invoke<SignOperationMethod>({
       method: "nocturne_signOperation",
       params: { op, metadata },
@@ -464,24 +460,17 @@ export class NocturneSdk {
     return { op: _op, metadata };
   }
 
-  async proveOperation({
-    op,
-    metadata,
-  }: OpWithMetadata<SignedOperation>): Promise<
-    OpWithMetadata<SubmittableOperationWithNetworkInfo>
-  > {
+  async proveOperation(
+    { op, metadata }: OpWithMetadata<SignedOperation>,
+  ): Promise<OpWithMetadata<SubmittableOperationWithNetworkInfo>> {
     const prover = await this.joinSplitProverThunk();
     const _op = await proveOperation(prover, op);
     return { op: _op, metadata };
   }
 
-  async performOperation({
-    op,
-    metadata,
-  }:
-    | OpWithMetadata<PreSignOperation>
-    | OpWithMetadata<SignedOperation>
-    | OpWithMetadata<SubmittableOperationWithNetworkInfo>): Promise<OperationHandle> {
+  async performOperation(
+    { op, metadata }: OpWithMetadata<PreSignOperation> | OpWithMetadata<SignedOperation> | OpWithMetadata<SubmittableOperationWithNetworkInfo>
+  ): Promise<OperationHandle> {
     const client = await this.clientThunk();
 
     const kind = getOperationKind(op);
@@ -491,7 +480,7 @@ export class NocturneSdk {
 
         const signed = await this.signOperation({ op: _op, metadata });
         const submittable = await this.proveOperation(signed);
-
+        
         await client.addOpToHistory(_op, metadata);
         try {
           const handle = await this.submitOperation(submittable.op);
@@ -687,7 +676,7 @@ export class NocturneSdk {
       default:
         throw new Error(`Unsupported protocol: ${protocol}`);
     }
-  }
+  } 
 
   async verifyProvenOperation(operation: ProvenOperation): Promise<boolean> {
     const opDigest = OperationTrait.computeDigest(operation);
@@ -894,7 +883,7 @@ export class NocturneSdk {
     // get EOA address from snap
     const eoaAddr = await this.snap.invoke<RequestSpendKeyEoaMethod>({
       method: "nocturne_requestSpendKeyEoa",
-      params: null,
+      params: undefined,
     });
 
     if (!eoaAddr) {
