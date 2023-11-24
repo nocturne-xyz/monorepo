@@ -2688,9 +2688,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/data-cli@workspace:packages/data-cli":
+"@nocturne-xyz/data-cli@workspace:packages/data":
   version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/data-cli@workspace:packages/data-cli"
+  resolution: "@nocturne-xyz/data-cli@workspace:packages/data"
   dependencies:
     "@nocturne-xyz/contracts": ^3.0.0
     "@nocturne-xyz/core": "workspace:^"

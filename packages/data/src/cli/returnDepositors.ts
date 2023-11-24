@@ -1,10 +1,10 @@
-import { parseAndFilterCsvOfAddresses } from "./utils";
+import { parseAndFilterCsvOfAddresses } from "../utils";
 import { Command } from "commander";
 
 export const returnDepositors = new Command("return-depositors")
-  .summary("Fetch depositors and write to CSV")
+  .summary("Print list of return depositors (at least 2 deposits)")
   .description(
-    "Fetch depositors for a block range then write to single-column CSV"
+    "Print list of return depositors to number of deposits. Minimum 2 deposits to show in list."
   )
   .requiredOption("--input-csv <string>", "Path to input CSV")
   .action(main);
