@@ -1,18 +1,17 @@
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { Command } from "commander";
-import fs from "fs";
 import { requireApiKeys } from "../../../utils";
 import { createWriteStream } from "fs";
 import { API_CALL_MAP, ApiCallNames } from "../../../screening/checks/apiCalls";
-import { Address, sleep } from "@nocturne-xyz/core";
+import { sleep } from "@nocturne-xyz/core";
 import * as JSON from "bigint-json-serialization";
 import {
   CachedAddressData,
-  dedupAddressesInOrder,
   ensureExists,
   formDepositInfo,
   getLocalRedis,
 } from "./helpers/utils";
+import { parseAndFilterCsvOfAddresses } from "@nocturne-xyz/data";
 
 /**
  * Example
@@ -43,21 +42,6 @@ const runSnapshot = new Command("snapshot")
   .option("--log-level <string>", "min log importance to log to stdout.")
   .action(main);
 
-async function parseAndFilterCsvOfAddresses(path: string): Promise<Address[]> {
-  const inputFileText = await fs.promises.readFile(path, "utf-8");
-  // split the input file into lines
-  const inputFileLines = inputFileText.split("\n");
-  // take the first column
-  const addresses = inputFileLines.map((line) => line.trim().split(",")[0]);
-  // filter out anything that doesn't look like an address
-  const filteredAddresses = addresses.filter((address) => {
-    return address.match(/^0x[0-9a-fA-F]{40}$/i);
-  });
-
-  // deduplicate and sort
-  return dedupAddressesInOrder(filteredAddresses);
-}
-
 async function main(options: any): Promise<void> {
   requireApiKeys();
 
@@ -73,7 +57,9 @@ async function main(options: any): Promise<void> {
   );
 
   logger.info(`Starting snapshot for addresses from ${inputCsv}`);
-  const dedupedAddresses = await parseAndFilterCsvOfAddresses(inputCsv);
+  const dedupedAddresses = await parseAndFilterCsvOfAddresses(inputCsv, {
+    dedupAddresses: true,
+  });
   const numAddresses = dedupedAddresses.length;
 
   const writeStream = createWriteStream(outputData, { encoding: "utf-8" });

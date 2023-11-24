@@ -6,7 +6,6 @@ import { isRejection } from "../../../screening/checks/RuleSet";
 import { Logger } from "winston";
 import {
   AddressDataSnapshot,
-  dedupAddressesInOrder,
   ensureExists,
   formDepositInfo,
   getLocalRedis,
@@ -14,6 +13,7 @@ import {
 } from "./helpers/utils";
 import * as JSON from "bigint-json-serialization";
 import path from "path";
+import { dedupAddressesInOrder } from "@nocturne-xyz/data";
 
 /**
  * Example

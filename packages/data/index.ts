@@ -1,1 +1,1 @@
-export * from "./src/cli/index";
+export * from "./src/index";
