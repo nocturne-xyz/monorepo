@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.1.0
+
+### Minor Changes
+
+- 5f493cdf: consensys is taking too long, revert firefox changes
+
 ## 4.0.3
 
 ### Patch Changes
