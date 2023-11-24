@@ -958,7 +958,9 @@ export class NocturneSdk {
 
         let endIndex = await fetchEndIndex();
 
-        const startIndex = (await this.getLatestSyncedMerkleIndex()) ?? 0;
+        const client = await this.clientThunk();
+
+        const startIndex = client.latestSyncedMerkleIndex ?? 0;
         let currentIndex = startIndex;
 
         // if latestCommittedMerkleIndex from the client is different from that on-chain, then the client
@@ -967,10 +969,7 @@ export class NocturneSdk {
         // to sync at least once if its `latestCommittedMerkleIndex` is different from the `endIndex` we fetched
         // this should work fine, but it technically makes more queries than it needs to.
         // TODO: add method to SDKSyncAdapter to fetch latest committed merkle index with a timelag
-        const latestCommittedMerkleIndex = await (
-          await this.clientThunk()
-        ).getLatestCommittedMerkleIndex();
-        const minIterations = latestCommittedMerkleIndex !== endIndex ? 1 : 0;
+        const minIterations = client.latestCommittedMerkleIndex !== endIndex ? 1 : 0;
 
         const NUM_REFETCHES = 5;
         const refetchEvery = Math.floor(
@@ -1028,12 +1027,7 @@ export class NocturneSdk {
 
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {
     const client = await this.clientThunk();
-    const latestSyncedMerkleIndex = client.latestSyncedMerkleIndex;
-    console.log(
-      "[getLatestSyncedMerkleIndex] FE-SDK latestSyncedMerkleIndex",
-      latestSyncedMerkleIndex,
-    );
-    return latestSyncedMerkleIndex;
+    return client.latestSyncedMerkleIndex;
   }
 
   async clearSyncState(): Promise<void> {
