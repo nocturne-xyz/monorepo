@@ -600,6 +600,12 @@ export class NocturneClientState {
     return state;
   }
 
+  // clears the underlying KV completely, including all snapshots.
+  // TODO: make this more granular
+  async clear(): Promise<void> {
+    await this.kv.clear();
+  }
+
   private static async loadInner(
     kv: KVStore,
     snapshotKey: string

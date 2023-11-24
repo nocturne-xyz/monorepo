@@ -4,10 +4,10 @@ import {
   Handler__factory,
   Teller__factory,
 } from "@nocturne-xyz/contracts";
-import { SparseMerkleProver, NocturneSigner } from "@nocturne-xyz/core";
+import { NocturneSigner } from "@nocturne-xyz/core";
 import {
   NocturneClient,
-  NocturneDB,
+  NocturneClientState,
   MockEthToTokenConverter,
   BundlerOpTracker,
 } from "@nocturne-xyz/client";
@@ -148,8 +148,7 @@ export const run = new Command("run")
 
     const nocturneSigner = new NocturneSigner(skBytes);
     const kv = new LMDBKVStore({ path: dbPath });
-    const merkleProver = await SparseMerkleProver.loadFromKV(kv);
-    const db = new NocturneDB(kv);
+    const state = await NocturneClientState.load(kv);
     const syncAdapter = new HasuraSdkSyncAdapter(
       hasuraEndpoint,
       subgraphEndpoint,
@@ -159,8 +158,7 @@ export const run = new Command("run")
       nocturneSigner.viewer(),
       provider,
       config,
-      merkleProver,
-      db,
+      state,
       syncAdapter,
       new MockEthToTokenConverter(),
       new BundlerOpTracker(bundlerEndpoint)

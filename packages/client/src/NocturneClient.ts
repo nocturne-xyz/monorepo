@@ -107,6 +107,10 @@ export class NocturneClient {
     return latestSyncedMerkleIndex;
   }
 
+  async clearSyncState(): Promise<void> {
+    await this.state.clear();
+  }
+
   async prepareOperation(
     opRequest: OperationRequest,
     gasMultiplier: number

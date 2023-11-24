@@ -243,7 +243,7 @@ export class NocturneSdk {
       const kv = new IdbKvStore(
         `nocturne-fe-sdk-${networkName}-${canonAddrHash}`,
       );
-      const state = NocturneClientState.load(kv);
+      const state = await NocturneClientState.load(kv);
       return new NocturneClient(
         viewer,
         this.provider,
@@ -1032,7 +1032,7 @@ export class NocturneSdk {
 
   async clearSyncState(): Promise<void> {
     const client = await this.clientThunk();
-    await client.kv.clear();
+    await client.clearSyncState();
   }
 
   /**

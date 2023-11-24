@@ -202,12 +202,9 @@ export class TestActor {
   private async runSyncOnly(syncInterval: number): Promise<void> {
     while (true) {
       await this.client.sync();
-      const [latestSyncedMerkleIndex, latestCommittedMerkleIndex] =
-        await Promise.all([
-          this.client.getLatestSyncedMerkleIndex(),
-          this.client.getLatestCommittedMerkleIndex(),
-        ]);
-      const currentTreeRoot = this.client.getCurrentTreeRoot();
+      const latestSyncedMerkleIndex = this.client.latestSyncedMerkleIndex;
+      const latestCommittedMerkleIndex = this.client.latestCommittedMerkleIndex;
+      const currentTreeRoot = this.client.merkleRoot;
       this.logger.info(
         `finished syncing to root ${currentTreeRoot}, committed index ${latestCommittedMerkleIndex}, latest index ${latestSyncedMerkleIndex}`,
         {
