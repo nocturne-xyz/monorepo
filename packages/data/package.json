@@ -1,9 +1,11 @@
 {
-  "name": "@nocturne-xyz/data-cli",
+  "name": "@nocturne-xyz/data",
   "version": "0.1.2",
   "license": "MIT",
   "main": "dist/index.js",
-  "bin": "dist/src/index.js",
+  "bin": {
+    "data-cli": "dist/src/cli/index.js"
+  },
   "types": "dist/index.d.ts",
   "files": [
     "dist/**/*",

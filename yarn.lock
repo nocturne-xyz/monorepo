@@ -2688,9 +2688,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/data-cli@workspace:packages/data-cli":
+"@nocturne-xyz/data@workspace:^, @nocturne-xyz/data@workspace:packages/data":
   version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/data-cli@workspace:packages/data-cli"
+  resolution: "@nocturne-xyz/data@workspace:packages/data"
   dependencies:
     "@nocturne-xyz/contracts": ^3.0.0
     "@nocturne-xyz/core": "workspace:^"
@@ -2730,7 +2730,7 @@ __metadata:
     typescript: ^4.8.4
     winston: ^3.9.0
   bin:
-    data-cli: dist/src/index.js
+    data-cli: dist/src/cli/index.js
   languageName: unknown
   linkType: soft
 
@@ -2765,6 +2765,7 @@ __metadata:
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": ^3.0.0
     "@nocturne-xyz/core": "workspace:^"
+    "@nocturne-xyz/data": "workspace:^"
     "@nocturne-xyz/offchain-utils": "workspace:^"
     "@nocturne-xyz/subgraph-sync-adapters": "workspace:^"
     "@opentelemetry/api": ^1.4.1

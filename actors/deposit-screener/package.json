@@ -33,6 +33,7 @@
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "^3.0.0",
     "@nocturne-xyz/core": "workspace:^",
+    "@nocturne-xyz/data": "workspace:^",
     "@nocturne-xyz/offchain-utils": "workspace:^",
     "@nocturne-xyz/subgraph-sync-adapters": "workspace:^",
     "@opentelemetry/api": "^1.4.1",

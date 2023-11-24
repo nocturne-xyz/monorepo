@@ -4,6 +4,7 @@ import { program } from "commander";
 import * as dotenv from "dotenv";
 import { setupDefaultInstrumentation } from "@nocturne-xyz/offchain-utils";
 import depositors from "./depositors";
+import { returnDepositors } from "./returnDepositors";
 
 export default async function main(): Promise<void> {
   dotenv.config();
@@ -12,7 +13,8 @@ export default async function main(): Promise<void> {
   program
     .name("data-cli")
     .description("CLI for onchain data inspection")
-    .addCommand(depositors);
+    .addCommand(depositors)
+    .addCommand(returnDepositors);
   await program.parseAsync(process.argv);
 }
 

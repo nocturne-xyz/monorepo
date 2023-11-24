@@ -18,7 +18,7 @@ import { ethers } from "ethers";
  * Example
  * yarn deposit-screener-cli inspect trmTxMonitor --token-address 0x6b175474e89094c44da98b954eedeac495271d0f --eth-transfer-style indirect --from-address 0xd90e2f925DA726b50C4Ed8D0Fb90Ad053324F31b --start-block 0 --end-block 27025780 --log-level=info
  */
-const runTrmTxMonitor = new Command("trmTxMonitor")
+const runTrmTxMonitor = new Command("trm-tx-monitor")
   .summary(
     "query token/ETH outflows and submit to TRM transaction monitoring API"
   )
