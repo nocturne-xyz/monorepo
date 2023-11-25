@@ -22,8 +22,7 @@ const runBatcher = new Command("batcher")
   )
   .option("--log-level <string>", "min log importance to log to stdout")
   .action(async (options) => {
-    const { configNameOrPath, maxLatency, batchSize, logDir, logLevel } =
-      options;
+    const { configNameOrPath, maxLatency, logDir, logLevel } = options;
 
     // TODO: consolidate batcher and submitter into one component (batcher doesn't need config name)
     const configName = extractConfigName(configNameOrPath);
@@ -37,8 +36,8 @@ const runBatcher = new Command("batcher")
     const batcher = new BundlerBatcher(
       getRedis(),
       logger,
-      maxLatency,
-      batchSize
+      maxLatency
+      // TODO
     );
 
     const { promise } = batcher.start();
