@@ -70,7 +70,13 @@ function startBundlerBatcher(
   redis: IORedis
 ): TeardownFn {
   const logger = makeTestLogger("bundler", "batcher");
-  const batcher = new BundlerBatcher(redis, logger, config.maxLatency);
+  const batcher = new BundlerBatcher(redis, logger, {
+    pollIntervalSeconds: 1,
+    mediumBatchSize: 1,
+    slowBatchSize: 1,
+    mediumBatchLatencySeconds: config.maxLatency,
+    slowBatchLatencySeconds: config.maxLatency,
+  });
   const { promise, teardown } = batcher.start();
   promise.catch((err) => {
     console.error("bundler batcher error", err);
