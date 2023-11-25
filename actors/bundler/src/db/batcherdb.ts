@@ -3,14 +3,14 @@ import * as JSON from "bigint-json-serialization";
 import { RedisTransaction } from ".";
 import { unixTimestampSeconds } from "../utils";
 
-export type BufferDBName = "FAST" | "MEDIUM" | "SLOW";
+export type BufferSpeed = "FAST" | "MEDIUM" | "SLOW";
 const WINDOW_START_KEY = "WINDOW_START";
 
 export class BatcherDB<T> {
-  prefix: BufferDBName;
+  prefix: BufferSpeed;
   redis: IORedis;
 
-  constructor(prefix: BufferDBName, redis: IORedis) {
+  constructor(prefix: BufferSpeed, redis: IORedis) {
     this.prefix = prefix;
     this.redis = redis;
   }

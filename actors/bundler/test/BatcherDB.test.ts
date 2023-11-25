@@ -3,6 +3,7 @@ import { expect } from "chai";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { BatcherDB } from "../src/db";
+import { unixTimestampSeconds } from "../src/utils";
 
 const BATCH_SIZE = 8;
 
@@ -18,7 +19,7 @@ describe("BatcherDB", async () => {
     const port = await server.getPort();
     redis = new IORedis(port, host);
 
-    batcherDB = new BatcherDB<string>(redis);
+    batcherDB = new BatcherDB<string>("FAST", redis);
   });
 
   beforeEach(async () => {
@@ -34,9 +35,13 @@ describe("BatcherDB", async () => {
   it("fills, detects, and pops batch", async () => {
     expect(await batcherDB.getBatch(BATCH_SIZE)).to.be.undefined;
     expect(await batcherDB.pop(BATCH_SIZE)).to.be.undefined;
+    expect(await batcherDB.getWindowStart()).to.be.undefined;
 
     await fillBatch();
     expect((await batcherDB.getBatch(BATCH_SIZE))!.length).to.equal(BATCH_SIZE);
+    expect(await batcherDB.getWindowStart()).to.be.lessThanOrEqual(
+      unixTimestampSeconds()
+    );
 
     const batch = await batcherDB.pop(BATCH_SIZE);
     expect(batch!.length).to.equal(BATCH_SIZE);

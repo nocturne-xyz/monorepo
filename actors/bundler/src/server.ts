@@ -5,13 +5,8 @@ import { ethers } from "ethers";
 import cors from "cors";
 import { Logger } from "winston";
 import morgan from "morgan";
-import { Queue } from "bullmq";
-import {
-  OperationJobData,
-  SUBMITTABLE_OPERATION_QUEUE,
-  ACTOR_NAME,
-} from "./types";
-import { NullifierDB, StatusDB } from "./db";
+import { ACTOR_NAME } from "./types";
+import { BatcherDB, NullifierDB, StatusDB } from "./db";
 import {
   Handler,
   Handler__factory,
@@ -31,7 +26,10 @@ import {
   makeCreateHistogramFn,
 } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
-import { Address } from "@nocturne-xyz/core";
+import {
+  Address,
+  SubmittableOperationWithNetworkInfo,
+} from "@nocturne-xyz/core";
 import { Knex } from "knex";
 
 const COMPONENT_NAME = "server";
@@ -45,7 +43,9 @@ export interface BundlerServerMetrics {
 export class BundlerServer {
   redis: IORedis;
   pool: Knex;
-  queue: Queue<OperationJobData>;
+  fastBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
+  mediumBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
+  slowBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   logger: Logger;
@@ -68,7 +68,9 @@ export class BundlerServer {
   ) {
     this.redis = redis;
     this.pool = pool;
-    this.queue = new Queue(SUBMITTABLE_OPERATION_QUEUE, { connection: redis });
+    this.fastBuffer = new BatcherDB("FAST", redis);
+    this.mediumBuffer = new BatcherDB("MEDIUM", redis);
+    this.slowBuffer = new BatcherDB("SLOW", redis);
     this.statusDB = new StatusDB(redis);
     this.nullifierDB = new NullifierDB(redis);
     this.logger = logger;
@@ -112,7 +114,11 @@ export class BundlerServer {
     router.post(
       "/relay",
       makeRelayHandler({
-        queue: this.queue,
+        buffers: {
+          fastBuffer: this.fastBuffer,
+          mediumBuffer: this.mediumBuffer,
+          slowBuffer: this.slowBuffer,
+        },
         statusDB: this.statusDB,
         nullifierDB: this.nullifierDB,
         redis: this.redis,

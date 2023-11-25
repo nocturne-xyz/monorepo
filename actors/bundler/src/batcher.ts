@@ -13,7 +13,7 @@ import {
   ACTOR_NAME,
 } from "./types";
 import * as JSON from "bigint-json-serialization";
-import { actorChain, unixTimestampSeconds } from "./utils";
+import { unixTimestampSeconds } from "./utils";
 import { Logger } from "winston";
 import {
   ActorHandle,
@@ -23,7 +23,6 @@ import {
 import * as ot from "@opentelemetry/api";
 
 const COMPONENT_NAME = "batcher";
-const SECONDS_IN_HOUR = 3600;
 
 export interface BundlerBatcherMetrics {
   relayRequestsEnqueuedInBatcherDBCounter: ot.Counter;
@@ -31,6 +30,14 @@ export interface BundlerBatcherMetrics {
   batchesCreatedCounter: ot.Counter;
   batchLatencyHistogram: ot.Histogram;
   batchSizeHistogram: ot.Histogram;
+}
+
+export interface BatcherOpts {
+  pollIntervalSeconds?: number;
+  mediumBatchLatencySeconds?: number;
+  slowBatchLatencySeconds?: number;
+  mediumBatchSize?: number;
+  slowBatchSize?: number;
 }
 
 export class BundlerBatcher {
@@ -44,21 +51,29 @@ export class BundlerBatcher {
   metrics: BundlerBatcherMetrics;
   stopped = false;
 
-  readonly MAX_BATCH_LATENCY_SECS: number = 60;
-  readonly BATCH_SIZE: number = 8;
+  readonly pollIntervalSeconds: number = 30 * 60;
+  readonly mediumBatchLatencySeconds: number = 3 * 60 * 60;
+  readonly slowBatchLatencySeconds: number = 6 * 60 * 60;
 
-  constructor(
-    redis: IORedis,
-    logger: Logger,
-    maxLatencySeconds?: number,
-    batchSize?: number
-  ) {
-    if (batchSize) {
-      this.BATCH_SIZE = batchSize;
+  readonly mediumBatchSize: number = 3;
+  readonly slowBatchSize: number = 7;
+
+  constructor(redis: IORedis, logger: Logger, opts?: BatcherOpts) {
+    if (opts?.pollIntervalSeconds) {
+      this.pollIntervalSeconds = opts.pollIntervalSeconds;
+    }
+    if (opts?.mediumBatchLatencySeconds) {
+      this.mediumBatchLatencySeconds = opts.mediumBatchLatencySeconds;
+    }
+    if (opts?.slowBatchLatencySeconds) {
+      this.slowBatchLatencySeconds = opts.slowBatchLatencySeconds;
     }
 
-    if (maxLatencySeconds) {
-      this.MAX_BATCH_LATENCY_SECS = maxLatencySeconds;
+    if (opts?.mediumBatchSize) {
+      this.mediumBatchSize = opts.mediumBatchSize;
+    }
+    if (opts?.slowBatchSize) {
+      this.slowBatchSize = opts.slowBatchSize;
     }
 
     this.redis = redis;
@@ -128,14 +143,20 @@ export class BundlerBatcher {
     const clearBufferTransactions = [];
     const currentTime = unixTimestampSeconds();
 
+    console.log("slow time diff", currentTime - slowTimestamp);
+    console.log("slow latency", this.slowBatchLatencySeconds);
     if (
       slowBatch &&
-      ((fastBatch?.length ?? 0) +
-        (mediumBatch?.length ?? 0) +
-        (slowBatch.length ?? 0) >=
-        7 ||
-        currentTime - slowTimestamp >= 6 * SECONDS_IN_HOUR)
+      (fastSize + mediumSize + slowSize >= 7 ||
+        currentTime - slowTimestamp >= this.slowBatchLatencySeconds)
     ) {
+      this.logger.info("creating slow batch", {
+        slowBatch,
+        fastSize,
+        mediumSize,
+        slowSize,
+        timeDiff: currentTime - slowTimestamp,
+      });
       batch.push(...slowBatch);
       clearBufferTransactions.push(this.slowBuffer.getPopTransaction(slowSize));
     }
@@ -143,8 +164,15 @@ export class BundlerBatcher {
     if (
       mediumBatch &&
       (batch.length + mediumSize + fastSize >= 3 ||
-        currentTime - mediumTimestamp >= 3 * SECONDS_IN_HOUR)
+        currentTime - mediumTimestamp >= this.mediumBatchLatencySeconds)
     ) {
+      this.logger.info("creating medium batch", {
+        mediumBatch,
+        fastSize,
+        mediumSize,
+        slowSize,
+        timeDiff: currentTime - mediumTimestamp,
+      });
       batch.push(...mediumBatch);
       clearBufferTransactions.push(
         this.mediumBuffer.getPopTransaction(mediumSize)
@@ -152,41 +180,52 @@ export class BundlerBatcher {
     }
 
     if (fastBatch) {
+      this.logger.info("creating fast batch", {
+        fastBatch,
+        fastSize,
+        mediumSize,
+        slowSize,
+        timeDiff: currentTime - mediumTimestamp,
+      });
       batch.push(...fastBatch);
       clearBufferTransactions.push(this.fastBuffer.getPopTransaction(fastSize));
     }
 
-    // add batch to outbound queue
-    const operationBatchJson = JSON.stringify(batch);
-    const operationBatchData: OperationBatchJobData = {
-      operationBatchJson,
-    };
-    await this.outboundQueue.add(OPERATION_BATCH_JOB_TAG, operationBatchData);
+    // add batch to outbound queue if non empty
+    if (batch.length > 0) {
+      this.logger.info("adding batch to outbound queue", { batch });
+      const operationBatchJson = JSON.stringify(batch);
+      const operationBatchData: OperationBatchJobData = {
+        operationBatchJson,
+      };
+      await this.outboundQueue.add(OPERATION_BATCH_JOB_TAG, operationBatchData);
 
-    // create set status redis txs
-    const setJobStatusTransactions = batch.map((op) => {
-      const jobId = OperationTrait.computeDigest(op).toString();
-      return this.statusDB.getSetJobStatusTransaction(
-        jobId,
-        OperationStatus.IN_BATCH
+      // create set status redis txs
+      const setJobStatusTransactions = batch.map((op) => {
+        const jobId = OperationTrait.computeDigest(op).toString();
+        return this.statusDB.getSetJobStatusTransaction(
+          jobId,
+          OperationStatus.IN_BATCH
+        );
+      });
+
+      // execute set status + clear buffer txs
+      this.logger.debug("clearing buffers and setting job statuses");
+      const allTransactions = setJobStatusTransactions.concat(
+        clearBufferTransactions
       );
-    });
+      await this.redis.multi(allTransactions).exec((maybeErr) => {
+        if (maybeErr) {
+          const msg = `failed to set operation job and/or remove batch from DB: ${maybeErr}`;
+          this.logger.error(msg);
+          throw Error(msg);
+        }
+      });
 
-    // execute set status + clear buffer txs
-    const allTransactions = setJobStatusTransactions.concat(
-      clearBufferTransactions
-    );
-    await this.redis.multi(allTransactions).exec((maybeErr) => {
-      if (maybeErr) {
-        const msg = `failed to set operation job and/or remove batch from DB: ${maybeErr}`;
-        this.logger.error(msg);
-        throw Error(msg);
-      }
-    });
-
-    this.metrics.relayRequestsBatchedCounter.add(batch.length);
-    this.metrics.batchesCreatedCounter.add(1);
-    this.metrics.batchSizeHistogram.record(batch.length);
+      this.metrics.relayRequestsBatchedCounter.add(batch.length);
+      this.metrics.batchesCreatedCounter.add(1);
+      this.metrics.batchSizeHistogram.record(batch.length);
+    }
   }
 
   start(): ActorHandle {
@@ -203,7 +242,7 @@ export class BundlerBatcher {
 
         await this.tryCreateBatch();
 
-        setTimeout(poll, 30 * 60); // 1800 seconds = 30m
+        setTimeout(poll, this.pollIntervalSeconds * 1000);
       };
 
       void poll();
