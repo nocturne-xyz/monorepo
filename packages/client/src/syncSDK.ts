@@ -2,15 +2,12 @@ import { NocturneViewer } from "@nocturne-xyz/crypto";
 import {
   IncludedEncryptedNote,
   IncludedNote,
-  IncludedNoteCommitment,
   NoteTrait,
   EncryptedStateDiff,
   StateDiff,
   SDKSyncAdapter,
   TotalEntityIndexTrait,
   decryptNote,
-  SparseMerkleProver,
-  consecutiveChunks,
   timed,
   Histogram,
 } from "@nocturne-xyz/core";
@@ -86,22 +83,12 @@ export async function syncSDK(
       "[syncSDK] diff latestNewlySyncedMerkleIndex",
       diff.latestNewlySyncedMerkleIndex
     );
-    // update notes in DB
-    const [nfIndices, nfTime] = timed(() => state.applyStateDiff(diff));
-    applyStateDiffHistogram?.sample(nfTime / diff.notesAndCommitments.length);
-    latestSyncedMerkleIndex = state.latestSyncedMerkleIndex;
 
-    if (diff.latestCommittedMerkleIndex) {
-      const [_, time] = timed(() =>
-        updateMerkle(
-          state.merkle,
-          diff.latestCommittedMerkleIndex!,
-          diff.notesAndCommitments.map((n) => n.inner),
-          nfIndices
-        )
-      );
-      updateMerkleHistogram?.sample(time / diff.notesAndCommitments.length);
-    }
+    // update notes in DB
+    // TODO: make something like plonky2's `TimingTree` abstraction to track perf all the way down
+    const [, time] = timed(() => state.applyStateDiff(diff));
+    applyStateDiffHistogram?.sample(time / diff.notesAndCommitments.length);
+    latestSyncedMerkleIndex = state.latestSyncedMerkleIndex;
   }
 
   // TODO instead of snapshotting at the end, check tree root every K diffs and snapshot if it's correct
@@ -112,45 +99,6 @@ export async function syncSDK(
   updateMerkleHistogram?.print();
 
   return latestSyncedMerkleIndex;
-}
-
-// TODO move inside applyStateDiff
-function updateMerkle(
-  merkle: SparseMerkleProver,
-  latestCommittedMerkleIndex: number,
-  notesAndCommitments: (IncludedNote | IncludedNoteCommitment)[],
-  nfIndices: number[]
-): void {
-  // add all new leaves as uncommitted leaves
-  const batches = consecutiveChunks(
-    notesAndCommitments,
-    (noteOrCommitment) => noteOrCommitment.merkleIndex
-  );
-  for (const batch of batches) {
-    const startIndex = batch[0].merkleIndex;
-    const leaves = [];
-    const includes = [];
-    for (const noteOrCommitment of batch) {
-      if (NoteTrait.isCommitment(noteOrCommitment)) {
-        leaves.push(
-          (noteOrCommitment as IncludedNoteCommitment).noteCommitment
-        );
-        includes.push(false);
-      } else {
-        leaves.push(NoteTrait.toCommitment(noteOrCommitment as IncludedNote));
-        includes.push(true);
-      }
-    }
-    merkle.insertBatchUncommitted(startIndex, leaves, includes);
-  }
-
-  // commit up to latest subtree commit
-  merkle.commitUpToIndex(latestCommittedMerkleIndex);
-
-  // mark nullified ones for pruning
-  for (const index of nfIndices) {
-    merkle.markForPruning(index);
-  }
 }
 
 function decryptStateDiff(

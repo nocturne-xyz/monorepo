@@ -129,7 +129,7 @@ export class SparseMerkleProver {
 
   insert(index: number, leaf: bigint, include = true): void {
     assertOrErr(index < ARITY ** DEPTH, `index must be < ${ARITY}^maxDepth`);
-    assertOrErr(index >= this.count(), "index must be >= tree count");
+    assertOrErr(index >= this.count(), "[insert] index must be >= tree count");
 
     this.root = this.insertInner(this.root, [leaf], pathIndexReverse(index));
 
@@ -145,7 +145,10 @@ export class SparseMerkleProver {
       startIndex + leaves.length < ARITY ** DEPTH,
       `index must be < ${ARITY}^maxDepth`
     );
-    assertOrErr(startIndex >= this.count(), "index must be >= tree count");
+    assertOrErr(
+      startIndex >= this.count(),
+      "[insertBatch] index must be >= tree count"
+    );
     assertOrErr(
       leaves.length === includes.length,
       "leaves and includes must be the same length"
@@ -168,7 +171,10 @@ export class SparseMerkleProver {
 
   insertUncommitted(index: number, leaf: bigint, include = true): void {
     assertOrErr(index < ARITY ** DEPTH, `index must be < ${ARITY}^maxDepth`);
-    assertOrErr(index >= this.count(), "index must be >= tree count");
+    assertOrErr(
+      index >= this.count(),
+      "[insertUncommitted] index must be >= tree count"
+    );
     assertOrErr(
       this.uncommittedLeaves.length === 0 ||
         index > this.uncommittedLeaves[this.uncommittedLeaves.length - 1].index,
@@ -187,7 +193,10 @@ export class SparseMerkleProver {
       startIndex + leaves.length < ARITY ** DEPTH,
       `index must be < ${ARITY}^maxDepth`
     );
-    assertOrErr(startIndex >= this.count(), "index must be >= tree count");
+    assertOrErr(
+      startIndex >= this.count(),
+      "[insertBatchUncommitted] index must be >= tree count"
+    );
     assertOrErr(
       leaves.length === includes.length,
       "leaves and includes must be the same length"

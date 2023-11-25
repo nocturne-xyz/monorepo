@@ -116,19 +116,19 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
       // check that DB has notes and merkle has leaves for them
       //@ts-ignore
-      const allNotes = await nocturneClientAlice.db.getAllNotes();
+      const allNotes = await nocturneClientAlice.state.getAllNotes();
       const notes = Array.from(allNotes.values()).flat();
       expect(notes.length).to.eql(2);
 
       //@ts-ignore
-      expect(nocturneClientAlice.merkleProver.count()).to.eql(2);
+      expect(nocturneClientAlice.state.merkle.count()).to.eql(2);
       expect(
         //@ts-ignore
-        BigInt(nocturneClientAlice.merkleProver.getProof(0).leaf)
+        BigInt(nocturneClientAlice.state.merkle.getProof(0).leaf)
       ).to.equal(ncs[0]);
       expect(
         //@ts-ignore
-        BigInt(nocturneClientAlice.merkleProver.getProof(1).leaf)
+        BigInt(nocturneClientAlice.state.merkle.getProof(1).leaf)
       ).to.equal(ncs[1]);
     });
 
