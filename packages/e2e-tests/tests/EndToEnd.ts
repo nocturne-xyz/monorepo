@@ -151,12 +151,12 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       console.log("bob: Sync SDK");
       await nocturneClientBob.sync();
 
-    const preOpNotesAlice = clientStateAlice.getAllNotes();
-    console.log("alice pre-op notes:", preOpNotesAlice);
-    console.log(
-      "alice pre-op latestCommittedMerkleIndex",
-      clientStateAlice.latestCommittedMerkleIndex
-    );
+      const preOpNotesAlice = clientStateAlice.getAllNotes();
+      console.log("alice pre-op notes:", preOpNotesAlice);
+      console.log(
+        "alice pre-op latestCommittedMerkleIndex",
+        clientStateAlice.latestCommittedMerkleIndex
+      );
 
       console.log("prepare, sign, and prove operation with NocturneClient");
       const preSign = await nocturneClientAlice.prepareOperation(
