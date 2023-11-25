@@ -1,23 +1,47 @@
 import IORedis from "ioredis";
 import * as JSON from "bigint-json-serialization";
 import { RedisTransaction } from ".";
+import { unixTimestampSeconds } from "../utils";
 
-const BATCH_DB_NAME = "BATCH_DB";
+export type BufferDBName = "FAST" | "MEDIUM" | "SLOW";
+const WINDOW_START_KEY = "WINDOW_START";
 
 export class BatcherDB<T> {
+  prefix: BufferDBName;
   redis: IORedis;
 
-  constructor(redis: IORedis) {
+  constructor(prefix: BufferDBName, redis: IORedis) {
+    this.prefix = prefix;
     this.redis = redis;
   }
 
   async add(elem: T): Promise<boolean> {
-    await this.redis.rpush(BATCH_DB_NAME, JSON.stringify(elem));
+    await this.redis.rpush(this.prefix, JSON.stringify(elem));
+    await this.setWindowStart(unixTimestampSeconds());
     return true;
   }
 
-  async getBatch(count: number, exact = false): Promise<T[] | undefined> {
-    const stringifiedItems = await this.redis.lrange(BATCH_DB_NAME, 0, count);
+  async size(): Promise<number> {
+    return this.redis.llen(this.prefix);
+  }
+
+  async setWindowStart(windowStart: number): Promise<void> {
+    await this.redis.set(WINDOW_START_KEY, windowStart.toString());
+  }
+
+  async getWindowStart(): Promise<number> {
+    const windowStart = await this.redis.get(WINDOW_START_KEY);
+    if (!windowStart) {
+      return unixTimestampSeconds(); // return current date if not set
+    }
+    return Number(windowStart);
+  }
+
+  async getBatch(count?: number, exact = false): Promise<T[] | undefined> {
+    if (!count) {
+      count = await this.size();
+    }
+    const stringifiedItems = await this.redis.lrange(this.prefix, 0, count);
 
     if (stringifiedItems.length == 0) {
       return undefined;
@@ -30,7 +54,7 @@ export class BatcherDB<T> {
   }
 
   async pop(count: number): Promise<T[] | undefined> {
-    const stringifiedItems = await this.redis.lpop(BATCH_DB_NAME, count);
+    const stringifiedItems = await this.redis.lpop(this.prefix, count);
 
     if (!stringifiedItems) {
       return undefined;
@@ -40,10 +64,10 @@ export class BatcherDB<T> {
   }
 
   getAddTransaction(elem: T): RedisTransaction {
-    return ["rpush", BATCH_DB_NAME, JSON.stringify(elem)];
+    return ["rpush", this.prefix, JSON.stringify(elem)];
   }
 
   getPopTransaction(count: number): RedisTransaction {
-    return ["lpop", BATCH_DB_NAME, count.toString()];
+    return ["lpop", this.prefix, count.toString()];
   }
 }
