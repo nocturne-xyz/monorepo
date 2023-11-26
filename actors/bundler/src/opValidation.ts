@@ -3,6 +3,7 @@ import {
   Bundle,
   SubmittableOperationWithNetworkInfo,
   OperationTrait,
+  Address,
 } from "@nocturne-xyz/core";
 import { Handler, Teller } from "@nocturne-xyz/contracts";
 import { NullifierDB } from "./db";
@@ -50,7 +51,7 @@ export async function checkNullifierConflictError(
 }
 
 export async function checkRevertError(
-  bundlerAddress: string,
+  bundlerAddress: Address,
   tellerContract: Teller,
   handlerContract: Handler,
   provider: ethers.providers.Provider,
