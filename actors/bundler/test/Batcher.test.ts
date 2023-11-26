@@ -6,7 +6,7 @@ import { BundlerBatcher } from "../src/batcher";
 import { VALID_RELAY_REQUEST } from "./utils";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { sleep } from "../src/utils";
-import { BatcherDB, BufferSpeed, StatusDB } from "../src/db";
+import { BufferDB, BufferSpeed, StatusDB } from "../src/db";
 import * as JSON from "bigint-json-serialization";
 import {
   OperationStatus,
@@ -20,9 +20,9 @@ describe("BundlerBatcher", async () => {
   let server: RedisMemoryServer;
   let redis: IORedis;
   let statusDB: StatusDB;
-  let fastBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
-  let mediumBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
-  let slowBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
+  let fastBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+  let mediumBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+  let slowBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
   let batcher: BundlerBatcher;
   let promise: Promise<void>;
   let teardown: () => Promise<void>;
@@ -36,9 +36,9 @@ describe("BundlerBatcher", async () => {
     redis = new IORedis(port, host);
 
     statusDB = new StatusDB(redis);
-    fastBuffer = new BatcherDB("FAST", redis);
-    mediumBuffer = new BatcherDB("MEDIUM", redis);
-    slowBuffer = new BatcherDB("SLOW", redis);
+    fastBuffer = new BufferDB("FAST", redis);
+    mediumBuffer = new BufferDB("MEDIUM", redis);
+    slowBuffer = new BufferDB("SLOW", redis);
   });
 
   beforeEach(async () => {

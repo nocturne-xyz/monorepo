@@ -6,7 +6,7 @@ import cors from "cors";
 import { Logger } from "winston";
 import morgan from "morgan";
 import { ACTOR_NAME } from "./types";
-import { BatcherDB, NullifierDB, StatusDB } from "./db";
+import { BufferDB, NullifierDB, StatusDB } from "./db";
 import {
   Handler,
   Handler__factory,
@@ -43,9 +43,9 @@ export interface BundlerServerMetrics {
 export class BundlerServer {
   redis: IORedis;
   pool: Knex;
-  fastBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
-  mediumBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
-  slowBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
+  fastBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+  mediumBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+  slowBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   logger: Logger;
@@ -68,9 +68,9 @@ export class BundlerServer {
   ) {
     this.redis = redis;
     this.pool = pool;
-    this.fastBuffer = new BatcherDB("FAST", redis);
-    this.mediumBuffer = new BatcherDB("MEDIUM", redis);
-    this.slowBuffer = new BatcherDB("SLOW", redis);
+    this.fastBuffer = new BufferDB("FAST", redis);
+    this.mediumBuffer = new BufferDB("MEDIUM", redis);
+    this.slowBuffer = new BufferDB("SLOW", redis);
     this.statusDB = new StatusDB(redis);
     this.nullifierDB = new NullifierDB(redis);
     this.logger = logger;

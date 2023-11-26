@@ -6,7 +6,7 @@ import { unixTimestampSeconds } from "../utils";
 export type BufferSpeed = "FAST" | "MEDIUM" | "SLOW";
 const WINDOW_START_KEY = "WINDOW_START";
 
-export class BatcherDB<T> {
+export class BufferDB<T> {
   prefix: BufferSpeed;
   redis: IORedis;
 

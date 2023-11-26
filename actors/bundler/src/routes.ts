@@ -16,7 +16,7 @@ import {
   checkNullifierConflictError,
   checkRevertError,
 } from "./opValidation";
-import { BatcherDB, NullifierDB, StatusDB } from "./db";
+import { BufferDB, NullifierDB, StatusDB } from "./db";
 import { ethers } from "ethers";
 import { tryParseRelayRequest } from "./request";
 import { Logger } from "winston";
@@ -24,9 +24,9 @@ import { BundlerServerMetrics } from "./server";
 
 export interface HandleRelayDeps {
   buffers: {
-    fastBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
-    mediumBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
-    slowBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
+    fastBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+    mediumBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+    slowBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
   };
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
@@ -224,9 +224,9 @@ export function makeCheckNFHandler({
 
 async function postJob(
   buffers: {
-    fastBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
-    mediumBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
-    slowBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
+    fastBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+    mediumBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+    slowBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
   },
   statusDB: StatusDB,
   nullifierDB: NullifierDB,
@@ -237,11 +237,14 @@ async function postJob(
 ): Promise<string> {
   const jobId = OperationTrait.computeDigest(op).toString();
 
-  const gasPrice = (await provider.getGasPrice()).toNumber();
-  if (op.gasPrice >= (gasPrice * 9) / 10) {
+  const gasPrice = (await provider.getGasPrice()).toBigInt();
+
+  if (op.gasPrice >= (gasPrice * 85n) / 100n) {
+    // client will pick 100%, 15% buffer for fluctuations
     logger.info("posting op to fast queue", { op });
     await buffers.fastBuffer.add(op);
-  } else if (op.gasPrice >= (gasPrice * 7) / 10) {
+  } else if (op.gasPrice >= (gasPrice * 60n) / 100n) {
+    // client will pick 70%, 10% buffer for fluctuations
     logger.info("posting op to medium queue", { op });
     await buffers.mediumBuffer.add(op);
   } else {

@@ -11,7 +11,9 @@ import { BundlerSubmitter } from "../../../submitter";
 
 const runProcessor = new Command("processor")
   .summary("run bundler processor which batches and submits operations")
-  .description("must supply .env file with REDIS_URL and REDIS_PASSWORD.")
+  .description(
+    "must supply .env file with REDIS_URL,REDIS_PASSWORD, RPC_URL, and TX_SIGNER_KEY."
+  )
   .requiredOption(
     "--config-name-or-path <string>",
     "config name or path to Nocturne contract JSON config file"

@@ -1,6 +1,6 @@
 import IORedis from "ioredis";
 import { Queue } from "bullmq";
-import { BatcherDB, StatusDB } from "./db";
+import { BufferDB, StatusDB } from "./db";
 import {
   OperationStatus,
   OperationTrait,
@@ -25,7 +25,7 @@ import * as ot from "@opentelemetry/api";
 const COMPONENT_NAME = "batcher";
 
 export interface BundlerBatcherMetrics {
-  relayRequestsEnqueuedInBatcherDBCounter: ot.Counter;
+  relayRequestsEnqueuedInBufferDBCounter: ot.Counter;
   relayRequestsBatchedCounter: ot.Counter;
   batchesCreatedCounter: ot.Counter;
   batchLatencyHistogram: ot.Histogram;
@@ -43,20 +43,20 @@ export interface BatcherOpts {
 export class BundlerBatcher {
   redis: IORedis;
   statusDB: StatusDB;
-  fastBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
-  mediumBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
-  slowBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
+  fastBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+  mediumBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+  slowBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
   outboundQueue: Queue<OperationBatchJobData>;
   logger: Logger;
   metrics: BundlerBatcherMetrics;
   stopped = false;
 
-  readonly pollIntervalSeconds: number = 30 * 60;
-  readonly mediumBatchLatencySeconds: number = 3 * 60 * 60;
+  readonly pollIntervalSeconds: number = 30 * 60; // default 30 minutes
+  readonly mediumBatchLatencySeconds: number = 3 * 60 * 60; // default 3 hours
   readonly slowBatchLatencySeconds: number = 6 * 60 * 60;
 
-  readonly mediumBatchSize: number = 3;
-  readonly slowBatchSize: number = 7;
+  readonly mediumBatchSize: number = 3; // default 3 existing ops, next op will be 4th
+  readonly slowBatchSize: number = 7; // default 7 existing ops, next op will be 8th
 
   constructor(redis: IORedis, logger: Logger, opts?: BatcherOpts) {
     if (opts?.pollIntervalSeconds) {
@@ -79,9 +79,9 @@ export class BundlerBatcher {
     this.redis = redis;
     this.logger = logger;
     this.statusDB = new StatusDB(redis);
-    this.fastBuffer = new BatcherDB("FAST", redis);
-    this.mediumBuffer = new BatcherDB("MEDIUM", redis);
-    this.slowBuffer = new BatcherDB("SLOW", redis);
+    this.fastBuffer = new BufferDB("FAST", redis);
+    this.mediumBuffer = new BufferDB("MEDIUM", redis);
+    this.slowBuffer = new BufferDB("SLOW", redis);
     this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, {
       connection: redis,
     });
@@ -99,7 +99,7 @@ export class BundlerBatcher {
     );
 
     this.metrics = {
-      relayRequestsEnqueuedInBatcherDBCounter: createCounter(
+      relayRequestsEnqueuedInBufferDBCounter: createCounter(
         "relay_requests_enqueued_in_batcher_db.counter",
         "Number of relay requests enqueued in batcher DB"
       ),
@@ -144,8 +144,6 @@ export class BundlerBatcher {
 
     const clearBufferTransactions = [];
 
-    console.log("slow time diff", currentTime - slowTimestamp);
-    console.log("slow latency", this.slowBatchLatencySeconds);
     if (
       slowBatch &&
       (fastSize + mediumSize + slowSize >= 7 ||
@@ -186,7 +184,6 @@ export class BundlerBatcher {
         fastSize,
         mediumSize,
         slowSize,
-        timeDiff: currentTime - mediumTimestamp,
       });
       batch.push(...fastBatch);
       clearBufferTransactions.push(this.fastBuffer.getPopTransaction(fastSize));
@@ -201,6 +198,7 @@ export class BundlerBatcher {
       };
       await this.outboundQueue.add(OPERATION_BATCH_JOB_TAG, operationBatchData);
 
+      // TODO: if crash happens between queue.add and status setting, state will be out of sync
       // create set status redis txs
       const setJobStatusTransactions = batch.map((op) => {
         const jobId = OperationTrait.computeDigest(op).toString();
