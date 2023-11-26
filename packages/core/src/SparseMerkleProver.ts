@@ -124,7 +124,10 @@ export class SparseMerkleProver {
   }
 
   totalCount(): number {
-    return this._count + this.uncommittedLeaves.length;
+    const numUncommitted = this.uncommittedLeaves.length;
+    return numUncommitted > 0
+      ? this.uncommittedLeaves[numUncommitted - 1].index + 1
+      : this.count();
   }
 
   insert(index: number, leaf: bigint, include = true): void {

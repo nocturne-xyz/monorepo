@@ -334,6 +334,109 @@ describe("SparseMerkleProver", () => {
     });
   });
 
+  it("queues up uncommitted leaves", () => {
+    const prover = new SparseMerkleProver();
+    const rootBefore = prover.getRoot();
+
+    // insert 10 leaves with `include = true`
+    const first10 = range(10).map(randomBaseFieldElement);
+    prover.insertBatchUncommitted(
+      0,
+      first10,
+      range(10).map(() => true)
+    );
+
+    // insert 10 leaves with `include = false`
+    prover.insertBatchUncommitted(
+      10,
+      range(10).map(randomBaseFieldElement),
+      range(10).map(() => false)
+    );
+
+    // since they're uncommitted, expect root and count to be the same as empty tree,
+    // but totalCount to be 20
+    expect(prover.getRoot()).to.equal(rootBefore);
+    expect(prover.count()).to.equal(0);
+    expect(prover.totalCount()).to.equal(20);
+
+    // commit to the first 10 leaves
+    prover.commitUpToIndex(9);
+
+    // expect root to be equivalent to inserting the first 10 leaves directly
+    // and count to be 10, nto 20
+    const replica = new SparseMerkleProver();
+    replica.insertBatch(
+      0,
+      first10,
+      range(10).map(() => true)
+    );
+    expect(prover.getRoot()).to.equal(replica.getRoot());
+    expect(prover.count()).to.equal(10);
+  });
+
+  it("returns correct totalCount when there are implicit zeros", () => {
+    const prover = new SparseMerkleProver();
+
+    // insert 10 leaves with `include = true`
+    prover.insertBatchUncommitted(
+      0,
+      range(10).map(randomBaseFieldElement),
+      range(10).map(() => true)
+    );
+
+    // insert 10 leaves with `include = true`, but starting at index 20, leaving a gap of 10 zeros
+    prover.insertBatchUncommitted(
+      20,
+      range(10).map(randomBaseFieldElement),
+      range(10).map(() => true)
+    );
+
+    // expect totalCount to be 30
+    expect(prover.totalCount()).to.equal(30);
+  });
+
+  it("enforces monotonicity when committing", () => {
+    const prover = new SparseMerkleProver();
+
+    // insert 10 leaves with `include = true`
+    const first10 = range(10).map(randomBaseFieldElement);
+    prover.insertBatchUncommitted(
+      0,
+      first10,
+      range(10).map(() => true)
+    );
+
+    // insert 10 leaves with `include = false`
+    prover.insertBatchUncommitted(
+      10,
+      range(10).map(randomBaseFieldElement),
+      range(10).map(() => false)
+    );
+
+    // commit to the first 10 leaves
+    prover.commitUpToIndex(10);
+
+    // attempt to insert an uncommitted batch starting at index 5
+    // we expect it to fail
+    expect(() =>
+      prover.insertBatchUncommitted(
+        5,
+        first10,
+        range(10).map(() => true)
+      )
+    ).to.throw;
+
+    // attempt to insert a batch directly into the tree starting at index 5
+    // we expect it to fail
+    expect(() =>
+      prover.insertBatch(
+        5,
+        first10,
+        range(10).map(() => true)
+      )
+    ).to.throw;
+  });
+
   it.skip("generates test constants for testTreeTest in contracts", () => {
     // from idx 0, insert 420, 69, and print root
     const prover = new SparseMerkleProver();

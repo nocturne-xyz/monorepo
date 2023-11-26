@@ -20,6 +20,7 @@ import {
   consecutiveChunks,
   MerkleIndex,
   Asset,
+  maxNullish,
 } from "@nocturne-xyz/core";
 import { Mutex } from "async-mutex";
 import { OpHistoryRecord, OperationMetadata } from "./types";
@@ -68,6 +69,10 @@ export class NocturneClientState {
   private tei?: TotalEntityIndex;
   private commitTei?: bigint;
 
+  // TODO track these via tree
+  private latestMerkleIndexFromDiff?: number;
+  private _latestCommittedMerkleIndex?: number;
+
   // TODO find another home for this
   assetAddrToAsset: Map<Address, Asset>;
 
@@ -111,7 +116,8 @@ export class NocturneClientState {
 
   get latestSyncedMerkleIndex(): number | undefined {
     const countMinusOne = this.merkle.totalCount() - 1;
-    if (countMinusOne < 0) {
+    const res = maxNullish(countMinusOne, this.latestMerkleIndexFromDiff)!;
+    if (res < 0) {
       return undefined;
     }
 
@@ -119,12 +125,7 @@ export class NocturneClientState {
   }
 
   get latestCommittedMerkleIndex(): number | undefined {
-    const countMinusOne = this.merkle.count() - 1;
-    if (countMinusOne < 0) {
-      return undefined;
-    }
-
-    return countMinusOne;
+    return this._latestCommittedMerkleIndex;
   }
 
   get merkleRoot(): bigint {
@@ -142,6 +143,7 @@ export class NocturneClientState {
       notesAndCommitments,
       nullifiers,
       latestCommittedMerkleIndex,
+      latestNewlySyncedMerkleIndex,
       totalEntityIndex,
     } = diff;
 
@@ -168,6 +170,10 @@ export class NocturneClientState {
     // TODO add commitTei to state diff
     this.commitTei = totalEntityIndex;
     this.tei = totalEntityIndex;
+
+    // 6. set indices
+    this.latestMerkleIndexFromDiff = latestNewlySyncedMerkleIndex;
+    this._latestCommittedMerkleIndex = latestCommittedMerkleIndex;
 
     return nfIndices;
   }
@@ -219,12 +225,9 @@ export class NocturneClientState {
       // 1. remove merkle index from asset => merkle indices map
       // 2. remove nf => merkle map entry
 
-      // if the nf isn't in the map, skip it. This is expected for idempotency, but we should log a warning anyways
+      // if the nf isn't in the map, skip it as it's not ours
       const merkleIndex = this.nfToMerkleIndex.get(nf);
       if (merkleIndex === undefined) {
-        console.warn(
-          `nullifier ${nf} not found in nfToMerkleIndex - skipping...`
-        );
         continue;
       }
 
