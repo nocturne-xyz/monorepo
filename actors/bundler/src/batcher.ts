@@ -122,7 +122,7 @@ export class BundlerBatcher {
     };
   }
 
-  async tryCreateBatch() {
+  async tryCreateBatch(): Promise<void> {
     const batch = [];
     const [fastBatch, mediumBatch, slowBatch] = [
       await this.fastBuffer.getBatch(),

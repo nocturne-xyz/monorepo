@@ -62,9 +62,7 @@ describe("BufferDB", async () => {
     await fillBatch();
     expect((await bufferDB.getBatch(BATCH_SIZE))!.length).to.equal(BATCH_SIZE);
 
-    const addTransaction = bufferDB.getAddTransaction(
-      `ITEM_${BATCH_SIZE + 1}`
-    );
+    const addTransaction = bufferDB.getAddTransaction(`ITEM_${BATCH_SIZE + 1}`);
     const popTransaction = bufferDB.getPopTransaction(BATCH_SIZE + 1);
 
     const res = await redis
