@@ -24,6 +24,8 @@ describe("BundlerBatcher", async () => {
   let mediumBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
   let slowBuffer: BatcherDB<SubmittableOperationWithNetworkInfo>;
   let batcher: BundlerBatcher;
+  let promise: Promise<void>;
+  let teardown: () => Promise<void>;
   const logger = makeTestLogger("bundler", "batcher");
 
   before(async () => {
@@ -37,14 +39,19 @@ describe("BundlerBatcher", async () => {
     fastBuffer = new BatcherDB("FAST", redis);
     mediumBuffer = new BatcherDB("MEDIUM", redis);
     slowBuffer = new BatcherDB("SLOW", redis);
+  });
+
+  beforeEach(async () => {
     batcher = new BundlerBatcher(redis, logger, {
       pollIntervalSeconds: 3,
       mediumBatchLatencySeconds: 5,
       slowBatchLatencySeconds: 10,
     });
+    ({ promise, teardown } = batcher.start());
   });
 
-  beforeEach(async () => {
+  afterEach(async () => {
+    await teardown();
     await redis.flushall();
   });
 
@@ -69,7 +76,6 @@ describe("BundlerBatcher", async () => {
 
   it("batches 8 ops as full batch", async () => {
     expect(await batcher.outboundQueue.count()).to.equal(0);
-    const { promise } = batcher.start();
 
     let jobIds: string[] = [];
     for (let i = 0; i < 6; i++) {
@@ -105,7 +111,6 @@ describe("BundlerBatcher", async () => {
 
   it("batches 6 slow ops after passing wait time", async () => {
     expect(await batcher.outboundQueue.count()).to.equal(0);
-    const { promise } = batcher.start();
 
     let jobIds: string[] = [];
     for (let i = 0; i < 6; i++) {

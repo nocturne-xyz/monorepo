@@ -29,10 +29,10 @@ export class BatcherDB<T> {
     await this.redis.set(WINDOW_START_KEY, windowStart.toString());
   }
 
-  async getWindowStart(): Promise<number> {
+  async getWindowStart(): Promise<number | undefined> {
     const windowStart = await this.redis.get(WINDOW_START_KEY);
     if (!windowStart) {
-      return unixTimestampSeconds(); // return current date if not set
+      return undefined;
     }
     return Number(windowStart);
   }

@@ -134,14 +134,15 @@ export class BundlerBatcher {
       mediumBatch?.length ?? 0,
       slowBatch?.length ?? 0,
     ];
+
+    const currentTime = unixTimestampSeconds();
     const [_fastTimestamp, mediumTimestamp, slowTimestamp] = [
-      await this.fastBuffer.getWindowStart(),
-      await this.mediumBuffer.getWindowStart(),
-      await this.slowBuffer.getWindowStart(),
+      (await this.fastBuffer.getWindowStart()) ?? currentTime,
+      (await this.mediumBuffer.getWindowStart()) ?? currentTime,
+      (await this.slowBuffer.getWindowStart()) ?? currentTime,
     ];
 
     const clearBufferTransactions = [];
-    const currentTime = unixTimestampSeconds();
 
     console.log("slow time diff", currentTime - slowTimestamp);
     console.log("slow latency", this.slowBatchLatencySeconds);
@@ -230,19 +231,22 @@ export class BundlerBatcher {
 
   start(): ActorHandle {
     const logger = this.logger.child({ function: "batcher" });
+    let timeoutId: NodeJS.Timeout;
+
     const promise = new Promise<void>((resolve) => {
       const poll = async () => {
         this.logger.info("polling...");
 
         if (this.stopped) {
-          this.logger.info("Balance Monitor stopping...");
+          this.logger.info("batcher stopping...");
+          clearTimeout(timeoutId);
           resolve();
           return;
         }
 
         await this.tryCreateBatch();
 
-        setTimeout(poll, this.pollIntervalSeconds * 1000);
+        timeoutId = setTimeout(poll, this.pollIntervalSeconds * 1000);
       };
 
       void poll();
