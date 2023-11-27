@@ -19,9 +19,9 @@ export class BufferDB<T> {
     await this.redis.rpush(this.prefix, JSON.stringify(elem));
 
     // Set window start if not set
-    const windowStart = await this.windowStart();
-    if (!windowStart) {
-      await this.setWindowStart(unixTimestampSeconds());
+    const windowStartTime = await this.windowStartTime();
+    if (!windowStartTime) {
+      await this.setWindowStartTime(unixTimestampSeconds());
     }
 
     return true;
@@ -31,20 +31,23 @@ export class BufferDB<T> {
     return this.redis.llen(this.prefix);
   }
 
-  windowStartPrefix(): string {
+  private windowStartTimePrefix(): string {
     return this.prefix + WINDOW_START_KEY;
   }
 
-  async setWindowStart(windowStart: number): Promise<void> {
-    await this.redis.set(this.windowStartPrefix(), windowStart.toString());
+  async setWindowStartTime(windowStartTime: number): Promise<void> {
+    await this.redis.set(
+      this.windowStartTimePrefix(),
+      windowStartTime.toString()
+    );
   }
 
-  async windowStart(): Promise<number | undefined> {
-    const windowStart = await this.redis.get(this.windowStartPrefix());
-    if (!windowStart) {
+  async windowStartTime(): Promise<number | undefined> {
+    const windowStartTime = await this.redis.get(this.windowStartTimePrefix());
+    if (!windowStartTime) {
       return undefined;
     }
-    return Number(windowStart);
+    return Number(windowStartTime);
   }
 
   async getBatch(count?: number, exact = false): Promise<T[] | undefined> {
@@ -81,7 +84,7 @@ export class BufferDB<T> {
     return ["lpop", this.prefix, count.toString()];
   }
 
-  getClearWindowStartTransaction(): RedisTransaction {
-    return ["set", this.windowStartPrefix(), ""];
+  getClearWindowStartTimeTransaction(): RedisTransaction {
+    return ["set", this.windowStartTimePrefix(), ""];
   }
 }

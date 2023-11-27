@@ -137,9 +137,9 @@ export class BundlerBatcher {
 
     const currentTime = unixTimestampSeconds();
     const [_fastTimestamp, mediumTimestamp, slowTimestamp] = [
-      (await this.fastBuffer.windowStart()) ?? currentTime,
-      (await this.mediumBuffer.windowStart()) ?? currentTime,
-      (await this.slowBuffer.windowStart()) ?? currentTime,
+      (await this.fastBuffer.windowStartTime()) ?? currentTime,
+      (await this.mediumBuffer.windowStartTime()) ?? currentTime,
+      (await this.slowBuffer.windowStartTime()) ?? currentTime,
     ];
 
     const bufferUpdateTransactions: RedisTransaction[] = [];
@@ -159,7 +159,7 @@ export class BundlerBatcher {
       batch.push(...slowBatch);
       bufferUpdateTransactions.push(
         this.slowBuffer.getPopTransaction(slowSize),
-        this.slowBuffer.getClearWindowStartTransaction()
+        this.slowBuffer.getClearWindowStartTimeTransaction()
       );
     }
 
@@ -178,7 +178,7 @@ export class BundlerBatcher {
       batch.push(...mediumBatch);
       bufferUpdateTransactions.push(
         this.mediumBuffer.getPopTransaction(mediumSize),
-        this.mediumBuffer.getClearWindowStartTransaction()
+        this.mediumBuffer.getClearWindowStartTimeTransaction()
       );
     }
 
@@ -192,7 +192,7 @@ export class BundlerBatcher {
       batch.push(...fastBatch);
       bufferUpdateTransactions.push(
         this.fastBuffer.getPopTransaction(fastSize),
-        this.fastBuffer.getClearWindowStartTransaction()
+        this.fastBuffer.getClearWindowStartTimeTransaction()
       );
     }
 
