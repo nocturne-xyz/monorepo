@@ -32,6 +32,7 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
+          version: yarn changeset version
           publish: echo "rip bozo"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
