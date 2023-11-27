@@ -17,7 +17,13 @@ export class BufferDB<T> {
 
   async add(elem: T): Promise<boolean> {
     await this.redis.rpush(this.prefix, JSON.stringify(elem));
-    await this.setWindowStart(unixTimestampSeconds());
+
+    // Set window start if not set
+    const windowStart = await this.windowStart();
+    if (!windowStart) {
+      await this.setWindowStart(unixTimestampSeconds());
+    }
+
     return true;
   }
 

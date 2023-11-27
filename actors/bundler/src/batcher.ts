@@ -1,6 +1,6 @@
 import IORedis from "ioredis";
 import { Queue } from "bullmq";
-import { BufferDB, StatusDB } from "./db";
+import { BufferDB, RedisTransaction, StatusDB } from "./db";
 import {
   OperationStatus,
   OperationTrait,
@@ -142,7 +142,7 @@ export class BundlerBatcher {
       (await this.slowBuffer.windowStart()) ?? currentTime,
     ];
 
-    const bufferUpdateTransactions = [];
+    const bufferUpdateTransactions: RedisTransaction[] = [];
 
     if (
       slowBatch &&
@@ -158,9 +158,7 @@ export class BundlerBatcher {
       });
       batch.push(...slowBatch);
       bufferUpdateTransactions.push(
-        this.slowBuffer.getPopTransaction(slowSize)
-      );
-      bufferUpdateTransactions.push(
+        this.slowBuffer.getPopTransaction(slowSize),
         this.slowBuffer.getClearWindowStartTransaction()
       );
     }
@@ -179,9 +177,7 @@ export class BundlerBatcher {
       });
       batch.push(...mediumBatch);
       bufferUpdateTransactions.push(
-        this.mediumBuffer.getPopTransaction(mediumSize)
-      );
-      bufferUpdateTransactions.push(
+        this.mediumBuffer.getPopTransaction(mediumSize),
         this.mediumBuffer.getClearWindowStartTransaction()
       );
     }
@@ -195,9 +191,7 @@ export class BundlerBatcher {
       });
       batch.push(...fastBatch);
       bufferUpdateTransactions.push(
-        this.fastBuffer.getPopTransaction(fastSize)
-      );
-      bufferUpdateTransactions.push(
+        this.fastBuffer.getPopTransaction(fastSize),
         this.fastBuffer.getClearWindowStartTransaction()
       );
     }
