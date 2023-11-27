@@ -76,6 +76,7 @@ describe("BundlerBatcher", async () => {
 
   it("batches 8 ops as full batch", async () => {
     expect(await batcher.outboundQueue.count()).to.equal(0);
+    expect(await slowBuffer.windowStart()).to.be.undefined;
 
     let jobIds: string[] = [];
     for (let i = 0; i < 6; i++) {
@@ -83,6 +84,8 @@ describe("BundlerBatcher", async () => {
       jobIds.push(jobId);
     }
 
+    // start window should be set now that elements have been added
+    expect(await slowBuffer.windowStart()).to.not.be.undefined;
     await Promise.race([sleep(1500), promise]);
 
     for (const id of jobIds) {
@@ -99,6 +102,7 @@ describe("BundlerBatcher", async () => {
     await Promise.race([sleep(1500), promise]);
 
     expect(await batcher.outboundQueue.count()).to.equal(1);
+    expect(await slowBuffer.windowStart()).to.be.undefined;
     expect(await slowBuffer.getBatch(BATCH_SIZE)).to.be.undefined;
     expect(await mediumBuffer.getBatch(BATCH_SIZE)).to.be.undefined;
     expect(await slowBuffer.size()).to.equal(0);
@@ -111,6 +115,7 @@ describe("BundlerBatcher", async () => {
 
   it("batches 6 slow ops after passing wait time", async () => {
     expect(await batcher.outboundQueue.count()).to.equal(0);
+    expect(await slowBuffer.windowStart()).to.be.undefined;
 
     let jobIds: string[] = [];
     for (let i = 0; i < 6; i++) {
@@ -122,12 +127,14 @@ describe("BundlerBatcher", async () => {
     await Promise.race([sleep(5_000), promise]);
 
     expect(await slowBuffer.size()).to.equal(6);
+    expect(await slowBuffer.windowStart()).to.not.be.undefined;
     expect(await batcher.outboundQueue.count()).to.equal(0);
 
     // Sleep 6 more seconds, now slow window should have passed
     await Promise.race([sleep(8_000), promise]);
 
     expect(await batcher.outboundQueue.count()).to.equal(1);
+    expect(await slowBuffer.windowStart()).to.be.undefined;
     expect(await slowBuffer.getBatch(BATCH_SIZE)).to.be.undefined;
     expect(await slowBuffer.size()).to.equal(0);
     for (const id of jobIds) {

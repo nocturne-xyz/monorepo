@@ -4,7 +4,7 @@ import { RedisTransaction } from ".";
 import { unixTimestampSeconds } from "../utils";
 
 export type BufferSpeed = "FAST" | "MEDIUM" | "SLOW";
-const WINDOW_START_KEY = "WINDOW_START";
+const WINDOW_START_KEY = "_WINDOW_START";
 
 export class BufferDB<T> {
   prefix: BufferSpeed;
@@ -25,12 +25,16 @@ export class BufferDB<T> {
     return this.redis.llen(this.prefix);
   }
 
-  async setWindowStart(windowStart: number): Promise<void> {
-    await this.redis.set(WINDOW_START_KEY, windowStart.toString());
+  windowStartPrefix(): string {
+    return this.prefix + WINDOW_START_KEY;
   }
 
-  async getWindowStart(): Promise<number | undefined> {
-    const windowStart = await this.redis.get(WINDOW_START_KEY);
+  async setWindowStart(windowStart: number): Promise<void> {
+    await this.redis.set(this.windowStartPrefix(), windowStart.toString());
+  }
+
+  async windowStart(): Promise<number | undefined> {
+    const windowStart = await this.redis.get(this.windowStartPrefix());
     if (!windowStart) {
       return undefined;
     }
@@ -69,5 +73,9 @@ export class BufferDB<T> {
 
   getPopTransaction(count: number): RedisTransaction {
     return ["lpop", this.prefix, count.toString()];
+  }
+
+  getClearWindowStartTransaction(): RedisTransaction {
+    return ["set", this.windowStartPrefix(), ""];
   }
 }

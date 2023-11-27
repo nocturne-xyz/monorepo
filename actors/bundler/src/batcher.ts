@@ -53,7 +53,7 @@ export class BundlerBatcher {
 
   readonly pollIntervalSeconds: number = 30 * 60; // default 30 minutes
   readonly mediumBatchLatencySeconds: number = 3 * 60 * 60; // default 3 hours
-  readonly slowBatchLatencySeconds: number = 6 * 60 * 60;
+  readonly slowBatchLatencySeconds: number = 6 * 60 * 60; // default 6 hours
 
   readonly mediumBatchSize: number = 3; // default 3 existing ops, next op will be 4th
   readonly slowBatchSize: number = 7; // default 7 existing ops, next op will be 8th
@@ -137,16 +137,16 @@ export class BundlerBatcher {
 
     const currentTime = unixTimestampSeconds();
     const [_fastTimestamp, mediumTimestamp, slowTimestamp] = [
-      (await this.fastBuffer.getWindowStart()) ?? currentTime,
-      (await this.mediumBuffer.getWindowStart()) ?? currentTime,
-      (await this.slowBuffer.getWindowStart()) ?? currentTime,
+      (await this.fastBuffer.windowStart()) ?? currentTime,
+      (await this.mediumBuffer.windowStart()) ?? currentTime,
+      (await this.slowBuffer.windowStart()) ?? currentTime,
     ];
 
-    const clearBufferTransactions = [];
+    const bufferUpdateTransactions = [];
 
     if (
       slowBatch &&
-      (fastSize + mediumSize + slowSize >= 7 ||
+      (fastSize + mediumSize + slowSize >= this.slowBatchSize ||
         currentTime - slowTimestamp >= this.slowBatchLatencySeconds)
     ) {
       this.logger.info("creating slow batch", {
@@ -157,12 +157,17 @@ export class BundlerBatcher {
         timeDiff: currentTime - slowTimestamp,
       });
       batch.push(...slowBatch);
-      clearBufferTransactions.push(this.slowBuffer.getPopTransaction(slowSize));
+      bufferUpdateTransactions.push(
+        this.slowBuffer.getPopTransaction(slowSize)
+      );
+      bufferUpdateTransactions.push(
+        this.slowBuffer.getClearWindowStartTransaction()
+      );
     }
 
     if (
       mediumBatch &&
-      (batch.length + mediumSize + fastSize >= 3 ||
+      (batch.length + mediumSize + fastSize >= this.mediumBatchSize ||
         currentTime - mediumTimestamp >= this.mediumBatchLatencySeconds)
     ) {
       this.logger.info("creating medium batch", {
@@ -173,8 +178,11 @@ export class BundlerBatcher {
         timeDiff: currentTime - mediumTimestamp,
       });
       batch.push(...mediumBatch);
-      clearBufferTransactions.push(
+      bufferUpdateTransactions.push(
         this.mediumBuffer.getPopTransaction(mediumSize)
+      );
+      bufferUpdateTransactions.push(
+        this.mediumBuffer.getClearWindowStartTransaction()
       );
     }
 
@@ -186,7 +194,12 @@ export class BundlerBatcher {
         slowSize,
       });
       batch.push(...fastBatch);
-      clearBufferTransactions.push(this.fastBuffer.getPopTransaction(fastSize));
+      bufferUpdateTransactions.push(
+        this.fastBuffer.getPopTransaction(fastSize)
+      );
+      bufferUpdateTransactions.push(
+        this.fastBuffer.getClearWindowStartTransaction()
+      );
     }
 
     // add batch to outbound queue if non empty
@@ -211,7 +224,7 @@ export class BundlerBatcher {
       // execute set status + clear buffer txs
       this.logger.debug("clearing buffers and setting job statuses");
       const allTransactions = setJobStatusTransactions.concat(
-        clearBufferTransactions
+        bufferUpdateTransactions
       );
       await this.redis.multi(allTransactions).exec((maybeErr) => {
         if (maybeErr) {

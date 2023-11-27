@@ -35,11 +35,11 @@ describe("BufferDB", async () => {
   it("fills, detects, and pops batch", async () => {
     expect(await bufferDB.getBatch(BATCH_SIZE)).to.be.undefined;
     expect(await bufferDB.pop(BATCH_SIZE)).to.be.undefined;
-    expect(await bufferDB.getWindowStart()).to.be.undefined;
+    expect(await bufferDB.windowStart()).to.be.undefined;
 
     await fillBatch();
     expect((await bufferDB.getBatch(BATCH_SIZE))!.length).to.equal(BATCH_SIZE);
-    expect(await bufferDB.getWindowStart()).to.be.lessThanOrEqual(
+    expect(await bufferDB.windowStart()).to.be.lessThanOrEqual(
       unixTimestampSeconds()
     );
 
