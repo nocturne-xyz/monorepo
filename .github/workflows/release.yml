@@ -3,7 +3,7 @@ name: release
 on:
   push:
     branches:
-      - main
+      - seb/changeset-github-action
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -32,7 +32,7 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          publish: yarn publish-packages
+          publish: echo "rip bozo"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
