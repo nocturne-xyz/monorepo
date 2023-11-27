@@ -94,7 +94,6 @@ export class SubtreeUpdater {
     this.handlerMutex = new Mutex();
     this.redis = redis;
 
-    // TODO make this a redis KV store
     this.tree = new SparseMerkleProver();
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
