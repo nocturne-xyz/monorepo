@@ -921,7 +921,9 @@ export class NocturneSdk {
     syncOpts?: Omit<SyncOpts, "timeoutSeconds">,
     handleProgress?: (progress: number) => void,
   ): Promise<void> {
-    // TODO: re-architect the SDK with a proper event-based subscription model
+    // HACK load client before setting start/end block
+    // TODO rewrite this dumpster fire of a class that requires me to do this
+    const client = await this.clientThunk();
     let handlerIndex: number | undefined;
     if (handleProgress) {
       handlerIndex = this.syncProgressHandlerCounter++;
@@ -957,9 +959,6 @@ export class NocturneSdk {
         };
 
         let endIndex = await fetchEndIndex();
-
-        const client = await this.clientThunk();
-
         const startIndex = client.latestSyncedMerkleIndex ?? 0;
         let currentIndex = startIndex;
 

@@ -20,7 +20,6 @@ import {
   consecutiveChunks,
   MerkleIndex,
   Asset,
-  maxNullish,
 } from "@nocturne-xyz/core";
 import { Mutex } from "async-mutex";
 import { OpHistoryRecord, OperationMetadata } from "./types";
@@ -52,6 +51,7 @@ type Snapshot = {
   tei?: bigint;
   teiOfLatestCommit?: bigint;
 
+  assetAddrToAsset: [Address, Asset][];
   merkleIndexToNote: [number, IncludedNoteWithNullifier][];
   merkleIndexToTei: [number, TotalEntityIndex][];
   assetToMerkleIndices: [Address, number[]][];
@@ -60,6 +60,8 @@ type Snapshot = {
   optimisticNfs: [MerkleIndex, ExpirationDate][];
   opHistory: OpHistoryRecord[];
 
+  latestCommittedMerkleIndex?: number;
+  latestSyncedMerkleIndex?: number;
   serializedMerkle: string;
 };
 
@@ -70,7 +72,7 @@ export class NocturneClientState {
   private commitTei?: bigint;
 
   // TODO track these via tree
-  private latestMerkleIndexFromDiff?: number;
+  private _latestSyncedMerkleIndex?: number;
   private _latestCommittedMerkleIndex?: number;
 
   // TODO find another home for this
@@ -115,13 +117,7 @@ export class NocturneClientState {
   }
 
   get latestSyncedMerkleIndex(): number | undefined {
-    const countMinusOne = this.merkle.totalCount() - 1;
-    const res = maxNullish(countMinusOne, this.latestMerkleIndexFromDiff)!;
-    if (res < 0) {
-      return undefined;
-    }
-
-    return countMinusOne;
+    return this._latestSyncedMerkleIndex;
   }
 
   get latestCommittedMerkleIndex(): number | undefined {
@@ -172,8 +168,12 @@ export class NocturneClientState {
     this.tei = totalEntityIndex;
 
     // 6. set indices
-    this.latestMerkleIndexFromDiff = latestNewlySyncedMerkleIndex;
-    this._latestCommittedMerkleIndex = latestCommittedMerkleIndex;
+    if (latestNewlySyncedMerkleIndex) {
+      this._latestSyncedMerkleIndex = latestNewlySyncedMerkleIndex;
+    }
+    if (latestCommittedMerkleIndex) {
+      this._latestCommittedMerkleIndex = latestCommittedMerkleIndex;
+    }
 
     return nfIndices;
   }
@@ -355,7 +355,9 @@ export class NocturneClientState {
   getNotesForAsset(asset: Address, opts?: GetNotesOpts): IncludedNote[] {
     const indices = this.assetToMerkleIndices.get(asset) ?? [];
     return this.filterNotesByOpts(
-      indices.map((i) => this.merkleIndexToNote.get(i)!),
+      indices
+        .map((i) => this.merkleIndexToNote.get(i)!)
+        .map(({ nullifier, ...includedNote }) => includedNote),
       opts
     );
   }
@@ -365,7 +367,9 @@ export class NocturneClientState {
       [...this.assetToMerkleIndices.entries()].map(([asset, indices]) => [
         asset,
         this.filterNotesByOpts(
-          indices.map((i) => this.merkleIndexToNote.get(i)!),
+          indices
+            .map((i) => this.merkleIndexToNote.get(i)!)
+            .map(({ nullifier, ...includedNote }) => includedNote),
           opts
         ),
       ])
@@ -552,6 +556,7 @@ export class NocturneClientState {
         tei: snapshotTei,
         teiOfLatestCommit: state.commitTei,
 
+        assetAddrToAsset: Array.from(state.assetAddrToAsset.entries()),
         merkleIndexToNote: Array.from(state.merkleIndexToNote.entries()),
         merkleIndexToTei: Array.from(state.merkleIndexToTei.entries()),
         assetToMerkleIndices: Array.from(state.assetToMerkleIndices.entries()),
@@ -560,6 +565,8 @@ export class NocturneClientState {
         optimisticNfs: Array.from(state.optimisticNfs),
         opHistory: state._opHistory,
 
+        latestCommittedMerkleIndex: state._latestCommittedMerkleIndex,
+        latestSyncedMerkleIndex: state._latestSyncedMerkleIndex,
         serializedMerkle: state.merkle.serialize(),
       };
 
@@ -590,6 +597,8 @@ export class NocturneClientState {
     state.tei = this.tei;
     state.commitTei = this.commitTei;
 
+    state._latestCommittedMerkleIndex = this._latestCommittedMerkleIndex;
+    state._latestSyncedMerkleIndex = this._latestSyncedMerkleIndex;
     state.merkle = this.merkle.clone();
 
     state._opHistory = structuredClone(this._opHistory);
@@ -619,6 +628,7 @@ export class NocturneClientState {
     }
 
     const {
+      assetAddrToAsset,
       merkleIndexToNote,
       merkleIndexToTei,
       assetToMerkleIndices,
@@ -629,17 +639,23 @@ export class NocturneClientState {
 
       serializedMerkle,
       tei,
+
+      latestSyncedMerkleIndex,
+      latestCommittedMerkleIndex,
     }: Snapshot = JSON.parse(serialized);
 
     const state = new NocturneClientState(kv);
     state.tei = tei;
     state.commitTei = tei;
 
+    state._latestCommittedMerkleIndex = latestCommittedMerkleIndex;
+    state._latestSyncedMerkleIndex = latestSyncedMerkleIndex;
     state.merkle = SparseMerkleProver.deserialize(serializedMerkle);
 
     state._opHistory = opHistory;
     state.optimisticNfs = new Map(optimisticNfs);
 
+    state.assetAddrToAsset = new Map(assetAddrToAsset);
     state.merkleIndexToNote = new Map(merkleIndexToNote);
     state.merkleIndexToTei = new Map(merkleIndexToTei);
     state.assetToMerkleIndices = new Map(assetToMerkleIndices);
