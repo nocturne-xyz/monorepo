@@ -33,7 +33,7 @@ import {
   maxArray,
 } from "@nocturne-xyz/core";
 
-const PRUNE_OPTIMISTIC_NFS_TIMER = 90 * 1000; // 90 seconds
+const PRUNE_OPTIMISTIC_NFS_TIMER = 60 * 1000; // 1 minute
 
 export class NocturneClient {
   protected provider: ethers.providers.Provider;
