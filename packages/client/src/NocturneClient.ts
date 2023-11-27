@@ -136,7 +136,11 @@ export class NocturneClient {
   getAllAssetBalances(opts?: GetNotesOpts): AssetWithBalance[] {
     const notes = this.state.getAllNotes(opts);
     return Array.from(notes.entries()).map(([addr, notes]) => {
-      const asset = this.state.assetAddrToAsset.get(addr)!;
+      const asset = this.state.assetAddrToAsset.get(addr);
+      if (!asset) {
+        throw new Error(`Asset not found for note spending asset addr ${addr}`);
+      }
+
       const balance = notes.reduce((a, b) => a + b.value, 0n);
       return {
         asset,
