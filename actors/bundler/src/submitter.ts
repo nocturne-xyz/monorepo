@@ -129,7 +129,7 @@ export class BundlerSubmitter {
         const validOps: SubmittableOperationWithNetworkInfo[] = [];
         for (let i = 0; i < operations.length; i++) {
           const maybeErr = await checkRevertError(
-            this.tellerContract.address,
+            await this.txSubmitter.address(),
             this.tellerContract,
             this.handlerContract,
             this.provider,
