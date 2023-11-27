@@ -301,6 +301,7 @@ describe("NocturneClientState", async () => {
       .sort((a, b) => a.merkleIndex - b.merkleIndex);
     const expectedNotes = notes
       .filter((n) => n.asset.assetAddr === shitcoin.assetAddr)
+      .map(({ nullifier, ...note }) => note)
       .sort((a, b) => a.merkleIndex - b.merkleIndex);
     expect(foundNotes.length).to.eql(10);
     expect(expectedNotes).to.eql(foundNotes);

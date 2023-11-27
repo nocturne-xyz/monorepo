@@ -168,10 +168,10 @@ export class NocturneClientState {
     this.tei = totalEntityIndex;
 
     // 6. set indices
-    if (latestNewlySyncedMerkleIndex) {
+    if (latestNewlySyncedMerkleIndex !== undefined) {
       this._latestSyncedMerkleIndex = latestNewlySyncedMerkleIndex;
     }
-    if (latestCommittedMerkleIndex) {
+    if (latestCommittedMerkleIndex !== undefined) {
       this._latestCommittedMerkleIndex = latestCommittedMerkleIndex;
     }
 
