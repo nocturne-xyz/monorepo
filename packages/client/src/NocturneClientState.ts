@@ -285,7 +285,6 @@ export class NocturneClientState {
     return nfIndices;
   }
 
-  // TODO make this private
   private updateMerkle(
     notesAndCommitments: (IncludedNote | IncludedNoteCommitment)[],
     nfIndices: number[],
