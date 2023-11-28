@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.0
+
+### Minor Changes
+
+- ccf1e594: add --op-gas-price-multiplier CLI arg to allow test actor to test batch preference
+
+### Patch Changes
+
+- Updated dependencies [909e8182]
+  - @nocturne-xyz/client@4.1.1
+  - @nocturne-xyz/op-request-plugins@2.1.19
+
 ## 0.7.11
 
 ### Patch Changes

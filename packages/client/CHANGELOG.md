@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.1.1
+
+### Patch Changes
+
+- 909e8182: increase optimistic NF TTL to 30min
+
 ## 4.1.0
 
 ### Minor Changes
