@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.0
+
+### Major Changes
+
+- ccf1e594: consolidate batcher and submitter into the processor command
+
+### Minor Changes
+
+- ccf1e594: add batching preference functionality by refactoring batcher and server to support fast/medium/slow buffers
+
+### Patch Changes
+
+- 3978618d: fix bug in bundler submitter gas estimation that was using wrong from address
+- Updated dependencies [909e8182]
+  - @nocturne-xyz/client@4.1.1
+
 ## 0.10.11
 
 ### Patch Changes
