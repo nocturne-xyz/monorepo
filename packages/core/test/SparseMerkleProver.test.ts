@@ -437,6 +437,39 @@ describe("SparseMerkleProver", () => {
     ).to.throw;
   });
 
+  it("serializes and deserializes correctly", () => {
+    const p1 = new SparseMerkleProver();
+
+    // insert 100 random leaves
+    const leaves = range(100).map(() => randomBaseFieldElement());
+    p1.insertBatchUncommitted(
+      0,
+      leaves,
+      range(100).map(() => true)
+    );
+
+    // serialize, deserialize and check that roots are equal
+    expect(p1.getRoot()).to.equal(
+      SparseMerkleProver.deserialize(p1.serialize()).getRoot()
+    );
+
+    // commit the first 24 leaves to the tree
+    p1.commitUpToIndex(23);
+
+    // serialize, deserialize and check that roots are equal
+    expect(p1.getRoot()).to.equal(
+      SparseMerkleProver.deserialize(p1.serialize()).getRoot()
+    );
+
+    // commit to the rest of them
+    p1.commitUpToIndex(99);
+
+    // serialize, deserialize and check that roots are equal
+    expect(p1.getRoot()).to.equal(
+      SparseMerkleProver.deserialize(p1.serialize()).getRoot()
+    );
+  });
+
   it.skip("generates test constants for testTreeTest in contracts", () => {
     // from idx 0, insert 420, 69, and print root
     const prover = new SparseMerkleProver();
