@@ -234,7 +234,7 @@ export class NocturneClientState {
       const note = this.merkleIndexToNote.get(merkleIndex);
       if (note === undefined) {
         console.error(
-          `merkle index ${merkleIndex} not found in merkleIndexToNote - client is in an incosistent state!`
+          `merkle index ${merkleIndex} not found in merkleIndexToNote - client is in an inconsistent state!`
         );
         // TODO: do we throw an error here?
         // TODO: trigger recovery once we have events
@@ -254,7 +254,7 @@ export class NocturneClientState {
       const assetIndices = this.assetToMerkleIndices.get(note.asset.assetAddr);
       if (assetIndices === undefined) {
         console.error(
-          `asset ${note.asset.assetAddr} not found in assetToMerkleIndices - client is in an incosistent state!`
+          `asset ${note.asset.assetAddr} not found in assetToMerkleIndices - client is in an inconsistent state!`
         );
         // TODO: do we throw an error here?
         // TODO: trigger recovery once we have events
@@ -264,7 +264,7 @@ export class NocturneClientState {
       const index = assetIndices.findIndex((i) => i === merkleIndex);
       if (index < 0) {
         console.error(
-          `merkle index ${merkleIndex} not found in assetToMerkleIndices - client is in an incosistent state!`
+          `merkle index ${merkleIndex} not found in assetToMerkleIndices - client is in an inconsistent state!`
         );
         // TODO: do we throw an error here?
         // TODO: trigger recovery once we have events
