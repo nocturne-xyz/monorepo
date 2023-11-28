@@ -1,0 +1,40 @@
+name: release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v3
+
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "v18.12.1"
+          cache: "yarn"
+          cache-dependency-path: ./yarn.lock
+
+      - name: corepack enable
+        run: corepack enable
+
+      - name: yarn install
+        run: yarn install --immutable
+
+      - name: update release PR or publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: yarn changeset version
+          publish: echo "rip bozo"
+          title: version packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
