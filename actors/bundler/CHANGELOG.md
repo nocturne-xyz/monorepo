@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.12
+
+### Patch Changes
+
+- 3978618d: fix bug in bundler submitter gas estimation that was using wrong from address
+
 ## 0.10.11
 
 ### Patch Changes

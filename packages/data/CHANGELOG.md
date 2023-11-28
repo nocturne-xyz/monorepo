@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0
+
+### Minor Changes
+
+- 74c4be87: add return-depositors command to track return users
+
+### Patch Changes
+
+- 74c4be87: move csv and address parsing util functions into data package and import in screener
+
 ## 0.1.2
 
 ### Patch Changes
