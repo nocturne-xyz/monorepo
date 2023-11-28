@@ -1,6 +1,6 @@
 import IORedis from "ioredis";
-import { Job, Queue, Worker } from "bullmq";
-import { BatcherDB, StatusDB } from "./db";
+import { Queue } from "bullmq";
+import { BufferDB, RedisTransaction, StatusDB } from "./db";
 import {
   OperationStatus,
   OperationTrait,
@@ -10,12 +10,10 @@ import {
   OperationBatchJobData,
   OPERATION_BATCH_QUEUE,
   OPERATION_BATCH_JOB_TAG,
-  OperationJobData,
-  SUBMITTABLE_OPERATION_QUEUE,
   ACTOR_NAME,
 } from "./types";
 import * as JSON from "bigint-json-serialization";
-import { actorChain } from "./utils";
+import { unixTimestampSeconds } from "./utils";
 import { Logger } from "winston";
 import {
   ActorHandle,
@@ -27,41 +25,63 @@ import * as ot from "@opentelemetry/api";
 const COMPONENT_NAME = "batcher";
 
 export interface BundlerBatcherMetrics {
-  relayRequestsEnqueuedInBatcherDBCounter: ot.Counter;
+  relayRequestsEnqueuedInBufferDBCounter: ot.Counter;
   relayRequestsBatchedCounter: ot.Counter;
   batchesCreatedCounter: ot.Counter;
   batchLatencyHistogram: ot.Histogram;
   batchSizeHistogram: ot.Histogram;
 }
 
+export interface BatcherOpts {
+  pollIntervalSeconds?: number;
+  mediumBatchLatencySeconds?: number;
+  slowBatchLatencySeconds?: number;
+  mediumBatchSize?: number;
+  slowBatchSize?: number;
+}
+
 export class BundlerBatcher {
   redis: IORedis;
   statusDB: StatusDB;
-  batcherDB: BatcherDB<SubmittableOperationWithNetworkInfo>;
+  fastBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+  mediumBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+  slowBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
   outboundQueue: Queue<OperationBatchJobData>;
   logger: Logger;
   metrics: BundlerBatcherMetrics;
-  readonly MAX_BATCH_LATENCY_SECS: number = 60;
-  readonly BATCH_SIZE: number = 8;
+  stopped = false;
 
-  constructor(
-    redis: IORedis,
-    logger: Logger,
-    maxLatencySeconds?: number,
-    batchSize?: number
-  ) {
-    if (batchSize) {
-      this.BATCH_SIZE = batchSize;
+  readonly pollIntervalSeconds: number = 30 * 60; // default 30 minutes
+  readonly mediumBatchLatencySeconds: number = 3 * 60 * 60; // default 3 hours
+  readonly slowBatchLatencySeconds: number = 6 * 60 * 60; // default 6 hours
+
+  readonly mediumBatchSize: number = 3; // default 3 existing ops, next op will be 4th
+  readonly slowBatchSize: number = 7; // default 7 existing ops, next op will be 8th
+
+  constructor(redis: IORedis, logger: Logger, opts?: BatcherOpts) {
+    if (opts?.pollIntervalSeconds) {
+      this.pollIntervalSeconds = opts.pollIntervalSeconds;
+    }
+    if (opts?.mediumBatchLatencySeconds) {
+      this.mediumBatchLatencySeconds = opts.mediumBatchLatencySeconds;
+    }
+    if (opts?.slowBatchLatencySeconds) {
+      this.slowBatchLatencySeconds = opts.slowBatchLatencySeconds;
     }
 
-    if (maxLatencySeconds) {
-      this.MAX_BATCH_LATENCY_SECS = maxLatencySeconds;
+    if (opts?.mediumBatchSize) {
+      this.mediumBatchSize = opts.mediumBatchSize;
+    }
+    if (opts?.slowBatchSize) {
+      this.slowBatchSize = opts.slowBatchSize;
     }
 
     this.redis = redis;
     this.logger = logger;
     this.statusDB = new StatusDB(redis);
-    this.batcherDB = new BatcherDB(redis);
+    this.fastBuffer = new BufferDB("FAST", redis);
+    this.mediumBuffer = new BufferDB("MEDIUM", redis);
+    this.slowBuffer = new BufferDB("SLOW", redis);
     this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, {
       connection: redis,
     });
@@ -79,7 +99,7 @@ export class BundlerBatcher {
     );
 
     this.metrics = {
-      relayRequestsEnqueuedInBatcherDBCounter: createCounter(
+      relayRequestsEnqueuedInBufferDBCounter: createCounter(
         "relay_requests_enqueued_in_batcher_db.counter",
         "Number of relay requests enqueued in batcher DB"
       ),
@@ -102,79 +122,136 @@ export class BundlerBatcher {
     };
   }
 
-  start(): ActorHandle {
-    const batcher = this.startBatcher();
-    const queuer = this.startQueuer();
-    return actorChain(batcher, queuer);
+  async tryCreateBatch(): Promise<void> {
+    const batch = [];
+    const [fastBatch, mediumBatch, slowBatch] = [
+      await this.fastBuffer.getBatch(),
+      await this.mediumBuffer.getBatch(),
+      await this.slowBuffer.getBatch(),
+    ];
+    const [fastSize, mediumSize, slowSize] = [
+      fastBatch?.length ?? 0,
+      mediumBatch?.length ?? 0,
+      slowBatch?.length ?? 0,
+    ];
+
+    const currentTime = unixTimestampSeconds();
+    const [_fastTimestamp, mediumTimestamp, slowTimestamp] = [
+      (await this.fastBuffer.windowStartTime()) ?? currentTime,
+      (await this.mediumBuffer.windowStartTime()) ?? currentTime,
+      (await this.slowBuffer.windowStartTime()) ?? currentTime,
+    ];
+
+    const bufferUpdateTransactions: RedisTransaction[] = [];
+
+    if (
+      slowBatch &&
+      (fastSize + mediumSize + slowSize >= this.slowBatchSize ||
+        currentTime - slowTimestamp >= this.slowBatchLatencySeconds)
+    ) {
+      this.logger.info("creating slow batch", {
+        slowBatch,
+        fastSize,
+        mediumSize,
+        slowSize,
+        timeDiff: currentTime - slowTimestamp,
+      });
+      batch.push(...slowBatch);
+      bufferUpdateTransactions.push(
+        this.slowBuffer.getPopTransaction(slowSize),
+        this.slowBuffer.getClearWindowStartTimeTransaction()
+      );
+    }
+
+    if (
+      mediumBatch &&
+      (batch.length + mediumSize + fastSize >= this.mediumBatchSize ||
+        currentTime - mediumTimestamp >= this.mediumBatchLatencySeconds)
+    ) {
+      this.logger.info("creating medium batch", {
+        mediumBatch,
+        fastSize,
+        mediumSize,
+        slowSize,
+        timeDiff: currentTime - mediumTimestamp,
+      });
+      batch.push(...mediumBatch);
+      bufferUpdateTransactions.push(
+        this.mediumBuffer.getPopTransaction(mediumSize),
+        this.mediumBuffer.getClearWindowStartTimeTransaction()
+      );
+    }
+
+    if (fastBatch) {
+      this.logger.info("creating fast batch", {
+        fastBatch,
+        fastSize,
+        mediumSize,
+        slowSize,
+      });
+      batch.push(...fastBatch);
+      bufferUpdateTransactions.push(
+        this.fastBuffer.getPopTransaction(fastSize),
+        this.fastBuffer.getClearWindowStartTimeTransaction()
+      );
+    }
+
+    // add batch to outbound queue if non empty
+    if (batch.length > 0) {
+      this.logger.info("adding batch to outbound queue", { batch });
+      const operationBatchJson = JSON.stringify(batch);
+      const operationBatchData: OperationBatchJobData = {
+        operationBatchJson,
+      };
+      await this.outboundQueue.add(OPERATION_BATCH_JOB_TAG, operationBatchData);
+
+      // TODO: if crash happens between queue.add and status setting, state will be out of sync
+      // create set status redis txs
+      const setJobStatusTransactions = batch.map((op) => {
+        const jobId = OperationTrait.computeDigest(op).toString();
+        return this.statusDB.getSetJobStatusTransaction(
+          jobId,
+          OperationStatus.IN_BATCH
+        );
+      });
+
+      // execute set status + clear buffer txs
+      this.logger.debug("clearing buffers and setting job statuses");
+      const allTransactions = setJobStatusTransactions.concat(
+        bufferUpdateTransactions
+      );
+      await this.redis.multi(allTransactions).exec((maybeErr) => {
+        if (maybeErr) {
+          const msg = `failed to set operation job and/or remove batch from DB: ${maybeErr}`;
+          this.logger.error(msg);
+          throw Error(msg);
+        }
+      });
+
+      this.metrics.relayRequestsBatchedCounter.add(batch.length);
+      this.metrics.batchesCreatedCounter.add(1);
+      this.metrics.batchSizeHistogram.record(batch.length);
+    }
   }
 
-  startBatcher(): ActorHandle {
+  start(): ActorHandle {
     const logger = this.logger.child({ function: "batcher" });
-    logger.info("starting batcher...");
+    let timeoutId: NodeJS.Timeout;
 
-    let stopped = false;
     const promise = new Promise<void>((resolve) => {
-      let counterSeconds = 0;
       const poll = async () => {
-        const batch = await this.batcherDB.getBatch(this.BATCH_SIZE);
-        if (batch) {
-          if (
-            (batch && batch.length >= this.BATCH_SIZE) ||
-            (counterSeconds >= this.MAX_BATCH_LATENCY_SECS && batch.length > 0)
-          ) {
-            const operationBatchJson = JSON.stringify(batch);
-            const operationBatchData: OperationBatchJobData = {
-              operationBatchJson,
-            };
+        this.logger.info("polling...");
 
-            // TODO: race condition where crash occurs between queue.add and
-            // batcherDB.pop
-            await this.outboundQueue.add(
-              OPERATION_BATCH_JOB_TAG,
-              operationBatchData
-            );
-
-            const popTransaction = this.batcherDB.getPopTransaction(
-              batch.length
-            );
-            const setJobStatusTransactions = batch.map((op) => {
-              const jobId = OperationTrait.computeDigest(op).toString();
-              return this.statusDB.getSetJobStatusTransaction(
-                jobId,
-                OperationStatus.IN_BATCH
-              );
-            });
-            const allTransactions = setJobStatusTransactions.concat([
-              popTransaction,
-            ]);
-
-            logger.info(`Creating batch. batch size: ${batch.length}`);
-            await this.redis.multi(allTransactions).exec((maybeErr) => {
-              if (maybeErr) {
-                const msg = `failed to set operation job and/or remove batch from DB: ${maybeErr}`;
-                logger.error(msg);
-                throw Error(msg);
-              }
-            });
-
-            // Update metrics
-            this.metrics.relayRequestsBatchedCounter.add(batch.length);
-            this.metrics.batchesCreatedCounter.add(1);
-            this.metrics.batchLatencyHistogram.record(counterSeconds);
-            this.metrics.batchSizeHistogram.record(batch.length);
-
-            counterSeconds = 0;
-          }
-
-          counterSeconds += 1;
-        }
-
-        if (stopped) {
-          logger.info("stopping...");
+        if (this.stopped) {
+          this.logger.info("batcher stopping...");
+          clearTimeout(timeoutId);
           resolve();
-        } else {
-          setTimeout(poll, 1000);
+          return;
         }
+
+        await this.tryCreateBatch();
+
+        timeoutId = setTimeout(poll, this.pollIntervalSeconds * 1000);
       };
 
       void poll();
@@ -183,62 +260,7 @@ export class BundlerBatcher {
     return {
       promise,
       teardown: async () => {
-        stopped = true;
-        await promise;
-        logger.info("teardown complete");
-      },
-    };
-  }
-
-  startQueuer(): ActorHandle {
-    const logger = this.logger.child({ function: "queuer" });
-    logger.info("starting queuer...");
-    const queuer = new Worker(
-      SUBMITTABLE_OPERATION_QUEUE,
-      async (job: Job<OperationJobData>) => {
-        const operation = JSON.parse(
-          job.data.operationJson
-        ) as SubmittableOperationWithNetworkInfo;
-
-        const batcherAddTransaction =
-          this.batcherDB.getAddTransaction(operation);
-        const setJobStatusTransaction =
-          this.statusDB.getSetJobStatusTransaction(
-            job.id!,
-            OperationStatus.PRE_BATCH
-          );
-        const allTransactions = [batcherAddTransaction].concat([
-          setJobStatusTransaction,
-        ]);
-
-        logger.info(`Adding operation to batcher DB. op digest: ${job.id}`);
-        await this.redis.multi(allTransactions).exec((maybeErr) => {
-          if (maybeErr) {
-            const msg = `failed to execute batcher add and set job status transaction: ${maybeErr}`;
-            logger.error(msg);
-            throw new Error(msg);
-          }
-        });
-
-        this.metrics.relayRequestsEnqueuedInBatcherDBCounter.add(1);
-      },
-      {
-        connection: this.redis,
-        autorun: true,
-      }
-    );
-
-    const promise = new Promise<void>((resolve) => {
-      queuer.on("closed", () => {
-        logger.info("stopping...");
-        resolve();
-      });
-    });
-
-    return {
-      promise,
-      teardown: async () => {
-        await queuer.close();
+        this.stopped = true;
         await promise;
         logger.info("teardown complete");
       },

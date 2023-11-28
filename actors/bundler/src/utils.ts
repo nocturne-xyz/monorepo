@@ -20,3 +20,7 @@ export function actorChain(...actors: ActorHandle[]): ActorHandle {
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export function unixTimestampSeconds(): number {
+  return Math.floor(Date.now() / 1000);
+}

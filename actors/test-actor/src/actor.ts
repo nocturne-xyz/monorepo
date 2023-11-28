@@ -47,6 +47,7 @@ export class TestActorOpts {
   depositIntervalSeconds?: number;
   opIntervalSeconds?: number;
   syncIntervalSeconds?: number;
+  opGasPriceMultiplier?: number;
   fullBundleEvery?: number;
   onlyDeposits?: boolean;
   onlyOperations?: boolean;
@@ -149,28 +150,26 @@ export class TestActor {
     }
   }
 
-  async runOps(
-    interval: number,
-    batchEvery?: number,
-    finalityBlocks?: number
-  ): Promise<void> {
+  async runOps(interval: number, opts?: TestActorOpts): Promise<void> {
+    const { fullBundleEvery, finalityBlocks } = opts ?? {};
+
     let i = 0;
     while (true) {
       await this.client.sync({ finalityBlocks });
       const balances = await this.client.getAllAssetBalances();
       this.logger.info("balances: ", balances);
 
-      if (batchEvery && i !== 0 && i % batchEvery === 0) {
+      if (fullBundleEvery && i !== 0 && i % fullBundleEvery === 0) {
         this.logger.info("performing 8 operations to fill a bundle");
         for (let j = 0; j < 8; j++) {
-          await this.randomOperation();
+          await this.randomOperation(opts);
         }
       } else {
         this.logger.info("performing operation");
-        await this.randomOperation();
+        await this.randomOperation(opts);
       }
 
-      this.logger.info(`sleeping for ${interval} seconds`);
+      this.logger.info(`sleeping for ${interval} ms`);
       await sleep(interval);
       i++;
     }
@@ -189,17 +188,13 @@ export class TestActor {
     if (opts?.onlyDeposits) {
       await this.runDeposits(depositIntervalSeconds * 1000);
     } else if (opts?.onlyOperations) {
-      await this.runOps(opIntervalSeconds * 1000, 1);
+      await this.runOps(opIntervalSeconds * 1000, opts);
     } else if (opts?.onlySync) {
       await this.runSyncOnly(syncIntervalSeconds * 1000);
     } else {
       await Promise.all([
         this.runDeposits(depositIntervalSeconds * 1000),
-        this.runOps(
-          opIntervalSeconds * 1000,
-          opts?.fullBundleEvery,
-          opts?.finalityBlocks
-        ),
+        this.runOps(opIntervalSeconds, opts),
       ]);
     }
   }
@@ -392,7 +387,7 @@ export class TestActor {
     }
   }
 
-  private async randomOperation(): Promise<boolean> {
+  private async randomOperation(opts?: TestActorOpts): Promise<boolean> {
     // choose a random joinsplit asset for oprequest
     const maybeErc20AndValue = await this.getRandomErc20AndValue();
     if (!maybeErc20AndValue) {
@@ -417,7 +412,10 @@ export class TestActor {
 
     // prepare, sign, and prove
     try {
-      const preSign = await this.client.prepareOperation(opRequest, 1);
+      const preSign = await this.client.prepareOperation(
+        opRequest,
+        opts?.opGasPriceMultiplier ?? 1
+      );
       const signed = signOperation(this.nocturneSigner, preSign);
       await this.client.addOpToHistory(signed, { items: [] });
 
@@ -495,7 +493,6 @@ export class TestActor {
         BigInt((await this.provider.getBlock("latest")).timestamp) +
           ONE_DAY_SECONDS
       )
-      .gasPrice(((await this.provider.getGasPrice()).toBigInt() * 14n) / 10n)
       .build();
   }
 }

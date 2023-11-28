@@ -1,4 +1,4 @@
-export * from "./batcherdb";
+export * from "./bufferdb";
 export * from "./statusdb";
 export * from "./nullifierdb";
 

@@ -196,12 +196,14 @@ export class BalanceMonitor {
     );
     this.registerMetrics();
 
+    let timeoutId: NodeJS.Timeout;
     const promise = new Promise<void>((resolve) => {
       const poll = async () => {
         this.logger.info("polling...");
 
         if (this.closed) {
           this.logger.info("Balance Monitor stopping...");
+          clearTimeout(timeoutId);
           resolve();
           return;
         }
@@ -211,7 +213,7 @@ export class BalanceMonitor {
 
         // balance monitor metrics piping is implicit, automatically executed via register metrics
         // callbacks
-        setTimeout(poll, 60_000);
+        timeoutId = setTimeout(poll, 60_000);
       };
 
       void poll();

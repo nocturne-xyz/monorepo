@@ -1,10 +1,5 @@
-import { Queue } from "bullmq";
 import IORedis from "ioredis";
-import {
-  OperationJobData,
-  PROVEN_OPERATION_JOB_TAG,
-  OpValidationFailure,
-} from "./types";
+import { OpValidationFailure } from "./types";
 import { Request, RequestHandler, Response } from "express";
 import {
   OperationStatus,
@@ -21,15 +16,18 @@ import {
   checkNullifierConflictError,
   checkRevertError,
 } from "./opValidation";
-import * as JSON from "bigint-json-serialization";
-import { NullifierDB, StatusDB } from "./db";
+import { BufferDB, NullifierDB, StatusDB } from "./db";
 import { ethers } from "ethers";
 import { tryParseRelayRequest } from "./request";
 import { Logger } from "winston";
 import { BundlerServerMetrics } from "./server";
 
 export interface HandleRelayDeps {
-  queue: Queue<OperationJobData>;
+  buffers: {
+    fastBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+    mediumBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+    slowBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+  };
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   redis: IORedis;
@@ -43,7 +41,7 @@ export interface HandleRelayDeps {
 }
 
 export function makeRelayHandler({
-  queue,
+  buffers,
   statusDB,
   nullifierDB,
   redis,
@@ -141,10 +139,11 @@ export function makeRelayHandler({
     let jobId;
     try {
       jobId = await postJob(
-        queue,
+        buffers,
         statusDB,
         nullifierDB,
         redis,
+        provider,
         childLogger,
         operation
       );
@@ -224,32 +223,40 @@ export function makeCheckNFHandler({
 }
 
 async function postJob(
-  queue: Queue<OperationJobData>,
+  buffers: {
+    fastBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+    mediumBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+    slowBuffer: BufferDB<SubmittableOperationWithNetworkInfo>;
+  },
   statusDB: StatusDB,
   nullifierDB: NullifierDB,
   redis: IORedis,
+  provider: ethers.providers.Provider,
   logger: Logger,
-  operation: SubmittableOperationWithNetworkInfo
+  op: SubmittableOperationWithNetworkInfo
 ): Promise<string> {
-  const jobId = OperationTrait.computeDigest(operation).toString();
-  const operationJson = JSON.stringify(operation);
-  const jobData: OperationJobData = {
-    operationJson,
-  };
+  const jobId = OperationTrait.computeDigest(op).toString();
 
-  logger.info("posting op to queue");
-  logger.debug("posting op to queue:", { jobData });
+  const gasPrice = (await provider.getGasPrice()).toBigInt();
 
-  // TODO: race condition between queue.add and redis transaction
-  await queue.add(PROVEN_OPERATION_JOB_TAG, jobData, {
-    jobId,
-  });
+  if (op.gasPrice >= (gasPrice * 85n) / 100n) {
+    // client will pick 100%, 15% buffer for fluctuations
+    logger.info("posting op to fast queue", { op });
+    await buffers.fastBuffer.add(op);
+  } else if (op.gasPrice >= (gasPrice * 60n) / 100n) {
+    // client will pick 70%, 10% buffer for fluctuations
+    logger.info("posting op to medium queue", { op });
+    await buffers.mediumBuffer.add(op);
+  } else {
+    logger.info("posting op to slow queue", { op });
+    await buffers.slowBuffer.add(op);
+  }
 
   const setJobStatusTransaction = statusDB.getSetJobStatusTransaction(
     jobId,
     OperationStatus.QUEUED
   );
-  const addNfsTransaction = nullifierDB.getAddNullifierTransactions(operation);
+  const addNfsTransaction = nullifierDB.getAddNullifierTransactions(op);
   const allTransactions = addNfsTransaction.concat([setJobStatusTransaction]);
   await redis.multi(allTransactions).exec((maybeErr) => {
     if (maybeErr) {

@@ -54,6 +54,11 @@ export const run = new Command("run")
     "60"
   )
   .option(
+    "--op-gas-price-multiplier <number>",
+    "multiplier for op gas price",
+    "1"
+  )
+  .option(
     "--full-bundle-every <number>",
     "perform 8 ops in rapid succession to fill a bundle every N iterations of the op loop"
   )
@@ -82,6 +87,7 @@ export const run = new Command("run")
       dbPath,
       depositInterval,
       opInterval,
+      opGasPriceMultiplier,
       fullBundleEvery,
       onlyDeposits,
       onlyOperations,
@@ -195,6 +201,7 @@ export const run = new Command("run")
       syncIntervalSeconds: onlySyncInterval
         ? parseInt(onlySyncInterval)
         : undefined,
+      opGasPriceMultiplier,
       fullBundleEvery: fullBundleEvery ? parseInt(fullBundleEvery) : undefined,
       onlyDeposits,
       onlyOperations,
