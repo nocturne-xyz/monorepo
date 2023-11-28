@@ -1,14 +1,5 @@
 # Changelog
 
-## 7.2.1
-
-### Patch Changes
-
-- 909e8182: add ops to history _after_ submission, not before
-- Updated dependencies [909e8182]
-  - @nocturne-xyz/client@4.1.1
-  - @nocturne-xyz/op-request-plugins@2.1.19
-
 ## 7.2.0
 
 ### Minor Changes

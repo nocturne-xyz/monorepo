@@ -1,11 +1,5 @@
 # Changelog
 
-## 0.4.4
-
-### Patch Changes
-
-- ccf1e594: fix start() function to clear interval on teardown
-
 ## 0.4.3
 
 ### Patch Changes

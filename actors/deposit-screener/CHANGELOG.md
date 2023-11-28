@@ -1,14 +1,5 @@
 # Changelog
 
-## 0.13.5
-
-### Patch Changes
-
-- 74c4be87: move csv and address parsing util functions into data package and import in screener
-- Updated dependencies [74c4be87]
-- Updated dependencies [74c4be87]
-  - @nocturne-xyz/data@0.2.0
-
 ## 0.13.4
 
 ### Patch Changes
