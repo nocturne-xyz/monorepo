@@ -28,6 +28,7 @@ import {
   getMerkleIndicesAndNfsFromOp,
   isTerminalOpStatus,
 } from "./utils";
+import { ensureChecksumAddresses } from "@nocturne-xyz/config";
 
 const SNAPSHOTS_KEY = "nocturne-client-snapshots";
 const SNAPSHOT_KEY_PREFIX = "snapshot-";
@@ -189,7 +190,9 @@ export class NocturneClientState {
         (inner as IncludedNoteWithNullifier).value > 0n
     ) as WithTotalEntityIndex<IncludedNoteWithNullifier>[];
 
-    for (const { inner: note } of notesToStore) {
+    for (const { inner } of notesToStore) {
+      const note = ensureChecksumAddresses(inner);
+
       // a. set the entry in `merkleIndexToNote` to the new note no matter what, even if there's something already there
       const alreadyHasNote = this.merkleIndexToNote.has(note.merkleIndex);
       this.merkleIndexToNote.set(note.merkleIndex, note);
