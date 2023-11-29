@@ -191,15 +191,26 @@ export class NocturneClient {
     );
   }
 
-  addOpToHistory(
+  async addOpToHistory(
     op: PreSignOperation | SignedOperation,
     metadata: OperationMetadata
-  ): void {
-    this.state.addOpToHistory(op, metadata);
+  ): Promise<void> {
+    await this.state.addOpToHistory(op, metadata);
   }
 
-  removeOpFromHistory(digest: bigint): void {
-    this.state.removeOpFromHistory(digest);
+  async removeOpFromHistory(digest: bigint): Promise<void> {
+    await this.state.removeOpFromHistory(digest);
+  }
+
+  async setOpStatusInHistory(
+    digest: bigint,
+    status: OperationStatus
+  ): Promise<void> {
+    await this.state.setStatusForOp(digest, status);
+  }
+
+  async pruneOptimisticNullifiers(): Promise<void> {
+    await this.state.pruneOptimisticNFs();
   }
 
   get opHistory(): OpHistoryRecord[] {
@@ -216,14 +227,6 @@ export class NocturneClient {
 
   getOpHistoryRecord(digest: bigint): OpHistoryRecord | undefined {
     return this.state.getOpHistoryRecord(digest);
-  }
-
-  setOpStatusInHistory(digest: bigint, status: OperationStatus): void {
-    this.state.setStatusForOp(digest, status);
-  }
-
-  pruneOptimisticNullifiers(): void {
-    this.state.pruneOptimisticNFs();
   }
 }
 

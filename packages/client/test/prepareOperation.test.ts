@@ -161,7 +161,7 @@ describe("gatherNotes", () => {
     );
 
     // add optimistic NF records for the 30 token note at merkleIndex 0
-    state.__optimisticNfs.set(0, Date.now() + 1_000_000);
+    state.__opHistory.__optimisticNfs.set(0, Date.now() + 1_000_000);
 
     // gather notes to spend 30 tokens total
     // we should not get the 30 token note, since it has an optimistic NF record

@@ -381,7 +381,7 @@ describe("NocturneClientState", async () => {
     state.applyStateDiff(diff);
 
     // add an optimistic nf for the 3rd note
-    state.__optimisticNfs.set(2, Date.now() + 10000);
+    state.__opHistory.__optimisticNfs.set(2, Date.now() + 10000);
 
     // get notes for shitcoin without setting `ignoreOpitimisticNfs`
     const foundNotes = state.getNotesForAsset(shitcoin);
@@ -408,7 +408,7 @@ describe("NocturneClientState", async () => {
     state.applyStateDiff(diff);
 
     // add an optimistic nf for the 3rd note
-    state.__optimisticNfs.set(2, Date.now() + 10000);
+    state.__opHistory.__optimisticNfs.set(2, Date.now() + 10000);
 
     // get notes for shitcoin while setting `ignoreOptimisticNfs` to `true
     // expect there to still be 10 of them
@@ -417,7 +417,7 @@ describe("NocturneClientState", async () => {
     ).to.eql(10);
   });
 
-  it("gets and sets op history", () => {
+  it("gets and sets op history", async () => {
     const [, state] = newState();
 
     // add a few ops with different assets
@@ -463,9 +463,17 @@ describe("NocturneClientState", async () => {
       },
     ];
 
-    state.addOpToHistory(ops[0], metas[0], OperationStatus.BUNDLE_REVERTED);
-    state.addOpToHistory(ops[1], metas[1], OperationStatus.EXECUTED_SUCCESS);
-    state.addOpToHistory(ops[2], metas[2]);
+    await state.addOpToHistory(
+      ops[0],
+      metas[0],
+      OperationStatus.BUNDLE_REVERTED
+    );
+    await state.addOpToHistory(
+      ops[1],
+      metas[1],
+      OperationStatus.EXECUTED_SUCCESS
+    );
+    await state.addOpToHistory(ops[2], metas[2]);
 
     // get op history, expect it to only have first 2
     expect(state.previousOps.length).to.eql(2);
@@ -528,7 +536,7 @@ describe("NocturneClientState", async () => {
       latestCommittedMerkleIndex: 9,
     };
     state.applyStateDiff(diff);
-    state.addOpToHistory(op, { items: [] });
+    await state.addOpToHistory(op, { items: [] });
 
     // expect `getAllNotes` to return an empty map, as all notes have been optimistically nf'd
     expect([...state.getAllNotes().values()].flat()).to.be.empty;

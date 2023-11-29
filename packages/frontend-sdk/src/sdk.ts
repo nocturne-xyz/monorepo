@@ -489,7 +489,7 @@ export class NocturneSdk {
         const signed = await this.signOperation({ op: _op, metadata });
         const submittable = await this.proveOperation(signed);
         const handle = await this.submitOperation(submittable.op);
-        client.addOpToHistory(_op, metadata);
+        await client.addOpToHistory(_op, metadata);
         return {
           ...handle,
           metadata,
@@ -500,7 +500,7 @@ export class NocturneSdk {
 
         const submittable = await this.proveOperation({ op: _op, metadata });
         const handle = await this.submitOperation(submittable.op);
-        client.addOpToHistory(_op, metadata);
+        await client.addOpToHistory(_op, metadata);
         return {
           ...handle,
           metadata,
@@ -789,7 +789,7 @@ export class NocturneSdk {
       // otherwise, assume bundler is being slow and say it's queued
       if (!res) {
         if (historyRecord.createdAt + BUNDLER_RECEIVED_OP_BUFFER < Date.now()) {
-          client.removeOpFromHistory(digest);
+          await client.removeOpFromHistory(digest);
         }
         return { status: OperationStatus.QUEUED };
       }
@@ -798,7 +798,7 @@ export class NocturneSdk {
       const { status } = res;
       if (status !== historyRecord.status) {
         try {
-          client.setOpStatusInHistory(digest, status);
+          await client.setOpStatusInHistory(digest, status);
         } catch (err) {
           if (
             err instanceof Error &&
@@ -1012,7 +1012,7 @@ export class NocturneSdk {
     try {
       const client = await this.clientThunk();
       latestSyncedMerkleIndex = await client.sync(syncOpts ?? { timing: true });
-      client.pruneOptimisticNullifiers();
+      await client.pruneOptimisticNullifiers();
     } catch (e) {
       console.log("Error syncing notes: ", e);
       throw e;
