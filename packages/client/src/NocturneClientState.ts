@@ -191,7 +191,7 @@ export class NocturneClientState {
     ) as WithTotalEntityIndex<IncludedNoteWithNullifier>[];
 
     for (const { inner } of notesToStore) {
-      const note = ensureChecksumAddresses(inner);
+      const note = ensureChecksumAddresses(inner) as IncludedNoteWithNullifier;
 
       // a. set the entry in `merkleIndexToNote` to the new note no matter what, even if there's something already there
       const alreadyHasNote = this.merkleIndexToNote.has(note.merkleIndex);

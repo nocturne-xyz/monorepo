@@ -156,7 +156,7 @@ export class TestActor {
     let i = 0;
     while (true) {
       await this.client.sync({ finalityBlocks });
-      const balances = await this.client.getAllAssetBalances();
+      const balances = this.client.getAllAssetBalances();
       this.logger.info("balances: ", balances);
 
       if (fullBundleEvery && i !== 0 && i % fullBundleEvery === 0) {
@@ -230,7 +230,7 @@ export class TestActor {
   }
 
   private async getRandomErc20AndValue(): Promise<[Asset, bigint] | undefined> {
-    const assetsWithBalance = await this.client.getAllAssetBalances();
+    const assetsWithBalance = this.client.getAllAssetBalances();
     if (assetsWithBalance.length === 0) {
       this.logger.warn("test-actor has no asset balances");
       return undefined;
