@@ -18,6 +18,7 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
 import {
   Asset,
+  AssetTrait,
   JoinSplitProver,
   NocturneSigner,
   OperationStatus,
@@ -419,10 +420,9 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
       await nocturneClientAlice.sync();
-      const updatedNotesAlice = clientStateAlice.getNotesForAsset(
-        erc20Asset.assetAddr,
-        { includeUncommitted: true }
-      )!;
+      const updatedNotesAlice = clientStateAlice.getNotesForAsset(erc20Asset, {
+        includeUncommitted: true,
+      })!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
       // alice should have 2 nonzero notes total, since all 4 notes spent, alice gets 1 output
       // note from JSs and 1 refund note (all in same token)
@@ -445,12 +445,9 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
       console.log("bob: Sync SDK post-operation");
       await nocturneClientBob.sync();
-      const updatedNotesBob = clientStateBob.getNotesForAsset(
-        erc20Asset.assetAddr,
-        {
-          includeUncommitted: true,
-        }
-      )!;
+      const updatedNotesBob = clientStateBob.getNotesForAsset(erc20Asset, {
+        includeUncommitted: true,
+      })!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
       // bob should have one nonzero note total
       expect(nonZeroNotesBob.length).to.equal(1);
@@ -563,10 +560,9 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
       await nocturneClientAlice.sync();
-      const updatedNotesAlice = clientStateAlice.getNotesForAsset(
-        erc20Asset.assetAddr,
-        { includeUncommitted: true }
-      )!;
+      const updatedNotesAlice = clientStateAlice.getNotesForAsset(erc20Asset, {
+        includeUncommitted: true,
+      })!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
       // alice should have 2 nonzero notes total, since all 4 notes spent, alice gets 1 output
       // note from JSs and 1 refund note (all in same token)
@@ -654,10 +650,9 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
       await nocturneClientAlice.sync();
-      const updatedNotesAlice = clientStateAlice.getNotesForAsset(
-        erc20Asset.assetAddr,
-        { includeUncommitted: true }
-      )!;
+      const updatedNotesAlice = clientStateAlice.getNotesForAsset(erc20Asset, {
+        includeUncommitted: true,
+      })!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
       // alice should have 1 nonzero note from joinsplit output
       expect(nonZeroNotesAlice.length).to.equal(1);
@@ -671,12 +666,9 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
       console.log("bob: Sync SDK post-operation");
       await nocturneClientBob.sync();
-      const updatedNotesBob = clientStateBob.getNotesForAsset(
-        erc20Asset.assetAddr,
-        {
-          includeUncommitted: true,
-        }
-      )!;
+      const updatedNotesBob = clientStateBob.getNotesForAsset(erc20Asset, {
+        includeUncommitted: true,
+      })!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
       // bob should have one nonzero note from conf payment
       expect(nonZeroNotesBob.length).to.equal(1);
@@ -771,7 +763,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       console.log("alice: Sync SDK post-operation");
       await nocturneClientAlice.sync();
       const updatedNotesAlice = clientStateAlice.getNotesForAsset(
-        weth.address,
+        AssetTrait.erc20AddressToAsset(weth.address),
         { includeUncommitted: true }
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
