@@ -29,7 +29,6 @@ import {
   getMerkleIndicesAndNfsFromOp,
   isTerminalOpStatus,
 } from "./utils";
-import { ensureChecksumAddresses } from "@nocturne-xyz/config";
 
 const SNAPSHOTS_KEY = "nocturne-client-snapshots";
 const SNAPSHOT_KEY_PREFIX = "snapshot-";
