@@ -672,7 +672,7 @@ export class NocturneClientState {
     return this.merkleIndexToTei;
   }
 
-  get __assetToMerkleIndices(): Map<Address, MerkleIndex[]> {
+  get __assetToMerkleIndices(): Map<SerializedAsset, MerkleIndex[]> {
     return this.assetToMerkleIndices;
   }
 
