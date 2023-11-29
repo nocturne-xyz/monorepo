@@ -1,5 +1,11 @@
 # Changelog
 
+## 8.0.0
+
+### Major Changes
+
+- 21b37810: Firefox fix
+
 ## 7.2.1
 
 ### Patch Changes
