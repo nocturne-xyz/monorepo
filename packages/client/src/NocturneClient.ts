@@ -135,12 +135,7 @@ export class NocturneClient {
 
   getAllAssetBalances(opts?: GetNotesOpts): AssetWithBalance[] {
     const notes = this.state.getAllNotes(opts);
-    return Array.from(notes.entries()).map(([addr, notes]) => {
-      const asset = this.state.assetAddrToAsset.get(addr);
-      if (!asset) {
-        throw new Error(`Asset not found for note spending asset addr ${addr}`);
-      }
-
+    return Array.from(notes.entries()).map(([asset, notes]) => {
       const balance = notes.reduce((a, b) => a + b.value, 0n);
       return {
         asset,
@@ -150,7 +145,7 @@ export class NocturneClient {
   }
 
   getBalanceForAsset(asset: Asset, opts?: GetNotesOpts): bigint {
-    return this.state.getBalanceForAsset(asset.assetAddr, opts);
+    return this.state.getBalanceForAsset(asset, opts);
   }
 
   get latestSyncedMerkleIndex(): number | undefined {
@@ -175,7 +170,7 @@ export class NocturneClient {
     }
 
     for (const [asset, requestedAmount] of assetRequestedAmounts.entries()) {
-      const balance = this.state.getBalanceForAsset(asset.assetAddr);
+      const balance = this.state.getBalanceForAsset(asset);
       if (balance < requestedAmount) {
         return false;
       }

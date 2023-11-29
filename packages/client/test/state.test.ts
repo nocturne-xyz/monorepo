@@ -297,7 +297,7 @@ describe("NocturneClientState", async () => {
     // get notes for shitcoin only
     // expect them to be the same
     const foundNotes = state
-      .getNotesForAsset(shitcoin.assetAddr, { includeUncommitted: true })
+      .getNotesForAsset(shitcoin, { includeUncommitted: true })
       .sort((a, b) => a.merkleIndex - b.merkleIndex);
     const expectedNotes = notes
       .filter((n) => n.asset.assetAddr === shitcoin.assetAddr)
@@ -336,7 +336,7 @@ describe("NocturneClientState", async () => {
 
     // get notes for shitcoin without setting `includeUncommitted`
     // expect to only have 4
-    expect(state.getNotesForAsset(shitcoin.assetAddr).length).to.eql(4);
+    expect(state.getNotesForAsset(shitcoin).length).to.eql(4);
   });
 
   it("includes uncommitted notes notes with { includeUncommitted: true }", () => {
@@ -359,8 +359,7 @@ describe("NocturneClientState", async () => {
     // get notes for shitcoin while setting `includeUncommitted` to `true
     // expect there to be 10 of them
     expect(
-      state.getNotesForAsset(shitcoin.assetAddr, { includeUncommitted: true })
-        .length
+      state.getNotesForAsset(shitcoin, { includeUncommitted: true }).length
     ).to.eql(10);
   });
 
@@ -385,7 +384,7 @@ describe("NocturneClientState", async () => {
     state.__optimisticNfs.set(2, Date.now() + 10000);
 
     // get notes for shitcoin without setting `ignoreOpitimisticNfs`
-    const foundNotes = state.getNotesForAsset(shitcoin.assetAddr);
+    const foundNotes = state.getNotesForAsset(shitcoin);
     // expect there to still be 9 of them and expect the missing one to be the 3rd one
     expect(foundNotes.length).to.eql(9);
     expect(foundNotes.map((n) => n.merkleIndex)).to.not.include(2);
@@ -414,8 +413,7 @@ describe("NocturneClientState", async () => {
     // get notes for shitcoin while setting `ignoreOptimisticNfs` to `true
     // expect there to still be 10 of them
     expect(
-      state.getNotesForAsset(shitcoin.assetAddr, { ignoreOptimisticNfs: true })
-        .length
+      state.getNotesForAsset(shitcoin, { ignoreOptimisticNfs: true }).length
     ).to.eql(10);
   });
 

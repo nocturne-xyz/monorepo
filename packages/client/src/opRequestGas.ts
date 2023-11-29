@@ -177,7 +177,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
 
   // attempt to find matching gas asset with enough balance
   for (const [ticker, gasAsset] of matchingGasAssets) {
-    const totalOwnedGasAsset = state.getBalanceForAsset(gasAsset.assetAddr);
+    const totalOwnedGasAsset = state.getBalanceForAsset(gasAsset);
     const matchingJoinSplitRequests = joinSplitRequestsByAsset.get(
       gasAsset.assetAddr
     )!;
@@ -274,7 +274,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
   // iterate through each gas asset
   for (const [ticker, gasAsset] of nonMatchingGasAssets) {
     const estimateInGasAsset = gasEstimatesInGasAssets.get(ticker)!;
-    const totalOwnedGasAsset = state.getBalanceForAsset(gasAsset.assetAddr);
+    const totalOwnedGasAsset = state.getBalanceForAsset(gasAsset);
 
     if (totalOwnedGasAsset >= estimateInGasAsset) {
       // Add enough to cover gas needed for existing joinsplits + gas for an extra joinsplits

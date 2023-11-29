@@ -20,6 +20,7 @@ import {
   consecutiveChunks,
   MerkleIndex,
   Asset,
+  AssetTrait,
 } from "@nocturne-xyz/core";
 import { Mutex } from "async-mutex";
 import { OpHistoryRecord, OperationMetadata } from "./types";
@@ -47,15 +48,15 @@ export type GetNotesOpts = {
 };
 
 type ExpirationDate = number;
+type SerializedAsset = string;
 
 type Snapshot = {
   tei?: bigint;
   teiOfLatestCommit?: bigint;
 
-  assetAddrToAsset: [Address, Asset][];
   merkleIndexToNote: [number, IncludedNoteWithNullifier][];
   merkleIndexToTei: [number, TotalEntityIndex][];
-  assetToMerkleIndices: [Address, number[]][];
+  assetToMerkleIndices: [SerializedAsset, number[]][];
   nfToMerkleIndex: [bigint, number][];
 
   optimisticNfs: [MerkleIndex, ExpirationDate][];
@@ -81,7 +82,7 @@ export class NocturneClientState {
 
   private merkleIndexToNote: Map<MerkleIndex, IncludedNoteWithNullifier>;
   private merkleIndexToTei: Map<MerkleIndex, TotalEntityIndex>;
-  private assetToMerkleIndices: Map<Address, MerkleIndex[]>;
+  private assetToMerkleIndices: Map<SerializedAsset, MerkleIndex[]>;
   private nfToMerkleIndex: Map<Nullifier, MerkleIndex>;
 
   private optimisticNfs: Map<MerkleIndex, ExpirationDate>;
@@ -98,7 +99,7 @@ export class NocturneClientState {
     this.assetAddrToAsset = new Map<Address, Asset>();
     this.merkleIndexToNote = new Map<MerkleIndex, IncludedNoteWithNullifier>();
     this.merkleIndexToTei = new Map<MerkleIndex, TotalEntityIndex>();
-    this.assetToMerkleIndices = new Map<Address, MerkleIndex[]>();
+    this.assetToMerkleIndices = new Map<SerializedAsset, MerkleIndex[]>();
     this.nfToMerkleIndex = new Map<Nullifier, MerkleIndex>();
 
     this.optimisticNfs = new Map<MerkleIndex, ExpirationDate>();
@@ -190,23 +191,18 @@ export class NocturneClientState {
         (inner as IncludedNoteWithNullifier).value > 0n
     ) as WithTotalEntityIndex<IncludedNoteWithNullifier>[];
 
-    for (const { inner } of notesToStore) {
-      const note = ensureChecksumAddresses(inner) as IncludedNoteWithNullifier;
-
+    for (const { inner: note } of notesToStore) {
       // a. set the entry in `merkleIndexToNote` to the new note no matter what, even if there's something already there
       const alreadyHasNote = this.merkleIndexToNote.has(note.merkleIndex);
       this.merkleIndexToNote.set(note.merkleIndex, note);
 
-      // b. add to the `assetAddr => Asset` map if it's not already there
-      // ? why do we need the full asset here?
-      this.assetAddrToAsset.set(note.asset.assetAddr, note.asset);
-
-      // c. add to `assetToMerkleIndices` map if it's not already there
+      // b. add to `assetToMerkleIndices` map if it's not already there
+      const serializedAsset = AssetTrait.serializeCompactString(note.asset);
       const merkleIndices =
-        this.assetToMerkleIndices.get(note.asset.assetAddr) ?? [];
+        this.assetToMerkleIndices.get(serializedAsset) ?? [];
       if (!merkleIndices.includes(note.merkleIndex)) {
         merkleIndices.push(note.merkleIndex);
-        this.assetToMerkleIndices.set(note.asset.assetAddr, merkleIndices);
+        this.assetToMerkleIndices.set(serializedAsset, merkleIndices);
 
         if (alreadyHasNote) {
           console.warn(
@@ -215,7 +211,7 @@ export class NocturneClientState {
         }
       }
 
-      // d. add the nullifiers to the `nfToMerkleIndex` map
+      // c. add the nullifiers to the `nfToMerkleIndex` map
       this.nfToMerkleIndex.set(note.nullifier, note.merkleIndex);
     }
   }
@@ -254,7 +250,8 @@ export class NocturneClientState {
         continue;
       }
 
-      const assetIndices = this.assetToMerkleIndices.get(note.asset.assetAddr);
+      const serializedAsset = AssetTrait.serializeCompactString(note.asset);
+      const assetIndices = this.assetToMerkleIndices.get(serializedAsset);
       if (assetIndices === undefined) {
         console.error(
           `asset ${note.asset.assetAddr} not found in assetToMerkleIndices - client is in an inconsistent state!`
@@ -276,9 +273,9 @@ export class NocturneClientState {
 
       assetIndices.splice(index, 1);
       if (assetIndices.length < 1) {
-        this.assetToMerkleIndices.delete(note.asset.assetAddr);
+        this.assetToMerkleIndices.delete(serializedAsset);
       } else {
-        this.assetToMerkleIndices.set(note.asset.assetAddr, assetIndices);
+        this.assetToMerkleIndices.set(serializedAsset, assetIndices);
       }
 
       nfIndices.push(merkleIndex);
@@ -333,8 +330,9 @@ export class NocturneClientState {
 
   // *** NOTE FETCHING METHODS ***
 
-  getBalanceForAsset(asset: Address, opts?: GetNotesOpts): bigint {
-    const indices = this.assetToMerkleIndices.get(asset) ?? [];
+  getBalanceForAsset(asset: Asset, opts?: GetNotesOpts): bigint {
+    const serializedAsset = AssetTrait.serializeCompactString(asset);
+    const indices = this.assetToMerkleIndices.get(serializedAsset) ?? [];
 
     // TODO catch error and trigger recovery once we have events
     const notes = indices.map((i) => this.merkleIndexToNote.get(i)!);
@@ -345,17 +343,18 @@ export class NocturneClientState {
     );
   }
 
-  getAllBalances(opts?: GetNotesOpts): Map<Address, bigint> {
+  getAllBalances(opts?: GetNotesOpts): Map<Asset, bigint> {
     return new Map(
-      [...this.assetToMerkleIndices.keys()].map((asset) => [
-        asset,
-        this.getBalanceForAsset(asset, opts),
-      ])
+      [...this.assetToMerkleIndices.keys()].map((serializedAsset) => {
+        const asset = AssetTrait.deserializeCompactString(serializedAsset);
+        return [asset, this.getBalanceForAsset(asset, opts)];
+      })
     );
   }
 
-  getNotesForAsset(asset: Address, opts?: GetNotesOpts): IncludedNote[] {
-    const indices = this.assetToMerkleIndices.get(asset) ?? [];
+  getNotesForAsset(asset: Asset, opts?: GetNotesOpts): IncludedNote[] {
+    const serializedAsset = AssetTrait.serializeCompactString(asset);
+    const indices = this.assetToMerkleIndices.get(serializedAsset) ?? [];
     return this.filterNotesByOpts(
       indices
         .map((i) => this.merkleIndexToNote.get(i)!)
@@ -364,10 +363,10 @@ export class NocturneClientState {
     );
   }
 
-  getAllNotes(opts?: GetNotesOpts): Map<Address, IncludedNote[]> {
+  getAllNotes(opts?: GetNotesOpts): Map<Asset, IncludedNote[]> {
     return new Map(
       [...this.assetToMerkleIndices.entries()].map(([asset, indices]) => [
-        asset,
+        AssetTrait.deserializeCompactString(asset),
         this.filterNotesByOpts(
           indices
             .map((i) => this.merkleIndexToNote.get(i)!)
@@ -558,7 +557,6 @@ export class NocturneClientState {
         tei: snapshotTei,
         teiOfLatestCommit: state.commitTei,
 
-        assetAddrToAsset: Array.from(state.assetAddrToAsset.entries()),
         merkleIndexToNote: Array.from(state.merkleIndexToNote.entries()),
         merkleIndexToTei: Array.from(state.merkleIndexToTei.entries()),
         assetToMerkleIndices: Array.from(state.assetToMerkleIndices.entries()),
@@ -630,7 +628,6 @@ export class NocturneClientState {
     }
 
     const {
-      assetAddrToAsset,
       merkleIndexToNote,
       merkleIndexToTei,
       assetToMerkleIndices,
@@ -657,7 +654,6 @@ export class NocturneClientState {
     state._opHistory = opHistory;
     state.optimisticNfs = new Map(optimisticNfs);
 
-    state.assetAddrToAsset = new Map(assetAddrToAsset);
     state.merkleIndexToNote = new Map(merkleIndexToNote);
     state.merkleIndexToTei = new Map(merkleIndexToTei);
     state.assetToMerkleIndices = new Map(assetToMerkleIndices);

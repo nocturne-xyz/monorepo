@@ -47,6 +47,14 @@ export class AssetTrait {
     );
   }
 
+  static serializeCompactString(asset: Asset): string {
+    return ethers.utils.hexlify(AssetTrait.serializeCompact(asset));
+  }
+
+  static deserializeCompactString(buf: string): Asset {
+    return AssetTrait.deserializeCompact(ethers.utils.arrayify(buf));
+  }
+
   static serializeCompact(asset: Asset): Uint8Array {
     const buf = new Uint8Array(ASSET_COMPACT_SERIALIZE_BYTES);
     const { assetType, assetAddr, id } = asset;

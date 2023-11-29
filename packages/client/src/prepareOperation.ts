@@ -155,7 +155,7 @@ export function gatherNotes(
 
   // check that the user has enough notes to cover the request
   const notes = state
-    .getNotesForAsset(asset.assetAddr)
+    .getNotesForAsset(asset)
     .filter((n) => !noteMerkleIndicesToIgnore.has(n.merkleIndex));
   const balance = notes.reduce((acc, note) => acc + note.value, 0n);
   if (balance < requestedAmount) {
