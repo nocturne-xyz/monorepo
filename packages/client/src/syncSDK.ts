@@ -121,6 +121,8 @@ export async function syncSDK(
     }
   }
 
+  eventBus.emit("SYNC_PROGRESS", 100);
+
   diffHistogram?.print();
   applyStateDiffHistogram?.print();
   updateMerkleHistogram?.print();
