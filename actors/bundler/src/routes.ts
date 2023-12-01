@@ -21,6 +21,8 @@ import { ethers } from "ethers";
 import { tryParseRelayRequest } from "./request";
 import { Logger } from "winston";
 import { BundlerServerMetrics } from "./server";
+import { Knex } from "knex";
+import { maybeStoreRequest } from "@nocturne-xyz/offchain-utils";
 
 export interface HandleRelayDeps {
   buffers: {
@@ -31,6 +33,7 @@ export interface HandleRelayDeps {
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   redis: IORedis;
+  pool: Knex;
   bundlerAddress: Address;
   tellerContract: Teller;
   handlerContract: Handler;
@@ -45,6 +48,7 @@ export function makeRelayHandler({
   statusDB,
   nullifierDB,
   redis,
+  pool,
   bundlerAddress,
   tellerContract,
   handlerContract,
@@ -157,6 +161,7 @@ export function makeRelayHandler({
 
     const response: RelayResponse = { id: jobId };
     res.json(response);
+    maybeStoreRequest(req, redis, { pool, logger });
   };
 }
 
