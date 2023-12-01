@@ -161,7 +161,7 @@ export function makeRelayHandler({
 
     const response: RelayResponse = { id: jobId };
     res.json(response);
-    maybeStoreRequest(req, redis, { pool, logger });
+    await maybeStoreRequest(req, redis, { pool, logger });
   };
 }
 
