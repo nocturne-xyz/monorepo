@@ -166,6 +166,7 @@ function decryptStateDiff(
     notes,
     nullifiers,
     latestCommittedMerkleIndex,
+    latestCommitTei,
     latestNewlySyncedMerkleIndex,
     totalEntityIndex,
   }: EncryptedStateDiff
@@ -236,6 +237,7 @@ function decryptStateDiff(
     notesAndCommitments,
     nullifiers,
     latestCommittedMerkleIndex,
+    latestCommitTei,
     latestNewlySyncedMerkleIndex,
     totalEntityIndex,
   };
