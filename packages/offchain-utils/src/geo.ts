@@ -3,6 +3,7 @@ import { Logger } from "winston";
 import { Knex } from "knex";
 import { cachedFetch } from "./request";
 import IORedis from "ioredis";
+import "dotenv/config";
 
 const IPQS_BASE_URL = "https://www.ipqualityscore.com/api/json/ip";
 const IPQS_API_KEY = process.env.IPQS_API_KEY ?? "";
@@ -113,7 +114,7 @@ export async function maybeStoreRequest(
 ): Promise<boolean> {
   const url = `${IPQS_BASE_URL}?ip=${req.ip}`;
   const requestInit = {
-    method: "POST",
+    method: "GET",
     headers: {
       "Content-Type": "application/json",
       "IPQS-KEY": `${IPQS_API_KEY}`,

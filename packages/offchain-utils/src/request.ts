@@ -103,6 +103,8 @@ export function formatCachedFetchCacheKey(
 ): string {
   const cacheKeyData = `${
     typeof requestInfo === "string" ? requestInfo : requestInfo.url
-  }-${stableStringify(requestInit.body ?? {})}`;
+  }-${stableStringify(requestInit.body ?? {})}-${stableStringify(
+    requestInit.headers ?? {}
+  )}}`;
   return `CACHE_${createHash("sha256").update(cacheKeyData).digest("hex")}`;
 }
