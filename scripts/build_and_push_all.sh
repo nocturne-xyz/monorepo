@@ -11,10 +11,13 @@ else
 	echo "building and pushing all images for network '$NETWORK_NAME'"
 fi
 
+yarn build:docker-actors:$NETWORK_NAME &
+yarn build:docker-updater:$NETWORK_NAME &
+wait
+
 yarn checkout-circuit-artifacts:$NETWORK_NAME
 ./scripts/authenticate_ecr.sh
 
-yarn build:docker-actors:$NETWORK_NAME
-yarn push:docker-actors:$NETWORK_NAME
-yarn build:docker-updater:$NETWORK_NAME
-yarn push:docker-updater:$NETWORK_NAME
+yarn push:docker-actors:$NETWORK_NAME &
+yarn push:docker-updater:$NETWORK_NAME &
+wait
