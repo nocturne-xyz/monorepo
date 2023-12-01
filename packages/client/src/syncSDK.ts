@@ -16,6 +16,7 @@ import {
   timedAsync,
   Histogram,
 } from "@nocturne-xyz/core";
+import { NocturneEventBus } from "./events";
 
 export interface SyncOpts {
   endBlock?: number;
@@ -26,11 +27,12 @@ export interface SyncOpts {
 
 export interface SyncDeps {
   viewer: NocturneViewer;
+  eventBus: NocturneEventBus;
 }
 
 // Sync SDK, returning last synced merkle index of last state diff
 export async function syncSDK(
-  { viewer }: SyncDeps,
+  { viewer, eventBus }: SyncDeps,
   adapter: SDKSyncAdapter,
   db: NocturneDB,
   merkle: SparseMerkleProver,
@@ -109,6 +111,13 @@ export async function syncSDK(
         )
       );
       updateMerkleHistogram?.sample(time / diff.notesAndCommitments.length);
+    }
+
+    if (diff.totalEntityIndex) {
+      // rounding is fine here
+      const num = diff.totalEntityIndex - startTotalEntityIndex;
+      const denom = endTotalEntityIndex - startTotalEntityIndex;
+      eventBus.emit("SYNC_PROGRESS", Number((num * 100n) / denom));
     }
   }
 

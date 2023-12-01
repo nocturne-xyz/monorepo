@@ -32,6 +32,8 @@ import {
   TotalEntityIndexTrait,
   maxArray,
 } from "@nocturne-xyz/core";
+import { NocturneEventBus, UnsubscribeFn } from "./events";
+import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 
 const PRUNE_OPTIMISTIC_NFS_TIMER = 60 * 1000; // 1 minute
 
@@ -44,6 +46,8 @@ export class NocturneClient {
   protected syncAdapter: SDKSyncAdapter;
   protected tokenConverter: EthToTokenConverter;
   protected opTracker: OpTracker;
+  protected events: NocturneEventBus;
+  protected syncMutex: Mutex;
 
   readonly viewer: NocturneViewer;
   readonly gasAssets: Map<string, Asset>;
@@ -85,6 +89,9 @@ export class NocturneClient {
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
     this.opTracker = nulliferChecker;
+    this.syncMutex = new Mutex();
+
+    this.events = new NocturneEventBus();
 
     // set an interval to prune optimistic nfs to ensure they don't get stuck
     const prune = async () => {
@@ -98,22 +105,31 @@ export class NocturneClient {
     await this.db.kv.clear();
   }
 
-  // Sync SDK, returning last synced merkle index of last state diff
-  async sync(opts?: SyncOpts): Promise<number | undefined> {
-    const latestSyncedMerkleIndex = await syncSDK(
-      { viewer: this.viewer },
-      this.syncAdapter,
-      this.db,
-      this.merkleProver,
-      opts
-        ? {
-            ...opts,
-            finalityBlocks: opts.finalityBlocks ?? this.config.finalityBlocks,
-          }
-        : undefined
-    );
+  onSyncProgress(cb: (progress: number) => void): UnsubscribeFn {
+    return this.events.subscribe("SYNC_PROGRESS", cb);
+  }
 
-    return latestSyncedMerkleIndex;
+  // Sync SDK, returning last synced merkle index of last state diff
+  async sync(_opts?: SyncOpts): Promise<void> {
+    try {
+      await tryAcquire(this.syncMutex).runExclusive(async () => {
+        await syncSDK(
+          { viewer: this.viewer, eventBus: this.events },
+          this.syncAdapter,
+          this.db,
+          this.merkleProver,
+          {
+            finalityBlocks: this.config.finalityBlocks,
+          }
+        );
+      });
+    } catch (err) {
+      if (err == E_ALREADY_LOCKED) {
+        await this.syncMutex.waitForUnlock();
+      } else {
+        throw err;
+      }
+    }
   }
 
   async prepareOperation(

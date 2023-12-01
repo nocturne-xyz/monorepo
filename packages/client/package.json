@@ -30,6 +30,7 @@
     "big-integer": "^1.6.42",
     "bigint-json-serialization": "^1.0.1",
     "ethers": "^5.7.2",
+    "eventemitter3": "^5.0.1",
     "js-sha256": "^0.9.0"
   },
   "devDependencies": {

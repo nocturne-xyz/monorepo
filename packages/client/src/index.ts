@@ -3,6 +3,7 @@ export * from "./conversion";
 export * from "./operationRequest";
 export * from "./snapJsonRpc";
 
+export { UnsubscribeFn } from "./events";
 export { NocturneClient } from "./NocturneClient";
 export { NocturneDB, GetNotesOpts } from "./NocturneDB";
 export { SyncOpts } from "./syncSDK";
