@@ -47,6 +47,22 @@ export async function syncSDK(
   const endTotalEntityIndex = TotalEntityIndexTrait.fromBlockNumber(
     opts?.endBlock ?? currentBlock
   );
+
+  const startMerkleIndex = (await db.latestSyncedMerkleIndex()) ?? 0;
+  const endMerkleIndex =
+    (await adapter.getLatestIndexedMerkleIndex(currentBlock + 1)) ?? 0;
+
+  // skip syncing if we're already synced
+  const latestCommittedMerkleIndex = await db.latestCommittedMerkleIndex();
+  if (
+    latestCommittedMerkleIndex !== undefined &&
+    latestCommittedMerkleIndex == endMerkleIndex
+  ) {
+    eventBus.emit("SYNC_PROGRESS", 100);
+    console.log("syncWithProgress returning early...");
+    return latestCommittedMerkleIndex;
+  }
+
   const range = {
     startTotalEntityIndex,
     endTotalEntityIndex,
@@ -89,6 +105,7 @@ export async function syncSDK(
   const updateMerkleHistogram = opts?.timing
     ? new Histogram("updateMerkle time (ms) per note or commitment")
     : undefined;
+
   for await (const diff of diffs.iter) {
     console.log(
       "[syncSDK] diff latestNewlySyncedMerkleIndex",
@@ -113,12 +130,17 @@ export async function syncSDK(
       updateMerkleHistogram?.sample(time / diff.notesAndCommitments.length);
     }
 
-    if (diff.totalEntityIndex) {
-      // rounding is fine here
-      const num = diff.totalEntityIndex - startTotalEntityIndex;
-      const denom = endTotalEntityIndex - startTotalEntityIndex;
-      eventBus.emit("SYNC_PROGRESS", Number((num * 100n) / denom));
-    }
+    // TODO be a bit more intelligent about this
+    eventBus.emit("STATE_DIFF", undefined);
+
+    // note that we don't re-fetch endMerkleIndex anymore. While this leads to "weird" progress when the tree is tiny / growing quickly,
+    // in practice neithes of those things are true
+    const num = (latestSyncedMerkleIndex ?? 0) - startMerkleIndex;
+    const denom = endMerkleIndex - startMerkleIndex;
+
+    // rounding is fine here
+    // HACK if endMerkleIndex - startMerkleIndex is 0, say we're done to avoid NaN progress
+    eventBus.emit("SYNC_PROGRESS", denom === 0 ? 100 : 100 * (num / denom));
   }
 
   eventBus.emit("SYNC_PROGRESS", 100);
@@ -127,6 +149,7 @@ export async function syncSDK(
   applyStateDiffHistogram?.print();
   updateMerkleHistogram?.print();
 
+  console.log("syncWithProgress returning...");
   return latestSyncedMerkleIndex;
 }
 

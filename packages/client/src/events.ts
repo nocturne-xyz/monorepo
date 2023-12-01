@@ -1,7 +1,14 @@
 import EventEmitter from "eventemitter3";
 
 export type Events = {
+  // fires when progress meter for syncing is updated
   SYNC_PROGRESS: Percentage;
+
+  // fires on every state diff
+  // TODO add a payload saying what changed that allows subscribers to filter
+  STATE_DIFF: undefined;
+
+  // TODO: add a more specific "BALANCE_DIFF" event
 };
 export type EventKind = keyof Events;
 

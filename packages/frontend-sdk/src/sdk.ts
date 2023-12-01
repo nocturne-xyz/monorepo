@@ -28,6 +28,7 @@ import {
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
   Address,
+  Asset,
   AssetTrait,
   AssetType,
   AssetWithBalance,
@@ -816,6 +817,16 @@ export class NocturneSdk {
       // return
       return res;
     };
+  }
+
+  async onBalancesUpdate(cb: (balances: AssetWithBalance[]) => void, opts?: GetBalanceOpts): Promise<UnsubscribeFn> {
+    const client = await this.clientThunk();
+    return client.onBalancesUpdate(cb, opts ? getBalanceOptsToGetNotesOpts(opts) : undefined);
+  }
+
+  async onBalanceForAssetUpdate(asset: Asset, cb: (balance: bigint) => void, opts?: GetBalanceOpts): Promise<UnsubscribeFn> {
+    const client = await this.clientThunk();
+    return client.onBalanceForAssetUpdate(asset, cb, opts ? getBalanceOptsToGetNotesOpts(opts) : undefined);
   }
 
   /**

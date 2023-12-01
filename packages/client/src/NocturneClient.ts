@@ -125,6 +125,7 @@ export class NocturneClient {
       });
     } catch (err) {
       if (err == E_ALREADY_LOCKED) {
+        console.log("waiting for unlock");
         await this.syncMutex.waitForUnlock();
       } else {
         throw err;
@@ -153,6 +154,27 @@ export class NocturneClient {
     );
 
     return await prepareOperation(deps, gasAccountedOpRequest);
+  }
+
+  onBalancesUpdate(
+    cb: (balances: AssetWithBalance[]) => void,
+    opts?: GetNotesOpts
+  ): UnsubscribeFn {
+    return this.events.subscribe("STATE_DIFF", async () => {
+      const balances = await this.getAllAssetBalances(opts);
+      cb(balances);
+    });
+  }
+
+  onBalanceForAssetUpdate(
+    asset: Asset,
+    cb: (balance: bigint) => void,
+    opts?: GetNotesOpts
+  ): UnsubscribeFn {
+    return this.events.subscribe("STATE_DIFF", async () => {
+      const balance = await this.getBalanceForAsset(asset, opts);
+      cb(balance);
+    });
   }
 
   async getAllAssetBalances(opts?: GetNotesOpts): Promise<AssetWithBalance[]> {
