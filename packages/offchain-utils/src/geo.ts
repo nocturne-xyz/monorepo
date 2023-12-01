@@ -125,7 +125,11 @@ export async function maybeStoreRequest(
 
   // Store request in db if anonymous IP detected
   if (ipqsResponse.proxy || ipqsResponse.vpn || ipqsResponse.tor) {
+    options.logger.info("Storing web request in db for sender", {
+      ipqsResponse,
+    });
     const cleanedRequest = requestToCleanJson(req);
+
     // note - autocommit mode is on by default
     await options.pool("requests").insert({
       request: cleanedRequest,
