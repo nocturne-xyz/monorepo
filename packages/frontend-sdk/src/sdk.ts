@@ -94,6 +94,7 @@ import {
   NocturneSdkConfig,
   OnChainDepositRequestStatus,
   OperationHandle,
+  SelectedBatchPreference,
   SupportedNetwork,
   SupportedProvider,
 } from "./types";
@@ -126,8 +127,15 @@ export interface NocturneSdkOptions {
   // we highly recommend letting the SDK default to the latest version unless you have a good reason not to
   snap?: GetSnapOptions;
 
-  opGasMultiplier?: number;
-  depositGasMultiplier?: number;
+  gasMultipliers?: {
+    ops?: number;
+    deposits?: number;
+    batchPreference?: {
+      SLOW: number;
+      MEDIUM: number;
+      FAST: number;
+    };
+  };
 }
 
 export class NocturneSdk {
@@ -142,6 +150,11 @@ export class NocturneSdk {
   protected syncMutex: Mutex;
   protected opGasMultiplier: number;
   protected depositGasMultiplier: number;
+  protected batchPreferenceGasMultipliers: {
+    SLOW: number;
+    MEDIUM: number;
+    FAST: number;
+  };
 
   protected syncProgressHandlerCounter = 0;
   protected syncProgressHandlers: Map<number, (progress: number) => void>;
@@ -185,8 +198,14 @@ export class NocturneSdk {
       return new WasmCanonAddrSigCheckProver(wasm, zkey, vkey);
     });
 
-    this.opGasMultiplier = options.opGasMultiplier ?? 1;
-    this.depositGasMultiplier = options.depositGasMultiplier ?? 1;
+    this.opGasMultiplier = options.gasMultipliers?.ops ?? 1;
+    this.depositGasMultiplier = options.gasMultipliers?.deposits ?? 1;
+    this.batchPreferenceGasMultipliers = options.gasMultipliers
+      ?.batchPreference ?? {
+      SLOW: 0.5,
+      MEDIUM: 0.7,
+      FAST: 1,
+    };
 
     this.endpoints = sdkConfig.endpoints;
     this.sdkConfig = sdkConfig;
@@ -438,12 +457,17 @@ export class NocturneSdk {
     return this.formDepositHandlesWithTxReceipt(tx);
   }
 
-  async prepareOperation({
-    request,
-    meta,
-  }: OperationRequestWithMetadata): Promise<OpWithMetadata<PreSignOperation>> {
+  async prepareOperation(
+    { request, meta }: OperationRequestWithMetadata,
+    batchPreference: SelectedBatchPreference,
+  ): Promise<OpWithMetadata<PreSignOperation>> {
     const client = await this.clientThunk();
-    const op = await client.prepareOperation(request, this.opGasMultiplier);
+    const userSelectedMultiplier =
+      this.batchPreferenceGasMultipliers[batchPreference];
+    const op = await client.prepareOperation(
+      request,
+      this.opGasMultiplier * userSelectedMultiplier,
+    );
     return {
       op,
       metadata: meta,
@@ -478,10 +502,9 @@ export class NocturneSdk {
   async performOperation({
     op,
     metadata,
-  }:
-    | OpWithMetadata<PreSignOperation>
-    | OpWithMetadata<SignedOperation>
-    | OpWithMetadata<SubmittableOperationWithNetworkInfo>): Promise<OperationHandle> {
+  }: OpWithMetadata<
+    PreSignOperation | SignedOperation | SubmittableOperationWithNetworkInfo
+  >): Promise<OperationHandle> {
     const client = await this.clientThunk();
 
     const kind = getOperationKind(op);
@@ -522,24 +545,26 @@ export class NocturneSdk {
     erc20Address: Address,
     amount: bigint,
     recipientAddress: Address,
+    batchPreference: SelectedBatchPreference,
   ): Promise<OpWithMetadata<PreSignOperation>> {
     const operationRequest = await this.opRequestBuilder
       .use(Erc20Plugin)
       .erc20Transfer(erc20Address, recipientAddress, amount)
       .build();
-    return await this.prepareOperation(operationRequest);
+    return await this.prepareOperation(operationRequest, batchPreference);
   }
 
   async prepareAnonEthTransfer(
     recipientAddress: Address,
     amount: bigint,
+    batchPreference: SelectedBatchPreference,
   ): Promise<OpWithMetadata<PreSignOperation>> {
     const operationRequest = await this.opRequestBuilder
       .use(EthTransferAdapterPlugin)
       .transferEth(recipientAddress, amount)
       .build();
 
-    return await this.prepareOperation(operationRequest);
+    return await this.prepareOperation(operationRequest, batchPreference);
   }
 
   async prepareAnonErc20Swap({
@@ -547,8 +572,11 @@ export class NocturneSdk {
     tokenOut,
     amountIn,
     maxSlippageBps,
+    batchPreference = "FAST",
     protocol = "UNISWAP_V3",
-  }: AnonSwapRequestParams): Promise<OpWithMetadata<PreSignOperation>> {
+  }: AnonSwapRequestParams & {
+    batchPreference: SelectedBatchPreference;
+  }): Promise<OpWithMetadata<PreSignOperation>> {
     if (protocol !== "UNISWAP_V3") {
       throw new Error(`Protocol "${protocol}" not currently supported`);
     }
@@ -558,7 +586,7 @@ export class NocturneSdk {
       .swap(tokenIn, amountIn, tokenOut, { maxSlippageBps })
       .build();
 
-    return await this.prepareOperation(operationRequest);
+    return await this.prepareOperation(operationRequest, batchPreference);
   }
 
   async retrievePendingDeposit(
