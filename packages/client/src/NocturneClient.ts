@@ -32,7 +32,7 @@ import {
   TotalEntityIndexTrait,
   maxArray,
 } from "@nocturne-xyz/core";
-import { NocturneEventBus, UnsubscribeFn } from "./events";
+import { NocturneEventBus, Percentage, UnsubscribeFn } from "./events";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 
 const PRUNE_OPTIMISTIC_NFS_TIMER = 60 * 1000; // 1 minute
@@ -105,7 +105,7 @@ export class NocturneClient {
     await this.db.kv.clear();
   }
 
-  onSyncProgress(cb: (progress: number) => void): UnsubscribeFn {
+  onSyncProgress(cb: (progress: Percentage) => void): UnsubscribeFn {
     return this.events.subscribe("SYNC_PROGRESS", cb);
   }
 

@@ -1,16 +1,11 @@
 import EventEmitter from "eventemitter3";
 
 export type Events = {
-  SYNC_PROGRESS: number;
+  SYNC_PROGRESS: Percentage;
 };
 export type EventKind = keyof Events;
 
-export type SyncFrontier = {
-  latestSyncedMerkleIndex: number;
-  latestCommittedMerkle: number;
-  tei: number;
-  latestCommitTei: number;
-};
+export type Percentage = number;
 
 export type UnsubscribeFn = () => void;
 
