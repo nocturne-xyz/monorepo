@@ -25,6 +25,7 @@ export const GoerliSdkEventsPaginatedById = graphql(`
       limit: 1
       order_by: { id: desc }
     ) {
+      id
       subtree_batch_offset
     }
   }
@@ -79,6 +80,7 @@ export const MainnetSdkEventsPaginatedById = graphql(`
       limit: 1
       order_by: { id: desc }
     ) {
+      id
       subtree_batch_offset
     }
   }

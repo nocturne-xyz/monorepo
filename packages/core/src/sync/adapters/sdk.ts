@@ -19,6 +19,9 @@ interface BaseStateDiff {
   // `merkleIndex` of the last leaf to be committed to the commitment tree
   latestCommittedMerkleIndex: number | undefined;
 
+  // `tei` of the latest commit to the commitment tree
+  latestCommitTei: bigint | undefined;
+
   // last `TotalEntityIndex` of the range this StateDiff represents
   totalEntityIndex: TotalEntityIndex;
 }

@@ -20,8 +20,11 @@ import {
 import { fetchSDKEvents } from "./fetch";
 import { Logger } from "winston";
 
-const { fetchLatestCommittedMerkleIndex, fetchLatestIndexedBlock } =
-  SubgraphUtils;
+const {
+  fetchLatestSubtreeCommit,
+  fetchLatestIndexedBlock,
+  fetchLatestCommittedMerkleIndex,
+} = SubgraphUtils;
 
 export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   private readonly graphqlEndpoint: string;
@@ -47,11 +50,13 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
     const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
       let from = startTotalEntityIndex;
-      let latestCommittedMerkleIndex = await fetchLatestCommittedMerkleIndex(
+      const latestCommit = await fetchLatestSubtreeCommit(
         endpoint,
         from,
         logger
       );
+      let latestCommittedMerkleIndex = latestCommit?.merkleIndex;
+      let latestCommitTei = latestCommit?.tei;
 
       const maybeApplyThrottle = async (currentBlock: number) => {
         const isCaughtUp =
@@ -104,16 +109,19 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
           fetchSDKEvents(endpoint, from, toTotalEntityIndex, logger)
         );
 
-        const newLatestCommittedMerkleIndex =
-          await fetchLatestCommittedMerkleIndex(
-            endpoint,
-            toTotalEntityIndex,
-            logger
-          );
+        const newLatestCommit = await fetchLatestSubtreeCommit(
+          endpoint,
+          toTotalEntityIndex,
+          logger
+        );
+        const newLatestCommittedMerkleIndex = newLatestCommit?.merkleIndex;
+        const newLatestCommitTei = newLatestCommit?.tei;
 
-        // if we have notes and/or mullifiers, update from and get the last committed merkle index as of the entity index we saw
+        // if we have notes and/or mullifiers, update from and set the last committed merkle index as of the entity index we saw
         if (sdkEvents.length > 0) {
           latestCommittedMerkleIndex = newLatestCommittedMerkleIndex;
+          latestCommitTei = newLatestCommitTei;
+
           const highestTotalEntityIndex = maxArray(
             sdkEvents.map((n) => n.totalEntityIndex)
           );
@@ -149,6 +157,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
             nullifiers: nullifiers.map((n) => n.inner),
             latestNewlySyncedMerkleIndex,
             latestCommittedMerkleIndex,
+            latestCommitTei,
             totalEntityIndex: highestTotalEntityIndex,
           };
 
@@ -180,11 +189,13 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
               newLatestCommittedMerkleIndex > latestCommittedMerkleIndex)
           ) {
             latestCommittedMerkleIndex = newLatestCommittedMerkleIndex;
+            latestCommitTei = newLatestCommitTei;
             const stateDiff: EncryptedStateDiff = {
               notes: [],
               nullifiers: [],
               latestNewlySyncedMerkleIndex: undefined,
               latestCommittedMerkleIndex,
+              latestCommitTei,
               totalEntityIndex: currentBlockTotalEntityIndex,
             };
 

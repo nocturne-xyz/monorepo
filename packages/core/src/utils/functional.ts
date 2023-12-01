@@ -130,6 +130,14 @@ export function maxArray(arr: number[] | bigint[]): number | bigint {
   return arr.reduce((curr, x) => max(curr, x));
 }
 
+export function maxByKey<T>(
+  arr: T[],
+  keyGetter: (item: T) => number | bigint
+): T {
+  assertOrErr(arr.length > 0, "maxByKey: array must have at least one element");
+  return arr.reduce((curr, x) => (keyGetter(curr) > keyGetter(x) ? curr : x));
+}
+
 export type Thunk<T, P extends any[] = any[]> = (...args: P) => Promise<T>;
 
 export function thunk<T, P extends any[] = any[]>(

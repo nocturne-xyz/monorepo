@@ -59,6 +59,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
       const merkleCount = (await handlerContract.count()).toNumber();
       let latestCommittedMerkleIndex =
         merkleCount !== 0 ? merkleCount - 1 : undefined;
+      let latestCommitTei = undefined;
 
       let from = Number(
         TotalEntityIndexTrait.toComponents(startTotalEntityIndex).blockNumber
@@ -107,11 +108,12 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         // update `latestCommittedMerkleIndex` according to the `SubtreeUpdate` events received
         const treeWasUpdated = subtreeUpdateCommits.length > 0;
         if (treeWasUpdated) {
-          latestCommittedMerkleIndex = maxArray(
-            subtreeUpdateCommits.map(({ inner: { subtreeBatchOffset } }) => {
-              return batchOffsetToLatestMerkleIndexInBatch(subtreeBatchOffset);
-            })
+          const lastCommit =
+            subtreeUpdateCommits[subtreeUpdateCommits.length - 1];
+          latestCommittedMerkleIndex = batchOffsetToLatestMerkleIndexInBatch(
+            lastCommit.inner.subtreeBatchOffset
           );
+          latestCommitTei = lastCommit.totalEntityIndex;
         }
 
         // extract notes and nullifiers
@@ -173,6 +175,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
             totalEntityIndex: currTotalEntityIndex,
             latestCommittedMerkleIndex,
             latestNewlySyncedMerkleIndex,
+            latestCommitTei,
           };
           yield diff;
         }

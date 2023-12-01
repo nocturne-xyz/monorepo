@@ -1,6 +1,6 @@
 import retry from "async-retry";
 import { TotalEntityIndex, TotalEntityIndexTrait } from "../sync";
-import { maxArray } from "./functional";
+import { maxByKey } from "./functional";
 import { batchOffsetToLatestMerkleIndexInBatch } from "./tree";
 import { Logger } from "winston";
 
@@ -92,34 +92,40 @@ export const makeSubgraphQuery =
     );
   };
 
-interface FetchSubtreeCommitsResponse {
+type FetchSubtreeCommitsResponse = {
   data: {
     subtreeCommits: SubtreeCommitResponse[];
   };
-}
+};
 
-interface FetchSubtreeCommitsVars {
+type FetchSubtreeCommitsVars = {
   toIdx?: string;
-}
+};
 
-interface SubtreeCommitResponse {
+type SubtreeCommitResponse = {
+  id: string;
   subtreeBatchOffset: string;
-}
+};
+
+export type SubtreeCommitIndex = {
+  tei: TotalEntityIndex;
+  merkleIndex: number;
+};
 
 const subtreeCommitQuery = (params: string, whereClause: string) => `
   query fetchSubtreeCommits${params} {
     subtreeCommits(${whereClause}orderBy: subtreeBatchOffset, orderDirection: desc, first: 1) {
+      id
       subtreeBatchOffset
     }
   }
 `;
 
-// gets last committed merkle index on or before a given totalEntityIndex
-export async function fetchLatestCommittedMerkleIndex(
+export async function fetchLatestSubtreeCommit(
   endpoint: string,
   toTotalEntityIndex?: TotalEntityIndex,
   logger?: Logger
-): Promise<number | undefined> {
+): Promise<SubtreeCommitIndex | undefined> {
   let params = "";
   let whereClause = "";
   if (toTotalEntityIndex) {
@@ -149,10 +155,28 @@ export async function fetchLatestCommittedMerkleIndex(
     return undefined;
   }
 
-  const subtreeBatchOffsets = res.data.subtreeCommits.map((commit) =>
+  const lastCommit = maxByKey(res.data.subtreeCommits, (commit) =>
     parseInt(commit.subtreeBatchOffset)
   );
-  const maxSubtreeBatchOffset = maxArray(subtreeBatchOffsets);
+  return {
+    tei: BigInt(lastCommit.id),
+    merkleIndex: batchOffsetToLatestMerkleIndexInBatch(
+      parseInt(lastCommit.subtreeBatchOffset)
+    ),
+  };
+}
 
-  return batchOffsetToLatestMerkleIndexInBatch(maxSubtreeBatchOffset);
+// gets last committed merkle index on or before a given totalEntityIndex
+export async function fetchLatestCommittedMerkleIndex(
+  endpoint: string,
+  toTotalEntityIndex?: TotalEntityIndex,
+  logger?: Logger
+): Promise<number | undefined> {
+  const commit = await fetchLatestSubtreeCommit(
+    endpoint,
+    toTotalEntityIndex,
+    logger
+  );
+
+  return commit?.merkleIndex;
 }

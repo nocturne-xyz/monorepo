@@ -50,7 +50,7 @@ export type FetchSdkEventsAndLatestCommitedMerkleIndexFn = (
   from: TotalEntityIndex,
   toBlock: number,
   limit?: number
-) => Promise<SdkEventsWithLatestCommittedMerkleIndex>;
+) => Promise<SdkEventsWithLatestCommit>;
 
 export function makeFetchLatestIndexedMerkleIndex<N>(
   client: UrqlClient,
@@ -88,9 +88,14 @@ type SdkEvent =
   | Nullifier
   | FilledBatchWithZerosEndMerkleIndex;
 type FilledBatchWithZerosEndMerkleIndex = number;
-type SdkEventsWithLatestCommittedMerkleIndex = {
+type SdkEventsWithLatestCommit = {
   events: WithTotalEntityIndex<SdkEvent>[];
-  latestCommittedMerkleIndex?: number;
+  latestCommit:
+    | {
+        merkleIndex: number;
+        tei: TotalEntityIndex;
+      }
+    | undefined;
 };
 type SdkEventResponse = ArrayElem<
   GoerliFetchSdkEventsQuery["goerli_sdk_events"]
@@ -137,23 +142,26 @@ export function makeFetchSdkEventsAndLatestCommittedMerkleIndex(
       }
     );
 
-    let latestCommittedMerkleIndex: number | undefined = undefined;
-
     //@ts-ignore
     const subtreeCommits = data[
       `${network}_subtree_commits`
     ] as SubtreeCommitResponse[];
 
+    let latestCommit;
     if (subtreeCommits && subtreeCommits.length > 0) {
       const subtreeCommit = subtreeCommits[0];
       const batchOffset = parseInt(subtreeCommit.subtree_batch_offset);
-      latestCommittedMerkleIndex =
-        batchOffsetToLatestMerkleIndexInBatch(batchOffset);
+      const merkleIndex = batchOffsetToLatestMerkleIndexInBatch(batchOffset);
+      const tei = BigInt(subtreeCommit.id);
+      latestCommit = {
+        merkleIndex,
+        tei,
+      };
     }
 
     return {
       events,
-      latestCommittedMerkleIndex,
+      latestCommit,
     };
   };
 }
