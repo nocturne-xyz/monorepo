@@ -128,7 +128,7 @@ export async function maybeStoreRequest(
   options.logger.info("IPQS response", { ipqsResponse })
 
   // Store request in db if anonymous IP detected
-  if (ipqsResponse.proxy || ipqsResponse.vpn || ipqsResponse.tor) {
+  if (ipqsResponse.proxy || ipqsResponse.vpn || ipqsResponse.tor || ipqsResponse.active_vpn || ipqsResponse.active_tor) {
     options.logger.info("Storing web request in db for sender", {
       ipqsResponse,
     });
