@@ -179,6 +179,7 @@ export class BundlerServer {
       }
     );
 
+    app.set("trust proxy", 1); // we know we're behind single AWS LB
     app.use(logMiddleware);
     app.use(cors());
     app.use(express.json());
