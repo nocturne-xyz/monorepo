@@ -106,10 +106,12 @@ async function getDepositRequestStatus(
       throw new Error(error?.message ?? "Deposit request query failed");
     }
 
-    if (data.deposit_request.length === 0) {
+    //@ts-ignore
+    const matches = data[`${network}_deposit_requests`] as DepositRequestResponse[];
+    if (matches.length === 0) {
       throw new Error("Deposit request not found");
     }
-    initialOnChainStatus= parseOnChainDepositRequestStatus(data.deposit_request[0].status);
+    initialOnChainStatus= parseOnChainDepositRequestStatus(matches[0].status);
   }
 
   const screenerResponse = await retry(
