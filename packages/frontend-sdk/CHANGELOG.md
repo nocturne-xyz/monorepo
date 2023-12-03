@@ -1,5 +1,11 @@
 # Changelog
 
+## 9.0.0
+
+### Major Changes
+
+- 48894fb7: Adds batch preference
+
 ## 8.0.0
 
 ### Major Changes
