@@ -21,7 +21,7 @@ export const GoerliDepositRequestsBySpender = graphql(`
 
 export const GoerliDepositRequestStatusById = graphql(`
   query goerliFetchDepositStatus($hash: String!) {
-    deposit_request(where: {id: {_eq: $hash}}) {
+    goerli_deposit_requests(where: {id: {_eq: $hash}}) {
       status
     }
   }
