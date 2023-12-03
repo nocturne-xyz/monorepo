@@ -14,7 +14,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 const documents = {
     "\n  query goerliFetchDepositRequests($spender: bytea!) {\n    goerli_deposit_requests(where: {spender: {_eq: $spender}}) {\n      status\n      encoded_asset_addr\n      encoded_asset_id\n      value\n      deposit_addr_h1\n      deposit_addr_h2\n      nonce\n      gas_compensation\n      instantiation_tx_hash\n      completion_tx_hash\n      retrieval_tx_hash\n      created_at_total_entity_index\n    }\n  }\n": types.GoerliFetchDepositRequestsDocument,
-    "\n  query goerliFetchDepositStatus($hash: String!) {\n    deposit_request(where: {id: {_eq: $hash}}) {\n      status\n    }\n  }\n": types.GoerliFetchDepositStatusDocument,
+    "\n  query goerliFetchDepositStatus($hash: String!) {\n    goerli_deposit_requests(where: {id: {_eq: $hash}}) {\n      status\n    }\n  }\n": types.GoerliFetchDepositStatusDocument,
     "\n  query mainnetFetchDepositRequests($spender: bytea!) {\n    mainnet_deposit_requests(where: {spender: {_eq: $spender}}) {\n      status\n      encoded_asset_addr\n      encoded_asset_id\n      value\n      deposit_addr_h1\n      deposit_addr_h2\n      nonce\n      gas_compensation\n      instantiation_tx_hash\n      completion_tx_hash\n      retrieval_tx_hash\n      created_at_total_entity_index\n    }\n  }\n": types.MainnetFetchDepositRequestsDocument,
     "\n  query mainnetFetchDepositStatus($hash: String!) {\n    mainnet_deposit_requests(where: {id: {_eq: $hash}}) {\n      status\n    }\n  }\n": types.MainnetFetchDepositStatusDocument,
 };
@@ -40,7 +40,7 @@ export function graphql(source: "\n  query goerliFetchDepositRequests($spender: 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query goerliFetchDepositStatus($hash: String!) {\n    deposit_request(where: {id: {_eq: $hash}}) {\n      status\n    }\n  }\n"): (typeof documents)["\n  query goerliFetchDepositStatus($hash: String!) {\n    deposit_request(where: {id: {_eq: $hash}}) {\n      status\n    }\n  }\n"];
+export function graphql(source: "\n  query goerliFetchDepositStatus($hash: String!) {\n    goerli_deposit_requests(where: {id: {_eq: $hash}}) {\n      status\n    }\n  }\n"): (typeof documents)["\n  query goerliFetchDepositStatus($hash: String!) {\n    goerli_deposit_requests(where: {id: {_eq: $hash}}) {\n      status\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
