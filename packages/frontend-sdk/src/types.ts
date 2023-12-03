@@ -1,9 +1,6 @@
-import { NocturneConfig } from "@nocturne-xyz/config";
 import { OperationMetadata } from "@nocturne-xyz/client";
-import {
-  AssetType,
-  OperationStatusResponse,
-} from "@nocturne-xyz/core";
+import { NocturneConfig } from "@nocturne-xyz/config";
+import { AssetType, OperationStatusResponse } from "@nocturne-xyz/core";
 import { AnonErc20SwapQuote } from "@nocturne-xyz/op-request-plugins";
 import { BigNumber, ContractReceipt, ethers } from "ethers";
 
@@ -41,7 +38,7 @@ export enum OnChainDepositRequestStatus {
 }
 
 export function parseOnChainDepositRequestStatus(
-  status: string
+  status: string,
 ): OnChainDepositRequestStatus {
   switch (status) {
     case "Completed":
@@ -162,6 +159,8 @@ export interface GetBalanceOpts {
   // defaults to `true`
   includePending?: boolean;
 }
+
+export type SelectedBatchPreference = "FAST" | "MEDIUM" | "SLOW";
 
 export interface AnonSwapRequestParams {
   tokenIn: string;
