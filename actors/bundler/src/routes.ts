@@ -200,8 +200,8 @@ export function makeCheckNFHandler({
   logger,
 }: HandleCheckNFDeps): RequestHandler {
   return async (req: Request, res: Response) => {
-    const childLogger = logger.child({ nf: req.params.nf });
-    const nf = BigInt(req.params.nf);
+    const childLogger = logger.child({ nf: req.params.nullifier });
+    const nf = BigInt(req.params.nullifier);
 
     let exists = false;
     try {

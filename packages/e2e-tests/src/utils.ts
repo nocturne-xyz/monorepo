@@ -101,6 +101,21 @@ export async function queryDepositStatus(
   }
 }
 
+export async function checkBundlerHasNf(nf: bigint): Promise<boolean> {
+  console.log(`checking bundler has nullifier ${nf}`);
+
+  try {
+    const res = await fetch(`${BUNDLER_ENDPOINT}/nullifiers/${nf}`, {
+      method: "GET",
+    });
+    const resJson = await res.json();
+    return resJson.exists;
+  } catch (err) {
+    console.error("error checking nullifier: ", err);
+    return false;
+  }
+}
+
 export async function submitAndProcessOperation(
   operation: SubmittableOperationWithNetworkInfo
 ): Promise<OperationStatus> {

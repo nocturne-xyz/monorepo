@@ -39,6 +39,7 @@ import {
   GAS_FAUCET_DEFAULT_AMOUNT,
   GAS_PRICE,
   ONE_DAY_SECONDS,
+  checkBundlerHasNf,
   submitAndProcessOperation,
 } from "../src/utils";
 
@@ -327,6 +328,17 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expectedResult: {
         type: "success",
         expectedBundlerStatus: OperationStatus.OPERATION_VALIDATION_FAILED,
+      },
+      offchainChecks: async () => {
+        // check that nfs are removed from db
+        const nfs = preSign.joinSplits.flatMap(({ nullifierA, nullifierB }) => [
+          nullifierA,
+          nullifierB,
+        ]);
+        const checks = await Promise.all(
+          nfs.map((nf) => checkBundlerHasNf(nf))
+        );
+        expect(checks.every((check) => check === false)).to.be.true;
       },
     });
 

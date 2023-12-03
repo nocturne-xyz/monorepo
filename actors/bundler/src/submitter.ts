@@ -142,10 +142,24 @@ export class BundlerSubmitter {
               `op failed. removing from batch. digest: ${opDigests[i]}`,
               { err: maybeErr }
             );
-            void this.statusDB.setJobStatus(
-              opDigests[i],
-              OperationStatus.OPERATION_VALIDATION_FAILED
-            );
+            await Promise.all([
+              this.statusDB.setJobStatus(
+                opDigests[i],
+                OperationStatus.OPERATION_VALIDATION_FAILED
+              ),
+              (async () => {
+                const tx = this.nullifierDB.getRemoveNullifierTransactions(
+                  operations[i]
+                );
+                await this.redis.multi(tx).exec((maybeErr) => {
+                  if (maybeErr) {
+                    const msg = `failed to remove nullifiers from DB after op failed validation: ${maybeErr}`;
+                    logger.error(msg);
+                    throw new Error(msg);
+                  }
+                });
+              })(),
+            ]);
           } else {
             validOps.push(operations[i]);
           }
