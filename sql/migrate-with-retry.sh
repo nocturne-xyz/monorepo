@@ -1,4 +1,3 @@
-Copy code
 #!/usr/bin/env bash
 
 # note - this is necessary for local dev and should not really be necessary for deployed environments
