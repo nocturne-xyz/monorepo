@@ -7,12 +7,14 @@ attempt=1
 while [ $attempt -le $max_attempts ]
 do
    echo "Attempt $attempt/$max_attempts"
-   # Capture both stdout and stderr in a variable
-   output=$(flyway migrate -placeholders.nocturne_db_user_password="$NOCTURNE_DB_USER_PASSWORD" 2>&1)
+   # Run the Flyway command with verbose logging (-X), capturing stdout and stderr separately
+   output=$(flyway migrate -X -placeholders.nocturne_db_user_password="$NOCTURNE_DB_USER_PASSWORD" 2>&1)
+   error=$(flyway migrate -X -placeholders.nocturne_db_user_password="$NOCTURNE_DB_USER_PASSWORD" 2>/dev/null)
    result=$?
    
-   # Print the output whether it's a success or an error
-   echo "$output" 
+   # Print standard output and error
+   echo "Output: $output"
+   echo "Error: $error"
 
    if [ $result -eq 0 ]
    then
@@ -20,8 +22,6 @@ do
      exit 0
    else
      echo "Migration failed with status $result"
-     # Print error message if the command fails
-     echo "Error: $output"
    fi
 
    echo "Migration failed, retrying in $delay seconds..."
