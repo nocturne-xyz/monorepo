@@ -5,6 +5,7 @@ const DEFAULT_MIN_POOL_CONNECTIONS = 0;
 const DEFAULT_MAX_POOL_CONNECTIONS = 1;
 const DEFAULT_CONNECTION_STRING =
   "postgresql://nocturne_db_user:password@localhost:5432/nocturne?searchPath=nocturne";
+
 /**
  * Creates a Knex pool for the offchain database.
  *
