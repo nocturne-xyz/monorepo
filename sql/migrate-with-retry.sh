@@ -1,23 +1,26 @@
 #!/usr/bin/env bash
 
 max_attempts=3
-delay=1
+delay=5 # Adjust the delay as necessary
 attempt=1
 
-while [ $attempt -le $max_attempts ]
-do
+while [ $attempt -le $max_attempts ]; do
    echo "Attempt $attempt/$max_attempts"
-   # Run the Flyway command with verbose logging (-X), capturing stdout and stderr separately
-   output=$(flyway migrate -X -placeholders.nocturne_db_user_password="$NOCTURNE_DB_USER_PASSWORD" 2>&1)
-   error=$(flyway migrate -X -placeholders.nocturne_db_user_password="$NOCTURNE_DB_USER_PASSWORD" 2>/dev/null)
+   
+   # Run the Flyway command with verbose logging (-X)
+   flyway migrate -X -placeholders.nocturne_db_user_password="$NOCTURNE_DB_USER_PASSWORD" > migrate_output.log 2>&1
    result=$?
    
-   # Print standard output and error
+   # Wait a bit to ensure all output is flushed
+   sleep $delay
+   
+   # Read the full output from the log file
+   output=$(<migrate_output.log)
+   
+   # Print the output
    echo "Output: $output"
-   echo "Error: $error"
 
-   if [ $result -eq 0 ]
-   then
+   if [ $result -eq 0 ]; then
      echo "Migration successful"
      exit 0
    else
@@ -26,7 +29,7 @@ do
 
    echo "Migration failed, retrying in $delay seconds..."
    sleep $delay
-   attempt=$(( $attempt + 1 ))
+   attempt=$(( attempt + 1 ))
 done
 
 echo "Migration failed after $max_attempts attempts"
