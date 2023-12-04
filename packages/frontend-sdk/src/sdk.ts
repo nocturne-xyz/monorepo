@@ -888,7 +888,7 @@ export class NocturneSdk {
   async getInFlightOperations(): Promise<OperationHandle[]> {
     const history = await this.getOpHistory(true);
     const operationHandles = history
-      .filter(({ status }) => !status || !isTerminalOpStatus(status))
+      .filter(record => !record.status || !isTerminalOpStatus(record.status))
       .map(({ digest, metadata }) => {
         const getStatus = this.makeGetStatus(digest);
         return {
