@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 max_attempts=3
-delay=5 # Delay time in seconds
+delay=30 # Delay time in seconds
 attempt=1
 output_log="migrate_output.log"
 
