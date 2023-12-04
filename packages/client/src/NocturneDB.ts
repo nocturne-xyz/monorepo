@@ -260,6 +260,7 @@ export class NocturneDB {
 
       const index = history.indexOf(digest);
       if (index !== -1) {
+        history.splice(index, 1);
         await this.setHistoryArray(history);
       } else {
         console.warn("tried to remove op from history that was not in history");
