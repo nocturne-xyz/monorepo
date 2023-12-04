@@ -5,19 +5,6 @@ delay=30
 attempt=1
 output_log="migrate_output.log"
 
-# Function to capture output upon script exit
-cleanup() {
-  if [ -s "$output_log" ]; then
-    echo "Output from Flyway command:"
-    cat "$output_log"
-  else
-    echo "No output captured in $output_log file."
-  fi
-}
-
-# Set a trap to call cleanup function on script exit
-trap cleanup EXIT
-
 while [ $attempt -le $max_attempts ]; do
    echo "Attempt $attempt/$max_attempts"
    
@@ -26,9 +13,7 @@ while [ $attempt -le $max_attempts ]; do
    result=$?
    
    # Immediately echo the output if there is any
-   if [ -s "$output_log" ]; then
-     cat "$output_log"
-   fi
+   cat "OUTPUT LOG: $output_log"
 
    # Check if Flyway migration was successful
    if [ $result -eq 0 ]; then
