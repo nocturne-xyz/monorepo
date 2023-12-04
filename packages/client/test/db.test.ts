@@ -344,6 +344,74 @@ describe("NocturneDB", async () => {
     const allNotes = await db.getAllNotes({ includeUncommitted: true });
     expect(allNotes.size).to.eql(0);
   });
+
+  it("removes ops from history", async () => {
+    const op1 = dummyOp(5, shitcoin);
+    const op2 = dummyOp(5, shitcoin);
+    await db.addOpToHistory(op1, { items: [] });
+    await db.addOpToHistory(op2, { items: [] });
+
+    await db.removeOpFromHistory(OperationTrait.computeDigest(op1));
+
+    const history = await db.getHistory(true);
+    expect(history.length).to.eql(1);
+    expect(history[0].digest).to.eql(OperationTrait.computeDigest(op2));
+  });
+
+  it("sets op status in history", async () => {
+    const op = dummyOp(5, shitcoin);
+    await db.addOpToHistory(op, { items: [] });
+
+    {
+      const history = await db.getHistory(true);
+      expect(history.length).to.eql(1);
+      expect(history[0].status).to.be.undefined;
+    }
+
+    await db.setStatusForOp(
+      OperationTrait.computeDigest(op),
+      OperationStatus.EXECUTED_SUCCESS
+    );
+
+    {
+      const history = await db.getHistory(true);
+      expect(history.length).to.eql(1);
+      expect(history[0].status).to.eql(OperationStatus.EXECUTED_SUCCESS);
+    }
+  });
+
+  it("removes optimistic nullifiers when op marked as failed in history", async () => {
+    // add an op with 5 joinsplits to history
+    const op = dummyOp(5, shitcoin);
+    const { oldNotes } = getNotesAndNfsFromOp(op);
+    await db.storeNotes(withDummyTotalEntityIndices(oldNotes));
+
+    await db.addOpToHistory(op, { items: [] });
+    // expect there to be optimistic NFs in db
+    {
+      const optimisticNfs = await db.getAllOptimisticNFRecords();
+      expect(optimisticNfs.size).to.eql(oldNotes.length);
+
+      const allNotes = await db.getAllNotes({ includeUncommitted: true });
+      const notes = [...allNotes.values()].flat();
+      expect(notes.length).to.eql(0);
+    }
+
+    await db.setStatusForOp(
+      OperationTrait.computeDigest(op),
+      OperationStatus.BUNDLE_REVERTED
+    );
+
+    // expect optimistic NFs to be removed
+    {
+      const optimisticNfs = await db.getAllOptimisticNFRecords();
+      expect(optimisticNfs.size).to.eql(0);
+
+      const allNotes = await db.getAllNotes({ includeUncommitted: true });
+      const notes = [...allNotes.values()].flat();
+      expect(notes.length).to.eql(oldNotes.length);
+    }
+  });
 });
 
 function withDummyTotalEntityIndices<T>(arr: T[]): WithTotalEntityIndex<T>[] {
