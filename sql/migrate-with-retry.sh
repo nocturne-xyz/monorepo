@@ -1,3 +1,4 @@
+Copy code
 #!/usr/bin/env bash
 
 # note - this is necessary for local dev and should not really be necessary for deployed environments
@@ -11,17 +12,18 @@ attempt=1
 while [ $attempt -le $max_attempts ]
 do
    echo "Attempt $attempt/$max_attempts"
-   # Redirecting both stdout and stderr to the console
-   flyway migrate -placeholders.nocturne_db_user_password="$NOCTURNE_DB_USER_PASSWORD" 2>&1
-
+   # Capture both stdout and stderr in a variable
+   output=$(flyway migrate -placeholders.nocturne_db_user_password="$NOCTURNE_DB_USER_PASSWORD" 2>&1)
    result=$?
+   
+   echo "$output"  # Print the output whether it's a success or an error
+   echo "$result"
+
    if [ $result -eq 0 ]
    then
      echo "Migration successful"
      exit 0
    else
-     # If you want to save the output to a file as well, uncomment the following line:
-     # flyway migrate -placeholders.nocturne_db_user_password="$NOCTURNE_DB_USER_PASSWORD" > "migration_log_$attempt.txt" 2>&1
      echo "Migration failed with status $result, check the output above."
    fi
 
