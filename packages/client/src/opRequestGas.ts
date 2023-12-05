@@ -177,7 +177,6 @@ async function tryUpdateJoinSplitRequests(
     numUniqueAssets: initialNumAssets,
   };
   const initialGasEstimate = gasCompensationForParams(params);
-  // console.log("initial gas estimate", initialGasEstimate, params);
 
   const failedGasAssets: Asset[] = [];
   const failedGasEstimates: bigint[] = [];
@@ -229,7 +228,6 @@ async function tryUpdateJoinSplitRequests(
       );
       const additionalCompEstimate =
         compEstimate - initialNotesForGasAssetValue;
-      // console.log({ currentGasNotesValue, additionalCompEstimate, compEstimate, initialNotesForGasAssetValue })
       if (currentGasNotesValue >= additionalCompEstimate) {
         // if a new joinsplit request is needed, modify an existing one, otherwise add a new one
         if (existingJsrIdx !== -1) {
@@ -293,8 +291,6 @@ async function tryUpdateJoinSplitRequests(
         (acc, { value }) => acc + value,
         0n
       );
-
-      // console.log("current gas estimate", currentGasEstimate, { ...params });
     }
   }
 
