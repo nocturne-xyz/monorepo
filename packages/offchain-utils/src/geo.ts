@@ -122,13 +122,18 @@ export async function maybeStoreRequest(
   };
 
   options.logger.info("Fetching IPQS response", { url, requestInit });
-  options.logger.info(`IPQS API key: ${IPQS_API_KEY}`);
   const response = await cachedFetch(url, requestInit, cache);
   const ipqsResponse = (await response.json()) as IPQSResponse;
-  options.logger.info("IPQS response", { ipqsResponse })
+  options.logger.info("IPQS response", { ipqsResponse });
 
   // Store request in db if anonymous IP detected
-  if (ipqsResponse.proxy || ipqsResponse.vpn || ipqsResponse.tor || ipqsResponse.active_vpn || ipqsResponse.active_tor) {
+  if (
+    ipqsResponse.proxy ||
+    ipqsResponse.vpn ||
+    ipqsResponse.tor ||
+    ipqsResponse.active_vpn ||
+    ipqsResponse.active_tor
+  ) {
     options.logger.info("Storing web request in db for sender", {
       ipqsResponse,
     });
