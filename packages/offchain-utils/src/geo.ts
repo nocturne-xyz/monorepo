@@ -1,6 +1,41 @@
-import { Request, Response, NextFunction } from "express";
+import { Request } from "express";
 import { Logger } from "winston";
 import { Knex } from "knex";
+import { cachedFetch } from "./request";
+import IORedis from "ioredis";
+import "dotenv/config";
+
+export const IPQS_BASE_URL = "https://www.ipqualityscore.com/api/json/ip";
+const IPQS_API_KEY = process.env.IPQS_API_KEY ?? "";
+
+export interface IPQSResponse {
+  success: boolean;
+  message: string;
+  fraud_score: number;
+  country_code: string;
+  region: string;
+  city: string;
+  ISP: string;
+  ASN: number;
+  organization: string;
+  is_crawler: boolean;
+  timezone: string;
+  mobile: boolean;
+  host: string;
+  proxy: boolean;
+  vpn: boolean;
+  tor: boolean;
+  active_vpn: boolean;
+  active_tor: boolean;
+  recent_abuse: boolean;
+  bot_status: boolean;
+  connection_type: string;
+  abuse_velocity: string;
+  zip_code: string;
+  latitude: number;
+  longitude: number;
+  request_id: string;
+}
 
 export interface GeoOptions {
   logger: Logger;
@@ -72,38 +107,46 @@ export function requestToCleanJson(request: Request): CleanRequest {
   };
 }
 
-/**
- * This middleware is used for geoblocking and geotracking.
- * Upstream, requests are processed via AWS WAF and tagged with headers in the format
- * X-WAF-<managed-rule-group-name>-<rule-name>: true
- *
- * When there is no header the rule did not match.
- *
- * This middleware tracks these rules initially by logging. Eventually we will
- * store this data in a database.
- *
- */
-export const geoMiddleware = (options: GeoOptions) => {
-  return async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    const wafHeaders = Object.entries(req.headers).filter((h) => {
-      return h[0].toLowerCase().startsWith("x-waf-");
+export async function maybeStoreRequest(
+  req: Request,
+  cache: IORedis,
+  options: GeoOptions
+): Promise<boolean> {
+  const url = `${IPQS_BASE_URL}?ip=${req.ip}`;
+  const requestInit = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "IPQS-KEY": `${IPQS_API_KEY}`,
+    },
+  };
+
+  options.logger.info("Fetching IPQS response", { url, requestInit });
+  const response = await cachedFetch(url, requestInit, cache);
+  const ipqsResponse = (await response.json()) as IPQSResponse;
+  options.logger.info("IPQS response", { ipqsResponse });
+
+  // Store request in db if anonymous IP detected
+  if (
+    ipqsResponse.proxy ||
+    ipqsResponse.vpn ||
+    ipqsResponse.tor ||
+    ipqsResponse.active_vpn ||
+    ipqsResponse.active_tor
+  ) {
+    options.logger.info("Storing web request in db for sender", {
+      ipqsResponse,
+    });
+    const cleanedRequest = requestToCleanJson(req);
+
+    // note - autocommit mode is on by default
+    await options.pool("requests").insert({
+      request: cleanedRequest,
+      is_flagged: true,
     });
 
-    // note - for now we only store waf tagged requests - this could change
-    if (wafHeaders.length > 0) {
-      const cleanedRequest = requestToCleanJson(req);
-      // note - autocommit mode is on by default
-      await options.pool("requests").insert({
-        request: cleanedRequest,
-        is_flagged: true,
-      });
-      options.logger.info("WAF tags applied", { wafHeaders, cleanedRequest });
-    }
+    return true;
+  }
 
-    next();
-  };
-};
+  return false;
+}

@@ -48,7 +48,7 @@ export function deserializeToResponseString(
 ): Response {
   const parsedData = JSON.parse(serializedResponseString);
 
-  const responseBody = JSON.stringify(parsedData.body); // Assuming the body was stored as JSON
+  const responseBody = parsedData.body ? JSON.stringify(parsedData.body) : "{}"; // Assuming the body was stored as JSON
   const headers = new Headers(parsedData.headers);
 
   return new Response(responseBody, {

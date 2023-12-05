@@ -20,7 +20,6 @@ import {
 } from "./routes";
 import {
   ActorHandle,
-  geoMiddleware,
   HealthCheckResponse,
   makeCreateCounterFn,
   makeCreateHistogramFn,
@@ -122,6 +121,7 @@ export class BundlerServer {
         statusDB: this.statusDB,
         nullifierDB: this.nullifierDB,
         redis: this.redis,
+        pool: this.pool,
         bundlerAddress: this.bundlerAddress,
         tellerContract: this.tellerContract,
         handlerContract: this.handlerContract,
@@ -179,11 +179,11 @@ export class BundlerServer {
       }
     );
 
+    app.set("trust proxy", 1); // we know we're behind single AWS LB
     app.use(logMiddleware);
     app.use(cors());
     app.use(express.json());
     app.use(router);
-    app.use(geoMiddleware({ logger: this.logger, pool: this.pool }));
 
     const server = app.listen(port, () => {
       this.logger.info(`listening at ${os.hostname()}:${port}`);
