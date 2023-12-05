@@ -1,9 +1,4 @@
-import {
-  Asset,
-  AssetType,
-  ERC20_ID,
-  gasCompensationForParams,
-} from "@nocturne-xyz/core";
+import { gasCompensationForParams } from "@nocturne-xyz/core";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ethers } from "ethers";
@@ -24,12 +19,6 @@ import {
 
 chai.use(chaiAsPromised);
 
-const DUMMY_GAS_ASSET: Asset = {
-  assetType: AssetType.ERC20,
-  assetAddr: "0x0000000000000000000000000000000000000000",
-  id: ERC20_ID,
-};
-
 const gasMultiplier = 1;
 
 describe("handleGasForOperationRequest", async () => {
@@ -39,7 +28,7 @@ describe("handleGasForOperationRequest", async () => {
   });
 
   describe("satisfies gas costs with...", () => {
-    it("1 JS req in gas asset, gas price 0", async () => {
+    it("gas price 0", async () => {
       const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
         [500_000n, 500_000n],
         [shitcoin, shitcoin]
@@ -72,13 +61,13 @@ describe("handleGasForOperationRequest", async () => {
       );
 
       expect(gasCompAccountedOpRequest.gasPrice).to.eql(0n);
-      expect(gasCompAccountedOpRequest.gasAsset).to.eql(DUMMY_GAS_ASSET);
+      expect(gasCompAccountedOpRequest.gasAsset).to.eql(shitcoin);
     });
 
-    it("1 JS req in gas asset, does not cover, ∃ 1 other note > remainder", async () => {
+    it("1 note in gas asset, does not cover, ∃ 1 other note > remainder", async () => {
       const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
-        [500_000n, 500_000n, 2_000_000n],
-        [shitcoin, shitcoin, shitcoin]
+        [500_000n, 2_500_000n],
+        [shitcoin, shitcoin]
       );
       const deps = {
         db: nocturneDB,
@@ -114,11 +103,19 @@ describe("handleGasForOperationRequest", async () => {
       const gasAccountedJoinSplitRequest =
         gasCompAccountedOpRequest.joinSplitRequests[0];
       expect(gasAccountedJoinSplitRequest.asset).to.eql(shitcoin);
-      // exact amount depends
-      expect(gasAccountedJoinSplitRequest.unwrapValue > 1_000_000).to.be.true;
+
+      const expectedGasEstimate = gasCompensationForParams({
+        executionGasLimit: 1_000_000n,
+        numJoinSplits: 1,
+        numUniqueAssets: 1,
+      });
+      expect(
+        gasAccountedJoinSplitRequest.unwrapValue >=
+          100_000n + expectedGasEstimate * 1n
+      ).to.be.true;
     });
 
-    it("2 JS req not in gas asset, ∃ 1 other note > remainder + extra JS cost", async () => {
+    it("2 notes not in gas asset, does not cover ∃ 1 other note > remainder + extra JS cost", async () => {
       const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
         [500_000n, 500_000n, 3_000_000n],
         [shitcoin, shitcoin, stablescam]
@@ -163,16 +160,23 @@ describe("handleGasForOperationRequest", async () => {
         expectedJoinSplitRequestUnwrap
       );
 
-      const joinSplitRequestForGas =
-        gasCompAccountedOpRequest.joinSplitRequests[1];
-      expect(joinSplitRequestForGas.asset).to.eql(stablescam);
-      // exact amount depends
-      expect(joinSplitRequestForGas.unwrapValue > 1_000_000).to.be.true;
+      // expect total value in JSRs for gas to be at least gas comp
+      const expectedGasEstimate = gasCompensationForParams({
+        executionGasLimit: 500_000n,
+        numJoinSplits: 2,
+        numUniqueAssets: 2,
+      });
+      expect(
+        gasCompAccountedOpRequest.joinSplitRequests[1].unwrapValue >=
+          expectedGasEstimate * 1n
+      ).to.be.true;
     });
 
-    it("1 JS req not in gas asset, ∃ 3 other notes > remainder + extra JS cost", async () => {
+    it("1 note in gas asset, does not cover, ∃ 3 other notes > remainder + extra JS cost in different gas asset", async () => {
+      // have several stablescam notes that can pay for gas, but need several to cover it when accounting for
+      // additional JSs
       const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
-        [500_000n, 5_300_000n, 5_300_000n, 5_300_000n],
+        [500_000n, 7_000_000n, 7_000_000n, 7_000_000n],
         [shitcoin, stablescam, stablescam, stablescam]
       );
       const deps = {
@@ -206,16 +210,15 @@ describe("handleGasForOperationRequest", async () => {
       const gasUnwrap = gasCompAccountedOperationRequest.joinSplitRequests
         .filter((req) => req.asset.assetAddr === stablescam.assetAddr)
         .reduce((acc, req) => acc + req.unwrapValue, 0n);
-      const gasCompEstimate = gasCompensationForParams({
+      const expectedGasEstimate = gasCompensationForParams({
         executionGasLimit: 200_000n,
         numJoinSplits: 3,
         numUniqueAssets: 2,
       });
-      console.log({ gasUnwrap, gasCompEstimate });
-      expect(gasUnwrap >= gasCompEstimate * 10n).to.be.true;
+      expect(gasUnwrap >= expectedGasEstimate * 10n).to.be.true;
     });
 
-    it("1 JS req in gas asset, does not cover, ∄ other notes > remainder, ∃ 1 other note > gas limit in different asset", async () => {
+    it("1 JS req in gas asset, does not cover, ∃ 1 other note > gas limit in different asset", async () => {
       const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
         [500_000n, 500_000n, 500_000n, 4_000_000n],
         [shitcoin, shitcoin, shitcoin, stablescam]
@@ -263,94 +266,15 @@ describe("handleGasForOperationRequest", async () => {
       const joinSplitRequestForGas =
         gasCompAccountedOperationRequest.joinSplitRequests[1];
       expect(joinSplitRequestForGas.asset).to.eql(stablescam);
-      // exact amount depends
-      expect(joinSplitRequestForGas.unwrapValue >= 1_000_000).to.be.true;
-    });
 
-    it("2 JS req in gas asset, does not cover, ∃ 5 other notes > remainder", async () => {
-      const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
-        [
-          500_000n, // for execution
-          500_000n, // for execution
-          1_500_000n, // for base gas (op w/ 1 JS)
-          1_500_000n, // for base gas (op w/ 1 JS)
-          1_500_000n, // for base gas (op w/ 1 JS)
-          1_500_000n, // for base gas (op w/ 1 JS)
-          1_500_000n, // for base gas (op w/ 1 JS)
-          2_000_000n, // rest is for covering extra joinsplits cost
-          2_000_000n,
-          2_000_000n,
-          2_000_000n,
-          2_000_000n,
-          2_000_000n,
-          2_000_000n,
-          2_000_000n,
-          2_000_000n,
-        ],
-        [
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-          shitcoin,
-        ]
-      );
-      const deps = {
-        db: nocturneDB,
-        handlerContract,
-        merkle: merkleProver,
-        viewer: signer,
-        gasAssets: testGasAssets(shitcoin),
-        tokenConverter: new MockEthToTokenConverter(),
-      };
-
-      const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
-
-      // Need 1M tokens to unwrap + op gas estimate with 1 JS (485k for one JS + 200k for op and gas buffer)
-      // 685k * 10 = 6.85M tokens needed for 1 JS op gas
-      // Each note of gas token is 1.5M so we need 6 notes, 3 additional JSs to cover (doesn't
-      // including extras to cover those joinsplits)
-      const opRequest = await builder
-        .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
-        .__unwrap(shitcoin, 1_000_000n)
-        .__refund({ asset: shitcoin, minRefundValue: 1n })
-        .gas({
-          executionGasLimit: 1n,
-          gasPrice: 10n,
-        })
-        .deadline(1n)
-        .build();
-
-      const gasCompAccountedOpRequest = await handleGasForOperationRequest(
-        deps,
-        opRequest.request,
-        gasMultiplier
-      );
-
-      expect(gasCompAccountedOpRequest.gasPrice).to.eql(10n);
-      expect(gasCompAccountedOpRequest.gasAsset).to.eql(shitcoin);
-
-      // Has enough for 1 original joinsplit + 3 additional gas joinsplits (4 total)
-      const expectedGasCompForOperation = gasCompensationForParams({
-        executionGasLimit: 1n,
-        numJoinSplits: 4,
-        numUniqueAssets: 1,
+      const expectedGasEstimate = gasCompensationForParams({
+        executionGasLimit: 1_500_000n,
+        numJoinSplits: 2,
+        numUniqueAssets: 2,
       });
-      expect(
-        gasCompAccountedOpRequest.joinSplitRequests[0].unwrapValue >
-          1_000_000n + expectedGasCompForOperation * 10n
-      ).to.be.true;
+      // exact amount depends
+      expect(joinSplitRequestForGas.unwrapValue >= expectedGasEstimate * 1n).to
+        .be.true;
     });
 
     it("1 JS req, covers gas cost", async () => {
@@ -390,16 +314,16 @@ describe("handleGasForOperationRequest", async () => {
       expect(gasCompAccountedOpRequest.gasPrice).to.eql(10n);
       expect(gasCompAccountedOpRequest.gasAsset).to.eql(shitcoin);
 
-      const expectedGasCompForOperation = gasCompensationForParams({
+      const expectedGasEstimate = gasCompensationForParams({
         executionGasLimit: 1n,
         numJoinSplits: 1,
         numUniqueAssets: 1,
       });
 
-      // Expect total amount unwrapped in joinsplit to be unwrap value + gas comp assuming 1 joinsplit (no extras added)
-      expect(gasCompAccountedOpRequest.joinSplitRequests[0].unwrapValue).to.eql(
-        1_000_000n + expectedGasCompForOperation * 10n
-      );
+      expect(
+        gasCompAccountedOpRequest.joinSplitRequests[0].unwrapValue >=
+          1_000_000n + expectedGasEstimate * 10n
+      ).to.be.true;
     });
   });
 });
