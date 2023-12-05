@@ -4,12 +4,19 @@ import { Knex } from "knex";
 import * as nodeMocks from "node-mocks-http";
 import {
   DbRequest,
-  geoMiddleware,
+  IPQSResponse,
+  IPQS_BASE_URL,
+  formatCachedFetchCacheKey,
   makeTestLogger,
+  maybeStoreRequest,
   requestToCleanJson,
+  serializeResponse,
 } from "../src";
 import { Logger } from "winston";
 import { Request } from "express";
+import IORedis from "ioredis";
+import RedisMemoryServer from "redis-memory-server";
+import * as JSON from "bigint-json-serialization";
 
 async function cleanRequestTable(pool: Knex<any, unknown[]>): Promise<void> {
   await pool("requests").delete();
@@ -42,14 +49,23 @@ function getTestRequest(): Request {
   });
 }
 
-describe("geoMiddleware", () => {
+describe("geo", () => {
   let pool: Knex<any, unknown[]>;
   let logger: Logger;
+
+  let server: RedisMemoryServer;
+  let redis: IORedis;
 
   before(async () => {
     pool = createPool();
     logger = makeTestLogger("test", "test");
     await cleanRequestTable(pool);
+
+    server = await RedisMemoryServer.create();
+
+    const host = await server.getHost();
+    const port = await server.getPort();
+    redis = new IORedis(port, host);
   });
 
   after(async () => {
@@ -81,17 +97,64 @@ describe("geoMiddleware", () => {
     expect(cleanJson.headers["accept"]).to.equal("application/json");
   });
 
-  it("should add a record when a matching waf header is present", async () => {
+  it("should store request if anonymous IP", async () => {
     const testRequest = getTestRequest();
 
-    const testResponse = nodeMocks.createResponse();
+    // Create mock response for ipqs
+    const mockedResponseBody: IPQSResponse = {
+      success: true,
+      message: "OK",
+      fraud_score: 0,
+      country_code: "US",
+      region: "California",
+      city: "San Francisco",
+      ISP: "Cloudflare",
+      ASN: 12345,
+      organization: "Cloudflare",
+      is_crawler: false,
+      timezone: "America/Los_Angeles",
+      mobile: false,
+      host: "10.10.1239.123",
+      proxy: false,
+      vpn: true,
+      tor: false,
+      active_vpn: true, // Set VPN to true
+      active_tor: false,
+      recent_abuse: false,
+      bot_status: false,
+      connection_type: "",
+      abuse_velocity: "0",
+      zip_code: "94107",
+      latitude: 37.7697,
+      longitude: -122.3933,
+      request_id: "12345",
+    };
+    const mockedResponse = new Response(JSON.stringify(mockedResponseBody), {
+      status: 200,
+      statusText: "OK",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const serializedResponse = await serializeResponse(mockedResponse);
 
-    const geoMiddlewareInstance = geoMiddleware({ pool, logger });
+    // Store response in cache
+    const cacheKey = formatCachedFetchCacheKey(
+      `${IPQS_BASE_URL}?ip=125.125.125.125`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "IPQS-API-Key": "DUMMY_API_KEY",
+        },
+      }
+    );
+    await redis.set(cacheKey, serializedResponse);
 
-    // run the middleware
-    await geoMiddlewareInstance(testRequest, testResponse, () => {});
+    // Call to ipqs will return from cache
+    await maybeStoreRequest(testRequest, redis, { pool, logger });
 
-    // read the state back from the database
+    // Check that request was stored
     const insertedRequest = await pool("requests").select<DbRequest[]>();
 
     expect(insertedRequest.length).to.equal(1);
