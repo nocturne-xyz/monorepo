@@ -1,21 +1,21 @@
-import { NocturneViewer } from "@nocturne-xyz/crypto";
-import { NocturneDB } from "./NocturneDB";
 import {
+  EncryptedStateDiff,
+  Histogram,
   IncludedEncryptedNote,
   IncludedNote,
   IncludedNoteCommitment,
   NoteTrait,
-  EncryptedStateDiff,
-  StateDiff,
   SDKSyncAdapter,
-  TotalEntityIndexTrait,
-  decryptNote,
   SparseMerkleProver,
+  StateDiff,
+  TotalEntityIndexTrait,
   consecutiveChunks,
+  decryptNote,
   timed,
   timedAsync,
-  Histogram,
 } from "@nocturne-xyz/core";
+import { NocturneViewer } from "@nocturne-xyz/crypto";
+import { NocturneDB } from "./NocturneDB";
 import { NocturneEventBus } from "./events";
 
 export interface SyncOpts {
@@ -56,7 +56,7 @@ export async function syncSDK(
   const latestCommittedMerkleIndex = await db.latestCommittedMerkleIndex();
   if (
     latestCommittedMerkleIndex !== undefined &&
-    latestCommittedMerkleIndex == endMerkleIndex
+    latestCommittedMerkleIndex === endMerkleIndex
   ) {
     eventBus.emit("SYNC_PROGRESS", 100);
     console.log("syncWithProgress returning early...");
@@ -71,7 +71,7 @@ export async function syncSDK(
     endBlock: currentBlock,
   };
   console.log(
-    `[syncSDK] syncing SDK from totalEntityIndex ${startTotalEntityIndex} (block ${range.startBlock}) to ${endTotalEntityIndex} (block ${currentBlock})...`,
+    `[syncSDK] syncing SDK from totalEntityIndex ${startTotalEntityIndex} (block ${range.startBlock}) to ${range.endBlock} (block ${currentBlock})...`,
     { range }
   );
 

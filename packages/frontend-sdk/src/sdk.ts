@@ -11,6 +11,7 @@ import {
   RequestViewingKeyMethod,
   SignCanonAddrRegistryEntryMethod,
   SignOperationMethod,
+  SyncOpts,
   UnsubscribeFn,
   isTerminalOpStatus,
   newOpRequestBuilder,
@@ -819,14 +820,28 @@ export class NocturneSdk {
     };
   }
 
-  async onBalancesUpdate(cb: (balances: AssetWithBalance[]) => void, opts?: GetBalanceOpts): Promise<UnsubscribeFn> {
+  async onBalancesUpdate(
+    opts: GetBalanceOpts = {},
+    cb: (balances: AssetWithBalance[]) => void,
+  ): Promise<UnsubscribeFn> {
     const client = await this.clientThunk();
-    return client.onBalancesUpdate(cb, opts ? getBalanceOptsToGetNotesOpts(opts) : undefined);
+    return client.onBalancesUpdate(
+      cb,
+      opts ? getBalanceOptsToGetNotesOpts(opts) : undefined,
+    );
   }
 
-  async onBalanceForAssetUpdate(asset: Asset, cb: (balance: bigint) => void, opts?: GetBalanceOpts): Promise<UnsubscribeFn> {
+  async onBalanceForAssetUpdate(
+    asset: Asset,
+    opts: GetBalanceOpts = {},
+    cb: (balance: bigint) => void,
+  ): Promise<UnsubscribeFn> {
     const client = await this.clientThunk();
-    return client.onBalanceForAssetUpdate(asset, cb, opts ? getBalanceOptsToGetNotesOpts(opts) : undefined);
+    return client.onBalanceForAssetUpdate(
+      asset,
+      cb,
+      opts ? getBalanceOptsToGetNotesOpts(opts) : undefined,
+    );
   }
 
   /**
@@ -917,6 +932,7 @@ export class NocturneSdk {
     return undefined;
   }
 
+  // nit: subbing/unsubbing from event shouldn't entail anything async, but tis the thunk tradeoff
   async onSyncProgress(cb: (progress: number) => void): Promise<UnsubscribeFn> {
     const client = await this.clientThunk();
     return client.onSyncProgress(cb);
@@ -927,9 +943,9 @@ export class NocturneSdk {
    * if another call to this function is in progress, this function will wait for the existing call to complete
    * TODO this behavior is extremely scuffed, this should be replaced by an event emitter in `client`
    */
-  async sync(): Promise<void> {
+  async sync(syncOpts?: Omit<SyncOpts, "timeoutSeconds">): Promise<void> {
     const client = await this.clientThunk();
-    await client.sync();
+    await client.sync(syncOpts);
   }
 
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {

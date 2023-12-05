@@ -32,8 +32,8 @@ import {
   TotalEntityIndexTrait,
   maxArray,
 } from "@nocturne-xyz/core";
-import { NocturneEventBus, Percentage, UnsubscribeFn } from "./events";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
+import { NocturneEventBus, Percentage, UnsubscribeFn } from "./events";
 
 const PRUNE_OPTIMISTIC_NFS_TIMER = 60 * 1000; // 1 minute
 
@@ -111,8 +111,8 @@ export class NocturneClient {
 
   // Sync SDK, returning last synced merkle index of last state diff
   async sync(_opts?: SyncOpts): Promise<void> {
-    try {
-      await tryAcquire(this.syncMutex).runExclusive(async () => {
+    await tryAcquire(this.syncMutex)
+      .runExclusive(async () => {
         await syncSDK(
           { viewer: this.viewer, eventBus: this.events },
           this.syncAdapter,
@@ -122,15 +122,15 @@ export class NocturneClient {
             finalityBlocks: this.config.finalityBlocks,
           }
         );
+      })
+      .catch(async (err) => {
+        if (err === E_ALREADY_LOCKED) {
+          console.log("waiting for unlock");
+          await this.syncMutex.waitForUnlock();
+        } else {
+          throw err;
+        }
       });
-    } catch (err) {
-      if (err == E_ALREADY_LOCKED) {
-        console.log("waiting for unlock");
-        await this.syncMutex.waitForUnlock();
-      } else {
-        throw err;
-      }
-    }
   }
 
   async prepareOperation(
