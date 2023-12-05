@@ -851,8 +851,6 @@ export class NocturneSdk {
    * if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
    */
   async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
-    await this.sync();
-
     const client = await this.clientThunk();
     return await client.getAllAssetBalances(
       opts ? getBalanceOptsToGetNotesOpts(opts) : undefined,
@@ -865,8 +863,6 @@ export class NocturneSdk {
     opts?: GetBalanceOpts,
   ): Promise<bigint> {
     const asset = AssetTrait.erc20AddressToAsset(erc20Address);
-
-    await this.sync();
 
     const client = await this.clientThunk();
     return client.getBalanceForAsset(

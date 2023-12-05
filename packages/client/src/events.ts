@@ -8,6 +8,8 @@ export type Events = {
   // TODO add a payload saying what changed that allows subscribers to filter
   STATE_DIFF: undefined;
 
+  SYNC_COMPLETE: undefined;
+
   // TODO: add a more specific "BALANCE_DIFF" event
 };
 export type EventKind = keyof Events;

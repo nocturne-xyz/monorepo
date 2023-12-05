@@ -59,7 +59,8 @@ export async function syncSDK(
     latestCommittedMerkleIndex === endMerkleIndex
   ) {
     eventBus.emit("SYNC_PROGRESS", 100);
-    console.log("syncWithProgress returning early...");
+    eventBus.emit("SYNC_COMPLETE", undefined);
+    console.log("synced to latestCommittedMerkleIndex, returning early...");
     return latestCommittedMerkleIndex;
   }
 
@@ -144,6 +145,7 @@ export async function syncSDK(
   }
 
   eventBus.emit("SYNC_PROGRESS", 100);
+  eventBus.emit("SYNC_COMPLETE", undefined);
 
   diffHistogram?.print();
   applyStateDiffHistogram?.print();

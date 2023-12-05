@@ -11,7 +11,7 @@ import {
   ensureOpRequestChainInfo,
 } from "./operationRequest/operationRequest";
 import { prepareOperation } from "./prepareOperation";
-import { SyncOpts, syncSDK } from "./syncSDK";
+import { SyncOpts, syncSDK } from "./syncSdk";
 import { OpHistoryRecord, OperationMetadata } from "./types";
 import {
   getJoinSplitRequestTotalValue,
@@ -160,10 +160,18 @@ export class NocturneClient {
     cb: (balances: AssetWithBalance[]) => void,
     opts?: GetNotesOpts
   ): UnsubscribeFn {
-    return this.events.subscribe("STATE_DIFF", async () => {
+    const _cb = async () => {
       const balances = await this.getAllAssetBalances(opts);
       cb(balances);
-    });
+    };
+
+    const unsubscribeStateDiff = this.events.subscribe("STATE_DIFF", _cb);
+    const unsubscribeSyncComplete = this.events.subscribe("SYNC_COMPLETE", _cb);
+
+    return () => {
+      unsubscribeStateDiff();
+      unsubscribeSyncComplete();
+    };
   }
 
   onBalanceForAssetUpdate(
@@ -171,10 +179,18 @@ export class NocturneClient {
     cb: (balance: bigint) => void,
     opts?: GetNotesOpts
   ): UnsubscribeFn {
-    return this.events.subscribe("STATE_DIFF", async () => {
+    const _cb = async () => {
       const balance = await this.getBalanceForAsset(asset, opts);
       cb(balance);
-    });
+    };
+
+    const unsubscribeStateDiff = this.events.subscribe("STATE_DIFF", _cb);
+    const unsubscribeSyncComplete = this.events.subscribe("SYNC_COMPLETE", _cb);
+
+    return () => {
+      unsubscribeStateDiff();
+      unsubscribeSyncComplete();
+    };
   }
 
   async getAllAssetBalances(opts?: GetNotesOpts): Promise<AssetWithBalance[]> {
