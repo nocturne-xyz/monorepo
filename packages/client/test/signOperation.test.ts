@@ -29,7 +29,7 @@ describe("signOperation", () => {
     );
     const deps = {
       db: nocturneDB,
-      gasAssets: testGasAssets,
+      gasAssets: testGasAssets(shitcoin),
       tokenConverter: new MockEthToTokenConverter(),
       merkle: merkleProver,
       viewer: signer,

@@ -184,7 +184,7 @@ describe("prepareOperation", async () => {
       handlerContract,
       merkle: merkleProver,
       viewer: signer,
-      gasAssets: testGasAssets,
+      gasAssets: testGasAssets(shitcoin),
       tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
@@ -235,7 +235,7 @@ describe("prepareOperation", async () => {
       handlerContract,
       merkle: merkleProver,
       viewer: signer,
-      gasAssets: testGasAssets,
+      gasAssets: testGasAssets(shitcoin),
       tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
@@ -291,7 +291,7 @@ describe("prepareOperation", async () => {
       handlerContract,
       merkle: merkleProver,
       viewer: signer,
-      gasAssets: testGasAssets,
+      gasAssets: testGasAssets(shitcoin),
       tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
@@ -349,7 +349,7 @@ describe("prepareOperation", async () => {
       handlerContract,
       merkle: merkleProver,
       viewer: signer,
-      gasAssets: testGasAssets,
+      gasAssets: testGasAssets(shitcoin, stablescam),
       tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
@@ -396,7 +396,7 @@ describe("prepareOperation", async () => {
       handlerContract,
       merkle: merkleProver,
       viewer: signer,
-      gasAssets: testGasAssets,
+      gasAssets: testGasAssets(shitcoin, ponzi, stablescam, monkey, plutocracy),
       tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
@@ -483,7 +483,7 @@ describe("prepareOperation", async () => {
       handlerContract,
       merkle: merkleProver,
       viewer: signer,
-      gasAssets: testGasAssets,
+      gasAssets: testGasAssets(shitcoin, ponzi),
       tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
@@ -523,7 +523,7 @@ describe("prepareOperation", async () => {
       handlerContract,
       merkle: merkleProver,
       viewer: signer,
-      gasAssets: testGasAssets,
+      gasAssets: testGasAssets(shitcoin),
       tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };

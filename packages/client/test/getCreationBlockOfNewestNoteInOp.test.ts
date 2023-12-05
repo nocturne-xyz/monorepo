@@ -30,7 +30,7 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
       handlerContract,
       merkle: merkleProver,
       viewer: signer,
-      gasAssets: testGasAssets,
+      gasAssets: testGasAssets(shitcoin),
       tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };

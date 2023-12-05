@@ -18,6 +18,7 @@ import {
   PreSignJoinSplit,
   iterChunks,
   MerkleProofInput,
+  Address,
 } from "@nocturne-xyz/core";
 import { NocturneDB } from "../src";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
@@ -74,12 +75,9 @@ export const plutocracy: Asset = {
 };
 export const encodedPlutocracy = AssetTrait.encode(plutocracy);
 
-export const testGasAssets = new Map(
-  [shitcoin, ponzi, stablescam, monkey, plutocracy].map((asset) => [
-    asset.assetAddr,
-    AssetTrait.erc20AddressToAsset(asset.assetAddr),
-  ])
-);
+export function testGasAssets(...assets: Asset[]): Map<Address, Asset> {
+  return new Map(assets.map((asset) => [asset.assetAddr, asset]));
+}
 
 export function getDummyHex(bump: number): string {
   const hex = utils.keccak256("0x" + bump.toString(16).padStart(64, "0"));
