@@ -11,6 +11,7 @@ import {
   DUMMY_CONFIG,
   DUMMY_CONTRACT_ADDR,
   getDummyHex,
+  ponzi,
   setup,
   shitcoin,
   stablescam,
@@ -21,7 +22,7 @@ chai.use(chaiAsPromised);
 
 const gasMultiplier = 1;
 
-describe("handleGasForOperationRequest", async () => {
+describe("handleGasForOperationRequest", () => {
   let provider: ethers.providers.JsonRpcProvider;
   beforeEach(() => {
     provider = ethers.getDefaultProvider() as ethers.providers.JsonRpcProvider;
@@ -324,6 +325,193 @@ describe("handleGasForOperationRequest", async () => {
         gasCompAccountedOpRequest.joinSplitRequests[0].unwrapValue >=
           1_000_000n + expectedGasEstimate * 10n
       ).to.be.true;
+    });
+  });
+
+  describe("throws NotEnoughGasError with...", () => {
+    it("1 note in gas asset, does not cover", async () => {
+      const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+        [500_000n],
+        [shitcoin]
+      );
+      const deps = {
+        db: nocturneDB,
+        handlerContract,
+        merkle: merkleProver,
+        viewer: signer,
+        gasAssets: testGasAssets(shitcoin),
+        tokenConverter: new MockEthToTokenConverter(),
+      };
+
+      const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
+      const opRequest = await builder
+        .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+        .__unwrap(shitcoin, 100_000n)
+        .gas({
+          executionGasLimit: 100_000n,
+          gasPrice: 1n,
+        })
+        .deadline(1n)
+        .build();
+
+      await expect(
+        handleGasForOperationRequest(deps, opRequest.request, gasMultiplier)
+      ).to.be.rejectedWith("Not enough gas");
+    });
+
+    it("3 notes in different gas assets, all don't cover", async () => {
+      const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+        [500_000n, 500_000n, 500_000n],
+        [shitcoin, stablescam, ponzi]
+      );
+      const deps = {
+        db: nocturneDB,
+        handlerContract,
+        merkle: merkleProver,
+        viewer: signer,
+        gasAssets: testGasAssets(shitcoin, stablescam, ponzi),
+        tokenConverter: new MockEthToTokenConverter(),
+      };
+
+      const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
+      const opRequest = await builder
+        .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+        .gas({
+          executionGasLimit: 150_000n,
+          gasPrice: 1n,
+        })
+        .deadline(1n)
+        .build();
+
+      await expect(
+        handleGasForOperationRequest(deps, opRequest.request, gasMultiplier)
+      ).to.be.rejectedWith("Not enough gas");
+    });
+
+    it("1 non-gas asset in req, 1 gas asset, doesn't cover", async () => {
+      const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+        [500_000n, 500_000n],
+        [shitcoin, stablescam]
+      );
+
+      const deps = {
+        db: nocturneDB,
+        handlerContract,
+        merkle: merkleProver,
+        viewer: signer,
+        gasAssets: testGasAssets(stablescam),
+        tokenConverter: new MockEthToTokenConverter(),
+      };
+
+      const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
+      const opRequest = await builder
+        .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+        // 1M shitcoin, 1M stablescam, 1M stablescam
+        .__unwrap(shitcoin, 500_000n)
+        .gas({
+          executionGasLimit: 200_000n,
+          gasPrice: 1n,
+        })
+        .deadline(1n)
+        .build();
+
+      await expect(
+        handleGasForOperationRequest(deps, opRequest.request, gasMultiplier)
+      ).to.be.rejectedWith("Not enough gas");
+    });
+
+    it("3 notes in different gas assets, one in request, others not, all don't cover", async () => {
+      const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+        [500_000n, 500_000n, 500_000n],
+        [shitcoin, stablescam, ponzi]
+      );
+
+      const deps = {
+        db: nocturneDB,
+        handlerContract,
+        merkle: merkleProver,
+        viewer: signer,
+        gasAssets: testGasAssets(stablescam, ponzi),
+        tokenConverter: new MockEthToTokenConverter(),
+      };
+
+      const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
+      const opRequest = await builder
+        .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+        // 1M shitcoin, 1M stablescam, 1M stablescam
+        .__unwrap(shitcoin, 100_000n)
+        .gas({
+          executionGasLimit: 200_000n,
+          gasPrice: 1n,
+        })
+        .deadline(1n)
+        .build();
+
+      await expect(
+        handleGasForOperationRequest(deps, opRequest.request, gasMultiplier)
+      ).to.be.rejectedWith("Not enough gas");
+    });
+
+    it("1 note in gas asset, note value covers op on its own, gas on its own, but not both", async () => {
+      const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+        [800_000n],
+        [shitcoin]
+      );
+
+      const deps = {
+        db: nocturneDB,
+        handlerContract,
+        merkle: merkleProver,
+        viewer: signer,
+        gasAssets: testGasAssets(shitcoin),
+        tokenConverter: new MockEthToTokenConverter(),
+      };
+
+      const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
+      const opRequest = await builder
+        .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+        .__unwrap(shitcoin, 600_000n)
+        .gas({
+          executionGasLimit: 100_000n,
+          gasPrice: 1n,
+        })
+        .deadline(1n)
+        .build();
+
+      await expect(
+        handleGasForOperationRequest(deps, opRequest.request, gasMultiplier)
+      ).to.be.rejectedWith("Not enough gas");
+    });
+
+    it("5 notes in gas asset, not enough to cover costs for additional JSs", async () => {
+      // 500K < per-joinsplit cost assuming no batch (660)
+      const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+        [500_000n, 250_000n, 250_000n, 250_000n, 250_000n],
+        [shitcoin, shitcoin, shitcoin, shitcoin, shitcoin]
+      );
+
+      const deps = {
+        db: nocturneDB,
+        handlerContract,
+        merkle: merkleProver,
+        viewer: signer,
+        gasAssets: testGasAssets(shitcoin, stablescam, ponzi),
+        tokenConverter: new MockEthToTokenConverter(),
+      };
+
+      const builder = newOpRequestBuilder(provider, 1n, DUMMY_CONFIG);
+      const opRequest = await builder
+        .__action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+        .gas({
+          executionGasLimit: 200_000n,
+          gasPrice: 1n,
+        })
+        .deadline(1n)
+        .build();
+
+      await expect(
+        handleGasForOperationRequest(deps, opRequest.request, gasMultiplier)
+      ).to.be.rejectedWith("Not enough gas");
     });
   });
 });
