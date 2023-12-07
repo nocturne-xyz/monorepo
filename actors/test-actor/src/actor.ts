@@ -187,8 +187,8 @@ export class TestActor {
 
     const pruneOptimsiticNullifiers = async () => {
       await this.client.pruneOptimisticNullifiers();
-      setTimeout(pruneOptimsiticNullifiers, opIntervalSeconds)
-    }
+      setTimeout(pruneOptimsiticNullifiers, opIntervalSeconds);
+    };
     void pruneOptimsiticNullifiers();
 
     if (opts?.onlyDeposits) {
@@ -492,10 +492,11 @@ export class TestActor {
   ): Promise<OperationRequestWithMetadata> {
     const chainId =
       this._chainId ?? BigInt((await this.provider.getNetwork()).chainId);
-
+    const gasPrice = (await this.provider.getGasPrice()).toBigInt();
     return newOpRequestBuilder(this.provider, chainId)
       .use(Erc20Plugin)
       .erc20Transfer(asset.assetAddr, this._address!, value)
+      .gasPrice((gasPrice * 3n) / 2n)
       .deadline(
         BigInt((await this.provider.getBlock("latest")).timestamp) +
           ONE_DAY_SECONDS
