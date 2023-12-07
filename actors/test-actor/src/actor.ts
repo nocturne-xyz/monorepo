@@ -185,6 +185,12 @@ export class TestActor {
     const opIntervalSeconds = opts?.opIntervalSeconds ?? ONE_MINUTE_AS_SECS;
     const syncIntervalSeconds = opts?.syncIntervalSeconds ?? ONE_MINUTE_AS_SECS;
 
+    const pruneOptimsiticNullifiers = async () => {
+      await this.client.pruneOptimisticNullifiers();
+      setTimeout(pruneOptimsiticNullifiers, opIntervalSeconds)
+    }
+    void pruneOptimsiticNullifiers();
+
     if (opts?.onlyDeposits) {
       await this.runDeposits(depositIntervalSeconds * 1000);
     } else if (opts?.onlyOperations) {
@@ -417,7 +423,6 @@ export class TestActor {
         opts?.opGasPriceMultiplier ?? 1
       );
       const signed = signOperation(this.nocturneSigner, preSign);
-      await this.client.addOpToHistory(signed, { items: [] });
 
       const opDigest = OperationTrait.computeDigest(signed);
       this.logger.info(`proving operation with digest ${opDigest}`, {
@@ -454,6 +459,8 @@ export class TestActor {
       this.logger.info(
         `successfully submitted operation with digest ${opDigest}`
       );
+
+      await this.client.addOpToHistory(signed, { items: [] });
 
       const labels = {
         spender: this._address!,
