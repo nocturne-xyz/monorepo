@@ -77,6 +77,7 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
     const generator = async function* () {
       let from = startTotalEntityIndex;
       let latestCommittedMerkleIndex = undefined;
+      let latestCommitTei = undefined;
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
         const toBlock =
           (await fetchLatestIndexedBlock()) - (opts?.finalityBlocks ?? 0);
@@ -86,13 +87,11 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
           continue;
         }
 
-        const {
-          events,
-          latestCommittedMerkleIndex: newLatestCommittedMerkleIndex,
-        } = await fetchSdkEventsAndLatestCommittedMerkleIndex(
-          from,
-          toBlock + 1
-        );
+        const { events, latestCommit } =
+          await fetchSdkEventsAndLatestCommittedMerkleIndex(from, toBlock + 1);
+
+        const newLatestCommittedMerkleIndex = latestCommit?.merkleIndex;
+        const newLatestCommitTei = latestCommit?.tei;
 
         console.log("[HasuraSdkSyncAdapter]", {
           events,
@@ -104,6 +103,7 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
         // otherwise, see if latestCommittedMerkleIndex changed - if so, yield an empty state diff with the new merkle index
         if (events.length > 0) {
           latestCommittedMerkleIndex = newLatestCommittedMerkleIndex;
+          latestCommitTei = newLatestCommitTei;
           const highestTotalEntityIndex = maxArray(
             events.map((e) => e.totalEntityIndex)
           );
@@ -139,6 +139,7 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
             nullifiers: nullifiers.map((n) => n.inner),
             latestNewlySyncedMerkleIndex,
             latestCommittedMerkleIndex,
+            latestCommitTei,
             totalEntityIndex: highestTotalEntityIndex,
           };
 
@@ -165,12 +166,14 @@ export class HasuraSdkSyncAdapter implements SDKSyncAdapter {
               newLatestCommittedMerkleIndex > latestCommittedMerkleIndex)
           ) {
             latestCommittedMerkleIndex = newLatestCommittedMerkleIndex;
+            latestCommitTei = newLatestCommitTei;
 
             const stateDiff: EncryptedStateDiff = {
               notes: [],
               nullifiers: [],
               latestNewlySyncedMerkleIndex: undefined,
               latestCommittedMerkleIndex,
+              latestCommitTei,
               totalEntityIndex: toBlockTEI,
             };
 

@@ -39,6 +39,7 @@ const OPTIMISTIC_NF_RECORD_PREFIX = "OPTIMISTIC_NF_RECORD";
 const CURRENT_TOTAL_ENTITY_INDEX_KEY = "CURRENT_TOTAL_ENTITY_INDEX";
 const LAST_COMMITTED_MERKLE_INDEX_KEY = "LAST_COMMITTED_MERKLE_INDEX";
 const LAST_SYNCED_MERKLE_INDEX_KEY = "LAST_SYNCED_MERKLE_INDEX";
+const LAST_COMMIT_TEI_KEY = "LAST_COMMIT_TEI";
 const OP_HISTORY_KEY = "OP_HISTORY";
 const OP_DIGEST_PREFIX = "OP_DIGEST_";
 
@@ -477,6 +478,18 @@ export class NocturneDB {
     await this.kv.putNumber(LAST_COMMITTED_MERKLE_INDEX_KEY, index);
   }
 
+  // get the total entity index at which the last commit was made
+  async lastCommitTotalEntityIndex(): Promise<TotalEntityIndex | undefined> {
+    return await this.kv.getBigInt(LAST_COMMIT_TEI_KEY);
+  }
+
+  // update `lastCommitTotalEntityIndex()`
+  async setLastCommitTotalEntityIndex(
+    totalEntityIndex: TotalEntityIndex
+  ): Promise<void> {
+    await this.kv.putBigInt(LAST_COMMIT_TEI_KEY, totalEntityIndex);
+  }
+
   // applies a single state diff to the DB
   // returns the merkle indices of the notes that were nullified
   async applyStateDiff(diff: StateDiff): Promise<number[]> {
@@ -485,6 +498,7 @@ export class NocturneDB {
       nullifiers,
       latestNewlySyncedMerkleIndex,
       latestCommittedMerkleIndex,
+      latestCommitTei,
       totalEntityIndex,
     } = diff;
 
@@ -505,6 +519,9 @@ export class NocturneDB {
     }
     if (latestCommittedMerkleIndex) {
       await this.setlatestCommittedMerkleIndex(latestCommittedMerkleIndex);
+    }
+    if (latestCommitTei) {
+      await this.setLastCommitTotalEntityIndex(latestCommitTei);
     }
 
     await this.setCurrentTotalEntityIndex(totalEntityIndex);

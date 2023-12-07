@@ -4929,6 +4929,7 @@ export type GoerliFetchSdkEventsQuery = {
   }>;
   goerli_subtree_commits: Array<{
     __typename?: "goerli_subtree_commits";
+    id: string;
     subtree_batch_offset: any;
   }>;
 };
@@ -4994,6 +4995,7 @@ export type MainnetFetchSdkEventsQuery = {
   }>;
   mainnet_subtree_commits: Array<{
     __typename?: "mainnet_subtree_commits";
+    id: string;
     subtree_batch_offset: any;
   }>;
 };
@@ -5263,6 +5265,7 @@ export const GoerliFetchSdkEventsDocument = {
             selectionSet: {
               kind: "SelectionSet",
               selections: [
+                { kind: "Field", name: { kind: "Name", value: "id" } },
                 {
                   kind: "Field",
                   name: { kind: "Name", value: "subtree_batch_offset" },
@@ -5648,6 +5651,7 @@ export const MainnetFetchSdkEventsDocument = {
             selectionSet: {
               kind: "SelectionSet",
               selections: [
+                { kind: "Field", name: { kind: "Name", value: "id" } },
                 {
                   kind: "Field",
                   name: { kind: "Name", value: "subtree_batch_offset" },
