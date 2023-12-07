@@ -184,52 +184,55 @@ async function tryUpdateJoinSplitRequests(
 
   // TODO return the cheapest result across all gas assets. Requires price feed
   for (const [ticker, gasAsset] of gasAssets.entries()) {
+    // figure out how much "excess" gas asset we have from the initial notes that we can use to cover gas.
+    // specifically, the difference between the total note value and total JS request value
     const initialNotesForGasAsset = usedNotes.get(gasAsset);
     const initialNotesForGasAssetValue = (initialNotesForGasAsset ?? []).reduce(
       (acc, { value }) => acc + value,
       0n
     );
-    // console.log("initial notes for gas asset value", initialNotesForGasAssetValue)
+    const initialJsrForGasAssetValue = joinSplitRequests
+      .filter(
+        ({ asset }) =>
+          asset.assetAddr === gasAsset.assetAddr &&
+          asset.assetType === gasAsset.assetType &&
+          asset.id === gasAsset.id
+      )
+      .reduce((acc, { unwrapValue }) => acc + unwrapValue, 0n);
+    const excessInInitialNotes =
+      initialNotesForGasAssetValue - initialJsrForGasAssetValue;
+
     const usedMerkleIndicesForGasAsset = new Set(
       (initialNotesForGasAsset ?? []).map((note) => note.merkleIndex)
     );
-    const existingJsrIdx = joinSplitRequests.findIndex(
-      ({ asset }) =>
-        asset.assetAddr === gasAsset.assetAddr &&
-        asset.assetType === gasAsset.assetType &&
-        asset.id === gasAsset.id
-    );
 
-    // main idea:
-    // start with the initial gasEstimate above and no extra gas notes
-    // LOOP:
-    // 1. convert it into gas asset, yielding `compEstimate`
-    // 2. let the `additionalGasComp` be `compEstimate - initialNotesForGasAssetValue`, indicating the remaining
-    //    amount of gas asset needed
-    // 2. if `currentGasNotesValue >= additionalGasComp`, then we have enough gas asset to cover the gas cost and we're done
-    //    - if the existing joinsplit requests already cover the gas cost, then we'll return on the first iteration because
-    //      `additionalCompEstimate` will be <= 0, and we start with `currentGasNotesValue` = 0
-    //    - if there's no existing joinsplit request for the gas asset, then we're guaranteed to do at least one iteration
-    //      because, in this case, `additionalCompEstimate` is guaranteed to be > 0,  and we start with `currentGasNotesValue` = 0
-    // 3. otherwise, gather notes for `additionalGasComp`. if we don't have enough, move on to the next gas asset
-    // 4. if we do have enough, then update the gas estimate accounting for new joinsplits from adding new notes and repeat
-    //
-    // this loop is guaranteed to terminate because at step 3, additionalCompEstimate > currentGasNotesValue,
-    // so gatherNotes is guaranteed to either:
-    //  a) return notes of greater value than it did during previous iteration.
-    //  b) run out of funds and throw an error.
-    // therefore, we'll eventually reach a point where we either have enough to cover the gas cost or we run out of funds
+    // start with no additional gas notes and the `initialGasEstimate` from above
     let currentGasNotesValue = 0n;
     let currentGasEstimate = initialGasEstimate;
+
+    // in the loop below, we'll iteratively attempt to add gas notes until we have enough
+    // The high level strategy is:
+    // 1. see if `excessInInitialNotes` + value of additional gas notes is enough to cover the gas estimate
+    // 2. if so, modify the joinsplit requests and return, otherwise proceed to 3.
+    // 3. gather additional gas notes that cover the difference between the gas estimate and the initial excess
+    // 4. recompute the gas estimate including the cost to spend additional gas notes
+    // 5. go to 1
     while (true) {
+      // convert `currentGasEstimate` to a fee estimate in the gas asset
       const compEstimate = await tokenConverter.weiToTargetErc20(
         currentGasEstimate * gasPrice,
         ticker
       );
-      const additionalCompEstimate =
-        compEstimate - initialNotesForGasAssetValue;
-      if (currentGasNotesValue >= additionalCompEstimate) {
+
+      // check if we have enough
+      if (currentGasNotesValue + excessInInitialNotes >= compEstimate) {
         // if a new joinsplit request is needed, modify an existing one, otherwise add a new one
+        const existingJsrIdx = joinSplitRequests.findIndex(
+          ({ asset }) =>
+            asset.assetAddr === gasAsset.assetAddr &&
+            asset.assetType === gasAsset.assetType &&
+            asset.id === gasAsset.id
+        );
         if (existingJsrIdx !== -1) {
           // assign new to avoid destructively modifying the original
           const req = joinSplitRequests[existingJsrIdx];
@@ -251,11 +254,13 @@ async function tryUpdateJoinSplitRequests(
         ];
       }
 
+      // try to gather new notes to cover the difference between the required
+      // comp and the initial excess in `usedNotes`
       let newGasNotes: IncludedNote[];
       try {
         newGasNotes = await gatherNotes(
           db,
-          additionalCompEstimate,
+          compEstimate - excessInInitialNotes,
           gasAsset,
           usedMerkleIndicesForGasAsset
         );
@@ -270,6 +275,8 @@ async function tryUpdateJoinSplitRequests(
         throw err;
       }
 
+      // compute a new gas estimate including the cost to spend the new gas notes
+      // HACK: destructively modify `usedNotes` to include the new gas notes and put it back after we're done
       usedNotes.set(gasAsset, [
         ...(initialNotesForGasAsset ?? []),
         ...newGasNotes,
