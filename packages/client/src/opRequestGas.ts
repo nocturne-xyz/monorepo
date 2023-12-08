@@ -149,6 +149,8 @@ async function tryUpdateJoinSplitRequests(
 ): Promise<[bigint, JoinSplitRequest[], AssetAndTicker]> {
   const joinSplitRequests = [...initialJoinSplitRequests];
 
+  console.log("joinsplit requests", joinSplitRequests);
+
   const computeNumJoinSplits = (
     notes: MapWithObjectKeys<Asset, IncludedNote[]>
   ): number =>
@@ -205,6 +207,14 @@ async function tryUpdateJoinSplitRequests(
     const usedMerkleIndicesForGasAsset = new Set(
       (initialNotesForGasAsset ?? []).map((note) => note.merkleIndex)
     );
+    console.log("all notes", await db.getNotesForAsset(gasAsset));
+    console.log("used merkle indices", usedMerkleIndicesForGasAsset);
+    console.log("intial notes", initialNotesForGasAsset);
+    console.log("initial notes value", initialNotesForGasAssetValue);
+    console.log("initial jsr value", initialJsrForGasAssetValue);
+    console.log("excess in initial notes", excessInInitialNotes);
+    console.log("initial params", params)
+    console.log("intial comp estimate", await tokenConverter.weiToTargetErc20(initialGasEstimate * gasPrice, ticker));
 
     // start with no additional gas notes and the `initialGasEstimate` from above
     let currentGasNotesValue = 0n;
@@ -266,8 +276,13 @@ async function tryUpdateJoinSplitRequests(
         );
       } catch (err) {
         if (err instanceof NotEnoughFundsError) {
+          console.warn("didn't have enough", {
+            compEstimate,
+            excessInInitialNotes,
+            available: err.ownedAmount
+          })
           failedGasAssets.push(gasAsset);
-          failedGasEstimates.push(err.requestedAmount);
+          failedGasEstimates.push(compEstimate);
           failedGasAssetBalances.push(err.ownedAmount);
           break;
         }
@@ -287,6 +302,7 @@ async function tryUpdateJoinSplitRequests(
         numUniqueAssets: computeNumUniqueAssets(usedNotes, initialRefundAssets),
       };
 
+      console.log("new params", params);
       currentGasEstimate = gasCompensationForParams(params);
       if (initialNotesForGasAsset !== undefined) {
         usedNotes.set(gasAsset, initialNotesForGasAsset);
@@ -298,6 +314,9 @@ async function tryUpdateJoinSplitRequests(
         (acc, { value }) => acc + value,
         0n
       );
+
+      console.log("new comp estimate", await tokenConverter.weiToTargetErc20(currentGasEstimate * gasPrice, ticker));
+      console.log("new notes value", currentGasNotesValue);
     }
   }
 
