@@ -101,7 +101,7 @@ function startBundlerServer(
     redis,
     logger,
     pool,
-    config.ignoreGas
+    { ignoreGas: config.ignoreGas, storeRequestInfo: false }
   );
 
   const { promise, teardown } = server.start(3000);

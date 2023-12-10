@@ -40,7 +40,7 @@ export interface HandleRelayDeps {
   provider: ethers.providers.Provider;
   logger: Logger;
   metrics: BundlerServerMetrics;
-  opts: { ignoreGas?: boolean };
+  opts?: { storeRequestInfo?: boolean; ignoreGas?: boolean };
 }
 
 export function makeRelayHandler({
@@ -78,7 +78,8 @@ export function makeRelayHandler({
 
     childLogger.debug("checking operation's gas price");
 
-    if (!opts.ignoreGas) {
+    // If option not set, treat as false
+    if (opts?.ignoreGas === true) {
       const gasPriceErr = await checkNotEnoughGasError(
         provider,
         logger,
@@ -161,7 +162,11 @@ export function makeRelayHandler({
 
     const response: RelayResponse = { id: jobId };
     res.json(response);
-    await maybeStoreRequest(req, redis, { pool, logger });
+
+    // If option not set, treat as false
+    if (opts?.storeRequestInfo === true) {
+      await maybeStoreRequest(req, redis, { pool, logger });
+    }
   };
 }
 
