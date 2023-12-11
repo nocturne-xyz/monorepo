@@ -167,6 +167,7 @@ describe("handleGasForOperationRequest", () => {
         numJoinSplits: 2,
         numUniqueAssets: 2,
       });
+
       expect(
         gasCompAccountedOpRequest.joinSplitRequests[1].unwrapValue >=
           expectedGasEstimate * 1n
