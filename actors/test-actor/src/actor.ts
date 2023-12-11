@@ -143,14 +143,14 @@ export class TestActor {
     };
   }
 
-  async runDeposits(interval: number): Promise<void> {
+  async runDeposits(intervalMs: number): Promise<void> {
     while (true) {
       await this.deposit();
-      await sleep(interval);
+      await sleep(intervalMs);
     }
   }
 
-  async runOps(interval: number, opts?: TestActorOpts): Promise<void> {
+  async runOps(intervalMs: number, opts?: TestActorOpts): Promise<void> {
     const { fullBundleEvery, finalityBlocks } = opts ?? {};
 
     let i = 0;
@@ -169,8 +169,8 @@ export class TestActor {
         await this.randomOperation(opts);
       }
 
-      this.logger.info(`sleeping for ${interval} ms`);
-      await sleep(interval);
+      this.logger.info(`sleeping for ${intervalMs} ms`);
+      await sleep(intervalMs);
       i++;
     }
   }
@@ -200,7 +200,7 @@ export class TestActor {
     } else {
       await Promise.all([
         this.runDeposits(depositIntervalSeconds * 1000),
-        this.runOps(opIntervalSeconds, opts),
+        this.runOps(opIntervalSeconds * 1000, opts),
       ]);
     }
   }
