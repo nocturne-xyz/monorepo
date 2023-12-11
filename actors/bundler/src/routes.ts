@@ -79,7 +79,7 @@ export function makeRelayHandler({
     childLogger.debug("checking operation's gas price");
 
     // If option not set, treat as false
-    if (opts?.ignoreGas === true) {
+    if (opts?.ignoreGas !== true) {
       const gasPriceErr = await checkNotEnoughGasError(
         provider,
         logger,
