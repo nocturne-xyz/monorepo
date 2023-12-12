@@ -54,6 +54,7 @@ export class BundlerServer {
   provider: ethers.providers.Provider;
   metrics: BundlerServerMetrics;
   ignoreGas?: boolean;
+  storeRequestInfo?: boolean;
 
   constructor(
     bundlerAddress: Address,
@@ -63,7 +64,7 @@ export class BundlerServer {
     redis: IORedis,
     logger: Logger,
     pool: Knex,
-    ignoreGas?: boolean
+    opts: { storeRequestInfo?: boolean; ignoreGas?: boolean } = {}
   ) {
     this.redis = redis;
     this.pool = pool;
@@ -105,7 +106,8 @@ export class BundlerServer {
       ),
     };
 
-    this.ignoreGas = ignoreGas;
+    this.ignoreGas = opts.ignoreGas;
+    this.storeRequestInfo = opts.storeRequestInfo;
   }
 
   start(port: number): ActorHandle {
@@ -131,7 +133,10 @@ export class BundlerServer {
           function: "relayHandler",
         }),
         metrics: this.metrics,
-        opts: { ignoreGas: this.ignoreGas },
+        opts: {
+          storeRequestInfo: this.storeRequestInfo,
+          ignoreGas: this.ignoreGas,
+        },
       })
     );
 

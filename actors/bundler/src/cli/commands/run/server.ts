@@ -33,6 +33,9 @@ const runServer = new Command("server")
     }
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
+    const maybeStoreRequestInfo = process.env.STORE_REQUEST_INFO;
+    const storeRequestInfo = maybeStoreRequestInfo === "true"; // anything but "true" is falsy
+
     const configName = extractConfigName(configNameOrPath);
     const logger = makeLogger(
       configName,
@@ -49,7 +52,8 @@ const runServer = new Command("server")
       provider,
       getRedis(),
       logger,
-      createPool()
+      createPool(),
+      { storeRequestInfo }
     );
 
     const { promise } = server.start(port);

@@ -38,8 +38,8 @@ export const BALANCE_THRESHOLDS = (
       "Bundler",
       {
         address: actorAddresses.bundler,
-        minBalance: ethers.utils.parseEther("0.4").toBigInt(),
-        targetBalance: ethers.utils.parseEther("0.8").toBigInt(),
+        minBalance: ethers.utils.parseEther("0.8").toBigInt(),
+        targetBalance: ethers.utils.parseEther("1.4").toBigInt(),
       },
     ],
     [
