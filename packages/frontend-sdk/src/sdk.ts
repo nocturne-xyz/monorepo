@@ -768,15 +768,31 @@ export class NocturneSdk {
           body: JSON.stringify({ operation } as RelayRequest),
         });
 
-        const resJSON = await res.json();
         if (!res.ok) {
+          let resText;
+          try {
+            resText = await res.text();
+          } catch (err) {
+            resText = "could not parse response body"
+          }
+
+          console.error("failed to submit proven operation to bundler:", {
+            status: res.status,
+            statusText: res.statusText,
+            resText
+          });
           throw new Error(
             `failed to submit proven operation to bundler: ${JSON.stringify(
-              resJSON,
-            )}`,
+              {
+                status: res.status,
+                statusText: res.statusText,
+                resText
+              }
+            )}`
           );
         }
-
+        
+        const resJSON = await res.json();
         return resJSON.id;
       },
       {
