@@ -773,20 +773,20 @@ export class NocturneSdk {
           try {
             resText = await res.text();
           } catch (err) {
-            resText = "could not parse response body"
+            resText = "could not parse response body";
           }
 
           console.error("failed to submit proven operation to bundler:", {
             status: res.status,
             statusText: res.statusText,
-            resText
+            resText,
           });
           throw new Error(
             `failed to submit proven operation to bundler: ${JSON.stringify(
               {
                 status: res.status,
                 statusText: res.statusText,
-                resText
+                resText,
               }
             )}`
           );
