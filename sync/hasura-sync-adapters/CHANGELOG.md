@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0-alpha.0
+
+### Minor Changes
+
+- 19b7836c: add `latestCommitTei` to `EncryptedStateDiff` type emitted by `SdkSyncAdapters`
+
+### Patch Changes
+
+- Updated dependencies [19b7836c]
+  - @nocturne-xyz/core@3.4.0-alpha.0
+
 ## 0.3.6
 
 ### Patch Changes

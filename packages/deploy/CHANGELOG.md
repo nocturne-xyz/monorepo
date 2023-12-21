@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.7-alpha.0
+
+### Patch Changes
+
+- Updated dependencies [19b7836c]
+  - @nocturne-xyz/core@3.4.0-alpha.0
+
 ## 0.12.6
 
 ### Patch Changes

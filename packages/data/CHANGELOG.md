@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1-alpha.0
+
+### Patch Changes
+
+- Updated dependencies [19b7836c]
+- Updated dependencies [19b7836c]
+  - @nocturne-xyz/subgraph-sync-adapters@0.6.0-alpha.0
+  - @nocturne-xyz/core@3.4.0-alpha.0
+
 ## 0.2.0
 
 ### Minor Changes
