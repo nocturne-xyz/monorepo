@@ -769,11 +769,12 @@ export class NocturneSdk {
         });
 
         if (!res.ok) {
+          console.error("failed to submit operation")
           let resText;
           try {
             resText = await res.text();
           } catch (err) {
-            resText = "could not parse response body";
+            resText = "could not parse response body into text";
           }
 
           console.error("failed to submit proven operation to bundler:", {
@@ -791,9 +792,36 @@ export class NocturneSdk {
             )}`
           );
         }
-        
-        const resJSON = await res.json();
-        return resJSON.id;
+      
+        let body;
+        try {
+          body = await res.clone().json();
+          console.log("successfully submitted operation", { body })
+        } catch (err) {
+          try {
+            body = await res.text();
+          } catch (err) {
+            body = "could not parse response body to text either";
+          }
+
+          console.error("could not parse response to JSON", {
+            status: res.status,
+            statusText: res.statusText,
+            body 
+          });
+
+          throw new Error(`failed parse response: ${
+            JSON.stringify({
+              status: res.status,
+              statusText: res.statusText,
+              body
+            })
+          }`);
+        }
+
+        console.log("successfully submitted operation:", { body })
+
+        return body.id;
       },
       {
         retries: 5,
@@ -1107,18 +1135,45 @@ export class NocturneSdk {
           `${this.endpoints.bundlerEndpoint}/operations/${opDigest}`,
         );
 
-        const body = await res.json();
+        let body;
+        try {
+          body = await res.clone().json();
+          console.log("succesfully fetched operation status", { body })
+        } catch (err) {
+          try {
+            body = await res.text();
+          } catch (err) {
+            body = "could not parse op status response body to text either";
+          }
+
+          console.error("could not parse op status response body to JSON", {
+            status: res.status,
+            statusText: res.statusText,
+            body 
+          });
+
+          throw new Error(`failed parse op status response: ${
+            JSON.stringify({
+              status: res.status,
+              statusText: res.statusText,
+              body 
+            })
+          }`);
+        }
+
         if (
           res.status === 404 &&
           typeof body.error === "string" &&
           body.error.includes("operation not found")
         ) {
+          console.log("[fetchBundlerOperationStatus] op not found");
           return undefined;
         } else if (!res.ok) {
           console.error("failed to fetch operation status", body);
           return undefined;
         }
 
+        console.log("successfully fetched op status:", { body });
         return (await body) as OperationStatusResponse;
       },
       {
