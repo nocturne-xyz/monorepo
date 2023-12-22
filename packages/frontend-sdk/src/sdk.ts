@@ -769,7 +769,7 @@ export class NocturneSdk {
         });
 
         if (!res.ok) {
-          console.error("failed to submit operation")
+          console.error("failed to submit operation");
           let resText;
           try {
             resText = await res.text();
@@ -796,7 +796,7 @@ export class NocturneSdk {
         let body;
         try {
           body = await res.clone().json();
-          console.log("successfully submitted operation", { body })
+          console.log("successfully submitted operation", { body });
         } catch (err) {
           try {
             body = await res.text();
@@ -807,19 +807,19 @@ export class NocturneSdk {
           console.error("could not parse response to JSON", {
             status: res.status,
             statusText: res.statusText,
-            body 
+            body, 
           });
 
           throw new Error(`failed parse response: ${
             JSON.stringify({
               status: res.status,
               statusText: res.statusText,
-              body
+              body,
             })
           }`);
         }
 
-        console.log("successfully submitted operation:", { body })
+        console.log("successfully submitted operation:", { body });
 
         return body.id;
       },
@@ -1138,7 +1138,7 @@ export class NocturneSdk {
         let body;
         try {
           body = await res.clone().json();
-          console.log("succesfully fetched operation status", { body })
+          console.log("succesfully fetched operation status", { body });
         } catch (err) {
           try {
             body = await res.text();
@@ -1149,14 +1149,14 @@ export class NocturneSdk {
           console.error("could not parse op status response body to JSON", {
             status: res.status,
             statusText: res.statusText,
-            body 
+            body, 
           });
 
           throw new Error(`failed parse op status response: ${
             JSON.stringify({
               status: res.status,
               statusText: res.statusText,
-              body 
+              body, 
             })
           }`);
         }
