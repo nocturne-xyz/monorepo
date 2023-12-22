@@ -1,5 +1,11 @@
 # Changelog
 
+## 9.0.1-alpha.1
+
+### Patch Changes
+
+- 5d9a6a49: add even more logs
+
 ## 9.0.1-alpha.0
 
 ### Patch Changes
