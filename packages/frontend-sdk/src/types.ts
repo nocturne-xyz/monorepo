@@ -161,6 +161,15 @@ export interface GetBalanceOpts {
 }
 
 export type SelectedBatchPreference = "FAST" | "MEDIUM" | "SLOW";
+export type PrepareOperationOpts =
+  | {
+      batchPreference: SelectedBatchPreference;
+      eoaProvidesGas?: false;
+    }
+  | {
+      batchPreference?: undefined;
+      eoaProvidesGas: true;
+    };
 
 export interface AnonSwapRequestParams {
   tokenIn: string;
