@@ -109,14 +109,14 @@ const TRM_SEVERE_COUNTERPARTY_REJECT: CombinedRulesParams<
           0
         );
 
-        return counterpartySevereTotal > 30_000;
+        return counterpartySevereTotal > 5_000;
       },
     },
     noPositiveLabelsPartial,
   ],
   action: {
     type: "Rejection",
-    reason: "Counterparty exposure to severe risk categories > $30k",
+    reason: "Counterparty exposure to severe risk categories > $5k",
   },
   applyIf: "All",
 };
@@ -138,14 +138,14 @@ const TRM_HIGH_COUNTERPARTY_REJECT: CombinedRulesParams<
           0
         );
 
-        return counterpartyHighTotal > 50_000;
+        return counterpartyHighTotal > 15_000;
       },
     },
     noPositiveLabelsPartial,
   ],
   action: {
     type: "Rejection",
-    reason: "Counterparty exposure to high risk categories > $50k",
+    reason: "Counterparty exposure to high risk categories > $15k",
   },
   applyIf: "All",
 };
