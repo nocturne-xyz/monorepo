@@ -515,7 +515,6 @@ export class NocturneSdk {
       operations: [submittable.op],
     });
 
-    await (await this.clientThunk()).addOpToHistory(op, metadata);
     return tx;
   }
 
