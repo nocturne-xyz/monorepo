@@ -38,7 +38,7 @@
     "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"]
   },
   "offchain": {
-    "finalityBlocks": 4,
+    "finalityBlocks": 1,
     "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
     "subtreeBatchFillers": ["0x6556186E3E940930c40068C76BC875De95811E42"]
   },

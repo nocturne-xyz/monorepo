@@ -24,6 +24,7 @@ import {
   DepositManager__factory,
   Handler,
   Handler__factory,
+  Teller__factory,
 } from "@nocturne-xyz/contracts";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
@@ -94,6 +95,7 @@ import {
   NocturneSdkConfig,
   OnChainDepositRequestStatus,
   OperationHandle,
+  PrepareOperationOpts,
   SelectedBatchPreference,
   SupportedNetwork,
   SupportedProvider,
@@ -459,15 +461,14 @@ export class NocturneSdk {
 
   async prepareOperation(
     { request, meta }: OperationRequestWithMetadata,
-    batchPreference: SelectedBatchPreference,
+    { batchPreference, eoaProvidesGas }: PrepareOperationOpts,
   ): Promise<OpWithMetadata<PreSignOperation>> {
     const client = await this.clientThunk();
-    const userSelectedMultiplier =
-      this.batchPreferenceGasMultipliers[batchPreference];
-    const op = await client.prepareOperation(
-      request,
-      this.opGasMultiplier * userSelectedMultiplier,
-    );
+    const gasMultiplier = eoaProvidesGas
+      ? 0
+      : this.opGasMultiplier *
+        this.batchPreferenceGasMultipliers[batchPreference];
+    const op = await client.prepareOperation(request, gasMultiplier);
     return {
       op,
       metadata: meta,
@@ -497,6 +498,24 @@ export class NocturneSdk {
     const prover = await this.joinSplitProverThunk();
     const _op = await proveOperation(prover, op);
     return { op: _op, metadata };
+  }
+
+  // added 12/22/23 in support of Nocturne sunset
+  async withdrawFunds({
+    op,
+    metadata,
+  }: OpWithMetadata<PreSignOperation>): Promise<ContractTransaction> {
+    const signed = await this.signOperation({ op, metadata });
+    const submittable = await this.proveOperation(signed);
+    const teller = Teller__factory.connect(
+      this.sdkConfig.config.tellerAddress,
+      await this.signerThunk(),
+    );
+    const tx = await teller.processBundle({
+      operations: [submittable.op],
+    });
+
+    return tx;
   }
 
   async performOperation({
@@ -545,26 +564,26 @@ export class NocturneSdk {
     erc20Address: Address,
     amount: bigint,
     recipientAddress: Address,
-    batchPreference: SelectedBatchPreference,
+    opts: PrepareOperationOpts,
   ): Promise<OpWithMetadata<PreSignOperation>> {
     const operationRequest = await this.opRequestBuilder
       .use(Erc20Plugin)
       .erc20Transfer(erc20Address, recipientAddress, amount)
       .build();
-    return await this.prepareOperation(operationRequest, batchPreference);
+    return await this.prepareOperation(operationRequest, opts);
   }
 
   async prepareAnonEthTransfer(
     recipientAddress: Address,
     amount: bigint,
-    batchPreference: SelectedBatchPreference,
+    opts: PrepareOperationOpts,
   ): Promise<OpWithMetadata<PreSignOperation>> {
     const operationRequest = await this.opRequestBuilder
       .use(EthTransferAdapterPlugin)
       .transferEth(recipientAddress, amount)
       .build();
 
-    return await this.prepareOperation(operationRequest, batchPreference);
+    return await this.prepareOperation(operationRequest, opts);
   }
 
   async prepareAnonErc20Swap({
@@ -586,7 +605,7 @@ export class NocturneSdk {
       .swap(tokenIn, amountIn, tokenOut, { maxSlippageBps })
       .build();
 
-    return await this.prepareOperation(operationRequest, batchPreference);
+    return await this.prepareOperation(operationRequest, { batchPreference });
   }
 
   async retrievePendingDeposit(
