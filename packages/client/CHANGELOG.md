@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.1.2
+
+### Patch Changes
+
+- 3281e2cd: fix db not removing top-level index entry for op history
+- Updated dependencies [19b7836c]
+  - @nocturne-xyz/core@3.4.0
+
 ## 4.1.1
 
 ### Patch Changes

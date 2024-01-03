@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.1.0
+
+### Minor Changes
+
+- b7e69a4f: feature flag storing request info
+
+### Patch Changes
+
+- 9834400d: remove nfs from DB upon op revalidation failure
+- b7e69a4f: remove 1.2x multiplier on gas limit, maxGasForOperation is already over-estimate
+- 595cb965: remove geomiddleware, instead call maybeStoreRequest IFF bundler /relay request succeeds
+- Updated dependencies [19b7836c]
+- Updated dependencies [595cb965]
+- Updated dependencies [3281e2cd]
+  - @nocturne-xyz/core@3.4.0
+  - @nocturne-xyz/offchain-utils@1.0.0
+  - @nocturne-xyz/client@4.1.2
+
 ## 1.0.0
 
 ### Major Changes

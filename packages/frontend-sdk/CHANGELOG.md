@@ -1,5 +1,23 @@
 # Changelog
 
+## 10.0.0
+
+### Major Changes
+
+- fa234de2: Add withdrawFunds method to fe-sdk, add PrepareOperationOpts
+
+### Patch Changes
+
+- Updated dependencies [19b7836c]
+- Updated dependencies [19b7836c]
+- Updated dependencies [3281e2cd]
+  - @nocturne-xyz/subgraph-sync-adapters@0.6.0
+  - @nocturne-xyz/core@3.4.0
+  - @nocturne-xyz/client@4.1.2
+  - @nocturne-xyz/idb-kv-store@0.4.15
+  - @nocturne-xyz/local-prover@0.6.5
+  - @nocturne-xyz/op-request-plugins@2.1.20
+
 ## 9.0.0
 
 ### Major Changes

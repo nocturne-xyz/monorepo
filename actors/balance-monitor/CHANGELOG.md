@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.5
+
+### Patch Changes
+
+- b7e69a4f: up bundler thresholds to 0.8 min, 1.4 target
+- Updated dependencies [19b7836c]
+- Updated dependencies [595cb965]
+  - @nocturne-xyz/core@3.4.0
+  - @nocturne-xyz/offchain-utils@1.0.0
+
 ## 0.4.4
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.13
+
+### Patch Changes
+
+- Updated dependencies [595cb965]
+  - @nocturne-xyz/offchain-utils@1.0.0
+
 ## 0.9.12
 
 ### Patch Changes
