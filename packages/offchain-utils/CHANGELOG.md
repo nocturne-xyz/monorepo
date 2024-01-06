@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0-alpha.0
+
+### Major Changes
+
+- 595cb965: removed geomiddleware in favor of maybeStoreRequest which uses IPQS instead of checking for header tags
+
+### Patch Changes
+
+- @nocturne-xyz/persistent-log@0.1.16-alpha.0
+
 ## 0.6.5
 
 ### Patch Changes

@@ -1,5 +1,26 @@
 # Changelog
 
+## 9.0.1-alpha.1
+
+### Patch Changes
+
+- 5d9a6a49: add even more logs
+
+## 9.0.1-alpha.0
+
+### Patch Changes
+
+- b992781c: improve error logging when submitting op
+- Updated dependencies [19b7836c]
+- Updated dependencies [19b7836c]
+- Updated dependencies [3281e2cd]
+  - @nocturne-xyz/subgraph-sync-adapters@0.6.0-alpha.0
+  - @nocturne-xyz/core@3.4.0-alpha.0
+  - @nocturne-xyz/client@4.1.2-alpha.0
+  - @nocturne-xyz/idb-kv-store@0.4.15-alpha.0
+  - @nocturne-xyz/local-prover@0.6.5-alpha.0
+  - @nocturne-xyz/op-request-plugins@2.1.20-alpha.0
+
 ## 9.0.0
 
 ### Major Changes

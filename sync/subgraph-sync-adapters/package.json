@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/subgraph-sync-adapters",
-  "version": "0.5.3",
+  "version": "0.6.0-alpha.0",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -1,0 +1,42 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@nocturne-xyz/balance-monitor": "0.4.4",
+    "@nocturne-xyz/bundler": "1.0.0",
+    "@nocturne-xyz/deposit-screener": "0.13.5",
+    "@nocturne-xyz/insertion-writer": "0.5.15",
+    "@nocturne-xyz/subtree-updater": "0.8.9",
+    "@nocturne-xyz/test-actor": "0.8.0",
+    "@nocturne-xyz/client": "4.1.1",
+    "@nocturne-xyz/config": "1.7.3",
+    "@nocturne-xyz/core": "3.3.0",
+    "@nocturne-xyz/crypto": "0.4.2",
+    "@nocturne-xyz/data": "0.2.0",
+    "@nocturne-xyz/deploy": "0.12.6",
+    "@nocturne-xyz/e2e-tests": "0.9.12",
+    "@nocturne-xyz/frontend-sdk": "9.0.0",
+    "@nocturne-xyz/idb-kv-store": "0.4.14",
+    "@nocturne-xyz/local-prover": "0.6.4",
+    "@nocturne-xyz/offchain-utils": "0.6.5",
+    "@nocturne-xyz/op-request-plugins": "2.1.19",
+    "@nocturne-xyz/persistent-log": "0.1.15",
+    "@nocturne-xyz/hasura-sync-adapters": "0.3.6",
+    "@nocturne-xyz/rpc-sync-adapters": "0.3.5",
+    "@nocturne-xyz/subgraph-sync-adapters": "0.5.3"
+  },
+  "changesets": [
+    "calm-bees-talk",
+    "chilled-rings-appear",
+    "cuddly-roses-cough",
+    "five-jars-prove",
+    "nine-hairs-ring",
+    "olive-pianos-worry",
+    "perfect-elephants-warn",
+    "silly-goats-kick",
+    "smart-dogs-dress",
+    "strange-pants-grin",
+    "strange-parrots-study",
+    "two-crabs-train"
+  ]
+}
