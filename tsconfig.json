@@ -86,6 +86,9 @@
       "path": "./packages/client"
     },
     {
+      "path": "./packages/ejector"
+    },
+    {
       "path": "./sync/rpc-sync-adapters"
     },
     {
