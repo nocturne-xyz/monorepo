@@ -1,6 +1,6 @@
-import { cloneGraphNode } from "./cloneGraphNode";
+import { getSubmodules } from "./getSubmodules";
 import { downloadCircuitArtifacts } from "./downloadCircuitArtifacts";
 
 export async function setup(): Promise<void> {
-  await Promise.all([cloneGraphNode(), downloadCircuitArtifacts()]);
+  await Promise.all([getSubmodules(), downloadCircuitArtifacts()]);
 }

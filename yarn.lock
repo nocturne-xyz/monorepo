@@ -2888,7 +2888,6 @@ __metadata:
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
     ethers: ^5.7.2
-    idb: ^7.1.1
     ioredis: ^5.3.1
     prettier: ^2.8.8
     redis-memory-server: ^0.6.0

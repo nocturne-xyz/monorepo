@@ -1,4 +1,7 @@
-import { spawn } from "child_process";
+import { promisify } from "node:util";
+import { exec } from "node:child_process";
+
+const execAsync = promisify(exec);
 
 export type TeardownFn = () => Promise<void>;
 export type ResetFn = () => Promise<void>;
@@ -12,32 +15,15 @@ export async function runCommand(
   cmd: string,
   cwd?: string
 ): Promise<[string, string]> {
-  return new Promise((resolve, reject) => {
-    let stdout = "";
-    let stderr = "";
-    const child = spawn("sh", ["-c", cmd], { cwd, env: process.env });
-    child.stdout.on("data", (data) => {
-      const output = data.toString();
-      stdout += output;
-    });
-    child.stderr.on("data", (data) => {
-      const output = data.toString();
-      stderr += output;
-    });
-    child.on("error", () => {
-      console.error(stderr);
-      reject(stderr);
-    });
-    child.on("exit", () => {
-      console.log(stdout);
-      resolve([stdout, stderr]);
-    });
+  const { stdout, stderr } = await execAsync(cmd, { cwd, env: process.env });
+  const out = stdout?.toString() ?? "";
+  const err = stderr?.toString() ?? "";
+  console.log(out);
+  if (err) {
+    console.error(err);
+  }
 
-    // kill child if parent exits first
-    process.on("exit", () => {
-      child.kill();
-    });
-  });
+  return [out, err];
 }
 
 export async function sleep(ms: number): Promise<void> {
