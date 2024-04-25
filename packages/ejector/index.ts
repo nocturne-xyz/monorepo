@@ -5,7 +5,7 @@ async function main() {
 }
 
 process.on('SIGINT', () => {
-  process.exit(1); // Exit with success status
+  process.exit(1); 
 });
 
 
