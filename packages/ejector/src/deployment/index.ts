@@ -9,10 +9,10 @@ import * as ethers from "ethers";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
 import { InsertionWriterConfig, startInsertionWriter } from "./insertionWriter";
 import { sleep, SUBGRAPH_URL } from "../utils";
-import { getEnvVars } from "./env";
+import { getEnvVars } from "../env";
 import { startSubgraph } from "./subgraph";
 
-export * from "./env";
+export * from "../env";
 export * from "./insertionWriter";
 export * from "./redis";
 export * from "./subgraph";
@@ -46,7 +46,7 @@ const INSERTION_WRITER_CONFIG: InsertionWriterConfig = {
 };
 
 export async function setupEjectorDeployment(
-  networkName?: string
+  networkName = "mainnet"
 ): Promise<EejectorDeployment> {
   const { RPC_URL, SPEND_PRIVATE_KEY, WITHDRAWAL_EOA_PRIVATE_KEY } =
     getEnvVars();
@@ -59,7 +59,7 @@ export async function setupEjectorDeployment(
   const eoa = new ethers.Wallet(SPEND_PRIVATE_KEY, provider);
 
   // get contract instances
-  const contractConfig = loadNocturneConfig(networkName ?? "mainnet");
+  const contractConfig = loadNocturneConfig(networkName);
   const tellerAddress = contractConfig.contracts.handlerProxy.proxy;
   const handlerAddress = contractConfig.contracts.tellerProxy.proxy;
   const [teller, handler] = await Promise.all([
