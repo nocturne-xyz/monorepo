@@ -5,7 +5,7 @@ import { ARTIFACTS_DIR } from "../utils";
 
 const CIRCUIT_ARTIFACTS_BASE_URL =
   "https://nocturne-circuit-artifacts-mainnet.s3.amazonaws.com";
-const CIRCUIT_ARTIFACTS = {
+export const CIRCUIT_ARTIFACTS = {
   joinSplit: {
     wasm: "joinsplit/joinsplit.wasm",
     zkey: "joinsplit/joinsplit.zkey",
