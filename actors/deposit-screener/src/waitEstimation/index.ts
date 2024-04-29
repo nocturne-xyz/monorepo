@@ -125,7 +125,7 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
   // ensure passes screen
   console.log("in estimateSecondsUntilCompletionForProspectiveDeposit");
 
-  const checkResult = await screeningApi.checkDeposit({
+  let checkResult = await screeningApi.checkDeposit({
     spender,
     assetAddr,
     value,
@@ -135,6 +135,9 @@ export async function estimateSecondsUntilCompletionForProspectiveDeposit(
     throw new Error(
       `Prospective deposit request failed screening. reason: ${checkResult.reason} spender: ${spender}. assetAddr: ${assetAddr}, value: ${value}`
     );
+  } else if (checkResult.type === "Accept") {
+    // If check result is accept treat as if it has no delay
+    checkResult = { type: "Delay", timeSeconds: 0 };
   }
 
   const fulfillerQueue = fulfillerQueues.get(assetAddr);

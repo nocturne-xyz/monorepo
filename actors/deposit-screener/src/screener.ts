@@ -295,13 +295,22 @@ export class DepositScreenerScreener {
             DepositRequestStatus.FailedScreen
           );
         } else {
-          childLogger.info(
-            "deposit passed first screening stage. pushing to delay queue"
-          );
+          let delayCheckResult: Delay;
+          if (checkResult.type === "Accept") {
+            delayCheckResult = { type: "Delay", timeSeconds: 0 };
+            childLogger.info(
+              `deposit passed labeled accept. pushing to delay queue with delay of 0 sec. spender: ${depositRequest.spender}`
+            );
+          } else {
+            delayCheckResult = checkResult;
+            childLogger.info(
+              `deposit passed labeled delay. pushing to delay queue with delay of ${delayCheckResult.timeSeconds} sec. spender: ${depositRequest.spender}`
+            );
+          }
           await this.scheduleSecondScreeningPhase(
             childLogger,
             depositRequest,
-            checkResult
+            delayCheckResult
           );
           await this.db.setDepositRequestStatus(
             depositRequest,

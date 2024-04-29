@@ -19,7 +19,11 @@ export interface Delay {
   timeSeconds: number;
 }
 
-export function isRejection(obj: Rejection | Delay): obj is Rejection {
+export interface Accept {
+  type: "Accept";
+}
+
+export function isRejection(obj: Rejection | Delay | Accept): obj is Rejection {
   return obj.type === "Rejection";
 }
 
@@ -63,7 +67,7 @@ export interface RuleParams<C extends ApiCallNames> {
   name: string;
   call: C;
   threshold: (data: ApiCallToReturnType[C]) => boolean;
-  action: Rejection | DelayAction;
+  action: Rejection | DelayAction | Accept;
 }
 
 export type PartialRuleParams<C extends ApiCallNames> = Omit<
@@ -88,7 +92,7 @@ export interface RuleLike {
   check: (
     deposit: ScreeningDepositRequest,
     cachedFetchOptions: CachedFetchOptions
-  ) => Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED>;
+  ) => Promise<Rejection | DelayAction | Accept | typeof ACTION_NOT_TRIGGERED>;
 }
 
 export class Rule<C extends ApiCallNames> implements RuleLike {
@@ -113,7 +117,7 @@ export class Rule<C extends ApiCallNames> implements RuleLike {
   async check(
     deposit: ScreeningDepositRequest,
     cachedFetchOptions: CachedFetchOptions
-  ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
+  ): Promise<Rejection | DelayAction | Accept | typeof ACTION_NOT_TRIGGERED> {
     const data = (await API_CALL_MAP[this.call](
       deposit,
       this.cache,
@@ -147,7 +151,7 @@ export class CompositeRule<T extends ReadonlyArray<ApiCallNames>>
   async check(
     deposit: ScreeningDepositRequest,
     cachedFetchOptions: CachedFetchOptions = {}
-  ): Promise<Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> {
+  ): Promise<Rejection | DelayAction | Accept | typeof ACTION_NOT_TRIGGERED> {
     const results = await Promise.all(
       this.partialRules.map(async (partial) => {
         const data = (await API_CALL_MAP[partial.call](
@@ -208,7 +212,7 @@ export class RuleSet {
   async check(
     deposit: ScreeningDepositRequest,
     cachedFetchOptions: CachedFetchOptions = {}
-  ): Promise<Rejection | Delay> {
+  ): Promise<Rejection | Delay | Accept> {
     let delaySeconds = this.baseDelaySeconds;
     let currRule = this.head;
     const rulesLogList: {
@@ -230,6 +234,12 @@ export class RuleSet {
             results: { ...toLoggable(rulesLogList) },
           }
         );
+        return result;
+      } else if (result.type === "Accept") {
+        this.logger.info(`Screener accepted addr ${deposit.spender}`, {
+          deposit: { ...deposit },
+          results: { ...toLoggable(rulesLogList) },
+        });
         return result;
       } else if (result.type === "Delay") {
         delaySeconds = APPLY_DELAY_OPERATION[result.operation](
@@ -255,7 +265,10 @@ const toLoggable = (
     ruleName: string;
     result: Awaited<ReturnType<RuleLike["check"]>>;
   }[]
-): Record<string, Rejection | DelayAction | typeof ACTION_NOT_TRIGGERED> => {
+): Record<
+  string,
+  Rejection | DelayAction | Accept | typeof ACTION_NOT_TRIGGERED
+> => {
   return rulesLogList.reduce((acc, { ruleName, result }) => {
     acc[ruleName] = result;
     return acc;
