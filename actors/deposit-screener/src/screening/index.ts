@@ -1,6 +1,6 @@
 import { Address } from "@nocturne-xyz/core";
 import { RULESET_V1 } from "./checks/v1/RULESET_V1";
-import { Delay, Rejection, RuleSet } from "./checks/RuleSet";
+import { Accept, Delay, Rejection, RuleSet } from "./checks/RuleSet";
 import IORedis from "ioredis";
 import { CachedFetchOptions } from "@nocturne-xyz/offchain-utils";
 import { requireApiKeys } from "../utils";
@@ -16,7 +16,7 @@ export interface ScreeningCheckerApi {
   checkDeposit(
     depositInfo: ScreeningDepositRequest,
     cachedFetchOptions?: CachedFetchOptions
-  ): Promise<Rejection | Delay>;
+  ): Promise<Rejection | Delay | Accept>;
 }
 
 export class ConcreteScreeningChecker implements ScreeningCheckerApi {
@@ -29,7 +29,7 @@ export class ConcreteScreeningChecker implements ScreeningCheckerApi {
 
   async checkDeposit(
     depositInfo: ScreeningDepositRequest
-  ): Promise<Rejection | Delay> {
+  ): Promise<Rejection | Delay | Accept> {
     return this.ruleset.check(depositInfo);
   }
 }

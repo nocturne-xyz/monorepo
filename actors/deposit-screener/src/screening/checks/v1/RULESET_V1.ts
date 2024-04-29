@@ -363,23 +363,38 @@ const MIXER_USAGE_DELAY: RuleParams<"MISTTRACK_ADDRESS_RISK_SCORE"> = {
   },
 };
 
-let ENV_BLACKLIST: string[] | undefined;
-if (process.env.DEFAULT_BLOCKLIST) {
-  ENV_BLACKLIST = process.env.DEFAULT_BLOCKLIST.split(",").map(
-    ethers.utils.getAddress
-  );
-}
-
 const ENV_BLACKLIST_RULE: RuleParams<"IDENTITY"> = {
   name: "ENV_BLACKLIST_RULE",
   call: "IDENTITY",
-  threshold: (deposit: ScreeningDepositRequest) =>
-    ENV_BLACKLIST
+  threshold: (deposit: ScreeningDepositRequest) => {
+    const ENV_BLACKLIST = process.env.DEFAULT_BLOCKLIST
+      ? process.env.DEFAULT_BLOCKLIST.split(",").map(ethers.utils.getAddress)
+      : [];
+
+    return ENV_BLACKLIST
       ? ENV_BLACKLIST.includes(ethers.utils.getAddress(deposit.spender))
-      : false,
+      : false;
+  },
   action: {
     type: "Rejection",
     reason: "ENV_BLACKLIST",
+  },
+};
+
+const ENV_WHITELIST_RULE: RuleParams<"IDENTITY"> = {
+  name: "ENV_WHITELIST_RULE",
+  call: "IDENTITY",
+  threshold: (deposit: ScreeningDepositRequest) => {
+    const ENV_WHITELIST = process.env.DEFAULT_ALLOWLIST
+      ? process.env.DEFAULT_ALLOWLIST.split(",").map(ethers.utils.getAddress)
+      : [];
+
+    return ENV_WHITELIST
+      ? ENV_WHITELIST.includes(ethers.utils.getAddress(deposit.spender))
+      : false;
+  },
+  action: {
+    type: "Accept",
   },
 };
 
@@ -446,6 +461,7 @@ export const RULESET_V1 = (redis: IORedis, logger: Logger): RuleSet => {
     logger
   )
     .add(ENV_BLACKLIST_RULE)
+    .add(ENV_WHITELIST_RULE)
     .add(US_TIMEZONE_DELAY_RULE)
     .add(TRM_SEVERE_OWNERSHIP_REJECT)
     .add(TRM_HIGH_OWNERSHIP_REJECT)

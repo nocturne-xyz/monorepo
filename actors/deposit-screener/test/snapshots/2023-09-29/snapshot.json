@@ -12820,5 +12820,195 @@
       "assetAddr": "",
       "value": "0n"
     }
+  },
+  "0x47794AB20f45Bdc18ef6EcBcB19E1FdF82C6E8Db": {
+    "TRM_SCREENING_ADDRESSES": {
+      "accountExternalId": null,
+      "address": "0x47794AB20f45Bdc18ef6EcBcB19E1FdF82C6E8Db",
+      "addressIncomingVolumeUsd": "25243.24261670846503509418511121479059523419",
+      "addressOutgoingVolumeUsd": "25236.04344519489990233015314080589064358232",
+      "addressRiskIndicators": [
+        {
+          "category": "Decentralized Exchange",
+          "categoryId": "6",
+          "categoryRiskScoreLevel": 1,
+          "categoryRiskScoreLevelLabel": "Low",
+          "incomingVolumeUsd": "6865.713034462387843088",
+          "outgoingVolumeUsd": "6792.46658587069996337703958744214105533203",
+          "riskType": "COUNTERPARTY",
+          "totalVolumeUsd": "13658.17962033308780646503958744214105533203"
+        },
+        {
+          "category": "Sanctions",
+          "categoryId": "69",
+          "categoryRiskScoreLevel": 15,
+          "categoryRiskScoreLevelLabel": "Severe",
+          "incomingVolumeUsd": "11585.062996375376773",
+          "outgoingVolumeUsd": "0",
+          "riskType": "COUNTERPARTY",
+          "totalVolumeUsd": "11585.062996375376773"
+        },
+        {
+          "category": "Decentralized Exchange",
+          "categoryId": "6",
+          "categoryRiskScoreLevel": 1,
+          "categoryRiskScoreLevelLabel": "Low",
+          "incomingVolumeUsd": "4509.349310759",
+          "outgoingVolumeUsd": "5782.46010864",
+          "riskType": "INDIRECT",
+          "totalVolumeUsd": "10291.809419399"
+        }
+      ],
+      "addressSubmitted": "0x47794AB20f45Bdc18ef6EcBcB19E1FdF82C6E8Db",
+      "addressTotalVolumeUsd": "50479.28606190336493742433825202068123881651",
+      "chain": "ethereum",
+      "entities": [],
+      "externalId": null,
+      "trmAppUrl": "https://my.trmlabs.com/address/0x47794AB20f45Bdc18ef6EcBcB19E1FdF82C6E8Db/eth"
+    },
+    "MISTTRACK_ADDRESS_OVERVIEW": {
+      "balance": 0.0001,
+      "txs_count": 10,
+      "first_seen": 1669169147,
+      "last_seen": 1669170299,
+      "total_received": 15.8521,
+      "total_spent": 15.8329,
+      "received_txs_count": 2,
+      "spent_txs_count": 8
+    },
+    "MISTTRACK_ADDRESS_LABELS": { "label_list": [], "label_type": "" },
+    "MISTTRACK_ADDRESS_RISK_SCORE": {
+      "score": 99,
+      "hacking_event": "",
+      "detail_list": [
+        "Interact With Malicious Address",
+        "Interact With Suspected Malicious Address",
+        "Interact With High-risk Tag Address"
+      ],
+      "risk_level": "Severe",
+      "risk_detail": [
+        {
+          "label": "USDT Banned Address",
+          "type": "suspected_malicious",
+          "volume": 9909.094,
+          "address": "0x881d40237659c251811cec9c364ef91dc08d300c",
+          "percent": 13.209
+        },
+        {
+          "label": "OFAC Sanctions",
+          "type": "malicious",
+          "volume": 16575.5,
+          "address": "0x910cbd523d972eb0a6f4cae4618ad62622b39dbf",
+          "percent": 22.095
+        },
+        {
+          "label": "Tornado.Cash: 10 ETH",
+          "type": "high_risk",
+          "volume": 16575.5,
+          "address": "0x910cbd523d972eb0a6f4cae4618ad62622b39dbf",
+          "percent": 22.095
+        }
+      ]
+    },
+    "IDENTITY": {
+      "spender": "0x47794AB20f45Bdc18ef6EcBcB19E1FdF82C6E8Db",
+      "assetAddr": "",
+      "value": "0n"
+    }
+  },
+  "0x52eb4040819bd0f49cb6ea01e5d33d328a25cc3f": {
+    "TRM_SCREENING_ADDRESSES": {
+      "accountExternalId": null,
+      "address": "0x52eb4040819bd0f49cb6ea01e5d33d328a25cc3f",
+      "addressIncomingVolumeUsd": "25243.24261670846503509418511121479059523419",
+      "addressOutgoingVolumeUsd": "25236.04344519489990233015314080589064358232",
+      "addressRiskIndicators": [
+        {
+          "category": "Decentralized Exchange",
+          "categoryId": "6",
+          "categoryRiskScoreLevel": 1,
+          "categoryRiskScoreLevelLabel": "Low",
+          "incomingVolumeUsd": "6865.713034462387843088",
+          "outgoingVolumeUsd": "6792.46658587069996337703958744214105533203",
+          "riskType": "COUNTERPARTY",
+          "totalVolumeUsd": "13658.17962033308780646503958744214105533203"
+        },
+        {
+          "category": "Sanctions",
+          "categoryId": "69",
+          "categoryRiskScoreLevel": 15,
+          "categoryRiskScoreLevelLabel": "Severe",
+          "incomingVolumeUsd": "11585.062996375376773",
+          "outgoingVolumeUsd": "0",
+          "riskType": "COUNTERPARTY",
+          "totalVolumeUsd": "11585.062996375376773"
+        },
+        {
+          "category": "Decentralized Exchange",
+          "categoryId": "6",
+          "categoryRiskScoreLevel": 1,
+          "categoryRiskScoreLevelLabel": "Low",
+          "incomingVolumeUsd": "4509.349310759",
+          "outgoingVolumeUsd": "5782.46010864",
+          "riskType": "INDIRECT",
+          "totalVolumeUsd": "10291.809419399"
+        }
+      ],
+      "addressSubmitted": "0x52eb4040819bd0f49cb6ea01e5d33d328a25cc3f",
+      "addressTotalVolumeUsd": "50479.28606190336493742433825202068123881651",
+      "chain": "ethereum",
+      "entities": [],
+      "externalId": null,
+      "trmAppUrl": "https://my.trmlabs.com/address/0x52eb4040819bd0f49cb6ea01e5d33d328a25cc3f/eth"
+    },
+    "MISTTRACK_ADDRESS_OVERVIEW": {
+      "balance": 0.0001,
+      "txs_count": 10,
+      "first_seen": 1669169147,
+      "last_seen": 1669170299,
+      "total_received": 15.8521,
+      "total_spent": 15.8329,
+      "received_txs_count": 2,
+      "spent_txs_count": 8
+    },
+    "MISTTRACK_ADDRESS_LABELS": { "label_list": [], "label_type": "" },
+    "MISTTRACK_ADDRESS_RISK_SCORE": {
+      "score": 99,
+      "hacking_event": "",
+      "detail_list": [
+        "Interact With Malicious Address",
+        "Interact With Suspected Malicious Address",
+        "Interact With High-risk Tag Address"
+      ],
+      "risk_level": "Severe",
+      "risk_detail": [
+        {
+          "label": "USDT Banned Address",
+          "type": "suspected_malicious",
+          "volume": 9909.094,
+          "address": "0x881d40237659c251811cec9c364ef91dc08d300c",
+          "percent": 13.209
+        },
+        {
+          "label": "OFAC Sanctions",
+          "type": "malicious",
+          "volume": 16575.5,
+          "address": "0x910cbd523d972eb0a6f4cae4618ad62622b39dbf",
+          "percent": 22.095
+        },
+        {
+          "label": "Tornado.Cash: 10 ETH",
+          "type": "high_risk",
+          "volume": 16575.5,
+          "address": "0x910cbd523d972eb0a6f4cae4618ad62622b39dbf",
+          "percent": 22.095
+        }
+      ]
+    },
+    "IDENTITY": {
+      "spender": "0x52eb4040819bd0f49cb6ea01e5d33d328a25cc3f",
+      "assetAddr": "",
+      "value": "0n"
+    }
   }
 }

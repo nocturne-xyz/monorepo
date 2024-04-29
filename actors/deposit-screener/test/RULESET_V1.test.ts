@@ -22,6 +22,9 @@ import moment from "moment-timezone";
 import * as sinon from "sinon";
 import { FIVE_ETHER } from "../src/screening/checks/v1/utils";
 
+const WHITELISTED_ADDRESSES_1 = "0x47794AB20f45Bdc18ef6EcBcB19E1FdF82C6E8Db";
+const WHITELISTED_ADDRESSES_2 = "0x52eb4040819bd0f49cb6ea01e5d33d328a25cc3f";
+
 describe("RULESET_V1", () => {
   let server: RedisMemoryServer;
   let redis: IORedis;
@@ -35,6 +38,8 @@ describe("RULESET_V1", () => {
   });
 
   before(async () => {
+    process.env.DEFAULT_ALLOWLIST = `${WHITELISTED_ADDRESSES_1},${WHITELISTED_ADDRESSES_2}`;
+
     server = await RedisMemoryServer.create();
 
     const host = await server.getHost();
@@ -300,5 +305,18 @@ describe("RULESET_V1", () => {
       timeSeconds: 7200 + 3600 * 6,
       type: "Delay",
     });
+  });
+
+  it("should give 0 delay to whitelisted users", async () => {
+    process.env.DEFAULT_ALLOWLIST = `${WHITELISTED_ADDRESSES_1},${WHITELISTED_ADDRESSES_2}`;
+
+    const result1 = await ruleset.check(
+      formDepositInfo(WHITELISTED_ADDRESSES_1)
+    );
+    const result2 = await ruleset.check(
+      formDepositInfo(WHITELISTED_ADDRESSES_2)
+    );
+    expect(result1).to.deep.equal({ type: "Accept" });
+    expect(result2).to.deep.equal({ type: "Accept" });
   });
 });
