@@ -43,7 +43,7 @@ export class WithdrawalClient {
 
   joinSplitProver: Thunk<JoinSplitProver>;
 
-  constructor(networkName = "mainnet") {
+  constructor(networkNameOrConfigPath = "mainnet") {
     const { RPC_URL, SPEND_PRIVATE_KEY } = getEnvVars();
     this.db = new NocturneDB(new InMemoryKVStore());
     this.syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_URL);
@@ -61,7 +61,7 @@ export class WithdrawalClient {
       new MockOpTracker()
     );
 
-    this.config = loadNocturneConfig(networkName);
+    this.config = loadNocturneConfig(networkNameOrConfigPath);
 
     this.teller = Teller__factory.connect(
       this.config.contracts.tellerProxy.proxy,

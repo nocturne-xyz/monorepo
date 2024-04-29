@@ -8,7 +8,7 @@ import {
 import * as ethers from "ethers";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
 import { InsertionWriterConfig, startInsertionWriter } from "./insertionWriter";
-import { sleep, SUBGRAPH_URL } from "../utils";
+import { sleep, SUBGRAPH_URL, TeardownFn } from "../utils";
 import { getEnvVars } from "../env";
 import { startSubgraph } from "./subgraph";
 
@@ -45,9 +45,17 @@ const INSERTION_WRITER_CONFIG: InsertionWriterConfig = {
   subgraphUrl: SUBGRAPH_URL,
 };
 
+export type SetupOptions = {
+  networkNameOrConfigPath: string;
+  updateTree: boolean;
+};
+
 export async function setupEjectorDeployment(
-  networkName = "mainnet"
+  options: Partial<SetupOptions> = {}
 ): Promise<EejectorDeployment> {
+  const networkNameOrConfigPath = options.networkNameOrConfigPath ?? "mainnet";
+  const updateTree = options.updateTree ?? false;
+
   const { RPC_URL, SPEND_PRIVATE_KEY, WITHDRAWAL_EOA_PRIVATE_KEY } =
     getEnvVars();
 
@@ -59,7 +67,7 @@ export async function setupEjectorDeployment(
   const eoa = new ethers.Wallet(SPEND_PRIVATE_KEY, provider);
 
   // get contract instances
-  const contractConfig = loadNocturneConfig(networkName);
+  const contractConfig = loadNocturneConfig(networkNameOrConfigPath);
   const tellerAddress = contractConfig.contracts.handlerProxy.proxy;
   const handlerAddress = contractConfig.contracts.tellerProxy.proxy;
   const [teller, handler] = await Promise.all([
@@ -67,23 +75,35 @@ export async function setupEjectorDeployment(
     Handler__factory.connect(handlerAddress, eoa),
   ]);
 
+  const teardownFns: TeardownFn[] = [];
+
   // deploy subgraph
   const teardownSubgraph = await startSubgraph();
+  teardownFns.push(teardownSubgraph);
 
-  // deploy subtree updater
-  const teardownSubtreeUpdater = await startSubtreeUpdater(
-    SUBTREE_UPDATER_CONFIG(RPC_URL, handlerAddress, WITHDRAWAL_EOA_PRIVATE_KEY)
-  );
+  // if updateTree is true, deploy subtree updater + insertion writer using the withdrawal EOA as the tx signer
+  if (updateTree) {
+    // deploy subtree updater
+    const teardownSubtreeUpdater = await startSubtreeUpdater(
+      SUBTREE_UPDATER_CONFIG(
+        RPC_URL,
+        handlerAddress,
+        WITHDRAWAL_EOA_PRIVATE_KEY
+      )
+    );
+    teardownFns.push(teardownSubtreeUpdater);
 
-  // deploy insertion writer
-  const teardownInsertionWriter = await startInsertionWriter(
-    INSERTION_WRITER_CONFIG
-  );
+    // deploy insertion writer
+    const teardownInsertionWriter = await startInsertionWriter(
+      INSERTION_WRITER_CONFIG
+    );
+    teardownFns.push(teardownInsertionWriter);
+  }
 
   const teardown = async () => {
-    await teardownInsertionWriter();
-    await teardownSubtreeUpdater();
-    await teardownSubgraph();
+    for (const fn of teardownFns) {
+      await fn();
+    }
   };
 
   const fillSubtreeBatch = async () => {
@@ -100,6 +120,7 @@ export async function setupEjectorDeployment(
     }
 
     // wait for subgraph / subtree updater
+    console.log("waiting for tree update. this may take a few minutes...");
     // TODO - listen for subtree update event on teller contract instead
     await sleep(300_000);
   };
@@ -109,7 +130,13 @@ export async function setupEjectorDeployment(
     handler,
     config: contractConfig,
     eoa,
-    fillSubtreeBatch,
+    fillSubtreeBatch: updateTree
+      ? fillSubtreeBatch
+      : async () => {
+          console.log(
+            "skipping fillSubtreeBatch - the `update-tree` flag is set to false"
+          );
+        },
     teardown,
   };
 }
