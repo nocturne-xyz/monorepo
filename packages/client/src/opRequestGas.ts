@@ -1,25 +1,23 @@
 import { Handler } from "@nocturne-xyz/contracts";
 import {
   Asset,
+  AssetTrait,
   AssetType,
   BLOCK_GAS_LIMIT,
   ERC20_ID,
   IncludedNote,
-  MAX_GAS_FOR_ADDITIONAL_JOINSPLIT,
   MapWithObjectKeys,
   Operation,
   OperationResult,
   OperationTrait,
   PreSignOperation,
   ProvenJoinSplit,
+  SetWithObjectKeys,
   SparseMerkleProver,
   SubmittableOperationWithNetworkInfo,
-  groupByMap,
-  maxGasForOperation,
-  partition,
+  gasCompensationForParams,
 } from "@nocturne-xyz/core";
 import { NocturneViewer, StealthAddress } from "@nocturne-xyz/crypto";
-import * as JSON from "bigint-json-serialization";
 import { NocturneDB } from "./NocturneDB";
 import { EthToTokenConverter } from "./conversion";
 import {
@@ -27,8 +25,12 @@ import {
   JoinSplitRequest,
   OperationRequest,
 } from "./operationRequest/operationRequest";
-import { gatherNotes, prepareOperation } from "./prepareOperation";
-import { getIncludedNotesFromOp, getJoinSplitRequestTotalValue } from "./utils";
+import {
+  NotEnoughFundsError,
+  gatherNotes,
+  prepareOperation,
+} from "./prepareOperation";
+import { getIncludedNotesFromOp } from "./utils";
 
 // If gas asset refund is less than this amount * gasPrice denominated in the gas asset, refund will
 // not be processed and funds will be sent to bundler. This is because cost of processing would
@@ -61,7 +63,6 @@ interface GasEstimatedOperationRequest
 }
 
 interface OpRequestTraceParams {
-  totalGasLimit: bigint;
   executionGasLimit: bigint;
   gasPrice: bigint;
   usedNotes: MapWithObjectKeys<Asset, IncludedNote[]>;
@@ -87,14 +88,18 @@ export class NotEnoughGasTokensError extends Error {
   }
 }
 
+// assume that existing joinsplit requests don't account for gas at all
 export async function handleGasForOperationRequest(
   deps: HandleOpRequestGasDeps,
   opRequest: OperationRequest,
   gasMultiplier: number
 ): Promise<GasAccountedOperationRequest> {
   // estimate gas params for opRequest
-  console.log("estimating gas for op request");
-  const { totalGasLimit, executionGasLimit, gasPrice, usedNotes } =
+  if (process?.env?.DEBUG) {
+    console.log("estimating gas for op request");
+  }
+
+  const { executionGasLimit, gasPrice, usedNotes } =
     await getOperationRequestTrace(deps, opRequest, gasMultiplier);
 
   const gasEstimatedOpRequest: GasEstimatedOperationRequest = {
@@ -103,219 +108,158 @@ export async function handleGasForOperationRequest(
     gasPrice,
   };
 
-  if (opRequest?.gasPrice == 0n) {
-    // If gasPrice = 0, override dummy gas asset and don't further modify opRequest
-    console.log("returning dummy gas asset");
-    return {
-      ...gasEstimatedOpRequest,
-      gasPrice: 0n,
-      gasAsset: DUMMY_GAS_ASSET,
-      gasAssetRefundThreshold: 0n,
-      totalGasLimit,
-    };
-  } else {
-    console.log(`total gas limit pre gas update: ${totalGasLimit}`);
-
-    // attempt to update the joinSplitRequests with gas compensation
-    // gasAsset will be `undefined` if the user's too broke to pay for gas
-    const [joinSplitRequests, gasAssetAndTicker] =
-      await tryUpdateJoinSplitRequestsForGasEstimate(
-        deps.gasAssets,
-        deps.db,
-        gasEstimatedOpRequest.joinSplitRequests,
-        totalGasLimit,
-        gasPrice,
-        deps.tokenConverter,
-        usedNotes
-      );
-
-    const gasAssetRefundThreshold = await deps.tokenConverter.weiToTargetErc20(
-      DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS * gasPrice,
-      gasAssetAndTicker.ticker
+  const [totalGasLimit, joinSplitRequests, gasAssetAndTicker] =
+    await tryUpdateJoinSplitRequests(
+      deps.db,
+      deps.gasAssets,
+      deps.tokenConverter,
+      usedNotes,
+      gasEstimatedOpRequest.joinSplitRequests,
+      gasEstimatedOpRequest.refunds.map(({ encodedAsset }) =>
+        AssetTrait.decode(encodedAsset)
+      ),
+      executionGasLimit,
+      gasPrice
     );
 
-    return {
-      ...gasEstimatedOpRequest,
-      gasAssetRefundThreshold,
-      joinSplitRequests,
-      gasAsset: gasAssetAndTicker.asset,
-      totalGasLimit,
-    };
-  }
+  const gasAssetRefundThreshold = await deps.tokenConverter.weiToTargetErc20(
+    DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS * gasPrice,
+    gasAssetAndTicker.ticker
+  );
+
+  return {
+    ...gasEstimatedOpRequest,
+    joinSplitRequests,
+    gasAsset: gasAssetAndTicker.asset,
+    gasAssetRefundThreshold,
+    totalGasLimit,
+  };
 }
 
-// update the joinSplitRequests to include any additional gas compensation, if needed
-// returns the updated JoinSplitRequests and the gas asset used to pay for gas if the user can afford gas
-// if the user can't afford gas, returns an empty array and undefined.
-async function tryUpdateJoinSplitRequestsForGasEstimate(
-  gasAssets: Map<string, Asset>,
+// TODO axe this module and account for gas on notes, not JS requests
+async function tryUpdateJoinSplitRequests(
   db: NocturneDB,
-  joinSplitRequests: JoinSplitRequest[],
-  gasUnitsEstimate: bigint,
-  gasPrice: bigint,
+  gasAssets: Map<string, Asset>,
   tokenConverter: EthToTokenConverter,
-  usedNotes: MapWithObjectKeys<Asset, IncludedNote[]>
-): Promise<[JoinSplitRequest[], AssetAndTicker]> {
-  // group joinSplitRequests by asset address
-  const joinSplitRequestsByAsset = groupByMap(
-    joinSplitRequests,
-    (request) => request.asset.assetAddr
-  );
+  usedNotes: MapWithObjectKeys<Asset, IncludedNote[]>,
+  initialJoinSplitRequests: JoinSplitRequest[],
+  initialRefundAssets: Asset[],
+  executionGasLimit: bigint,
+  gasPrice: bigint
+): Promise<[bigint, JoinSplitRequest[], AssetAndTicker]> {
+  const joinSplitRequests = [...initialJoinSplitRequests];
 
-  const gasEstimateWei = gasPrice * gasUnitsEstimate;
-  const gasEstimatesInGasAssets = await tokenConverter.gasEstimatesInGasAssets(
-    gasEstimateWei,
-    Array.from(gasAssets.keys())
-  );
+  const computeNumJoinSplits = (
+    notes: MapWithObjectKeys<Asset, IncludedNote[]>
+  ): number =>
+    [...notes.values()]
+      .map((notes) => Math.ceil(notes.length / 2))
+      .reduce((acc, val) => acc + val, 0);
+  const computeNumUniqueAssets = (
+    notes: MapWithObjectKeys<Asset, IncludedNote[]>,
+    refundAssets: Asset[]
+  ): number => {
+    const assets = new SetWithObjectKeys<Asset>(notes.keys());
+    for (const asset of refundAssets) {
+      assets.add(asset);
+    }
+    return assets.size();
+  };
 
-  const [matchingGasAssets, nonMatchingGasAssets] = partition(
-    Array.from(gasAssets.entries()),
-    ([_, gasAsset]) => joinSplitRequestsByAsset.has(gasAsset.assetAddr)
-  );
+  const failedGasAssets: Asset[] = [];
+  const failedGasEstimates: bigint[] = [];
+  const failedGasAssetBalances: bigint[] = [];
 
-  const failedGasEstimates = [];
-  const failedGasAssets = [];
-  const failedGasAssetBalances = [];
+  const initialGasEstimate = gasCompensationForParams({
+    executionGasLimit,
+    numJoinSplits: computeNumJoinSplits(usedNotes),
+    numUniqueAssets: computeNumUniqueAssets(usedNotes, initialRefundAssets),
+  });
 
-  // attempt to find matching gas asset with enough balance
-  for (const [ticker, gasAsset] of matchingGasAssets) {
-    const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
-    const matchingJoinSplitRequests = joinSplitRequestsByAsset.get(
-      gasAsset.assetAddr
-    )!;
+  for (const [ticker, gasAsset] of gasAssets.entries()) {
+    const requestedAmount = joinSplitRequests
+      .filter(({ asset }) => AssetTrait.isSameAsset(asset, gasAsset))
+      .reduce((acc, { unwrapValue }) => acc + unwrapValue, 0n);
 
-    const totalAmountInMatchingJoinSplitRequests =
-      matchingJoinSplitRequests.reduce((acc, request) => {
-        return acc + getJoinSplitRequestTotalValue(request);
-      }, 0n);
+    let currentGasEstimate = initialGasEstimate;
+    let currentCompEstimate = await tokenConverter.weiToTargetErc20(
+      currentGasEstimate * gasPrice,
+      ticker
+    );
+    while (true) {
+      // attempt to re-gather notes for the gas asset
+      let newNotes: IncludedNote[];
+      try {
+        newNotes = await gatherNotes(
+          db,
+          currentCompEstimate + requestedAmount,
+          gasAsset
+        );
+      } catch (err) {
+        if (err instanceof NotEnoughFundsError) {
+          console.warn("didn't have enough", {
+            currentCompEstimate,
+            available: err.ownedAmount,
+          });
+          failedGasAssets.push(gasAsset);
+          failedGasEstimates.push(currentCompEstimate);
+          failedGasAssetBalances.push(err.ownedAmount);
+          break;
+        }
 
-    // if they have enough for request + gas, modify one of the requests to include the gas, and
-    // we're done
-    const estimateInGasAsset = gasEstimatesInGasAssets.get(ticker)!;
-    if (
-      totalOwnedGasAsset >=
-      estimateInGasAsset + totalAmountInMatchingJoinSplitRequests
-    ) {
-      const usedNotesForGasAsset = usedNotes.get(gasAsset)!;
-      const usedMerkleIndicesForGasAsset = new Set(
-        usedNotesForGasAsset.map((note) => note.merkleIndex)
+        throw err;
+      }
+
+      // compute new gas estimate
+      const oldNotes = usedNotes.get(gasAsset);
+      usedNotes.set(gasAsset, newNotes);
+      currentGasEstimate = gasCompensationForParams({
+        executionGasLimit,
+        numJoinSplits: computeNumJoinSplits(usedNotes),
+        numUniqueAssets: computeNumUniqueAssets(usedNotes, initialRefundAssets),
+      });
+      if (oldNotes !== undefined) {
+        usedNotes.set(gasAsset, oldNotes);
+      } else {
+        usedNotes.delete(gasAsset);
+      }
+
+      currentCompEstimate = await tokenConverter.weiToTargetErc20(
+        currentGasEstimate * gasPrice,
+        ticker
       );
-      const totalValueInExistingJoinSplits = usedNotesForGasAsset.reduce(
-        (acc, note) => acc + note.value,
+
+      // if the new notes cover requested amount + updated gas estimate, we're done -
+      // modify the joinsplit requests and return.
+      // otherwise, try again
+      const newNotesValue = newNotes.reduce(
+        (acc, { value }) => acc + value,
         0n
       );
-      const remainingValueNeededInNewJoinSplits =
-        totalAmountInMatchingJoinSplitRequests +
-        estimateInGasAsset -
-        totalValueInExistingJoinSplits;
-
-      let extraJoinSplitsGas: bigint;
-      let numExtraJoinSplits: number;
-      if (remainingValueNeededInNewJoinSplits > 0n) {
-        // Add enough to cover gas needed for existing joinsplits + gas for an extra joinsplits
-        const extraNotes = await gatherNotes(
-          db,
-          remainingValueNeededInNewJoinSplits,
-          gasAsset,
-          usedMerkleIndicesForGasAsset
+      if (newNotesValue >= currentCompEstimate + requestedAmount) {
+        const idx = joinSplitRequests.findIndex(({ asset }) =>
+          AssetTrait.isSameAsset(asset, gasAsset)
         );
-
-        console.log(`usedNotes: ${JSON.stringify(usedNotes)}`);
-        console.log(`need ${extraNotes.length} extra notes for gas comp`);
-        numExtraJoinSplits =
-          Math.ceil((usedNotesForGasAsset.length + extraNotes.length) / 2) -
-          Math.ceil(usedNotesForGasAsset.length / 2);
-        extraJoinSplitsGas =
-          BigInt(numExtraJoinSplits) *
-          MAX_GAS_FOR_ADDITIONAL_JOINSPLIT *
-          gasPrice;
-        const estimateInGasAssetIncludingNewJoinSplits =
-          estimateInGasAsset + extraJoinSplitsGas;
-
-        if (totalOwnedGasAsset < estimateInGasAssetIncludingNewJoinSplits) {
-          // Don't have enough for new joinsplits gas overhead, try new asset
-          failedGasAssets.push(gasAsset);
-          failedGasEstimates.push(estimateInGasAssetIncludingNewJoinSplits);
-          failedGasAssetBalances.push(totalOwnedGasAsset);
-          continue;
+        if (idx !== -1) {
+          const oldValue = joinSplitRequests[idx].unwrapValue;
+          joinSplitRequests[idx] = {
+            ...joinSplitRequests[idx],
+            unwrapValue: oldValue + currentCompEstimate,
+          };
+        } else {
+          console.log();
+          joinSplitRequests.push({
+            asset: gasAsset,
+            unwrapValue: currentCompEstimate,
+          });
         }
-      } else {
-        // otherwise we don't need any extra joinsplits because existing notes cover gas cost
-        extraJoinSplitsGas = 0n;
-        numExtraJoinSplits = 0;
+
+        return [
+          currentGasEstimate,
+          joinSplitRequests,
+          { asset: gasAsset, ticker },
+        ];
       }
-
-      console.log(
-        `adding ${extraJoinSplitsGas} tokens for ${numExtraJoinSplits} extra joinsplits for gas compensation`
-      );
-      matchingJoinSplitRequests[0].unwrapValue +=
-        estimateInGasAsset + extraJoinSplitsGas;
-      joinSplitRequestsByAsset.set(
-        gasAsset.assetAddr,
-        matchingJoinSplitRequests
-      );
-
-      console.log(
-        `amount to add for gas asset by modifying existing joinsplit for gas asset with ticker ${ticker}: ${estimateInGasAsset}}`,
-        { gasAssetTicker: ticker, gasAsset, estimateInGasAsset }
-      );
-
-      return [
-        Array.from(joinSplitRequestsByAsset.values()).flat(),
-        { asset: gasAsset, ticker },
-      ];
-    } else {
-      failedGasAssets.push(gasAsset);
-      failedGasEstimates.push(estimateInGasAsset);
-      failedGasAssetBalances.push(totalOwnedGasAsset);
-    }
-  }
-
-  // if we couldn't find an existing joinsplit request with a supported gas asset,
-  // attempt to make a new joinsplit request to include the gas comp
-  // iterate through each gas asset
-  for (const [ticker, gasAsset] of nonMatchingGasAssets) {
-    const estimateInGasAsset = gasEstimatesInGasAssets.get(ticker)!;
-    const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
-
-    if (totalOwnedGasAsset >= estimateInGasAsset) {
-      // Add enough to cover gas needed for existing joinsplits + gas for an extra joinsplits
-      const extraNotes = await gatherNotes(db, estimateInGasAsset, gasAsset);
-      const numExtraJoinSplits = Math.ceil(extraNotes.length / 2);
-      const additionaJoinSplitGas =
-        BigInt(numExtraJoinSplits) *
-        MAX_GAS_FOR_ADDITIONAL_JOINSPLIT *
-        gasPrice;
-      const estimateInGasAssetIncludingNewJoinSplits =
-        estimateInGasAsset + additionaJoinSplitGas;
-
-      if (totalOwnedGasAsset < estimateInGasAssetIncludingNewJoinSplits) {
-        // Don't have enough for new joinsplits gas overhead, try new asset
-        failedGasAssets.push(gasAsset);
-        failedGasEstimates.push(estimateInGasAssetIncludingNewJoinSplits);
-        failedGasAssetBalances.push(totalOwnedGasAsset);
-        continue;
-      }
-
-      const modifiedJoinSplitRequests = joinSplitRequests.concat({
-        asset: gasAsset,
-        unwrapValue: estimateInGasAssetIncludingNewJoinSplits,
-      });
-
-      console.log(
-        `amount to add for gas asset by adding a new joinsplit for gas asset with ticker ${ticker}: ${estimateInGasAssetIncludingNewJoinSplits}`,
-        {
-          gasAssetTicker: ticker,
-          gasAsset,
-          estimateInGasAssetIncludingNewJoinSplits,
-        }
-      );
-
-      return [modifiedJoinSplitRequests, { asset: gasAsset, ticker }];
-    } else {
-      failedGasAssets.push(gasAsset);
-      failedGasEstimates.push(estimateInGasAsset);
-      failedGasAssetBalances.push(totalOwnedGasAsset);
     }
   }
 
@@ -370,7 +314,6 @@ async function getOperationRequestTrace(
   }
 
   preparedOp.executionGasLimit = executionGasLimit;
-  const totalGasLimit = maxGasForOperation(preparedOp);
 
   const scale = 100;
   const gasMultiplierScaled = BigInt(Math.floor(gasMultiplier * scale));
@@ -383,7 +326,6 @@ async function getOperationRequestTrace(
       BigInt(Math.floor(scale));
 
   return {
-    totalGasLimit,
     executionGasLimit,
     gasPrice,
     usedNotes,

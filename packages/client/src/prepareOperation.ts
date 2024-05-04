@@ -56,7 +56,10 @@ export async function prepareOperation(
   let joinSplits: PreSignJoinSplit[] = [];
   const usedMerkleIndices = new Set<number>();
   for (const joinSplitRequest of joinSplitRequests) {
-    console.log("preparing joinSplits for request: ", joinSplitRequest);
+    if (process?.env?.DEBUG) {
+      console.log("preparing joinSplits for request: ", joinSplitRequest);
+    }
+
     const newJoinSplits = await prepareJoinSplits(
       deps,
       joinSplitRequest,
@@ -121,7 +124,10 @@ async function prepareJoinSplits(
 
   const receiver = joinSplitRequest.payment?.receiver;
 
-  console.log(`getting joinsplits from notes. Num notes: ${notes.length}`);
+  if (process?.env?.DEBUG) {
+    console.log(`getting joinsplits from notes. Num notes: ${notes.length}`);
+  }
+
   return getJoinSplitsFromNotes(
     viewer,
     merkle,
@@ -152,7 +158,9 @@ export async function gatherNotes(
   asset: Asset,
   noteMerkleIndicesToIgnore: Set<number> = new Set()
 ): Promise<IncludedNote[]> {
-  console.log("indices to ignore", noteMerkleIndicesToIgnore);
+  if (process?.env?.DEBUG) {
+    console.log("indices to ignore", noteMerkleIndicesToIgnore);
+  }
 
   // check that the user has enough notes to cover the request
   const notes = (await db.getNotesForAsset(asset)).filter(
@@ -223,10 +231,12 @@ export async function gatherNotes(
     }
   }
 
-  console.log(
-    `gathered notes to satisfy request for ${requestedAmount} of assest ${asset.assetAddr}`,
-    { notesToUse, requestedAmount, asset }
-  );
+  if (process?.env?.DEBUG) {
+    console.log(
+      `gathered notes to satisfy request for ${requestedAmount} of assest ${asset.assetAddr}`,
+      { notesToUse, requestedAmount, asset }
+    );
+  }
   return notesToUse;
 }
 

@@ -143,14 +143,14 @@ export class TestActor {
     };
   }
 
-  async runDeposits(interval: number): Promise<void> {
+  async runDeposits(intervalMs: number): Promise<void> {
     while (true) {
       await this.deposit();
-      await sleep(interval);
+      await sleep(intervalMs);
     }
   }
 
-  async runOps(interval: number, opts?: TestActorOpts): Promise<void> {
+  async runOps(intervalMs: number, opts?: TestActorOpts): Promise<void> {
     const { fullBundleEvery, finalityBlocks } = opts ?? {};
 
     let i = 0;
@@ -169,8 +169,8 @@ export class TestActor {
         await this.randomOperation(opts);
       }
 
-      this.logger.info(`sleeping for ${interval} ms`);
-      await sleep(interval);
+      this.logger.info(`sleeping for ${intervalMs} ms`);
+      await sleep(intervalMs);
       i++;
     }
   }
@@ -185,6 +185,12 @@ export class TestActor {
     const opIntervalSeconds = opts?.opIntervalSeconds ?? ONE_MINUTE_AS_SECS;
     const syncIntervalSeconds = opts?.syncIntervalSeconds ?? ONE_MINUTE_AS_SECS;
 
+    const pruneOptimsiticNullifiers = async () => {
+      await this.client.pruneOptimisticNullifiers();
+      setTimeout(pruneOptimsiticNullifiers, opIntervalSeconds);
+    };
+    void pruneOptimsiticNullifiers();
+
     if (opts?.onlyDeposits) {
       await this.runDeposits(depositIntervalSeconds * 1000);
     } else if (opts?.onlyOperations) {
@@ -194,7 +200,7 @@ export class TestActor {
     } else {
       await Promise.all([
         this.runDeposits(depositIntervalSeconds * 1000),
-        this.runOps(opIntervalSeconds, opts),
+        this.runOps(opIntervalSeconds * 1000, opts),
       ]);
     }
   }
@@ -417,7 +423,6 @@ export class TestActor {
         opts?.opGasPriceMultiplier ?? 1
       );
       const signed = signOperation(this.nocturneSigner, preSign);
-      await this.client.addOpToHistory(signed, { items: [] });
 
       const opDigest = OperationTrait.computeDigest(signed);
       this.logger.info(`proving operation with digest ${opDigest}`, {
@@ -455,6 +460,8 @@ export class TestActor {
         `successfully submitted operation with digest ${opDigest}`
       );
 
+      await this.client.addOpToHistory(signed, { items: [] });
+
       const labels = {
         spender: this._address!,
         assetAddr: asset.assetAddr,
@@ -485,10 +492,11 @@ export class TestActor {
   ): Promise<OperationRequestWithMetadata> {
     const chainId =
       this._chainId ?? BigInt((await this.provider.getNetwork()).chainId);
-
+    const gasPrice = (await this.provider.getGasPrice()).toBigInt();
     return newOpRequestBuilder(this.provider, chainId)
       .use(Erc20Plugin)
       .erc20Transfer(asset.assetAddr, this._address!, value)
+      .gasPrice((gasPrice * 3n) / 2n)
       .deadline(
         BigInt((await this.provider.getBlock("latest")).timestamp) +
           ONE_DAY_SECONDS

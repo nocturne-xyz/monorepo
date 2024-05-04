@@ -48,22 +48,33 @@ export function gasCompensationForParams({
   numJoinSplits,
   numUniqueAssets,
 }: GasCompensationParams): bigint {
-  console.log(
-    `Gas compensation equation: ${executionGasLimit} + (${GAS_PER_JOINSPLIT_VERIFY_SINGLE} + ${GAS_PER_JOINSPLIT_HANDLE}) * BigInt(${numJoinSplits}) + (${GAS_PER_INSERTION_SUBTREE_UPDATE} + ${GAS_PER_INSERTION_ENQUEUE}) * BigInt(${numUniqueAssets} + ${numJoinSplits} * 2) + ${GAS_PER_OPERATION_MISC} + ${GAS_BUFFER}`
-  );
-
-  return (
+  const res =
     executionGasLimit +
     (GAS_PER_JOINSPLIT_VERIFY_SINGLE + GAS_PER_JOINSPLIT_HANDLE) *
       BigInt(numJoinSplits) +
     (GAS_PER_INSERTION_SUBTREE_UPDATE + GAS_PER_INSERTION_ENQUEUE) *
       BigInt(numUniqueAssets + numJoinSplits * 2) +
     GAS_PER_OPERATION_MISC +
-    GAS_BUFFER
-  );
-}
+    GAS_BUFFER;
 
-export const MAX_GAS_FOR_ADDITIONAL_JOINSPLIT =
-  GAS_PER_JOINSPLIT_VERIFY_SINGLE +
-  GAS_PER_JOINSPLIT_HANDLE +
-  3n * (GAS_PER_INSERTION_SUBTREE_UPDATE + GAS_PER_INSERTION_ENQUEUE); // 2 new NCs + refund
+  // TODO gas estimation report system
+  if (process?.env?.DEBUG) {
+    console.log(
+      `Gas compensation equation:
+        ${executionGasLimit} (exectuion gas limit)
+        + (${
+          GAS_PER_JOINSPLIT_VERIFY_SINGLE + GAS_PER_JOINSPLIT_HANDLE
+        }) (gas per joinsplit assuming no batch) * ${numJoinSplits} (numJoinSplits)
+        + (${
+          GAS_PER_INSERTION_SUBTREE_UPDATE + GAS_PER_INSERTION_ENQUEUE
+        }) (gas per insertion) * (${numUniqueAssets} (num unique assets) + ${
+        2 * numJoinSplits
+      } (num joinsplits x 2))
+        + ${GAS_PER_OPERATION_MISC} (misc costs in contract, magic number)
+        + ${GAS_BUFFER} (buffer)
+        = ${res} (total gas estimate)`
+    );
+  }
+
+  return res;
+}
