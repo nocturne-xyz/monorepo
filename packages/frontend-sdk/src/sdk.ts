@@ -12,6 +12,7 @@ import {
   SignCanonAddrRegistryEntryMethod,
   SignOperationMethod,
   SyncOpts,
+  UnsubscribeFn,
   isTerminalOpStatus,
   newOpRequestBuilder,
   proveOperation,
@@ -29,6 +30,7 @@ import {
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import {
   Address,
+  Asset,
   AssetTrait,
   AssetType,
   AssetWithBalance,
@@ -75,7 +77,6 @@ import {
   getSwapQuote,
 } from "@nocturne-xyz/op-request-plugins";
 import { SubgraphSDKSyncAdapter } from "@nocturne-xyz/subgraph-sync-adapters";
-import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import retry from "async-retry";
 import * as JSON from "bigint-json-serialization";
 import { BigNumber, ContractTransaction, ethers } from "ethers";
@@ -149,7 +150,6 @@ export class NocturneSdk {
   protected _snap: SnapStateSdk;
   protected depositAdapter: DepositAdapter;
   protected syncAdapter: SDKSyncAdapter;
-  protected syncMutex: Mutex;
   protected opGasMultiplier: number;
   protected depositGasMultiplier: number;
   protected batchPreferenceGasMultipliers: {
@@ -217,7 +217,6 @@ export class NocturneSdk {
       snapOptions?.version,
       snapOptions?.snapId,
     );
-    this.syncMutex = new Mutex();
     this.syncProgressHandlers = new Map();
 
     this.signerThunk = thunk(() => getSigner(this.provider));
@@ -868,6 +867,30 @@ export class NocturneSdk {
     };
   }
 
+  async onBalancesUpdate(
+    opts: GetBalanceOpts = {},
+    cb: (balances: AssetWithBalance[]) => void,
+  ): Promise<UnsubscribeFn> {
+    const client = await this.clientThunk();
+    return client.onBalancesUpdate(
+      cb,
+      opts ? getBalanceOptsToGetNotesOpts(opts) : undefined,
+    );
+  }
+
+  async onBalanceForAssetUpdate(
+    asset: Asset,
+    opts: GetBalanceOpts = {},
+    cb: (balance: bigint) => void,
+  ): Promise<UnsubscribeFn> {
+    const client = await this.clientThunk();
+    return client.onBalanceForAssetUpdate(
+      asset,
+      cb,
+      opts ? getBalanceOptsToGetNotesOpts(opts) : undefined,
+    );
+  }
+
   /**
    * Return a list of snap's assets (address & id) along with its given balance.
    * if includeUncommitted is defined and true, then the method include notes that are not yet committed to the commitment tree
@@ -875,8 +898,6 @@ export class NocturneSdk {
    * if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
    */
   async getAllBalances(opts?: GetBalanceOpts): Promise<AssetWithBalance[]> {
-    await this.sync();
-
     const client = await this.clientThunk();
     return await client.getAllAssetBalances(
       opts ? getBalanceOptsToGetNotesOpts(opts) : undefined,
@@ -889,8 +910,6 @@ export class NocturneSdk {
     opts?: GetBalanceOpts,
   ): Promise<bigint> {
     const asset = AssetTrait.erc20AddressToAsset(erc20Address);
-
-    await this.sync();
 
     const client = await this.clientThunk();
     return client.getBalanceForAsset(
@@ -956,118 +975,20 @@ export class NocturneSdk {
     return undefined;
   }
 
+  // nit: subbing/unsubbing from event shouldn't entail anything async, but tis the thunk tradeoff
+  async onSyncProgress(cb: (progress: number) => void): Promise<UnsubscribeFn> {
+    const client = await this.clientThunk();
+    return client.onSyncProgress(cb);
+  }
+
   /**
    * sync in increments, passing progress updates back to the caller through a callback
    * if another call to this function is in progress, this function will wait for the existing call to complete
    * TODO this behavior is extremely scuffed, this should be replaced by an event emitter in `client`
    */
-  async sync(
-    syncOpts?: Omit<SyncOpts, "timeoutSeconds">,
-    handleProgress?: (progress: number) => void,
-  ): Promise<void> {
-    // TODO: re-architect the SDK with a proper event-based subscription model
-    let handlerIndex: number | undefined;
-    if (handleProgress) {
-      handlerIndex = this.syncProgressHandlerCounter++;
-      this.syncProgressHandlers.set(handlerIndex, handleProgress);
-    }
-
-    try {
-      await tryAcquire(this.syncMutex).runExclusive(async () => {
-        const finalityBlocks = this.sdkConfig.config.finalityBlocks;
-
-        const opts = {
-          ...syncOpts,
-          timing: syncOpts?.timing ?? true,
-          finalityBlocks: syncOpts?.finalityBlocks ?? finalityBlocks,
-          timeoutSeconds: 5, // always override timeoutSeconds
-        };
-
-        const fetchEndIndex = async () => {
-          if (!finalityBlocks) {
-            return (await this.syncAdapter.getLatestIndexedMerkleIndex()) ?? 0;
-          }
-
-          const currentBlock = await this.provider.getBlockNumber();
-          if (finalityBlocks > currentBlock) {
-            return 0;
-          }
-
-          return (
-            (await this.syncAdapter.getLatestIndexedMerkleIndex(
-              currentBlock - finalityBlocks,
-            )) ?? 0
-          );
-        };
-
-        let endIndex = await fetchEndIndex();
-
-        const startIndex = (await this.getLatestSyncedMerkleIndex()) ?? 0;
-        let currentIndex = startIndex;
-
-        // if latestCommittedMerkleIndex from the client is different from that on-chain, then the client
-        // is behind  and we need to sync at least once. However, we don't currently have a way to fetch
-        // the latest committed merkle index with a timelag, so for now we're going to assume the client needs
-        // to sync at least once if its `latestCommittedMerkleIndex` is different from the `endIndex` we fetched
-        // this should work fine, but it technically makes more queries than it needs to.
-        // TODO: add method to SDKSyncAdapter to fetch latest committed merkle index with a timelag
-        const latestCommittedMerkleIndex = await (
-          await this.clientThunk()
-        ).getLatestCommittedMerkleIndex();
-        const minIterations = latestCommittedMerkleIndex !== endIndex ? 1 : 0;
-
-        const NUM_REFETCHES = 5;
-        const refetchEvery = Math.floor(
-          (endIndex - startIndex) / NUM_REFETCHES,
-        );
-
-        let count = 0;
-        while (count < minIterations || currentIndex < endIndex) {
-          console.log("[sync] syncing", { currentIndex, endIndex, opts });
-          currentIndex = (await this.syncInner(opts)) ?? 0;
-
-          if (refetchEvery > 1 && count % refetchEvery === 0) {
-            endIndex = await fetchEndIndex();
-          }
-          count++;
-
-          const progress =
-            ((currentIndex - startIndex) / (endIndex - startIndex)) * 100;
-
-          this.syncProgressHandlers.forEach((handler) => handler(progress));
-        }
-      });
-    } catch (err) {
-      if (err == E_ALREADY_LOCKED) {
-        await this.syncMutex.waitForUnlock();
-      } else {
-        throw err;
-      }
-    } finally {
-      if (handlerIndex !== undefined) {
-        this.syncProgressHandlers.delete(handlerIndex);
-      }
-    }
-  }
-
-  // syncs new notes and returns latest sync merkle index
-  // NOTE: this method is not safe to call concurrently without wrapping in
-  // a call to syncMutex.runExclusive or runExclusiveIfNotAlreadyLocked(syncMutex)
-  protected async syncInner(syncOpts?: SyncOpts): Promise<number | undefined> {
-    let latestSyncedMerkleIndex: number | undefined;
-    try {
-      const client = await this.clientThunk();
-      latestSyncedMerkleIndex = await client.sync(syncOpts ?? { timing: true });
-      await client.pruneOptimisticNullifiers();
-    } catch (e) {
-      console.log("Error syncing notes: ", e);
-      throw e;
-    }
-    console.log(
-      "[sync] FE-sdk latestSyncedMerkleIndex, ",
-      latestSyncedMerkleIndex,
-    );
-    return latestSyncedMerkleIndex;
+  async sync(syncOpts?: Omit<SyncOpts, "timeoutSeconds">): Promise<void> {
+    const client = await this.clientThunk();
+    await client.sync(syncOpts);
   }
 
   async getLatestSyncedMerkleIndex(): Promise<number | undefined> {

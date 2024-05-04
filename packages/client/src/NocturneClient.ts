@@ -11,7 +11,7 @@ import {
   ensureOpRequestChainInfo,
 } from "./operationRequest/operationRequest";
 import { prepareOperation } from "./prepareOperation";
-import { SyncOpts, syncSDK } from "./syncSDK";
+import { SyncOpts, syncSDK } from "./syncSdk";
 import { OpHistoryRecord, OperationMetadata } from "./types";
 import {
   getJoinSplitRequestTotalValue,
@@ -32,6 +32,8 @@ import {
   TotalEntityIndexTrait,
   maxArray,
 } from "@nocturne-xyz/core";
+import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
+import { NocturneEventBus, Percentage, UnsubscribeFn } from "./events";
 
 const PRUNE_OPTIMISTIC_NFS_TIMER = 60 * 1000; // 1 minute
 
@@ -44,6 +46,8 @@ export class NocturneClient {
   protected syncAdapter: SDKSyncAdapter;
   protected tokenConverter: EthToTokenConverter;
   protected opTracker: OpTracker;
+  protected events: NocturneEventBus;
+  protected syncMutex: Mutex;
 
   readonly viewer: NocturneViewer;
   readonly gasAssets: Map<string, Asset>;
@@ -85,6 +89,9 @@ export class NocturneClient {
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
     this.opTracker = nulliferChecker;
+    this.syncMutex = new Mutex();
+
+    this.events = new NocturneEventBus();
 
     // set an interval to prune optimistic nfs to ensure they don't get stuck
     const prune = async () => {
@@ -98,22 +105,32 @@ export class NocturneClient {
     await this.db.kv.clear();
   }
 
-  // Sync SDK, returning last synced merkle index of last state diff
-  async sync(opts?: SyncOpts): Promise<number | undefined> {
-    const latestSyncedMerkleIndex = await syncSDK(
-      { viewer: this.viewer },
-      this.syncAdapter,
-      this.db,
-      this.merkleProver,
-      opts
-        ? {
-            ...opts,
-            finalityBlocks: opts.finalityBlocks ?? this.config.finalityBlocks,
-          }
-        : undefined
-    );
+  onSyncProgress(cb: (progress: Percentage) => void): UnsubscribeFn {
+    return this.events.subscribe("SYNC_PROGRESS", cb);
+  }
 
-    return latestSyncedMerkleIndex;
+  // Sync SDK, returning last synced merkle index of last state diff
+  async sync(_opts?: SyncOpts): Promise<void> {
+    await tryAcquire(this.syncMutex)
+      .runExclusive(async () => {
+        await syncSDK(
+          { viewer: this.viewer, eventBus: this.events },
+          this.syncAdapter,
+          this.db,
+          this.merkleProver,
+          {
+            finalityBlocks: this.config.finalityBlocks,
+          }
+        );
+      })
+      .catch(async (err) => {
+        if (err === E_ALREADY_LOCKED) {
+          console.log("waiting for unlock");
+          await this.syncMutex.waitForUnlock();
+        } else {
+          throw err;
+        }
+      });
   }
 
   async prepareOperation(
@@ -137,6 +154,43 @@ export class NocturneClient {
     );
 
     return await prepareOperation(deps, gasAccountedOpRequest);
+  }
+
+  onBalancesUpdate(
+    cb: (balances: AssetWithBalance[]) => void,
+    opts?: GetNotesOpts
+  ): UnsubscribeFn {
+    const _cb = async () => {
+      const balances = await this.getAllAssetBalances(opts);
+      cb(balances);
+    };
+
+    const unsubscribeStateDiff = this.events.subscribe("STATE_DIFF", _cb);
+    const unsubscribeSyncComplete = this.events.subscribe("SYNC_COMPLETE", _cb);
+
+    return () => {
+      unsubscribeStateDiff();
+      unsubscribeSyncComplete();
+    };
+  }
+
+  onBalanceForAssetUpdate(
+    asset: Asset,
+    cb: (balance: bigint) => void,
+    opts?: GetNotesOpts
+  ): UnsubscribeFn {
+    const _cb = async () => {
+      const balance = await this.getBalanceForAsset(asset, opts);
+      cb(balance);
+    };
+
+    const unsubscribeStateDiff = this.events.subscribe("STATE_DIFF", _cb);
+    const unsubscribeSyncComplete = this.events.subscribe("SYNC_COMPLETE", _cb);
+
+    return () => {
+      unsubscribeStateDiff();
+      unsubscribeSyncComplete();
+    };
   }
 
   async getAllAssetBalances(opts?: GetNotesOpts): Promise<AssetWithBalance[]> {

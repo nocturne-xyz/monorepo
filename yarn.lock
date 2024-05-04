@@ -2727,6 +2727,7 @@ __metadata:
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
     ethers: ^5.7.2
+    eventemitter3: ^5.0.1
     js-sha256: ^0.9.0
     mocha: ^10.1.0
     prettier: ^2.8.8
@@ -8127,6 +8128,13 @@ circomlibjs@nocturne-xyz/circomlibjs:
     is-hex-prefixed: 1.0.0
     strip-hex-prefix: 1.0.0
   checksum: 1f42959e78ec6f49889c49c8a98639e06f52a15966387dd39faf2930db48663d026efb7db2702dcffe7f2a99c4a0144b7ce784efdbf733f4077aae95de76d65f
+  languageName: node
+  linkType: hard
+
+"eventemitter3@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "eventemitter3@npm:5.0.1"
+  checksum: 543d6c858ab699303c3c32e0f0f47fc64d360bf73c3daf0ac0b5079710e340d6fe9f15487f94e66c629f5f82cd1a8678d692f3dbb6f6fcd1190e1b97fcad36f8
   languageName: node
   linkType: hard
 

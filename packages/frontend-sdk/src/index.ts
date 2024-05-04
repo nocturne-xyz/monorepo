@@ -13,15 +13,20 @@ export {
   SyncProgress,
 } from "./types";
 
-export {
+export type {
+  Percentage,
+  UnsubscribeFn,
   ActionMetadata,
   ConfidentialPaymentMetadata,
-  NotEnoughFundsError,
-  NotEnoughGasTokensError,
   OpWithMetadata,
   OperationRequest,
   OperationRequestWithMetadata,
   SyncOpts,
+} from "@nocturne-xyz/client";
+
+export {
+  NotEnoughFundsError,
+  NotEnoughGasTokensError,
   isFailedOpStatus,
   isTerminalOpStatus,
 } from "@nocturne-xyz/client";
