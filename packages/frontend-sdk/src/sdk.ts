@@ -58,6 +58,7 @@ import {
   encodeEncodedAssetAddrWithSignBitsPI,
   hashDepositRequest,
   joinSplitPublicSignalsToArray,
+  maxGasForOperation,
   packToSolidityProof,
   parseEventsFromContractReceipt,
   thunk,
@@ -511,9 +512,16 @@ export class NocturneSdk {
       this.sdkConfig.config.tellerAddress,
       await this.signerThunk(),
     );
-    const tx = await teller.processBundle({
-      operations: [submittable.op],
-    });
+
+    const gasLimit = maxGasForOperation(submittable.op);
+    const tx = await teller.processBundle(
+      {
+        operations: [submittable.op],
+      },
+      {
+        gasLimit
+      }
+    );
 
     return tx;
   }
