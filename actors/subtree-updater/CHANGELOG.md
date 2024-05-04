@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.10
+
+### Patch Changes
+
+- Updated dependencies [19b7836c]
+- Updated dependencies [595cb965]
+  - @nocturne-xyz/core@3.4.0
+  - @nocturne-xyz/offchain-utils@1.0.0
+  - @nocturne-xyz/persistent-log@0.1.16
+
 ## 0.8.9
 
 ### Patch Changes

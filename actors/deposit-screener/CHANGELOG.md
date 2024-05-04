@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.13.6
+
+### Patch Changes
+
+- 595cb965: remove geomiddleware after it was removed from offchain-utils
+- Updated dependencies [19b7836c]
+- Updated dependencies [19b7836c]
+- Updated dependencies [595cb965]
+  - @nocturne-xyz/subgraph-sync-adapters@0.6.0
+  - @nocturne-xyz/core@3.4.0
+  - @nocturne-xyz/offchain-utils@1.0.0
+  - @nocturne-xyz/data@0.2.1
+
 ## 0.13.5
 
 ### Patch Changes

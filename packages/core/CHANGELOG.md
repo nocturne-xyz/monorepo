@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.0
+
+### Minor Changes
+
+- 19b7836c: add `latestCommitTei` to `StateDiff`
+
 ## 3.3.0
 
 ### Minor Changes
